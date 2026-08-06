@@ -64,6 +64,7 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   @keyframes heartBeat{from{transform:none}to{transform:none}}
 }
 @media(max-width:768px){
+  :root{--pad-page:16px;--gutter-section:16px;--pad-section-y:48px}
   .mobile-menu-btn{display:flex!important}
   .desktop-nav{display:none!important}
 }
