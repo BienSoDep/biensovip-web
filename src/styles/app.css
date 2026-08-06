@@ -1,7 +1,9 @@
+/* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity */
 :root{
-  --blue-700:#8A4A05;--blue-600:#CF6B08;--blue-500:#E8790A;--blue-400:#F0A24E;--blue-200:#F7D8A8;--blue-100:#FBEBD2;--blue-50:#FEF7EC;
-  --shadow-blue:0 8px 20px rgba(232,121,10,.26);
-  --surface-hero:linear-gradient(135deg,#FBEBD2 0%,#FEF7EC 42%,var(--cream-100) 100%);
+  --brand-700:#8A3F00;--brand-600:#B85600;--brand-500:#D4650A;--brand-400:#E8903E;--brand-200:#F4C89E;--brand-100:#F9E2CC;--brand-50:#FCF2E6;
+  --blue-700:var(--brand-700);--blue-600:var(--brand-600);--blue-500:var(--brand-500);--blue-400:var(--brand-400);--blue-200:var(--brand-200);--blue-100:var(--brand-100);--blue-50:var(--brand-50);
+  --shadow-blue:0 8px 20px rgba(212,101,10,.26);
+  --surface-hero:linear-gradient(135deg,#F9E2CC 0%,#FCF2E6 42%,var(--cream-100) 100%);
 }
 html,body,#root{height:100%}
 body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased}
@@ -14,7 +16,7 @@ button,[data-pressable],.pressable{
 button:not(:disabled):active,[data-pressable]:active,.pressable:active{transform:scale(0.97)}
 button:disabled{cursor:not-allowed}
 button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
-  outline:2px solid var(--action-primary);outline-offset:2px;
+  outline:2px solid var(--action-primary)!important;outline-offset:2px;
 }
 [data-pressable],.pressable{cursor:pointer}
 
@@ -50,6 +52,17 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
 @keyframes fanRight{from{opacity:0;transform:rotate(7deg) scale(.9)}to{opacity:1;transform:rotate(7deg) scale(1)}}
 @keyframes heartBeat{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
 
+@media(prefers-reduced-motion:reduce){
+  .pill-btn,[data-pressable],.pressable,button{transition:none!important}
+  @keyframes pageIn{from{opacity:1;transform:none}to{opacity:1;transform:none}}
+  @keyframes fadeIn{from{opacity:1}to{opacity:1}}
+  @keyframes modalIn{from{opacity:1;transform:none}to{opacity:1;transform:none}}
+  @keyframes toastIn{from{opacity:1;transform:none}to{opacity:1;transform:none}}
+  @keyframes fanMain{from{opacity:1;transform:none}to{opacity:1;transform:none}}
+  @keyframes fanLeft{from{opacity:1;transform:none}to{opacity:1;transform:none}}
+  @keyframes fanRight{from{opacity:1;transform:none}to{opacity:1;transform:none}}
+  @keyframes heartBeat{from{transform:none}to{transform:none}}
+}
 @media(max-width:768px){
   .mobile-menu-btn{display:flex!important}
   .desktop-nav{display:none!important}
