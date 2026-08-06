@@ -9,7 +9,6 @@ export default function PlateDetail({ st, cur, go, openPlate, openBuy, toggleFav
   const [shot, setShot] = useState(0);
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-3)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Trang chủ / <a href="#" onClick={(e) => { e.preventDefault(); go('list')(); }}>Biển số</a> / <span style={{ color: 'var(--text-strong)' }}>{cur.title}</span></section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-4) var(--pad-page) var(--pad-section-y)', display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 500px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,4vw,52px)', display: 'flex', justifyContent: 'center', transition: 'background 180ms var(--ease-out)' }}>

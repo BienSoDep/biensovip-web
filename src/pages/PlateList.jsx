@@ -10,7 +10,6 @@ export default function PlateList({ st, setSt, patch, list, page, pageCount, pag
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Trang chủ / <span style={{ color: 'var(--text-strong)' }}>Biển số</span></span>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{list.length} biển số phù hợp bộ lọc hiện tại</p>
       </section>
