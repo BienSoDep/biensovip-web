@@ -1,10 +1,9 @@
-import { CATS } from '../lib/mockData.js';
 import Button from '../components/Button.jsx';
 import { SearchField, Badge, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 
-export default function Home({ st, patch, go, notify, heroAnim, cards }) {
+export default function Home({ st, patch, go, notify, heroAnim, cards, catNames }) {
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ padding: '0 var(--pad-page)' }}>
@@ -42,7 +41,7 @@ export default function Home({ st, patch, go, notify, heroAnim, cards }) {
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <SearchField placeholder="Tìm theo đuôi số, VD: 79, 68, 39…" value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} width={300} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
-            {['Tất cả', ...CATS].map((c) => (
+            {['Tất cả', ...catNames].map((c) => (
               <NavBtn key={c} onClick={() => patch({ cat: c, page: 1 })} {...pill(st.cat === c)}>{c}</NavBtn>
             ))}
           </div>

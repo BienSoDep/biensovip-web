@@ -1,10 +1,10 @@
-import { CATS, CITIES } from '../lib/mockData.js';
+import { CITIES } from '../lib/mockData.js';
 import Button from '../components/Button.jsx';
 import { Input, Select, Checkbox, Radio } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 
-export default function PlateList({ st, setSt, patch, list, page, pageCount, pageItems, cards }) {
+export default function PlateList({ st, setSt, patch, list, page, pageCount, pageItems, cards, catNames }) {
   const clearFilters = () => patch({ cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', page: 1 });
 
   return (
@@ -18,7 +18,7 @@ export default function PlateList({ st, setSt, patch, list, page, pageCount, pag
         <aside style={{ flex: '0 0 272px', minWidth: 250, position: 'sticky', top: 78, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
-            {CATS.map((c) => (
+            {catNames.map((c) => (
               <div key={c} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <Checkbox label={c} checked={!!st.catFilters[c]} onChange={(v) => setSt((x) => ({ ...x, catFilters: { ...x.catFilters, [c]: v }, page: 1 }))} style={{ flex: 1 }} />
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{st.plates.filter((p) => p.cat === c).length}</span>
@@ -49,7 +49,7 @@ export default function PlateList({ st, setSt, patch, list, page, pageCount, pag
         <div style={{ flex: '1 1 540px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
-              {['Tất cả', ...CATS].map((c) => (
+              {['Tất cả', ...catNames].map((c) => (
                 <NavBtn key={c} onClick={() => patch({ cat: c, page: 1 })} {...pill(st.cat === c)}>{c}</NavBtn>
               ))}
             </div>
