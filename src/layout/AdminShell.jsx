@@ -37,7 +37,7 @@ export default function AdminShell({
         </nav>
         <div style={{ flex: 1 }} />
         <div style={{ padding: '0 var(--space-5)' }}>
-          <Button variant="ghost" size="sm" fullWidth onClick={go('adminLogin')}>Đăng xuất</Button>
+          <Button variant="ghost" size="sm" fullWidth onClick={() => patch({ user: null, isAdmin: false, screen: 'adminLogin' })}>Đăng xuất</Button>
         </div>
       </aside>
       <main style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>

@@ -21,7 +21,7 @@ export default function MobileDrawer({ open, onClose, s, go, user, patch, notify
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{user}</span>
-              <button onClick={() => { patch({ user: null }); notify('Đã đăng xuất'); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
+              <button onClick={() => { patch({ user: null, isAdmin: false }); notify('Đã đăng xuất'); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>

@@ -30,7 +30,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu })
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 12px 4px 4px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)' }}>
               <Avatar name={user} size="sm" />
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{user}</span>
-              <button type="button" onClick={() => { patch({ user: null }); notify('Đã đăng xuất'); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)', padding: 0 }}>Thoát</button>
+              <button type="button" onClick={() => { patch({ user: null, isAdmin: false }); notify('Đã đăng xuất'); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)', padding: 0 }}>Thoát</button>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
