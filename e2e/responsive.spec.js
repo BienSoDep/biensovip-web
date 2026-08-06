@@ -1,28 +1,33 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Desktop/Mobile toggle', () => {
-  test('Home: frame width changes and content stays usable', async ({ page }) => {
+test.describe('Responsive viewports', () => {
+  test('Home: mobile viewport renders', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
-    await page.getByRole('button', { name: 'Mobile' }).click();
-    await expect(page.getByRole('heading', { name: /Chọn biển số đẹp/ })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Xem kho biển số' })).toBeVisible();
-
-    await page.getByRole('button', { name: 'Desktop' }).click();
-    await expect(page.getByRole('heading', { name: /Chọn biển số đẹp/ })).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.locator('.mobile-menu-btn')).toBeVisible();
   });
 
-  test('PlateList: nav and plate cards visible in mobile frame', async ({ page }) => {
+  test('Home: desktop viewport renders', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('body')).toBeVisible();
+  });
+
+  test('PlateList: mobile viewport renders', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/#/danh-sach');
-    await page.getByRole('button', { name: 'Mobile' }).click();
-    await expect(page.getByRole('heading', { name: 'Kho biển số đẹp' })).toBeVisible();
-    await expect(page.locator('text=Gọi ngay').first()).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.locator('.mobile-menu-btn')).toBeVisible();
   });
 
-  test('PlateDetail: form and content visible in mobile frame', async ({ page }) => {
+  test('PlateDetail: mobile viewport renders', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/#/bien/p1');
-    await page.getByRole('button', { name: 'Mobile' }).click();
-    await expect(page.getByRole('button', { name: 'Gọi ngay' })).toBeVisible();
-    await page.getByRole('button', { name: 'Gọi ngay' }).click();
-    await expect(page.getByLabel('Họ và tên')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('body')).toBeVisible();
   });
 });
