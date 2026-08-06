@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 import {
-  PLATES, CATS, POST_CATS, POSTS, CONTACTS,
+  PLATES, CATS, POST_CATS, POSTS, CONTACTS, STAFF,
   priceNum, validatePhone,
 } from './lib/mockData.js';
+import { loadAuth, saveAuth } from './lib/authStore.js';
 import { PER_PAGE } from './common/constants.js';
 import NavBtn, { darkPill } from './components/NavBtn.jsx';
 import Breadcrumb from './components/Breadcrumb.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import RequireAuth from './components/RequireAuth.jsx';
 import Header from './layout/Header.jsx';
 import Footer from './layout/Footer.jsx';
+import MobileDrawer from './layout/MobileDrawer.jsx';
 import Home from './pages/Home.jsx';
 import PlateList from './pages/PlateList.jsx';
 import PlateDetail from './pages/PlateDetail.jsx';
@@ -17,8 +22,16 @@ import LuckyPlate from './pages/LuckyPlate.jsx';
 import About from './pages/About.jsx';
 import Blog from './pages/Blog.jsx';
 import Post from './pages/Post.jsx';
+import NotFound from './pages/NotFound.jsx';
+import ChatZaloContact from './pages/ChatZaloContact.jsx';
+import Compare from './pages/Compare.jsx';
+import SavedSearches from './pages/SavedSearches.jsx';
+import Reviews from './pages/Reviews.jsx';
+import Notifications from './pages/Notifications.jsx';
+import Collaborator from './pages/Collaborator.jsx';
 import AdminShell from './layout/AdminShell.jsx';
 import Modals from './layout/Modals.jsx';
+import AiChatbot from './components/AiChatbot.jsx';
 import { parseRoute, routeFor, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
 import { useHashRouter } from './hooks/useHashRouter.js';
@@ -31,37 +44,36 @@ export default function App() {
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
     favs: { p2: true, p7: true }, curId: initRoute.detailId || 'p1',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mErr: {},
-    aName: '', aPhone: '', aPw: '', aPw2: '', aOtp: '', aAgree: false, aErr: {}, step: 1, user: null,
+    aName: '', aPhone: '', aPw: '', aPw2: '', aOtp: '', aAgree: false, aErr: {}, step: 1, user: loadAuth(),
     admEmail: '', admPw: '', admErr: '',
-    plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(),
+    plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
     cats: CATS.map((c) => ({ name: c })), newCat: '', catErr: '',
     adminQ: '', admCat: 'Tất cả', admStatus: 'Tất cả',
     addOpen: false, editId: null, form: {}, formErr: {},
-    confirm: null, picker: false, sync: true, toast: '',
+    confirm: null, picker: false, sync: true,
     postCat: 'Tất cả', postId: initRoute.postId || 'a1',
     editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '',
     ms: { name: '', year: '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' }, msResult: null,
+    drawerOpen: false,
+    compareIds: [], savedSearches: [], reviews: [], reviewDraft: null,
+    notifications: [], collabs: [], videos: [],
   });
   const patch = (p) => setSt((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
-  const toastTimer = useRef(null);
   const fanDone = useRef(false);
 
   useEffect(() => {
     const t = setTimeout(() => { fanDone.current = true; }, 1200);
     return () => clearTimeout(t);
   }, []);
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  useEffect(() => { saveAuth(st.user); }, [st.user]);
 
   useHashRouter(st, patch);
 
-  const notify = (msg) => {
-    patch({ toast: msg });
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => patch({ toast: '' }), 3000);
-  };
+  const notify = (msg) => toast(msg);
   const heroAnim = makeHeroAnim(fanDone);
 
-  const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}) });
+  const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
   const toggleFav = (id) => setSt((s) => {
     const favs = { ...s.favs };
     if (favs[id]) delete favs[id]; else favs[id] = true;
@@ -71,6 +83,8 @@ export default function App() {
   const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mErr: {} });
   const openPost = (id) => patch({ screen: 'post', postId: id });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
+
+  const catNames = st.cats.map((c) => c.name);
 
   const filtered = () => {
     const q = st.q.trim().toLowerCase();
@@ -110,7 +124,7 @@ export default function App() {
     else if (!validatePhone(st.mPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
     if (Object.keys(err).length) { patch({ mErr: err }); return; }
     const cur = st.plates.find((p) => p.id === st.curId) || st.plates[0];
-    const row = { id: 'c' + Date.now(), name: st.mName.trim(), phone: st.mPhone.trim(), pid: cur.id, time: 'Vừa xong', status: 'Mới' };
+    const row = { id: 'c' + Date.now(), name: st.mName.trim(), phone: st.mPhone.trim(), note: st.mNote.trim(), pid: cur.id, time: 'Vừa xong', status: 'Mới' };
     setSt((s) => ({ ...s, sent: true, mErr: {}, contacts: [row, ...s.contacts] }));
     notify('Đã gửi yêu cầu tư vấn');
   };
@@ -120,11 +134,11 @@ export default function App() {
     if (!/^\S+@\S+\.\S+$/.test(st.admEmail)) err.email = 'Email chưa đúng định dạng.';
     if (st.admPw.length < 6) err.pw = 'Mật khẩu tối thiểu 6 ký tự.';
     if (Object.keys(err).length) { patch({ admErr: err }); return; }
-    patch({ admErr: {}, screen: 'dash' });
+    patch({ admErr: {}, screen: 'dash', user: st.admEmail });
     notify('Đăng nhập quản trị thành công');
   };
   const adminDemo = () => {
-    patch({ admEmail: 'admin@biensovip.com', admPw: 'admin123', admErr: {}, screen: 'dash' });
+    patch({ admEmail: 'admin@biensovip.com', admPw: 'admin123', admErr: {}, screen: 'dash', user: 'admin@biensovip.com' });
     notify('Đăng nhập quản trị bằng tài khoản mẫu');
   };
 
@@ -207,15 +221,42 @@ export default function App() {
     notify('Đã xóa');
   };
 
+  // Bug 1 fix: parse [biển XX..] token → {t:'plate', pid:'pX'} block
+  const parseBodyTokens = (text, plates) => {
+    const lines = text.split('\n');
+    const body = [];
+    for (const line of lines) {
+      const m = line.match(/^\[biển\s+(\S+)\s+([\d.]+)\]$/);
+      if (m) {
+        const provSeri = m[1];
+        const num = m[2];
+        const found = plates.find((p) => p.prov + p.seri === provSeri && p.num === num);
+        if (found) {
+          body.push({ t: 'plate', plate: found.id });
+          continue;
+        }
+      }
+      if (line.startsWith('## ')) {
+        body.push({ t: 'h2', v: line.slice(3) });
+      } else if (line.startsWith('> ')) {
+        body.push({ t: 'quote', v: line.slice(2) });
+      } else if (line.trim()) {
+        body.push({ t: 'p', v: line });
+      }
+    }
+    return body.length ? body : [{ t: 'p', v: text }];
+  };
+
   const publish = (status) => {
     const t = st.cTitle.trim();
     if (!t) { patch({ cErr: 'Nhập tiêu đề bài viết.' }); return; }
+    const body = parseBodyTokens(st.cBody, st.plates);
     setSt((s) => {
       if (s.editPostId) {
-        const posts = s.posts.map((p) => (p.id === s.editPostId ? { ...p, title: t, cat: s.cCat, excerpt: s.cBody.slice(0, 90) || p.excerpt, status } : p));
+        const posts = s.posts.map((p) => (p.id === s.editPostId ? { ...p, title: t, cat: s.cCat, body, excerpt: st.cBody.slice(0, 90) || p.excerpt, status } : p));
         return { ...s, posts, editPostId: null, cTitle: '', cBody: '', cErr: '', screen: 'aposts' };
       }
-      const row = { id: 'a' + Date.now(), title: t, cat: s.cCat, date: 'Hôm nay', excerpt: s.cBody.slice(0, 90) || 'Bài viết mới.', status };
+      const row = { id: 'a' + Date.now(), title: t, cat: s.cCat, date: 'Hôm nay', body, excerpt: st.cBody.slice(0, 90) || 'Bài viết mới.', status };
       return { ...s, posts: [row, ...s.posts], cTitle: '', cBody: '', cErr: '', screen: 'aposts' };
     });
     notify(status === 'Bản nháp' ? 'Đã lưu nháp' : (st.editPostId ? 'Đã cập nhật bài viết' : 'Đã xuất bản bài viết'));
@@ -227,6 +268,7 @@ export default function App() {
   useSeo(st, cur0);
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
+  const isUnknown = !isPublic && !isAdminShell && s !== 'register' && s !== 'login' && s !== 'forgot' && s !== 'adminLogin';
 
   const list = filtered();
   const per = PER_PAGE;
@@ -250,8 +292,13 @@ export default function App() {
     aplates: ['Biển số', st.plates.length + ' biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
     acontacts: ['Yêu cầu liên hệ', st.contacts.filter((c) => c.status === 'Mới').length + ' yêu cầu mới cần xử lý'],
+    astaff: ['Nhân viên', st.staff.length + ' nhân viên trong hệ thống'],
     aposts: ['Bài viết', st.posts.filter((p) => p.status === 'Đã xuất bản').length + ' bài đang hiển thị'],
     compose: ['Viết bài mới', 'Bài sẽ có slug và meta riêng để tối ưu SEO'],
+    acustomers: ['Khách hàng', (st.contacts || []).length + ' khách hàng trong hệ thống'],
+    avideos: ['Video', 'Quản lý video TikTok/Facebook'],
+    anotifications: ['Thông báo', 'Gửi thông báo đến người dùng'],
+    acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
   }[s] || ['', ''];
 
   const authMeta = {
@@ -265,7 +312,6 @@ export default function App() {
   }[s] || ['', '', ''];
 
   const post = st.posts.find((p) => p.id === st.postId) || st.posts[0];
-  const frameW = st.device === 'mobile' ? '414px' : '100%';
   const insertPlates = st.plates.filter((p) => p.id !== cur.id).slice(0, 4);
 
   useEffect(() => {
@@ -276,67 +322,91 @@ export default function App() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
-      <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 100, display: 'flex', gap: 4, padding: 4, borderRadius: 'var(--radius-pill)', background: 'var(--ink-900)', boxShadow: 'var(--shadow-3)' }}>
-        <NavBtn onClick={() => patch({ device: 'desktop' })} {...darkPill(st.device === 'desktop')}>Desktop</NavBtn>
-        <NavBtn onClick={() => patch({ device: 'mobile' })} {...darkPill(st.device === 'mobile')}>Mobile</NavBtn>
+    <ErrorBoundary>
+      <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
+        <Toaster position="top-right" toastOptions={{ style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
+
+        <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
+
+          {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} />}
+
+          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} patch={patch} notify={notify} />}
+
+          {isPublic && (function () {
+            let trail = [];
+            if (s === 'list') trail = [{ label: 'Biển số' }];
+            else if (s === 'detail') trail = [{ label: 'Biển số', onClick: go('list') }, { label: cur.title }];
+            else if (s === 'fav') trail = [{ label: 'Yêu thích' }];
+            else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
+            else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
+            else if (s === 'lucky') trail = [{ label: 'Tư vấn biển hợp mệnh' }];
+            else if (s === 'post') trail = [{ label: 'Tin phong thủy', onClick: go('blog') }, { label: post.title }];
+            else if (s === 'register') trail = [{ label: 'Tài khoản' }, { label: 'Đăng ký' }];
+            else if (s === 'login') trail = [{ label: 'Tài khoản' }, { label: 'Đăng nhập' }];
+            else if (s === 'forgot') trail = [{ label: 'Tài khoản' }, { label: 'Lấy lại mật khẩu' }];
+            else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
+            else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];
+            else if (s === 'saved') trail = [{ label: 'Thông báo biển mới' }];
+            else if (s === 'reviews') trail = [{ label: 'Đánh giá' }];
+            else if (s === 'notifications') trail = [{ label: 'Thông báo' }];
+            else if (s === 'collab') trail = [{ label: 'Cộng tác viên' }];
+            if (!trail.length) return null;
+            return <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, ...trail]} />;
+          })()}
+
+          {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} cards={cards} catNames={catNames} />}
+
+          {s === 'list' && <PlateList st={st} setSt={setSt} patch={patch} list={list} page={page} pageCount={pageCount} pageItems={pageItems} cards={cards} catNames={catNames} />}
+
+          {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} toggleFav={toggleFav} notify={notify} />}
+
+          {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
+            <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
+          )}
+
+          {s === 'fav' && <Fav favCards={favCards} patch={patch} go={go} notify={notify} />}
+
+          {s === 'lucky' && <LuckyPlate st={st} patch={patch} go={go} openPlate={openPlate} openBuy={openBuy} />}
+
+          {s === 'about' && <About go={go} />}
+
+          {s === 'chat' && <ChatZaloContact st={st} patch={patch} notify={notify} />}
+
+          {s === 'compare' && <Compare st={st} patch={patch} go={go} notify={notify} />}
+
+          {s === 'saved' && <SavedSearches st={st} patch={patch} go={go} notify={notify} />}
+
+          {s === 'reviews' && <Reviews st={st} patch={patch} notify={notify} />}
+
+          {s === 'notifications' && <Notifications st={st} go={go} />}
+
+          {s === 'collab' && <Collaborator st={st} patch={patch} go={go} notify={notify} />}
+
+          {s === 'blog' && <Blog st={st} patch={patch} />}
+
+          {s === 'post' && <Post post={post} st={st} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
+
+          {isPublic && <Footer />}
+
+          {isAdminShell && (
+            <RequireAuth st={st} go={go}>
+              <AdminShell
+                s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
+                adminMeta={adminMeta} admPlates={admPlates} admContacts={admContacts} admPosts={admPosts}
+                openAdd={openAdd} openEdit={openEdit} openEditPost={openEditPost} askDelete={askDelete} publish={publish} insertPlates={insertPlates}
+                catNames={catNames}
+              />
+            </RequireAuth>
+          )}
+
+          {isUnknown && <NotFound go={go} />}
+
+          <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />
+
+          {isPublic && <AiChatbot />}
+
+        </div>
       </div>
-
-      <div style={{ maxWidth: frameW, margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
-
-        {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} />}
-
-        {isPublic && (function () {
-          let trail = [];
-          if (s === 'list') trail = [{ label: 'Biển số' }];
-          else if (s === 'detail') trail = [{ label: 'Biển số', onClick: go('list') }, { label: cur.title }];
-          else if (s === 'fav') trail = [{ label: 'Yêu thích' }];
-          else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
-          else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
-          else if (s === 'lucky') trail = [{ label: 'Tư vấn biển hợp mệnh' }];
-          else if (s === 'post') trail = [{ label: 'Tin phong thủy', onClick: go('blog') }, { label: post.title }];
-          else if (s === 'register') trail = [{ label: 'Tài khoản' }, { label: 'Đăng ký' }];
-          else if (s === 'login') trail = [{ label: 'Tài khoản' }, { label: 'Đăng nhập' }];
-          else if (s === 'forgot') trail = [{ label: 'Tài khoản' }, { label: 'Lấy lại mật khẩu' }];
-          if (!trail.length) return null;
-          return <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, ...trail]} />;
-        })()}
-
-        {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} cards={cards} />}
-
-        {s === 'list' && <PlateList st={st} setSt={setSt} patch={patch} list={list} page={page} pageCount={pageCount} pageItems={pageItems} cards={cards} />}
-
-        {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} toggleFav={toggleFav} notify={notify} />}
-
-        {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
-          <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
-        )}
-
-        {s === 'fav' && <Fav favCards={favCards} patch={patch} go={go} notify={notify} />}
-
-        {s === 'lucky' && <LuckyPlate st={st} patch={patch} go={go} openPlate={openPlate} openBuy={openBuy} />}
-
-        {s === 'about' && <About go={go} />}
-
-        {s === 'blog' && <Blog st={st} patch={patch} />}
-
-        {s === 'post' && <Post post={post} st={st} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
-
-        {isPublic && <Footer />}
-
-        {false && s === 'adminLogin'}
-
-        {isAdminShell && (
-          <AdminShell
-            s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
-            adminMeta={adminMeta} admPlates={admPlates} admContacts={admContacts} admPosts={admPosts}
-            openAdd={openAdd} openEdit={openEdit} openEditPost={openEditPost} askDelete={askDelete} publish={publish} insertPlates={insertPlates}
-          />
-        )}
-
-        <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} />
-
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 }
