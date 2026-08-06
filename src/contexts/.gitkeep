@@ -1,0 +1,1 @@
+Placeholder: no global React Context needed yet — App.jsx state is small enough for prop drilling. Add providers here when state needs to escape prop drilling (see structure.md).

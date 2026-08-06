@@ -1,0 +1,51 @@
+:root{
+  --blue-700:#8A4A05;--blue-600:#CF6B08;--blue-500:#E8790A;--blue-400:#F0A24E;--blue-200:#F7D8A8;--blue-100:#FBEBD2;--blue-50:#FEF7EC;
+  --shadow-blue:0 8px 20px rgba(232,121,10,.26);
+  --surface-hero:linear-gradient(135deg,#FBEBD2 0%,#FEF7EC 42%,var(--cream-100) 100%);
+}
+html,body,#root{height:100%}
+body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased}
+button{cursor:pointer}
+
+button,[data-pressable],.pressable{
+  transition:transform 120ms var(--ease-standard,ease),box-shadow 120ms var(--ease-standard,ease),background-color 120ms var(--ease-standard,ease),filter 120ms var(--ease-standard,ease),opacity 120ms var(--ease-standard,ease);
+  -webkit-tap-highlight-color:transparent;
+}
+button:not(:disabled):active,[data-pressable]:active,.pressable:active{transform:scale(0.97)}
+button:disabled{cursor:not-allowed}
+button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--action-primary);outline-offset:2px;
+}
+[data-pressable],.pressable{cursor:pointer}
+
+/* Elements without a dedicated variant class (plate cards, blog cards, etc.)
+   fall back to a brightness nudge — real color swaps below take priority. */
+[data-pressable]:hover,.pressable:hover{filter:brightness(0.97)}
+[data-pressable]:active,.pressable:active{filter:brightness(0.94)}
+
+.btn-primary:not(:disabled):hover{background:var(--action-primary-hover)!important}
+.btn-primary:not(:disabled):active{background:var(--action-primary-press)!important}
+.btn-dark:not(:disabled):hover{background:var(--action-dark-hover)!important}
+.btn-dark:not(:disabled):active{background:var(--ink-800)!important;filter:brightness(0.88)}
+.btn-outline:not(:disabled):hover{background:var(--action-ghost-hover)!important}
+.btn-outline:not(:disabled):active{background:var(--grey-200)!important}
+.btn-ghost:not(:disabled):hover{background:var(--action-ghost-hover)!important}
+.btn-ghost:not(:disabled):active{background:var(--grey-200)!important}
+
+/* Pill nav/filter buttons: selected (active bg) state needs a darker press,
+   unselected state needs a visible hover tint — not just a global filter. */
+.pill-btn{transition:background-color 120ms var(--ease-standard,ease),color 120ms var(--ease-standard,ease),transform 120ms var(--ease-standard,ease)}
+.pill-btn[data-on="true"]:hover{background:var(--action-primary-hover)!important}
+.pill-btn[data-on="true"]:active{background:var(--action-primary-press)!important}
+.pill-btn[data-on="false"]:hover{background:var(--surface-muted)!important;filter:brightness(0.96)}
+.pill-btn[data-on="false"]:active{filter:brightness(0.9)}
+.pill-btn[data-on="false"][data-dark="true"]:hover{background:rgba(255,255,255,.18)!important;filter:none}
+.pill-btn[data-on="false"][data-dark="true"]:active{background:rgba(255,255,255,.24)!important}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fanMain{from{opacity:0;transform:rotate(-5deg) scale(.9)}to{opacity:1;transform:rotate(-5deg) scale(1)}}
+@keyframes fanLeft{from{opacity:0;transform:rotate(-13deg) scale(.9)}to{opacity:1;transform:rotate(-13deg) scale(1)}}
+@keyframes fanRight{from{opacity:0;transform:rotate(7deg) scale(.9)}to{opacity:1;transform:rotate(7deg) scale(1)}}
+@keyframes heartBeat{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}

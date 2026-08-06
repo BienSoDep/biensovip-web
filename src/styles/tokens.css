@@ -1,0 +1,129 @@
+:root{
+--font-display:"Be Vietnam Pro",ui-sans-serif,system-ui,sans-serif;
+--font-text:"Be Vietnam Pro",ui-sans-serif,system-ui,sans-serif;
+/* --- Base neutrals: warm-cool grey ramp, near-black ink --- */
+--ink-900:#0E0F12;--ink-800:#16181D;--ink-700:#24272E;--ink-600:#3A3E47;
+--grey-500:#6B7180;--grey-400:#9AA0AD;--grey-300:#C7CBD4;--grey-200:#E4E6EC;--grey-100:#F1F2F6;--grey-50:#F7F8FA;
+--white:#FFFFFF;
+
+/* --- Brand blue: the single saturated action colour --- */
+--blue-700:#1F3BD6;--blue-600:#2C4BF0;--blue-500:#3B5BFF;--blue-400:#6E85FF;--blue-200:#BFC9FF;--blue-100:#E6EAFF;--blue-50:#F2F4FF;
+
+/* --- Tinted atmospheres lifted from the hero gradient --- */
+--lilac-100:#EDEEFB;--lilac-50:#F5F6FE;
+--cream-100:#F0EEE7;--cream-50:#F7F6F1;
+
+/* --- Accents used sparingly on badges + promo chips --- */
+--amber-500:#F5C542;--amber-100:#FDF2D2;
+--mint-500:#3FBF8F;--mint-100:#DFF5EC;
+--rose-500:#E5484D;--rose-100:#FCE7E7;
+
+/* --- Semantic aliases: use these in components --- */
+--text-strong:var(--ink-900);--text-body:var(--ink-700);--text-muted:var(--grey-500);--text-faint:var(--grey-400);--text-inverse:var(--white);--text-link:var(--blue-600);
+
+--surface-page:var(--white);--surface-card:var(--white);--surface-sunken:var(--grey-50);--surface-muted:var(--grey-100);--surface-inverse:var(--ink-900);
+--surface-hero:linear-gradient(135deg,var(--lilac-100) 0%,var(--lilac-50) 40%,var(--cream-100) 100%);
+--surface-tint-blue:var(--blue-50);--surface-tint-cream:var(--cream-50);
+
+--border-hairline:var(--grey-200);--border-strong:var(--grey-300);--border-focus:var(--blue-500);
+
+--action-primary:var(--blue-500);--action-primary-hover:var(--blue-600);--action-primary-press:var(--blue-700);
+--action-dark:var(--ink-900);--action-dark-hover:var(--ink-800);
+--action-ghost-hover:var(--grey-100);
+
+--status-success:var(--mint-500);--status-success-bg:var(--mint-100);
+--status-warning:var(--amber-500);--status-warning-bg:var(--amber-100);
+--status-danger:var(--rose-500);--status-danger-bg:var(--rose-100);
+
+--focus-ring:0 0 0 3px var(--blue-200);
+}
+:root{
+--space-0:0;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
+--space-7:32px;--space-8:40px;--space-9:56px;--space-10:72px;--space-11:96px;--space-12:128px;
+
+--gutter-card:20px;      /* padding inside a product/content card */
+--gutter-section:24px;   /* gap between cards in a grid */
+--pad-page:32px;         /* page side padding at 1280 */
+--pad-section-y:72px;    /* vertical rhythm between page sections */
+--width-content:1216px;  /* max content width */
+--width-prose:62ch;
+--control-h-sm:32px;--control-h-md:40px;--control-h-lg:48px;
+}
+:root{
+--radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:14px;--radius-2xl:18px;--radius-pill:8px;
+--radius-card:var(--radius-lg);      /* product + content cards */
+--radius-control:var(--radius-sm);   /* buttons, chips, nav pills */
+--radius-field:var(--radius-sm);     /* inputs, selects */
+--radius-surface:var(--radius-2xl);  /* hero + full-bleed panels */
+--border-w:1px;--border-w-strong:1.5px;
+}
+:root{
+/* Shadows are soft, low-opacity and cool-tinted — never black drop shadows. */
+--shadow-none:none;
+--shadow-1:0 1px 2px rgba(14,15,18,.04),0 1px 1px rgba(14,15,18,.03);
+--shadow-2:0 4px 12px rgba(14,15,18,.05),0 1px 3px rgba(14,15,18,.04);
+--shadow-3:0 10px 28px rgba(14,15,18,.07),0 2px 6px rgba(14,15,18,.04);
+--shadow-4:0 24px 60px rgba(14,15,18,.10),0 4px 12px rgba(14,15,18,.05);
+--shadow-blue:0 8px 20px rgba(59,91,255,.28);
+--shadow-inset-hairline:inset 0 0 0 1px var(--border-hairline);
+--overlay-scrim:rgba(14,15,18,.42);
+--glass-fill:rgba(255,255,255,.72);
+--glass-blur:blur(14px); /* @kind other */
+}
+:root{
+--dur-instant:80ms; /* @kind other */
+--dur-fast:140ms; /* @kind other */
+--dur-base:220ms; /* @kind other */
+--dur-slow:340ms; /* @kind other */
+--dur-page:480ms; /* @kind other */
+--ease-standard:cubic-bezier(.2,.6,.2,1); /* @kind other */
+--ease-out:cubic-bezier(.16,1,.3,1); /* @kind other */
+--ease-in:cubic-bezier(.4,0,1,1); /* @kind other */
+--transition-control:background-color var(--dur-fast) var(--ease-standard),color var(--dur-fast) var(--ease-standard),box-shadow var(--dur-fast) var(--ease-standard),transform var(--dur-fast) var(--ease-standard); /* @kind other */
+--transition-card:transform var(--dur-base) var(--ease-out),box-shadow var(--dur-base) var(--ease-out); /* @kind other */
+--press-scale:.97; /* @kind other */
+--lift-y:-2px; /* @kind spacing */
+}
+:root{
+/* Sizes — 1280px desktop scale. Display sizes are tight and heavy; body is 15/16px. */
+--fs-display-1:56px;--fs-display-2:44px;--fs-display-3:34px;
+--fs-title-1:26px;--fs-title-2:20px;--fs-title-3:17px;
+--fs-body:15px;--fs-body-sm:14px;--fs-caption:13px;--fs-micro:11px;
+
+--lh-display:1.06; /* @kind font */
+--lh-title:1.25; /* @kind font */
+--lh-body:1.55; /* @kind font */
+--lh-tight:1.35; /* @kind font */
+
+--fw-light:300; /* @kind font */
+--fw-regular:400; /* @kind font */
+--fw-medium:500; /* @kind font */
+--fw-semibold:600; /* @kind font */
+--fw-bold:700; /* @kind font */
+--fw-extrabold:800; /* @kind font */
+
+--ls-display:-0.03em; /* @kind font */
+--ls-title:-0.015em; /* @kind font */
+--ls-body:0em; /* @kind font */
+--ls-eyebrow:0.14em; /* @kind font */
+
+/* Composed roles — shorthand font: values */
+--type-display-1:var(--fw-bold) var(--fs-display-1)/var(--lh-display) var(--font-display); /* @kind font */
+--type-display-2:var(--fw-bold) var(--fs-display-2)/var(--lh-display) var(--font-display); /* @kind font */
+--type-display-3:var(--fw-semibold) var(--fs-display-3)/var(--lh-title) var(--font-display); /* @kind font */
+--type-title-1:var(--fw-semibold) var(--fs-title-1)/var(--lh-title) var(--font-display); /* @kind font */
+--type-title-2:var(--fw-semibold) var(--fs-title-2)/var(--lh-title) var(--font-display); /* @kind font */
+--type-title-3:var(--fw-semibold) var(--fs-title-3)/var(--lh-tight) var(--font-text); /* @kind font */
+--type-body:var(--fw-regular) var(--fs-body)/var(--lh-body) var(--font-text); /* @kind font */
+--type-body-sm:var(--fw-regular) var(--fs-body-sm)/var(--lh-body) var(--font-text); /* @kind font */
+--type-caption:var(--fw-medium) var(--fs-caption)/var(--lh-tight) var(--font-text); /* @kind font */
+--type-label:var(--fw-semibold) var(--fs-body-sm)/1.2 var(--font-text); /* @kind font */
+--type-price:var(--fw-semibold) var(--fs-title-3)/1.2 var(--font-text); /* @kind font */
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--text-link);text-decoration:none;transition:var(--transition-control)}
+a:hover{color:var(--blue-700);text-decoration:underline;text-underline-offset:3px}
+button{font:inherit}
+::selection{background:var(--blue-100);color:var(--ink-900)}
