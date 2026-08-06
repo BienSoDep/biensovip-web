@@ -1,8 +1,11 @@
 import { POST_CATS } from '../lib/mockData.js';
 import { Badge } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
+import LazyImage from '../components/LazyImage.jsx';
+import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 
 export default function Blog({ st, patch }) {
+  const stagger = useStaggeredReveal();
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
@@ -15,12 +18,10 @@ export default function Blog({ st, patch }) {
         </div>
       </section>
       <section aria-label="Danh sách bài viết" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
-        {st.posts.filter((p) => p.status === 'Đã xuất bản' && (st.postCat === 'Tất cả' || p.cat === st.postCat)).map((p) => (
-          <article key={p.id} itemScope itemType="https://schema.org/Article" className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'var(--transition-card)' }}>
+        {st.posts.filter((p) => p.status === 'Đã xuất bản' && (st.postCat === 'Tất cả' || p.cat === st.postCat)).map((p, i) => (
+          <article key={p.id} itemScope itemType="https://schema.org/Article" className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'var(--transition-card)', ...stagger(i) }}>
             <a href={'#/bai-viet/' + (p.slug || p.id)} onClick={(e) => { e.preventDefault(); patch({ screen: 'post', postId: p.id }); }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ height: 170, background: 'var(--surface-muted)', overflow: 'hidden' }}>
-                <img src={p.img || ''} alt={p.imgAlt || p.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              </div>
+              <LazyImage src={p.img || ''} alt={p.imgAlt || p.title} style={{ height: 170, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={170} />
               <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   <Badge tone="neutral">{p.cat}</Badge>

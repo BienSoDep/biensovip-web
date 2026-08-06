@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import {
   PLATES, CATS, POST_CATS, POSTS, CONTACTS, STAFF,
@@ -13,33 +13,35 @@ import RequireAuth from './components/RequireAuth.jsx';
 import Header from './layout/Header.jsx';
 import Footer from './layout/Footer.jsx';
 import MobileDrawer from './layout/MobileDrawer.jsx';
-import Home from './pages/Home.jsx';
-import PlateList from './pages/PlateList.jsx';
-import PlateDetail from './pages/PlateDetail.jsx';
-import Auth from './pages/Auth.jsx';
-import Fav from './pages/Fav.jsx';
-import LuckyPlate from './pages/LuckyPlate.jsx';
-import About from './pages/About.jsx';
-import Blog from './pages/Blog.jsx';
-import Post from './pages/Post.jsx';
-import NotFound from './pages/NotFound.jsx';
-import ChatZaloContact from './pages/ChatZaloContact.jsx';
-import Compare from './pages/Compare.jsx';
-import SavedSearches from './pages/SavedSearches.jsx';
-import Reviews from './pages/Reviews.jsx';
-import Notifications from './pages/Notifications.jsx';
-import Collaborator from './pages/Collaborator.jsx';
-import Terms from './pages/Terms.jsx';
-import Privacy from './pages/Privacy.jsx';
-import TransferGuide from './pages/TransferGuide.jsx';
-import Faq from './pages/Faq.jsx';
-import AdminShell from './layout/AdminShell.jsx';
-import Modals from './layout/Modals.jsx';
-import AiChatbot from './components/AiChatbot.jsx';
+import PageSkeleton from './components/skeletons/PageSkeleton.jsx';
 import { parseRoute, routeFor, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
 import { useHashRouter } from './hooks/useHashRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
+
+const Home = lazy(() => import('./pages/Home.jsx'));
+const PlateList = lazy(() => import('./pages/PlateList.jsx'));
+const PlateDetail = lazy(() => import('./pages/PlateDetail.jsx'));
+const Auth = lazy(() => import('./pages/Auth.jsx'));
+const Fav = lazy(() => import('./pages/Fav.jsx'));
+const LuckyPlate = lazy(() => import('./pages/LuckyPlate.jsx'));
+const About = lazy(() => import('./pages/About.jsx'));
+const Blog = lazy(() => import('./pages/Blog.jsx'));
+const Post = lazy(() => import('./pages/Post.jsx'));
+const NotFound = lazy(() => import('./pages/NotFound.jsx'));
+const ChatZaloContact = lazy(() => import('./pages/ChatZaloContact.jsx'));
+const Compare = lazy(() => import('./pages/Compare.jsx'));
+const SavedSearches = lazy(() => import('./pages/SavedSearches.jsx'));
+const Reviews = lazy(() => import('./pages/Reviews.jsx'));
+const Notifications = lazy(() => import('./pages/Notifications.jsx'));
+const Collaborator = lazy(() => import('./pages/Collaborator.jsx'));
+const Terms = lazy(() => import('./pages/Terms.jsx'));
+const Privacy = lazy(() => import('./pages/Privacy.jsx'));
+const TransferGuide = lazy(() => import('./pages/TransferGuide.jsx'));
+const Faq = lazy(() => import('./pages/Faq.jsx'));
+const AdminShell = lazy(() => import('./layout/AdminShell.jsx'));
+const Modals = lazy(() => import('./layout/Modals.jsx'));
+const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
 export default function App() {
   const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.hash) : { screen: 'home' };
@@ -360,64 +362,72 @@ export default function App() {
             return <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, ...trail]} keepOnMobile={s === 'detail' || s === 'post'} />;
           })()}
 
-          {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} cards={cards} catNames={catNames} />}
+          <Suspense fallback={<PageSkeleton screen={s} />}>
+            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} cards={cards} catNames={catNames} />}
 
-          {s === 'list' && <PlateList st={st} setSt={setSt} patch={patch} list={list} page={page} pageCount={pageCount} pageItems={pageItems} cards={cards} catNames={catNames} />}
+            {s === 'list' && <PlateList st={st} setSt={setSt} patch={patch} list={list} page={page} pageCount={pageCount} pageItems={pageItems} cards={cards} catNames={catNames} />}
 
-          {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} toggleFav={toggleFav} notify={notify} />}
+            {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} toggleFav={toggleFav} notify={notify} />}
 
-          {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
-            <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
-          )}
+            {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
+              <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
+            )}
 
-          {s === 'fav' && <Fav favCards={favCards} patch={patch} go={go} notify={notify} />}
+            {s === 'fav' && <Fav favCards={favCards} patch={patch} go={go} notify={notify} />}
 
-          {s === 'lucky' && <LuckyPlate st={st} patch={patch} go={go} openPlate={openPlate} openBuy={openBuy} />}
+            {s === 'lucky' && <LuckyPlate st={st} patch={patch} go={go} openPlate={openPlate} openBuy={openBuy} />}
 
-          {s === 'about' && <About go={go} />}
+            {s === 'about' && <About go={go} />}
 
-          {s === 'chat' && <ChatZaloContact st={st} patch={patch} notify={notify} />}
+            {s === 'chat' && <ChatZaloContact st={st} patch={patch} notify={notify} />}
 
-          {s === 'compare' && <Compare st={st} patch={patch} go={go} notify={notify} />}
+            {s === 'compare' && <Compare st={st} patch={patch} go={go} notify={notify} />}
 
-          {s === 'saved' && <SavedSearches st={st} patch={patch} go={go} notify={notify} />}
+            {s === 'saved' && <SavedSearches st={st} patch={patch} go={go} notify={notify} />}
 
-          {s === 'reviews' && <Reviews st={st} patch={patch} notify={notify} />}
+            {s === 'reviews' && <Reviews st={st} patch={patch} notify={notify} />}
 
-          {s === 'notifications' && <Notifications st={st} go={go} />}
+            {s === 'notifications' && <Notifications st={st} go={go} />}
 
-          {s === 'collab' && <Collaborator st={st} patch={patch} go={go} notify={notify} />}
+            {s === 'collab' && <Collaborator st={st} patch={patch} go={go} notify={notify} />}
 
-          {s === 'terms' && <Terms />}
+            {s === 'terms' && <Terms />}
 
-          {s === 'privacy' && <Privacy />}
+            {s === 'privacy' && <Privacy />}
 
-          {s === 'transfer' && <TransferGuide go={go} />}
+            {s === 'transfer' && <TransferGuide go={go} />}
 
-          {s === 'faq' && <Faq go={go} />}
+            {s === 'faq' && <Faq go={go} />}
 
-          {s === 'blog' && <Blog st={st} patch={patch} />}
+            {s === 'blog' && <Blog st={st} patch={patch} />}
 
-          {s === 'post' && <Post post={post} st={st} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
+            {s === 'post' && <Post post={post} st={st} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
+
+            {isAdminShell && (
+              <RequireAuth st={st} go={go}>
+                <AdminShell
+                  s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
+                  adminMeta={adminMeta} admPlates={admPlates} admContacts={admContacts} admPosts={admPosts}
+                  openAdd={openAdd} openEdit={openEdit} openEditPost={openEditPost} askDelete={askDelete} publish={publish} insertPlates={insertPlates}
+                  catNames={catNames}
+                />
+              </RequireAuth>
+            )}
+
+            {isUnknown && <NotFound go={go} />}
+          </Suspense>
 
           {isPublic && <Footer />}
 
-          {isAdminShell && (
-            <RequireAuth st={st} go={go}>
-              <AdminShell
-                s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
-                adminMeta={adminMeta} admPlates={admPlates} admContacts={admContacts} admPosts={admPosts}
-                openAdd={openAdd} openEdit={openEdit} openEditPost={openEditPost} askDelete={askDelete} publish={publish} insertPlates={insertPlates}
-                catNames={catNames}
-              />
-            </RequireAuth>
+          <Suspense fallback={null}>
+            <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />
+          </Suspense>
+
+          {isPublic && (
+            <Suspense fallback={null}>
+              <AiChatbot />
+            </Suspense>
           )}
-
-          {isUnknown && <NotFound go={go} />}
-
-          <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />
-
-          {isPublic && <AiChatbot />}
 
         </div>
         </main>

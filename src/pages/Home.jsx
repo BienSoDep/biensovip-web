@@ -2,8 +2,10 @@ import Button from '../components/Button.jsx';
 import { SearchField, Badge, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
+import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 
 export default function Home({ st, patch, go, notify, heroAnim, cards, catNames }) {
+  const stagger = useStaggeredReveal();
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ padding: '0 var(--pad-page)' }}>
@@ -67,7 +69,7 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
               </div>
             );
           }
-          return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>{featured.map((p) => <PlateCard key={p.id} {...p} />)}</div>;
+          return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>{featured.map((p, i) => <PlateCard key={p.id} {...p} style={stagger(i)} />)}</div>;
         })()}
       </section>
 

@@ -2,10 +2,10 @@ import { Card, Badge, IconButton } from './index.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
 
-export default function PlateCard({ prov, seri, num, cat, price, meta, hot, isNew, sold, fav, onFav, onOpen, onBuy }) {
+export default function PlateCard({ prov, seri, num, cat, price, meta, hot, isNew, sold, fav, onFav, onOpen, onBuy, style }) {
   const plateLabel = `${prov || ''}${seri || ''} · ${num || ''}`;
   return (
-    <Card tone="sunken" pad="10px" style={{ height: '100%' }}>
+    <Card tone="sunken" pad="10px" style={{ height: '100%', ...style }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Badge tone="dark">{cat}</Badge>

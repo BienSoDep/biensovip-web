@@ -3,11 +3,16 @@ import { CITIES } from '../lib/mockData.js';
 import Button from '../components/Button.jsx';
 import { Input, Select, Checkbox, Radio } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
+import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
+import { useDelayedLoading } from '../hooks/useDelayedLoading.js';
+import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 
 export default function PlateList({ st, setSt, patch, list, page, pageCount, pageItems, cards, catNames }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const clearFilters = () => patch({ cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', page: 1 });
+  const isLoading = useDelayedLoading([st.cat, st.q, JSON.stringify(st.cities), JSON.stringify(st.catFilters), st.vehicle, st.sort, page], 280);
+  const stagger = useStaggeredReveal();
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -57,9 +62,13 @@ export default function PlateList({ st, setSt, patch, list, page, pageCount, pag
             </div>
             <Select label="Sắp xếp" value={st.sort} options={[{ value: 'new', label: 'Mới nhất' }, { value: 'asc', label: 'Giá thấp → cao' }, { value: 'desc', label: 'Giá cao → thấp' }]} onChange={(v) => patch({ sort: v, page: 1 })} variant="pill" />
           </div>
-          {list.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(268px,1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
-              {cards(pageItems).map((p) => <PlateCard key={p.id} {...p} />)}
+          {isLoading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(268px,1fr))', gap: 'var(--gutter-section)' }}>
+              {Array.from({ length: pageItems.length || 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
+            </div>
+          ) : list.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(268px,1fr))', gap: 'var(--gutter-section)' }}>
+              {cards(pageItems).map((p, i) => <PlateCard key={p.id} {...p} style={stagger(i)} />)}
             </div>
           ) : (
             <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>

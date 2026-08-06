@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, Eyebrow } from '../components/index.jsx';
+import LazyImage from '../components/LazyImage.jsx';
 
 const STATS = [['10+', 'năm kinh nghiệm'], ['5.000+', 'biển số đã trao tay'], ['2.000+', 'khách hàng Đà Nẵng'], ['1–2 ngày', 'sang tên trung bình']];
 
@@ -61,7 +62,7 @@ export default function About({ go }) {
               <Badge tone="dark">Sáng lập</Badge>
               <Badge tone="mint">Duy Đinh</Badge>
             </div>
-            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=70" alt="Chân dung Duy Đinh — chủ cửa hàng biển số đẹp Đà Nẵng" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, display: 'block' }} />
+            <LazyImage src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=70" alt="Chân dung Duy Đinh — chủ cửa hàng biển số đẹp Đà Nẵng" style={{ position: 'absolute', inset: 0 }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, display: 'block' }} />
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 18px', background: 'linear-gradient(180deg, rgba(255,255,255,0), var(--ink-900))', color: 'var(--white)', font: 'var(--type-title-3)' }}>Duy Đinh</div>
           </div>
         </div>
