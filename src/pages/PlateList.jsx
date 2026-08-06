@@ -69,7 +69,7 @@ export default function PlateList({ st, setSt, patch, list, page, pageCount, pag
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)', paddingTop: 'var(--space-3)' }}>
               <Button variant="outline" size="sm" disabled={page === 1} onClick={() => patch({ page: Math.max(1, page - 1) })}>Trước</Button>
               {Array.from({ length: pageCount }, (_, i) => (
-                <button key={i} type="button" className="pill-btn" data-on={String(page === i + 1)} data-dark="false" onClick={() => patch({ page: i + 1 })} style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(page === i + 1).background, color: pill(page === i + 1).color }}>{i + 1}</button>
+                <button key={i} type="button" className="pill-btn" data-on={String(page === i + 1)} data-dark="false" aria-current={page === i + 1 ? 'page' : undefined} onClick={() => patch({ page: i + 1 })} style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(page === i + 1).background, color: pill(page === i + 1).color }}>{i + 1}</button>
               ))}
               <Button variant="outline" size="sm" disabled={page === pageCount} onClick={() => patch({ page: Math.min(pageCount, page + 1) })}>Sau</Button>
             </div>
