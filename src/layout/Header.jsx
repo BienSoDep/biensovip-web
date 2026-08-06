@@ -15,7 +15,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu })
             <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Biển số đẹp Đà Nẵng</span>
           </div>
         </div>
-        <nav style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <nav className="header-nav-pills" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-2)' }}>
           {[['list', 'Biển số'], ['lucky', 'Hợp mệnh'], ['fav', 'Yêu thích'], ['blog', 'Tin phong thủy'], ['about', 'Về chúng tôi']].map((n) => (
             <NavBtn key={n[0]} onClick={go(n[0])} {...pill(s === n[0])}>{n[1]}</NavBtn>
           ))}

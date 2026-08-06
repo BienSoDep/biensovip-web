@@ -39,7 +39,7 @@ export default function AiChatbot() {
   return (
     <>
       {!open && (
-        <button onClick={() => setOpen(true)} style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 70, width: 52, height: 52, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', boxShadow: 'var(--shadow-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={() => setOpen(true)} className="chatbot-fab" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 70, width: 52, height: 52, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', boxShadow: 'var(--shadow-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Sparkles size={24} />
         </button>
       )}

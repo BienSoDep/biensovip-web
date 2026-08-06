@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { CITIES } from '../lib/mockData.js';
 import Button from '../components/Button.jsx';
 import { Input, Select, Checkbox, Radio } from '../components/index.jsx';
@@ -5,6 +6,7 @@ import PlateCard from '../components/PlateCard.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 
 export default function PlateList({ st, setSt, patch, list, page, pageCount, pageItems, cards, catNames }) {
+  const [filterOpen, setFilterOpen] = useState(false);
   const clearFilters = () => patch({ cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', page: 1 });
 
   return (
@@ -12,9 +14,10 @@ export default function PlateList({ st, setSt, patch, list, page, pageCount, pag
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{list.length} biển số phù hợp bộ lọc hiện tại</p>
+        <button type="button" className="list-filter-toggle" onClick={() => setFilterOpen((v) => !v)} style={{ display: 'none', marginTop: 'var(--space-3)', height: 36, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer' }}>{filterOpen ? 'Ẩn bộ lọc' : 'Bộ lọc'}</button>
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-5) var(--pad-page) var(--pad-section-y)', display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
-        <aside style={{ flex: '0 0 272px', minWidth: 250, position: 'sticky', top: 78, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+        <aside className={'list-filter-aside' + (filterOpen ? ' open' : '')} style={{ flex: '0 0 272px', minWidth: 250, position: 'sticky', top: 78, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
             {catNames.map((c) => (
@@ -45,7 +48,7 @@ export default function PlateList({ st, setSt, patch, list, page, pageCount, pag
           <Input label="Đuôi số" placeholder="VD: 79" value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} />
           <Button variant="outline" size="sm" fullWidth onClick={clearFilters}>Xóa bộ lọc</Button>
         </aside>
-        <div style={{ flex: '1 1 540px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
               {['Tất cả', ...catNames].map((c) => (

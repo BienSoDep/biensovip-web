@@ -29,6 +29,10 @@ import SavedSearches from './pages/SavedSearches.jsx';
 import Reviews from './pages/Reviews.jsx';
 import Notifications from './pages/Notifications.jsx';
 import Collaborator from './pages/Collaborator.jsx';
+import Terms from './pages/Terms.jsx';
+import Privacy from './pages/Privacy.jsx';
+import TransferGuide from './pages/TransferGuide.jsx';
+import Faq from './pages/Faq.jsx';
 import AdminShell from './layout/AdminShell.jsx';
 import Modals from './layout/Modals.jsx';
 import AiChatbot from './components/AiChatbot.jsx';
@@ -348,8 +352,12 @@ export default function App() {
             else if (s === 'reviews') trail = [{ label: 'Đánh giá' }];
             else if (s === 'notifications') trail = [{ label: 'Thông báo' }];
             else if (s === 'collab') trail = [{ label: 'Cộng tác viên' }];
+            else if (s === 'terms') trail = [{ label: 'Điều khoản sử dụng' }];
+            else if (s === 'privacy') trail = [{ label: 'Chính sách bảo mật' }];
+            else if (s === 'transfer') trail = [{ label: 'Hướng dẫn sang tên' }];
+            else if (s === 'faq') trail = [{ label: 'Câu hỏi thường gặp' }];
             if (!trail.length) return null;
-            return <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, ...trail]} />;
+            return <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, ...trail]} keepOnMobile={s === 'detail' || s === 'post'} />;
           })()}
 
           {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} cards={cards} catNames={catNames} />}
@@ -379,6 +387,14 @@ export default function App() {
           {s === 'notifications' && <Notifications st={st} go={go} />}
 
           {s === 'collab' && <Collaborator st={st} patch={patch} go={go} notify={notify} />}
+
+          {s === 'terms' && <Terms />}
+
+          {s === 'privacy' && <Privacy />}
+
+          {s === 'transfer' && <TransferGuide go={go} />}
+
+          {s === 'faq' && <Faq go={go} />}
 
           {s === 'blog' && <Blog st={st} patch={patch} />}
 

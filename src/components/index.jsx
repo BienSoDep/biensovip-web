@@ -115,10 +115,10 @@ export function Badge({ tone = 'neutral', children }) {
   );
 }
 
-export function Eyebrow({ tone = 'blue', children }) {
+export function Eyebrow({ tone = 'blue', children, className }) {
   const color = tone === 'inverse' ? 'rgba(255,255,255,.7)' : 'var(--blue-600)';
   return (
-    <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color }}>{children}</span>
+    <span className={className} style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color }}>{children}</span>
   );
 }
 

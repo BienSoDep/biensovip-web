@@ -27,7 +27,7 @@ export default function PlateDetail({ st, cur, go, openPlate, openBuy, toggleFav
               <PlateVisual size="lg" prov={cur.prov} seri={cur.seri} num={cur.num} />
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <div className="detail-gallery-thumbs" style={{ display: 'flex', gap: 'var(--space-2)' }}>
             {GALLERY_BG.map((bg, i) => (
               <button
                 key={i}
@@ -44,8 +44,8 @@ export default function PlateDetail({ st, cur, go, openPlate, openBuy, toggleFav
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số tương tự</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-              {st.plates.filter((p) => p.id !== cur.id).slice(0, 4).map((p) => (
-                <div key={p.id} onClick={() => openPlate(p.id)} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', transition: 'var(--transition-card)' }}>
+              {st.plates.filter((p) => p.id !== cur.id).slice(0, 4).map((p, i) => (
+                <div key={p.id} onClick={() => openPlate(p.id)} className={'pressable' + (i >= 2 ? ' similar-plate-extra' : '')} style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', transition: 'var(--transition-card)' }}>
                   <PlateVisual size="sm" prov={p.prov} seri={p.seri} num={p.num} />
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{p.price}</span>
                 </div>
@@ -67,8 +67,8 @@ export default function PlateDetail({ st, cur, go, openPlate, openBuy, toggleFav
             <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{cur.price}</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-            <Button variant="primary" size="lg" onClick={() => openBuy(cur.id)} style={{ flex: '1 1 120px' }}>Gọi ngay</Button>
-            <Button variant="outline" size="lg" onClick={() => openBuy(cur.id)} style={{ flex: '1 1 120px' }}>Nhắn Zalo</Button>
+            <Button variant="primary" size="lg" onClick={() => openBuy(cur.id)} className="detail-cta-primary" style={{ flex: '1 1 120px' }}>Gọi ngay</Button>
+            <Button variant="outline" size="lg" onClick={() => openBuy(cur.id)} className="detail-cta-secondary" style={{ flex: '1 1 120px' }}>Nhắn Zalo</Button>
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { toggleFav(cur.id); notify(st.favs[cur.id] ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={st.favs[cur.id] ? { color: 'var(--status-danger)' } : undefined} />
           </div>
           <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

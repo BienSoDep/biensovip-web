@@ -64,9 +64,56 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   @keyframes heartBeat{from{transform:none}to{transform:none}}
 }
 @media(max-width:768px){
-  :root{--pad-page:16px;--gutter-section:16px;--pad-section-y:48px}
+  :root{--pad-page:16px;--gutter-section:16px;--pad-section-y:36px;--gutter-card:14px;
+    --space-6:18px;--space-7:24px;--space-8:28px;--space-9:36px;--space-10:48px;
+    --fs-display-1:36px;--fs-display-2:28px;--fs-display-3:24px;
+    --fs-title-1:22px;--fs-title-2:18px;
+  }
   .mobile-menu-btn{display:flex!important}
   .desktop-nav{display:none!important}
+  .header-nav-pills{display:none!important}
+  .page-breadcrumb{display:none!important}
+  .page-breadcrumb.keep-mobile{display:flex!important;padding:8px var(--pad-page)}
+  /* Hero CTA full-width on mobile */
+  .hero-cta-row{flex-direction:column!important}
+  .hero-cta-row button,.hero-cta-row a{width:100%}
+  /* Hero plates — tighten container for small screens */
+  .hero-plate-container{max-width:400px!important}
+  /* Hero: drop redundant eyebrow (dup of stats row), redundant search CTA */
+  .hero-eyebrow{display:none}
+  .home-search-btn{display:none}
+  /* Home: hide empty video placeholder until real embeds exist */
+  .home-video-section{display:none!important}
+  /* PlateCard / Detail: single CTA on mobile (both buttons call the same handler) */
+  .plate-card-cta-secondary,.detail-cta-secondary{display:none}
+  .plate-card-cta-primary,.detail-cta-primary{flex:1 1 100%!important}
+  /* PlateList: filter sidebar collapses behind a toggle on mobile */
+  .list-filter-toggle{display:inline-flex!important}
+  .list-filter-aside{display:none!important}
+  .list-filter-aside.open{display:flex!important;position:static;flex:1 1 100%;min-width:0}
+  /* Detail: gallery thumbnails only swap background color, no real photos */
+  .detail-gallery-thumbs{display:none!important}
+  /* Footer: drop description line, tighten panel padding */
+  .footer-desc{display:none}
+  .footer-inner{padding:clamp(20px,4vw,36px)!important}
+  /* About: contact grid duplicates Footer contact info; FAQ answers collapse behind toggle */
+  .about-contact{display:none!important}
+  .about-faq-answer{display:none!important}
+  .about-faq-item.open .about-faq-answer{display:block!important}
+  /* Home: section eyebrows duplicate the heading right below them */
+  .section-eyebrow{display:none}
+  .hero-plate-container{max-width:320px!important}
+  /* Hero description: clamp to one line on mobile */
+  .hero-desc{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  /* About: timeline capped at 3 items behind a toggle */
+  .about-timeline-item-extra{display:none!important}
+  .about-timeline.open .about-timeline-item-extra{display:flex!important}
+  .about-timeline-toggle{display:inline-flex!important}
+  /* Detail: similar plates capped at 2 on mobile */
+  .similar-plate-extra{display:none!important}
+}
+@media(max-height:420px){
+  .chatbot-fab{width:40px!important;height:40px!important;bottom:12px!important;right:12px!important}
 }
 @media(max-width:1024px){
   .admin-sidebar{flex:0 0 56px!important;min-width:56px!important}

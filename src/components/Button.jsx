@@ -6,12 +6,12 @@ const VARIANTS = {
   ghost: { background: 'transparent', color: 'var(--text-body)' },
 };
 
-export default function Button({ variant = 'primary', size = 'md', fullWidth, uppercase, disabled, onClick, children, style }) {
+export default function Button({ variant = 'primary', size = 'md', fullWidth, uppercase, disabled, onClick, children, style, className }) {
   const v = VARIANTS[variant] || VARIANTS.primary;
   return (
     <button
       type="button"
-      className={`btn-${variant}`}
+      className={`btn-${variant}${className ? ' ' + className : ''}`}
       disabled={disabled}
       onClick={onClick}
       style={{

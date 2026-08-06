@@ -1,11 +1,11 @@
-export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'adminLogin', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
+export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'adminLogin', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
 
 export const ROUTE_MAP = {
   'list': 'danh-sach', 'register': 'dang-ky', 'login': 'dang-nhap', 'forgot': 'quen-mat-khau',
   'fav': 'yeu-thich', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'tu-van', 'adminLogin': 'admin',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acats': 'admin/danh-muc',
   'acontacts': 'admin/lien-he', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'acollabs': 'admin/cong-tac-vien', 'compose': 'admin/them-bai',
-  'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien',
+  'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien', 'terms': 'dieu-khoan', 'privacy': 'bao-mat', 'transfer': 'sang-ten', 'faq': 'hoi-dap',
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
@@ -25,4 +25,4 @@ export function parseRoute(h) {
 }
 
 export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
-export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab'];
+export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq'];

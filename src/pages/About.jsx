@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, Eyebrow } from '../components/index.jsx';
 
@@ -40,6 +42,8 @@ const FAQ = [
 ];
 
 export default function About({ go }) {
+  const [openFaq, setOpenFaq] = useState(null);
+  const [timelineOpen, setTimelineOpen] = useState(false);
   return (
     <section style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-9)', animation: 'pageIn 180ms var(--ease-out)' }}>
 
@@ -76,9 +80,9 @@ export default function About({ go }) {
       {/* Timeline */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <Eyebrow tone="blue">Hành trình làm nghề</Eyebrow>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div className={'about-timeline' + (timelineOpen ? ' open' : '')} style={{ display: 'flex', flexDirection: 'column' }}>
           {TIMELINE.map(([y, t, d], i) => (
-            <div key={y} style={{ display: 'flex', gap: 'var(--space-5)', paddingBottom: i === TIMELINE.length - 1 ? 0 : 'var(--space-5)', position: 'relative' }}>
+            <div key={y} className={i >= 3 ? 'about-timeline-item-extra' : ''} style={{ display: 'flex', gap: 'var(--space-5)', paddingBottom: i === TIMELINE.length - 1 ? 0 : 'var(--space-5)', position: 'relative' }}>
               <div style={{ flex: '0 0 64px', paddingTop: 2, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--action-primary)' }}>{y}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', borderLeft: '2px solid var(--border-hairline)', paddingLeft: 'var(--space-5)' }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{t}</span>
@@ -87,6 +91,7 @@ export default function About({ go }) {
             </div>
           ))}
         </div>
+        <button type="button" className="about-timeline-toggle pressable" onClick={() => setTimelineOpen((v) => !v)} style={{ display: 'none', border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', height: 36, padding: '0 16px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer', alignSelf: 'flex-start' }}>{timelineOpen ? 'Ẩn bớt' : 'Xem toàn bộ hành trình'}</button>
       </div>
 
       {/* Values */}
@@ -134,12 +139,18 @@ export default function About({ go }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <Eyebrow tone="blue">Câu hỏi thường gặp</Eyebrow>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          {FAQ.map(([q, a]) => (
-            <div key={q} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{q}</span>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{a}</span>
-            </div>
-          ))}
+          {FAQ.map(([q, a], i) => {
+            const open = openFaq === i;
+            return (
+              <div key={q} className={'about-faq-item' + (open ? ' open' : '')} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+                <button type="button" className="about-faq-toggle pressable" onClick={() => setOpenFaq(open ? null : i)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
+                  <span>{q}</span>
+                  <ChevronDown size={18} className="about-faq-chevron" style={{ flexShrink: 0, transition: 'transform 160ms var(--ease-out)', transform: open ? 'rotate(180deg)' : 'none' }} />
+                </button>
+                <span className="about-faq-answer" style={{ display: open ? 'block' : undefined, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{a}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -153,7 +164,7 @@ export default function About({ go }) {
       </div>
 
       {/* Contact */}
-      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--space-5)' }}>
+      <div className="about-contact" style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--space-5)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Cửa hàng</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Duy Đinh — Biển số đẹp</span></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Điện thoại</span><a href="tel:0905000000" style={{ font: 'var(--type-title-3)' }}>0905 000 000</a></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Zalo OA</span><a href="#" style={{ font: 'var(--type-title-3)' }}>zalo.me/duydinh</a></div>

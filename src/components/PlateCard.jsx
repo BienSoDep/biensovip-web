@@ -36,8 +36,8 @@ export default function PlateCard({ prov, seri, num, cat, price, meta, hot, isNe
           </div>
           {!sold ? (
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="primary" size="sm" onClick={onBuy} style={{ flex: 1 }}>Gọi ngay</Button>
-              <Button variant="outline" size="sm" onClick={onBuy} style={{ flex: 1 }}>Nhắn Zalo</Button>
+              <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Gọi ngay</Button>
+              <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" style={{ flex: 1 }}>Nhắn Zalo</Button>
             </div>
           ) : (
             <Button variant="ghost" size="sm" disabled fullWidth>Đã bán</Button>
