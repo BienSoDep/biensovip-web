@@ -124,7 +124,8 @@ export default function App() {
     if (!st.mPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
     else if (!validatePhone(st.mPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
     if (Object.keys(err).length) { patch({ mErr: err }); return; }
-    const cur = st.plates.find((p) => p.id === st.curId) || st.plates[0];
+    const cur = st.plates.find((p) => p.id === st.curId);
+    if (!cur) { notify('Biển số không tồn tại'); return; }
     const row = { id: 'c' + Date.now(), name: st.mName.trim(), phone: st.mPhone.trim(), note: st.mNote.trim(), pid: cur.id, time: 'Vừa xong', status: 'Mới' };
     setSt((s) => ({ ...s, sent: true, mErr: {}, contacts: [row, ...s.contacts] }));
     notify('Đã gửi yêu cầu tư vấn');
@@ -268,8 +269,8 @@ export default function App() {
   };
 
   const s = st.screen;
-  const cur0 = st.plates.find((p) => p.id === st.curId) || st.plates[0];
-  const cur = { ...cur0, title: cur0.prov + cur0.seri + ' · ' + cur0.num, sub: 'Biển ' + String(cur0.vehicle).toLowerCase() + ' · ' + cur0.city + (cur0.hot ? ' · còn 1 số duy nhất' : ''), ref: cur0.prov + cur0.seri + String(cur0.num).replace('.', '') };
+  const cur0 = st.plates.find((p) => p.id === st.curId);
+  const cur = cur0 ? { ...cur0, title: cur0.prov + cur0.seri + ' · ' + cur0.num, sub: 'Biển ' + String(cur0.vehicle).toLowerCase() + ' · ' + cur0.city + (cur0.hot ? ' · còn 1 số duy nhất' : ''), ref: cur0.prov + cur0.seri + String(cur0.num).replace('.', '') } : null;
   useSeo(st, cur0);
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
@@ -316,14 +317,15 @@ export default function App() {
     ][st.step - 1],
   }[s] || ['', '', ''];
 
-  const post = st.posts.find((p) => p.id === st.postId) || st.posts[0];
+  const post = st.posts.find((p) => p.id === st.postId);
   const insertPlates = st.plates.filter((p) => p.id !== cur.id).slice(0, 4);
 
 
   return (
     <ErrorBoundary>
       <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
-        <Toaster position="top-right" toastOptions={{ style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
+        <Toaster position="top-right" toastOptions={{ role: 'alert', style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
+        <main>
 
         <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
 
@@ -402,6 +404,7 @@ export default function App() {
           {isPublic && <AiChatbot />}
 
         </div>
+        </main>
       </div>
     </ErrorBoundary>
   );
