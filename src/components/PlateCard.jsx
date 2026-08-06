@@ -17,7 +17,7 @@ export default function PlateCard({ prov, seri, num, cat, price, meta, hot, isNe
           </span>
         </div>
 
-        <div onClick={onOpen} className="pressable" style={{ cursor: 'pointer', position: 'relative', background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 12 }}>
+        <div role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }} className="pressable" style={{ cursor: 'pointer', position: 'relative', background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 12 }}>
           <PlateVisual size="md" prov={prov} seri={seri} num={num} />
           {sold && (
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,15,18,.5)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -29,7 +29,7 @@ export default function PlateCard({ prov, seri, num, cat, price, meta, hot, isNe
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-              <span onClick={onOpen} className="pressable" style={{ cursor: 'pointer', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plateLabel}</span>
+              <span role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }} className="pressable" style={{ cursor: 'pointer', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plateLabel}</span>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{meta}</span>
             </div>
             <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{price}</span>
