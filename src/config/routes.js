@@ -1,10 +1,11 @@
-export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'adminLogin', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'compose'];
+export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'adminLogin', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
 
 export const ROUTE_MAP = {
   'list': 'danh-sach', 'register': 'dang-ky', 'login': 'dang-nhap', 'forgot': 'quen-mat-khau',
   'fav': 'yeu-thich', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'tu-van', 'adminLogin': 'admin',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acats': 'admin/danh-muc',
-  'acontacts': 'admin/lien-he', 'aposts': 'admin/bai-viet', 'compose': 'admin/them-bai',
+  'acontacts': 'admin/lien-he', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'acollabs': 'admin/cong-tac-vien', 'compose': 'admin/them-bai',
+  'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien',
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
@@ -23,5 +24,5 @@ export function parseRoute(h) {
   return { screen: REVERSE_MAP[p.join('/')] || 'home' };
 }
 
-export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'aposts', 'compose'];
-export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky'];
+export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
+export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab'];
