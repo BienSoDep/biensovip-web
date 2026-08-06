@@ -1,11 +1,13 @@
+import { Menu } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { IconButton, Avatar } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 
-export default function Header({ s, go, favCount, user, patch, notify }) {
+export default function Header({ s, go, favCount, user, patch, notify, onMenu }) {
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'var(--glass-fill)', backdropFilter: 'var(--glass-blur)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
       <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '14px var(--pad-page)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)' }}>
+        <button onClick={onMenu} style={{ display: 'none', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }} className="mobile-menu-btn"><Menu size={24} /></button>
         <div onClick={go('home')} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer' }}>
           <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 38, height: 38, objectFit: 'contain', display: 'block' }} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>

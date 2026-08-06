@@ -1,9 +1,9 @@
-import { CATS, opts } from '../lib/mockData.js';
+import { opts } from '../lib/mockData.js';
 import Button from '../components/Button.jsx';
 import { Input, Select, IconButton, Toast } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 
-export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, submitContact, setField }) {
+export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, submitContact, setField, catNames }) {
   return (
     <>
       {st.addOpen && (
@@ -19,7 +19,7 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
             </div>
             <Input label="Số biển" placeholder="999.99" value={st.form.num || ''} error={st.formErr.num} onChange={setForm('num')} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-              <Select label="Danh mục" value={st.form.cat || 'Ngũ quý'} options={opts(CATS)} onChange={setForm('cat')} />
+              <Select label="Danh mục" value={st.form.cat || 'Ngũ quý'} options={opts(catNames)} onChange={setForm('cat')} />
               <Select label="Loại xe" value={st.form.vehicle || 'Ô tô'} options={opts(['Ô tô', 'Xe máy'])} onChange={setForm('vehicle')} />
               <Select label="Trạng thái" value={st.form.status || 'Còn hàng'} options={opts(['Còn hàng', 'Đã bán', 'Ẩn'])} onChange={setForm('status')} />
             </div>
