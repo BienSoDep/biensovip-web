@@ -7,6 +7,17 @@ const GALLERY_BG = ['var(--surface-sunken)', 'var(--surface-tint-cream)', 'var(-
 
 export default function PlateDetail({ st, cur, go, openPlate, openBuy, toggleFav, notify }) {
   const [shot, setShot] = useState(0);
+
+  if (!cur) {
+    return (
+      <div style={{ animation: 'pageIn 180ms var(--ease-out)', maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-10) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
+        <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Biển số không tồn tại</h1>
+        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Biển số này có thể đã được bán hoặc đường dẫn không chính xác.</p>
+        <Button variant="primary" size="md" onClick={() => go('list')()}>Về kho biển số</Button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-4) var(--pad-page) var(--pad-section-y)', display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
@@ -55,9 +66,9 @@ export default function PlateDetail({ st, cur, go, openPlate, openBuy, toggleFav
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
             <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{cur.price}</span>
           </div>
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <Button variant="primary" size="lg" onClick={() => openBuy(cur.id)} style={{ flex: 1 }}>Gọi ngay</Button>
-            <Button variant="outline" size="lg" onClick={() => openBuy(cur.id)} style={{ flex: 1 }}>Nhắn Zalo</Button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <Button variant="primary" size="lg" onClick={() => openBuy(cur.id)} style={{ flex: '1 1 120px' }}>Gọi ngay</Button>
+            <Button variant="outline" size="lg" onClick={() => openBuy(cur.id)} style={{ flex: '1 1 120px' }}>Nhắn Zalo</Button>
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { toggleFav(cur.id); notify(st.favs[cur.id] ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={st.favs[cur.id] ? { color: 'var(--status-danger)' } : undefined} />
           </div>
           <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

@@ -39,7 +39,7 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
 
       <section style={{ maxWidth: 'var(--width-content)', margin: '-26px auto 0', padding: '0 var(--pad-page)', position: 'relative', zIndex: 5 }}>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <SearchField placeholder="Tìm theo đuôi số, VD: 79, 68, 39…" value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} width={300} />
+          <div style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder="Tìm theo đuôi số, VD: 79, 68, 39…" value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} width="100%" /></div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
             {['Tất cả', ...catNames].map((c) => (
               <NavBtn key={c} onClick={() => patch({ cat: c, page: 1 })} {...pill(st.cat === c)}>{c}</NavBtn>
@@ -57,8 +57,18 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
         </div>
         <Button variant="ghost" size="sm" onClick={go('list')}>Xem tất cả →</Button>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
-        {cards(st.plates.filter((p) => p.status !== 'Ẩn').slice(0, 4)).map((p) => <PlateCard key={p.id} {...p} />)}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', animation: 'fadeIn 180ms var(--ease-out)' }}>
+        {(() => {
+          const featured = cards(st.plates.filter((p) => p.status !== 'Ẩn').slice(0, 4));
+          if (featured.length === 0) {
+            return (
+              <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
+                <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Chưa có biển số nổi bật. <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>Khám phá kho biển số</button></p>
+              </div>
+            );
+          }
+          return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>{featured.map((p) => <PlateCard key={p.id} {...p} />)}</div>;
+        })()}
       </section>
 
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
