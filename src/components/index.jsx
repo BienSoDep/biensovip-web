@@ -1,30 +1,37 @@
 import { Heart, X, Pencil, Trash2, Check } from 'lucide-react';
 
-export function Input({ label, placeholder, value, error, onChange, type = 'text', hint }) {
+export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint }) {
+  const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+  const errId = error && inputId ? inputId + '-err' : undefined;
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
       <input
+        id={inputId}
         type={type}
         placeholder={placeholder}
         value={value ?? ''}
         onChange={onChange}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={errId}
         style={{
           height: 40, border: 'none', borderRadius: 'var(--radius-field)',
           background: 'var(--surface-sunken)', boxShadow: error ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
           padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none',
         }}
       />
-      {error ? <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{error}</span>
+      {error ? <span id={errId} role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{error}</span>
         : hint ? <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{hint}</span> : null}
     </label>
   );
 }
 
-export function SearchField({ placeholder, value, onChange, width }) {
+export function SearchField({ placeholder, value, onChange, width, ariaLabel }) {
   return (
     <input
+      type="search"
       placeholder={placeholder}
+      aria-label={ariaLabel || placeholder}
       value={value ?? ''}
       onChange={onChange}
       style={{
@@ -73,9 +80,9 @@ export function Radio({ label, checked, onChange }) {
   );
 }
 
-export function Switch({ checked, onChange }) {
+export function Switch({ checked, onChange, label }) {
   return (
-    <button type="button" onClick={() => onChange(!checked)}
+    <button type="button" role="switch" aria-checked={!!checked} aria-label={label || 'Công tắc'} onClick={() => onChange(!checked)}
       style={{
         width: 40, height: 24, borderRadius: 'var(--radius-pill)', border: 'none', position: 'relative',
         background: checked ? 'var(--action-primary)' : 'var(--grey-300)', transition: 'var(--transition-control)',
@@ -101,7 +108,8 @@ export function Badge({ tone = 'neutral', children }) {
   const t = BADGE_TONES[tone] || BADGE_TONES.neutral;
   return (
     <span style={{
-      height: 24, padding: '0 10px', borderRadius: 'var(--radius-pill)', display: 'inline-flex', alignItems: 'center',
+      height: 24, maxWidth: '100%', padding: '0 10px', borderRadius: 'var(--radius-pill)', display: 'inline-flex', alignItems: 'center',
+      overflow: 'hidden', textOverflow: 'ellipsis',
       font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', ...t,
     }}>{children}</span>
   );
@@ -122,7 +130,7 @@ export function Icon({ name, size = 18 }) {
 }
 
 export function IconButton({ name, label, onClick, size = 'md', style }) {
-  const px = size === 'lg' ? 40 : size === 'sm' ? 28 : 34;
+  const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 40;
   return (
     <button type="button" aria-label={label} onClick={onClick}
       style={{
