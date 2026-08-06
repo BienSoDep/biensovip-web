@@ -44,7 +44,7 @@ export default function App() {
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
     favs: { p2: true, p7: true }, curId: initRoute.detailId || 'p1',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mErr: {},
-    aName: '', aPhone: '', aPw: '', aPw2: '', aOtp: '', aAgree: false, aErr: {}, step: 1, user: loadAuth(),
+    aName: '', aPhone: '', aPw: '', aPw2: '', aOtp: '', aAgree: false, aErr: {}, step: 1, user: loadAuth()?.user || null,
     admEmail: '', admPw: '', admErr: '',
     plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
     cats: CATS.map((c) => ({ name: c })), newCat: '', catErr: '',
@@ -57,6 +57,7 @@ export default function App() {
     drawerOpen: false,
     compareIds: [], savedSearches: [], reviews: [], reviewDraft: null,
     notifications: [], collabs: [], videos: [],
+    isAdmin: !!(loadAuth()?.isAdmin),
   });
   const patch = (p) => setSt((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
   const fanDone = useRef(false);
@@ -66,7 +67,7 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => { saveAuth(st.user); }, [st.user]);
+  useEffect(() => { saveAuth(st.user, st.isAdmin); }, [st.user, st.isAdmin]);
 
   useHashRouter(st, patch);
 
@@ -129,16 +130,20 @@ export default function App() {
     notify('Đã gửi yêu cầu tư vấn');
   };
 
+  const ADMIN_EMAIL = 'admin@biensovip.com';
+  const ADMIN_PW = 'admin123';
   const adminSignIn = () => {
     const err = {};
     if (!/^\S+@\S+\.\S+$/.test(st.admEmail)) err.email = 'Email chưa đúng định dạng.';
+    else if (st.admEmail !== ADMIN_EMAIL) err.email = 'Tài khoản không tồn tại.';
     if (st.admPw.length < 6) err.pw = 'Mật khẩu tối thiểu 6 ký tự.';
+    else if (st.admPw !== ADMIN_PW) err.pw = 'Mật khẩu không chính xác.';
     if (Object.keys(err).length) { patch({ admErr: err }); return; }
-    patch({ admErr: {}, screen: 'dash', user: st.admEmail });
+    patch({ admErr: {}, screen: 'dash', user: st.admEmail, isAdmin: true });
     notify('Đăng nhập quản trị thành công');
   };
   const adminDemo = () => {
-    patch({ admEmail: 'admin@biensovip.com', admPw: 'admin123', admErr: {}, screen: 'dash', user: 'admin@biensovip.com' });
+    patch({ admEmail: ADMIN_EMAIL, admPw: ADMIN_PW, admErr: {}, screen: 'dash', user: ADMIN_EMAIL, isAdmin: true });
     notify('Đăng nhập quản trị bằng tài khoản mẫu');
   };
 
@@ -314,12 +319,6 @@ export default function App() {
   const post = st.posts.find((p) => p.id === st.postId) || st.posts[0];
   const insertPlates = st.plates.filter((p) => p.id !== cur.id).slice(0, 4);
 
-  useEffect(() => {
-    const r = document.documentElement.style;
-    r.setProperty('--blue-500', '#E8790A');
-    r.setProperty('--blue-600', '#CF6B08');
-    r.setProperty('--blue-700', '#8A4A05');
-  }, []);
 
   return (
     <ErrorBoundary>
@@ -341,9 +340,6 @@ export default function App() {
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'lucky') trail = [{ label: 'Tư vấn biển hợp mệnh' }];
             else if (s === 'post') trail = [{ label: 'Tin phong thủy', onClick: go('blog') }, { label: post.title }];
-            else if (s === 'register') trail = [{ label: 'Tài khoản' }, { label: 'Đăng ký' }];
-            else if (s === 'login') trail = [{ label: 'Tài khoản' }, { label: 'Đăng nhập' }];
-            else if (s === 'forgot') trail = [{ label: 'Tài khoản' }, { label: 'Lấy lại mật khẩu' }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
             else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];
             else if (s === 'saved') trail = [{ label: 'Thông báo biển mới' }];

@@ -8,9 +8,9 @@ export function loadAuth() {
   } catch { return null; }
 }
 
-export function saveAuth(user) {
+export function saveAuth(user, isAdmin) {
   try {
-    if (user) localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    if (user || isAdmin) localStorage.setItem(AUTH_KEY, JSON.stringify({ user: user || null, isAdmin: !!isAdmin }));
     else localStorage.removeItem(AUTH_KEY);
   } catch { /* localStorage blocked */ }
 }
