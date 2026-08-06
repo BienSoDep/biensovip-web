@@ -87,7 +87,7 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
             <Button variant="primary" size="lg" onClick={go('blog')}>Đọc tin phong thủy</Button>
-            <Button variant="ghost" size="lg" onClick={go('about')} style={{ background: '#cccccc' }}>Về chúng tôi</Button>
+            <Button variant="outline" size="lg" onClick={go('about')}>Về chúng tôi</Button>
           </div>
         </div>
       </section>

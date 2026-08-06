@@ -1,6 +1,6 @@
 import { opts } from '../lib/mockData.js';
 import Button from '../components/Button.jsx';
-import { Input, Select, IconButton, Toast } from '../components/index.jsx';
+import { Input, Select, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 
 export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, submitContact, setField, catNames }) {
@@ -91,11 +91,6 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
         </div>
       )}
 
-      {!!st.toast && (
-        <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 99, animation: 'toastIn 200ms var(--ease-out)' }}>
-          <Toast message={st.toast} tone="dark" />
-        </div>
-      )}
     </>
   );
 }
