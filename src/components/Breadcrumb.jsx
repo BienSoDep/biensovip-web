@@ -1,7 +1,9 @@
+import { contentGet } from '../lib/content/index.js';
+
 export default function Breadcrumb({ items, keepOnMobile }) {
   if (!items || !items.length) return null;
   return (
-    <nav aria-label="Breadcrumb" className={'page-breadcrumb' + (keepOnMobile ? ' keep-mobile' : '')} style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '12px var(--pad-page)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+    <nav aria-label={contentGet('common.breadcrumb.aria')} className={'page-breadcrumb' + (keepOnMobile ? ' keep-mobile' : '')} style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '12px var(--pad-page)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
       {items.map((it, i) => {
         const last = i === items.length - 1;
         return (

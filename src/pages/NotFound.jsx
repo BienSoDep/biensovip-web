@@ -1,4 +1,5 @@
 import Button from '../components/Button.jsx';
+import { contentGet } from '../lib/content/index.js';
 
 export default function NotFound({ go }) {
   return (
@@ -10,13 +11,13 @@ export default function NotFound({ go }) {
 
       <div style={{ position: 'relative', maxWidth: 560, padding: 'var(--space-9) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-5)' }}>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span aria-hidden style={{ position: 'absolute', font: 'var(--fw-extrabold) clamp(48px,10vw,84px)/1 var(--font-display)', color: 'rgba(255,255,255,.08)', whiteSpace: 'nowrap' }}>Không tìm thấy</span>
-          <span style={{ font: 'var(--fw-extrabold) clamp(64px,16vw,140px)/1 var(--font-display)', letterSpacing: 'var(--ls-display)', color: 'var(--white)' }}>404</span>
+          <span aria-hidden style={{ position: 'absolute', font: 'var(--fw-extrabold) clamp(48px,10vw,84px)/1 var(--font-display)', color: 'rgba(255,255,255,.08)', whiteSpace: 'nowrap' }}>{contentGet('common.notfound.ghost')}</span>
+          <span style={{ font: 'var(--fw-extrabold) clamp(64px,16vw,140px)/1 var(--font-display)', letterSpacing: 'var(--ls-display)', color: 'var(--white)' }}>{contentGet('common.notfound.code')}</span>
         </div>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255,255,255,.66)', maxWidth: 420 }}>Biển số hoặc trang bạn tìm đã được bán, gỡ xuống hoặc không tồn tại.</p>
+        <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255,255,255,.66)', maxWidth: 420 }}>{contentGet('common.notfound.desc')}</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'var(--space-3)' }}>
-          <Button variant="primary" size="lg" onClick={go('home')}>Về trang chủ</Button>
-          <Button variant="outline" size="lg" onClick={go('chat')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>Nhờ tư vấn</Button>
+          <Button variant="primary" size="lg" onClick={go('home')}>{contentGet('common.notfound.cta_home')}</Button>
+          <Button variant="outline" size="lg" onClick={go('chat')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>{contentGet('common.notfound.cta_chat')}</Button>
         </div>
       </div>
     </section>

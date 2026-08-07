@@ -5,6 +5,7 @@ import {
   priceNum, validatePhone,
 } from './lib/mockData.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
+import { contentGet } from './lib/content/index.js';
 import { PER_PAGE } from './common/constants.js';
 import NavBtn, { darkPill } from './components/NavBtn.jsx';
 import Breadcrumb from './components/Breadcrumb.jsx';
@@ -358,7 +359,7 @@ export default function App() {
             else if (s === 'transfer') trail = [{ label: 'Hướng dẫn sang tên' }];
             else if (s === 'faq') trail = [{ label: 'Câu hỏi thường gặp' }];
             if (!trail.length) return null;
-            return <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, ...trail]} keepOnMobile={s === 'detail' || s === 'post'} />;
+            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), onClick: go('home') }, ...trail]} keepOnMobile={s === 'detail' || s === 'post'} />;
           })()}
 
           <Suspense fallback={<PageSkeleton screen={s} />}>

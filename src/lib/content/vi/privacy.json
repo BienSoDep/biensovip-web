@@ -1,0 +1,41 @@
+{
+  "title": "Chính sách bảo mật",
+  "updated": "Cập nhật lần cuối: 01/08/2026",
+  "sections": {
+    "section_0": {
+      "title": "1. Thông tin chúng tôi thu thập",
+      "type": "list",
+      "body": "<li><strong>Thông tin bạn cung cấp:</strong> họ tên, số điện thoại, email khi đăng ký tài khoản, gửi yêu cầu tư vấn, hoặc đăng ký CTV.</li><li><strong>Thông tin tự động:</strong> loại trình duyệt, thiết bị, địa chỉ IP, các trang đã xem — phục vụ phân tích lưu lượng truy cập.</li><li><strong>Cookie:</strong> chúng tôi dùng cookie để duy trì phiên đăng nhập và ghi nhớ tùy chọn của bạn.</li>"
+    },
+    "section_1": {
+      "title": "2. Mục đích sử dụng thông tin",
+      "type": "list",
+      "body": "<li>Xử lý yêu cầu tư vấn và liên hệ từ bạn.</li><li>Gửi thông báo về biển số mới phù hợp tiêu chí bạn đã lưu.</li><li>Cải thiện trải nghiệm người dùng và chất lượng dịch vụ.</li><li>Ngăn chặn gian lận và đảm bảo an ninh hệ thống.</li>"
+    },
+    "section_2": {
+      "title": "3. Chia sẻ thông tin",
+      "type": "mixed",
+      "body": "<p>Chúng tôi <strong>không bán, cho thuê, hoặc chia sẻ</strong> thông tin cá nhân của bạn với bên thứ ba, ngoại trừ:</p><li>Khi có yêu cầu từ cơ quan nhà nước có thẩm quyền theo quy định pháp luật.</li><li>Đối tác vận chuyển, thanh toán (nếu có) — chỉ ở mức cần thiết để hoàn thành giao dịch.</li>"
+    },
+    "section_3": {
+      "title": "4. Bảo mật dữ liệu",
+      "type": "p",
+      "body": "Chúng tôi áp dụng các biện pháp kỹ thuật và tổ chức phù hợp để bảo vệ thông tin cá nhân của bạn. Tuy nhiên, không có phương thức truyền tải qua Internet hoặc lưu trữ điện tử nào an toàn tuyệt đối 100%."
+    },
+    "section_4": {
+      "title": "5. Quyền của bạn",
+      "type": "list",
+      "body": "<li>Yêu cầu xem, chỉnh sửa hoặc xóa thông tin cá nhân.</li><li>Từ chối nhận thông báo tiếp thị bất kỳ lúc nào.</li><li>Yêu cầu xóa tài khoản.</li>"
+    },
+    "section_5": {
+      "title": "6. Thời gian lưu trữ",
+      "type": "p",
+      "body": "Chúng tôi lưu trữ thông tin cá nhân trong thời gian cần thiết để cung cấp dịch vụ, hoặc theo yêu cầu của pháp luật. Khi không còn cần thiết, dữ liệu sẽ được xóa hoặc ẩn danh."
+    },
+    "section_6": {
+      "title": "7. Liên hệ",
+      "type": "p",
+      "body": "Mọi câu hỏi về chính sách bảo mật, vui lòng liên hệ: <strong>lienhe@biensovip.com</strong> hoặc gọi <strong>0905 221 334</strong>."
+    }
+  }
+}
