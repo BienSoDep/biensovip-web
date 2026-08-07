@@ -1,13 +1,13 @@
-import { CATS, opts } from '../../lib/mockData.js';
+import { opts } from '../../lib/mockData.js';
 import { TONES } from '../../common/constants.js';
 import { Select, Badge, IconButton } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 
-export default function AdminPlates({ st, patch, admPlates, openEdit, askDelete }) {
+export default function AdminPlates({ st, patch, admPlates, openEdit, askDelete, catNames }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-        <Select label="Danh mục" value={st.admCat} options={opts(['Tất cả', ...CATS])} onChange={(v) => patch({ admCat: v })} />
+        <Select label="Danh mục" value={st.admCat} options={opts(['Tất cả', ...catNames])} onChange={(v) => patch({ admCat: v })} />
         <Select label="Trạng thái" value={st.admStatus} options={opts(['Tất cả', 'Còn hàng', 'Đã bán', 'Ẩn'])} onChange={(v) => patch({ admStatus: v })} />
       </div>
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>

@@ -100,6 +100,12 @@ export const CONTACTS = [
   { id: 'c5', name: 'Võ Thanh Hà', phone: '0903 118 776', pid: 'p9', time: '2 ngày trước', status: 'Đang tư vấn' },
 ];
 
+export const STAFF = [
+  { id: 's1', name: 'Duy Đinh', email: 'duy@biensovip.com', role: 'Admin', active: true, added: '12/01/2026' },
+  { id: 's2', name: 'Lê Thị Hạnh', email: 'hanh@biensovip.com', role: 'Editor', active: true, added: '02/03/2026' },
+  { id: 's3', name: 'Nguyễn Văn Sơn', email: 'son@biensovip.com', role: 'Editor', active: false, added: '20/04/2026' },
+];
+
 export const priceNum = (p) => { const n = String(p).replace(/[^0-9]/g, ''); return n ? parseInt(n, 10) : 0; };
 export const opts = (arr) => arr.map((v) => ({ value: v, label: v }));
 export const validatePhone = (v) => /^0\d{8,10}$/.test(String(v).replace(/[\s.]/g, ''));

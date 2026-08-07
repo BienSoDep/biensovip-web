@@ -10,6 +10,16 @@ function readingMinutes(body) {
 }
 
 export default function Post({ post, st, go, openPlate, openPost, notify }) {
+  if (!post) {
+    return (
+      <div style={{ animation: 'pageIn 180ms var(--ease-out)', maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-10) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
+        <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Bài viết không tồn tại</h1>
+        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Bài viết này có thể đã bị gỡ hoặc đường dẫn không chính xác.</p>
+        <Button variant="primary" size="md" onClick={() => go('blog')()}>Về tin phong thủy</Button>
+      </div>
+    );
+  }
+
   const body = post.body || [{ t: 'p', v: post.excerpt }];
   const heads = body.filter((b) => b.t === 'h2');
   const mins = readingMinutes(body);
@@ -77,7 +87,7 @@ export default function Post({ post, st, go, openPlate, openPost, notify }) {
           <h2 style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Bài viết liên quan</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 'var(--gutter-section)' }}>
             {related.map((r) => (
-              <div key={r.id} onClick={() => openPost(r.id)} className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+              <div key={r.id} role="button" tabIndex={0} onClick={() => openPost(r.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPost(r.id); } }} className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{r.cat} · {r.date}</span>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{r.title}</span>
               </div>
