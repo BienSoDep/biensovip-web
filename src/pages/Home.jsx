@@ -8,7 +8,7 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
   const stagger = useStaggeredReveal();
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
-      <section style={{ padding: '0 var(--pad-page)' }}>
+      <section style={{ padding: '0 var(--pad-page)', margin: '15px 0' }}>
         <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-hero)', borderRadius: 'var(--radius-surface)', padding: 'clamp(24px,8vw,64px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', alignItems: 'center' }}>
           <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
             <Eyebrow tone="blue" className="hero-eyebrow">3.240 biển số đang chờ chủ mới</Eyebrow>

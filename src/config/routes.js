@@ -13,6 +13,7 @@ const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) =>
 export function routeFor(s, id) {
   if (s === 'detail') return '#/bien/' + (id || '');
   if (s === 'post') return '#/bai-viet/' + (id || '');
+  if (s === 'notfound') return window.location.hash;
   return '#/' + (ROUTE_MAP[s] || '');
 }
 
@@ -21,8 +22,8 @@ export function parseRoute(h) {
   if (!p.length) return { screen: 'home' };
   if (p[0] === 'bien') return { screen: 'detail', detailId: p[1] || 'p1' };
   if (p[0] === 'bai-viet') return { screen: 'post', postId: p[1] || 'a1' };
-  return { screen: REVERSE_MAP[p.join('/')] || 'home' };
+  return { screen: REVERSE_MAP[p.join('/')] || 'notfound' };
 }
 
 export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
-export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq'];
+export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'notfound'];

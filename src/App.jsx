@@ -280,7 +280,6 @@ export default function App() {
   useSeo(st, cur0);
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
-  const isUnknown = !isPublic && !isAdminShell && s !== 'register' && s !== 'login' && s !== 'forgot' && s !== 'adminLogin';
 
   const list = filtered();
   const per = PER_PAGE;
@@ -403,6 +402,8 @@ export default function App() {
 
             {s === 'post' && <Post post={post} st={st} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
 
+            {s === 'notfound' && <NotFound go={go} />}
+
             {isAdminShell && (
               <RequireAuth st={st} go={go}>
                 <AdminShell
@@ -413,8 +414,6 @@ export default function App() {
                 />
               </RequireAuth>
             )}
-
-            {isUnknown && <NotFound go={go} />}
           </Suspense>
 
           {isPublic && <Footer />}
