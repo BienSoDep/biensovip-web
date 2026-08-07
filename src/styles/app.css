@@ -82,6 +82,10 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   /* Hero: drop redundant eyebrow (dup of stats row), redundant search CTA */
   .hero-eyebrow{display:none}
   .home-search-btn{display:none}
+  /* Home search bar: stack into clear rows instead of one wrapped pill blob */
+  .home-search-bar{border-radius:var(--radius-xl)!important;flex-direction:column;align-items:stretch!important;padding:14px!important}
+  .home-search-field{flex:1 1 auto!important;max-width:none!important}
+  .home-search-cats{justify-content:center}
   /* Home: hide empty video placeholder until real embeds exist */
   .home-video-section{display:none!important}
   /* PlateCard / Detail: single CTA on mobile (both buttons call the same handler) */

@@ -40,9 +40,9 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
       </section>
 
       <section style={{ maxWidth: 'var(--width-content)', margin: '-26px auto 0', padding: '0 var(--pad-page)', position: 'relative', zIndex: 5 }}>
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <div style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder="Tìm theo đuôi số, VD: 79, 68, 39…" value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} width="100%" /></div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
+        <div className="home-search-bar" style={{ background: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <div className="home-search-field" style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder="Tìm theo đuôi số, VD: 79, 68, 39…" value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} width="100%" /></div>
+          <div className="home-search-cats" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
             {['Tất cả', ...catNames].map((c) => (
               <NavBtn key={c} onClick={() => patch({ cat: c, page: 1 })} {...pill(st.cat === c)}>{c}</NavBtn>
             ))}

@@ -366,7 +366,7 @@ export default function App() {
 
             {s === 'list' && <PlateList st={st} setSt={setSt} patch={patch} list={list} page={page} pageCount={pageCount} pageItems={pageItems} cards={cards} catNames={catNames} />}
 
-            {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} toggleFav={toggleFav} notify={notify} />}
+            {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} openPost={openPost} toggleFav={toggleFav} notify={notify} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
               <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
