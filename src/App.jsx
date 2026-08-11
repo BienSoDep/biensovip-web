@@ -2,11 +2,10 @@ import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import {
   PLATES, CATS, POSTS, CONTACTS, STAFF,
-  priceNum, validatePhone,
+  validatePhone,
 } from './lib/mockData.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
 import { contentGet } from './lib/content/index.js';
-import { PER_PAGE } from './common/constants.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
@@ -92,27 +91,6 @@ export default function App() {
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
 
   const catNames = st.cats.map((c) => c.name);
-
-  const filtered = () => {
-    const q = st.q.trim().toLowerCase();
-    const cityOn = Object.keys(st.cities).filter((k) => st.cities[k]);
-    const catOn = Object.keys(st.catFilters).filter((k) => st.catFilters[k]);
-    let list = st.plates.filter((p) => {
-      if (st.cat !== 'Tất cả' && p.cat !== st.cat) return false;
-      if (catOn.length && catOn.indexOf(p.cat) < 0) return false;
-      if (cityOn.length && cityOn.indexOf(p.city) < 0) return false;
-      if (st.vehicle !== 'Tất cả' && p.vehicle !== st.vehicle) return false;
-      if (p.status === 'Ẩn') return false;
-      if (q) {
-        const hay = (p.prov + p.seri + ' ' + p.num + ' ' + p.cat).toLowerCase();
-        if (hay.indexOf(q) < 0) return false;
-      }
-      return true;
-    });
-    if (st.sort === 'asc') list = [...list].sort((a, b) => priceNum(a.price) - priceNum(b.price));
-    if (st.sort === 'desc') list = [...list].sort((a, b) => priceNum(b.price) - priceNum(a.price));
-    return list;
-  };
 
   const cards = (list) => list.map((p) => ({
     ...p,
@@ -238,11 +216,6 @@ export default function App() {
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
-  const list = filtered();
-  const per = PER_PAGE;
-  const pageCount = Math.max(1, Math.ceil(list.length / per));
-  const page = Math.min(st.page, pageCount);
-  const pageItems = list.slice((page - 1) * per, page * per);
   const favCards = cards(st.plates.filter((p) => st.favs[p.id]));
 
   const admQ = st.adminQ.trim().toLowerCase();
@@ -316,9 +289,9 @@ export default function App() {
           })()}
 
           <Suspense fallback={<PageSkeleton screen={s} />}>
-            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} cards={cards} catNames={catNames} />}
+            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} />}
 
-            {s === 'list' && <PlateList st={st} setSt={setSt} patch={patch} list={list} page={page} pageCount={pageCount} pageItems={pageItems} cards={cards} catNames={catNames} />}
+            {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} />}
 
             {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} openPost={openPost} toggleFav={toggleFav} notify={notify} />}
 

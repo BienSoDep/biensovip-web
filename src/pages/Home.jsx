@@ -4,10 +4,16 @@ import PlateCard from '../components/PlateCard.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { contentGet } from '../lib/content/index.js';
+import { useCategories } from '../services/categories.js';
+import { useFeaturedPlates } from '../services/plates.js';
 
-export default function Home({ st, patch, go, notify, heroAnim, cards, catNames }) {
+export default function Home({ st, patch, go, notify, heroAnim, openPlate, openBuy }) {
   const stagger = useStaggeredReveal();
   const T = contentGet;
+  const { data: plateTypes } = useCategories('plate_type');
+  const { data: featured, isLoading: featuredLoading } = useFeaturedPlates(4);
+  const featuredItems = featured || [];
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ padding: '0 var(--pad-page)', margin: '15px 0' }}>
@@ -45,8 +51,9 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
         <div className="home-search-bar" style={{ background: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <div className="home-search-field" style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder={T('home.search.placeholder')} value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} width="100%" /></div>
           <div className="home-search-cats" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
-            {[T('home.search.all'), ...catNames].map((c) => (
-              <NavBtn key={c} onClick={() => patch({ cat: c, page: 1 })} {...pill(st.cat === c)}>{c}</NavBtn>
+            <NavBtn onClick={() => patch({ cat: 'Tất cả', page: 1 })} {...pill(st.cat === 'Tất cả')}>{T('home.search.all')}</NavBtn>
+            {(plateTypes?.items || []).map((c) => (
+              <NavBtn key={c.id} onClick={() => patch({ cat: c.name, page: 1 })} {...pill(st.cat === c.name)}>{c.name}</NavBtn>
             ))}
           </div>
           <Button variant="primary" size="md" onClick={go('list')} className="home-search-btn">{T('home.search.button')}</Button>
@@ -62,17 +69,22 @@ export default function Home({ st, patch, go, notify, heroAnim, cards, catNames 
         <Button variant="ghost" size="sm" onClick={go('list')}>{T('home.featured.all')}</Button>
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', animation: 'fadeIn 180ms var(--ease-out)' }}>
-        {(() => {
-          const featured = cards(st.plates.filter((p) => p.status !== 'Ẩn').slice(0, 4));
-          if (featured.length === 0) {
-            return (
-              <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
-                <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>{T('home.featured.empty')} <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>{T('home.featured.empty_link')}</button></p>
-              </div>
-            );
-          }
-          return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>{featured.map((p, i) => <PlateCard key={p.id} {...p} style={stagger(i)} />)}</div>;
-        })()}
+        {featuredLoading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>
+            {Array.from({ length: 4 }, (_, i) => <div key={i} style={{ height: 320, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }} />)}
+          </div>
+        ) : featuredItems.length === 0 ? (
+          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
+            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>{T('home.featured.empty')} <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>{T('home.featured.empty_link')}</button></p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>
+            {featuredItems.map((p, i) => (
+              <PlateCard key={p.id} plateNumber={p.plateNumber} province={p.province} price={p.price} thumbnailUrl={p.thumbnailUrl} isHot
+                onOpen={() => openPlate(p.slug || p.id)} onBuy={() => openBuy?.(p.id)} style={stagger(i)} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="home-video-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
