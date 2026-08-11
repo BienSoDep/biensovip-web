@@ -17,8 +17,8 @@ import Compose from '../pages/admin/Compose.jsx';
 
 export default function AdminShell({
   s, st, setSt, patch, go, notify, setField,
-  adminMeta, admPlates, admContacts, admPosts,
-  openAdd, openEdit, openEditPost, askDelete, publish, insertPlates, catNames,
+  adminMeta, admPlates, admContacts,
+  openAdd, openEdit, askDelete, catNames,
 }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
@@ -64,8 +64,8 @@ export default function AdminShell({
         {s === 'avideos' && <AdminVideos st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'anotifications' && <AdminNotifications st={st} patch={patch} notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
-        {s === 'aposts' && <AdminPosts admPosts={admPosts} openEditPost={openEditPost} askDelete={askDelete} />}
-        {s === 'compose' && <Compose st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} publish={publish} insertPlates={insertPlates} />}
+        {s === 'aposts' && <AdminPosts patch={patch} notify={notify} />}
+        {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
       </main>
     </div>
   );

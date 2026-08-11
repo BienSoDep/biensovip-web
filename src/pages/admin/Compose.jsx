@@ -1,39 +1,119 @@
-import { POST_CATS, opts } from '../../lib/mockData.js';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TiptapLink from '@tiptap/extension-link';
+import TiptapImage from '@tiptap/extension-image';
+import { useEffect, useState } from 'react';
 import Button from '../../components/Button.jsx';
-import { Input, Select } from '../../components/index.jsx';
-import PlateVisual from '../../components/PlateVisual.jsx';
+import { Input } from '../../components/index.jsx';
+import { apiClient } from '../../services/apiClient.js';
+import { useCreateBlogPost, useUpdateBlogPost } from '../../services/blog.js';
 
-export default function Compose({ st, setField, patch, setSt, notify, publish, insertPlates }) {
+function slugify(title) {
+  return title
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 300);
+}
+
+export default function Compose({ st, patch, notify }) {
+  const editPostId = st.editPostId;
+  const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [metaTitle, setMetaTitle] = useState('');
+  const [metaDescription, setMetaDescription] = useState('');
+  const [err, setErr] = useState('');
+
+  const createPost = useCreateBlogPost();
+  const updatePost = useUpdateBlogPost();
+
+  const editor = useEditor({
+    extensions: [StarterKit, TiptapLink, TiptapImage],
+    content: '',
+  });
+
+  useEffect(() => {
+    if (!editPostId || !editor) return;
+    apiClient.get(`/api/admin/blog/posts?page=1&limit=200`).then((data) => {
+      const post = data?.items?.find((p) => p.id === editPostId);
+      if (!post) return;
+      apiClient.get(`/api/blog/posts/${post.slug}`).catch(() => null).then((detail) => {
+        const full = detail || post;
+        setTitle(full.title || '');
+        setSlug(full.slug || '');
+        setSlugTouched(true);
+        setCoverImageUrl(full.coverImageUrl || '');
+        setMetaTitle(full.metaTitle || '');
+        setMetaDescription(full.metaDescription || '');
+        if (full.contentHtml) editor.commands.setContent(full.contentHtml);
+      });
+    });
+  }, [editPostId, editor]);
+
+  const onTitleChange = (e) => {
+    const v = e.target.value;
+    setTitle(v);
+    if (!slugTouched) setSlug(slugify(v));
+  };
+
+  const submit = (status) => {
+    if (!title.trim()) { setErr('Nhập tiêu đề bài viết.'); return; }
+    const contentHtml = editor?.getHTML() || '';
+    if (status === 'published' && !editor?.getText().trim()) { setErr('Bài viết cần có nội dung để đăng.'); return; }
+    setErr('');
+
+    const body = {
+      title: title.trim(),
+      slug: slug.trim() || null,
+      contentHtml,
+      coverImageUrl: coverImageUrl.trim() || null,
+      metaTitle: metaTitle.trim() || null,
+      metaDescription: metaDescription.trim() || null,
+      status,
+    };
+
+    const onSuccess = () => {
+      notify(status === 'draft' ? 'Đã lưu nháp' : (editPostId ? 'Đã cập nhật bài viết' : 'Đã xuất bản bài viết'));
+      patch({ screen: 'aposts', editPostId: null });
+    };
+    const onError = (e) => {
+      if (e.code === 'slug_taken') setErr('Đường dẫn này đã được sử dụng, vui lòng chọn slug khác.');
+      else setErr(e.message || 'Có lỗi xảy ra.');
+    };
+
+    if (editPostId) updatePost.mutate({ id: editPostId, body }, { onSuccess, onError });
+    else createPost.mutate(body, { onSuccess, onError });
+  };
+
+  const saving = createPost.isPending || updatePost.isPending;
+
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <Input label="Tiêu đề" placeholder="VD: Ngũ quý 99999 — vì sao đắt nhất?" value={st.cTitle} error={st.cErr} onChange={setField('cTitle')} />
+        <Input label="Tiêu đề" placeholder="VD: Ngũ quý 99999 — vì sao đắt nhất?" value={title} error={err} onChange={onTitleChange} />
+        <Input label="Slug" placeholder="tu-dong-sinh-tu-tieu-de" value={slug} onChange={(e) => { setSlugTouched(true); setSlug(e.target.value); }} />
         <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
-          <textarea rows={9} placeholder="## Độ hiếm quyết định giá" value={st.cBody} onChange={setField('cBody')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
-        </label>
-        <Button variant="outline" size="sm" style={{ alignSelf: 'flex-start' }} onClick={() => patch({ picker: !st.picker })}>Chèn biển số liên quan</Button>
-        {st.picker && (
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', animation: 'fadeIn 140ms var(--ease-out)' }}>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Chọn biển để chèn</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-              {insertPlates.map((p) => (
-                <div key={p.id} onClick={() => { setSt((x) => ({ ...x, cBody: x.cBody + `\n[biển ${p.prov}${p.seri} ${p.num}]`, picker: false })); notify('Đã chèn biển số vào bài'); }} className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '8px 10px', boxShadow: 'var(--shadow-inset-hairline)' }}>
-                  <PlateVisual size="sm" prov={p.prov} seri={p.seri} num={p.num} />
-                </div>
-              ))}
-            </div>
+          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '12px 14px', minHeight: 240 }}>
+            <EditorContent editor={editor} />
           </div>
-        )}
+        </label>
       </div>
       <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Select label="Chuyên mục" value={st.cCat} options={opts(POST_CATS.slice(1))} onChange={(v) => patch({ cCat: v })} />
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 22, textAlign: 'center', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Ảnh đại diện — kéo &amp; thả vào đây</div>
+          <Input label="Ảnh đại diện (URL)" placeholder="https://..." value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} />
+          <Input label="Meta title (SEO)" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+          <Input label="Meta description (SEO)" value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <Button variant="outline" size="md" onClick={() => publish('Bản nháp')} style={{ flex: 1 }}>Lưu nháp</Button>
-          <Button variant="primary" size="md" onClick={() => publish('Đã xuất bản')} style={{ flex: 1 }}>{st.editPostId ? 'Cập nhật' : 'Xuất bản'}</Button>
+          <Button variant="outline" size="md" disabled={saving} onClick={() => submit('draft')} style={{ flex: 1 }}>Lưu nháp</Button>
+          <Button variant="primary" size="md" disabled={saving} onClick={() => submit('published')} style={{ flex: 1 }}>{editPostId ? 'Cập nhật' : 'Xuất bản'}</Button>
         </div>
       </div>
     </div>

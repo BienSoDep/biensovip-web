@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import {
-  PLATES, CATS, POST_CATS, POSTS, CONTACTS, STAFF,
+  PLATES, CATS, POSTS, CONTACTS, STAFF,
   priceNum, validatePhone,
 } from './lib/mockData.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
 import { contentGet } from './lib/content/index.js';
 import { PER_PAGE } from './common/constants.js';
-import NavBtn, { darkPill } from './components/NavBtn.jsx';
 import Breadcrumb from './components/Breadcrumb.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
@@ -15,7 +14,7 @@ import Header from './layout/Header.jsx';
 import Footer from './layout/Footer.jsx';
 import MobileDrawer from './layout/MobileDrawer.jsx';
 import PageSkeleton from './components/skeletons/PageSkeleton.jsx';
-import { parseRoute, routeFor, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
+import { parseRoute, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
 import { useHashRouter } from './hooks/useHashRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
@@ -197,8 +196,6 @@ export default function App() {
   const openEdit = (p) => patch({ addOpen: true, editId: p.id, formErr: {}, form: { prov: p.prov, seri: p.seri, num: p.num, cat: p.cat, vehicle: p.vehicle, status: p.status, price: p.price === 'Giá liên hệ' ? '' : p.price } });
   const setForm = (k) => (v) => setSt((s) => ({ ...s, form: { ...s.form, [k]: v && v.target ? v.target.value : v } }));
 
-  const openEditPost = (p) => patch({ screen: 'compose', editPostId: p.id, cTitle: p.title, cBody: p.body ? p.body.map((b) => b.v || '').join('\n') : (p.excerpt || ''), cCat: p.cat, cErr: '' });
-
   const savePlate = () => {
     const f = st.form;
     const err = {};
@@ -234,47 +231,6 @@ export default function App() {
     notify('Đã xóa');
   };
 
-  // Bug 1 fix: parse [biển XX..] token → {t:'plate', pid:'pX'} block
-  const parseBodyTokens = (text, plates) => {
-    const lines = text.split('\n');
-    const body = [];
-    for (const line of lines) {
-      const m = line.match(/^\[biển\s+(\S+)\s+([\d.]+)\]$/);
-      if (m) {
-        const provSeri = m[1];
-        const num = m[2];
-        const found = plates.find((p) => p.prov + p.seri === provSeri && p.num === num);
-        if (found) {
-          body.push({ t: 'plate', plate: found.id });
-          continue;
-        }
-      }
-      if (line.startsWith('## ')) {
-        body.push({ t: 'h2', v: line.slice(3) });
-      } else if (line.startsWith('> ')) {
-        body.push({ t: 'quote', v: line.slice(2) });
-      } else if (line.trim()) {
-        body.push({ t: 'p', v: line });
-      }
-    }
-    return body.length ? body : [{ t: 'p', v: text }];
-  };
-
-  const publish = (status) => {
-    const t = st.cTitle.trim();
-    if (!t) { patch({ cErr: 'Nhập tiêu đề bài viết.' }); return; }
-    const body = parseBodyTokens(st.cBody, st.plates);
-    setSt((s) => {
-      if (s.editPostId) {
-        const posts = s.posts.map((p) => (p.id === s.editPostId ? { ...p, title: t, cat: s.cCat, body, excerpt: st.cBody.slice(0, 90) || p.excerpt, status } : p));
-        return { ...s, posts, editPostId: null, cTitle: '', cBody: '', cErr: '', screen: 'aposts' };
-      }
-      const row = { id: 'a' + Date.now(), title: t, cat: s.cCat, date: 'Hôm nay', body, excerpt: st.cBody.slice(0, 90) || 'Bài viết mới.', status };
-      return { ...s, posts: [row, ...s.posts], cTitle: '', cBody: '', cErr: '', screen: 'aposts' };
-    });
-    notify(status === 'Bản nháp' ? 'Đã lưu nháp' : (st.editPostId ? 'Đã cập nhật bài viết' : 'Đã xuất bản bài viết'));
-  };
-
   const s = st.screen;
   const cur0 = st.plates.find((p) => p.id === st.curId);
   const cur = cur0 ? { ...cur0, title: cur0.prov + cur0.seri + ' · ' + cur0.num, sub: 'Biển ' + String(cur0.vehicle).toLowerCase() + ' · ' + cur0.city + (cur0.hot ? ' · còn 1 số duy nhất' : ''), ref: cur0.prov + cur0.seri + String(cur0.num).replace('.', '') } : null;
@@ -297,7 +253,6 @@ export default function App() {
     return true;
   });
   const admContacts = st.contacts.filter((c) => !admQ || (c.name + ' ' + c.phone).toLowerCase().indexOf(admQ) >= 0);
-  const admPosts = st.posts.filter((p) => !admQ || p.title.toLowerCase().indexOf(admQ) >= 0);
 
   const adminMeta = {
     dash: ['Tổng quan', 'Chào buổi sáng, đây là tình hình hôm nay.'],
@@ -323,8 +278,6 @@ export default function App() {
     ][st.step - 1],
   }[s] || ['', '', ''];
 
-  const post = st.posts.find((p) => p.id === st.postId);
-  const insertPlates = st.plates.filter((p) => p.id !== cur.id).slice(0, 4);
 
 
   return (
@@ -347,7 +300,7 @@ export default function App() {
             else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'lucky') trail = [{ label: 'Tư vấn biển hợp mệnh' }];
-            else if (s === 'post') trail = [{ label: 'Tin phong thủy', onClick: go('blog') }, { label: post.title }];
+            else if (s === 'post') trail = [{ label: 'Tin phong thủy', onClick: go('blog') }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
             else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];
             else if (s === 'saved') trail = [{ label: 'Thông báo biển mới' }];
@@ -401,7 +354,7 @@ export default function App() {
 
             {s === 'blog' && <Blog st={st} patch={patch} />}
 
-            {s === 'post' && <Post post={post} st={st} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
+            {s === 'post' && <Post postId={st.postId} go={go} notify={notify} />}
 
             {s === 'notfound' && <NotFound go={go} />}
 
@@ -409,8 +362,8 @@ export default function App() {
               <RequireAuth st={st} go={go}>
                 <AdminShell
                   s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
-                  adminMeta={adminMeta} admPlates={admPlates} admContacts={admContacts} admPosts={admPosts}
-                  openAdd={openAdd} openEdit={openEdit} openEditPost={openEditPost} askDelete={askDelete} publish={publish} insertPlates={insertPlates}
+                  adminMeta={adminMeta} admPlates={admPlates} admContacts={admContacts}
+                  openAdd={openAdd} openEdit={openEdit} askDelete={askDelete}
                   catNames={catNames}
                 />
               </RequireAuth>
