@@ -1,0 +1,57 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from './apiClient.js';
+
+export const CATEGORY_GROUPS = [
+  { value: 'plate_type', label: 'Loại biển' },
+  { value: 'province', label: 'Tỉnh/thành' },
+  { value: 'vehicle_type', label: 'Loại xe' },
+  { value: 'price_range', label: 'Khoảng giá' },
+  { value: 'blog_category', label: 'Danh mục blog' },
+];
+
+export function useCategories(group) {
+  return useQuery({
+    queryKey: ['categories', group ?? 'all'],
+    queryFn: () => apiClient.get(`/api/categories${group ? `?group=${group}` : ''}`),
+  });
+}
+
+export function useAdminCategories(group) {
+  return useQuery({
+    queryKey: ['admin-categories', group ?? 'all'],
+    queryFn: () => apiClient.get(`/api/admin/categories${group ? `?group=${group}` : ''}`),
+  });
+}
+
+export function useCreateCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => apiClient.post('/api/admin/categories', body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}
+
+export function useUpdateCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }) => apiClient.put(`/api/admin/categories/${id}`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}
+
+export function useDeleteCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/api/admin/categories/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}
