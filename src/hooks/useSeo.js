@@ -12,7 +12,8 @@ export function useSeo(st, cur0) {
     let type = 'website';
     let ld = null;
     if (scr === 'list') { title = 'Danh sách biển số đẹp | ' + brand; canonical = site + '/danh-sach'; }
-    else if (scr === 'detail') { title = 'Biển ' + cur0.prov + cur0.seri + ' ' + cur0.num + ' — ' + cur0.price + ' | ' + brand; desc = 'Biển số đẹp ' + cur0.vehicle + ' tại ' + cur0.city + '. ' + (cur0.fengshui || '') + ' Liên hệ Duy Đinh để giữ chỗ.'; canonical = site + '/bien/' + cur0.id; }
+    else if (scr === 'detail' && cur0) { title = 'Biển ' + cur0.prov + cur0.seri + ' ' + cur0.num + ' — ' + cur0.price + ' | ' + brand; desc = 'Biển số đẹp ' + cur0.vehicle + ' tại ' + cur0.city + '. ' + (cur0.fengshui || '') + ' Liên hệ Duy Đinh để giữ chỗ.'; canonical = site + '/bien/' + cur0.id; }
+    else if (scr === 'detail') { title = 'Chi tiết biển số | ' + brand; canonical = site + '/bien/' + (st.curId || ''); }
     else if (scr === 'lucky') { title = 'Tư vấn biển số hợp mệnh | ' + brand; desc = 'Điền thông tin cá nhân để nhận gợi ý biển số đẹp hợp mệnh, hợp ngũ hành và phù hợp ngân sách của bạn.'; canonical = site + '/tu-van'; }
     else if (scr === 'about') { title = 'Về Duy Đinh — ' + brand; canonical = site + '/gioi-thieu'; }
     else if (scr === 'blog') { title = 'Tin phong thủy biển số | ' + brand; desc = 'Ý nghĩa dãy số, cách chọn biển hợp mệnh và quy định sang tên mới nhất. Nội dung phong thủy biển số xe hữu ích.'; canonical = site + '/tin'; type = 'CollectionPage'; }

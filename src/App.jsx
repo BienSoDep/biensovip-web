@@ -87,7 +87,6 @@ export default function App() {
   });
   const openPlate = (id) => patch({ screen: 'detail', curId: id, modal: false });
   const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mErr: {} });
-  const openPost = (id) => patch({ screen: 'post', postId: id });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
 
   const catNames = st.cats.map((c) => c.name);
@@ -268,7 +267,7 @@ export default function App() {
           {isPublic && (function () {
             let trail = [];
             if (s === 'list') trail = [{ label: 'Biển số' }];
-            else if (s === 'detail') trail = [{ label: 'Biển số', onClick: go('list') }, { label: cur.title }];
+            else if (s === 'detail') trail = [{ label: 'Biển số', onClick: go('list') }];
             else if (s === 'fav') trail = [{ label: 'Yêu thích' }];
             else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
@@ -293,7 +292,7 @@ export default function App() {
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} />}
 
-            {s === 'detail' && <PlateDetail st={st} cur={cur} go={go} openPlate={openPlate} openBuy={openBuy} openPost={openPost} toggleFav={toggleFav} notify={notify} />}
+            {s === 'detail' && <PlateDetail plateId={st.curId} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} notify={notify} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
               <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
