@@ -1,39 +1,42 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles } from 'lucide-react';
+import { useSendChatbotMessage } from '../services/chatbotService.js';
 
-// ponytail: UC26 keyword-matching chatbot, floating widget, quick replies
-const REPLIES = {
-  'giá': 'Giá biển số phụ thuộc vào loại (ngũ quý, tứ quý, lộc phát...), đầu số tỉnh và độ hiếm. Bạn muốn tham khảo loại nào?',
-  'mua': 'Để mua biển số, chọn biển ưng ý, nhấn "Yêu cầu tư vấn". Shop gọi lại trong 15 phút để báo giá và hướng dẫn thủ tục.',
-  'thủ tục': 'Thủ tục sang tên mất 1–2 ngày. Cần: CMND/CCCD, giấy đăng ký xe. Shop lo phần còn lại.',
-  'liên hệ': 'Gọi 0905 221 334 hoặc nhắn Zalo cùng số. Shop làm việc 8:00–20:00 mỗi ngày.',
-  'zalo': 'Nhắn Zalo 0905 221 334 để được tư vấn nhanh nhất kèm ảnh biển thực tế.',
-  'đẹp': 'Biển đẹp là biển hợp mệnh chủ xe. Dùng công cụ "Tra cứu hợp mệnh" để xem biển nào hợp tuổi nhé!',
-};
+const ACTION_LABEL = { chat_with_staff: 'Chat với nhân viên', contact_form: 'Để lại thông tin liên hệ' };
 
-function matchReply(msg) {
-  const lower = msg.toLowerCase();
-  for (const [k, v] of Object.entries(REPLIES)) {
-    if (lower.includes(k)) return v;
-  }
-  return 'Cảm ơn bạn! Bạn cần tư vấn về giá, thủ tục, hay muốn xem kho biển? Tôi sẽ giúp ngay.';
-}
-
-export default function AiChatbot() {
+export default function AiChatbot({ go }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState([{ from: 'bot', text: 'Chào bạn! Tôi là trợ lý Biensovip. Bạn cần tư vấn gì về biển số ạ?' }]);
   const [input, setInput] = useState('');
+  const [sessionId, setSessionId] = useState(null);
   const bottomRef = useRef(null);
+  const sendMessage = useSendChatbotMessage();
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, sendMessage.isPending]);
 
-  const send = () => {
+  const send = async () => {
     const v = input.trim();
-    if (!v) return;
-    const next = [...msgs, { from: 'user', text: v }];
-    setMsgs(next);
+    if (!v || sendMessage.isPending) return;
+    setMsgs((m) => [...m, { from: 'user', text: v }]);
     setInput('');
-    setTimeout(() => setMsgs([...next, { from: 'bot', text: matchReply(v) }]), 600 + Math.random() * 600);
+
+    try {
+      const res = await sendMessage.mutateAsync({ sessionId, message: v });
+      setSessionId(res.sessionId);
+      setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions }]);
+    } catch (e) {
+      if (e.status === 429) {
+        setMsgs((m) => [...m, { from: 'bot', text: e.message || 'Bạn đã gửi quá nhiều tin nhắn, vui lòng thử lại sau ít phút.' }]);
+      } else {
+        setMsgs((m) => [...m, { from: 'bot', text: 'Trợ lý AI đang bận, vui lòng chat với nhân viên.', actions: ['chat_with_staff', 'contact_form'] }]);
+      }
+    }
+  };
+
+  const handleAction = (action) => {
+    setOpen(false);
+    if (action === 'chat_with_staff') go?.('chat')();
+    else if (action === 'contact_form') go?.('chat')();
   };
 
   return (
@@ -52,20 +55,32 @@ export default function AiChatbot() {
           </div>
           <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {msgs.map((m, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: m.from === 'user' ? 'flex-end' : 'flex-start' }}>
-                <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: m.from === 'user' ? 'var(--radius-pill)' : 'var(--radius-md)', background: m.from === 'user' ? 'var(--action-primary)' : 'var(--surface-sunken)', color: m.from === 'user' ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)' }}>{m.text}</div>
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: m.from === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
+                <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: m.from === 'user' ? 'var(--radius-pill)' : 'var(--radius-md)', background: m.from === 'user' ? 'var(--action-primary)' : 'var(--surface-sunken)', color: m.from === 'user' ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)', whiteSpace: 'pre-wrap' }}>{m.text}</div>
+                {m.actions?.length > 0 && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {m.actions.map((a) => (
+                      <button key={a} onClick={() => handleAction(a)} style={{ border: '1px solid var(--action-primary)', borderRadius: 'var(--radius-pill)', background: 'transparent', padding: '4px 10px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>{ACTION_LABEL[a] || a}</button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
+            {sendMessage.isPending && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Đang trả lời…</div>
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 var(--space-3) var(--space-2)' }}>
-            {['Báo giá', 'Thủ tục', 'Liên hệ', 'Biển hợp mệnh'].map((qr) => (
-              <button key={qr} onClick={() => { setInput(qr); }} style={{ border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '5px 12px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>{qr}</button>
+            {['Ý nghĩa biển số này là gì?', 'Còn hàng không?', 'Cách đặt cọc?'].map((qr) => (
+              <button key={qr} onClick={() => setInput(qr)} style={{ border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '5px 12px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>{qr}</button>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-3)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
             <input type="text" placeholder="Nhập câu hỏi..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} style={{ flex: 1, height: 40, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
-            <button onClick={send} style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={16} /></button>
+            <button onClick={send} disabled={sendMessage.isPending} style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: sendMessage.isPending ? 'default' : 'pointer', opacity: sendMessage.isPending ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={16} /></button>
           </div>
         </div>
       )}
