@@ -129,13 +129,14 @@ export function Icon({ name, size = 18 }) {
   return I ? <I size={size} /> : null;
 }
 
-export function IconButton({ name, label, onClick, size = 'md', style }) {
-  const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 40;
+export function IconButton({ name, label, onClick, size = 'md', style, disabled }) {
+  const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 44;
   return (
-    <button type="button" aria-label={label} onClick={onClick}
+    <button type="button" aria-label={label} onClick={onClick} disabled={disabled}
       style={{
         width: px, height: px, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', ...style,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)',
+        cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1, ...style,
       }}>
       <Icon name={name} size={Math.round(px * 0.5)} />
     </button>

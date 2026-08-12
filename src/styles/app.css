@@ -86,15 +86,13 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   .home-search-bar{border-radius:var(--radius-xl)!important;flex-direction:column;align-items:stretch!important;padding:14px!important}
   .home-search-field{flex:1 1 auto!important;max-width:none!important}
   .home-search-cats{justify-content:center}
-  /* Home: hide empty video placeholder until real embeds exist */
-  .home-video-section{display:none!important}
+  /* Home: promo video section — single column stack on mobile (grid already reflows via auto-fit) */
   /* PlateCard / Detail: single CTA on mobile (both buttons call the same handler) */
   .plate-card-cta-secondary,.detail-cta-secondary{display:none}
   .plate-card-cta-primary,.detail-cta-primary{flex:1 1 100%!important}
-  /* PlateList: filter sidebar collapses behind a toggle on mobile */
-  .list-filter-toggle{display:inline-flex!important}
+  /* PlateList: filter sidebar collapses behind a "Bộ lọc" toggle button + drawer on mobile */
+  .list-filter-toggle-row{display:flex!important}
   .list-filter-aside{display:none!important}
-  .list-filter-aside.open{display:flex!important;position:static;flex:1 1 100%;min-width:0}
   /* Detail: gallery thumbnails only swap background color, no real photos */
   .detail-gallery-thumbs{display:none!important}
   /* Footer: drop description line, tighten panel padding */
@@ -115,11 +113,19 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   .about-timeline-toggle{display:inline-flex!important}
   /* Detail: similar plates capped at 2 on mobile */
   .similar-plate-extra{display:none!important}
+  /* Admin: sidebar becomes a drawer opened via fixed top-left hamburger button */
+  .admin-sidebar{display:none!important}
+  .admin-mobile-topbar-btn{display:flex!important}
+  .admin-main{padding-top:64px!important}
 }
 @media(max-height:420px){
   .chatbot-fab{width:40px!important;height:40px!important;bottom:12px!important;right:12px!important}
 }
-@media(max-width:1024px){
-  .admin-sidebar{flex:0 0 56px!important;min-width:56px!important}
-  .admin-sidebar .sidebar-label,.admin-sidebar .sidebar-brand-sub{display:none}
+@media(min-width:769px) and (max-width:1024px){
+  /* Tablet: admin sidebar narrows, reclaiming width for content tables */
+  .admin-sidebar{flex:0 0 188px!important;min-width:188px!important}
+  .admin-sidebar nav button{padding:10px 10px!important;font-size:13px!important}
+  /* Tablet: two-column page splits that only fit desktop stack cleanly instead of half-wrapping */
+  .tablet-stack{flex-direction:column!important}
+  .tablet-stack>*{flex:1 1 100%!important}
 }

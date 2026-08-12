@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { MessageCircle, ClipboardCheck, HandCoins, KeyRound } from 'lucide-react';
+import { MessageCircle, ClipboardCheck, HandCoins, KeyRound, Star } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
+import { useCompareIds } from '../services/compareService.js';
+import { usePlateReviews } from '../services/reviewService.js';
 
 const CONTACT_STEPS = [
   { icon: MessageCircle, title: '1. Nhắn Zalo', desc: 'Bấm "Nhắn Zalo", gửi biển số bạn quan tâm. Shop phản hồi trong 5–15 phút, kể cả cuối tuần.' },
@@ -75,6 +77,9 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
   const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
   const sold = plate.status === 'sold';
   const isFav = !!favs?.[plate.id];
+  const { data: reviewData } = usePlateReviews(plate.id);
+  const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
+  const inCompare = isInList(plate.id);
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -123,6 +128,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
           <div>
             <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{prov}{seri} · {num}</h1>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')} · {plate.viewCount} lượt xem</p>
+            {reviewData?.totalReviews > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <div style={{ display: 'flex', gap: 1 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= Math.round(reviewData.averageRating) ? 'var(--amber-400)' : 'none'} style={{ color: n <= Math.round(reviewData.averageRating) ? 'var(--amber-400)' : 'var(--grey-300)' }} />)}</div>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{reviewData.averageRating.toFixed(1)} ({reviewData.totalReviews} đánh giá)</span>
+              </div>
+            ) : (
+              <span style={{ display: 'block', marginTop: 6, font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có đánh giá</span>
+            )}
           </div>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
@@ -136,6 +149,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
               <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => handleContact('contact')} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
             )}
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
+            <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
           </div>
           {plate.fengShuiMeaning && (
             <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

@@ -205,7 +205,9 @@ export default function AdminPlates({ go, notify }) {
 
       {/* Table */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ minWidth: 720 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           <span style={{ flex: '1 1 130px' }}>Biển số</span>
           <span style={{ flex: '1 1 80px' }}>Loại</span>
           <span style={{ flex: '1 1 80px' }}>Tỉnh</span>
@@ -220,7 +222,7 @@ export default function AdminPlates({ go, notify }) {
         {!isLoading && plates.map((p) => {
           const parsed = parsePlateNumber(p.plateNumber);
           return (
-            <div key={p.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+            <div key={p.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
               <span style={{ flex: '1 1 130px' }}>
                 <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
               </span>
@@ -244,6 +246,8 @@ export default function AdminPlates({ go, notify }) {
             </div>
           );
         })}
+        </div>
+        </div>
 
         {!isLoading && plates.length === 0 && (
           <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>Không có biển số nào khớp tìm kiếm.</div>

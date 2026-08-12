@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
@@ -6,6 +6,24 @@ import { contentGet, contentItems } from '../lib/content/index.js';
 export default function Faq({ go }) {
   const [open, setOpen] = useState(null);
   const QA = contentItems('faq.items');
+
+  useEffect(() => {
+    const old = document.head.querySelector('script[data-faq-ld]');
+    if (old) old.remove();
+    if (QA.length === 0) return;
+    const sc = document.createElement('script');
+    sc.type = 'application/ld+json';
+    sc.dataset.faqLd = '1';
+    sc.textContent = JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: QA.map((item) => ({
+        '@type': 'Question', name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    });
+    document.head.appendChild(sc);
+    return () => { sc.remove(); };
+  }, [QA]);
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>

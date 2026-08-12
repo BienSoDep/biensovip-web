@@ -6,6 +6,7 @@ import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { contentGet } from '../lib/content/index.js';
 import { useCategories } from '../services/categories.js';
 import { useFeaturedPlates } from '../services/plates.js';
+import { usePromoVideos } from '../services/promoVideoService.js';
 
 export default function Home({ st, patch, go, notify, heroAnim, openPlate, openBuy }) {
   const stagger = useStaggeredReveal();
@@ -13,6 +14,8 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
   const { data: plateTypes } = useCategories('plate_type');
   const { data: featured, isLoading: featuredLoading } = useFeaturedPlates(4);
   const featuredItems = featured || [];
+  const { data: promoVideos } = usePromoVideos();
+  const videoItems = promoVideos?.items || [];
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -70,7 +73,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', animation: 'fadeIn 180ms var(--ease-out)' }}>
         {featuredLoading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {Array.from({ length: 4 }, (_, i) => <div key={i} style={{ height: 320, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }} />)}
           </div>
         ) : featuredItems.length === 0 ? (
@@ -78,7 +81,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
             <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>{T('home.featured.empty')} <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>{T('home.featured.empty_link')}</button></p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(276px,1fr))', gap: 'var(--gutter-section)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {featuredItems.map((p, i) => (
               <PlateCard key={p.id} plateNumber={p.plateNumber} province={p.province} price={p.price} thumbnailUrl={p.thumbnailUrl} isHot
                 onOpen={() => openPlate(p.slug || p.id)} onBuy={() => openBuy?.(p.id)} style={stagger(i)} />
@@ -87,22 +90,21 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
         )}
       </section>
 
-      <section className="home-video-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <Eyebrow tone="blue" className="section-eyebrow">{T('home.video.eyebrow')}</Eyebrow>
-          <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.video.title')}</h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 'var(--gutter-section)' }}>
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', aspectRatio: '9/14', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', border: '2px dashed var(--border-strong)' }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-muted)' }}>{T('home.video.tiktok')}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{T('home.video.tiktok_hint')}</span>
+      {videoItems.length > 0 && (
+        <section className="home-video-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Eyebrow tone="blue" className="section-eyebrow">{T('home.video.eyebrow')}</Eyebrow>
+            <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.video.title')}</h2>
           </div>
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', aspectRatio: '16/9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', border: '2px dashed var(--border-strong)' }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-muted)' }}>{T('home.video.facebook')}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{T('home.video.facebook_hint')}</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            {videoItems.map((v) => (
+              <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', aspectRatio: v.platform === 'tiktok' ? '9/14' : '16/9', overflow: 'hidden' }}>
+                <iframe src={v.videoUrl} title={v.title || 'Video'} style={{ width: '100%', height: '100%', border: 0 }} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section style={{ padding: '0 var(--pad-page) var(--pad-section-y)' }}>
         <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-inverse)', borderRadius: 'var(--radius-surface)', padding: 'clamp(28px,4vw,52px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-8)' }}>

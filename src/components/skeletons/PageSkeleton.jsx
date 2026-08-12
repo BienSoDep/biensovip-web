@@ -8,7 +8,7 @@ function ListSkeletonLayout() {
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--pad-section-y)' }}>
       <SkeletonBase width={240} height={32} style={{ marginBottom: 'var(--space-2)' }} />
       <SkeletonBase width={160} height={16} style={{ marginBottom: 'var(--space-5)' }} />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(268px,1fr))', gap: 'var(--gutter-section)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
         {Array.from({ length: 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
       </div>
     </div>
