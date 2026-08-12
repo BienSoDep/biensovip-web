@@ -59,7 +59,7 @@ export function useComparePlates(ids) {
   const key = ids.length > 0 ? ids.join(',') : '';
   return useQuery({
     queryKey: ['compare-plates', key],
-    queryFn: () => apiClient.get(`/api/plates/compare?ids=${key}`),
+    queryFn: () => apiClient.get('/api/plates/compare', { params: { ids: key } }),
     enabled: ids.length >= 2,
     placeholderData: (prev) => prev,
   });
