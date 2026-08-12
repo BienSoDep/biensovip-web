@@ -17,8 +17,7 @@ import Compose from '../pages/admin/Compose.jsx';
 
 export default function AdminShell({
   s, st, setSt, patch, go, notify, setField,
-  adminMeta, admPlates, admContacts,
-  openAdd, openEdit, askDelete, catNames,
+  adminMeta, admContacts,
 }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
@@ -47,16 +46,16 @@ export default function AdminShell({
             <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{adminMeta[0]}</h1>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{adminMeta[1]}</p>
           </div>
-          {['aplates', 'acontacts', 'aposts', 'astaff', 'acustomers', 'acollabs'].indexOf(s) >= 0 && (
+          {['acontacts', 'aposts', 'astaff', 'acustomers', 'acollabs'].indexOf(s) >= 0 && (
             <SearchField placeholder="Tìm trong bảng…" value={st.adminQ} onChange={(e) => patch({ adminQ: e.target.value })} width={240} />
           )}
-          {(s === 'aplates' || s === 'aposts') && (
-            <Button variant="primary" size="md" onClick={s === 'aplates' ? openAdd : go('compose')}>{s === 'aplates' ? 'Thêm biển số' : 'Đăng bài mới'}</Button>
+          {(s === 'aposts') && (
+            <Button variant="primary" size="md" onClick={go('compose')}>Đăng bài mới</Button>
           )}
         </div>
 
         {s === 'dash' && <Dashboard st={st} go={go} />}
-        {s === 'aplates' && <AdminPlates st={st} patch={patch} admPlates={admPlates} openEdit={openEdit} askDelete={askDelete} catNames={catNames} />}
+        {s === 'aplates' && <AdminPlates go={go} notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} />}
         {s === 'acontacts' && <AdminContacts st={st} setSt={setSt} patch={patch} admContacts={admContacts} notify={notify} />}
         {s === 'astaff' && <AdminStaff st={st} patch={patch} setSt={setSt} notify={notify} />}

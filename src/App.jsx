@@ -228,7 +228,7 @@ export default function App() {
 
   const adminMeta = {
     dash: ['Tổng quan', 'Chào buổi sáng, đây là tình hình hôm nay.'],
-    aplates: ['Biển số', st.plates.length + ' biển số trong hệ thống'],
+    aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
     acontacts: ['Yêu cầu liên hệ', st.contacts.filter((c) => c.status === 'Mới').length + ' yêu cầu mới cần xử lý'],
     astaff: ['Nhân viên', st.staff.length + ' nhân viên trong hệ thống'],
@@ -334,9 +334,7 @@ export default function App() {
               <RequireAuth st={st} go={go}>
                 <AdminShell
                   s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
-                  adminMeta={adminMeta} admPlates={admPlates} admContacts={admContacts}
-                  openAdd={openAdd} openEdit={openEdit} askDelete={askDelete}
-                  catNames={catNames}
+                  adminMeta={adminMeta} admContacts={admContacts}
                 />
               </RequireAuth>
             )}
