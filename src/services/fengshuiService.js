@@ -7,3 +7,10 @@ export function useFengShuiLookup() {
       apiClient.post('/api/fengshui/lookup', { birthDate }),
   });
 }
+
+export function useSaveFengShuiHistory() {
+  return useMutation({
+    mutationFn: ({ birthDate, element }) =>
+      apiClient.post('/api/fengshui/history', { birthDate, element }),
+  });
+}

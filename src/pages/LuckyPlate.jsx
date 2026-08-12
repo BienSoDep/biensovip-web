@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Share2 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Input, Select, Eyebrow } from '../components/index.jsx';
-import { useFengShuiLookup } from '../services/fengshuiService.js';
+import { useFengShuiLookup, useSaveFengShuiHistory } from '../services/fengshuiService.js';
+import { loadAuth } from '../lib/authStore.js';
 
 const PURPOSES = ['Kinh doanh', 'Đi lại cá nhân', 'Sang tên/sưu tầm'];
 const VEHICLES = ['Ô tô', 'Xe máy'];
@@ -10,7 +12,9 @@ const BUDGETS = ['Dưới 100 triệu', '100 – 500 triệu', '500 triệu – 
 export default function LuckyPlate({ go, notify }) {
   const [form, setForm] = useState({ name: '', birthDate: '', purpose: '', vehicle: '', budget: '' });
   const [err, setErr] = useState('');
+  const [copied, setCopied] = useState(false);
   const lookup = useFengShuiLookup();
+  const saveHistory = useSaveFengShuiHistory();
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -25,6 +29,33 @@ export default function LuckyPlate({ go, notify }) {
   const reset = () => { lookup.reset(); setForm((f) => ({ ...f, birthDate: '' })); };
 
   const result = lookup.data;
+
+  useEffect(() => {
+    if (!result) return;
+    const auth = loadAuth();
+    if (!auth?.accessToken) return;
+    saveHistory.mutate({ birthDate: form.birthDate, element: result.element });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
+
+  const viewLuckyPlates = () => {
+    const digit = result?.luckyDigits?.[0];
+    const base = '#/danh-sach';
+    window.location.hash = digit !== undefined ? `${base}?q=${digit}` : base;
+    go('list')();
+  };
+
+  const share = () => {
+    const text = `Mệnh ${result.element} — con số may mắn: ${result.luckyDigits.join(', ')}. Tra cứu biển hợp mệnh tại Biensovip.com`;
+    try {
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      notify('Đã sao chép kết quả');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      notify('Không sao chép được');
+    }
+  };
 
   return (
     <section style={{ maxWidth: 820, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -78,7 +109,10 @@ export default function LuckyPlate({ go, notify }) {
 
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)', justifyContent: 'space-between' }}>
             <span style={{ font: 'var(--type-body)', color: 'var(--text-body)' }}>Xem kho biển số đẹp và lọc theo số may mắn của bạn.</span>
-            <Button variant="primary" size="md" onClick={go('list')}>Xem biển hợp mệnh →</Button>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <Button variant="outline" size="md" onClick={share}><Share2 size={16} style={{ marginRight: 6 }} />{copied ? 'Đã sao chép' : 'Chia sẻ'}</Button>
+              <Button variant="primary" size="md" onClick={viewLuckyPlates}>Xem biển hợp mệnh →</Button>
+            </div>
           </div>
 
           <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{result.disclaimer}</p>
