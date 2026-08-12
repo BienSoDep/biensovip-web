@@ -3,10 +3,10 @@ import { apiClient } from './apiClient.js';
 
 const KEY = ['admin', 'reviews'];
 
-export function useAdminReviews(status) {
+export function useAdminReviews(status, page = 1, perPage = 20) {
   return useQuery({
-    queryKey: [...KEY, status],
-    queryFn: () => apiClient.get('/api/admin/reviews', { params: { status } }),
+    queryKey: [...KEY, status, page, perPage],
+    queryFn: () => apiClient.get('/api/admin/reviews', { params: { status, page, perPage } }),
     placeholderData: (prev) => prev,
   });
 }
