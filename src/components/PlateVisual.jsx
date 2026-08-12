@@ -1,37 +1,76 @@
+const SIZES = {
+  sm: { pad: '5px 8px', gap: 6, radius: 4, minH: 32, provFs: 11, seriFs: 8, numFs: 15, ls: 0.5, boltSize: 3, boltInset: 6, border: 2 },
+  md: { pad: '10px 14px', gap: 12, radius: 6, minH: 92, provFs: 22, seriFs: 14, numFs: 34, ls: 1.5, boltSize: 5, boltInset: 8, border: 4 },
+  lg: { pad: '22px 28px', gap: 22, radius: 8, minH: 180, provFs: 'clamp(28px,5.5vw,48px)', seriFs: 'clamp(18px,3.6vw,30px)', numFs: 'clamp(40px,8.5vw,78px)', ls: 3, boltSize: 9, boltInset: 14, border: 7 },
+};
+
 export default function PlateVisual({ size = 'md', prov, seri, num }) {
-  if (size === 'sm') {
-    return (
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'stretch', gap: 6, background: '#F6F4EC', boxShadow: '0 0 0 3px #d8d3c4 inset', borderRadius: 3, padding: '4px 6px', minHeight: 34, width: 'fit-content' }}>
-        <div style={{ background: '#1B4F91', color: '#fff', borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2px 5px', fontFamily: 'Oswald,sans-serif', fontWeight: 600, lineHeight: 1.05 }}>
-          <span style={{ fontSize: 11 }}>{prov}</span>
-          <span style={{ fontSize: 8, opacity: 0.9 }}>{seri}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Oswald,sans-serif', fontWeight: 700, fontSize: 15, color: '#111', letterSpacing: 1, paddingRight: 2 }}>{num}</div>
-      </div>
-    );
-  }
-  if (size === 'lg') {
-    return (
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'stretch', gap: 24, background: '#F6F4EC', boxShadow: '0 0 0 7px #d8d3c4 inset,0 40px 70px -20px rgba(0,0,0,.85)', borderRadius: 5, padding: '24px 30px', minHeight: 190 }}>
-        <div style={{ position: 'absolute', top: 12, left: '28%', width: 9, height: 9, borderRadius: '50%', background: '#9c9686' }} />
-        <div style={{ position: 'absolute', top: 12, left: '72%', width: 9, height: 9, borderRadius: '50%', background: '#9c9686' }} />
-        <div style={{ background: '#1B4F91', color: '#fff', borderRadius: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 20px', fontFamily: 'Oswald,sans-serif', fontWeight: 600, lineHeight: 1.05 }}>
-          <span style={{ fontSize: 'clamp(30px,6vw,52px)' }}>{prov}</span>
-          <span style={{ fontSize: 'clamp(20px,4vw,34px)', opacity: 0.9 }}>{seri}</span>
-        </div>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Oswald,sans-serif', fontWeight: 700, fontSize: 'clamp(42px,9vw,84px)', color: '#111', letterSpacing: 3 }}>{num}</div>
-      </div>
-    );
-  }
+  const s = SIZES[size] || SIZES.md;
+  const emboss = '0 1px 0 rgba(255,255,255,.9), 0 -1px 0 rgba(0,0,0,.15), 0 1.5px 1.5px rgba(0,0,0,.35)';
+
   return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'stretch', gap: 12, background: '#F6F4EC', boxShadow: '0 0 0 4px #d8d3c4 inset', borderRadius: 4, padding: '12px 16px', minHeight: 96 }}>
-      <div style={{ position: 'absolute', top: 6, left: '28%', width: 5, height: 5, borderRadius: '50%', background: '#9c9686' }} />
-      <div style={{ position: 'absolute', top: 6, left: '72%', width: 5, height: 5, borderRadius: '50%', background: '#9c9686' }} />
-      <div style={{ background: '#1B4F91', color: '#fff', borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '6px 12px', fontFamily: 'Oswald,sans-serif', fontWeight: 600, lineHeight: 1.05 }}>
-        <span style={{ fontSize: 24 }}>{prov}</span>
-        <span style={{ fontSize: 15, opacity: 0.9 }}>{seri}</span>
+    <div
+      style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'stretch',
+        gap: s.gap,
+        minHeight: s.minH,
+        padding: s.pad,
+        borderRadius: s.radius,
+        overflow: 'hidden',
+        /* Brushed-aluminum base + diagonal reflective sheen, like real reflective sheeting */
+        background: `
+          linear-gradient(115deg, transparent 30%, rgba(255,255,255,.85) 45%, rgba(255,255,255,.3) 52%, transparent 62%),
+          repeating-linear-gradient(90deg, rgba(0,0,0,.02) 0px, rgba(0,0,0,.02) 1px, transparent 1px, transparent 3px),
+          linear-gradient(180deg, #fdfdfd 0%, #f2f2f0 45%, #e8e8e5 100%)
+        `,
+        boxShadow: `
+          0 0 0 ${s.border}px #cfcfc9 inset,
+          0 0 0 ${s.border + 1}px #9a9a92 inset,
+          inset 0 2px 3px rgba(255,255,255,.6),
+          inset 0 -3px 5px rgba(0,0,0,.12)
+        `,
+      }}
+    >
+      {/* Bolt holes — top corners, sunk-metal look */}
+      <span aria-hidden style={{ position: 'absolute', top: s.boltInset, left: s.boltInset, width: s.boltSize, height: s.boltSize, borderRadius: '50%', background: 'radial-gradient(circle at 35% 30%, #fff, #8a8a82 55%, #55554f 100%)', boxShadow: '0 1px 1px rgba(0,0,0,.4)' }} />
+      <span aria-hidden style={{ position: 'absolute', top: s.boltInset, right: s.boltInset, width: s.boltSize, height: s.boltSize, borderRadius: '50%', background: 'radial-gradient(circle at 35% 30%, #fff, #8a8a82 55%, #55554f 100%)', boxShadow: '0 1px 1px rgba(0,0,0,.4)' }} />
+
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: 1.02,
+          fontFamily: 'Oswald,sans-serif',
+          fontWeight: 700,
+          color: '#0F2E6B',
+          textShadow: emboss,
+        }}
+      >
+        <span style={{ fontSize: s.provFs }}>{prov}</span>
+        <span style={{ fontSize: s.seriFs, opacity: 0.94 }}>{seri}</span>
       </div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Oswald,sans-serif', fontWeight: 700, fontSize: 36, color: '#111', letterSpacing: 2 }}>{num}</div>
+
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'Oswald,sans-serif',
+          fontWeight: 700,
+          fontSize: s.numFs,
+          letterSpacing: s.ls,
+          color: '#0F2E6B',
+          textShadow: emboss,
+        }}
+      >
+        {num}
+      </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose'
 
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
-  status, badge, fav, onFav, onOpen, onBuy, style,
+  status, badge, fav, onFav, onCompare, inCompare, onOpen, onBuy, style,
 }) {
   const { prov, seri, num } = splitPlateNumber(plateNumber);
   const sold = status === 'sold';
@@ -25,6 +25,9 @@ export default function PlateCard({
             <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
               <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={onFav} style={fav ? { color: 'var(--status-danger)' } : undefined} />
             </span>
+          )}
+          {onCompare && (
+            <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={onCompare} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
           )}
         </div>
 
