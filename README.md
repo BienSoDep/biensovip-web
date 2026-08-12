@@ -1,44 +1,95 @@
 # Biensovip.com — biensovip-web
 
-Website bán biển số đẹp (thương hiệu Duy Đinh, Đà Nẵng). React SPA, hiện **chưa có backend** — toàn bộ dữ liệu là mock data tĩnh, chưa có xác thực thật.
+Frontend cho website mua bán biển số xe đẹp **Biensovip.com** (thương hiệu Duy Đinh, Đà Nẵng). React 19 SPA, đã nối API backend thật (biển số, danh mục, blog, liên hệ) qua `React Query`.
 
 ## Công nghệ
 
-- **React 19 + Vite** — SPA, không dùng React Router (routing tự viết qua hash: `src/config/routes.js` + `src/hooks/useHashRouter.js`).
-- **State**: một object `st` duy nhất trong `src/App.jsx` (`useState`), không dùng Redux/Zustand/Context — xem lý do ở `structure.md` mục 2.
-- **Style**: inline style + design token CSS (`src/styles/tokens.css`), không dùng Tailwind/CSS Modules.
-- **Dữ liệu**: mock trong `src/lib/mockData.js` (biển số, danh mục, bài viết, liên hệ) — chưa có API thật. Kế hoạch tích hợp backend: xem `docs/API-REQUIREMENTS.md`.
-- **Test**: Playwright (E2E), thư mục `e2e/`.
+| Layer | Công nghệ |
+|-------|-----------|
+| Runtime | React 19 + Vite 8 |
+| Language | JavaScript (JSX) — không TypeScript |
+| Routing | Hash-based router tự viết (`useHashRouter`) |
+| State | `useState` trong `App.jsx`, không dùng Redux/Context |
+| Server state | `@tanstack/react-query` |
+| Data | API backend qua `services/` + `VITE_API_URL` |
+| UI | `@base-ui/react` + CSS design tokens (`tokens.css`) |
+| Animation | `framer-motion` |
+| Editor | `@tiptap/react` (soạn bài blog) |
+| Charts | `recharts` (dashboard quản trị) |
+| Lint | `oxlint` |
+| Test | `@playwright/test` (E2E) |
 
 ## Cài đặt & chạy
 
 ```bash
 npm install
-npm run dev       # chạy dev server (Vite), mặc định http://localhost:5173
-npm run build     # build production vào dist/
-npm run preview   # xem thử bản build
-npm run lint      # oxlint
+npm run dev         # dev server (Vite) — mặc định http://localhost:5173
+npm run build       # build production vào dist/
+npm run preview     # xem thử bản build
+npm run lint        # oxlint
+npm run validate:content  # kiểm tra file content JSON
 ```
 
-## Chạy test E2E (Playwright)
+### Kết nối backend
+
+Frontend gọi API qua `services/apiClient.js`, URL lấy từ `VITE_API_URL`. Tạo file `.env`:
+
+```dotenv
+VITE_API_URL=http://localhost:5028   # trỏ tới biensovip-backend
+```
+
+Backend mặc định chạy tại `http://localhost:5028`. Hướng dẫn backend: [biensovip-backend/README.md](../biensovip-backend/README.md).
+
+## Test E2E (Playwright)
 
 ```bash
-npx playwright install chromium   # chỉ cần chạy 1 lần
-npx playwright test               # chạy toàn bộ test, tự khởi động dev server
-npx playwright test --ui          # chạy ở chế độ UI để debug
-npx playwright show-report        # xem báo cáo HTML sau khi chạy
+npx playwright install chromium       # chỉ cần chạy 1 lần
+npx playwright test                   # chạy toàn bộ test, tự khởi động server
+npx playwright test --ui              # chế độ UI để debug
+npx playwright show-report            # xem báo cáo HTML
 ```
 
-Test bao phủ luồng công khai (trang chủ, danh sách/lọc biển số, chi tiết, yêu thích, đăng ký/đăng nhập/quên mật khẩu, blog, tư vấn hợp mệnh, giới thiệu), luồng quản trị (đăng nhập demo → dashboard → quản lý biển số/danh mục/liên hệ/bài viết → soạn bài), và chuyển đổi Desktop/Mobile. Cấu hình: `playwright.config.js`.
+Cấu hình: `playwright.config.js`. Bao phủ luồng công khai (trang chủ, danh sách/lọc biển, chi tiết, yêu thích, đăng ký/đăng nhập/quên mật khẩu, blog, tư vấn, giới thiệu), luồng quản trị (đăng nhập demo → dashboard → quản lý biển số/danh mục/liên hệ/bài viết → soạn bài), và chuyển đổi Desktop/Mobile.
 
 ## Cấu trúc thư mục
 
-Xem chi tiết tại [`structure.md`](./structure.md) — mô tả đầy đủ `src/` (animations, common, components, config, hooks, layout, lib, pages, styles) và lý do một số thư mục (`contexts/`, `controllers/`, `services/`, `locales/`) hiện còn rỗng.
+```
+src/
+├── main.jsx                 # Entry — StrictMode
+├── App.jsx                  # Root — toàn bộ state + routing
+├── animations/
+├── common/                  # constants
+├── components/              # UI components chia sẻ (barrel index.jsx)
+├── config/routes.js         # Định nghĩa route (PUBLIC_SCREENS, ADMIN_SCREENS)
+├── contexts/                # .gitkeep — reserve React Context
+├── controllers/             # .gitkeep — reserve business logic
+├── hooks/                   # useHashRouter, useSeo, useStaggeredReveal, ...
+├── layout/                  # Header, Footer, MobileDrawer, AdminShell, Modals
+├── lib/                     # mockData.js (fallback), authStore.js, content/vi/*.json
+├── pages/                   # trang công khai + admin/
+├── services/                # API client + từng tài nguyên (plates, blog, categories...)
+└── styles/                  # app.css, tokens.css, skeleton.css
+```
 
-## Kế hoạch tích hợp backend
+Chi tiết đầy đủ từng thư mục: [`structure.md`](./structure.md) và [`CLAUDE.md`](./CLAUDE.md).
 
-Dự án hiện chạy hoàn toàn trên mock data (`src/lib/mockData.js`, `src/common/constants.js`). Toàn bộ REST API cần xây dựng để thay thế — theo từng tài nguyên (biển số, danh mục, bài viết, liên hệ, người dùng/xác thực, yêu thích), kèm đối chiếu với thiết kế database — xem [`docs/API-REQUIREMENTS.md`](../docs/API-REQUIREMENTS.md).
+## Kiến trúc
 
-Tài liệu liên quan khác:
-- [`docs/TECH-STACK-PROPOSAL.md`](../docs/TECH-STACK-PROPOSAL.md) — đề xuất công nghệ tổng thể (backend, database, hạ tầng).
-- [`docs/database/DATABASE-SCHEMA.md`](../docs/database/DATABASE-SCHEMA.md) và [`docs/database/schema.dbml`](../docs/database/schema.dbml) — thiết kế database chi tiết.
+- **State cục bộ:** mọi state trong `App.jsx` qua `useState` + helper `patch()`. Không Redux/Zustand/Context (thư mục `contexts/` đang rỗng, dành khi cần).
+- **Routing:** hash-based, tự viết. Cấu hình tại `config/routes.js`. Dạng `#/screen` hoặc `#/screen/param`, điều hướng qua `go('screen')()`.
+- **Dữ liệu server:** `services/` gọi backend; `@tanstack/react-query` quản lý cache/server state.
+- **Code splitting:** mọi trang tải qua `React.lazy` + `Suspense`, fallback `<PageSkeleton/>`.
+- **Content:** nội dung tiếng Việt trong `lib/content/vi/*.json`, truy cập qua `contentGet('common.breadcrumb.home')`.
+- **Error:** `ErrorBoundary` bọc toàn app, `NotFound` (404) / `ServerError` (500).
+
+## Screens
+
+- **Public (21 route):** `home, list, detail, register, login, forgot, fav, lucky, about, blog, post, chat, compare, saved, reviews, notifications, collab, terms, privacy, transfer, faq`
+- **Admin (12 route):** `dash, adminLogin, aplates, acats, acontacts, aposts, compose, acustomers, astaff, avideos, anotifications, acollabs`
+- **Error:** `notfound, servererror`
+
+## Tài liệu liên quan
+
+- Thiết kế database & API: [`docs/database/schema.dbml`](../biensodep-infrastructure/docs/database/schema.dbml), [`docs/api/API-REQUIREMENTS.md`](../biensodep-infrastructure/docs/api/API-REQUIREMENTS.md)
+- Đề xuất công nghệ: [`docs/architecture/TECH-STACK-PROPOSAL.md`](../biensodep-infrastructure/docs/architecture/TECH-STACK-PROPOSAL.md)
+- Screen specs (21 màn): [`docs/specs/screens/INDEX.md`](../biensodep-infrastructure/docs/specs/screens/INDEX.md)
