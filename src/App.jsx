@@ -49,6 +49,7 @@ const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
 export default function App() {
   const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.hash) : { screen: 'home' };
+  const [favItems, setFavItems] = useState([]);
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home', device: 'desktop',
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
@@ -124,6 +125,7 @@ export default function App() {
         if (items) {
           const dict = {};
           items.forEach((p) => { dict[p.id] = true; });
+          setFavItems(items);
           patch({ favs: dict });
         }
       }).catch(() => {});
@@ -131,6 +133,7 @@ export default function App() {
       const ids = getLocalFavorites();
       const dict = {};
       ids.forEach((id) => { dict[id] = true; });
+      setFavItems([]);
       patch({ favs: dict });
     }
   }, [st.user]);
@@ -150,8 +153,12 @@ export default function App() {
     // Persist: guest → localStorage, user → API (fire-and-forget, optimistic)
     if (st.user) {
       const isFav = st.favs[id];
-      if (isFav) favApi.removeFavorite(id).catch(() => {});
-      else favApi.addFavorite(id).catch(() => {});
+      if (isFav) {
+        favApi.removeFavorite(id).catch(() => {});
+        setFavItems((items) => items.filter((p) => p.id !== id));
+      } else {
+        favApi.addFavorite(id).then(() => favApi.listFavorites()).then((items) => items && setFavItems(items)).catch(() => {});
+      }
     } else {
       const isFav = st.favs[id];
       if (isFav) removeLocalFavorite(id);
@@ -215,7 +222,7 @@ export default function App() {
     }
   };
   const adminDemo = () => {
-    patch({ admEmail: ADMIN_EMAIL, admPw: 'admin123', admErr: {} });
+    patch({ admEmail: ADMIN_EMAIL, admPw: 'Admin@123', admErr: {} });
     notify('Đã điền tài khoản mẫu — bấm Đăng nhập để tiếp tục');
   };
 
@@ -329,7 +336,14 @@ export default function App() {
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
-  const favCards = cards(st.plates.filter((p) => st.favs[p.id]));
+  const favCards = favItems.map((p) => ({
+    id: p.id, plateNumber: p.plateNumber, price: p.price, province: p.province,
+    thumbnailUrl: p.thumbnailUrl, status: p.status,
+    fav: true,
+    onFav: () => { toggleFav(p.id); notify('Đã bỏ khỏi yêu thích'); },
+    onOpen: () => openPlate(p.id),
+    onBuy: () => openBuy(p.id),
+  }));
 
   const admQ = st.adminQ.trim().toLowerCase();
   const admPlates = st.plates.filter((p) => {

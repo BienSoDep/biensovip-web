@@ -5,9 +5,10 @@ import { Input, Select, Eyebrow } from '../components/index.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory } from '../services/fengshuiService.js';
 import { loadAuth } from '../lib/authStore.js';
 
-const PURPOSES = ['Kinh doanh', 'Đi lại cá nhân', 'Sang tên/sưu tầm'];
-const VEHICLES = ['Ô tô', 'Xe máy'];
-const BUDGETS = ['Dưới 100 triệu', '100 – 500 triệu', '500 triệu – 1 tỷ', 'Trên 1 tỷ', 'Mọi ngân sách'];
+const toOpts = (arr) => arr.map((o) => ({ value: o, label: o }));
+const PURPOSES = toOpts(['Kinh doanh', 'Đi lại cá nhân', 'Sang tên/sưu tầm']);
+const VEHICLES = toOpts(['Ô tô', 'Xe máy']);
+const BUDGETS = toOpts(['Dưới 100 triệu', '100 – 500 triệu', '500 triệu – 1 tỷ', 'Trên 1 tỷ', 'Mọi ngân sách']);
 
 export default function LuckyPlate({ go, notify }) {
   const [form, setForm] = useState({ name: '', birthDate: '', purpose: '', vehicle: '', budget: '' });

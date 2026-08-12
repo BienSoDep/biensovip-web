@@ -79,7 +79,7 @@ export default function ChatZaloContact({ notify }) {
           <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={form.phone} onChange={set('phone')} />
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mục đích</span>
-            <Select value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(form.intent)] || 'Hỏi chung'} options={INTENT_OPTS} onChange={(v) => setForm((f) => ({ ...f, intent: INTENT_VAL[v] || 'inquiry' }))} />
+            <Select value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(form.intent)] || 'Hỏi chung'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => setForm((f) => ({ ...f, intent: INTENT_VAL[v] || 'inquiry' }))} />
           </label>
           {(form.intent === 'deposit_request' || form.intent === 'buy') && (
             <Input label="Biển số quan tâm" placeholder="VD: 43A1-999.99" value={form.plateNumber} onChange={set('plateNumber')} />

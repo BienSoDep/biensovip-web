@@ -46,7 +46,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
         <SearchField placeholder="Tìm theo email hoặc tên…" value={st.adminQ || ''} onChange={(e) => { setSt((s) => ({ ...s, adminQ: e.target.value })); setPage(1); }} width={260} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái:</span>
-          <Select value={status === 'all' ? 'Tất cả' : (STATUS_LABEL[status] || 'Chưa xác thực')} options={STATUS_OPTS} onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }} variant="pill" />
+          <Select value={status === 'all' ? 'Tất cả' : (STATUS_LABEL[status] || 'Chưa xác thực')} options={STATUS_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }} variant="pill" />
         </div>
         <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} khách hàng</span>
       </div>

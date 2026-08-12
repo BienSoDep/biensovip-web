@@ -47,11 +47,11 @@ export default function AdminContacts({ notify }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái:</span>
-          <Select value={status === 'all' ? 'Tất cả' : STATUS_LABEL[status]} options={['Tất cả', ...STATUS_OPTS]} onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }} variant="pill" />
+          <Select value={status === 'all' ? 'Tất cả' : STATUS_LABEL[status]} options={['Tất cả', ...STATUS_OPTS].map((o) => ({ value: o, label: o }))} onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }} variant="pill" />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Mục đích:</span>
-          <Select value={intent === 'all' ? 'Tất cả' : INTENT_LABEL[intent]} options={INTENT_OPTS} onChange={(v) => { setIntent(v === 'Tất cả' ? 'all' : INTENT_VAL[v]); setPage(1); }} variant="pill" />
+          <Select value={intent === 'all' ? 'Tất cả' : INTENT_LABEL[intent]} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => { setIntent(v === 'Tất cả' ? 'all' : INTENT_VAL[v]); setPage(1); }} variant="pill" />
         </div>
         <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} yêu cầu</span>
       </div>
@@ -90,7 +90,7 @@ export default function AdminContacts({ notify }) {
               <span style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
                 <Select
                   value={STATUS_LABEL[c.status] || c.status}
-                  options={STATUS_OPTS}
+                  options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
                   onChange={(v) => handleStatus(c.id, v)}
                   variant="pill"
                   style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}

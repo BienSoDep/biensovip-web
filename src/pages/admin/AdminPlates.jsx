@@ -358,6 +358,11 @@ function PlateFormModal({
           <Select label="Tỉnh/thành" value={form.provinceId} options={provinces} onChange={setF('provinceId')} style={{ flex: '1 1 140px' }} />
           <Select label="Loại xe" value={form.vehicleTypeId} options={vehicleTypes} onChange={setF('vehicleTypeId')} style={{ flex: '1 1 140px' }} />
         </div>
+        {(formErr.plateTypeId || formErr.provinceId || formErr.vehicleTypeId) && (
+          <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>
+            {[formErr.plateTypeId, formErr.provinceId, formErr.vehicleTypeId].filter(Boolean).join(' · ')}
+          </span>
+        )}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'flex-end' }}>
           <div style={{ flex: '1 1 180px' }}>

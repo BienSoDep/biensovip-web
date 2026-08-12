@@ -110,9 +110,11 @@ export default function Compose({ st, patch, notify }) {
   const [addVideoId, setAddVideoId] = useState('');
   const [videoBusy, setVideoBusy] = useState(false);
 
+  const [, forceEditorUpdate] = useState(0);
   const editor = useEditor({
     extensions: [StarterKit, TiptapLink, TiptapImage],
     content: '',
+    onUpdate: () => forceEditorUpdate((n) => n + 1),
   });
 
   useEffect(() => {

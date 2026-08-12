@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Select, Checkbox, Input } from '../components/index.jsx';
+import { Select, Checkbox, Radio, Input } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
@@ -48,6 +48,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
 
   const { data: plateTypes } = useCategories('plate_type');
   const { data: provinces } = useCategories('province');
+  const { data: vehicleTypes } = useCategories('vehicle_type');
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const createSavedSearch = useCreateSavedSearch();
   const isLoggedIn = !!loadAuth()?.accessToken;
@@ -152,6 +153,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
                 </div>
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
+                  {(vehicleTypes?.items || []).map((v) => (
+                    <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
+                  ))}
+                </div>
+                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Từ khóa</span>
                   <input value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} placeholder="VD: 51A"
                     style={{ height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
@@ -182,6 +190,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
                 <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
               </div>
+            ))}
+          </div>
+          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
+            {(vehicleTypes?.items || []).map((v) => (
+              <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
             ))}
           </div>
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />

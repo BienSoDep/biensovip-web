@@ -1,29 +1,28 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('LuckyPlate', () => {
-  test('form submit produces ranked results', async ({ page }) => {
+  test('form submit produces fengshui result', async ({ page }) => {
     await page.goto('/#/tu-van');
     await expect(page.getByRole('heading', { name: 'Tìm biển số hợp mệnh của bạn' })).toBeVisible();
-    await page.getByLabel('Năm sinh').fill('1990');
-    await page.getByRole('button', { name: 'Gợi ý biển số hợp mệnh' }).click();
-    await expect(page.getByText('3 biển số hợp mệnh nhất')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Xem biển' })).toHaveCount(3);
+    await page.getByLabel('Ngày sinh').fill('1990-01-01');
+    await page.getByRole('button', { name: 'Tra cứu mệnh của bạn' }).click();
+    await expect(page.getByText(/Mệnh .+ —/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Xem biển hợp mệnh →' })).toBeVisible();
   });
 
-  test('sửa thông tin resets the form', async ({ page }) => {
+  test('tra cứu lại resets the form', async ({ page }) => {
     await page.goto('/#/tu-van');
-    await page.getByLabel('Năm sinh').fill('1990');
-    await page.getByRole('button', { name: 'Gợi ý biển số hợp mệnh' }).click();
-    await expect(page.getByText('3 biển số hợp mệnh nhất')).toBeVisible();
-    await page.getByRole('button', { name: '← Sửa thông tin' }).click();
-    await expect(page.getByRole('button', { name: 'Gợi ý biển số hợp mệnh' })).toBeVisible();
+    await page.getByLabel('Ngày sinh').fill('1990-01-01');
+    await page.getByRole('button', { name: 'Tra cứu mệnh của bạn' }).click();
+    await expect(page.getByText(/Mệnh .+ —/)).toBeVisible();
+    await page.getByRole('button', { name: '← Tra cứu lại' }).click();
+    await expect(page.getByRole('button', { name: 'Tra cứu mệnh của bạn' })).toBeVisible();
   });
 
-  test('invalid year shows error', async ({ page }) => {
+  test('invalid date shows error', async ({ page }) => {
     await page.goto('/#/tu-van');
-    await page.getByLabel('Năm sinh').fill('abcd');
-    await page.getByRole('button', { name: 'Gợi ý biển số hợp mệnh' }).click();
-    await expect(page.getByText('Nhập năm sinh hợp lệ (VD: 1990).')).toBeVisible();
+    await page.getByRole('button', { name: 'Tra cứu mệnh của bạn' }).click();
+    await expect(page.getByText('Vui lòng nhập ngày sinh.')).toBeVisible();
   });
 });
 
