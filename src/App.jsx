@@ -5,6 +5,9 @@ import {
   validatePhone,
 } from './lib/mockData.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
+import * as authApi from './services/authService.js';
+import * as favApi from './services/favoriteService.js';
+import { getLocalFavorites, addLocalFavorite, removeLocalFavorite } from './services/favoriteStore.js';
 import { contentGet } from './lib/content/index.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
@@ -15,6 +18,8 @@ import MobileDrawer from './layout/MobileDrawer.jsx';
 import PageSkeleton from './components/skeletons/PageSkeleton.jsx';
 import { parseRoute, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
+import { usePlateDetail } from './services/plateDetail.js';
+import { useBlogPost } from './services/blog.js';
 import { useHashRouter } from './hooks/useHashRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 
@@ -47,9 +52,9 @@ export default function App() {
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home', device: 'desktop',
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
-    favs: { p2: true, p7: true }, curId: initRoute.detailId || 'p1',
+    favs: {}, curId: initRoute.detailId || 'p1',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mErr: {},
-    aName: '', aPhone: '', aPw: '', aPw2: '', aOtp: '', aAgree: false, aErr: {}, step: 1, user: loadAuth()?.user || null,
+    aName: '', aEmail: '', aPhone: '', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aErr: {}, step: 1, user: loadAuth()?.user || null,
     admEmail: '', admPw: '', admErr: '',
     plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
     cats: CATS.map((c) => ({ name: c })), newCat: '', catErr: '',
@@ -63,6 +68,7 @@ export default function App() {
     compareIds: [], savedSearches: [], reviews: [], reviewDraft: null,
     notifications: [], collabs: [], videos: [],
     isAdmin: !!(loadAuth()?.isAdmin),
+    settings: null,
   });
   const patch = (p) => setSt((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
   const fanDone = useRef(false);
@@ -72,7 +78,62 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => { saveAuth(st.user, st.isAdmin); }, [st.user, st.isAdmin]);
+  // Restore admin session on mount
+  useEffect(() => {
+    const auth = loadAuth();
+    if (auth?.isAdmin && auth?.accessToken) {
+      authApi.restoreAdminSession().then((session) => {
+        if (session?.user) {
+          patch({ user: session.user, isAdmin: true, screen: 'dash' });
+        }
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-redirect admin away from login page when already logged in
+  useEffect(() => {
+    if (st.screen === 'adminLogin' && st.isAdmin) {
+      patch({ screen: 'dash' });
+    }
+  }, [st.screen, st.isAdmin]);
+
+  // UC05+UC06 — fetch public settings for chat widget + Zalo
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings`)
+      .then(r => r.json())
+      .then(body => {
+        if (!body?.success) return;
+        const s = body.data;
+        patch({ settings: s });
+        // UC05 — inject chat widget script (Tawk.to / Messenger / custom)
+        if (s.chatWidgetScript) {
+          const div = document.createElement('div');
+          div.innerHTML = s.chatWidgetScript;
+          document.body.appendChild(div);
+        }
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { saveAuth({ user: st.user, isAdmin: st.isAdmin }); }, [st.user, st.isAdmin]);
+
+  // Init favs from localStorage (guest) or API (user)
+  useEffect(() => {
+    if (st.user) {
+      favApi.listFavorites().then((items) => {
+        if (items) {
+          const dict = {};
+          items.forEach((p) => { dict[p.id] = true; });
+          patch({ favs: dict });
+        }
+      }).catch(() => {});
+    } else {
+      const ids = getLocalFavorites();
+      const dict = {};
+      ids.forEach((id) => { dict[id] = true; });
+      patch({ favs: dict });
+    }
+  }, [st.user]);
 
   useHashRouter(st, patch);
 
@@ -80,11 +141,23 @@ export default function App() {
   const heroAnim = makeHeroAnim(fanDone);
 
   const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
-  const toggleFav = (id) => setSt((s) => {
-    const favs = { ...s.favs };
-    if (favs[id]) delete favs[id]; else favs[id] = true;
-    return { ...s, favs };
-  });
+  const toggleFav = (id) => {
+    setSt((s) => {
+      const favs = { ...s.favs };
+      if (favs[id]) delete favs[id]; else favs[id] = true;
+      return { ...s, favs };
+    });
+    // Persist: guest → localStorage, user → API (fire-and-forget, optimistic)
+    if (st.user) {
+      const isFav = st.favs[id];
+      if (isFav) favApi.removeFavorite(id).catch(() => {});
+      else favApi.addFavorite(id).catch(() => {});
+    } else {
+      const isFav = st.favs[id];
+      if (isFav) removeLocalFavorite(id);
+      else addLocalFavorite(id);
+    }
+  };
   const openPlate = (id) => patch({ screen: 'detail', curId: id, modal: false });
   const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mErr: {} });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
@@ -115,58 +188,96 @@ export default function App() {
   };
 
   const ADMIN_EMAIL = 'admin@biensovip.com';
-  const ADMIN_PW = 'admin123';
-  const adminSignIn = () => {
+  const adminSignIn = async () => {
     const err = {};
     if (!/^\S+@\S+\.\S+$/.test(st.admEmail)) err.email = 'Email chưa đúng định dạng.';
-    else if (st.admEmail !== ADMIN_EMAIL) err.email = 'Tài khoản không tồn tại.';
     if (st.admPw.length < 6) err.pw = 'Mật khẩu tối thiểu 6 ký tự.';
-    else if (st.admPw !== ADMIN_PW) err.pw = 'Mật khẩu không chính xác.';
     if (Object.keys(err).length) { patch({ admErr: err }); return; }
-    patch({ admErr: {}, screen: 'dash', user: st.admEmail, isAdmin: true });
-    notify('Đăng nhập quản trị thành công');
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: st.admEmail.trim(), password: st.admPw }),
+      });
+      const body = await resp.json();
+      if (!resp.ok || !body?.success) {
+        const msg = body?.error?.message || 'Đăng nhập thất bại';
+        if (resp.status === 429) patch({ admErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
+        else if (resp.status === 401) patch({ admErr: { pw: 'Email hoặc mật khẩu không đúng.' } });
+        else patch({ admErr: { email: msg } });
+        return;
+      }
+      const { accessToken, refreshToken, admin } = body.data;
+      saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
+      patch({ admErr: {}, screen: 'dash', user: admin, isAdmin: true });
+      notify('Đăng nhập quản trị thành công');
+    } catch {
+      patch({ admErr: { email: 'Không kết nối được server.' } });
+    }
   };
   const adminDemo = () => {
-    patch({ admEmail: ADMIN_EMAIL, admPw: ADMIN_PW, admErr: {}, screen: 'dash', user: ADMIN_EMAIL, isAdmin: true });
-    notify('Đăng nhập quản trị bằng tài khoản mẫu');
+    patch({ admEmail: ADMIN_EMAIL, admPw: 'admin123', admErr: {} });
+    notify('Đã điền tài khoản mẫu — bấm Đăng nhập để tiếp tục');
   };
 
-  const authSubmit = () => {
+  const authSubmit = async () => {
     const s = st.screen;
     const err = {};
     if (s === 'register') {
       if (!st.aName.trim()) err.name = 'Vui lòng nhập họ tên.';
-      if (!validatePhone(st.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng.';
+      if (!st.aEmail.trim() || !st.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.';
       if (st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
       if (!st.aAgree) err.agree = true;
       if (Object.keys(err).length) { patch({ aErr: err }); return; }
-      patch({ aErr: {}, user: st.aName.trim(), screen: 'home' });
-      notify('Tạo tài khoản thành công');
+      try {
+        await authApi.register({ identifierType: 'email', identifier: st.aEmail.trim(), password: st.aPw, fullName: st.aName.trim() });
+        patch({ aErr: {}, screen: 'login', aPw: '', step: 1 });
+        notify('Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
+      } catch (e) {
+        if (e.status === 409) patch({ aErr: { email: 'Email đã được sử dụng.' } });
+        else patch({ aErr: { email: e.message || 'Đăng ký thất bại.' } });
+      }
       return;
     }
     if (s === 'login') {
-      if (!validatePhone(st.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng.';
+      if (!st.aEmail.trim()) err.email = 'Vui lòng nhập email hoặc số điện thoại.';
       if (st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
       if (Object.keys(err).length) { patch({ aErr: err }); return; }
-      patch({ aErr: {}, user: st.aName.trim() || 'Khách Duy Đinh', screen: 'home' });
-      notify('Đăng nhập thành công');
+      try {
+        const data = await authApi.login({ identifier: st.aEmail.trim(), password: st.aPw });
+        patch({ aErr: {}, user: data.user, screen: 'home', aPw: '' });
+        notify('Đăng nhập thành công');
+        favApi.syncFavorites(); // fire-and-forget: merge local → server
+      } catch (e) {
+        if (e.status === 401) patch({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
+        else if (e.status === 429) patch({ aErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
+        else patch({ aErr: { email: e.message || 'Đăng nhập thất bại.' } });
+      }
       return;
     }
     if (st.step === 1) {
-      if (!validatePhone(st.aPhone)) { patch({ aErr: { phone: 'Số điện thoại chưa đúng định dạng.' } }); return; }
-      patch({ aErr: {}, step: 2 });
-      notify('Đã gửi mã OTP');
+      if (!st.aEmail.trim() || !st.aEmail.includes('@')) { patch({ aErr: { email: 'Vui lòng nhập email đã đăng ký.' } }); return; }
+      try {
+        await authApi.requestPasswordResetOtp(st.aEmail.trim());
+        patch({ aErr: {}, step: 2 });
+        notify('Đã gửi mã OTP tới email của bạn');
+      } catch { patch({ aErr: { email: 'Không gửi được email, thử lại sau.' } }); }
       return;
     }
     if (st.step === 2) {
       if (!/^\d{6}$/.test(st.aOtp)) { patch({ aErr: { otp: 'Mã gồm 6 chữ số.' } }); return; }
-      patch({ aErr: {}, step: 3 });
+      try {
+        const data = await authApi.verifyPasswordResetOtp(st.aEmail.trim(), st.aOtp);
+        patch({ aErr: {}, step: 3, aResetToken: data?.resetToken || '' });
+      } catch (e) { patch({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
       return;
     }
     if (st.aPw.length < 8) { patch({ aErr: { pw: 'Mật khẩu tối thiểu 8 ký tự.' } }); return; }
     if (st.aPw !== st.aPw2) { patch({ aErr: { pw2: 'Hai mật khẩu chưa khớp.' } }); return; }
-    patch({ aErr: {}, screen: 'login', step: 1, aPw: '', aPw2: '' });
-    notify('Đã đặt lại mật khẩu');
+    try {
+      await authApi.resetPassword(st.aResetToken, st.aPw);
+      patch({ aErr: {}, screen: 'login', step: 1, aPw: '', aPw2: '', aResetToken: '' });
+      notify('Đã đặt lại mật khẩu');
+    } catch (e) { patch({ aErr: { pw: e.message || 'Đặt lại mật khẩu thất bại.' } }); }
   };
 
   const openAdd = () => patch({ addOpen: true, editId: null, formErr: {}, form: { prov: '', seri: '', num: '', cat: 'Ngũ quý', vehicle: 'Ô tô', status: 'Còn hàng', price: '' } });
@@ -211,7 +322,10 @@ export default function App() {
   const s = st.screen;
   const cur0 = st.plates.find((p) => p.id === st.curId);
   const cur = cur0 ? { ...cur0, title: cur0.prov + cur0.seri + ' · ' + cur0.num, sub: 'Biển ' + String(cur0.vehicle).toLowerCase() + ' · ' + cur0.city + (cur0.hot ? ' · còn 1 số duy nhất' : ''), ref: cur0.prov + cur0.seri + String(cur0.num).replace('.', '') } : null;
-  useSeo(st, cur0);
+
+  const { data: seoPlate } = usePlateDetail(s === 'detail' ? st.curId : null);
+  const { data: seoPost } = useBlogPost(s === 'post' ? st.postId : null);
+  useSeo(s, s === 'detail' ? { plate: seoPlate } : s === 'post' ? { post: seoPost } : undefined);
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
@@ -224,13 +338,11 @@ export default function App() {
     if (admQ && (p.prov + p.seri + ' ' + p.num + ' ' + p.cat).toLowerCase().indexOf(admQ) < 0) return false;
     return true;
   });
-  const admContacts = st.contacts.filter((c) => !admQ || (c.name + ' ' + c.phone).toLowerCase().indexOf(admQ) >= 0);
-
   const adminMeta = {
     dash: ['Tổng quan', 'Chào buổi sáng, đây là tình hình hôm nay.'],
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
-    acontacts: ['Yêu cầu liên hệ', st.contacts.filter((c) => c.status === 'Mới').length + ' yêu cầu mới cần xử lý'],
+    acontacts: ['Yêu cầu liên hệ', 'Quản lý yêu cầu liên hệ từ khách'],
     astaff: ['Nhân viên', st.staff.length + ' nhân viên trong hệ thống'],
     aposts: ['Bài viết', st.posts.filter((p) => p.status === 'Đã xuất bản').length + ' bài đang hiển thị'],
     compose: ['Viết bài mới', 'Bài sẽ có slug và meta riêng để tối ưu SEO'],
@@ -238,14 +350,15 @@ export default function App() {
     avideos: ['Video', 'Quản lý video TikTok/Facebook'],
     anotifications: ['Thông báo', 'Gửi thông báo đến người dùng'],
     acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
+    areviews: ['Đánh giá', 'Kiểm duyệt đánh giá của khách hàng'],
   }[s] || ['', ''];
 
   const authMeta = {
     register: ['Tạo tài khoản', 'Lưu biển yêu thích và nhận số mới trước tiên.', 'Đăng ký'],
     login: ['Đăng nhập', 'Tiếp tục với tài khoản Duy Đinh của bạn.', 'Đăng nhập'],
     forgot: [
-      ['Lấy lại mật khẩu', 'Nhập số điện thoại đã đăng ký để nhận mã xác thực.', 'Gửi mã OTP'],
-      ['Nhập mã xác thực', 'Mã 6 số đã được gửi tới số bạn vừa nhập.', 'Xác nhận mã'],
+      ['Lấy lại mật khẩu', 'Nhập email đã đăng ký để nhận mã xác thực.', 'Gửi mã OTP'],
+      ['Nhập mã xác thực', 'Mã 6 số đã được gửi tới email của bạn.', 'Xác nhận mã'],
       ['Đặt mật khẩu mới', 'Chọn mật khẩu tối thiểu 8 ký tự.', 'Hoàn tất'],
     ][st.step - 1],
   }[s] || ['', '', ''];
@@ -260,7 +373,7 @@ export default function App() {
 
         <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
 
-          {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} />}
+          {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} />}
 
           {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} patch={patch} notify={notify} />}
 
@@ -290,7 +403,7 @@ export default function App() {
           <Suspense fallback={<PageSkeleton screen={s} />}>
             {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} />}
 
-            {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} />}
+            {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} />}
 
             {s === 'detail' && <PlateDetail plateId={st.curId} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} notify={notify} />}
 
@@ -298,21 +411,21 @@ export default function App() {
               <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
             )}
 
-            {s === 'fav' && <Fav favCards={favCards} patch={patch} go={go} notify={notify} />}
+            {s === 'fav' && <Fav favCards={favCards} user={st.user} patch={patch} go={go} notify={notify} />}
 
-            {s === 'lucky' && <LuckyPlate st={st} patch={patch} go={go} openPlate={openPlate} openBuy={openBuy} />}
+            {s === 'lucky' && <LuckyPlate go={go} notify={notify} />}
 
             {s === 'about' && <About go={go} />}
 
-            {s === 'chat' && <ChatZaloContact st={st} patch={patch} notify={notify} />}
+            {s === 'chat' && <ChatZaloContact notify={notify} />}
 
-            {s === 'compare' && <Compare st={st} patch={patch} go={go} notify={notify} />}
+            {s === 'compare' && <Compare go={go} notify={notify} />}
 
-            {s === 'saved' && <SavedSearches st={st} patch={patch} go={go} notify={notify} />}
+            {s === 'saved' && <SavedSearches go={go} notify={notify} />}
 
-            {s === 'reviews' && <Reviews st={st} patch={patch} notify={notify} />}
+            {s === 'reviews' && <Reviews notify={notify} />}
 
-            {s === 'notifications' && <Notifications st={st} go={go} />}
+            {s === 'notifications' && <Notifications go={go} notify={notify} />}
 
             {s === 'collab' && <Collaborator st={st} patch={patch} go={go} notify={notify} />}
 
@@ -326,7 +439,7 @@ export default function App() {
 
             {s === 'blog' && <Blog st={st} patch={patch} />}
 
-            {s === 'post' && <Post postId={st.postId} go={go} notify={notify} />}
+            {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} />}
 
             {s === 'notfound' && <NotFound go={go} />}
 
@@ -334,7 +447,7 @@ export default function App() {
               <RequireAuth st={st} go={go}>
                 <AdminShell
                   s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
-                  adminMeta={adminMeta} admContacts={admContacts}
+                  adminMeta={adminMeta} askDelete={askDelete}
                 />
               </RequireAuth>
             )}
@@ -346,9 +459,15 @@ export default function App() {
             <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />
           </Suspense>
 
+          {isPublic && st.settings?.zalo && (
+            <a href={`https://zalo.me/${st.settings.zalo.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo" title="Chat qua Zalo" style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 80, width: 48, height: 48, borderRadius: '50%', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', transition: 'var(--transition-control)', cursor: 'pointer' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.02 2 10.98c0 2.94 1.69 5.52 4.23 6.94l-1.06 3.18a.5.5 0 0 0 .66.63l3.55-1.38c.82.23 1.68.35 2.62.35 5.52 0 10-4.02 10-8.98S17.52 2 12 2Z" fill="#fff" fillOpacity=".12" stroke="#fff" strokeWidth="1.5"/><path d="M8.5 9.5h.01M12 9.5h.01M15.5 9.5h.01" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><path d="M8.5 13.5s1.5 2 3.5 2 3.5-2 3.5-2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            </a>
+          )}
+
           {isPublic && (
             <Suspense fallback={null}>
-              <AiChatbot />
+              <AiChatbot go={go} />
             </Suspense>
           )}
 
