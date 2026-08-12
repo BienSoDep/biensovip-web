@@ -27,8 +27,8 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             {s === 'register' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.aName} error={st.aErr.name} onChange={setField('aName')} />
-                <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={st.aPhone} error={st.aErr.phone} onChange={setField('aPhone')} />
-                <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
+                <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
+                <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự, có chữ và số" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
                 <Checkbox label="Tôi đồng ý với điều khoản sử dụng" checked={st.aAgree} onChange={(v) => patch({ aAgree: v })} />
                 {st.aErr.agree && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn cần đồng ý với điều khoản để tiếp tục.</span>}
               </div>
@@ -42,15 +42,15 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                   </>
                 ) : (
                   <>
-                    <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={st.aPhone} error={st.aErr.phone} onChange={setField('aPhone')} />
+                    <Input label="Email hoặc số điện thoại" placeholder="email@example.com hoặc 09xx xxx xxx" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
                     <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
                     <a href="#" onClick={(e) => { e.preventDefault(); go('forgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)' }}>Quên mật khẩu?</a>
                   </>
                 )}
               </div>
             )}
-            {s === 'forgot' && st.step === 1 && <Input label="Số điện thoại đã đăng ký" placeholder="09xx xxx xxx" value={st.aPhone} error={st.aErr.phone} onChange={setField('aPhone')} />}
-            {s === 'forgot' && st.step === 2 && <Input label="Mã xác thực 6 số" placeholder="123456" value={st.aOtp} error={st.aErr.otp} onChange={setField('aOtp')} hint="Mã đã gửi tới số bạn vừa nhập. Thử 123456." />}
+            {s === 'forgot' && st.step === 1 && <Input label="Email đã đăng ký" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />}
+            {s === 'forgot' && st.step === 2 && <Input label="Mã xác thực 6 số" placeholder="123456" value={st.aOtp} error={st.aErr.otp} onChange={setField('aOtp')} hint="Mã đã gửi tới email của bạn." />}
             {s === 'forgot' && st.step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
