@@ -17,6 +17,7 @@ import AdminVideos from '../pages/admin/AdminVideos.jsx';
 import AdminNotifications from '../pages/admin/AdminNotifications.jsx';
 import AdminCollaborators from '../pages/admin/AdminCollaborators.jsx';
 import AdminReviews from '../pages/admin/AdminReviews.jsx';
+import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
 
 function AdminSidebarNav({ s, st, go, onNavigate }) {
@@ -101,6 +102,7 @@ export default function AdminShell({
         {s === 'anotifications' && <AdminNotifications notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}
+        {s === 'ameanings' && <AdminMeanings notify={notify} />}
         {s === 'aposts' && <AdminPosts patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
       </main>
