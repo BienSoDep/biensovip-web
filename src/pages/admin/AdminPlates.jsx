@@ -69,7 +69,18 @@ export default function AdminPlates({ go, notify }) {
   const updateMut = useUpdatePlate();
   const uploadMut = useUploadImage();
 
-  const catOpts = (list) => (list || []).map((c) => ({ value: c.id, label: c.name }));
+  const catOpts = (list) => (list || []).map((c) => ({ value: c.id, label: c.name, code: c.code }));
+  const provinceByCode = (code) => (provinces.find((c) => (c.code || '').trim() === (code || '').trim()) || {}).id;
+
+  // Nhập biển số → tự chọn tỉnh/thành theo 2 số đầu (VD "43" → Đà Nẵng)
+  const handlePlateNumberChange = (v) => {
+    const prov = parsePlateNumber(v).prov;
+    setForm((f) => {
+      const patch = { plateNumber: v };
+      if (prov && !f.provinceId) patch.provinceId = provinceByCode(prov) || f.provinceId;
+      return { ...f, ...patch };
+    });
+  };
 
   const openAdd = () => {
     setEditId('new');
@@ -275,6 +286,7 @@ export default function AdminPlates({ go, notify }) {
           saving={saving} uploading={uploading}
           plateTypes={catOpts(plateTypes)}
           provinces={catOpts(provinces)}
+          onPlateNumberChange={handlePlateNumberChange}
           vehicleTypes={catOpts(vehicleTypes)}
           editDetail={editPlateId ? editDetail : null}
           onSave={handleSave}
@@ -306,7 +318,7 @@ export default function AdminPlates({ go, notify }) {
 function PlateFormModal({
   form, setF, formErr, saving, uploading,
   plateTypes, provinces, vehicleTypes,
-  editDetail, onSave, onUpload, onRemoveImage, onClose,
+  editDetail, onPlateNumberChange, onSave, onUpload, onRemoveImage, onClose,
 }) {
   const fileRef = (e) => {
     if (e?.target?.files?.[0]) {
@@ -345,7 +357,7 @@ function PlateFormModal({
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số</span>
           <input
             type="text" placeholder="43A1-999.99" value={form.plateNumber ?? ''}
-            onChange={setF('plateNumber')}
+            onChange={(e) => onPlateNumberChange(e.target.value)}
             style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
               boxShadow: formErr.plateNumber ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
               padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
