@@ -33,7 +33,8 @@ export async function refreshToken() {
 
 // ── Logout ──
 export async function logout() {
-  try { await apiClient.post('/api/auth/logout'); } catch { /* ignore */ }
+  const auth = loadAuth();
+  try { await apiClient.post('/api/auth/logout', { refreshToken: auth?.refreshToken || '' }); } catch { /* ignore */ }
   saveAuth(null);
 }
 
