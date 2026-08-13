@@ -29,10 +29,24 @@
   "video": {
     "eyebrow": "Video",
     "title": "Xem shop trên TikTok & Facebook",
+    "featured_title": "Video nổi bật",
     "tiktok": "TikTok video",
     "tiktok_hint": "Chèn link/embed video TikTok tại đây",
     "facebook": "Facebook video",
     "facebook_hint": "Chèn link/embed video Facebook tại đây"
+  },
+  "contact": {
+    "eyebrow": "Liên hệ",
+    "title": "Liên hệ nhanh với shop qua Zalo",
+    "desc": "Zalo là kênh chính để kết nối — nhắn ngay để nhận báo giá và tư vấn biển đẹp trong 15 phút.",
+    "zalo_cta": "Nhắn Zalo ngay",
+    "form_title": "Để lại số điện thoại",
+    "form_sub": "Shop gọi lại tư vấn trong 15 phút.",
+    "name": "Họ và tên",
+    "phone": "Số điện thoại",
+    "note": "Lời nhắn (không bắt buộc)",
+    "submit": "Gửi yêu cầu tư vấn",
+    "sending": "Đang gửi..."
   },
   "guide": {
     "eyebrow": "Hướng dẫn",

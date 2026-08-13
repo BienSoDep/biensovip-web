@@ -8,6 +8,13 @@ export function usePromoVideos() {
   return useQuery({ queryKey: PUBLIC_KEY, queryFn: () => apiClient.get('/api/promo-videos') });
 }
 
+export function useFeaturedPromoVideos(limit = 3) {
+  return useQuery({
+    queryKey: [...PUBLIC_KEY, 'featured', limit],
+    queryFn: () => apiClient.get('/api/promo-videos/featured', { params: { limit } }),
+  });
+}
+
 export function useAdminPromoVideos(status) {
   return useQuery({
     queryKey: [...ADMIN_KEY, status],

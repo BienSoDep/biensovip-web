@@ -129,3 +129,13 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   .tablet-stack{flex-direction:column!important}
   .tablet-stack>*{flex:1 1 100%!important}
 }
+/* Promo video side rails — fixed vertical strips, wide screens only */
+.promo-rail{position:fixed;top:70px;bottom:0;width:170px;display:none;z-index:20;flex-direction:column;gap:14px;overflow-y:auto;padding:14px;scrollbar-width:thin}
+.promo-rail--left{left:0}
+.promo-rail--right{right:0}
+.promo-rail__item{border-radius:12px;overflow:hidden;background:var(--surface-sunken);box-shadow:var(--shadow-2);flex-shrink:0;aspect-ratio:16/9}
+.promo-rail__item--tiktok{aspect-ratio:9/14}
+.promo-rail__item iframe{width:100%;height:100%;border:0;display:block}
+@media(min-width:1600px){
+  .promo-rail{display:flex}
+}

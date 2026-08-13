@@ -8,6 +8,7 @@ import { loadAuth, saveAuth } from './lib/authStore.js';
 import * as authApi from './services/authService.js';
 import * as favApi from './services/favoriteService.js';
 import { getLocalFavorites, addLocalFavorite, removeLocalFavorite } from './services/favoriteStore.js';
+import { useComparePlates } from './services/compareService.js';
 import { contentGet } from './lib/content/index.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
@@ -15,6 +16,7 @@ import RequireAuth from './components/RequireAuth.jsx';
 import Header from './layout/Header.jsx';
 import Footer from './layout/Footer.jsx';
 import MobileDrawer from './layout/MobileDrawer.jsx';
+import PromoRails from './components/PromoRails.jsx';
 import PageSkeleton from './components/skeletons/PageSkeleton.jsx';
 import { parseRoute, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
@@ -139,6 +141,9 @@ export default function App() {
   }, [st.user]);
 
   useHashRouter(st, patch);
+
+  // Scroll to top whenever the page changes (route, plate, or post).
+  useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.curId, st.postId]);
 
   const notify = (msg) => toast(msg);
   const heroAnim = makeHeroAnim(fanDone);
@@ -336,14 +341,28 @@ export default function App() {
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
-  const favCards = favItems.map((p) => ({
-    id: p.id, plateNumber: p.plateNumber, price: p.price, province: p.province,
-    thumbnailUrl: p.thumbnailUrl, status: p.status,
-    fav: true,
-    onFav: () => { toggleFav(p.id); notify('Đã bỏ khỏi yêu thích'); },
-    onOpen: () => openPlate(p.id),
-    onBuy: () => openBuy(p.id),
-  }));
+  // Guest: fetch plate data for localStorage favorite ids via the compare endpoint.
+  // Logged-in: use favItems returned by the favorites API.
+  const guestFavs = !st.user ? getLocalFavorites() : [];
+  const { data: guestFavData } = useComparePlates(guestFavs);
+  const guestFavItems = guestFavData?.items || [];
+  const favCards = st.user
+    ? favItems.map((p) => ({
+        id: p.id, plateNumber: p.plateNumber, price: p.price, province: p.province,
+        thumbnailUrl: p.thumbnailUrl, status: p.status,
+        fav: true,
+        onFav: () => { toggleFav(p.id); notify('Đã bỏ khỏi yêu thích'); },
+        onOpen: () => openPlate(p.id),
+        onBuy: () => openBuy(p.id),
+      }))
+    : guestFavItems.map((p) => ({
+        id: p.id, plateNumber: p.plateNumber, price: p.price, province: p.province,
+        thumbnailUrl: p.thumbnailUrl, status: p.status,
+        fav: true,
+        onFav: () => { toggleFav(p.id); notify('Đã bỏ khỏi yêu thích'); },
+        onOpen: () => openPlate(p.id),
+        onBuy: () => openBuy(p.id),
+      }));
 
   const admQ = st.adminQ.trim().toLowerCase();
   const admPlates = st.plates.filter((p) => {
@@ -365,6 +384,7 @@ export default function App() {
     anotifications: ['Thông báo', 'Gửi thông báo đến người dùng'],
     acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
     areviews: ['Đánh giá', 'Kiểm duyệt đánh giá của khách hàng'],
+    ameanings: ['Ý nghĩa phong thủy', 'Mẫu ý nghĩa chung và ý nghĩa riêng cho từng biển'],
   }[s] || ['', ''];
 
   const authMeta = {
@@ -385,7 +405,7 @@ export default function App() {
         <Toaster position="top-right" toastOptions={{ role: 'alert', style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
         <main>
 
-        <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative', overflowX: 'hidden' }}>
+        <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative' }}>
 
           {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} />}
 
@@ -415,11 +435,11 @@ export default function App() {
           })()}
 
           <Suspense fallback={<PageSkeleton screen={s} />}>
-            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} />}
+            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} />}
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} />}
 
-            {s === 'detail' && <PlateDetail plateId={st.curId} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} notify={notify} />}
+            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} notify={notify} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
               <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
@@ -433,7 +453,7 @@ export default function App() {
 
             {s === 'chat' && <ChatZaloContact notify={notify} />}
 
-            {s === 'compare' && <Compare go={go} notify={notify} />}
+            {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} />}
 
             {s === 'saved' && <SavedSearches go={go} notify={notify} />}
 
@@ -468,6 +488,8 @@ export default function App() {
           </Suspense>
 
           {isPublic && <Footer />}
+
+          {isPublic && <PromoRails />}
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />

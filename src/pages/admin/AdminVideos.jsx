@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Star } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, IconButton, Badge } from '../../components/index.jsx';
-import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos } from '../../services/promoVideoService.js';
+import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos, useUpdatePromoVideo } from '../../services/promoVideoService.js';
 
 const PLATFORM_LABEL = { tiktok: 'TikTok', facebook: 'Facebook' };
 const PLATFORM_TONE = { tiktok: 'dark', facebook: 'blue' };
@@ -13,6 +13,7 @@ export default function AdminVideos({ notify }) {
   const createVideo = useCreatePromoVideo();
   const deleteVideo = useDeletePromoVideo();
   const reorderVideos = useReorderPromoVideos();
+  const updateVideo = useUpdatePromoVideo();
 
   const videos = (data?.items || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);
 
@@ -81,6 +82,9 @@ export default function AdminVideos({ notify }) {
                   <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.title || 'Video'}</div>
                   <Badge tone={PLATFORM_TONE[v.platform] || 'neutral'}>{PLATFORM_LABEL[v.platform] || v.platform}</Badge>
                 </div>
+                <button type="button" aria-label={v.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'} title={v.isFeatured ? 'Đang hiển thị ở trang chủ' : 'Đánh dấu hiển thị ở trang chủ'} onClick={() => updateVideo.mutate({ id: v.id, isFeatured: !v.isFeatured })} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, color: v.isFeatured ? '#F5A623' : 'var(--grey-400)', display: 'flex', alignItems: 'center' }}>
+                  <Star size={18} fill={v.isFeatured ? '#F5A623' : 'none'} />
+                </button>
                 <IconButton name="trash-2" label="Xóa video" size="sm" onClick={() => setDelId(v.id)} />
               </div>
             </div>

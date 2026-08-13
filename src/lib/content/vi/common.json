@@ -1,6 +1,6 @@
 {
   "brand": { "name": "Duy Đinh", "tagline_header": "Biển số đẹp Đà Nẵng" },
-  "nav": { "plates": "Biển số", "lucky": "Hợp mệnh", "fav": "Yêu thích", "blog": "Tin phong thủy", "about": "Về chúng tôi" },
+  "nav": { "plates": "Biển số", "lucky": "Hợp mệnh", "compare": "So sánh", "blog": "Tin phong thủy", "about": "Về chúng tôi", "contact": "Liên hệ" },
   "auth": { "login": "Đăng nhập", "register": "Đăng ký", "logout": "Thoát", "logout_done": "Đã đăng xuất" },
   "fav": { "label": "Biển số yêu thích", "fav_aria": "Lưu yêu thích", "unfav_aria": "Bỏ lưu yêu thích", "fav_added": "Đã lưu vào yêu thích", "fav_removed": "Đã bỏ khỏi yêu thích" },
   "breadcrumb": { "home": "Trang chủ", "aria": "Breadcrumb" },

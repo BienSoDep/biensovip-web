@@ -6,6 +6,7 @@ import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { contentGet } from '../lib/content/index.js';
 import * as authApi from '../services/authService.js';
 import { useNotifications, useMarkNotificationRead } from '../services/notificationService.js';
+import { useCompareIds } from '../services/compareService.js';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -72,25 +73,31 @@ function NotificationBell({ go, openPlate }) {
 
 export default function Header({ s, go, favCount, user, patch, notify, onMenu, openPlate }) {
   const T = contentGet;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['fav', T('common.nav.fav')], ['blog', T('common.nav.blog')], ['about', T('common.nav.about')]];
+  const { ids: compareIds } = useCompareIds();
+  const compareCount = compareIds.length;
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare')], ['blog', T('common.nav.blog')], ['about', T('common.nav.about')], ['chat', T('common.nav.contact')]];
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'var(--glass-fill)', backdropFilter: 'var(--glass-blur)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-      <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '14px var(--pad-page)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)' }}>
+      <div className="header-row" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '14px var(--pad-page)', display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-3)' }}>
         <button onClick={onMenu} style={{ display: 'none', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }} className="mobile-menu-btn"><Menu size={24} /></button>
-        <div role="button" tabIndex={0} onClick={go('home')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('home')(); } }} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer' }}>
+        <div role="button" tabIndex={0} onClick={go('home')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('home')(); } }} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', flexShrink: 0 }}>
           <img src="/assets/logo-mark.png" alt={T('common.brand.name')} style={{ width: 38, height: 38, objectFit: 'contain', display: 'block' }} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
             <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>{T('common.brand.name')}</span>
             <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{T('common.brand.tagline_header')}</span>
           </div>
         </div>
-        <nav className="header-nav-pills" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <nav className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-2)', overflowX: 'auto', scrollbarWidth: 'none', minWidth: 0 }}>
           {nav.map(([key, label], i) => (
-            <NavBtn key={key} onClick={go(String(key))} {...pill(s === key)}>{label}</NavBtn>
+            <NavBtn key={key} onClick={go(String(key))} {...pill(s === key)}>
+              {label}
+              {key === 'compare' && compareCount > 0 && (
+                <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'rgba(255,255,255,.25)' : 'var(--action-primary)', color: s === key ? 'var(--white)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
+              )}
+            </NavBtn>
           ))}
         </nav>
-        <div style={{ flex: 1 }} />
-        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0 }}>
           {user && <NotificationBell go={go} openPlate={openPlate} />}
           <div style={{ position: 'relative', display: 'flex' }}>
             <IconButton name="heart" label={T('common.fav.label')} onClick={go('fav')} />
