@@ -60,7 +60,7 @@ export function useComparePlates(ids) {
   return useQuery({
     queryKey: ['compare-plates', key],
     queryFn: () => apiClient.get('/api/plates/compare', { params: { ids: key } }),
-    enabled: ids.length >= 2,
+    enabled: ids.length >= 1,
     placeholderData: (prev) => prev,
   });
 }

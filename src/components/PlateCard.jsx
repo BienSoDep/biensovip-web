@@ -15,27 +15,32 @@ export default function PlateCard({
 
   return (
     <Card tone="sunken" pad="10px" style={{ height: '100%', ...style }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          {type && <Badge tone="dark">{type}</Badge>}
-          {isHot && <Badge tone="rose">VIP</Badge>}
-          {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
-          <div style={{ flex: 1 }} />
-          {onFav && (
-            <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
-              <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={onFav} style={fav ? { color: 'var(--status-danger)' } : undefined} />
-            </span>
-          )}
-          {onCompare && (
-            <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={onCompare} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
-          )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+        <div style={{ minHeight: 60, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 6 }}>
+              {type && <Badge tone="dark">{type}</Badge>}
+              {isHot && <Badge tone="rose">VIP</Badge>}
+              {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              {onFav && (
+                <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
+                  <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={onFav} style={fav ? { color: 'var(--status-danger)' } : undefined} />
+                </span>
+              )}
+              {onCompare && (
+                <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={onCompare} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+              )}
+            </div>
+          </div>
         </div>
 
         <div role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }} className="pressable" style={{ cursor: 'pointer', position: 'relative', background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 12 }}>
           {thumbnailUrl ? (
             <img src={thumbnailUrl} alt={plateNumber} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
           ) : (
-            <PlateVisual size="md" prov={prov} seri={seri} num={num} />
+            <PlateVisual size="md" prov={prov} seri={seri} num={num} shape="short" />
           )}
           {sold && (
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,15,18,.5)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -44,14 +49,12 @@ export default function PlateCard({
           )}
         </div>
 
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-              <span role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }} className="pressable" style={{ cursor: 'pointer', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{prov}{seri} · {num}</span>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{meta}</span>
-            </div>
-            <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+            <span role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }} className="pressable" style={{ cursor: 'pointer', font: 'var(--type-title-3)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta}</span>
           </div>
+          <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
           {!sold ? (
             <div style={{ display: 'flex', gap: 8 }}>
               <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Gọi ngay</Button>

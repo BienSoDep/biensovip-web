@@ -12,10 +12,14 @@ const ROW_LABELS = [
   { key: 'fengShuiMeaning', label: 'Ý nghĩa phong thủy' },
 ];
 
-export default function Compare({ go, notify }) {
+export default function Compare({ go, notify, allPlates }) {
   const { ids, remove, clear } = useCompareIds();
   const { data, isLoading, isError, refetch } = useComparePlates(ids);
-  const plates = data?.items || [];
+  // Fall back to the in-app plate list when the API is unavailable (mock/dev).
+  const apiPlates = data?.items || [];
+  const plates = (apiPlates.length > 0)
+    ? apiPlates
+    : (allPlates || []).filter((p) => ids.includes(p.id));
 
   const removePlate = (id) => {
     remove(id);

@@ -80,6 +80,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
   const { data: reviewData } = usePlateReviews(plate.id);
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const inCompare = isInList(plate.id);
+  const isCar = plate.vehicleType === 'O to';
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -89,8 +90,19 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
             <div style={{ width: '100%', maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-xl)', padding: 24 }}>
               {plate.images?.length > 0 ? (
                 <img src={plate.images[0]} alt={plate.plateNumber} style={{ width: '100%', borderRadius: 'var(--radius-md)' }} />
+              ) : isCar ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Biển ngắn</span>
+                    <PlateVisual size="lg" prov={prov} seri={seri} num={num} shape="short" />
+                  </div>
+                  <div>
+                    <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Biển dài</span>
+                    <PlateVisual size="lg" prov={prov} seri={seri} num={num} shape="long" />
+                  </div>
+                </div>
               ) : (
-                <PlateVisual size="lg" prov={prov} seri={seri} num={num} />
+                <PlateVisual size="lg" prov={prov} seri={seri} num={num} shape="short" />
               )}
             </div>
           </div>
@@ -102,22 +114,27 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
             </div>
           )}
 
-          {similar?.items?.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số tương tự</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-                {similar.items.map((p) => {
-                  const sp = splitPlateNumber(p.plateNumber);
-                  return (
-                    <div key={p.id} onClick={() => openPlate(p.slug || p.id)} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', transition: 'var(--transition-card)' }}>
-                      <PlateVisual size="sm" prov={sp.prov} seri={sp.seri} num={sp.num} />
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
-                    </div>
-                  );
-                })}
+          {[
+            { group: similar?.sameType, label: 'Biển số tương tự kiểu' },
+            { group: similar?.sameProvince, label: 'Biển số cùng tỉnh/thành' },
+          ].map(({ group, label }) => (
+            group?.length > 0 && (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+                  {group.map((p) => {
+                    const sp = splitPlateNumber(p.plateNumber);
+                    return (
+                      <div key={p.id} onClick={() => openPlate(p.slug || p.id)} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', transition: 'var(--transition-card)' }}>
+                        <PlateVisual size="sm" prov={sp.prov} seri={sp.seri} num={sp.num} />
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          ))}
         </div>
         <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
@@ -151,12 +168,6 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
             <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
           </div>
-          {plate.fengShuiMeaning && (
-            <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ý nghĩa phong thủy</span>
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{plate.fengShuiMeaning}</p>
-            </div>
-          )}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 'var(--space-3)' }}>
             <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Loại xe</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.vehicleType}</div></div>
             <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tỉnh / thành</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.province}</div></div>
@@ -165,6 +176,30 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, go, notif
           </div>
         </div>
       </section>
+
+      {plate.meanings?.length > 0 && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+          <div>
+            <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Ý nghĩa phong thủy biển {prov}{seri} · {num}</h2>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Phân tích chi tiết theo con số, ngũ hành, vận trình sự nghiệp &amp; tài lộc.</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+            {plate.meanings.map((m) => (
+              <div key={m.id} style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexWrap: 'wrap' }}>
+                {m.imageUrl && (
+                  <div style={{ flex: '1 1 280px', maxWidth: 360, minHeight: 220 }}>
+                    <img src={m.imageUrl} alt={m.title || 'Phong thủy'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  </div>
+                )}
+                <div style={{ flex: '2 1 320px', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  {m.title && <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{m.title}</h3>}
+                  <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', whiteSpace: 'pre-line' }}>{m.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <div>

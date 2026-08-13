@@ -1,4 +1,4 @@
-import { Heart, X, Pencil, Trash2, Check } from 'lucide-react';
+import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2 } from 'lucide-react';
 
 export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint }) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
@@ -122,7 +122,7 @@ export function Eyebrow({ tone = 'blue', children, className }) {
   );
 }
 
-const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check };
+const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check, 'plus-circle': PlusCircle, 'check-circle': CheckCircle2 };
 
 export function Icon({ name, size = 18 }) {
   const I = ICONS[name];
