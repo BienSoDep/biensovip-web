@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { MessageCircle, Phone } from 'lucide-react';
+import { MessageCircle, Phone, SearchX } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { SearchField, Badge, Eyebrow, Input } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
@@ -8,10 +8,21 @@ import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { contentGet } from '../lib/content/index.js';
 import { useCategories } from '../services/categories.js';
-import { useFeaturedPlates } from '../services/plates.js';
+import { useFeaturedPlates, usePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
 import { useSubmitContact } from '../services/contactService.js';
+
+// Debounce a value — waits `delay`ms of silence before committing, so typing doesn't fire
+// a request per keystroke. Pure client-side; React Query then caches each committed value.
+function useDebounced(value, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
 
 export default function Home({ st, patch, go, notify, heroAnim, openPlate, openBuy, favs, onFav }) {
   const stagger = useStaggeredReveal();
@@ -22,6 +33,19 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const { data: featuredVideos } = useFeaturedPromoVideos(3);
   const featuredVideoItems = featuredVideos?.items || [];
+
+  // Home search: catId/qDebounced empty = show featured plates as before.
+  // Any non-empty selection replaces that section with live search results (usePlates is React
+  // Query, so identical filters within the session are served from cache instead of refetching).
+  const debouncedQ = useDebounced(st.q, 300);
+  const selectedCatId = st.cat !== 'Tất cả' ? (plateTypes?.items || []).find((c) => c.name === st.cat)?.id : null;
+  const isSearching = !!debouncedQ.trim() || !!selectedCatId;
+  const searchFilters = { q: debouncedQ.trim() || undefined, cat: selectedCatId ? [selectedCatId] : undefined, perPage: 12 };
+  const { data: searchResult, isLoading: searchLoading } = usePlates(searchFilters, { enabled: isSearching });
+  const searchItems = isSearching ? (searchResult?.items || []) : [];
+
+  const displayItems = isSearching ? searchItems : featuredItems;
+  const displayLoading = isSearching ? searchLoading : featuredLoading;
 
   const submitContact = useSubmitContact();
   const [cForm, setCForm] = useState({ fullName: '', phone: '', note: '' });
@@ -103,24 +127,47 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
 
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
         <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <Eyebrow tone="blue" className="section-eyebrow">{T('home.featured.eyebrow')}</Eyebrow>
-          <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.featured.title')}</h2>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{T('home.featured.desc')}</p>
+          <Eyebrow tone="blue" className="section-eyebrow">{isSearching ? 'Kết quả tìm kiếm' : T('home.featured.eyebrow')}</Eyebrow>
+          <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
+            {isSearching ? `${searchItems.length} biển số phù hợp` : T('home.featured.title')}
+          </h2>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            {isSearching ? [debouncedQ.trim() && `đuôi "${debouncedQ.trim()}"`, selectedCatId && st.cat].filter(Boolean).join(' · ') : T('home.featured.desc')}
+          </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={go('list')}>{T('home.featured.all')}</Button>
+        <Button variant="ghost" size="sm" onClick={go('list')}>{isSearching ? 'Xem tất cả →' : T('home.featured.all')}</Button>
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', animation: 'fadeIn 180ms var(--ease-out)' }}>
-        {featuredLoading ? (
+        {displayLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {Array.from({ length: 6 }, (_, i) => <div key={i} style={{ height: 320, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }} />)}
           </div>
-        ) : featuredItems.length === 0 ? (
+        ) : displayItems.length === 0 && isSearching ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '32px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <SearchX size={28} style={{ color: 'var(--text-faint)' }} />
+              <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Không tìm thấy biển số phù hợp. Thử đuôi số khác hoặc xem các biển nổi bật bên dưới.</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+              {featuredItems.map((p, i) => (
+                <PlateCard key={p.id} {...p}
+                  fav={!!favs?.[p.id]}
+                  onFav={onFav ? () => onFav(p.id) : undefined}
+                  onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
+                  inCompare={isInList(p.id)}
+                  onOpen={() => openPlate(p.id)}
+                  onBuy={() => openBuy?.(p.id)}
+                  style={stagger(i)} />
+              ))}
+            </div>
+          </div>
+        ) : displayItems.length === 0 ? (
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
             <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>{T('home.featured.empty')} <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>{T('home.featured.empty_link')}</button></p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-            {featuredItems.map((p, i) => (
+            {displayItems.map((p, i) => (
               <PlateCard key={p.id} {...p}
                 fav={!!favs?.[p.id]}
                 onFav={onFav ? () => onFav(p.id) : undefined}

@@ -22,6 +22,7 @@ import { parseRoute, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
 import { usePlateDetail } from './services/plateDetail.js';
 import { useBlogPost } from './services/blog.js';
+import { usePlateRealtime } from './services/plateRealtime.js';
 import { useHashRouter } from './hooks/useHashRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 
@@ -75,6 +76,9 @@ export default function App() {
   });
   const patch = (p) => setSt((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
   const fanDone = useRef(false);
+
+  // UC09 realtime — admin thêm/sửa/xóa biển → public tự cập nhật tức thì
+  usePlateRealtime();
 
   useEffect(() => {
     const t = setTimeout(() => { fanDone.current = true; }, 1200);
@@ -232,7 +236,11 @@ export default function App() {
     notify('Đã điền tài khoản mẫu — bấm Đăng nhập để tiếp tục');
   };
 
-  const authSubmit = async () => {
+  const rememberEmail = (email) => {
+    try { localStorage.setItem('bsd_last_email', email); } catch { /* ignore */ }
+  };
+
+  const authSubmit = async (remember = true) => {
     const s = st.screen;
     const err = {};
     if (s === 'register') {
@@ -243,6 +251,7 @@ export default function App() {
       if (Object.keys(err).length) { patch({ aErr: err }); return; }
       try {
         await authApi.register({ identifierType: 'email', identifier: st.aEmail.trim(), password: st.aPw, fullName: st.aName.trim() });
+        rememberEmail(st.aEmail.trim());
         patch({ aErr: {}, screen: 'login', aPw: '', step: 1 });
         notify('Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
       } catch (e) {
@@ -256,7 +265,8 @@ export default function App() {
       if (st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
       if (Object.keys(err).length) { patch({ aErr: err }); return; }
       try {
-        const data = await authApi.login({ identifier: st.aEmail.trim(), password: st.aPw });
+        const data = await authApi.login({ identifier: st.aEmail.trim(), password: st.aPw, remember });
+        rememberEmail(st.aEmail.trim());
         patch({ aErr: {}, user: data.user, screen: 'home', aPw: '' });
         notify('Đăng nhập thành công');
         favApi.syncFavorites(); // fire-and-forget: merge local → server
@@ -291,6 +301,27 @@ export default function App() {
       patch({ aErr: {}, screen: 'login', step: 1, aPw: '', aPw2: '', aResetToken: '' });
       notify('Đã đặt lại mật khẩu');
     } catch (e) { patch({ aErr: { pw: e.message || 'Đặt lại mật khẩu thất bại.' } }); }
+  };
+
+  // OTP login: passwordless sign-in, separate from forgot-password (no password change).
+  const otpLoginRequest = async () => {
+    if (!st.aEmail.trim() || !st.aEmail.includes('@')) { patch({ aErr: { email: 'Vui lòng nhập email đã đăng ký.' } }); return; }
+    try {
+      await authApi.requestLoginOtp(st.aEmail.trim());
+      patch({ aErr: {}, step: 2 });
+      notify('Đã gửi mã OTP tới email của bạn');
+    } catch { patch({ aErr: { email: 'Không gửi được email, thử lại sau.' } }); }
+  };
+
+  const otpLoginVerify = async (remember = true) => {
+    if (!/^\d{6}$/.test(st.aOtp)) { patch({ aErr: { otp: 'Mã gồm 6 chữ số.' } }); return; }
+    try {
+      const data = await authApi.verifyLoginOtp(st.aEmail.trim(), st.aOtp, remember);
+      rememberEmail(st.aEmail.trim());
+      patch({ aErr: {}, user: data.user, screen: 'home', step: 1, aOtp: '' });
+      notify('Đăng nhập thành công');
+      favApi.syncFavorites();
+    } catch (e) { patch({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
   };
 
   const openAdd = () => patch({ addOpen: true, editId: null, formErr: {}, form: { prov: '', seri: '', num: '', cat: 'Ngũ quý', vehicle: 'Ô tô', status: 'Còn hàng', price: '' } });
@@ -443,7 +474,7 @@ export default function App() {
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
-              <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
+              <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} />
             )}
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} patch={patch} go={go} notify={notify} />}

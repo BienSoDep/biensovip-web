@@ -16,11 +16,12 @@ function toQueryString(filters) {
   return params.toString();
 }
 
-export function usePlates(filters) {
+export function usePlates(filters, options) {
   const qs = toQueryString(filters);
   return useQuery({
     queryKey: ['plates', qs],
     queryFn: () => apiClient.get(`/api/plates${qs ? `?${qs}` : ''}`),
+    enabled: options?.enabled,
   });
 }
 

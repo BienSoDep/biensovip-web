@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Share2, Link2, MessageCircle } from 'lucide-react';
+import { Share2, Link2, MessageCircle, Minus, Plus } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -11,6 +11,54 @@ const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
   'cau-chuyen': 'Câu chuyện khách hàng', general: 'Tin tức',
 };
+
+// Cùng pool ảnh Unsplash dùng làm cover ở backend seed — chọn ảnh khác cover để minh họa giữa bài, tránh lặp.
+const ILLUSTRATION_POOL = [
+  'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=1200&q=80',
+  'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=1200&q=80',
+  'https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=1200&q=80',
+  'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&q=80',
+  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80',
+  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80',
+  'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=1200&q=80',
+  'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1200&q=80',
+  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80',
+  'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=1200&q=80',
+];
+
+function pickIllustration(slug, excludeUrl) {
+  let hash = 0;
+  for (let i = 0; i < slug.length; i++) hash = (hash * 31 + slug.charCodeAt(i)) >>> 0;
+  const pool = ILLUSTRATION_POOL.filter((u) => u !== excludeUrl);
+  return pool[hash % pool.length];
+}
+
+const FONT_SIZES = [15, 17, 19, 21];
+const FONT_FAMILIES = [
+  { id: 'sans', label: 'Mặc định', value: 'var(--font-text)' },
+  { id: 'serif', label: 'Chữ chân', value: '"Noto Serif","Times New Roman",serif' },
+];
+const READER_PREFS_KEY = 'biensovip.readerPrefs';
+
+function useReaderPrefs() {
+  const [sizeIdx, setSizeIdx] = useState(1);
+  const [fontId, setFontId] = useState('sans');
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(READER_PREFS_KEY) || '{}');
+      if (Number.isInteger(saved.sizeIdx) && FONT_SIZES[saved.sizeIdx]) setSizeIdx(saved.sizeIdx);
+      if (FONT_FAMILIES.some((f) => f.id === saved.fontId)) setFontId(saved.fontId);
+    } catch { /* ignore malformed prefs */ }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(READER_PREFS_KEY, JSON.stringify({ sizeIdx, fontId }));
+  }, [sizeIdx, fontId]);
+
+  const fontFamily = FONT_FAMILIES.find((f) => f.id === fontId)?.value || FONT_FAMILIES[0].value;
+  return { sizeIdx, setSizeIdx, fontId, setFontId, fontSize: FONT_SIZES[sizeIdx], fontFamily };
+}
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -27,9 +75,16 @@ function slugifyHeading(text, seen) {
   return slug;
 }
 
+function rangeHtml(doc, startBefore, endBefore) {
+  const r = doc.createRange();
+  if (startBefore) r.setStartBefore(startBefore); else r.setStartBefore(doc.body.firstChild);
+  if (endBefore) r.setEndBefore(endBefore); else r.setEndAfter(doc.body.lastChild);
+  return new XMLSerializer().serializeToString(r.cloneContents()).replace(/ xmlns="[^"]*"/g, '');
+}
+
 function useTableOfContents(html) {
   return useMemo(() => {
-    if (!html) return { html, items: [] };
+    if (!html) return { html, items: [], parts: null };
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const headings = doc.querySelectorAll('h2');
     const seen = new Set();
@@ -39,7 +94,24 @@ function useTableOfContents(html) {
       h.id = id;
       items.push({ id, text: h.textContent || '' });
     });
-    return { html: doc.body.innerHTML, items };
+
+    // Chèn ảnh minh họa sau H2 đầu và biển minh họa ở giữa bài — phá thế đơn điệu toàn chữ.
+    // >=4 H2: 3 khúc (ảnh sau đoạn 1, biển ở giữa). 2-3 H2: 2 khúc (chỉ biển ở giữa, không đủ chỗ cho cả 2).
+    let parts = null;
+    if (headings.length >= 4) {
+      const imgAt = headings[1];
+      const midAt = headings[Math.floor(headings.length / 2)];
+      parts = [
+        rangeHtml(doc, null, imgAt),
+        rangeHtml(doc, imgAt, midAt),
+        rangeHtml(doc, midAt, null),
+      ];
+    } else if (headings.length >= 2) {
+      const midAt = headings[Math.floor(headings.length / 2)];
+      parts = [rangeHtml(doc, null, midAt), rangeHtml(doc, midAt, null)];
+    }
+
+    return { html: doc.body.innerHTML, items, parts };
   }, [html]);
 }
 
@@ -49,9 +121,13 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
   const { data: relatedPlatesData } = useRelatedPlates(postId, 4);
   const [copied, setCopied] = useState(false);
 
-  const { html: contentWithIds, items: tocItems } = useTableOfContents(post?.contentHtml);
+  const { html: contentWithIds, items: tocItems, parts } = useTableOfContents(post?.contentHtml);
   const related = relatedData?.items || [];
   const relatedPlates = relatedPlatesData?.items || [];
+  const midPlate = relatedPlates[0];
+  const illustrationUrl = post ? pickIllustration(post.slug, post.coverImageUrl) : null;
+  const { sizeIdx, setSizeIdx, fontId, setFontId, fontSize, fontFamily } = useReaderPrefs();
+  const articleBodyVars = { '--article-font-size': `${fontSize}px`, '--article-font-family': fontFamily };
 
   useEffect(() => {
     if (!post) return;
@@ -105,10 +181,6 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
 
   return (
     <article style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
-      <nav aria-label="Breadcrumb" style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-        {contentGet('posts.ui.home')} <span aria-hidden>›</span> <button type="button" onClick={go('blog')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>{contentGet('posts.ui.blog')}</button>
-      </nav>
-
       <header style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[post.category] || post.category}</span>
@@ -140,7 +212,52 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
         </nav>
       )}
 
-      <div itemProp="articleBody" style={{ font: 'var(--type-body)', fontSize: 17, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentWithIds }} />
+      <div className="reader-prefs">
+        <div className="reader-prefs__group">
+          <span className="reader-prefs__label">Cỡ chữ</span>
+          <button type="button" className="reader-prefs__btn" onClick={() => setSizeIdx((i) => Math.max(0, i - 1))} disabled={sizeIdx === 0} aria-label="Giảm cỡ chữ"><Minus size={14} /></button>
+          <span className="reader-prefs__size">{fontSize}px</span>
+          <button type="button" className="reader-prefs__btn" onClick={() => setSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))} disabled={sizeIdx === FONT_SIZES.length - 1} aria-label="Tăng cỡ chữ"><Plus size={14} /></button>
+        </div>
+        <div className="reader-prefs__group">
+          <span className="reader-prefs__label">Font chữ</span>
+          <select id="reader-font-select" name="reader-font" className="reader-prefs__font" value={fontId} onChange={(e) => setFontId(e.target.value)} aria-label="Chọn kiểu chữ">
+            {FONT_FAMILIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {parts ? (
+        <div itemProp="articleBody">
+          <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[0] }} />
+
+          {parts.length === 3 && illustrationUrl && (
+            <>
+              <figure style={{ margin: 'var(--space-6) 0 0', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+                <img src={illustrationUrl} alt={post.title} loading="lazy" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
+              </figure>
+              <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[1] }} />
+            </>
+          )}
+
+          {midPlate && (
+            <div onClick={() => openPlate?.(midPlate.slug || midPlate.id)} className="pressable" style={{ cursor: 'pointer', margin: 'var(--space-6) 0', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ width: 180, flexShrink: 0 }}>
+                <PlateVisual size="md" prov={splitPlateNumber(midPlate.plateNumber).prov} seri={splitPlateNumber(midPlate.plateNumber).seri} num={splitPlateNumber(midPlate.plateNumber).num} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển đang giao dịch cùng chủ đề bài viết</span>
+                <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{midPlate.plateNumber} · {midPlate.province}</span>
+                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(midPlate.price, midPlate.priceOnRequest)}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[parts.length - 1] }} />
+        </div>
+      ) : (
+        <div className="article-body" itemProp="articleBody" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentWithIds }} />
+      )}
 
       {post.tags?.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

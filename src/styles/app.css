@@ -141,3 +141,53 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
 @media(min-width:1600px){
   .promo-rail{display:flex}
 }
+
+/* Blog article body — raw ContentHtml from backend has no inline styling of its own.
+   --article-font-size / --article-font-family are set inline by the reader-preferences toolbar in Post.jsx. */
+.article-body{
+  line-height:1.9;
+  font-size:var(--article-font-size,17px);
+  font-family:var(--article-font-family,var(--font-text));
+}
+.article-body>*+*{margin-top:var(--space-5)}
+.article-body h2{margin:var(--space-9) 0 var(--space-3);font:var(--type-title-1);font-family:inherit;color:var(--action-primary);scroll-margin-top:80px}
+.article-body h3{margin:var(--space-6) 0 var(--space-2);font:var(--type-title-2);font-family:inherit;color:var(--action-primary)}
+.article-body p{margin:0}
+.article-body strong{color:var(--action-primary);font-weight:var(--fw-semibold)}
+.article-body ul,.article-body ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px}
+.article-body blockquote{margin:0;padding:var(--space-3) var(--space-4);border-left:3px solid var(--action-primary);background:var(--surface-sunken);border-radius:var(--radius-sm);font-style:italic;color:var(--text-muted)}
+.article-body img{max-width:100%;height:auto;border-radius:var(--radius-card);display:block;margin:0 auto}
+.article-body figure{margin:0}
+.article-body figcaption{margin-top:6px;font:var(--type-caption);color:var(--text-faint);text-align:center}
+.article-body table{width:100%;border-collapse:collapse;font-size:0.9em;overflow-x:auto;display:block}
+.article-body th,.article-body td{padding:10px 12px;border:1px solid var(--border-hairline);text-align:left}
+.article-body th{background:var(--surface-sunken);color:var(--action-primary);font-weight:var(--fw-semibold)}
+
+/* Reader preferences toolbar — font family + size controls above article body */
+.reader-prefs{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4);background:var(--surface-sunken);border-radius:var(--radius-card);padding:var(--space-3) var(--gutter-card)}
+.reader-prefs__group{display:flex;align-items:center;gap:var(--space-2)}
+.reader-prefs__label{font:var(--type-caption);color:var(--text-muted);white-space:nowrap}
+.reader-prefs__btn{border:1px solid var(--border-hairline);background:var(--surface-page);border-radius:var(--radius-control);width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:var(--fw-semibold);color:var(--text-strong)}
+.reader-prefs__btn:not(:disabled):hover{background:var(--action-ghost-hover)}
+.reader-prefs__btn:disabled{opacity:0.4;cursor:not-allowed}
+.reader-prefs__size{font:var(--type-caption);color:var(--text-strong);min-width:32px;text-align:center}
+.reader-prefs__font{border:1px solid var(--border-hairline);background:var(--surface-page);border-radius:var(--radius-control);height:30px;padding:0 var(--space-2);font:var(--type-caption);color:var(--text-strong)}
+.article-body tr:nth-child(even) td{background:var(--surface-sunken)}
+
+/* Global breadcrumb — chevron/arrow-shaped connected steps, current step filled with brand color */
+.breadcrumb-step{
+  position:relative;display:flex;align-items:center;gap:6px;
+  height:30px;padding:0 18px 0 22px;margin-left:-10px;
+  border:none;background:var(--surface-sunken);color:var(--text-muted);
+  font:var(--type-caption);font-weight:var(--fw-medium,500);white-space:nowrap;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%,10px 50%);
+}
+.breadcrumb-step:first-child{margin-left:0;padding-left:14px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,0 100%)}
+.breadcrumb-step:not(:first-child){padding-left:22px}
+.breadcrumb-step.pressable{cursor:pointer}
+.breadcrumb-step.pressable:hover{background:var(--brand-100);color:var(--action-primary)}
+.breadcrumb-step.is-current{background:var(--action-primary);color:var(--white);z-index:1}
+
+/* Plate card stage — warm brand-tinted backdrop; plate itself stays realistic grey/white, only the surrounding frame gets the orange lift */
+.plate-card-stage{background:linear-gradient(155deg,var(--brand-100) 0%,var(--brand-50) 100%);border:1px solid var(--brand-200);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.plate-card-stage:hover{border-color:var(--brand-400);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 18px -10px rgba(212,101,10,.35)}

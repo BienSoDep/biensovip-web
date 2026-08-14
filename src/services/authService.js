@@ -7,10 +7,23 @@ export async function register({ identifierType, identifier, password, fullName 
 }
 
 // ── Login ──
-export async function login({ identifier, password }) {
+export async function login({ identifier, password, remember = true }) {
   const data = await apiClient.post('/api/auth/login', { identifier, password });
   if (data?.accessToken) {
-    saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user });
+    saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user }, remember);
+  }
+  return data;
+}
+
+// ── OTP login (passwordless, keeps existing password unchanged) ──
+export async function requestLoginOtp(email) {
+  return apiClient.post('/api/auth/otp-login/request', { email });
+}
+
+export async function verifyLoginOtp(email, code, remember = true) {
+  const data = await apiClient.post('/api/auth/otp-login/verify', { email, code });
+  if (data?.accessToken) {
+    saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user }, remember);
   }
   return data;
 }
