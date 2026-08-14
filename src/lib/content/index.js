@@ -11,6 +11,8 @@ import privacy from './vi/privacy.json';
 import transfer from './vi/transfer.json';
 import plates from './vi/plates.json';
 import posts from './vi/posts.json';
+import process_ from './vi/process.json';
+import info from './vi/info.json';
 
 export const content = {
   home,
@@ -22,6 +24,8 @@ export const content = {
   transfer,
   plates,
   posts,
+  process: process_,
+  info,
 };
 
 // Resolve a dotted path like 'home.hero.title'. Returns value or fallback.

@@ -25,6 +25,10 @@ const SIZES = {
     long: { pad: '0 3px', gap: 6, radius: 5, provFs: 32, seriFs: 24, numFs: 44, ls: 1, border: 3, screwSize: 3, screwOff: 2 },
     short: { pad: '0 3px', gap: 0, radius: 5, topFs: 34, numFs: 40, ls: 1, border: 3, screwSize: 3, screwOff: 2 },
   },
+  listLg: {
+    long: { pad: '1px 8px', gap: 10, radius: 6, provFs: 52, seriFs: 38, numFs: 88, ls: 1.2, border: 4, screwSize: 4, screwOff: 3 },
+    short: { pad: '1px 6px', gap: 0, radius: 6, topFs: 50, numFs: 108, ls: 1.2, border: 4, screwSize: 4, screwOff: 3 },
+  },
   lg: {
     long: { pad: '1px 8px', gap: 12, radius: 7, provFs: 'clamp(36px,6.5vw,60px)', seriFs: 'clamp(26px,4.8vw,42px)', numFs: 'clamp(60px,12vw,104px)', ls: 1.5, border: 5, screwSize: 5, screwOff: 3 },
     short: { pad: '1px 5px', gap: 0, radius: 7, topFs: 'clamp(34px,6.5vw,58px)', numFs: 'clamp(72px,14vw,126px)', ls: 1.5, border: 5, screwSize: 5, screwOff: 3 },

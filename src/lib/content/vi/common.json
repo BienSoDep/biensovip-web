@@ -10,7 +10,10 @@
     "hotline": "Hotline", "zalo_oa": "Zalo OA", "address": "Địa chỉ", "hours": "Giờ làm việc",
     "address_value": "123 Nguyễn Văn Linh, Đà Nẵng", "hours_value": "8:00 – 21:00",
     "copyright": "© 2026 Duy Đinh — Biensovip.com",
-    "terms": "Điều khoản", "privacy": "Bảo mật", "transfer": "Sang tên", "faq": "FAQ"
+    "explore_title": "Khám phá",
+    "list": "Kho biển số", "lucky": "Hợp mệnh", "chat": "Liên hệ tư vấn", "collab": "Cộng tác viên", "compare": "So sánh biển số", "fav": "Biển số yêu thích", "blog": "Tin phong thủy", "about": "Về chúng tôi",
+    "policy_title": "Chính sách & Câu hỏi",
+    "terms": "Điều khoản", "privacy": "Bảo mật", "transfer": "Hướng dẫn sang tên", "faq": "Câu hỏi thường gặp"
   },
   "notfound": {
     "ghost": "Không tìm thấy",

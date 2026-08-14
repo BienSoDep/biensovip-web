@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, LayoutGrid, List as ListIcon } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Select, Checkbox, Radio, Input } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
@@ -11,7 +11,11 @@ import { useCompareIds } from '../services/compareService.js';
 import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
 
-const PER_PAGE = 20;
+const PER_PAGE_OPTIONS = [
+  { value: '20', label: '20 / trang' },
+  { value: '40', label: '40 / trang' },
+  { value: '60', label: '60 / trang' },
+];
 
 function readFiltersFromUrl() {
   const qIdx = window.location.hash.indexOf('?');
@@ -23,6 +27,8 @@ function readFiltersFromUrl() {
     q: params.get('q') || '',
     sort: params.get('sort') || 'newest',
     page: Number(params.get('page')) || 1,
+    perPage: Number(params.get('perPage')) || 20,
+    view: params.get('view') === 'list' ? 'list' : 'grid',
   };
 }
 
@@ -34,6 +40,8 @@ function writeFiltersToUrl(filters) {
   if (filters.q) params.set('q', filters.q);
   if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
   if (filters.page > 1) params.set('page', String(filters.page));
+  if (filters.perPage && filters.perPage !== 20) params.set('perPage', String(filters.perPage));
+  if (filters.view === 'list') params.set('view', 'list');
   const qs = params.toString();
   const base = window.location.hash.split('?')[0] || '#/danh-sach';
   const next = qs ? `${base}?${qs}` : base;
@@ -83,7 +91,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
 
   const apiFilters = useMemo(() => ({
     cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
-    q: filters.q || undefined, sort: filters.sort, page: filters.page, perPage: PER_PAGE,
+    q: filters.q || undefined, sort: filters.sort, page: filters.page, perPage: filters.perPage,
   }), [filters]);
 
   const { data, isLoading, isError, isFetching } = usePlates(apiFilters);
@@ -98,7 +106,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
     [key]: filters[key].includes(id) ? filters[key].filter((x) => x !== id) : [...filters[key], id],
   });
 
-  const clearFilters = () => setFilters({ cat: [], city: [], vehicle: '', q: '', sort: 'newest', page: 1 });
+  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], vehicle: '', q: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
 
   const cardProps = (p) => ({
     ...p,
@@ -208,12 +216,32 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
           <Button variant="outline" size="sm" fullWidth onClick={clearFilters}>Xóa bộ lọc</Button>
         </aside>
         <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
-            {hasActiveFilters && <Button variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
-            <Select label="Sắp xếp" value={filters.sort} options={[{ value: 'newest', label: 'Mới nhất' }, { value: 'price_asc', label: 'Giá thấp → cao' }, { value: 'price_desc', label: 'Giá cao → thấp' }]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              {activeFilterCount > 0 && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-tint-cream)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>
+                  {activeFilterCount} bộ lọc đang bật
+                </span>
+              )}
+              <div style={{ display: 'flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: 3, gap: 2 }}>
+                <button type="button" aria-label="Xem dạng lưới" aria-pressed={filters.view !== 'list'} onClick={() => setFilter({ view: 'grid', page: filters.page })}
+                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view !== 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view !== 'list' ? 'var(--shadow-1, 0 1px 2px rgba(0,0,0,.08))' : 'none', color: filters.view !== 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
+                  <LayoutGrid size={16} />
+                </button>
+                <button type="button" aria-label="Xem dạng danh sách" aria-pressed={filters.view === 'list'} onClick={() => setFilter({ view: 'list', page: filters.page })}
+                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view === 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view === 'list' ? 'var(--shadow-1, 0 1px 2px rgba(0,0,0,.08))' : 'none', color: filters.view === 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
+                  <ListIcon size={16} />
+                </button>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+              {hasActiveFilters && <Button variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
+              <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />
+              <Select label="Sắp xếp" value={filters.sort} options={[{ value: 'newest', label: 'Mới nhất' }, { value: 'price_asc', label: 'Giá thấp → cao' }, { value: 'price_desc', label: 'Giá cao → thấp' }]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
+            </div>
           </div>
           {(isLoading || isFetching) ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
               {Array.from({ length: items.length || 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
             </div>
           ) : isError ? (
@@ -221,8 +249,11 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
               <span style={{ font: 'var(--type-body)', color: 'var(--status-danger)' }}>Không tải được danh sách biển số.</span>
             </div>
           ) : items.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-              {items.map((p, i) => <PlateCard key={p.id} {...cardProps(p)} style={stagger(i)} />)}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{total} biển số</span>
+              <div style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+                {items.map((p, i) => <PlateCard key={p.id} {...cardProps(p)} plateSize={filters.view === 'list' ? 'listLg' : 'md'} style={stagger(i)} />)}
+              </div>
             </div>
           ) : (
             <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>

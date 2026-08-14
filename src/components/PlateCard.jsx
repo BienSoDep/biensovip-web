@@ -7,7 +7,7 @@ const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose'
 
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
-  status, badge, fav, onFav, onCompare, inCompare, onOpen, onBuy, style,
+  status, badge, fav, onFav, onCompare, inCompare, onOpen, onBuy, style, plateSize = 'md',
 }) {
   const { prov, seri, num } = splitPlateNumber(plateNumber);
   const sold = status === 'sold';
@@ -40,7 +40,9 @@ export default function PlateCard({
           {thumbnailUrl ? (
             <img src={thumbnailUrl} alt={plateNumber} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
           ) : (
-            <PlateVisual size="md" prov={prov} seri={seri} num={num} shape="short" />
+            <div style={{ maxWidth: plateSize === 'listLg' ? 420 : undefined, margin: plateSize === 'listLg' ? '0 auto' : undefined }}>
+              <PlateVisual size={plateSize} prov={prov} seri={seri} num={num} shape="short" />
+            </div>
           )}
           {sold && (
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,15,18,.5)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

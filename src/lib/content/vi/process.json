@@ -1,0 +1,38 @@
+{
+  "teaser": {
+    "title": "Quy trình giao dịch",
+    "desc": "5 bước rõ ràng, minh bạch — từ lúc liên hệ đến khi nhận biển số mang tên bạn.",
+    "cta": "Xem quy trình chi tiết"
+  },
+  "detail": {
+    "title": "Quy trình giao dịch chi tiết",
+    "desc": "Biensovip cam kết minh bạch từng bước — không phát sinh chi phí ẩn, hồ sơ được xác minh trước khi bạn đặt cọc."
+  },
+  "steps": [
+    {
+      "title": "Liên hệ & giữ biển",
+      "desc": "Gọi hoặc nhắn Zalo với biển số quan tâm. Shop phản hồi trong 5–15 phút, kể cả cuối tuần, và giữ biển tạm thời cho bạn.",
+      "detail": "Bạn có thể liên hệ qua Zalo, hotline hoặc form trên website. Nhân viên tư vấn xác nhận biển số còn hàng và giữ chỗ tạm thời (không mất phí) trong khi hai bên trao đổi thêm."
+    },
+    {
+      "title": "Tư vấn & xác minh hồ sơ gốc",
+      "desc": "Nhân viên tư vấn chi tiết giá, tình trạng biển và gửi ảnh/video hồ sơ gốc (đăng ký xe, giấy tờ sang tên) để bạn đối chiếu trước khi cọc.",
+      "detail": "Trước khi đặt cọc, bạn được cung cấp ảnh/video hồ sơ gốc gồm: giấy đăng ký xe, giấy tờ tùy thân chủ cũ (nếu sang tên trực tiếp) hoặc hồ sơ ủy quyền hợp pháp. Mọi thắc mắc về nguồn gốc, tình trạng pháp lý của biển số đều được giải đáp ở bước này."
+    },
+    {
+      "title": "Thống nhất giá & đặt cọc",
+      "desc": "Chốt giá cuối cùng, đặt cọc 10–30% giá trị biển (có biên nhận/hợp đồng cọc) để chính thức giữ chỗ và khoá giao dịch.",
+      "detail": "Mức cọc dao động 10–30% giá trị biển tuỳ thoả thuận, có biên nhận hoặc hợp đồng đặt cọc ghi rõ số tiền, thời hạn thanh toán phần còn lại và điều khoản hoàn/mất cọc nếu một trong hai bên vi phạm cam kết."
+    },
+    {
+      "title": "Ký hợp đồng mua bán",
+      "desc": "Hai bên ký hợp đồng mua bán có công chứng/xác nhận, ghi rõ giá trị, thời hạn thanh toán và trách nhiệm sang tên.",
+      "detail": "Hợp đồng mua bán được lập theo mẫu chuẩn, có thể công chứng tại phòng công chứng hoặc xác nhận tại chỗ tuỳ nhu cầu khách hàng. Hợp đồng nêu rõ giá trị giao dịch, thời hạn thanh toán số tiền còn lại và bên chịu trách nhiệm thực hiện thủ tục sang tên."
+    },
+    {
+      "title": "Sang tên & nhận biển",
+      "desc": "Thanh toán phần còn lại, hỗ trợ hoàn tất thủ tục sang tên tại cơ quan chức năng và bàn giao biển số mang tên bạn.",
+      "detail": "Sau khi thanh toán đủ, Biensovip hỗ trợ khách hàng hoàn tất thủ tục sang tên tại cơ quan đăng ký xe (CSGT/Công an nơi đăng ký). Khách hàng nhận biển số đã mang tên chính chủ cùng đầy đủ giấy tờ liên quan."
+    }
+  ]
+}
