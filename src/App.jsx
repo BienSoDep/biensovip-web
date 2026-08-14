@@ -171,6 +171,7 @@ export default function App() {
     }
   };
   const openPlate = (id) => patch({ screen: 'detail', curId: id, modal: false });
+  const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
   const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mErr: {} });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
 
@@ -439,7 +440,7 @@ export default function App() {
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} />}
 
-            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} notify={notify} />}
+            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
               <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} />
@@ -473,7 +474,7 @@ export default function App() {
 
             {s === 'blog' && <Blog st={st} patch={patch} />}
 
-            {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} />}
+            {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} />}
 
             {s === 'notfound' && <NotFound go={go} />}
 

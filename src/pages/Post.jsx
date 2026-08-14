@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Share2, Link2, MessageCircle } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import LazyImage from '../components/LazyImage.jsx';
+import PlateVisual from '../components/PlateVisual.jsx';
 import { contentGet } from '../lib/content/index.js';
-import { useBlogPost, useRelatedPosts } from '../services/blog.js';
+import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { useBlogPost, useRelatedPosts, useRelatedPlates } from '../services/blog.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -41,13 +43,15 @@ function useTableOfContents(html) {
   }, [html]);
 }
 
-export default function Post({ postId, go, patch, notify }) {
+export default function Post({ postId, go, patch, notify, openPlate }) {
   const { data: post, isLoading, isError } = useBlogPost(postId);
   const { data: relatedData } = useRelatedPosts(postId, 3);
+  const { data: relatedPlatesData } = useRelatedPlates(postId, 4);
   const [copied, setCopied] = useState(false);
 
   const { html: contentWithIds, items: tocItems } = useTableOfContents(post?.contentHtml);
   const related = relatedData?.items || [];
+  const relatedPlates = relatedPlatesData?.items || [];
 
   useEffect(() => {
     if (!post) return;
@@ -160,6 +164,27 @@ export default function Post({ postId, go, patch, notify }) {
         <Button variant="outline" size="md" onClick={shareZalo}><MessageCircle size={16} style={{ marginRight: 6 }} />Zalo</Button>
         <Button variant="outline" size="md" onClick={copyLink}><Link2 size={16} style={{ marginRight: 6 }} />{copied ? contentGet('posts.ui.copied') : contentGet('posts.ui.cta_share')}</Button>
       </div>
+
+      {relatedPlates.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+          <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Biển số liên quan đến bài viết</h2>
+          <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Những biển số cùng dãy ý nghĩa phong thủy với bài viết này, còn hàng trong hệ thống:</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(200px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            {relatedPlates.map((p) => {
+              const sp = splitPlateNumber(p.plateNumber);
+              return (
+                <div key={p.id} onClick={() => openPlate?.(p.slug || p.id)} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+                  <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{p.plateNumber} · {p.province}</span>
+                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(p.price, p.priceOnRequest)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {related.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>

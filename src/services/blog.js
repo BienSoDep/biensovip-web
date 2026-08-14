@@ -25,6 +25,14 @@ export function useRelatedPosts(slug, limit = 3) {
   });
 }
 
+export function useRelatedPlates(slug, limit = 4) {
+  return useQuery({
+    queryKey: ['blog-post-related-plates', slug, limit],
+    queryFn: () => apiClient.get(`/api/blog/posts/${slug}/related-plates?limit=${limit}`),
+    enabled: !!slug,
+  });
+}
+
 export function useAdminBlogPosts(status, page = 1, limit = 50) {
   return useQuery({
     queryKey: ['admin-blog-posts', status ?? 'all', page, limit],
