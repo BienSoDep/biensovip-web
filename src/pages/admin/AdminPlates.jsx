@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
 import {
   useAdminPlates, useDeletePlate, useUpdatePlateStatus,
   useUpdatePlateVisibility, useUpdatePlate, useCreatePlate,
-  useUploadImage, useAdminPlate,
+  useBulkCreatePlate, useUploadImage, useAdminPlate,
 } from '../../services/adminPlates.js';
 import { useAdminCategories } from '../../services/categories.js';
-import { Select, Badge, IconButton, SearchField } from '../../components/index.jsx';
+import { Select, IconButton, SearchField } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 import Button from '../../components/Button.jsx';
 
@@ -35,6 +34,15 @@ const INITIAL_FORM = {
   description: '', fengShuiMeaning: '', images: [],
 };
 
+const fmt = (n) => (n == null ? '—' : n.toLocaleString('vi-VN') + 'đ');
+const num = (v) => Number(String(v ?? '').replace(/[^\d]/g, '') || 0);
+
+const ERR_MSG = {
+  DUPLICATE: 'Trùng biển',
+  INVALID_PROVINCE: 'Sai tỉnh',
+  EMPTY: 'Bỏ trống',
+};
+
 export default function AdminPlates({ go, notify }) {
   const [status, setStatus] = useState('all');
   const [keyword, setKeyword] = useState('');
@@ -46,6 +54,15 @@ export default function AdminPlates({ go, notify }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+
+  // Quick-add + paste/CSV
+  const [quickNum, setQuickNum] = useState('');
+  const [quickPrice, setQuickPrice] = useState('');
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [bulkRows, setBulkRows] = useState([]);
+  // Inline edit cell: { id, field, value }
+  const [cell, setCell] = useState(null);
 
   const filters = { status, keyword, page, perPage: 20 };
   const { data, isLoading } = useAdminPlates(filters);
@@ -67,10 +84,12 @@ export default function AdminPlates({ go, notify }) {
   const visMut = useUpdatePlateVisibility();
   const createMut = useCreatePlate();
   const updateMut = useUpdatePlate();
+  const bulkMut = useBulkCreatePlate();
   const uploadMut = useUploadImage();
 
   const catOpts = (list) => (list || []).map((c) => ({ value: c.id, label: c.name, code: c.code }));
   const provinceByCode = (code) => (provinces.find((c) => (c.code || '').trim() === (code || '').trim()) || {}).id;
+  const provNameOf = (code) => (provinces.find((c) => (c.code || '').trim() === (code || '').trim()) || {}).name || '';
 
   // Nhập biển số → tự chọn tỉnh/thành theo 2 số đầu (VD "43" → Đà Nẵng)
   const handlePlateNumberChange = (v) => {
@@ -137,7 +156,6 @@ export default function AdminPlates({ go, notify }) {
     if (!form.plateTypeId) errs.plateTypeId = 'Chọn loại biển';
     if (!form.provinceId) errs.provinceId = 'Chọn tỉnh/thành';
     if (!form.vehicleTypeId) errs.vehicleTypeId = 'Chọn loại xe';
-    if (form.images.length === 0) errs.images = 'Cần ít nhất 1 ảnh';
     setFormErr(errs);
     if (Object.keys(errs).length) return;
 
@@ -183,26 +201,95 @@ export default function AdminPlates({ go, notify }) {
     }
   };
 
-  const toggleStatus = async (p) => {
-    const next = p.status === 'sold' ? 'available' : 'sold';
+  // ── Quick-add & batch-in-grid: tạo 1 biển qua bulk(1) → server tự detect tỉnh/xe/loại biển
+  const quickCreate = async (number, price) => {
+    const n = (number || '').trim();
+    if (!n || !/-\d/.test(n)) { notify('Nhập biển số hợp lệ (VD: 43A1-999.99)'); return false; }
     try {
-      await statusMut.mutateAsync({ id: p.id, status: next });
-      notify(next === 'sold' ? 'Đã đánh dấu đã bán' : 'Đã đánh dấu còn hàng');
+      const res = await bulkMut.mutateAsync([{ plateNumber: n, price: num(price), isHot: false, priceOnRequest: false }]);
+      if (res[0]?.success) { notify(`Đã thêm ${n}`); return true; }
+      notify(ERR_MSG[res[0]?.error] || 'Không thêm được biển');
+      return false;
     } catch (err) {
-      notify(err.message || 'Lỗi cập nhật trạng thái');
+      notify(err.message || 'Lỗi thêm biển');
+      return false;
     }
   };
 
-  const toggleVis = async (p) => {
+  const quickAdd = async () => {
+    const ok = await quickCreate(quickNum, quickPrice);
+    if (ok) { setQuickNum(''); setQuickPrice(''); }
+  };
+
+  // ── Paste / CSV: parse từng dòng "số biển,giá" → preview xanh/đỏ
+  const parseLine = (line) => {
+    const parts = line.split(/[,;\t ]+/).filter(Boolean);
+    if (parts.length === 0) return null;
+    const number = parts[0].trim();
+    const price = num(parts[1]);
+    const prov = parsePlateNumber(number).prov;
+    return { number, price, provName: prov ? provNameOf(prov) : '', ok: /-\d/.test(number), reason: /-\d/.test(number) ? '' : 'Sai định dạng' };
+  };
+
+  const onBulkTextChange = (v) => {
+    setBulkText(v);
+    setBulkRows(v.split('\n').map(parseLine).filter(Boolean).map((r, i) => ({ key: i, done: false, ...r })));
+  };
+
+  const submitBulk = async () => {
+    const valid = bulkRows.filter((r) => r.ok && !r.done);
+    if (valid.length === 0) { notify('Không có dòng hợp lệ để thêm'); return; }
     try {
-      await visMut.mutateAsync({ id: p.id, visible: !p.visible });
-      notify(p.visible ? 'Đã ẩn biển số' : 'Đã hiển thị biển số');
+      const results = await bulkMut.mutateAsync(valid.map((r) => ({ plateNumber: r.number, price: r.price, isHot: false, priceOnRequest: false })));
+      setBulkRows((rows) => rows.map((r) => {
+        const res = results.find((x) => x.plateNumber === r.number);
+        return res ? { ...r, done: true, ok: res.success, reason: res.success ? '' : (ERR_MSG[res.error] || 'Lỗi') } : r;
+      }));
+      const okCount = results.filter((r) => r.success).length;
+      notify(`Đã thêm ${okCount}/${valid.length} biển`);
     } catch (err) {
-      notify(err.message || 'Lỗi cập nhật hiển thị');
+      notify(err.message || 'Lỗi thêm hàng loạt');
     }
+  };
+
+  // ── Inline edit grid
+  const commitPrice = (p) => {
+    if (!cell) return;
+    const price = num(cell.value);
+    updateMut.mutate({ id: p.id, body: { price, priceOnRequest: false } });
+    setCell(null);
+  };
+
+  const toggleHot = (p) => updateMut.mutate({ id: p.id, body: { isHot: !p.isHot } });
+
+  const renderCell = (p, field) => {
+    const editing = cell?.id === p.id && cell?.field === field;
+    const cellStyle = { border: 'none', background: 'none', cursor: 'text', font: 'var(--type-caption)', color: 'var(--text-strong)', textAlign: 'left', padding: '4px 6px', borderRadius: 'var(--radius-sm)', width: '100%' };
+    if (field === 'price') {
+      if (editing) {
+        return (
+          <input autoFocus value={cell.value} onChange={(e) => setCell({ ...cell, value: e.target.value })}
+            onBlur={() => commitPrice(p)} onKeyDown={(e) => { if (e.key === 'Enter') commitPrice(p); if (e.key === 'Escape') setCell(null); }}
+            onFocus={(e) => e.target.select()}
+            style={{ ...cellStyle, background: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px var(--action-primary)' }} />
+        );
+      }
+      return (
+        <button type="button" onClick={() => setCell({ id: p.id, field: 'price', value: p.priceOnRequest ? '' : String(p.price || '') })} style={cellStyle} title="Bấm để sửa giá">
+          {p.priceOnRequest ? 'Giá liên hệ' : (p.price ? fmt(p.price) : '—')}
+        </button>
+      );
+    }
+    return null;
   };
 
   const totalPages = Math.max(1, Math.ceil(total / 20));
+
+  const inputCell = (v, setV, ph) => (
+    <input value={v} placeholder={ph} onChange={(e) => setV(e.target.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+      style={{ height: 36, minWidth: 0, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 12px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none', flex: '1 1 150px' }} />
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -211,19 +298,59 @@ export default function AdminPlates({ go, notify }) {
         <Select label="Trạng thái" value={status} options={STATUS_OPTIONS} onChange={(v) => { setStatus(v); setPage(1); }} />
         <SearchField placeholder="Tìm biển số…" value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} width={220} />
         <div style={{ flex: 1 }} />
-        <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số</Button>
+        <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
       </div>
 
-      {/* Table */}
+      {/* Quick-add bar */}
+      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', flex: '0 0 auto' }}>Thêm nhanh</span>
+          {inputCell(quickNum, setQuickNum, '43A1-999.99')}
+          {inputCell(quickPrice, setQuickPrice, 'Giá (VNĐ)')}
+          <Button variant="primary" size="md" onClick={quickAdd} disabled={bulkMut.isPending}>{bulkMut.isPending ? 'Đang thêm…' : 'Thêm'}</Button>
+          <Button variant="ghost" size="md" onClick={() => setBulkOpen(!bulkOpen)}>{bulkOpen ? 'Đóng dán nhiều' : 'Dán nhiều / CSV'}</Button>
+        </div>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển.</span>
+
+        {bulkOpen && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <textarea value={bulkText} onChange={(e) => onBulkTextChange(e.target.value)} rows={5}
+              placeholder={'Mỗi dòng 1 biển, cách nhau bằng dấu phẩy / tab:\n43A1-999.99, 350000000\n43A1-666.66, 500000000'}
+              style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none', fontFamily: 'monospace' }} />
+            {bulkRows.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflow: 'auto' }}>
+                {bulkRows.map((r) => (
+                  <div key={r.key} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: r.done ? (r.ok ? 'var(--mint-100)' : 'var(--rose-100)') : 'transparent', font: 'var(--type-body-sm)' }}>
+                    <span style={{ color: 'var(--text-strong)', flex: '1 1 160px' }}>{r.number || '—'}</span>
+                    <span style={{ color: 'var(--text-muted)', flex: '1 1 120px' }}>{r.provName || '…'}</span>
+                    <span style={{ color: 'var(--text-muted)', flex: '1 1 100px' }}>{r.price ? fmt(r.price) : '0'}</span>
+                    <span style={{ color: r.ok ? 'var(--mint-700)' : 'var(--status-danger)', flex: '0 0 130px', textAlign: 'right' }}>
+                      {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+              <Button variant="primary" size="md" onClick={submitBulk} disabled={bulkMut.isPending || bulkRows.filter((r) => r.ok && !r.done).length === 0}>
+                {bulkMut.isPending ? 'Đang thêm…' : `Thêm ${bulkRows.filter((r) => r.ok && !r.done).length} biển hợp lệ`}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Table — grid notion, edit inline */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ minWidth: 720 }}>
+        <div style={{ minWidth: 900 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-          <span style={{ flex: '1 1 130px' }}>Biển số</span>
-          <span style={{ flex: '1 1 80px' }}>Loại</span>
-          <span style={{ flex: '1 1 80px' }}>Tỉnh</span>
-          <span style={{ flex: '1 1 90px' }}>Giá</span>
-          <span style={{ flex: '1 1 70px' }}>Trạng thái</span>
+          <span style={{ flex: '1 1 150px' }}>Biển số</span>
+          <span style={{ flex: '1 1 90px' }}>Loại</span>
+          <span style={{ flex: '1 1 90px' }}>Tỉnh</span>
+          <span style={{ flex: '1 1 130px' }}>Giá (bấm sửa)</span>
+          <span style={{ flex: '1 1 90px' }}>Trạng thái</span>
+          <span style={{ flex: '1 1 60px' }}>HOT</span>
           <span style={{ flex: '1 1 70px' }}>Hiển thị</span>
           <span style={{ flex: '0 0 80px' }}>Thao tác</span>
         </div>
@@ -233,20 +360,27 @@ export default function AdminPlates({ go, notify }) {
         {!isLoading && plates.map((p) => {
           const parsed = parsePlateNumber(p.plateNumber);
           return (
-            <div key={p.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-              <span style={{ flex: '1 1 130px' }}>
+            <div key={p.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-2) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+              <span style={{ flex: '1 1 150px' }}>
                 <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
               </span>
-              <span style={{ flex: '1 1 80px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>
-              <span style={{ flex: '1 1 80px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>
-              <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>
-                {p.priceOnRequest ? 'Giá liên hệ' : (p.price ? p.price.toLocaleString('vi-VN') + 'đ' : '—')}
+              <span style={{ flex: '1 1 90px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>
+              <span style={{ flex: '1 1 90px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>
+              <span style={{ flex: '1 1 130px' }}>{renderCell(p, 'price')}</span>
+              <span style={{ flex: '1 1 90px' }}>
+                <select value={p.status} onChange={(e) => statusMut.mutate({ id: p.id, status: e.target.value })}
+                  style={{ border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-caption)', color: 'var(--text-body)', outline: 'none', cursor: 'pointer' }}>
+                  <option value="available">Còn hàng</option>
+                  <option value="sold">Đã bán</option>
+                </select>
+              </span>
+              <span style={{ flex: '1 1 60px' }}>
+                <button type="button" onClick={() => toggleHot(p)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: p.isHot ? 'var(--action-primary)' : 'var(--text-muted)' }}>
+                  {p.isHot ? '🔥 HOT' : 'Bình thường'}
+                </button>
               </span>
               <span style={{ flex: '1 1 70px' }}>
-                <Badge tone={p.status === 'sold' ? 'rose' : 'mint'}>{p.status === 'sold' ? 'Đã bán' : 'Còn hàng'}</Badge>
-              </span>
-              <span style={{ flex: '1 1 70px' }}>
-                <button type="button" onClick={() => toggleVis(p)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: p.visible ? 'var(--mint-700)' : 'var(--text-muted)' }}>
+                <button type="button" onClick={() => visMut.mutate({ id: p.id, visible: !p.visible })} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: p.visible ? 'var(--mint-700)' : 'var(--text-muted)' }}>
                   {p.visible ? '👁 Hiện' : '— Ẩn'}
                 </button>
               </span>
@@ -412,7 +546,7 @@ function PlateFormModal({
           </label>
         </div>
 
-        {/* Images */}
+        {/* Images — optional (biển không ảnh vẫn lưu, hiển thị bằng PlateVisual) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>
             Ảnh biển số

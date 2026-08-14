@@ -29,6 +29,9 @@ export function useAdminPlate(id) {
 function invalidate(qc) {
   qc.invalidateQueries({ queryKey: ['admin-plates'] });
   qc.invalidateQueries({ queryKey: ['admin-plate'] });
+  // Cập nhật cả cache public để biển mới/sửa hiện ngay trên web (fallback cho realtime push)
+  qc.invalidateQueries({ queryKey: ['plates'] });
+  qc.invalidateQueries({ queryKey: ['plates-featured'] });
 }
 
 export function useCreatePlate() {
@@ -43,6 +46,15 @@ export function useUpdatePlate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }) => apiClient.put(`/api/admin/plates/${id}`, body),
+    onSuccess: () => invalidate(qc),
+  });
+}
+
+// Bulk create (quick-add / paste-CSV) — server trả kết quả TỪNG DÒNG {plateNumber, success, error, plateId}
+export function useBulkCreatePlate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (items) => apiClient.post('/api/admin/plates/bulk', { items }),
     onSuccess: () => invalidate(qc),
   });
 }
