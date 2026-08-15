@@ -119,22 +119,17 @@ export default function Compose({ st, patch, notify }) {
 
   useEffect(() => {
     if (!editPostId || !editor) return;
-    apiClient.get(`/api/admin/blog/posts?page=1&limit=200`).then((data) => {
-      const post = data?.items?.find((p) => p.id === editPostId);
-      if (!post) return;
-      apiClient.get(`/api/blog/posts/${post.slug}`).catch(() => null).then((detail) => {
-        const full = detail || post;
-        setTitle(full.title || '');
-        setSlug(full.slug || '');
-        setSlugTouched(true);
-        setCoverImageUrl(full.coverImageUrl || '');
-        setMetaTitle(full.metaTitle || '');
-        setMetaDescription(full.metaDescription || '');
-        setCategory(full.category || 'kien-thuc');
-        setTagsInput((full.tags || []).join(', '));
-        if (full.contentHtml) editor.commands.setContent(full.contentHtml);
-        setAttachedVideos(full.videos || []);
-      });
+    apiClient.get(`/api/admin/blog/posts/${editPostId}`).then((full) => {
+      setTitle(full.title || '');
+      setSlug(full.slug || '');
+      setSlugTouched(true);
+      setCoverImageUrl(full.coverImageUrl || '');
+      setMetaTitle(full.metaTitle || '');
+      setMetaDescription(full.metaDescription || '');
+      setCategory(full.category || 'kien-thuc');
+      setTagsInput((full.tags || []).join(', '));
+      if (full.contentHtml) editor.commands.setContent(full.contentHtml);
+      setAttachedVideos(full.videos || []);
     });
   }, [editPostId, editor]);
 

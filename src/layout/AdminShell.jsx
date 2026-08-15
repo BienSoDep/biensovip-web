@@ -103,7 +103,7 @@ export default function AdminShell({
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}
         {s === 'ameanings' && <AdminMeanings notify={notify} />}
-        {s === 'aposts' && <AdminPosts patch={patch} notify={notify} />}
+        {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
       </main>
     </div>

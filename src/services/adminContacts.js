@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
-function buildQuery({ status, intent, page, perPage }) {
+function buildQuery({ status, intent, q, page, perPage }) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.set('status', status);
   if (intent && intent !== 'all') params.set('intent', intent);
+  if (q) params.set('q', q);
   params.set('page', String(page || 1));
   params.set('perPage', String(perPage || 20));
   return params.toString();

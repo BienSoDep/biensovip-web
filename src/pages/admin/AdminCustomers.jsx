@@ -6,8 +6,8 @@ import Button from '../../components/Button.jsx';
 
 const STATUS_OPTS = ['Tất cả', 'Hoạt động', 'Đã khóa', 'Chưa xác thực'];
 const STATUS_VAL = { 'Hoạt động': 'active', 'Đã khóa': 'locked', 'Chưa xác thực': 'unverified' };
-const STATUS_LABEL = { active: 'Hoạt động', locked: 'Đã khóa' };
-const STATUS_COLOR = { active: '#1B7A5A', locked: '#C62828' };
+const STATUS_LABEL = { active: 'Hoạt động', locked: 'Đã khóa', unverified: 'Chưa xác thực' };
+const STATUS_COLOR = { active: '#1B7A5A', locked: '#C62828', unverified: 'var(--grey-600)' };
 
 export default function AdminCustomers({ st, setSt, notify }) {
   const adminQ = (st.adminQ || '').trim();
@@ -81,11 +81,11 @@ export default function AdminCustomers({ st, setSt, notify }) {
             </span>
             <span style={{ flex: '1 1 100px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{c.phone || '—'}</span>
             <span style={{ flex: '1 1 72px' }}>
-              <Badge tone={c.isVerified ? 'success' : 'neutral'}>{c.isVerified ? 'Đã xác thực' : 'Chưa'}</Badge>
+              <Badge tone={c.isVerified ? 'mint' : 'neutral'}>{c.isVerified ? 'Đã xác thực' : 'Chưa'}</Badge>
             </span>
             <span style={{ flex: '1 1 72px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{c.favoritesCount}</span>
             <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-              {new Date(c.createdAt).toLocaleDateString('vi-VN')}
+              {c.createdAt ? new Date(c.createdAt).toLocaleDateString('vi-VN') : '—'}
             </span>
             <span style={{ flex: '1 1 100px' }}>
               <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: (STATUS_COLOR[c.status] || 'var(--grey-400)') + '18', color: STATUS_COLOR[c.status] || 'var(--grey-600)' }}>

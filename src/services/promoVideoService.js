@@ -51,6 +51,14 @@ export function useDeletePromoVideo() {
   });
 }
 
+export function useHardDeletePromoVideo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/api/admin/promo-videos/${id}/hard`),
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
 export function useReorderPromoVideos() {
   const qc = useQueryClient();
   return useMutation({

@@ -67,6 +67,14 @@ export function useDeletePlate() {
   });
 }
 
+export function useHardDeletePlate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/api/admin/plates/${id}/hard`),
+    onSuccess: () => invalidate(qc),
+  });
+}
+
 export function useUpdatePlateStatus() {
   const qc = useQueryClient();
   return useMutation({

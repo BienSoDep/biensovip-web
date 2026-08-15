@@ -33,10 +33,15 @@ export function useRelatedPlates(slug, limit = 4) {
   });
 }
 
-export function useAdminBlogPosts(status, page = 1, limit = 50) {
+export function useAdminBlogPosts(status, q, page = 1, limit = 50) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (q) params.set('q', q);
+  params.set('page', String(page));
+  params.set('limit', String(limit));
   return useQuery({
-    queryKey: ['admin-blog-posts', status ?? 'all', page, limit],
-    queryFn: () => apiClient.get(`/api/admin/blog/posts?${status ? `status=${status}&` : ''}page=${page}&limit=${limit}`),
+    queryKey: ['admin-blog-posts', status ?? 'all', q ?? '', page, limit],
+    queryFn: () => apiClient.get(`/api/admin/blog/posts?${params.toString()}`),
   });
 }
 

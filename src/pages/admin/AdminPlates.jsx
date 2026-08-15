@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   useAdminPlates, useDeletePlate, useUpdatePlateStatus,
   useUpdatePlateVisibility, useUpdatePlate, useCreatePlate,
-  useBulkCreatePlate, useUploadImage, useAdminPlate,
+  useBulkCreatePlate, useUploadImage, useAdminPlate, useHardDeletePlate,
 } from '../../services/adminPlates.js';
 import { useAdminCategories } from '../../services/categories.js';
 import { Select, IconButton, SearchField } from '../../components/index.jsx';
@@ -36,6 +36,18 @@ const INITIAL_FORM = {
 
 const fmt = (n) => (n == null ? '—' : n.toLocaleString('vi-VN') + 'đ');
 const num = (v) => Number(String(v ?? '').replace(/[^\d]/g, '') || 0);
+
+// Windowed pagination: first, current±1, last, with ellipsis (null) between gaps.
+function pageWindow(page, total) {
+  const pages = new Set([1, total, page - 1, page, page + 1].filter((p) => p >= 1 && p <= total));
+  const sorted = [...pages].sort((a, b) => a - b);
+  const out = [];
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && sorted[i] - sorted[i - 1] > 1) out.push(null);
+    out.push(sorted[i]);
+  }
+  return out;
+}
 
 const ERR_MSG = {
   DUPLICATE: 'Trùng biển',
@@ -80,6 +92,7 @@ export default function AdminPlates({ go, notify }) {
   const { data: editDetail } = useAdminPlate(editPlateId);
 
   const deleteMut = useDeletePlate();
+  const hardDeleteMut = useHardDeletePlate();
   const statusMut = useUpdatePlateStatus();
   const visMut = useUpdatePlateVisibility();
   const createMut = useCreatePlate();
@@ -164,7 +177,7 @@ export default function AdminPlates({ go, notify }) {
       plateTypeId: form.plateTypeId,
       provinceId: form.provinceId,
       vehicleTypeId: form.vehicleTypeId,
-      price: form.priceOnRequest ? 0 : Number(form.price || '0'),
+      price: form.priceOnRequest ? 0 : num(form.price),
       priceOnRequest: form.priceOnRequest,
       isHot: form.isHot,
       description: form.description || null,
@@ -195,7 +208,18 @@ export default function AdminPlates({ go, notify }) {
     try {
       await deleteMut.mutateAsync(confirmDelete);
       setConfirmDelete(null);
-      notify('Đã xóa biển số');
+      notify('Đã xóa (ẩn) biển số');
+    } catch (err) {
+      notify(err.message || 'Lỗi xóa biển số');
+    }
+  };
+
+  const handleHardDelete = async () => {
+    if (!confirmDelete) return;
+    try {
+      await hardDeleteMut.mutateAsync(confirmDelete);
+      setConfirmDelete(null);
+      notify('Đã xóa vĩnh viễn biển số');
     } catch (err) {
       notify(err.message || 'Lỗi xóa biển số');
     }
@@ -256,11 +280,17 @@ export default function AdminPlates({ go, notify }) {
   const commitPrice = (p) => {
     if (!cell) return;
     const price = num(cell.value);
-    updateMut.mutate({ id: p.id, body: { price, priceOnRequest: false } });
+    updateMut.mutate({ id: p.id, body: { price, priceOnRequest: false } }, {
+      onSuccess: () => notify('Đã cập nhật giá'),
+      onError: (err) => { notify(err.message || 'Lỗi cập nhật giá'); setCell(null); },
+    });
     setCell(null);
   };
 
-  const toggleHot = (p) => updateMut.mutate({ id: p.id, body: { isHot: !p.isHot } });
+  const toggleHot = (p) => updateMut.mutate({ id: p.id, body: { isHot: !p.isHot } }, {
+    onSuccess: () => notify(p.isHot ? 'Đã bỏ nổi bật' : 'Đã đánh dấu nổi bật'),
+    onError: (err) => notify(err.message || 'Lỗi cập nhật nổi bật'),
+  });
 
   const renderCell = (p, field) => {
     const editing = cell?.id === p.id && cell?.field === field;
@@ -368,7 +398,10 @@ export default function AdminPlates({ go, notify }) {
               <span style={{ flex: '1 1 90px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>
               <span style={{ flex: '1 1 130px' }}>{renderCell(p, 'price')}</span>
               <span style={{ flex: '1 1 90px' }}>
-                <select value={p.status} onChange={(e) => statusMut.mutate({ id: p.id, status: e.target.value })}
+                <select value={p.status} onChange={(e) => statusMut.mutate({ id: p.id, status: e.target.value }, {
+                  onSuccess: () => notify(e.target.value === 'sold' ? 'Đã đánh dấu Đã bán' : 'Đã đổi sang Còn hàng'),
+                  onError: (err) => notify(err.message || 'Lỗi cập nhật trạng thái'),
+                })}
                   style={{ border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-caption)', color: 'var(--text-body)', outline: 'none', cursor: 'pointer' }}>
                   <option value="available">Còn hàng</option>
                   <option value="sold">Đã bán</option>
@@ -380,7 +413,10 @@ export default function AdminPlates({ go, notify }) {
                 </button>
               </span>
               <span style={{ flex: '1 1 70px' }}>
-                <button type="button" onClick={() => visMut.mutate({ id: p.id, visible: !p.visible })} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: p.visible ? 'var(--mint-700)' : 'var(--text-muted)' }}>
+                <button type="button" onClick={() => visMut.mutate({ id: p.id, visible: !p.visible }, {
+                  onSuccess: () => notify(p.visible ? 'Đã ẩn biển' : 'Đã hiện biển'),
+                  onError: (err) => notify(err.message || 'Lỗi cập nhật hiển thị'),
+                })} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: p.visible ? 'var(--mint-700)' : 'var(--text-muted)' }}>
                   {p.visible ? '👁 Hiện' : '— Ẩn'}
                 </button>
               </span>
@@ -399,17 +435,27 @@ export default function AdminPlates({ go, notify }) {
         )}
       </div>
 
-      {/* Pagination */}
+      {/* Pagination — prev/next + windowed pages */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)' }}>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button key={i} type="button" onClick={() => setPage(i + 1)}
-              style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-caption)',
-                background: page === i + 1 ? 'var(--action-primary)' : 'var(--surface-sunken)',
-                color: page === i + 1 ? 'var(--white)' : 'var(--text-body)' }}>
-              {i + 1}
-            </button>
-          ))}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}
+            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', cursor: page <= 1 ? 'default' : 'pointer', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: page <= 1 ? 'var(--grey-300)' : 'var(--text-body)' }}>
+            ‹ Trước
+          </button>
+          {pageWindow(page, totalPages).map((p, idx) =>
+            p === null
+              ? <span key={`e${idx}`} style={{ color: 'var(--text-faint)', font: 'var(--type-caption)' }}>…</span>
+              : <button key={p} type="button" onClick={() => setPage(p)}
+                  style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-caption)',
+                    background: p === page ? 'var(--action-primary)' : 'var(--surface-sunken)',
+                    color: p === page ? 'var(--white)' : 'var(--text-body)', fontWeight: p === page ? 'var(--fw-bold)' : 'var(--fw-medium)' }}>
+                  {p}
+                </button>
+          )}
+          <button type="button" disabled={page >= totalPages} onClick={() => setPage(page + 1)}
+            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', cursor: page >= totalPages ? 'default' : 'pointer', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: page >= totalPages ? 'var(--grey-300)' : 'var(--text-body)' }}>
+            Sau ›
+          </button>
         </div>
       )}
 
@@ -435,10 +481,11 @@ export default function AdminPlates({ go, notify }) {
         <div role="alertdialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xóa biển số này khỏi hệ thống? Hành động này không thể hoàn tác.</p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Biển số này sẽ được xóa. Chọn <b>Xóa</b> để ẩn (khôi phục được) hoặc <b>Xóa vĩnh viễn</b> để xóa hẳn khỏi hệ thống — không thể hoàn tác.</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               <Button variant="ghost" size="md" onClick={() => setConfirmDelete(null)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={handleDelete} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
+              <Button variant="primary" size="md" onClick={handleHardDelete} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa vĩnh viễn</Button>
+              <Button variant="primary" size="md" onClick={handleDelete} style={{ boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
             </div>
           </div>
         </div>

@@ -10,9 +10,10 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('vi-VN');
 }
 
-export default function AdminPosts({ patch, notify }) {
+export default function AdminPosts({ st, patch, notify }) {
   const [status, setStatus] = useState('');
-  const { data, isLoading, isError } = useAdminBlogPosts(status || undefined);
+  const adminQ = (st?.adminQ || '').trim();
+  const { data, isLoading, isError } = useAdminBlogPosts(status || undefined, adminQ || undefined);
   const deletePost = useDeleteBlogPost();
   const items = data?.items || [];
 

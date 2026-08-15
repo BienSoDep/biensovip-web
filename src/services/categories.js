@@ -55,3 +55,14 @@ export function useDeleteCategory() {
     },
   });
 }
+
+export function useHardDeleteCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/api/admin/categories/${id}/hard`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}

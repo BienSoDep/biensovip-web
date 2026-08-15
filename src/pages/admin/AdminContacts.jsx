@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useDebouncedValue } from '@mantine/hooks';
 import { useAdminContacts, useUpdateContactStatus } from '../../services/adminContacts.js';
 import { Select } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: '#C75B00', buy: 'var(--blue-700)', hunting: '#7B2D8B' };
-const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt'];
-const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed' };
+const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Đã tìm thấy'];
+const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Đã tìm thấy': 'found' };
 const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã tìm thấy' };
 const STATUS_COLOR = { new: 'var(--blue-700)', consulting: '#8A6100', closed: '#1B7A5A', found: '#7B2D8B' };
-const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt'];
-const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy' };
+const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
+const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ': 'hunting' };
 
 function parsePlateNumber(raw) {
   if (!raw) return null;
@@ -27,9 +28,11 @@ function parsePlateNumber(raw) {
 export default function AdminContacts({ notify }) {
   const [status, setStatus] = useState('all');
   const [intent, setIntent] = useState('all');
+  const [search, setSearch] = useState('');
+  const [q] = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useAdminContacts({ status, intent, page, perPage: 20 });
+  const { data, isLoading } = useAdminContacts({ status, intent, q, page, perPage: 20 });
   const updateStatus = useUpdateContactStatus();
 
   const result = data ?? { items: [], total: 0, page: 1, perPage: 20 };
@@ -45,6 +48,12 @@ export default function AdminContacts({ notify }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
+        <input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder="Tìm tên / SĐT..."
+          style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)', color: 'var(--text-body)', background: 'var(--white)', minWidth: 200 }}
+        />
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái:</span>
           <Select value={status === 'all' ? 'Tất cả' : STATUS_LABEL[status]} options={['Tất cả', ...STATUS_OPTS].map((o) => ({ value: o, label: o }))} onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }} variant="pill" />
