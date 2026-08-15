@@ -51,6 +51,7 @@ export default function ChatZaloContact({ notify }) {
       fullName: form.fullName.trim(),
       phone: form.phone.trim(),
       plateId: null,
+      plateNumber: form.plateNumber.trim() || null,
       note: form.note.trim() || null,
       source: 'contact-page',
       intent: form.intent,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Button from '../components/Button.jsx';
-import { useNotifications, useMarkNotificationRead } from '../services/notificationService.js';
+import { useNotifications, useMarkNotificationRead, useMarkNotificationClicked } from '../services/notificationService.js';
 
 const PER_PAGE = 20;
 
@@ -20,9 +20,11 @@ export default function Notifications({ go, notify }) {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useNotifications({ page, limit: PER_PAGE });
   const markRead = useMarkNotificationRead();
+  const markClicked = useMarkNotificationClicked();
 
   const handleClick = (n) => {
     if (!n.read) markRead.mutate(n.id);
+    markClicked.mutate(n.id); // T10: đo CTR theo loại thông báo
     if (n.plateId && go) go('detail', n.plateId)?.();
   };
 

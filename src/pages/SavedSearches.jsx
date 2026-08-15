@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Bell, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Bell, Trash2, Pencil, Check, X, Mail } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Switch } from '../components/index.jsx';
 import { useSavedSearches, useUpdateSavedSearch, useDeleteSavedSearch } from '../services/savedSearchService.js';
+import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
 
 function filterSummary(filtersStr) {
   try {
@@ -22,6 +23,11 @@ export default function SavedSearches({ go, notify }) {
   const deleteSearch = useDeleteSavedSearch();
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
+
+  // T4/T5/T8 — cài đặt thông báo (kênh email, giờ digest, ngôn ngữ)
+  const { data: settings } = useNotificationSettings();
+  const updateSettings = useUpdateNotificationSettings();
+  const setSetting = (body) => updateSettings.mutate(body, { onError: () => notify('Không cập nhật được, thử lại sau.') });
 
   const toggleNotify = (s) => {
     updateSearch.mutate({ id: s.id, notifyEnabled: !s.notifyEnabled }, {
@@ -57,6 +63,40 @@ export default function SavedSearches({ go, notify }) {
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Lưu tiêu chí để nhận thông báo khi có biển phù hợp.</p>
         </div>
       </div>
+
+      {settings && (
+        <div style={{ background: 'var(--surface-tint-blue)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flex: '1 1 260px' }}>
+            <Mail size={18} style={{ color: 'var(--text-muted)' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Cài đặt thông báo</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nhận email tóm tắt, chọn giờ gửi và ngôn ngữ.</span>
+            </div>
+          </div>
+          <Switch checked={!!settings.notifyByEmail} onChange={(v) => setSetting({ notifyByEmail: v })} label="Email" />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Giờ gửi
+            <select
+              value={settings.notifyHour ?? 8}
+              onChange={(e) => setSetting({ notifyHour: Number(e.target.value) })}
+              style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-body-sm)' }}
+            >
+              {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{h}h</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Ngôn ngữ
+            <select
+              value={settings.language || 'vi'}
+              onChange={(e) => setSetting({ language: e.target.value })}
+              style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-body-sm)' }}
+            >
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+        </div>
+      )}
 
       {isLoading ? (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center' }}>

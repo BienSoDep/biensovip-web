@@ -23,6 +23,7 @@ import { useSeo } from './hooks/useSeo.js';
 import { usePlateDetail } from './services/plateDetail.js';
 import { useBlogPost } from './services/blog.js';
 import { usePlateRealtime } from './services/plateRealtime.js';
+import { useNotificationRealtime } from './services/notificationRealtime.js';
 import { useHashRouter } from './hooks/useHashRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 
@@ -79,6 +80,8 @@ export default function App() {
 
   // UC09 realtime — admin thêm/sửa/xóa biển → public tự cập nhật tức thì
   usePlateRealtime();
+  // UC17 realtime — user đăng nhập nhận thông báo mới (chuông/toast tức thì)
+  useNotificationRealtime(st.user);
 
   useEffect(() => {
     const t = setTimeout(() => { fanDone.current = true; }, 1200);
@@ -519,7 +522,7 @@ export default function App() {
             )}
           </Suspense>
 
-          {isPublic && <Footer />}
+          {isPublic && <Footer settings={st.settings} />}
 
           {isPublic && <PromoRails />}
 

@@ -112,9 +112,11 @@ biensovip-web/
     │       ├── AdminCollaborators.jsx
     │       ├── AdminContacts.jsx   # Contact requests
     │       ├── AdminCustomers.jsx  # Customer management
+    │       ├── AdminMeanings.jsx   # Meaning template + per-plate meaning management
     │       ├── AdminNotifications.jsx
     │       ├── AdminPlates.jsx     # Plate CRUD
     │       ├── AdminPosts.jsx      # Blog post management
+    │       ├── AdminReviews.jsx    # Review moderation
     │       ├── AdminStaff.jsx      # Staff management (RBAC)
     │       ├── AdminVideos.jsx     # Promo video management
     │       ├── Compose.jsx         # Blog post editor (Tiptap)
@@ -228,8 +230,8 @@ npm run validate:content  # Validate content JSON files
 ### Public (21 routes)
 `home`, `list`, `detail`, `register`, `login`, `forgot`, `fav`, `lucky`, `about`, `blog`, `post`, `chat`, `compare`, `saved`, `reviews`, `notifications`, `collab`, `terms`, `privacy`, `transfer`, `faq`
 
-### Admin (12 routes)
-`dash`, `adminLogin`, `aplates`, `acats`, `acontacts`, `aposts`, `compose`, `acustomers`, `astaff`, `avideos`, `anotifications`, `acollabs`
+### Admin (14 routes)
+`dash`, `adminLogin`, `aplates`, `acats`, `acontacts`, `aposts`, `compose`, `acustomers`, `astaff`, `avideos`, `anotifications`, `acollabs`, `areviews`, `ameanings`
 
 ### Error
 `notfound`, `servererror`

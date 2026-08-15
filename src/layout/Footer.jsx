@@ -1,7 +1,9 @@
 import { contentGet } from '../lib/content/index.js';
 
-export default function Footer() {
+// UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: 'duydinh'.
+export default function Footer({ settings }) {
   const T = contentGet;
+  const zalo = settings?.zalo || 'duydinh';
   const exploreLinks = [
     ['#/danh-sach', T('common.footer.list')],
     ['#/tu-van', T('common.footer.lucky')],
@@ -40,7 +42,7 @@ export default function Footer() {
 
         <div style={{ flex: '1 1 240px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 'var(--space-5)', alignContent: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.hotline')}</span><a href="tel:0905000000" style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>0905 000 000</a></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.zalo_oa')}</span><a href="https://zalo.me/duydinh" target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>zalo.me/duydinh</a></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.zalo_oa')}</span><a href={`https://zalo.me/${zalo}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>zalo.me/{zalo}</a></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.address')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.address_value')}</span></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.hours')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.hours_value')}</span></div>
         </div>
