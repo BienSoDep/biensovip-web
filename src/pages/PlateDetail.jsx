@@ -46,6 +46,10 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plateId]);
 
+  // Hooks phải chạy vô điều kiện trước mọi early-return (rules-of-hooks)
+  const { data: reviewData } = usePlateReviews(plateId);
+  const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
+
   const handleContact = (action) => {
     if (plateId) logContact.mutate({ id: plateId, action });
   };
@@ -71,8 +75,6 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
   const sold = plate.status === 'sold';
   const isFav = !!favs?.[plate.id];
-  const { data: reviewData } = usePlateReviews(plate.id);
-  const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const inCompare = isInList(plate.id);
   const isCar = plate.vehicleType === 'Ô tô';
 
