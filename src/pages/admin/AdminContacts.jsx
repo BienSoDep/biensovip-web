@@ -67,12 +67,14 @@ export default function AdminContacts({ notify }) {
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ minWidth: 640 }}>
+        <div style={{ minWidth: 820 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           <span style={{ flex: '1 1 96px' }}>Khách hàng</span>
           <span style={{ flex: '1 1 88px' }}>Điện thoại</span>
           <span style={{ flex: '1 1 100px' }}>Biển quan tâm</span>
           <span style={{ flex: '1 1 72px' }}>Mục đích</span>
+          <span style={{ flex: '1 1 120px' }}>Ghi chú</span>
+          <span style={{ flex: '1 1 80px' }}>Đặt cọc</span>
           <span style={{ flex: '1 1 64px' }}>Thời gian</span>
           <span style={{ flex: '1 1 160px' }}>Trạng thái</span>
         </div>
@@ -93,6 +95,8 @@ export default function AdminContacts({ notify }) {
                   {INTENT_LABEL[c.intent] || c.intent}
                 </span>
               </span>
+              <span style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
+              <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{c.depositAmount != null ? new Intl.NumberFormat('vi-VN').format(c.depositAmount) + ' đ' : '—'}</span>
               <span style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 {new Date(c.createdAt).toLocaleDateString('vi-VN')}
               </span>
