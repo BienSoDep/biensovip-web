@@ -29,6 +29,9 @@ function readFiltersFromUrl() {
     page: Number(params.get('page')) || 1,
     perPage: Number(params.get('perPage')) || 20,
     view: params.get('view') === 'list' ? 'list' : 'grid',
+    priceMin: params.get('priceMin') || '',
+    priceMax: params.get('priceMax') || '',
+    status: params.get('status') || '',
   };
 }
 
@@ -42,6 +45,9 @@ function writeFiltersToUrl(filters) {
   if (filters.page > 1) params.set('page', String(filters.page));
   if (filters.perPage && filters.perPage !== 20) params.set('perPage', String(filters.perPage));
   if (filters.view === 'list') params.set('view', 'list');
+  if (filters.priceMin) params.set('priceMin', filters.priceMin);
+  if (filters.priceMax) params.set('priceMax', filters.priceMax);
+  if (filters.status) params.set('status', filters.status);
   const qs = params.toString();
   const base = window.location.hash.split('?')[0] || '#/danh-sach';
   const next = qs ? `${base}?${qs}` : base;
@@ -64,9 +70,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [saveName, setSaveName] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const activeFilterCount = filters.cat.length + filters.city.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0);
+  const activeFilterCount = filters.cat.length + filters.city.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.status ? 1 : 0);
 
-  const hasActiveFilters = filters.cat.length > 0 || filters.city.length > 0 || !!filters.vehicle || !!filters.q;
+  const hasActiveFilters = filters.cat.length > 0 || filters.city.length > 0 || !!filters.vehicle || !!filters.q || !!filters.priceMin || !!filters.priceMax || !!filters.status;
 
   const openSaveModal = () => {
     if (!isLoggedIn) { notify?.('Vui lòng đăng nhập để lưu tìm kiếm.'); go?.('login')(); return; }
@@ -79,7 +85,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     try {
       await createSavedSearch.mutateAsync({
         name: saveName.trim(),
-        filters: JSON.stringify({ cat: filters.cat, city: filters.city, vehicle: filters.vehicle, q: filters.q }),
+        filters: JSON.stringify({ cat: filters.cat, city: filters.city, vehicle: filters.vehicle, q: filters.q, priceMin: filters.priceMin, priceMax: filters.priceMax, status: filters.status }),
       });
       setSaveOpen(false);
       notify?.('Đã lưu tiêu chí tìm kiếm. Bạn sẽ nhận thông báo khi có biển mới phù hợp.');
@@ -91,7 +97,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
 
   const apiFilters = useMemo(() => ({
     cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
-    q: filters.q || undefined, sort: filters.sort, page: filters.page, perPage: filters.perPage,
+    q: filters.q || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
+    status: filters.status || undefined, sort: filters.sort, page: filters.page, perPage: filters.perPage,
   }), [filters]);
 
   const { data, isLoading, isError, isFetching } = usePlates(apiFilters);
@@ -106,7 +113,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     [key]: filters[key].includes(id) ? filters[key].filter((x) => x !== id) : [...filters[key], id],
   });
 
-  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], vehicle: '', q: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
+  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
 
   const cardProps = (p) => ({
     ...p,
@@ -172,6 +179,22 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                   <input value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} placeholder="VD: 51A"
                     style={{ height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
                 </div>
+                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                    <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMin} onChange={(e) => setFilter({ priceMin: e.target.value })} placeholder="Từ"
+                      style={{ flex: 1, minWidth: 0, height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
+                    <span style={{ color: 'var(--text-faint)' }}>—</span>
+                    <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMax} onChange={(e) => setFilter({ priceMax: e.target.value })} placeholder="Đến"
+                      style={{ flex: 1, minWidth: 0, height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
+                  </div>
+                </div>
+                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trạng thái</span>
+                  <Checkbox label="Chỉ xem biển đã bán" checked={filters.status === 'sold'} onChange={() => setFilter({ status: filters.status === 'sold' ? '' : 'sold' })} />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
                 <Button variant="outline" size="md" onClick={() => { clearFilters(); }} style={{ flex: 1 }}>Xóa bộ lọc</Button>
@@ -212,6 +235,22 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Từ khóa</span>
             <input value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} placeholder="VD: 51A"
               style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
+          </div>
+          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+              <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMin} onChange={(e) => setFilter({ priceMin: e.target.value })} placeholder="Từ"
+                style={{ flex: 1, minWidth: 0, height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
+              <span style={{ color: 'var(--text-faint)' }}>—</span>
+              <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMax} onChange={(e) => setFilter({ priceMax: e.target.value })} placeholder="Đến"
+                style={{ flex: 1, minWidth: 0, height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
+            </div>
+          </div>
+          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trạng thái</span>
+            <Checkbox label="Chỉ xem biển đã bán" checked={filters.status === 'sold'} onChange={() => setFilter({ status: filters.status === 'sold' ? '' : 'sold' })} />
           </div>
           <Button variant="outline" size="sm" fullWidth onClick={clearFilters}>Xóa bộ lọc</Button>
         </aside>
