@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import { useAdminContacts, useUpdateContactStatus } from '../../services/adminContacts.js';
@@ -31,6 +32,7 @@ export default function AdminContacts({ notify }) {
   const [search, setSearch] = useState('');
   const [q] = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState(null);
 
   const { data, isLoading } = useAdminContacts({ status, intent, q, page, perPage: 20 });
   const updateStatus = useUpdateContactStatus();
@@ -84,7 +86,7 @@ export default function AdminContacts({ notify }) {
         {!isLoading && result.items.map((c) => {
           const parsed = parsePlateNumber(c.plateNumber);
           return (
-            <div key={c.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+            <div key={c.id} onClick={() => setSelected(c)} title="Xem chi tiết" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}>
               <span style={{ flex: '1 1 96px', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{c.fullName}</span>
               <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{c.phone}</span>
               <span style={{ flex: '1 1 100px' }}>
@@ -100,7 +102,7 @@ export default function AdminContacts({ notify }) {
               <span style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 {new Date(c.createdAt).toLocaleDateString('vi-VN')}
               </span>
-              <span style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
                 <Select
                   value={STATUS_LABEL[c.status] || c.status}
                   options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
@@ -129,6 +131,68 @@ export default function AdminContacts({ notify }) {
               cursor: 'pointer', boxShadow: 'var(--shadow-inset-hairline)',
             }}>{p}</button>
           ))}
+        </div>
+      )}
+
+      {selected && (
+        <div className="contact-detail-overlay" onClick={() => setSelected(null)}>
+          <div className="contact-detail-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={`Chi tiết yêu cầu của ${selected.fullName}`}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+                <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{selected.fullName}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{(INTENT_LABEL[selected.intent] || selected.intent) + (selected.source ? ' · ' + selected.source : '')}</span>
+              </div>
+              <button type="button" aria-label="Đóng" onClick={() => setSelected(null)} style={{ border: 'none', background: 'var(--surface-muted)', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer', flexShrink: 0 }}><X size={18} /></button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Điện thoại</span>
+                <a href={`tel:${selected.phone}`} style={{ font: 'var(--type-body)', color: 'var(--text-link)', textDecoration: 'none' }}>{selected.phone}</a>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Biển quan tâm</span>
+                {selected.plateNumber ? (
+                  <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.plateNumber}</span>
+                ) : (
+                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-faint)' }}>Khách hỏi chung, không có biển cụ thể</span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Đặt cọc</span>
+                <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.depositAmount != null ? new Intl.NumberFormat('vi-VN').format(selected.depositAmount) + ' đ' : '—'}</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Ghi chú yêu cầu</span>
+                <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap', maxHeight: 160, overflowY: 'auto' }}>
+                  {selected.note || <span style={{ color: 'var(--text-faint)' }}>Không có ghi chú</span>}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thời gian gửi</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{new Date(selected.createdAt).toLocaleString('vi-VN')}</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái xử lý</span>
+                <Select
+                  value={STATUS_LABEL[selected.status] || selected.status}
+                  options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
+                  onChange={(v) => { handleStatus(selected.id, v); setSelected((s) => ({ ...s, status: STATUS_VAL[v] })); }}
+                  variant="pill"
+                  style={{ color: STATUS_COLOR[selected.status] || 'var(--text-strong)' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-5)' }}>
+              <button type="button" onClick={() => setSelected(null)} style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-body)', cursor: 'pointer' }}>Đóng</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
