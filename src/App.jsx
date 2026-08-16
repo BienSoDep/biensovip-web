@@ -10,6 +10,7 @@ import * as favApi from './services/favoriteService.js';
 import { getLocalFavorites, addLocalFavorite, removeLocalFavorite } from './services/favoriteStore.js';
 import { useComparePlates } from './services/compareService.js';
 import { contentGet } from './lib/content/index.js';
+import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
@@ -194,17 +195,40 @@ export default function App() {
     onBuy: () => openBuy(p.id),
   }));
 
-  const submitContact = () => {
+  const submitContact = async () => {
     const err = {};
     if (!st.mName.trim()) err.name = 'Vui lòng nhập họ tên.';
     if (!st.mPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
     else if (!validatePhone(st.mPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
     if (Object.keys(err).length) { patch({ mErr: err }); return; }
-    const cur = st.plates.find((p) => p.id === st.curId);
-    if (!cur) { notify('Biển số không tồn tại'); return; }
-    const row = { id: 'c' + Date.now(), name: st.mName.trim(), phone: st.mPhone.trim(), note: st.mNote.trim(), pid: cur.id, time: 'Vừa xong', status: 'Mới' };
-    setSt((s) => ({ ...s, sent: true, mErr: {}, contacts: [row, ...s.contacts] }));
-    notify('Đã gửi yêu cầu tư vấn');
+
+    // UC07 — gửi thật lên API (backend resolve plateNumber → plateId, chống spam qua honeypot).
+    const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.curId || '');
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/contact-requests`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: st.mName.trim(),
+          phone: st.mPhone.trim(),
+          plateId: isGuid ? st.curId : null,
+          plateNumber: cur?.plateNumber || cur?.title || null,
+          note: st.mNote.trim() || null,
+          source: 'plate-detail',
+          intent: 'inquiry',
+          depositAmount: null,
+          honeypot: '',
+        }),
+      });
+      const body = await resp.json().catch(() => null);
+      if (!resp.ok || !body?.success) {
+        patch({ mErr: { name: body?.error?.message || 'Gửi thất bại, vui lòng thử lại.' } });
+        return;
+      }
+      patch({ sent: true, mErr: {} });
+      notify('Đã gửi yêu cầu tư vấn');
+    } catch {
+      patch({ mErr: { name: 'Không kết nối được server.' } });
+    }
   };
 
   const ADMIN_EMAIL = 'admin@biensovip.com';
@@ -367,11 +391,26 @@ export default function App() {
   };
 
   const s = st.screen;
-  const cur0 = st.plates.find((p) => p.id === st.curId);
-  const cur = cur0 ? { ...cur0, title: cur0.prov + cur0.seri + ' · ' + cur0.num, sub: 'Biển ' + String(cur0.vehicle).toLowerCase() + ' · ' + cur0.city + (cur0.hot ? ' · còn 1 số duy nhất' : ''), ref: cur0.prov + cur0.seri + String(cur0.num).replace('.', '') } : null;
 
   const { data: seoPlate } = usePlateDetail(s === 'detail' ? st.curId : null);
+  const { data: modalPlate } = usePlateDetail(st.modal ? st.curId : null);
   const { data: seoPost } = useBlogPost(s === 'post' ? st.postId : null);
+
+  // UC07 — modal liên hệ ưu tiên dữ liệu biển thật (GUID từ API), fallback mock st.plates.
+  const cur0 = st.plates.find((p) => p.id === st.curId);
+  let cur = cur0 ? { ...cur0, title: cur0.prov + cur0.seri + ' · ' + cur0.num, sub: 'Biển ' + String(cur0.vehicle).toLowerCase() + ' · ' + cur0.city + (cur0.hot ? ' · còn 1 số duy nhất' : ''), ref: cur0.prov + cur0.seri + String(cur0.num).replace('.', '') } : null;
+  if (!cur && st.modal && modalPlate) {
+    const { prov, seri, num } = splitPlateNumber(modalPlate.plateNumber);
+    cur = {
+      id: modalPlate.id,
+      plateNumber: modalPlate.plateNumber,
+      prov, seri, num,
+      title: modalPlate.plateNumber,
+      cat: modalPlate.province || modalPlate.vehicleType || '',
+      price: formatPrice(modalPlate.price, modalPlate.priceOnRequest),
+      ref: modalPlate.plateNumber.replace(/[^A-Z0-9]/gi, ''),
+    };
+  }
   useSeo(s, s === 'detail' ? { plate: seoPlate } : s === 'post' ? { post: seoPost } : undefined);
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
