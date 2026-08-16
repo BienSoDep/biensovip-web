@@ -1,4 +1,5 @@
-import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2, ChevronDown,
+  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History } from 'lucide-react';
 import { Select as BaseSelect } from '@base-ui/react/select';
 
 export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint }) {
@@ -152,7 +153,9 @@ export function Eyebrow({ tone = 'blue', children, className }) {
   );
 }
 
-const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check, 'plus-circle': PlusCircle, 'check-circle': CheckCircle2 };
+const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check, 'plus-circle': PlusCircle, 'check-circle': CheckCircle2,
+  flame: Flame, droplets: Droplets, mountain: Mountain, wind: Wind, zap: Zap,
+  sparkles: Sparkles, copy: Copy, download: Download, share: Share2, history: History };
 
 export function Icon({ name, size = 18 }) {
   const I = ICONS[name];

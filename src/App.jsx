@@ -68,7 +68,7 @@ export default function App() {
     confirm: null, picker: false, sync: true,
     postCat: 'Tất cả', postId: initRoute.postId || 'a1',
     editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '',
-    ms: { name: '', year: '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' }, msResult: null,
+    ms: { name: '', year: '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' }, msResult: null, listNotice: null,
     drawerOpen: false,
     compareIds: [], savedSearches: [], reviews: [], reviewDraft: null,
     notifications: [], collabs: [], videos: [],
@@ -472,7 +472,7 @@ export default function App() {
           <Suspense fallback={<PageSkeleton screen={s} />}>
             {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} />}
 
-            {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} />}
+            {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} />}
 
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
 
@@ -482,7 +482,7 @@ export default function App() {
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} patch={patch} go={go} notify={notify} />}
 
-            {s === 'lucky' && <LuckyPlate go={go} notify={notify} />}
+            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} />}
 
             {s === 'about' && <About go={go} />}
 

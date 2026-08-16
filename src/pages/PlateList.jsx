@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SlidersHorizontal, X, LayoutGrid, List as ListIcon } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Select, Checkbox, Radio, Input } from '../components/index.jsx';
+import { Select, Checkbox, Radio, Input, Icon } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
@@ -48,7 +48,7 @@ function writeFiltersToUrl(filters) {
   if (next !== window.location.hash) history.replaceState(null, '', next);
 }
 
-export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go }) {
+export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice }) {
   const [filters, setFilters] = useState(readFiltersFromUrl);
   useEffect(() => { writeFiltersToUrl(filters); }, [filters]);
 
@@ -216,6 +216,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go 
           <Button variant="outline" size="sm" fullWidth onClick={clearFilters}>Xóa bộ lọc</Button>
         </aside>
         <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+          {listNotice && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-pill)', padding: '8px 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
+              <Icon name="sparkles" size={16} />
+              <span style={{ flex: 1 }}>{listNotice.text}</span>
+              <Button variant="ghost" size="sm" onClick={() => { setFilters((f) => ({ ...f, q: '', page: 1 })); onClearNotice?.(); }}>Bỏ lọc</Button>
+            </div>
+          )}
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               {activeFilterCount > 0 && (

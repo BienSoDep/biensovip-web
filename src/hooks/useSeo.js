@@ -65,7 +65,8 @@ export function useSeo(screen, data) {
     } else if (screen === 'lucky') {
       title = 'Tư vấn biển số hợp mệnh | ' + BRAND;
       desc = 'Điền thông tin cá nhân để nhận gợi ý biển số đẹp hợp mệnh, hợp ngũ hành và phù hợp ngân sách của bạn.';
-      canonical = SITE + '/tu-van';
+      canonical = SITE + '/hop-menh';
+      image = SITE + '/assets/logo-mark.png';
     } else if (screen === 'about') {
       title = 'Về Duy Đinh — ' + BRAND;
       canonical = SITE + '/gioi-thieu';
