@@ -131,6 +131,23 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   .tablet-stack{flex-direction:column!important}
   .tablet-stack>*{flex:1 1 100%!important}
 }
+/* Detail: mobile sticky bottom action bar */
+.plate-actions-mobile{display:none}
+@media(max-width:768px){
+  .plate-actions-mobile{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:90;gap:8px;align-items:center;padding:10px var(--pad-page) calc(10px + env(safe-area-inset-bottom));background:var(--glass-fill);backdrop-filter:var(--glass-blur);box-shadow:0 -1px 0 var(--border-hairline)}
+  .plate-actions-desktop{display:none}
+}
+/* Detail: image lightbox */
+.detail-lightbox{position:fixed;inset:0;z-index:120;background:var(--overlay-scrim);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:fadeIn 150ms var(--ease-out)}
+.lightbox-close{position:absolute;top:16px;right:16px;width:44px;height:44px;border-radius:50%;border:none;background:rgba(14,15,18,.6);color:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:none;background:rgba(14,15,18,.6);color:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lightbox-prev{left:16px}
+.lightbox-next{right:16px}
+.lightbox-counter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font:var(--type-caption);color:var(--white);background:rgba(14,15,18,.6);padding:4px 12px;border-radius:var(--radius-pill)}
+/* Admin contacts: detail modal */
+.contact-detail-overlay{position:fixed;inset:0;z-index:100;background:var(--overlay-scrim);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 150ms var(--ease-out)}
+.contact-detail-modal{background:var(--white);border-radius:var(--radius-card);box-shadow:var(--shadow-4);width:100%;max-width:480px;padding:var(--space-5);animation:modalIn 180ms var(--ease-out);max-height:90vh;overflow-y:auto}
+
 /* Promo video side rails — fixed vertical strips, wide screens only */
 .promo-rail{position:fixed;top:70px;bottom:0;width:170px;display:none;z-index:20;flex-direction:column;gap:14px;overflow-y:auto;padding:14px;scrollbar-width:thin}
 .promo-rail--left{left:0}

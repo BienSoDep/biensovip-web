@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ArrowRight, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -50,6 +50,20 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const { data: reviewData } = usePlateReviews(plateId);
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
 
+  const [lightbox, setLightbox] = useState(-1);
+  const images = plate?.images || [];
+
+  useEffect(() => {
+    if (lightbox < 0) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setLightbox(-1);
+      else if (e.key === 'ArrowRight') setLightbox((i) => (i + 1) % images.length);
+      else if (e.key === 'ArrowLeft') setLightbox((i) => (i - 1 + images.length) % images.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox, images.length]);
+
   const handleContact = (action) => {
     if (plateId) logContact.mutate({ id: plateId, action });
   };
@@ -85,7 +99,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,4vw,52px)', display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: '100%', maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-xl)', padding: 24 }}>
               {plate.images?.length > 0 ? (
-                <img src={plate.images[0]} alt={plate.plateNumber} style={{ width: '100%', borderRadius: 'var(--radius-md)' }} />
+                <img src={plate.images[0]} alt={plate.plateNumber} onClick={() => setLightbox(0)} style={{ width: '100%', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
               ) : isCar ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
@@ -105,7 +119,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           {plate.images?.length > 1 && (
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {plate.images.slice(1).map((url, i) => (
-                <img key={i} src={url} alt={`${plate.plateNumber} ${i + 2}`} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+                <img key={i} src={url} alt={`${plate.plateNumber} ${i + 2}`} onClick={() => setLightbox(i + 1)} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
               ))}
             </div>
           )}
@@ -149,7 +163,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
             <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+          <div className="plate-actions-desktop" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {plate.seller?.phone && (
               <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 120px' }}>Gọi ngay</LinkButton>
             )}
@@ -223,6 +237,30 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           </Button>
         </div>
       </section>
+
+      <div className="plate-actions-mobile">
+        <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
+          <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+        </div>
+        {plate.seller?.phone && (
+          <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 0' }}>Gọi ngay</LinkButton>
+        )}
+        {plate.seller?.zalo && (
+          <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => handleContact('contact')} style={{ flex: '1 1 0' }}>Zalo</LinkButton>
+        )}
+        <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
+      </div>
+
+      {lightbox >= 0 && images.length > 0 && (
+        <div className="detail-lightbox" onClick={() => setLightbox(-1)}>
+          <button type="button" className="lightbox-close" aria-label="Đóng" onClick={() => setLightbox(-1)}><X size={24} /></button>
+          <button type="button" className="lightbox-nav lightbox-prev" aria-label="Ảnh trước" onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + images.length) % images.length); }}><ChevronLeft size={28} /></button>
+          <img src={images[lightbox]} alt={`${plate.plateNumber} ${lightbox + 1}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)' }} />
+          <button type="button" className="lightbox-nav lightbox-next" aria-label="Ảnh tiếp" onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % images.length); }}><ChevronRight size={28} /></button>
+          <span className="lightbox-counter">{lightbox + 1}/{images.length}</span>
+        </div>
+      )}
     </div>
   );
 }
