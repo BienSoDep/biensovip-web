@@ -10,6 +10,7 @@ html,body,#root{height:100%}
 .select-item[data-selected]{color:var(--action-primary);font-weight:var(--fw-semibold)}
 body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased}
 button{cursor:pointer}
+input,select,textarea{font-size:16px}
 
 button,[data-pressable],.pressable{
   transition:transform 120ms var(--ease-standard,ease),box-shadow 120ms var(--ease-standard,ease),background-color 120ms var(--ease-standard,ease),filter 120ms var(--ease-standard,ease),opacity 120ms var(--ease-standard,ease);
@@ -71,7 +72,7 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
     --fs-display-1:36px;--fs-display-2:28px;--fs-display-3:24px;
     --fs-title-1:22px;--fs-title-2:18px;
   }
-  .mobile-menu-btn{display:flex!important}
+  .mobile-menu-btn{display:flex!important;min-width:44px;min-height:44px;align-items:center;justify-content:center}
   .desktop-nav{display:none!important}
   .header-nav-pills{display:none!important}
   .page-breadcrumb{display:none!important}
