@@ -28,7 +28,7 @@ const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy' };
 
 export default function ChatZaloContact({ notify }) {
-  const [form, setForm] = useState({ fullName: '', phone: '', plateNumber: '', note: '', intent: 'inquiry' });
+  const [form, setForm] = useState({ fullName: '', phone: '', plateNumber: '', note: '', intent: 'inquiry', depositAmount: '' });
   const submit = useSubmitContact();
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -55,7 +55,7 @@ export default function ChatZaloContact({ notify }) {
       note: form.note.trim() || null,
       source: 'contact-page',
       intent: form.intent,
-      depositAmount: null,
+      depositAmount: form.intent === 'deposit_request' ? (Number(form.depositAmount.replace(/[^\d]/g, '')) || null) : null,
       honeypot: null,
     }, {
       onSuccess: () => {
@@ -128,6 +128,9 @@ export default function ChatZaloContact({ notify }) {
           </label>
           {(form.intent === 'deposit_request' || form.intent === 'buy') && (
             <Input label="Biển số quan tâm" placeholder="VD: 43A1-999.99" value={form.plateNumber} onChange={set('plateNumber')} />
+          )}
+          {form.intent === 'deposit_request' && (
+            <Input label="Số tiền cọc (VNĐ)" placeholder="VD: 50000000" value={form.depositAmount} onChange={set('depositAmount')} />
           )}
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
             <textarea rows={3} placeholder="VD: cần sang tên trong tuần này" value={form.note} onChange={set('note')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />

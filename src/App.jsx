@@ -60,7 +60,7 @@ export default function App() {
     screen: initRoute.screen || 'home', device: 'desktop',
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
     favs: {}, curId: initRoute.detailId || 'p1',
-    modal: false, sent: false, mName: '', mPhone: '', mNote: '', mErr: {},
+    modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mDeposit: '', mErr: {},
     aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aErr: {}, step: 1, redirectTo: null, user: loadAuth()?.user || null,
     admEmail: '', admPw: '', admErr: '',
     plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
@@ -203,7 +203,7 @@ export default function App() {
   };
   const openPlate = (id) => patch({ screen: 'detail', curId: id, modal: false });
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
-  const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mErr: {} });
+  const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {} });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
 
   const catNames = st.cats.map((c) => c.name);
@@ -227,6 +227,8 @@ export default function App() {
 
     // UC07 — gửi thật lên API (backend resolve plateNumber → plateId, chống spam qua honeypot).
     const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.curId || '');
+    const intent = st.mIntent === 'deposit_request' ? 'deposit_request' : 'inquiry';
+    const depositAmount = intent === 'deposit_request' ? (Number(String(st.mDeposit || '').replace(/[^\d]/g, '')) || null) : null;
     try {
       const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/contact-requests`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -237,8 +239,8 @@ export default function App() {
           plateNumber: cur?.plateNumber || cur?.title || null,
           note: st.mNote.trim() || null,
           source: 'plate-detail',
-          intent: 'inquiry',
-          depositAmount: null,
+          intent,
+          depositAmount,
           honeypot: '',
         }),
       });
