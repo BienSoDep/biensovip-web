@@ -103,7 +103,20 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             {s === 'register' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.aName} error={st.aErr.name} onChange={setField('aName')} />
-                <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
+                <div style={{ display: 'flex', gap: 8, background: 'var(--surface-sunken)', padding: 4, borderRadius: 'var(--radius-pill)' }}>
+                  {['email', 'phone'].map((t) => (
+                    <button key={t} type="button" onClick={() => patch({ aIdType: t, aErr: { ...st.aErr, email: '', phone: '' } })}
+                      style={{ flex: 1, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
+                        background: st.aIdType === t ? 'var(--action-primary)' : 'transparent', color: st.aIdType === t ? 'var(--white)' : 'var(--text-muted)' }}>
+                      {t === 'email' ? 'Email' : 'Số điện thoại'}
+                    </button>
+                  ))}
+                </div>
+                {st.aIdType === 'phone' ? (
+                  <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={st.aPhone} error={st.aErr.phone} onChange={setField('aPhone')} />
+                ) : (
+                  <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
+                )}
                 <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự, có chữ và số" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
                 <Checkbox label="Tôi đồng ý với điều khoản sử dụng" checked={st.aAgree} onChange={(v) => patch({ aAgree: v })} />
                 {st.aErr.agree && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn cần đồng ý với điều khoản để tiếp tục.</span>}

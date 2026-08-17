@@ -6,6 +6,7 @@ export const ROUTE_MAP = {
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acats': 'admin/danh-muc',
   'acontacts': 'admin/lien-he', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'acollabs': 'admin/cong-tac-vien', 'areviews': 'admin/danh-gia', 'ameanings': 'admin/y-nghia', 'compose': 'admin/them-bai',
   'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien', 'terms': 'dieu-khoan', 'privacy': 'bao-mat', 'transfer': 'sang-ten', 'faq': 'hoi-dap',
+  'verify-email': 'xac-thuc-email',
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
@@ -18,7 +19,7 @@ export function routeFor(s, id) {
 }
 
 export function parseRoute(h) {
-  const p = h.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const p = h.replace(/^#\/?/, '').split('?')[0].split('/').filter(Boolean);
   if (!p.length) return { screen: 'home' };
   if (p[0] === 'bien') return { screen: 'detail', detailId: p[1] || 'p1' };
   if (p[0] === 'bai-viet') return { screen: 'post', postId: p[1] || 'a1' };

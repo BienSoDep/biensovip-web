@@ -32,6 +32,7 @@ const Home = lazy(() => import('./pages/Home.jsx'));
 const PlateList = lazy(() => import('./pages/PlateList.jsx'));
 const PlateDetail = lazy(() => import('./pages/PlateDetail.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail.jsx'));
 const Fav = lazy(() => import('./pages/Fav.jsx'));
 const LuckyPlate = lazy(() => import('./pages/LuckyPlate.jsx'));
 const About = lazy(() => import('./pages/About.jsx'));
@@ -60,7 +61,7 @@ export default function App() {
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
     favs: {}, curId: initRoute.detailId || 'p1',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mErr: {},
-    aName: '', aEmail: '', aPhone: '', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aErr: {}, step: 1, user: loadAuth()?.user || null,
+    aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aErr: {}, step: 1, redirectTo: null, user: loadAuth()?.user || null,
     admEmail: '', admPw: '', admErr: '',
     plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
     cats: CATS.map((c) => ({ name: c })), newCat: '', catErr: '',
@@ -156,7 +157,7 @@ export default function App() {
   const notify = (msg) => toast(msg);
   const heroAnim = makeHeroAnim(fanDone);
 
-  const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
+  const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot', 'adminLogin'].includes(st.screen) ? st.screen : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
   const toggleFav = (id) => {
     setSt((s) => {
       const favs = { ...s.favs };
@@ -271,19 +272,25 @@ export default function App() {
     const s = st.screen;
     const err = {};
     if (s === 'register') {
+      const isPhone = st.aIdType === 'phone';
       if (!st.aName.trim()) err.name = 'Vui lòng nhập họ tên.';
-      if (!st.aEmail.trim() || !st.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.';
+      if (isPhone) {
+        if (!st.aPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
+        else if (!validatePhone(st.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
+      } else if (!st.aEmail.trim() || !st.aEmail.includes('@')) {
+        err.email = 'Email chưa đúng định dạng.';
+      }
       if (st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
       if (!st.aAgree) err.agree = true;
       if (Object.keys(err).length) { patch({ aErr: err }); return; }
       try {
-        await authApi.register({ identifierType: 'email', identifier: st.aEmail.trim(), password: st.aPw, fullName: st.aName.trim() });
-        rememberEmail(st.aEmail.trim());
+        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier: (isPhone ? st.aPhone : st.aEmail).trim(), password: st.aPw, fullName: st.aName.trim() });
+        if (!isPhone) rememberEmail(st.aEmail.trim());
         patch({ aErr: {}, screen: 'login', aPw: '', step: 1 });
-        notify('Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
+        notify(isPhone ? 'Đăng ký thành công! Vui lòng đăng nhập.' : 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
       } catch (e) {
-        if (e.status === 409) patch({ aErr: { email: 'Email đã được sử dụng.' } });
-        else patch({ aErr: { email: e.message || 'Đăng ký thất bại.' } });
+        if (e.status === 409) patch({ aErr: { [isPhone ? 'phone' : 'email']: isPhone ? 'Số điện thoại đã được sử dụng.' : 'Email đã được sử dụng.' } });
+        else patch({ aErr: { [isPhone ? 'phone' : 'email']: e.message || 'Đăng ký thất bại.' } });
       }
       return;
     }
@@ -294,7 +301,7 @@ export default function App() {
       try {
         const data = await authApi.login({ identifier: st.aEmail.trim(), password: st.aPw, remember });
         rememberEmail(st.aEmail.trim());
-        patch({ aErr: {}, user: data.user, screen: 'home', aPw: '' });
+        patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', aPw: '', redirectTo: null });
         notify('Đăng nhập thành công');
         favApi.syncFavorites(); // fire-and-forget: merge local → server
       } catch (e) {
@@ -345,7 +352,7 @@ export default function App() {
     try {
       const data = await authApi.verifyLoginOtp(st.aEmail.trim(), st.aOtp, remember);
       rememberEmail(st.aEmail.trim());
-      patch({ aErr: {}, user: data.user, screen: 'home', step: 1, aOtp: '' });
+      patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', step: 1, aOtp: '', redirectTo: null });
       notify('Đăng nhập thành công');
       favApi.syncFavorites();
     } catch (e) { patch({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
@@ -518,6 +525,8 @@ export default function App() {
             {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
               <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} />
             )}
+
+            {s === 'verify-email' && <VerifyEmail go={go} />}
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} patch={patch} go={go} notify={notify} />}
 
