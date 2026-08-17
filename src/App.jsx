@@ -127,6 +127,28 @@ export default function App() {
       .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // UC05 — Messenger Customer Chat plugin (chỉ load khi có VITE_FB_PAGE_ID; Zalo là fallback).
+  useEffect(() => {
+    const pageId = import.meta.env.VITE_FB_PAGE_ID;
+    if (!pageId || document.getElementById('facebook-jssdk')) return;
+    window.fbAsyncInit = () => { window.FB?.init?.({ xfbml: true, version: 'v18.0' }); };
+    const root = document.createElement('div');
+    root.id = 'fb-root';
+    document.body.appendChild(root);
+    const chat = document.createElement('div');
+    chat.id = 'fb-customer-chat';
+    chat.className = 'fb-customerchat';
+    chat.setAttribute('page_id', pageId);
+    chat.setAttribute('attribution', 'biz_inbox');
+    document.body.appendChild(chat);
+    const js = document.createElement('script');
+    js.id = 'facebook-jssdk';
+    js.async = true;
+    js.defer = true;
+    js.src = 'https://connect.facebook.net/vi_VN/sdk/xfbml.customerchat.js';
+    document.body.appendChild(js);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => { saveAuth({ user: st.user, isAdmin: st.isAdmin }); }, [st.user, st.isAdmin]);
 
   // Init favs from localStorage (guest) or API (user)
@@ -578,7 +600,7 @@ export default function App() {
             <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />
           </Suspense>
 
-          {isPublic && st.settings?.zalo && (
+          {isPublic && st.settings?.zalo && !import.meta.env.VITE_FB_PAGE_ID && (
             <a href={`https://zalo.me/${st.settings.zalo.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo" title="Chat qua Zalo" style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 80, width: 48, height: 48, borderRadius: '50%', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', transition: 'var(--transition-control)', cursor: 'pointer' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.02 2 10.98c0 2.94 1.69 5.52 4.23 6.94l-1.06 3.18a.5.5 0 0 0 .66.63l3.55-1.38c.82.23 1.68.35 2.62.35 5.52 0 10-4.02 10-8.98S17.52 2 12 2Z" fill="#fff" fillOpacity=".12" stroke="#fff" strokeWidth="1.5"/><path d="M8.5 9.5h.01M12 9.5h.01M15.5 9.5h.01" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><path d="M8.5 13.5s1.5 2 3.5 2 3.5-2 3.5-2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </a>
