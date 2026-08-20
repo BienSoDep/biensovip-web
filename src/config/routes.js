@@ -1,11 +1,12 @@
-export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'adminLogin', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
+export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'adminLogin', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'areviews', 'ameanings', 'compose'];
 
 export const ROUTE_MAP = {
   'list': 'danh-sach', 'register': 'dang-ky', 'login': 'dang-nhap', 'forgot': 'quen-mat-khau',
-  'fav': 'yeu-thich', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'tu-van', 'adminLogin': 'admin',
+  'fav': 'yeu-thich', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'hop-menh', 'adminLogin': 'admin',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acats': 'admin/danh-muc',
-  'acontacts': 'admin/lien-he', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'acollabs': 'admin/cong-tac-vien', 'compose': 'admin/them-bai',
+  'acontacts': 'admin/lien-he', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'acollabs': 'admin/cong-tac-vien', 'areviews': 'admin/danh-gia', 'ameanings': 'admin/y-nghia', 'compose': 'admin/them-bai',
   'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien', 'terms': 'dieu-khoan', 'privacy': 'bao-mat', 'transfer': 'sang-ten', 'faq': 'hoi-dap',
+  'verify-email': 'xac-thuc-email',
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
@@ -13,16 +14,18 @@ const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) =>
 export function routeFor(s, id) {
   if (s === 'detail') return '#/bien/' + (id || '');
   if (s === 'post') return '#/bai-viet/' + (id || '');
+  if (s === 'notfound') return window.location.hash;
   return '#/' + (ROUTE_MAP[s] || '');
 }
 
 export function parseRoute(h) {
-  const p = h.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const p = h.replace(/^#\/?/, '').split('?')[0].split('/').filter(Boolean);
   if (!p.length) return { screen: 'home' };
   if (p[0] === 'bien') return { screen: 'detail', detailId: p[1] || 'p1' };
   if (p[0] === 'bai-viet') return { screen: 'post', postId: p[1] || 'a1' };
-  return { screen: REVERSE_MAP[p.join('/')] || 'home' };
+  if (p[0] === 'tu-van') return { screen: 'lucky' }; // alias cũ → hop-menh (redirect)
+  return { screen: REVERSE_MAP[p.join('/')] || 'notfound' };
 }
 
-export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'compose'];
-export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq'];
+export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'areviews', 'ameanings', 'compose'];
+export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'notfound'];

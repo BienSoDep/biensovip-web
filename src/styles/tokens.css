@@ -120,7 +120,12 @@
 --type-label:var(--fw-semibold) var(--fs-body-sm)/1.2 var(--font-text); /* @kind font */
 --type-price:var(--fw-semibold) var(--fs-title-3)/1.2 var(--font-text); /* @kind font */
 }
+/* --- Z-index scale: dropdown popovers must clear every modal/scrim or options render invisible --- */
+:root{
+--z-header:40;--z-chatbot:70;--z-drawer:80;--z-filter-overlay:85;--z-modal:90;--z-confirm:95;--z-popover:110;--z-toast:120;
+}
 *,*::before,*::after{box-sizing:border-box}
+html{overflow-x:hidden}
 body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 h1,h2,h3,h4,p{margin:0}
 a{color:var(--text-link);text-decoration:none;transition:var(--transition-control)}

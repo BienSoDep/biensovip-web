@@ -1,16 +1,25 @@
-import { SearchX } from 'lucide-react';
+import Button from '../components/Button.jsx';
+import { contentGet } from '../lib/content/index.js';
 
 export default function NotFound({ go }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 'var(--space-5)', padding: 'var(--pad-page)', textAlign: 'center', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ width: 72, height: 72, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <SearchX size={32} style={{ color: 'var(--text-muted)' }} />
+    <section style={{ position: 'relative', overflow: 'hidden', minHeight: '70vh', background: 'var(--surface-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <div aria-hidden style={{ position: 'absolute', top: -60, right: -60, width: 260, height: 260, borderRadius: '50%', background: 'var(--action-primary)', opacity: 0.9 }} />
+      <div aria-hidden style={{ position: 'absolute', top: 140, right: 40, width: 140, height: 140, borderRadius: '50%', background: 'var(--ink-700)' }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: -70, left: -70, width: 220, height: 220, borderRadius: '50%', background: 'var(--action-primary)', opacity: 0.9 }} />
+      <div aria-hidden style={{ position: 'absolute', bottom: 60, left: 160, width: 120, height: 120, borderRadius: '50%', background: 'var(--ink-700)' }} />
+
+      <div style={{ position: 'relative', maxWidth: 560, padding: 'var(--space-9) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-5)' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span aria-hidden style={{ position: 'absolute', font: 'var(--fw-extrabold) clamp(48px,10vw,84px)/1 var(--font-display)', color: 'rgba(255,255,255,.08)', whiteSpace: 'nowrap' }}>{contentGet('common.notfound.ghost')}</span>
+          <span style={{ font: 'var(--fw-extrabold) clamp(64px,16vw,140px)/1 var(--font-display)', letterSpacing: 'var(--ls-display)', color: 'var(--white)' }}>{contentGet('common.notfound.code')}</span>
+        </div>
+        <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255,255,255,.66)', maxWidth: 420 }}>{contentGet('common.notfound.desc')}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'var(--space-3)' }}>
+          <Button variant="primary" size="lg" onClick={go('home')}>{contentGet('common.notfound.cta_home')}</Button>
+          <Button variant="outline" size="lg" onClick={go('chat')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>{contentGet('common.notfound.cta_chat')}</Button>
+        </div>
       </div>
-      <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', color: 'var(--text-strong)' }}>404 — Trang không tồn tại</h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Trang bạn tìm không có hoặc đã bị xóa.</p>
-      </div>
-      <button onClick={go('home')} style={{ border: '1px solid var(--border-heavy)', borderRadius: 'var(--radius-pill)', background: 'transparent', color: 'var(--text-strong)', padding: '10px 24px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer' }}>Về trang chủ</button>
-    </div>
+    </section>
   );
 }

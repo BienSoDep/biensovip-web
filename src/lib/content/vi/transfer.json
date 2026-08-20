@@ -1,0 +1,21 @@
+{
+  "title": "Hướng dẫn sang tên",
+  "subtitle": "Quy trình mua bán và sang tên biển số tại Biensovip — minh bạch, nhanh gọn, đúng luật.",
+  "steps": {
+    "step_0": { "title": "1. Kiểm tra hồ sơ", "desc": "Chúng tôi kiểm tra giấy tờ gốc: đăng ký xe, CMND/CCCD chính chủ, sổ đăng kiểm (ô tô). Đảm bảo biển số sạch, không tranh chấp, không cầm cố." },
+    "step_1": { "title": "2. Đặt cọc & ký hợp đồng", "desc": "Hai bên ký hợp đồng mua bán có công chứng. Đặt cọc 30–50% giá trị biển số. Phần còn lại thanh toán khi hoàn tất sang tên." },
+    "step_2": { "title": "3. Sang tên tại CA", "desc": "Nhân viên Duy Đinh hỗ trợ làm thủ tục sang tên tại Phòng Cảnh sát Giao thông tỉnh/thành phố nơi xe đăng ký. Thời gian: 1–2 ngày làm việc." },
+    "step_3": { "title": "4. Nhận biển & thanh toán", "desc": "Sau khi sang tên hoàn tất, bạn thanh toán phần còn lại và nhận toàn bộ giấy tờ mới mang tên mình." }
+  },
+  "need_help_title": "Cần tư vấn thêm?",
+  "need_help_desc": "Gọi 0905 221 334 hoặc nhắn Zalo để được hướng dẫn chi tiết cho trường hợp của bạn.",
+  "cta_zalo": "Nhắn Zalo",
+  "cta_list": "Xem kho biển số",
+  "notes_title": "Lưu ý quan trọng",
+  "notes": [
+    "Biển số chỉ được sang tên khi xe đã đăng ký chính chủ, không vi phạm giao thông chưa xử lý.",
+    "Người mua cần có CMND/CCCD còn hiệu lực và hộ khẩu tại tỉnh/thành muốn đăng ký (hoặc tạm trú dài hạn).",
+    "Phí sang tên do Nhà nước quy định, không nằm trong giá biển số.",
+    "Thời gian sang tên có thể kéo dài hơn nếu hồ sơ phức tạp hoặc ngày lễ, cuối tuần."
+  ]
+}

@@ -1,4 +1,6 @@
-import { Heart, X, Pencil, Trash2, Check } from 'lucide-react';
+import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2, ChevronDown,
+  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History } from 'lucide-react';
+import { Select as BaseSelect } from '@base-ui/react/select';
 
 export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint }) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
@@ -44,21 +46,50 @@ export function SearchField({ placeholder, value, onChange, width, ariaLabel }) 
 }
 
 export function Select({ label, value, options = [], onChange, variant, style }) {
+  const selected = options.find((o) => o.value === value);
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
       {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
-      <select
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          height: 40, border: 'none', borderRadius: variant === 'pill' ? 'var(--radius-pill)' : 'var(--radius-field)',
-          background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)',
-          padding: '0 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none',
-        }}
-      >
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </label>
+      <BaseSelect.Root value={value ?? ''} onValueChange={(v) => onChange(v)} items={options}>
+        <BaseSelect.Trigger
+          style={{
+            height: 40, border: 'none', borderRadius: variant === 'pill' ? 'var(--radius-pill)' : 'var(--radius-field)',
+            background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)',
+            padding: '0 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer', width: '100%',
+          }}
+        >
+          <BaseSelect.Value>{selected?.label ?? ''}</BaseSelect.Value>
+          <BaseSelect.Icon style={{ display: 'flex', color: 'var(--text-muted)' }}><ChevronDown size={16} /></BaseSelect.Icon>
+        </BaseSelect.Trigger>
+        <BaseSelect.Portal>
+          <BaseSelect.Positioner sideOffset={6} style={{ zIndex: 'var(--z-popover, 60)' }}>
+            <BaseSelect.Popup
+              style={{
+                background: 'var(--white)', borderRadius: 'var(--radius-field)', boxShadow: 'var(--shadow-3)',
+                padding: 4, minWidth: 'var(--anchor-width)', maxHeight: 280, overflowY: 'auto',
+              }}
+            >
+              {options.map((o) => (
+                <BaseSelect.Item
+                  key={o.value}
+                  value={o.value}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                    padding: '9px 12px', borderRadius: 'var(--radius-sm, 8px)', cursor: 'pointer',
+                    font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none',
+                  }}
+                  className="select-item"
+                >
+                  <BaseSelect.ItemText>{o.label}</BaseSelect.ItemText>
+                  <BaseSelect.ItemIndicator style={{ display: 'flex', color: 'var(--action-primary)' }}><Check size={14} /></BaseSelect.ItemIndicator>
+                </BaseSelect.Item>
+              ))}
+            </BaseSelect.Popup>
+          </BaseSelect.Positioner>
+        </BaseSelect.Portal>
+      </BaseSelect.Root>
+    </div>
   );
 }
 
@@ -122,20 +153,23 @@ export function Eyebrow({ tone = 'blue', children, className }) {
   );
 }
 
-const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check };
+const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check, 'plus-circle': PlusCircle, 'check-circle': CheckCircle2,
+  flame: Flame, droplets: Droplets, mountain: Mountain, wind: Wind, zap: Zap,
+  sparkles: Sparkles, copy: Copy, download: Download, share: Share2, history: History };
 
 export function Icon({ name, size = 18 }) {
   const I = ICONS[name];
   return I ? <I size={size} /> : null;
 }
 
-export function IconButton({ name, label, onClick, size = 'md', style }) {
-  const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 40;
+export function IconButton({ name, label, onClick, size = 'md', style, disabled }) {
+  const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 44;
   return (
-    <button type="button" aria-label={label} onClick={onClick}
+    <button type="button" aria-label={label} onClick={onClick} disabled={disabled}
       style={{
         width: px, height: px, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', ...style,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)',
+        cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1, ...style,
       }}>
       <Icon name={name} size={Math.round(px * 0.5)} />
     </button>

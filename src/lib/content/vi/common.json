@@ -1,0 +1,25 @@
+{
+  "brand": { "name": "Duy Đinh", "tagline_header": "Biển số đẹp Đà Nẵng" },
+  "nav": { "plates": "Biển số", "lucky": "Hợp mệnh", "compare": "So sánh", "blog": "Tin phong thủy", "about": "Về chúng tôi", "contact": "Liên hệ" },
+  "auth": { "login": "Đăng nhập", "register": "Đăng ký", "logout": "Thoát", "logout_done": "Đã đăng xuất" },
+  "fav": { "label": "Biển số yêu thích", "fav_aria": "Lưu yêu thích", "unfav_aria": "Bỏ lưu yêu thích", "fav_added": "Đã lưu vào yêu thích", "fav_removed": "Đã bỏ khỏi yêu thích" },
+  "breadcrumb": { "home": "Trang chủ", "aria": "Breadcrumb" },
+  "plate": { "call": "Gọi ngay", "zalo": "Nhắn Zalo", "sold": "Đã bán", "sold_overlay": "ĐÃ BÁN", "hot": "Còn 1 số", "new": "Mới", "contact_price": "Giá liên hệ" },
+  "footer": {
+    "desc": "Biển số đẹp Đà Nẵng — hồ sơ rõ ràng, sang tên nhanh, tư vấn theo mệnh chủ xe.",
+    "hotline": "Hotline", "zalo_oa": "Zalo OA", "address": "Địa chỉ", "hours": "Giờ làm việc",
+    "address_value": "123 Nguyễn Văn Linh, Đà Nẵng", "hours_value": "8:00 – 21:00",
+    "copyright": "© 2026 Duy Đinh — Biensovip.com",
+    "explore_title": "Khám phá",
+    "list": "Kho biển số", "lucky": "Hợp mệnh", "chat": "Liên hệ tư vấn", "collab": "Cộng tác viên", "compare": "So sánh biển số", "fav": "Biển số yêu thích", "blog": "Tin phong thủy", "about": "Về chúng tôi",
+    "policy_title": "Chính sách & Câu hỏi",
+    "terms": "Điều khoản", "privacy": "Bảo mật", "transfer": "Hướng dẫn sang tên", "faq": "Câu hỏi thường gặp"
+  },
+  "notfound": {
+    "ghost": "Không tìm thấy",
+    "code": "404",
+    "desc": "Biển số hoặc trang bạn tìm đã được bán, gỡ xuống hoặc không tồn tại.",
+    "cta_home": "Về trang chủ",
+    "cta_chat": "Nhờ tư vấn"
+  }
+}

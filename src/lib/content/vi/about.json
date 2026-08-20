@@ -1,0 +1,79 @@
+{
+  "intro": {
+    "eyebrow": "Từ 2016 tại Đà Nẵng",
+    "title": "Chọn số như chọn vận khí cho chủ xe",
+    "p1": "Xin chào, tôi là Duy Đinh — người sáng lập cửa hàng biển số đẹp đầu tiên tại Đà Nẵng theo đúng nghĩa làm nghề.",
+    "p2": "Tôi tin mỗi con số trên tấm biển không chỉ là địa chỉ phương tiện — nó mang ý nghĩa phong thủy, sự may mắn và câu chuyện của chủ nhân. Hơn mười năm qua, công việc của tôi là giúp khách tìm được con số hợp mệnh, hợp tài và hợp ý, với một nguyên tắc duy nhất: hồ sơ rõ ràng, giá công khai.",
+    "portrait_caption": "Duy Đinh",
+    "badge_founder": "Sáng lập",
+    "portrait_alt": "Chân dung Duy Đinh — chủ cửa hàng biển số đẹp Đà Nẵng"
+  },
+  "stats": {
+    "items": {
+      "s0": { "n": "10+", "l": "năm kinh nghiệm" },
+      "s1": { "n": "5.000+", "l": "biển số đã trao tay" },
+      "s2": { "n": "2.000+", "l": "khách hàng Đà Nẵng" },
+      "s3": { "n": "1–2 ngày", "l": "sang tên trung bình" }
+    }
+  },
+  "timeline": {
+    "eyebrow": "Hành trình làm nghề",
+    "toggle_open": "Xem toàn bộ hành trình",
+    "toggle_close": "Ẩn bớt",
+    "items": {
+      "2016": { "title": "Khởi đầu", "desc": "Một cửa hàng nhỏ 20m² trên đường Nguyễn Văn Linh, chỉ có vài biển số ô tô và một chiếc bàn gỗ." },
+      "2018": { "title": "Mở rộng kho", "desc": "Kết nối nguồn biển từ Quảng Nam, Huế và miền Trung — kho tăng lên hơn 200 số." },
+      "2020": { "title": "Chuyển dịch online", "desc": "Xây website, Zalo OA và nhận tư vấn phong thủy từ xa cho khách ở mọi tỉnh thành." },
+      "2022": { "title": "5.000 biển đã trao tay", "desc": "Vượt mốc 5.000 khách hàng, đa số giới thiệu lại từ người thân, bạn bè." },
+      "2024": { "title": "Tư vấn chuyên sâu theo mệnh", "desc": "Chuẩn hóa quy trình chọn số theo ngũ hành, năm sinh và mục đích sử dụng của chủ xe." },
+      "2026": { "title": "Duy Đinh hôm nay", "desc": "Đội ngũ 6 người, cam kết hồ sơ gốc rõ ràng và sang tên nhanh cho mọi giao dịch." }
+    }
+  },
+  "values": {
+    "eyebrow": "Giá trị tôi giữ vững",
+    "items": {
+      "v0": { "title": "Hồ sơ minh bạch", "desc": "Mọi biển đều kèm hồ sơ gốc, được kiểm tra nguồn gốc trước khi niêm yết." },
+      "v1": { "title": "Giá công khai", "desc": "Niêm yết rõ ràng, không tăng giá sau khi chốt, không phí ẩn." },
+      "v2": { "title": "Tư vấn đúng mệnh", "desc": "Chọn số theo ngũ hành, năm sinh và mục đích sử dụng của chủ xe." },
+      "v3": { "title": "Sang tên trọn gói", "desc": "Lo trọn thủ tục pháp lý, hỗ trợ lắp đặt tận nơi." }
+    }
+  },
+  "steps": {
+    "eyebrow": "Quy trình mua — 4 bước",
+    "items": {
+      "s0": { "title": "Chọn biển", "desc": "Duyệt kho, lọc theo đuôi số, loại xe và ngân sách." },
+      "s1": { "title": "Đặt cọc", "desc": "Chuyển khoản cọc để giữ chỗ, có xác nhận chủ shop." },
+      "s2": { "title": "Sang tên", "desc": "Hồ sơ gốc rõ ràng, làm thủ tục trong 1–2 ngày." },
+      "s3": { "title": "Nhận xe", "desc": "Bàn giao biển + giấy tờ, hỗ trợ lắp đặt tận nơi." }
+    }
+  },
+  "testimonials": {
+    "eyebrow": "Khách hàng nói về tôi",
+    "items": {
+      "t0": { "who": "Chú Hải — Ngũ Quý 99999", "quote": "Tôi lo hồ sơ lằng nhằng, nhưng Duy lo trọn trong 2 ngày, đúng như cam kết." },
+      "t1": { "who": "Anh Tuấn — 68.68 tiến lên", "quote": "Tư vấn theo mệnh của tôi rất kỹ, chọn được số ưng ý mà giá hợp lý." },
+      "t2": { "who": "Chị Lan — số sảnh tiến", "quote": "Mua từ 2020, sang tên nhanh, sau này giới thiệu thêm 3 người bạn đến." }
+    }
+  },
+  "faq": {
+    "eyebrow": "Câu hỏi thường gặp",
+    "items": {
+      "f0": { "q": "Biển số có sang tên được ngay không?", "a": "Có. Với hồ sơ gốc đầy đủ, thủ tục sang tên thường hoàn tất trong 1–2 ngày làm việc." },
+      "f1": { "q": "Tôi ở tỉnh khác mua được không?", "a": "Được. Chúng tôi gửi hồ sơ và hỗ trợ đăng ký từ xa, giao tận nơi trong khu vực miền Trung." },
+      "f2": { "q": "Đặt cọc giữ chỗ như thế nào?", "a": "Quý khách chuyển khoản cọc, có biên nhận và xác nhận từ chủ shop. Số tiền cọc sẽ trừ vào giá mua." },
+      "f3": { "q": "Có tư vấn phong thủy không?", "a": "Có. Duy Đinh tư vấn miễn phí chọn số theo mệnh, năm sinh và ngũ hành của chủ xe." }
+    }
+  },
+  "cta": {
+    "title": "Sẵn sàng tìm biển hợp mệnh?",
+    "desc": "Mở kho, lọc theo đuôi số và ngân sách của bạn ngay hôm nay.",
+    "button": "Xem kho biển số"
+  },
+  "contact": {
+    "shop_label": "Cửa hàng", "shop_value": "Duy Đinh — Biển số đẹp",
+    "phone_label": "Điện thoại", "phone_value": "0905 000 000",
+    "zalo_label": "Zalo OA", "zalo_value": "zalo.me/duydinh",
+    "address_label": "Địa chỉ", "address_value": "123 Nguyễn Văn Linh, Đà Nẵng",
+    "hours_label": "Giờ làm việc", "hours_value": "8:00 – 21:00, cả chủ nhật"
+  }
+}

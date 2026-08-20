@@ -4,6 +4,9 @@ import Button from '../components/Button.jsx';
 import { Input, Select, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 
+const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển'];
+const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request' };
+
 export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, submitContact, setField, catNames }) {
   const addRef = useRef(null);
   const confirmRef = useRef(null);
@@ -78,7 +81,7 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
         </div>
       )}
 
-      {st.modal && (
+      {st.modal && cur && (
         <div role="dialog" aria-modal="true" aria-labelledby="modal-contact-title" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div ref={contactRef} style={{ width: '100%', maxWidth: 460, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
@@ -93,6 +96,10 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
                 <div><h2 id="modal-contact-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Gửi yêu cầu tư vấn</h2><p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Shop gọi lại trong 15 phút, kể cả chủ nhật.</p></div>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.mName} error={st.mErr.name} onChange={setField('mName')} />
                 <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
+                <Select label="Mục đích" value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Hỏi chung'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'inquiry' })} />
+                {st.mIntent === 'deposit_request' && (
+                  <Input label="Số tiền cọc (VNĐ)" placeholder="VD: 50000000" value={st.mDeposit} onChange={setField('mDeposit')} />
+                )}
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
                   <textarea rows={3} placeholder="VD: cần sang tên trong tuần này" value={st.mNote} onChange={setField('mNote')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
