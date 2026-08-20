@@ -92,7 +92,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             <NavBtn key={key} onClick={go(String(key))} {...pill(s === key)}>
               {label}
               {key === 'compare' && compareCount > 0 && (
-                <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'rgba(255,255,255,.25)' : 'var(--action-primary)', color: s === key ? 'var(--white)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
+                <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--action-primary)', color: s === key ? 'var(--action-primary)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
               )}
             </NavBtn>
           ))}

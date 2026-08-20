@@ -99,7 +99,7 @@ export default function Compare({ go, notify, allPlates }) {
                   {p.thumbnailUrl ? (
                     <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                   ) : (
-                    <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                    <PlateVisual size="md" prov={prov} seri={seri} num={num} />
                   )}
                   <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
                   <button onClick={() => go('detail', p.id)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>Xem chi tiết</button>
