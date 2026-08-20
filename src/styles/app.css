@@ -121,6 +121,8 @@ button:focus-visible,[data-pressable]:focus-visible,.pressable:focus-visible,a:f
   .admin-mobile-topbar-btn{display:flex!important}
   .admin-main{padding-top:64px!important}
 }
+/* Admin sidebar: sticky + tự cuộn — nav dài (14 route) không được đẩy nút Đăng xuất ra ngoài tầm nhìn */
+.admin-sidebar{position:sticky;top:0;max-height:100vh;overflow-y:auto}
 @media(max-height:420px){
   .chatbot-fab{width:40px!important;height:40px!important;bottom:12px!important;right:12px!important}
 }

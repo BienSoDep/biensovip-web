@@ -14,3 +14,19 @@ export function formatPrice(price, priceOnRequest) {
   if (priceOnRequest) return 'Giá liên hệ';
   return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
 }
+
+// Nội dung phong thủy backend trả về là 1 chuỗi liền không xuống dòng, nối nhiều "đoạn" bằng dấu
+// chấm câu — mỗi đoạn thường bắt đầu bằng 1 cụm nhãn ngắn kết thúc ":" (VD "Ngũ hành:", "Lời khuyên
+// phong thủy:"). Tách tại "câu kết + khoảng trắng + Cụm nhãn Hoa đầu:" để hiển thị từng đoạn riêng.
+const PARAGRAPH_BREAK_RE = /(?<=[.!?])\s+(?=[A-ZÀ-Ỵ][^.!?]{2,40}:)/g;
+
+// Mỗi đoạn có thể bắt đầu bằng 1 cụm nhãn ngắn kết ":" (VD "Ngũ hành:") — tách riêng label để in đậm.
+const LABEL_RE = /^([A-ZÀ-Ỵ][^.!?:]{2,40}:)\s*(.*)$/s;
+
+export function splitFengShuiParagraphs(text) {
+  if (!text) return [];
+  return text.split(PARAGRAPH_BREAK_RE).map((s) => s.trim()).filter(Boolean).map((para) => {
+    const m = para.match(LABEL_RE);
+    return m ? { label: m[1], rest: m[2] } : { label: null, rest: para };
+  });
+}

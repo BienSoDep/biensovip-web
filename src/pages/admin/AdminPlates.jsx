@@ -26,12 +26,14 @@ const STATUS_OPTIONS = [
   { value: 'all', label: 'Tất cả' },
   { value: 'available', label: 'Còn hàng' },
   { value: 'sold', label: 'Đã bán' },
+  { value: 'inactive', label: 'Hết hạn đấu giá' },
 ];
 
 const INITIAL_FORM = {
   plateNumber: '', plateTypeId: '', provinceId: '', vehicleTypeId: '',
   price: '', priceOnRequest: false, isHot: false,
   description: '', fengShuiMeaning: '', images: [],
+  listingType: 'direct', auctionEndAt: '',
 };
 
 const fmt = (n) => (n == null ? '—' : n.toLocaleString('vi-VN') + 'đ');
@@ -142,6 +144,8 @@ export default function AdminPlates({ go, notify }) {
         description: editDetail.description || '',
         fengShuiMeaning: editDetail.fengShuiMeaning || '',
         images: (editDetail.images || []).map((img) => img.url),
+        listingType: editDetail.listingType || 'direct',
+        auctionEndAt: editDetail.auctionEndAt ? editDetail.auctionEndAt.slice(0, 16) : '',
       });
     }
   }, [editDetail]); // ponytail: runs once when detail arrives; editId/editPlateId stable at this point
@@ -169,6 +173,7 @@ export default function AdminPlates({ go, notify }) {
     if (!form.plateTypeId) errs.plateTypeId = 'Chọn loại biển';
     if (!form.provinceId) errs.provinceId = 'Chọn tỉnh/thành';
     if (!form.vehicleTypeId) errs.vehicleTypeId = 'Chọn loại xe';
+    if (form.listingType === 'auction' && !form.auctionEndAt) errs.auctionEndAt = 'Chọn hạn đấu giá';
     setFormErr(errs);
     if (Object.keys(errs).length) return;
 
@@ -183,6 +188,8 @@ export default function AdminPlates({ go, notify }) {
       description: form.description || null,
       fengShuiMeaning: form.fengShuiMeaning || null,
       images: form.images,
+      listingType: form.listingType,
+      auctionEndAt: form.listingType === 'auction' ? new Date(form.auctionEndAt).toISOString() : null,
     };
 
     setSaving(true);
@@ -397,15 +404,21 @@ export default function AdminPlates({ go, notify }) {
               <span style={{ flex: '1 1 90px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>
               <span style={{ flex: '1 1 90px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>
               <span style={{ flex: '1 1 130px' }}>{renderCell(p, 'price')}</span>
-              <span style={{ flex: '1 1 90px' }}>
+              <span style={{ flex: '1 1 90px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <select value={p.status} onChange={(e) => statusMut.mutate({ id: p.id, status: e.target.value }, {
-                  onSuccess: () => notify(e.target.value === 'sold' ? 'Đã đánh dấu Đã bán' : 'Đã đổi sang Còn hàng'),
+                  onSuccess: () => notify(e.target.value === 'sold' ? 'Đã đánh dấu Đã bán' : e.target.value === 'inactive' ? 'Đã ẩn khỏi trang' : 'Đã đổi sang Còn hàng'),
                   onError: (err) => notify(err.message || 'Lỗi cập nhật trạng thái'),
                 })}
                   style={{ border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-caption)', color: 'var(--text-body)', outline: 'none', cursor: 'pointer' }}>
                   <option value="available">Còn hàng</option>
                   <option value="sold">Đã bán</option>
+                  <option value="inactive">Hết hạn</option>
                 </select>
+                {p.listingType === 'auction' && (
+                  <span style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-muted)' }}>
+                    Đấu giá · hạn {p.auctionEndAt ? new Date(p.auctionEndAt).toLocaleDateString('vi-VN') : '—'}
+                  </span>
+                )}
               </span>
               <span style={{ flex: '1 1 60px' }}>
                 <button type="button" onClick={() => toggleHot(p)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: p.isHot ? 'var(--action-primary)' : 'var(--text-muted)' }}>
@@ -578,6 +591,32 @@ function PlateFormModal({
             <input type="checkbox" checked={form.isHot} onChange={(e) => setF('isHot')(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
             <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Biển HOT</span>
           </label>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Kiểu đăng biển</span>
+          <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="radio" name="listingType" checked={form.listingType === 'direct'} onChange={() => setF('listingType')('direct')} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Sở hữu trực tiếp (hiển thị vô hạn tới khi bán)</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="radio" name="listingType" checked={form.listingType === 'auction'} onChange={() => setF('listingType')('auction')} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Đấu giá trung gian (có hạn)</span>
+            </label>
+          </div>
+          {form.listingType === 'auction' && (
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 260 }}>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hạn đấu giá — hết hạn tự ẩn khỏi trang, có thể đặt lại sau</span>
+              <input
+                type="datetime-local" value={form.auctionEndAt}
+                onChange={setF('auctionEndAt')}
+                style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
+                  boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
+              />
+              {formErr.auctionEndAt && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.auctionEndAt}</span>}
+            </label>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>

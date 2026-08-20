@@ -21,3 +21,11 @@ export function useFengShuiHistory(enabled) {
     enabled,
   });
 }
+
+// UC16 Compare — chấm điểm hợp mệnh cho danh sách biển cụ thể (1-3 biển).
+export function useScorePlates() {
+  return useMutation({
+    mutationFn: ({ birthDate, plateIds }) =>
+      apiClient.post('/api/fengshui/score-plates', { birthDate, plateIds }),
+  });
+}

@@ -17,11 +17,10 @@ const REGISTER_BENEFITS = [
 ];
 
 export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, adminSignIn, adminDemo, admin, otpLoginRequest, otpLoginVerify }) {
-  const [localAdmin, setLocalAdmin] = useState(!!admin);
   const [otpMode, setOtpMode] = useState(false);
   const [remember, setRemember] = useState(true);
   const [lastEmail, setLastEmail] = useState('');
-  const isAdmin = admin || localAdmin;
+  const isAdmin = !!admin;
 
   useEffect(() => {
     try { setLastEmail(localStorage.getItem(LAST_EMAIL_KEY) || ''); } catch { /* ignore */ }
@@ -165,11 +164,8 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
               <Button variant="primary" size="lg" fullWidth onClick={isAdmin ? adminSignIn : () => authSubmit(remember)}>{isAdmin ? 'Đăng nhập quản trị' : authMeta[2]}</Button>
             )}
 
-            {s === 'login' && isAdmin && (
+            {s === 'login' && admin && (
               <Button variant="outline" size="md" fullWidth onClick={adminDemo}>Dùng tài khoản mẫu (demo)</Button>
-            )}
-            {s === 'login' && !admin && !otpMode && (
-              <Button variant="ghost" size="sm" fullWidth onClick={() => setLocalAdmin(!isAdmin)}>{isAdmin ? '← Đăng nhập khách hàng' : 'Đăng nhập quản trị →'}</Button>
             )}
 
             {otpMode && (

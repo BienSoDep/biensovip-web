@@ -257,25 +257,49 @@ export default function App() {
   };
 
   const ADMIN_EMAIL = 'admin@biensovip.com';
+
+  // Gọi /api/admin/auth/login trực tiếp (không set field lỗi aErr/admErr riêng) —
+  // dùng chung bởi form login user (auto-detect) và form admin (adminSignIn).
+  const adminLoginRequest = async (email, password) => {
+    const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const body = await resp.json();
+    if (!resp.ok || !body?.success) return { ok: false, status: resp.status, message: body?.error?.message };
+    return { ok: true, data: body.data };
+  };
+
+  // Thử đăng nhập như admin sau khi form user thất bại (401) — cùng ô email/password.
+  // true = đã đăng nhập thành công + điều hướng dashboard; false = không phải tài khoản admin.
+  const tryAdminLogin = async (email, password) => {
+    try {
+      const result = await adminLoginRequest(email, password);
+      if (!result.ok) return false;
+      const { accessToken, refreshToken, admin } = result.data;
+      saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
+      patch({ aErr: {}, aPw: '', screen: 'dash', user: admin, isAdmin: true });
+      notify('Đăng nhập quản trị thành công');
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const adminSignIn = async () => {
     const err = {};
     if (!/^\S+@\S+\.\S+$/.test(st.admEmail)) err.email = 'Email chưa đúng định dạng.';
     if (st.admPw.length < 6) err.pw = 'Mật khẩu tối thiểu 6 ký tự.';
     if (Object.keys(err).length) { patch({ admErr: err }); return; }
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: st.admEmail.trim(), password: st.admPw }),
-      });
-      const body = await resp.json();
-      if (!resp.ok || !body?.success) {
-        const msg = body?.error?.message || 'Đăng nhập thất bại';
-        if (resp.status === 429) patch({ admErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
-        else if (resp.status === 401) patch({ admErr: { pw: 'Email hoặc mật khẩu không đúng.' } });
-        else patch({ admErr: { email: msg } });
+      const result = await adminLoginRequest(st.admEmail.trim(), st.admPw);
+      if (!result.ok) {
+        if (result.status === 429) patch({ admErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
+        else if (result.status === 401) patch({ admErr: { pw: 'Email hoặc mật khẩu không đúng.' } });
+        else patch({ admErr: { email: result.message || 'Đăng nhập thất bại' } });
         return;
       }
-      const { accessToken, refreshToken, admin } = body.data;
+      const { accessToken, refreshToken, admin } = result.data;
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
       patch({ admErr: {}, screen: 'dash', user: admin, isAdmin: true });
       notify('Đăng nhập quản trị thành công');
@@ -329,7 +353,13 @@ export default function App() {
         notify('Đăng nhập thành công');
         favApi.syncFavorites(); // fire-and-forget: merge local → server
       } catch (e) {
-        if (e.status === 401) patch({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
+        // Sai với endpoint user — thử lại như tài khoản quản trị trước khi báo lỗi.
+        // 1 form, 1 ô nhập, tự nhận diện loại tài khoản qua endpoint nào chấp nhận.
+        if (e.status === 401) {
+          const adminOk = await tryAdminLogin(st.aEmail.trim(), st.aPw);
+          if (adminOk) return;
+          patch({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
+        }
         else if (e.status === 429) patch({ aErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
         else patch({ aErr: { email: e.message || 'Đăng nhập thất bại.' } });
       }
@@ -560,7 +590,7 @@ export default function App() {
 
             {s === 'chat' && <ChatZaloContact notify={notify} />}
 
-            {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} />}
+            {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} />}
 
             {s === 'saved' && <SavedSearches go={go} notify={notify} />}
 

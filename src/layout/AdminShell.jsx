@@ -78,7 +78,7 @@ export default function AdminShell({
         </div>
       </aside>
       <main className="admin-main" style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <Breadcrumb items={[{ label: 'Quản trị', onClick: go('dash') }, { label: adminMeta[0] }]} />
+        <Breadcrumb inset items={[{ label: 'Quản trị', onClick: go('dash') }, { label: adminMeta[0] }]} />
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
           <div style={{ flex: '1 1 280px' }}>
             <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{adminMeta[0]}</h1>
