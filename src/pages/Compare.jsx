@@ -240,7 +240,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
       </div>
 
       {!isLoading && !isError && plates.length >= 2 && (
-        <div style={{ background: 'linear-gradient(180deg, var(--orange-50, #fff4e8) 0%, var(--white) 100%)', border: '1px solid var(--orange-100, #ffe1bf)', borderRadius: 'var(--radius-card)', padding: 'var(--space-5) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div style={{ background: 'linear-gradient(180deg, var(--orange-50) 0%, var(--white) 100%)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-5) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Điểm chung &amp; điểm riêng phong thủy</h2>
 
           <div>
@@ -285,7 +285,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
       )}
 
       {!isLoading && !isError && plates.length >= 2 && (
-        <div style={{ background: 'var(--white)', border: '1px solid var(--orange-100, #ffe1bf)', borderRadius: 'var(--radius-card)', padding: 'var(--space-5) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div style={{ background: 'var(--white)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-5) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Chấm điểm tự động</h2>
           {!birthDate ? (
             <BirthDatePrompt onSubmit={setBirthDate} />
@@ -293,7 +293,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
             <div style={{ width: '100%', height: 340 }}>
               <ResponsiveContainer>
                 <RadarChart data={radarData}>
-                  <PolarGrid stroke="var(--orange-100, #ffe1bf)" />
+                  <PolarGrid stroke="var(--orange-100)" />
                   <PolarAngleAxis dataKey="axis" tick={{ fontSize: 13, fill: 'var(--text-body)' }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
                   {plates.map((p, i) => (
@@ -322,7 +322,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
             {plates.map((p) => {
               const { prov, seri, num } = splitPlateNumber(p.plateNumber);
               return (
-                <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--orange-50, #fff4e8)', border: '1px solid var(--orange-100, #ffe1bf)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
+                <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
                   <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 2, right: 2, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Bỏ khỏi so sánh"><X size={16} /></button>
                   {p.thumbnailUrl ? (
                     <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
@@ -339,9 +339,9 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
               const allSame = values.length >= 2 && values.every((v) => v && v === values[0]);
               return (
               <>
-                <div key={`h-${row.key}`} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50, #fff4e8)' }}>{row.label}</div>
+                <div key={`h-${row.key}`} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>{row.label}</div>
                 {plates.map((p) => (
-                  <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', background: allSame ? 'var(--green-50, #eefcf3)' : undefined }}>
+                  <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', background: allSame ? 'var(--green-50)' : undefined }}>
                     {row.key === 'price' ? (
                       <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)' }}>{formatPrice(p.price, false)}</span>
                     ) : (
@@ -357,7 +357,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
                 sánh ngang; biển nào không có đoạn tương ứng hiện dấu "–". */}
             {fengShuiRows.length === 0 ? (
               <>
-                <div key="h-fengshui-empty" style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50, #fff4e8)' }}>Ý nghĩa phong thủy</div>
+                <div key="h-fengshui-empty" style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>Ý nghĩa phong thủy</div>
                 {plates.map((p) => (
                   <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center' }}>
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontStyle: 'italic' }}>Chưa có</span>
@@ -368,9 +368,9 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
               const allSame = row.values.length >= 2 && row.values.every((v) => v.text && v.text === row.values[0].text);
               return (
                 <>
-                  <div key={`h-fs-${ri}`} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50, #fff4e8)' }}>{ri === 0 && <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 4 }}>Ý nghĩa phong thủy</span>}{row.label}</div>
+                  <div key={`h-fs-${ri}`} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>{ri === 0 && <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 4 }}>Ý nghĩa phong thủy</span>}{row.label}</div>
                   {row.values.map((v) => (
-                    <div key={v.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left', background: allSame ? 'var(--green-50, #eefcf3)' : undefined }}>
+                    <div key={v.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left', background: allSame ? 'var(--green-50)' : undefined }}>
                       {v.text || <span style={{ color: 'var(--text-muted)', textAlign: 'center', display: 'block' }}>–</span>}
                     </div>
                   ))}
@@ -382,7 +382,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
       )}
 
       {plates.length < ids.length && !isLoading && (
-        <div style={{ padding: 'var(--space-4)', background: 'var(--amber-50)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)', color: '#8A6100', textAlign: 'center' }}>
+        <div style={{ padding: 'var(--space-4)', background: 'var(--amber-50)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)', color: 'var(--status-warning-ink)', textAlign: 'center' }}>
           Một số biển không còn khả dụng và đã bị loại khỏi bảng so sánh.
         </div>
       )}

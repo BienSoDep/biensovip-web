@@ -18,3 +18,26 @@ export function useSendBroadcast() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+const TYPE_SETTINGS_KEY = ['admin', 'notification-type-settings'];
+
+export function useNotificationTypeSettings() {
+  return useQuery({
+    queryKey: TYPE_SETTINGS_KEY,
+    queryFn: () => apiClient.get('/api/admin/notifications/type-settings'),
+  });
+}
+
+export function useUpdateNotificationTypeSetting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ type, ...body }) => apiClient.patch(`/api/admin/notifications/type-settings/${type}`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: TYPE_SETTINGS_KEY }),
+  });
+}
+
+export function useSendTestEmail() {
+  return useMutation({
+    mutationFn: (body) => apiClient.post('/api/admin/notifications/test-email', body),
+  });
+}

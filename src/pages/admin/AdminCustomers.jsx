@@ -7,7 +7,7 @@ import Button from '../../components/Button.jsx';
 const STATUS_OPTS = ['Tất cả', 'Hoạt động', 'Đã khóa', 'Chưa xác thực'];
 const STATUS_VAL = { 'Hoạt động': 'active', 'Đã khóa': 'locked', 'Chưa xác thực': 'unverified' };
 const STATUS_LABEL = { active: 'Hoạt động', locked: 'Đã khóa', unverified: 'Chưa xác thực' };
-const STATUS_COLOR = { active: '#1B7A5A', locked: '#C62828', unverified: 'var(--grey-600)' };
+const STATUS_COLOR = { active: 'var(--status-success-ink)', locked: 'var(--status-danger)', unverified: 'var(--text-muted)' };
 
 export default function AdminCustomers({ st, setSt, notify }) {
   const adminQ = (st.adminQ || '').trim();
@@ -88,7 +88,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
               {c.createdAt ? new Date(c.createdAt).toLocaleDateString('vi-VN') : '—'}
             </span>
             <span style={{ flex: '1 1 100px' }}>
-              <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: (STATUS_COLOR[c.status] || 'var(--grey-400)') + '18', color: STATUS_COLOR[c.status] || 'var(--grey-600)' }}>
+              <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: (STATUS_COLOR[c.status] || 'var(--grey-400)') + '18', color: STATUS_COLOR[c.status] || 'var(--text-muted)' }}>
                 {STATUS_LABEL[c.status] || c.status}
               </span>
             </span>

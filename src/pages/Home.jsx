@@ -11,6 +11,7 @@ import { useCategories } from '../services/categories.js';
 import { useFeaturedPlates, usePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
+import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import { useSubmitContact } from '../services/contactService.js';
 
 // Debounce a value — waits `delay`ms of silence before committing, so typing doesn't fire
@@ -190,8 +191,12 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {featuredVideoItems.map((v) => (
-              <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', aspectRatio: v.platform === 'tiktok' ? '9/14' : '16/9', overflow: 'hidden' }}>
-                <iframe src={v.videoUrl} title={v.title || 'Video'} style={{ width: '100%', height: '100%', border: 0 }} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+              <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', display: 'flex', justifyContent: 'center' }}>
+                {v.platform === 'tiktok' ? (
+                  <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+                ) : (
+                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 200, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</a>
+                )}
               </div>
             ))}
           </div>
@@ -237,7 +242,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
             <Button variant="primary" size="lg" onClick={go('blog')}>{T('home.guide.cta_blog')}</Button>
-            <Button variant="outline" size="lg" onClick={go('about')}>{T('home.guide.cta_about')}</Button>
+            <Button variant="outline" size="lg" onClick={go('about')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>{T('home.guide.cta_about')}</Button>
           </div>
         </div>
       </section>

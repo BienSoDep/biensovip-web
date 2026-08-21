@@ -18,28 +18,6 @@ export function useDashboardSummary({ from, to }) {
   });
 }
 
-export function useViewsChart({ from, to, granularity }) {
-  const params = new URLSearchParams(buildRange(from, to));
-  if (granularity) params.set('granularity', granularity);
-  const qs = params.toString();
-  return useQuery({
-    queryKey: ['dashboard-views-chart', qs],
-    queryFn: () => apiClient.get(`/api/admin/dashboard/views-chart?${qs}`),
-    placeholderData: (prev) => prev,
-  });
-}
-
-export function useTopViewedPlates({ from, to, limit }) {
-  const params = new URLSearchParams(buildRange(from, to));
-  if (limit) params.set('limit', String(limit));
-  const qs = params.toString();
-  return useQuery({
-    queryKey: ['dashboard-top-plates', qs],
-    queryFn: () => apiClient.get(`/api/admin/dashboard/top-viewed-plates?${qs}`),
-    placeholderData: (prev) => prev,
-  });
-}
-
 export function useTrafficSources({ from, to }) {
   const qs = buildRange(from, to);
   return useQuery({
@@ -139,19 +117,64 @@ export function useIntent({ from, to }) {
   });
 }
 
-export function useCollaboratorPerf(limit = 5, enabled = true) {
+export function useCollaboratorPerf({ from, to, limit = 5 }, enabled = true) {
+  const params = new URLSearchParams(buildRange(from, to));
+  params.set('limit', String(limit));
+  const qs = params.toString();
   return useQuery({
-    queryKey: ['dashboard-collab-perf', limit],
-    queryFn: () => apiClient.get(`/api/admin/dashboard/collaborators?limit=${limit}`),
+    queryKey: ['dashboard-collab-perf', qs],
+    queryFn: () => apiClient.get(`/api/admin/dashboard/collaborators?${qs}`),
     placeholderData: (prev) => prev,
     enabled,
   });
 }
 
-export function useDemand() {
+export function useDemand({ from, to }) {
+  const qs = buildRange(from, to);
   return useQuery({
-    queryKey: ['dashboard-demand'],
-    queryFn: () => apiClient.get('/api/admin/dashboard/demand'),
+    queryKey: ['dashboard-demand', qs],
+    queryFn: () => apiClient.get(`/api/admin/dashboard/demand?${qs}`),
+    placeholderData: (prev) => prev,
+  });
+}
+
+// ── Insight nhân khẩu học + hành vi mới ──
+
+export function useCustomerDemographics() {
+  return useQuery({
+    queryKey: ['dashboard-demographics'],
+    queryFn: () => apiClient.get('/api/admin/dashboard/customer-demographics'),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useSearchInsights({ from, to, limit }) {
+  const params = new URLSearchParams(buildRange(from, to));
+  if (limit) params.set('limit', String(limit));
+  const qs = params.toString();
+  return useQuery({
+    queryKey: ['dashboard-search-insights', qs],
+    queryFn: () => apiClient.get(`/api/admin/dashboard/search-insights?${qs}`),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useCompareInsights({ from, to, limit }) {
+  const params = new URLSearchParams(buildRange(from, to));
+  if (limit) params.set('limit', String(limit));
+  const qs = params.toString();
+  return useQuery({
+    queryKey: ['dashboard-compare-insights', qs],
+    queryFn: () => apiClient.get(`/api/admin/dashboard/compare-insights?${qs}`),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useTrafficHeatmap({ from, to }) {
+  const qs = buildRange(from, to);
+  return useQuery({
+    queryKey: ['dashboard-heatmap', qs],
+    queryFn: () => apiClient.get(`/api/admin/dashboard/traffic-heatmap?${qs}`),
     placeholderData: (prev) => prev,
   });
 }

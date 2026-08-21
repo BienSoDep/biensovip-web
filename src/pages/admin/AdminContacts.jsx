@@ -11,7 +11,7 @@ const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: '#C75B00',
 const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Đã tìm thấy'];
 const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Đã tìm thấy': 'found' };
 const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã tìm thấy' };
-const STATUS_COLOR = { new: 'var(--blue-700)', consulting: '#8A6100', closed: '#1B7A5A', found: '#7B2D8B' };
+const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#7B2D8B' };
 const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ': 'hunting' };
 

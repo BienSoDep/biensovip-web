@@ -1,16 +1,21 @@
 import { useState, useMemo } from 'react';
-import { startOfMonth, subDays, startOfDay } from 'date-fns';
+import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
-import { useDashboardSummary, useActionsChart, useTrafficSources, useFunnel, usePlateDistribution, useTopInterested, usePlateConversion, useConvertedOrders, useTopContent, useRatings, useIntent, useCollaboratorPerf, useDemand } from '../../services/adminDashboard.js';
+import {
+  useDashboardSummary, useActionsChart, useTrafficSources, useFunnel, usePlateDistribution,
+  useTopInterested, usePlateConversion, useConvertedOrders, useTopContent, useRatings, useIntent,
+  useCollaboratorPerf, useDemand, useCustomerDemographics, useSearchInsights, useCompareInsights, useTrafficHeatmap,
+} from '../../services/adminDashboard.js';
 
 const PIE_COLORS = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#ca8a04', '#0891b2', '#6d28d9'];
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 const ORDER_STATUS_LABEL = { new: 'Mới', consulting: 'Tư vấn', closed: 'Chốt' };
+const WEEKDAY_LABEL = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
 const PRESETS = [
   { label: '7 ngày', from: () => startOfDay(subDays(new Date(), 7)) },
@@ -26,13 +31,18 @@ function fmtPct(n) {
 
 export default function Dashboard({ go, st }) {
   const isSuperAdmin = st?.user?.role === 'super-admin';
-  const [rangeIdx, setRangeIdx] = useState(1); // default 30 days
+  const [rangeIdx, setRangeIdx] = useState(1); // default 30 days; null nếu đang dùng custom range
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const [granularity, setGranularity] = useState('day');
 
   const range = useMemo(() => {
-    const p = PRESETS[rangeIdx];
+    if (rangeIdx === null && customFrom && customTo) {
+      return { from: startOfDay(parseISO(customFrom)), to: new Date(customTo) };
+    }
+    const p = PRESETS[rangeIdx ?? 1];
     return { from: p.from(), to: new Date() };
-  }, [rangeIdx]);
+  }, [rangeIdx, customFrom, customTo]);
 
   const summary = useDashboardSummary(range);
   const chart = useActionsChart({ ...range, granularity });
@@ -46,10 +56,21 @@ export default function Dashboard({ go, st }) {
   const topContent = useTopContent({ ...range, limit: 8 });
   const ratings = useRatings(range);
   const intent = useIntent(range);
-  const collabPerf = useCollaboratorPerf(5, isSuperAdmin);
-  const demand = useDemand();
+  const collabPerf = useCollaboratorPerf({ ...range, limit: 5 }, isSuperAdmin);
+  const demand = useDemand(range);
+  const demographics = useCustomerDemographics();
+  const searchInsights = useSearchInsights({ ...range, limit: 10 });
+  const compareInsights = useCompareInsights({ ...range, limit: 10 });
+  const heatmap = useTrafficHeatmap(range);
 
   const kpis = summary.data;
+
+  const selectPreset = (i) => { setRangeIdx(i); setCustomFrom(''); setCustomTo(''); };
+  const applyCustomRange = (from, to) => {
+    setCustomFrom(from);
+    setCustomTo(to);
+    if (from && to) setRangeIdx(null);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -61,14 +82,23 @@ export default function Dashboard({ go, st }) {
             key={p.label}
             type="button"
             className="pill-btn"
-            data-on={String(i === rangeIdx)}
+            data-on={String(rangeIdx === i)}
             data-dark="false"
-            onClick={() => setRangeIdx(i)}
-            style={{ padding: '6px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', background: i === rangeIdx ? 'var(--text-strong)' : 'var(--grey-100)', color: i === rangeIdx ? 'var(--white)' : 'var(--text-muted)' }}
+            onClick={() => selectPreset(i)}
+            style={{ padding: '6px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', background: rangeIdx === i ? 'var(--text-strong)' : 'var(--grey-100)', color: rangeIdx === i ? 'var(--white)' : 'var(--text-muted)' }}
           >
             {p.label}
           </button>
         ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: rangeIdx === null ? 'var(--action-primary)' + '18' : 'transparent', border: rangeIdx === null ? '1px solid var(--action-primary)' : '1px solid var(--border-hairline)' }}>
+          <input type="date" value={customFrom} max={customTo || format(new Date(), 'yyyy-MM-dd')}
+            onChange={(e) => applyCustomRange(e.target.value, customTo)}
+            style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>→</span>
+          <input type="date" value={customTo} min={customFrom} max={format(new Date(), 'yyyy-MM-dd')}
+            onChange={(e) => applyCustomRange(customFrom, e.target.value)}
+            style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
+        </div>
         <div style={{ flex: 1 }} />
         <select
           value={granularity}
@@ -377,6 +407,154 @@ export default function Dashboard({ go, st }) {
         </div>
       </div>
 
+      {/* Nhân khẩu học khách hàng */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
+        <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng theo mệnh phong thủy</h3>
+          {demographics.isLoading ? (
+            <SkeletonBase height={240} />
+          ) : demographics.data?.byElement?.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie data={demographics.data.byElement} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={80} label={({ label, count }) => `${label}: ${count}`}>
+                  {demographics.data.byElement.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyBlock>Chưa có khách hàng có ngày sinh</EmptyBlock>
+          )}
+          {demographics.data && (
+            <p style={{ margin: 'var(--space-2) 0 0', font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'center' }}>
+              {demographics.data.totalUsersWithBirthDate}/{demographics.data.totalUsers} khách đã điền ngày sinh
+            </p>
+          )}
+        </div>
+
+        <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng theo độ tuổi</h3>
+          {demographics.isLoading ? (
+            <SkeletonBase height={240} />
+          ) : demographics.data?.byAgeGroup?.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={demographics.data.byAgeGroup}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" name="Số khách" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu độ tuổi</EmptyBlock>
+          )}
+        </div>
+
+        <div style={{ flex: '1 1 240px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng theo giới tính</h3>
+          {demographics.isLoading ? (
+            <SkeletonBase height={240} />
+          ) : demographics.data?.byGender?.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart>
+                <Pie data={demographics.data.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={80} label={({ label, count }) => `${label}: ${count}`}>
+                  {demographics.data.byGender.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu giới tính</EmptyBlock>
+          )}
+        </div>
+      </div>
+
+      {/* Search insights + Compare insights */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
+        <div style={{ flex: '1 1 400px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+          <div style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Từ khóa tìm kiếm nhiều nhất</h3>
+            {searchInsights.data && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{searchInsights.data.totalSearches} lượt tìm · {searchInsights.data.zeroResultSearches} không có kết quả</span>}
+          </div>
+          {searchInsights.isLoading ? (
+            <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
+          ) : searchInsights.data?.topKeywords?.length > 0 ? (
+            searchInsights.data.topKeywords.map((k, i) => (
+              <div key={k.keyword} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < searchInsights.data.topKeywords.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24 }}>{i + 1}</span>
+                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{k.keyword}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>~{k.avgResultCount} kết quả</span>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{k.count} lượt</span>
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có tìm kiếm bằng từ khóa</EmptyBlock></div>
+          )}
+        </div>
+
+        <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+          <div style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Cặp biển hay được so sánh cùng nhau</h3>
+            {compareInsights.data && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{compareInsights.data.totalCompareSessions} lượt so sánh</span>}
+          </div>
+          {compareInsights.isLoading ? (
+            <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
+          ) : compareInsights.data?.topPairs?.length > 0 ? (
+            compareInsights.data.topPairs.map((p, i) => (
+              <div key={`${p.plateNumberA}-${p.plateNumberB}`} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < compareInsights.data.topPairs.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24 }}>{i + 1}</span>
+                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumberA} ↔ {p.plateNumberB}</span>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{p.count} lần</span>
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có lượt so sánh biển</EmptyBlock></div>
+          )}
+        </div>
+      </div>
+
+      {/* Traffic heatmap */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
+        <div style={{ flex: '1 1 400px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Traffic theo giờ trong ngày</h3>
+          {heatmap.isLoading ? (
+            <SkeletonBase height={220} />
+          ) : heatmap.data?.byHour?.some((h) => h.count > 0) ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={heatmap.data.byHour}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
+                <XAxis dataKey="hour" tick={{ fontSize: 10 }} tickFormatter={(h) => `${h}h`} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip labelFormatter={(h) => `${h}h`} />
+                <Bar dataKey="count" name="Lượt xem" fill="#0891b2" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu traffic theo giờ</EmptyBlock>
+          )}
+        </div>
+
+        <div style={{ flex: '1 1 320px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Traffic theo ngày trong tuần</h3>
+          {heatmap.isLoading ? (
+            <SkeletonBase height={220} />
+          ) : heatmap.data?.byWeekday?.some((d) => d.count > 0) ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={heatmap.data.byWeekday.map((d) => ({ ...d, label: WEEKDAY_LABEL[d.weekday] }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" name="Lượt xem" fill="#6d28d9" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu traffic theo ngày trong tuần</EmptyBlock>
+          )}
+        </div>
+      </div>
+
       {/* Error states */}
       {summary.isError && <ErrorBlock onRetry={() => summary.refetch()} />}
       {chart.isError && <ErrorBlock onRetry={() => chart.refetch()} />}
@@ -392,6 +570,10 @@ export default function Dashboard({ go, st }) {
       {intent.isError && <ErrorBlock onRetry={() => intent.refetch()} />}
       {isSuperAdmin && collabPerf.isError && <ErrorBlock onRetry={() => collabPerf.refetch()} />}
       {demand.isError && <ErrorBlock onRetry={() => demand.refetch()} />}
+      {demographics.isError && <ErrorBlock onRetry={() => demographics.refetch()} />}
+      {searchInsights.isError && <ErrorBlock onRetry={() => searchInsights.refetch()} />}
+      {compareInsights.isError && <ErrorBlock onRetry={() => compareInsights.refetch()} />}
+      {heatmap.isError && <ErrorBlock onRetry={() => heatmap.refetch()} />}
     </div>
   );
 }

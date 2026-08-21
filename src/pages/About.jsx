@@ -4,8 +4,12 @@ import Button from '../components/Button.jsx';
 import { Badge, Eyebrow } from '../components/index.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
+import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
+import TikTokEmbed from '../components/TikTokEmbed.jsx';
 
 export default function About({ go }) {
+  const { data: videosData } = useFeaturedPromoVideos(6);
+  const videos = videosData?.items || [];
   const [openFaq, setOpenFaq] = useState(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const STATS = contentItems('about.stats.items').map((s) => [s.n, s.l]);
@@ -25,6 +29,7 @@ export default function About({ go }) {
           <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{T('about.intro.title')}</h1>
           <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }}>{T('about.intro.p1')}</p>
           <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }}>{T('about.intro.p2')}</p>
+          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }}>{T('about.intro.p3')}</p>
         </div>
         <div style={{ flex: '1 1 240px', display: 'flex', justifyContent: 'center' }}>
           <div style={{ position: 'relative', width: 'min(100%, 300px)', aspectRatio: '1/1.05', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-surface)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', boxShadow: 'var(--shadow-3)' }}>
@@ -77,6 +82,29 @@ export default function About({ go }) {
           ))}
         </div>
       </div>
+
+      {/* Featured videos */}
+      {videos.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+          <Eyebrow tone="blue">Video nổi bật</Eyebrow>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 'var(--gutter-section)' }}>
+            {videos.map((v) => (
+              <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <div style={{ width: '100%', borderRadius: 'var(--radius-card)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', justifyContent: 'center' }}>
+                  {v.platform === 'tiktok' ? (
+                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+                  ) : (
+                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 300, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                      Xem video
+                    </a>
+                  )}
+                </div>
+                {v.title && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{v.title}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Process */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>

@@ -12,6 +12,16 @@ export class ApiError extends Error {
 
 let _refreshPromise = null;
 
+// Lỗi mạng (server down / CORS / offline) từ fetch() ném TypeError "Failed to fetch"
+// → bọc thành ApiError tiếng Việt để UI hiện thông báo thân thiện thay vì chuỗi tiếng Anh thô.
+async function rawFetch(url, opts) {
+  try {
+    return await fetch(url, opts);
+  } catch {
+    throw new ApiError('Không thể kết nối đến máy chủ. Kiểm tra kết nối mạng và thử lại.', 0, 'network');
+  }
+}
+
 async function tryRefresh() {
   const auth = loadAuth();
   if (!auth?.refreshToken) return null;
@@ -48,7 +58,7 @@ async function request(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  let res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  let res = await rawFetch(`${BASE_URL}${path}`, { ...options, headers });
   let body = await res.json().catch(() => null);
 
   // Auto-refresh on 401 — try once, retry original request
@@ -56,7 +66,7 @@ async function request(path, options = {}) {
     const newToken = await tryRefresh();
     if (newToken) {
       headers.Authorization = `Bearer ${newToken}`;
-      res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+      res = await rawFetch(`${BASE_URL}${path}`, { ...options, headers });
       body = await res.json().catch(() => null);
     } else {
       clearAuth();
@@ -65,7 +75,7 @@ async function request(path, options = {}) {
 
   if (!res.ok || (body && body.success === false)) {
     const err = body?.error;
-    throw new ApiError(err?.message || `Request failed (${res.status})`, res.status, err?.code);
+    throw new ApiError(err?.message || `Có lỗi xảy ra (${res.status}). Vui lòng thử lại.`, res.status, err?.code);
   }
   return body?.data;
 }
@@ -76,12 +86,12 @@ async function uploadRequest(path, formData) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { method: 'POST', headers, body: formData });
+  const res = await rawFetch(`${BASE_URL}${path}`, { method: 'POST', headers, body: formData });
   const body = await res.json().catch(() => null);
 
   if (!res.ok || (body && body.success === false)) {
     const err = body?.error;
-    throw new ApiError(err?.message || `Upload failed (${res.status})`, res.status, err?.code);
+    throw new ApiError(err?.message || `Không tải tệp được (${res.status}). Vui lòng thử lại.`, res.status, err?.code);
   }
   return body?.data;
 }

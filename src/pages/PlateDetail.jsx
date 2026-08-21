@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton } from '../components/index.jsx';
@@ -32,6 +32,43 @@ function LinkButton({ href, target, rel, variant, disabled, onClick, children, s
     >
       {children}
     </a>
+  );
+}
+
+function AutoCarousel({ items, openPlate }) {
+  const trackRef = useRef(null);
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || items.length <= 1) return;
+    const id = setInterval(() => {
+      if (pausedRef.current) return;
+      const cardWidth = 188 + 12; // width + gap (var(--space-3))
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+      el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + cardWidth, behavior: 'smooth' });
+    }, 2800);
+    return () => clearInterval(id);
+  }, [items.length]);
+
+  return (
+    <div
+      ref={trackRef}
+      onMouseEnter={() => { pausedRef.current = true; }}
+      onMouseLeave={() => { pausedRef.current = false; }}
+      className="similar-carousel"
+      style={{ display: 'flex', gap: 'var(--space-3)', overflowX: 'auto', scrollSnapType: 'x mandatory', paddingBottom: 4 }}
+    >
+      {items.map((p) => {
+        const sp = splitPlateNumber(p.plateNumber);
+        return (
+          <div key={p.id} onClick={() => openPlate(p.slug || p.id)} className="pressable" style={{ scrollSnapAlign: 'start', flex: '0 0 auto', width: 188, cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+            <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -123,23 +160,6 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               ))}
             </div>
           )}
-
-          {similar?.sameProvince?.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số cùng tỉnh/thành</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-                {similar.sameProvince.map((p) => {
-                  const sp = splitPlateNumber(p.plateNumber);
-                  return (
-                    <div key={p.id} onClick={() => openPlate(p.slug || p.id)} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', width: 188, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
-                      <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
         <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
@@ -182,20 +202,17 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         </div>
       </section>
 
+      {similar?.sameProvince?.length > 0 && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số cùng tỉnh/thành</span>
+          <AutoCarousel items={similar.sameProvince} openPlate={openPlate} />
+        </section>
+      )}
+
       {similar?.sameType?.length > 0 && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số tương tự kiểu</span>
-          <div className="similar-carousel" style={{ display: 'flex', gap: 'var(--space-3)', overflowX: 'auto', scrollSnapType: 'x mandatory', paddingBottom: 4 }}>
-            {similar.sameType.map((p) => {
-              const sp = splitPlateNumber(p.plateNumber);
-              return (
-                <div key={p.id} onClick={() => openPlate(p.slug || p.id)} className="pressable" style={{ scrollSnapAlign: 'start', flex: '0 0 auto', width: 188, cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
-                  <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
-                </div>
-              );
-            })}
-          </div>
+          <AutoCarousel items={similar.sameType} openPlate={openPlate} />
         </section>
       )}
 

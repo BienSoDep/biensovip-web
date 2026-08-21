@@ -129,8 +129,8 @@ export function Switch({ checked, onChange, label }) {
 const BADGE_TONES = {
   dark: { background: 'var(--action-dark)', color: 'var(--white)' },
   rose: { background: 'var(--rose-100)', color: 'var(--rose-500)' },
-  amber: { background: 'var(--amber-100)', color: '#8A6100' },
-  mint: { background: 'var(--mint-100)', color: '#1B7A5A' },
+  amber: { background: 'var(--amber-100)', color: 'var(--status-warning-ink)' },
+  mint: { background: 'var(--mint-100)', color: 'var(--status-success-ink)' },
   blue: { background: 'var(--blue-100)', color: 'var(--blue-700)' },
   neutral: { background: 'var(--grey-100)', color: 'var(--text-muted)' },
 };

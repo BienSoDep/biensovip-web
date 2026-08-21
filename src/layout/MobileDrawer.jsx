@@ -20,7 +20,7 @@ export default function MobileDrawer({ open, onClose, s, go, user, patch, notify
         <div style={{ padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{user}</span>
+              <button onClick={() => { go('profile')(); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')}</button>
               <button onClick={() => { patch({ user: null, isAdmin: false }); notify('Đã đăng xuất'); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
             </div>
           ) : (

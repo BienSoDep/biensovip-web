@@ -23,14 +23,22 @@ const pad = (n) => String(n).padStart(2, '0');
 const EL_DISP = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
 const elName = (k) => EL_DISP[k] || k;
 
-export default function LuckyPlate({ go, notify, onNotice }) {
-  const [form, setForm] = useState({ name: '', day: '', month: '', year: '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' });
+function splitBirthDate(iso) {
+  if (!iso) return { day: '', month: '', year: '' };
+  const [y, m, d] = iso.split('-');
+  return { day: String(Number(d)), month: String(Number(m)), year: y };
+}
+
+export default function LuckyPlate({ go, notify, onNotice, user }) {
+  const bd = splitBirthDate(user?.birthDate);
+  const [form, setForm] = useState({ name: user?.fullName || '', day: bd.day, month: bd.month, year: bd.year, purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' });
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
   const lookup = useFengShuiLookup();
   const saveHistory = useSaveFengShuiHistory();
   const isAuthed = !!loadAuth()?.accessToken;
   const history = useFengShuiHistory(isAuthed);
+  const hasProfileBirthDate = !!user?.birthDate;
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -49,6 +57,12 @@ export default function LuckyPlate({ go, notify, onNotice }) {
   const reset = () => { lookup.reset(); setForm((f) => ({ ...f, day: '', month: '', year: '' })); };
 
   const result = lookup.data;
+
+  // Có ngày sinh trong hồ sơ (đăng nhập + đã điền Profile) → tra cứu luôn, khỏi bắt nhập lại.
+  useEffect(() => {
+    if (hasProfileBirthDate && !result && !lookup.isPending) submit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasProfileBirthDate]);
 
   useEffect(() => {
     if (result && isAuthed && form.year) {
@@ -92,6 +106,11 @@ export default function LuckyPlate({ go, notify, onNotice }) {
 
       {!result ? (
         <form onSubmit={(e) => { e.preventDefault(); submit(); }} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {isAuthed && !hasProfileBirthDate && (
+            <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              Mẹo: <a href="#" onClick={(e) => { e.preventDefault(); go('profile')(); }}>lưu ngày sinh vào hồ sơ</a> để lần sau vào đây là có kết quả ngay.
+            </p>
+          )}
           <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.name} onChange={(e) => set('name')(e.target.value)} />
 
           <div>

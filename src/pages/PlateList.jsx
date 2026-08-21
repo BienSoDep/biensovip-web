@@ -12,9 +12,19 @@ import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
 
 const PER_PAGE_OPTIONS = [
-  { value: '20', label: '20 / trang' },
-  { value: '40', label: '40 / trang' },
-  { value: '60', label: '60 / trang' },
+  { value: '9', label: '9 / trang' },
+  { value: '18', label: '18 / trang' },
+  { value: '0', label: 'Xem tất cả' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Mới nhất' },
+  { value: 'hot_first', label: 'Nổi bật trước' },
+  { value: 'most_viewed', label: 'Xem nhiều nhất' },
+  { value: 'ending_soon', label: 'Sắp hết hạn đấu giá' },
+  { value: 'plate_number', label: 'Số biển A→Z' },
+  { value: 'price_asc', label: 'Giá thấp → cao' },
+  { value: 'price_desc', label: 'Giá cao → thấp' },
 ];
 
 function readFiltersFromUrl() {
@@ -27,7 +37,7 @@ function readFiltersFromUrl() {
     q: params.get('q') || '',
     sort: params.get('sort') || 'newest',
     page: Number(params.get('page')) || 1,
-    perPage: Number(params.get('perPage')) || 20,
+    perPage: Number(params.get('perPage')) || 18,
     view: params.get('view') === 'list' ? 'list' : 'grid',
     priceMin: params.get('priceMin') || '',
     priceMax: params.get('priceMax') || '',
@@ -43,7 +53,7 @@ function writeFiltersToUrl(filters) {
   if (filters.q) params.set('q', filters.q);
   if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
   if (filters.page > 1) params.set('page', String(filters.page));
-  if (filters.perPage && filters.perPage !== 20) params.set('perPage', String(filters.perPage));
+  if (filters.perPage !== 18) params.set('perPage', String(filters.perPage));
   if (filters.view === 'list') params.set('view', 'list');
   if (filters.priceMin) params.set('priceMin', filters.priceMin);
   if (filters.priceMax) params.set('priceMax', filters.priceMax);
@@ -98,7 +108,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const apiFilters = useMemo(() => ({
     cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
     q: filters.q || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
-    status: filters.status || undefined, sort: filters.sort, page: filters.page, perPage: filters.perPage,
+    status: filters.status || undefined, sort: filters.sort, page: filters.page,
+    perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
   }), [filters]);
 
   const { data, isLoading, isError, isFetching } = usePlates(apiFilters);
@@ -114,6 +125,11 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   });
 
   const clearFilters = () => setFilters((f) => ({ cat: [], city: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
+
+  const goToPage = (p) => {
+    setFilters((f) => ({ ...f, page: p }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const cardProps = (p) => ({
     ...p,
@@ -284,7 +300,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
               {hasActiveFilters && <Button variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
               <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />
-              <Select  value={filters.sort} options={[{ value: 'newest', label: 'Mới nhất' }, { value: 'price_asc', label: 'Giá thấp → cao' }, { value: 'price_desc', label: 'Giá cao → thấp' }]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
+              <Select  value={filters.sort} options={SORT_OPTIONS} onChange={(v) => setFilter({ sort: v })} variant="pill" />
             </div>
           </div>
           {(isLoading || isFetching) ? (
@@ -311,9 +327,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           )}
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)', paddingTop: 'var(--space-3)' }}>
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setFilters((f) => ({ ...f, page: Math.max(1, page - 1) }))}>Trước</Button>
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => goToPage(Math.max(1, page - 1))}>Trước</Button>
               <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {page} / {totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setFilters((f) => ({ ...f, page: Math.min(totalPages, page + 1) }))}>Sau</Button>
+              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => goToPage(Math.min(totalPages, page + 1))}>Sau</Button>
             </div>
           )}
         </div>

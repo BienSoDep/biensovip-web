@@ -4,6 +4,7 @@
     "title": "Chọn số như chọn vận khí cho chủ xe",
     "p1": "Xin chào, tôi là Duy Đinh — người sáng lập cửa hàng biển số đẹp đầu tiên tại Đà Nẵng theo đúng nghĩa làm nghề.",
     "p2": "Tôi tin mỗi con số trên tấm biển không chỉ là địa chỉ phương tiện — nó mang ý nghĩa phong thủy, sự may mắn và câu chuyện của chủ nhân. Hơn mười năm qua, công việc của tôi là giúp khách tìm được con số hợp mệnh, hợp tài và hợp ý, với một nguyên tắc duy nhất: hồ sơ rõ ràng, giá công khai.",
+    "p3": "Theo dõi các video thực tế về biển số, quy trình sang tên và cảm nhận khách hàng tại TikTok @duydinhbiensodepdanang — mọi giao dịch đều minh bạch, quay lại đúng như những gì diễn ra tại cửa hàng.",
     "portrait_caption": "Duy Đinh",
     "badge_founder": "Sáng lập",
     "portrait_alt": "Chân dung Duy Đinh — chủ cửa hàng biển số đẹp Đà Nẵng"
@@ -70,10 +71,10 @@
     "button": "Xem kho biển số"
   },
   "contact": {
-    "shop_label": "Cửa hàng", "shop_value": "Duy Đinh — Biển số đẹp",
-    "phone_label": "Điện thoại", "phone_value": "0905 000 000",
-    "zalo_label": "Zalo OA", "zalo_value": "zalo.me/duydinh",
-    "address_label": "Địa chỉ", "address_value": "123 Nguyễn Văn Linh, Đà Nẵng",
+    "shop_label": "Cửa hàng", "shop_value": "Duy Đinh - Biển Số Phong Thuỷ Đà Nẵng",
+    "phone_label": "Điện thoại", "phone_value": "081 579 2699",
+    "zalo_label": "Zalo OA", "zalo_value": "zalo.me/0815792699",
+    "address_label": "Địa chỉ", "address_value": "Liên hệ qua Hotline 081 579 2699",
     "hours_label": "Giờ làm việc", "hours_value": "8:00 – 21:00, cả chủ nhật"
   }
 }

@@ -4,7 +4,6 @@ import Button from '../components/Button.jsx';
 import { IconButton, Avatar } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { contentGet } from '../lib/content/index.js';
-import * as authApi from '../services/authService.js';
 import { useNotifications, useMarkNotificationRead } from '../services/notificationService.js';
 import { useCompareIds } from '../services/compareService.js';
 
@@ -105,9 +104,10 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
           </div>
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 12px 4px 4px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)' }}>
-              <Avatar name={typeof user === 'string' ? user : (user.identifier || user.email || 'U')} size="sm" />
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')}</span>
-              <button type="button" onClick={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(T('common.auth.logout_done')); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)', padding: 0 }}>{T('common.auth.logout')}</button>
+              <button type="button" onClick={go('profile')} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
+                <Avatar name={typeof user === 'string' ? user : (user.identifier || user.email || 'U')} size="sm" />
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')}</span>
+              </button>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>

@@ -2,11 +2,11 @@
 // file này chỉ giữ dữ liệu hiển thị (màu/icon/desc) + map mục đích. Không có logic chấm điểm client.
 
 export const ELEMENTS = {
-  Kim:  { icon: 'zap',      color: '#C7CBD4', label: 'Kim',  desc: 'Kim loại — sắc bén, quyết đoán, hợp người lãnh đạo, giao thương lớn.' },
-  Mộc:  { icon: 'wind',     color: '#3FBF8F', label: 'Mộc',  desc: 'Cây cối — sinh sôi, phát triển, hợp người làm việc theo đam mê, khởi nghiệp.' },
-  Thủy: { icon: 'droplets', color: '#3B5BFF', label: 'Thủy', desc: 'Nước — linh hoạt, trí tuệ, hợp người làm truyền thông, nghệ thuật, tài chính.' },
-  Hỏa:  { icon: 'flame',    color: '#E5484D', label: 'Hỏa',  desc: 'Lửa — nhiệt huyết, danh tiếng, hợp người kinh doanh, sáng tạo, trình diễn.' },
-  Thổ:  { icon: 'mountain', color: '#F5C542', label: 'Thổ',  desc: 'Đất — vững vàng, giữ của, hợp người làm bất động sản, nông nghiệp, kho vận.' },
+  Kim:  { icon: 'zap',      color: 'var(--grey-300)', label: 'Kim',  desc: 'Kim loại — sắc bén, quyết đoán, hợp người lãnh đạo, giao thương lớn.' },
+  Mộc:  { icon: 'wind',     color: 'var(--mint-500)', label: 'Mộc',  desc: 'Cây cối — sinh sôi, phát triển, hợp người làm việc theo đam mê, khởi nghiệp.' },
+  Thủy: { icon: 'droplets', color: 'var(--blue-500)', label: 'Thủy', desc: 'Nước — linh hoạt, trí tuệ, hợp người làm truyền thông, nghệ thuật, tài chính.' },
+  Hỏa:  { icon: 'flame',    color: 'var(--rose-500)', label: 'Hỏa',  desc: 'Lửa — nhiệt huyết, danh tiếng, hợp người kinh doanh, sáng tạo, trình diễn.' },
+  Thổ:  { icon: 'mountain', color: 'var(--amber-500)', label: 'Thổ',  desc: 'Đất — vững vàng, giữ của, hợp người làm bất động sản, nông nghiệp, kho vận.' },
 };
 
 // Mục đích (nhãn UI → key backend). Key trùng enum FengShuiPurpose.

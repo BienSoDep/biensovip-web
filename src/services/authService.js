@@ -62,6 +62,14 @@ export async function getMe() {
   return apiClient.get('/api/auth/me');
 }
 
+// ── Update profile (BirthDate/Gender cần cho tính năng hợp mệnh) ──
+export async function updateProfile({ fullName, birthDate, gender } = {}) {
+  const data = await apiClient.patch('/api/auth/me', { fullName, birthDate, gender });
+  const auth = loadAuth();
+  if (auth) saveAuth({ ...auth, user: data });
+  return data;
+}
+
 // ── Verify email ──
 export async function verifyEmail(token) {
   return apiClient.post('/api/auth/verify-email', { token });
@@ -78,6 +86,11 @@ export async function verifyPasswordResetOtp(email, code) {
 
 export async function resetPassword(token, newPassword) {
   return apiClient.post('/api/auth/forgot-password/reset', { token, newPassword });
+}
+
+// ── Change password (in-session, requires current password) ──
+export async function changePassword(currentPassword, newPassword) {
+  return apiClient.post('/api/auth/change-password', { currentPassword, newPassword });
 }
 
 // ── Restore session on app load ──

@@ -88,7 +88,7 @@ export default function ChatZaloContact({ notify }) {
           </div>
 
           <div style={{ flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: 'var(--mint-100)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={22} style={{ color: '#1B7A5A' }} /></div>
+            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: 'var(--mint-100)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={22} style={{ color: 'var(--status-success-ink)' }} /></div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Gọi điện thoại</h3>
               <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{content.info.hours}</p>
@@ -106,7 +106,7 @@ export default function ChatZaloContact({ notify }) {
           </div>
 
           <div style={{ flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TikTokIcon style={{ color: '#fff' }} /></div>
+            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TikTokIcon style={{ color: 'var(--white)' }} /></div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>TikTok</h3>
               <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Video giới thiệu biển số, đánh giá thực tế từ khách.</p>

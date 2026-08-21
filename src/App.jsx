@@ -7,7 +7,7 @@ import {
 import { loadAuth, saveAuth } from './lib/authStore.js';
 import * as authApi from './services/authService.js';
 import * as favApi from './services/favoriteService.js';
-import { getLocalFavorites, addLocalFavorite, removeLocalFavorite } from './services/favoriteStore.js';
+import { getLocalFavorites, addLocalFavorite, removeLocalFavorite, clearLocalFavorites } from './services/favoriteStore.js';
 import { useComparePlates } from './services/compareService.js';
 import { contentGet } from './lib/content/index.js';
 import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
@@ -34,6 +34,7 @@ const PlateDetail = lazy(() => import('./pages/PlateDetail.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail.jsx'));
 const Fav = lazy(() => import('./pages/Fav.jsx'));
+const Profile = lazy(() => import('./pages/Profile.jsx'));
 const LuckyPlate = lazy(() => import('./pages/LuckyPlate.jsx'));
 const About = lazy(() => import('./pages/About.jsx'));
 const Blog = lazy(() => import('./pages/Blog.jsx'));
@@ -200,6 +201,16 @@ export default function App() {
       else addLocalFavorite(id);
     }
   };
+  const clearAllFavs = async () => {
+    if (st.user) {
+      try { await favApi.clearFavorites(); } catch { /* ignore */ }
+      setFavItems([]);
+    } else {
+      clearLocalFavorites();
+    }
+    patch({ favs: {} });
+    notify('Đã bỏ lưu tất cả');
+  };
   const openPlate = (id) => patch({ screen: 'detail', curId: id, modal: false });
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
   const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {} });
@@ -291,6 +302,9 @@ export default function App() {
     try { localStorage.setItem('bsd_last_email', email); } catch { /* ignore */ }
   };
 
+  // Hồ sơ chưa đủ để dùng tính năng hợp mệnh + phân khúc khách hàng (thiếu bất kỳ trường nào).
+  const isProfileIncomplete = (user) => !user?.fullName?.trim() || !user?.birthDate || !user?.gender;
+
   const authSubmit = async (remember = true) => {
     const s = st.screen;
     const err = {};
@@ -307,10 +321,20 @@ export default function App() {
       if (!st.aAgree) err.agree = true;
       if (Object.keys(err).length) { patch({ aErr: err }); return; }
       try {
-        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier: (isPhone ? st.aPhone : st.aEmail).trim(), password: st.aPw, fullName: st.aName.trim() });
-        if (!isPhone) rememberEmail(st.aEmail.trim());
-        patch({ aErr: {}, screen: 'login', aPw: '', step: 1 });
-        notify(isPhone ? 'Đăng ký thành công! Vui lòng đăng nhập.' : 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
+        const identifier = (isPhone ? st.aPhone : st.aEmail).trim();
+        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier, password: st.aPw, fullName: st.aName.trim() });
+        if (!isPhone) rememberEmail(identifier);
+        // Đăng ký xong tự đăng nhập luôn → chuyển thẳng vào Profile để mời điền ngày sinh
+        // (cần cho tính năng hợp mệnh) — Profile có nút bỏ qua nếu login tự động lỡ thất bại.
+        try {
+          const data = await authApi.login({ identifier, password: st.aPw, remember });
+          patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, aPw: '' });
+          notify('Đăng ký thành công!');
+          favApi.syncFavorites();
+        } catch {
+          patch({ aErr: {}, screen: 'login', aPw: '', step: 1 });
+          notify(isPhone ? 'Đăng ký thành công! Vui lòng đăng nhập.' : 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
+        }
       } catch (e) {
         if (e.status === 409) patch({ aErr: { [isPhone ? 'phone' : 'email']: isPhone ? 'Số điện thoại đã được sử dụng.' : 'Email đã được sử dụng.' } });
         else patch({ aErr: { [isPhone ? 'phone' : 'email']: e.message || 'Đăng ký thất bại.' } });
@@ -324,7 +348,13 @@ export default function App() {
       try {
         const data = await authApi.login({ identifier: st.aEmail.trim(), password: st.aPw, remember });
         rememberEmail(st.aEmail.trim());
-        patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', aPw: '', redirectTo: null });
+        // Hồ sơ chưa đủ (họ tên/ngày sinh/giới tính) → mời điền luôn thay vì vào thẳng trang cũ,
+        // để tính năng hợp mệnh + phân khúc khách hàng có dữ liệu ngay từ lần đăng nhập đầu.
+        if (isProfileIncomplete(data.user)) {
+          patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, aPw: '' });
+        } else {
+          patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', aPw: '', redirectTo: null });
+        }
         notify('Đăng nhập thành công');
         favApi.syncFavorites(); // fire-and-forget: merge local → server
       } catch (e) {
@@ -381,7 +411,11 @@ export default function App() {
     try {
       const data = await authApi.verifyLoginOtp(st.aEmail.trim(), st.aOtp, remember);
       rememberEmail(st.aEmail.trim());
-      patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', step: 1, aOtp: '', redirectTo: null });
+      if (isProfileIncomplete(data.user)) {
+        patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, step: 1, aOtp: '', redirectTo: null });
+      } else {
+        patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', step: 1, aOtp: '', redirectTo: null });
+      }
       notify('Đăng nhập thành công');
       favApi.syncFavorites();
     } catch (e) { patch({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
@@ -557,9 +591,10 @@ export default function App() {
 
             {s === 'verify-email' && <VerifyEmail go={go} />}
 
-            {s === 'fav' && <Fav favCards={favCards} user={st.user} patch={patch} go={go} notify={notify} contact={contact} />}
+            {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
 
-            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} />}
+            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} />}
+            {s === 'profile' && <Profile go={go} notify={notify} user={st.user} onboarding={!!st.profileOnboarding} onUserUpdate={(u) => patch({ user: u, profileOnboarding: false })} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
             {s === 'about' && <About go={go} />}
 
@@ -608,7 +643,7 @@ export default function App() {
           </Suspense>
 
           {isPublic && st.settings?.zalo && !import.meta.env.VITE_FB_PAGE_ID && (
-            <a href={`https://zalo.me/${st.settings.zalo.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo" title="Chat qua Zalo" style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 80, width: 48, height: 48, borderRadius: '50%', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', transition: 'var(--transition-control)', cursor: 'pointer' }}>
+            <a href={`https://zalo.me/${st.settings.zalo.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo" title="Chat qua Zalo" style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 80, width: 48, height: 48, borderRadius: '50%', background: '#0068FF', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', transition: 'var(--transition-control)', cursor: 'pointer' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.02 2 10.98c0 2.94 1.69 5.52 4.23 6.94l-1.06 3.18a.5.5 0 0 0 .66.63l3.55-1.38c.82.23 1.68.35 2.62.35 5.52 0 10-4.02 10-8.98S17.52 2 12 2Z" fill="#fff" fillOpacity=".12" stroke="#fff" strokeWidth="1.5"/><path d="M8.5 9.5h.01M12 9.5h.01M15.5 9.5h.01" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><path d="M8.5 13.5s1.5 2 3.5 2 3.5-2 3.5-2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </a>
           )}

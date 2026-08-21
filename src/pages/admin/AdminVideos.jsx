@@ -3,6 +3,7 @@ import { ChevronUp, ChevronDown, Star, Search } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, IconButton, Badge } from '../../components/index.jsx';
 import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos, useUpdatePromoVideo, useHardDeletePromoVideo } from '../../services/promoVideoService.js';
+import TikTokEmbed from '../../components/TikTokEmbed.jsx';
 
 const PLATFORM_LABEL = { tiktok: 'TikTok', facebook: 'Facebook' };
 const PLATFORM_TONE = { tiktok: 'dark', facebook: 'blue' };
@@ -142,8 +143,12 @@ export default function AdminVideos({ notify }) {
             const realIdx = videos.findIndex((x) => x.id === v.id);
             return (
             <div key={v.id} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-              <div style={{ position: 'relative', aspectRatio: RATIO[v.platform] || '16 / 9', background: 'var(--surface-sunken)' }}>
-                <iframe src={v.videoUrl} title={v.title || 'Video'} style={{ width: '100%', height: '100%', border: 0 }} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+              <div style={{ background: 'var(--surface-sunken)', display: 'flex', justifyContent: 'center' }}>
+                {v.platform === 'tiktok' ? (
+                  <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+                ) : (
+                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', aspectRatio: RATIO[v.platform] || '16 / 9', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</a>
+                )}
               </div>
               <div style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -166,8 +171,8 @@ export default function AdminVideos({ notify }) {
                     </div>
                   )}
                 </div>
-                <button type="button" aria-label={v.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'} title={v.isFeatured ? 'Đang hiển thị ở trang chủ' : 'Đánh dấu hiển thị ở trang chủ'} onClick={() => updateVideo.mutate({ id: v.id, isFeatured: !v.isFeatured })} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, color: v.isFeatured ? '#F5A623' : 'var(--grey-400)', display: 'flex', alignItems: 'center' }}>
-                  <Star size={18} fill={v.isFeatured ? '#F5A623' : 'none'} />
+                <button type="button" aria-label={v.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'} title={v.isFeatured ? 'Đang hiển thị ở trang chủ' : 'Đánh dấu hiển thị ở trang chủ'} onClick={() => updateVideo.mutate({ id: v.id, isFeatured: !v.isFeatured })} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, color: v.isFeatured ? 'var(--status-warning)' : 'var(--grey-400)', display: 'flex', alignItems: 'center' }}>
+                  <Star size={18} fill={v.isFeatured ? 'var(--status-warning)' : 'none'} />
                 </button>
                 <IconButton name="pencil" label="Sửa video" size="sm" onClick={() => openEdit(v)} />
                 <IconButton name="trash-2" label="Xóa video" size="sm" onClick={() => setDelId(v.id)} />
