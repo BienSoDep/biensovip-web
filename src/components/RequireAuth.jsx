@@ -15,7 +15,7 @@ export default function RequireAuth({ st, go, children }) {
   const authed = !!st.isAdmin && !!auth?.accessToken && !tokenExpired(auth.accessToken);
 
   useEffect(() => {
-    if (!authed) go('adminLogin')();
+    if (!authed) go('login')();
   }, [authed, go]);
 
   return authed ? children : null;

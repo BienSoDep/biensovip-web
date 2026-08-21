@@ -2,7 +2,7 @@ import Button from '../components/Button.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import { clearFavorites } from '../services/favoriteService.js';
 
-export default function Fav({ favCards, user, patch, go, notify }) {
+export default function Fav({ favCards, user, patch, go, notify, contact }) {
   const handleClearAll = async () => {
     if (user) {
       try { await clearFavorites(); } catch { /* ignore */ }
@@ -30,7 +30,7 @@ export default function Fav({ favCards, user, patch, go, notify }) {
       </div>
       {favCards.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
-          {favCards.map((p) => <PlateCard key={p.id} {...p} />)}
+          {favCards.map((p) => <PlateCard key={p.id} {...p} contact={contact} />)}
         </div>
       ) : (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '72px var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>

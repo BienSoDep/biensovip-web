@@ -54,7 +54,7 @@ function writeFiltersToUrl(filters) {
   if (next !== window.location.hash) history.replaceState(null, '', next);
 }
 
-export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice }) {
+export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice, contact }) {
   const [filters, setFilters] = useState(readFiltersFromUrl);
   useEffect(() => { writeFiltersToUrl(filters); }, [filters]);
 
@@ -123,6 +123,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     inCompare: isInList(p.id),
     onOpen: () => openPlate(p.id),
     onBuy: () => openBuy?.(p.id),
+    contact,
   });
 
   return (
@@ -283,7 +284,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
               {hasActiveFilters && <Button variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
               <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />
-              <Select label="Sắp xếp" value={filters.sort} options={[{ value: 'newest', label: 'Mới nhất' }, { value: 'price_asc', label: 'Giá thấp → cao' }, { value: 'price_desc', label: 'Giá cao → thấp' }]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
+              <Select  value={filters.sort} options={[{ value: 'newest', label: 'Mới nhất' }, { value: 'price_asc', label: 'Giá thấp → cao' }, { value: 'price_desc', label: 'Giá cao → thấp' }]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
             </div>
           </div>
           {(isLoading || isFetching) ? (

@@ -62,7 +62,6 @@ export default function App() {
     favs: {}, curId: initRoute.detailId || 'p1',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mDeposit: '', mErr: {},
     aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aErr: {}, step: 1, redirectTo: null, user: loadAuth()?.user || null,
-    admEmail: '', admPw: '', admErr: '',
     plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
     cats: CATS.map((c) => ({ name: c })), newCat: '', catErr: '',
     adminQ: '', admCat: 'Tất cả', admStatus: 'Tất cả',
@@ -104,7 +103,7 @@ export default function App() {
 
   // Auto-redirect admin away from login page when already logged in
   useEffect(() => {
-    if (st.screen === 'adminLogin' && st.isAdmin) {
+    if (st.screen === 'login' && st.isAdmin) {
       patch({ screen: 'dash' });
     }
   }, [st.screen, st.isAdmin]);
@@ -179,7 +178,7 @@ export default function App() {
   const notify = (msg) => toast(msg);
   const heroAnim = makeHeroAnim(fanDone);
 
-  const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot', 'adminLogin'].includes(st.screen) ? st.screen : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
+  const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? st.screen : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
   const toggleFav = (id) => {
     setSt((s) => {
       const favs = { ...s.favs };
@@ -205,6 +204,11 @@ export default function App() {
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
   const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {} });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
+  // Liên hệ shop cho card biển số: ưu tiên settings từ backend, fallback số mặc định (info.json).
+  const contact = {
+    phone: (st.settings?.phone || '0815792699').replace(/[^0-9]/g, ''),
+    zalo: (st.settings?.zalo || '0815792699').replace(/[^0-9]/g, ''),
+  };
 
   const catNames = st.cats.map((c) => c.name);
 
@@ -256,10 +260,7 @@ export default function App() {
     }
   };
 
-  const ADMIN_EMAIL = 'admin@biensovip.com';
-
-  // Gọi /api/admin/auth/login trực tiếp (không set field lỗi aErr/admErr riêng) —
-  // dùng chung bởi form login user (auto-detect) và form admin (adminSignIn).
+  // Gọi /api/admin/auth/login — chia sẻ bởi form login user (auto-detect tài khoản admin).
   const adminLoginRequest = async (email, password) => {
     const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -284,32 +285,6 @@ export default function App() {
     } catch {
       return false;
     }
-  };
-
-  const adminSignIn = async () => {
-    const err = {};
-    if (!/^\S+@\S+\.\S+$/.test(st.admEmail)) err.email = 'Email chưa đúng định dạng.';
-    if (st.admPw.length < 6) err.pw = 'Mật khẩu tối thiểu 6 ký tự.';
-    if (Object.keys(err).length) { patch({ admErr: err }); return; }
-    try {
-      const result = await adminLoginRequest(st.admEmail.trim(), st.admPw);
-      if (!result.ok) {
-        if (result.status === 429) patch({ admErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
-        else if (result.status === 401) patch({ admErr: { pw: 'Email hoặc mật khẩu không đúng.' } });
-        else patch({ admErr: { email: result.message || 'Đăng nhập thất bại' } });
-        return;
-      }
-      const { accessToken, refreshToken, admin } = result.data;
-      saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
-      patch({ admErr: {}, screen: 'dash', user: admin, isAdmin: true });
-      notify('Đăng nhập quản trị thành công');
-    } catch {
-      patch({ admErr: { email: 'Không kết nối được server.' } });
-    }
-  };
-  const adminDemo = () => {
-    patch({ admEmail: ADMIN_EMAIL, admPw: 'Admin@123', admErr: {} });
-    notify('Đã điền tài khoản mẫu — bấm Đăng nhập để tiếp tục');
   };
 
   const rememberEmail = (email) => {
@@ -570,19 +545,19 @@ export default function App() {
           })()}
 
           <Suspense fallback={<PageSkeleton screen={s} />}>
-            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} />}
+            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} contact={contact} />}
 
-            {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} />}
+            {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
 
-            {(s === 'register' || s === 'login' || s === 'forgot' || s === 'adminLogin') && (
-              <Auth st={st} s={s === 'adminLogin' ? 'login' : s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} adminSignIn={adminSignIn} adminDemo={adminDemo} admin={s === 'adminLogin'} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} />
+            {(s === 'register' || s === 'login' || s === 'forgot') && (
+              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} />
             )}
 
             {s === 'verify-email' && <VerifyEmail go={go} />}
 
-            {s === 'fav' && <Fav favCards={favCards} user={st.user} patch={patch} go={go} notify={notify} />}
+            {s === 'fav' && <Fav favCards={favCards} user={st.user} patch={patch} go={go} notify={notify} contact={contact} />}
 
             {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} />}
 
@@ -590,7 +565,7 @@ export default function App() {
 
             {s === 'chat' && <ChatZaloContact notify={notify} />}
 
-            {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} />}
+            {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} />}
 
             {s === 'saved' && <SavedSearches go={go} notify={notify} />}
 

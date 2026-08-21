@@ -1,9 +1,12 @@
 import { contentGet } from '../lib/content/index.js';
 
-// UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: 'duydinh'.
+// UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: thông tin doanh nghiệp thật.
 export default function Footer({ settings }) {
   const T = contentGet;
-  const zalo = settings?.zalo || 'duydinh';
+  const phone = (settings?.phone || '0815792699').replace(/[^0-9]/g, '');
+  const phoneDisplay = (settings?.phone || '0815792699').replace(/[^0-9]/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+  const zalo = settings?.zalo || '0815792699';
+  const email = settings?.email || 'duymc64@gmail.com';
   const exploreLinks = [
     ['#/danh-sach', T('common.footer.list')],
     ['#/tu-van', T('common.footer.lucky')],

@@ -8,6 +8,7 @@ const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose'
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
   status, badge, fav, onFav, onCompare, inCompare, onOpen, onBuy, style, plateSize = 'md',
+  contact,
 }) {
   const { prov, seri, num } = splitPlateNumber(plateNumber);
   const sold = status === 'sold';
@@ -59,8 +60,16 @@ export default function PlateCard({
           <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
           {!sold ? (
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Gọi ngay</Button>
-              <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" style={{ flex: 1 }}>Nhắn Zalo</Button>
+              {contact?.phone ? (
+                <a href={`tel:${contact.phone}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}><Button variant="primary" size="sm" className="plate-card-cta-primary" style={{ width: '100%' }}>Gọi ngay</Button></a>
+              ) : onBuy ? (
+                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Gọi ngay</Button>
+              ) : null}
+              {contact?.zalo ? (
+                <a href={`https://zalo.me/${contact.zalo}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}><Button variant="outline" size="sm" className="plate-card-cta-secondary" style={{ width: '100%' }}>Nhắn Zalo</Button></a>
+              ) : onBuy ? (
+                <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" style={{ flex: 1 }}>Nhắn Zalo</Button>
+              ) : null}
             </div>
           ) : (
             <Button variant="ghost" size="sm" disabled fullWidth>Đã bán</Button>

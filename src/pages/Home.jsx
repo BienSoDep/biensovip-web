@@ -24,7 +24,7 @@ function useDebounced(value, delay = 300) {
   return debounced;
 }
 
-export default function Home({ st, patch, go, notify, heroAnim, openPlate, openBuy, favs, onFav }) {
+export default function Home({ st, patch, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact }) {
   const stagger = useStaggeredReveal();
   const T = contentGet;
   const { data: plateTypes } = useCategories('plate_type');
@@ -157,6 +157,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
                   inCompare={isInList(p.id)}
                   onOpen={() => openPlate(p.id)}
                   onBuy={() => openBuy?.(p.id)}
+                  contact={contact}
                   style={stagger(i)} />
               ))}
             </div>

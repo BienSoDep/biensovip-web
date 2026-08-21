@@ -16,20 +16,19 @@ const REGISTER_BENEFITS = [
   { icon: Star, text: 'Đánh giá và chia sẻ trải nghiệm sau khi mua' },
 ];
 
-export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, adminSignIn, adminDemo, admin, otpLoginRequest, otpLoginVerify }) {
+export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify }) {
   const [otpMode, setOtpMode] = useState(false);
   const [remember, setRemember] = useState(true);
   const [lastEmail, setLastEmail] = useState('');
-  const isAdmin = !!admin;
 
   useEffect(() => {
     try { setLastEmail(localStorage.getItem(LAST_EMAIL_KEY) || ''); } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
-    if (s === 'login' && !isAdmin && lastEmail && !st.aEmail) patch({ aEmail: lastEmail });
+    if (s === 'login' && lastEmail && !st.aEmail) patch({ aEmail: lastEmail });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s, isAdmin, lastEmail]);
+  }, [s, lastEmail]);
 
   const goHome = (e) => { e.preventDefault(); go('home')(); };
 
@@ -58,7 +57,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             <motion.p key={s === 'register' ? 'register-headline' : 'login-headline'}
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={CONTENT_FADE}
               style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)', maxWidth: 420 }}>
-              {s === 'register' ? 'Tạo tài khoản để lưu lại những biển số ưng ý.' : lastEmail && !isAdmin ? `Chào mừng quay lại, ${lastEmail}` : 'Chào mừng quay lại — 3.240 biển số đang chờ bạn.'}
+              {s === 'register' ? 'Tạo tài khoản để lưu lại những biển số ưng ý.' : lastEmail ? `Chào mừng quay lại, ${lastEmail}` : 'Chào mừng quay lại — 3.240 biển số đang chờ bạn.'}
             </motion.p>
           </AnimatePresence>
 
@@ -85,17 +84,17 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
         </motion.div>
         <motion.div layout transition={SWAP_TRANSITION} style={{ order: formOrder, flex: '1 1 420px', background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,4vw,64px)', minHeight: '100vh' }}>
           <AnimatePresence mode="wait">
-          <motion.div key={`${s}-${otpMode ? 'otp' : 'std'}-${isAdmin ? 'admin' : 'user'}`}
+          <motion.div key={`${s}-${otpMode ? 'otp' : 'std'}`}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={CONTENT_FADE}
             style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
             {s === 'forgot' && <Eyebrow tone="blue">{`Bước ${st.step}/3`}</Eyebrow>}
             {otpMode && <Eyebrow tone="blue">{`Đăng nhập bằng OTP · Bước ${st.step}/2`}</Eyebrow>}
             <div>
               <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
-                {isAdmin ? 'Đăng nhập quản trị' : otpMode ? (st.step === 1 ? 'Đăng nhập bằng OTP' : 'Nhập mã xác thực') : authMeta[0]}
+                {otpMode ? (st.step === 1 ? 'Đăng nhập bằng OTP' : 'Nhập mã xác thực') : authMeta[0]}
               </h1>
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                {isAdmin ? 'Chỉ dành cho chủ shop Duy Đinh.' : otpMode ? (st.step === 1 ? 'Không cần nhớ mật khẩu — nhận mã qua email.' : 'Mã 6 số đã được gửi tới email của bạn.') : authMeta[1]}
+                {otpMode ? (st.step === 1 ? 'Không cần nhớ mật khẩu — nhận mã qua email.' : 'Mã 6 số đã được gửi tới email của bạn.') : authMeta[1]}
               </p>
             </div>
 
@@ -123,22 +122,13 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             )}
             {s === 'login' && !otpMode && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                {isAdmin ? (
-                  <>
-                    <Input label="Tài khoản" placeholder="admin@biensovip.com" value={st.admEmail} error={st.admErr.email} onChange={setField('admEmail')} />
-                    <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.admPw} error={st.admErr.pw} onChange={setField('admPw')} />
-                  </>
-                ) : (
-                  <>
-                    <Input label="Email hoặc số điện thoại" placeholder="email@example.com hoặc 09xx xxx xxx" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
-                    <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                      <Checkbox label="Ghi nhớ đăng nhập" checked={remember} onChange={setRemember} />
-                      <a href="#" onClick={(e) => { e.preventDefault(); patch({ aErr: {} }); setOtpMode(true); }} style={{ font: 'var(--type-caption)' }}>Đăng nhập bằng OTP</a>
-                    </div>
-                    <a href="#" onClick={(e) => { e.preventDefault(); go('forgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)' }}>Quên mật khẩu?</a>
-                  </>
-                )}
+                <Input label="Email hoặc số điện thoại" placeholder="email@example.com hoặc 09xx xxx xxx" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
+                <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                  <Checkbox label="Ghi nhớ đăng nhập" checked={remember} onChange={setRemember} />
+                  <a href="#" onClick={(e) => { e.preventDefault(); patch({ aErr: {} }); setOtpMode(true); }} style={{ font: 'var(--type-caption)' }}>Đăng nhập bằng OTP</a>
+                </div>
+                <a href="#" onClick={(e) => { e.preventDefault(); go('forgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)' }}>Quên mật khẩu?</a>
               </div>
             )}
             {s === 'login' && otpMode && st.step === 1 && (
@@ -161,11 +151,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 {st.step === 1 ? 'Gửi mã OTP' : 'Xác nhận & đăng nhập'}
               </Button>
             ) : (
-              <Button variant="primary" size="lg" fullWidth onClick={isAdmin ? adminSignIn : () => authSubmit(remember)}>{isAdmin ? 'Đăng nhập quản trị' : authMeta[2]}</Button>
-            )}
-
-            {s === 'login' && admin && (
-              <Button variant="outline" size="md" fullWidth onClick={adminDemo}>Dùng tài khoản mẫu (demo)</Button>
+              <Button variant="primary" size="lg" fullWidth onClick={() => authSubmit(remember)}>{authMeta[2]}</Button>
             )}
 
             {otpMode && (

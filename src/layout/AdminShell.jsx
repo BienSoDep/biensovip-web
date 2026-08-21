@@ -38,7 +38,7 @@ export default function AdminShell({
   adminMeta,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const logout = async () => { await authApi.adminLogout(); patch({ user: null, isAdmin: false, screen: 'adminLogin' }); };
+  const logout = async () => { await authApi.adminLogout(); patch({ user: null, isAdmin: false, screen: 'home' }); };
 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>

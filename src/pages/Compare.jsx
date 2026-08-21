@@ -51,8 +51,68 @@ function priceScores(plates) {
 
 const CHART_COLORS = ['#F97316', '#2563EB', '#16A34A'];
 
+const CURRENT_YEAR = new Date().getFullYear();
+const daysInMonth = (year, month) => new Date(year, month, 0).getDate();
+
+const birthInputStyle = {
+  width: '100%', height: 40, padding: '0 12px', borderRadius: 'var(--radius-field)',
+  background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)',
+  border: 'none', font: 'var(--type-body-sm)', color: 'var(--text-strong)',
+  outline: 'none', textAlign: 'center', boxSizing: 'border-box',
+};
+
 function BirthDatePrompt({ onSubmit }) {
-  const [value, setValue] = useState('');
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
+  const set = { day: setDay, month: setMonth, year: setYear };
+  const pad = (n) => String(n).padStart(2, '0');
+
+  // Giới hạn hợp lệ theo trường (trừ năm — để người dùng tự gõ thoải mái, không cân);
+  // ngày dùng số ngày thực của tháng/năm đang chọn (tháng 2 → 28/29).
+  const bounds = (f) => {
+    if (f === 'month') return { min: 1, max: 12 };
+    const y = Number(year) || CURRENT_YEAR, m = Number(month) || 1;
+    return { min: 1, max: daysInMonth(y, m) };
+  };
+  const clamp = (f, v) => {
+    if (v === '' || f === 'year') return v;
+    const n = Number(v);
+    if (Number.isNaN(n)) return '';
+    const { min, max } = bounds(f);
+    return String(Math.min(Math.max(Math.round(n), min), max));
+  };
+  const def = (f) => (f === 'year' ? CURRENT_YEAR : 1);
+  // Lăn chuột: lên tăng, xuống giảm, chặn cuộn trang để chỉ đổi giá trị ô.
+  const wheel = (f) => (e) => {
+    e.preventDefault();
+    const cur = f === 'year' ? year : f === 'month' ? month : day;
+    const dir = e.deltaY < 0 ? 1 : -1;
+    set[f](clamp(f, (Number(cur) || def(f)) + dir));
+  };
+  const field = (f, label) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: f === 'year' ? '112px' : '84px' }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>
+      <input
+        type="number"
+        value={f === 'year' ? year : f === 'month' ? month : day}
+        {...(f === 'year' ? {} : { min: bounds(f).min, max: bounds(f).max })}
+        placeholder={def(f)}
+        onChange={(e) => set[f](clamp(f, e.target.value))}
+        onBlur={() => set[f](clamp(f, (f === 'year' ? year : f === 'month' ? month : day)))}
+        onWheel={wheel(f)}
+        style={birthInputStyle}
+      />
+    </div>
+  );
+
+  const valid = (() => {
+    const d = Number(day), m = Number(month), y = Number(year);
+    if (!d || !m || !y) return false;
+    const dt = new Date(y, m - 1, d);
+    return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+  })();
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-5)', textAlign: 'center' }}>
       <Sparkles size={28} style={{ color: 'var(--action-primary)' }} />
@@ -60,23 +120,19 @@ function BirthDatePrompt({ onSubmit }) {
         Nhập ngày sinh để xem điểm <strong>hợp mệnh</strong> của từng biển trong biểu đồ so sánh — hoặc <a href="#/register" style={{ color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>đăng ký tài khoản</a> để lưu lại cho lần sau.
       </p>
       <form
-        onSubmit={(e) => { e.preventDefault(); if (value) onSubmit(value); }}
-        style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center' }}
+        onSubmit={(e) => { e.preventDefault(); if (valid) onSubmit(`${year}-${pad(month)}-${pad(day)}`); }}
+        style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end' }}
       >
-        <input
-          type="date"
-          value={value}
-          max={new Date().toISOString().slice(0, 10)}
-          onChange={(e) => setValue(e.target.value)}
-          style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
-        />
-        <Button type="submit" variant="primary" size="md" disabled={!value}>Xem điểm hợp mệnh</Button>
+        {field('day', 'Ngày')}
+        {field('month', 'Tháng')}
+        {field('year', 'Năm')}
+        <Button type="submit" variant="primary" size="md" disabled={!valid}>Xem điểm hợp mệnh</Button>
       </form>
     </div>
   );
 }
 
-export default function Compare({ go, notify, allPlates, user }) {
+export default function Compare({ go, notify, allPlates, user, openPlate }) {
   const { ids, remove, clear } = useCompareIds();
   const { data, isLoading, isFetching, isPlaceholderData, isError, refetch } = useComparePlates(ids);
   // Fall back to the in-app plate list when the API is unavailable (mock/dev).
@@ -274,7 +330,7 @@ export default function Compare({ go, notify, allPlates, user }) {
                     <PlateVisual size="md" prov={prov} seri={seri} num={num} />
                   )}
                   <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
-                  <button onClick={() => go('detail', p.id)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>Xem chi tiết</button>
+                  <button onClick={() => openPlate(p.id)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>Xem chi tiết</button>
                 </div>
               );
             })}

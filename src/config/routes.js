@@ -1,8 +1,8 @@
-export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'adminLogin', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'areviews', 'ameanings', 'compose'];
+export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'dash', 'aplates', 'acats', 'acontacts', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'acollabs', 'areviews', 'ameanings', 'compose'];
 
 export const ROUTE_MAP = {
   'list': 'danh-sach', 'register': 'dang-ky', 'login': 'dang-nhap', 'forgot': 'quen-mat-khau',
-  'fav': 'yeu-thich', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'hop-menh', 'adminLogin': 'admin',
+  'fav': 'yeu-thich', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'hop-menh',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acats': 'admin/danh-muc',
   'acontacts': 'admin/lien-he', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'acollabs': 'admin/cong-tac-vien', 'areviews': 'admin/danh-gia', 'ameanings': 'admin/y-nghia', 'compose': 'admin/them-bai',
   'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien', 'terms': 'dieu-khoan', 'privacy': 'bao-mat', 'transfer': 'sang-ten', 'faq': 'hoi-dap',

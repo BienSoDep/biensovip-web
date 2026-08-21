@@ -2,6 +2,13 @@
 // Xe máy chỉ dùng biển ngắn; ô tô có thể dùng cả 2 kiểu (biển ngắn cũ hoặc biển dài phổ biến hiện nay)
 const ASPECT = { short: '330/165', long: '520/110' };
 
+// Font tỉ lệ % theo CHIỀU CAO khung biển (cqh) — lấy từ kích thước render của màn Detail (size lg) làm mẫu.
+// Nhờ đó mọi size/preview mọi trang giữ đúng 1 tỉ lệ chữ-số/số-khung giống nhau; khung co giãn → chữ scale theo.
+const RATIO = {
+  short: { topFs: '23cqh', numFs: '49cqh' },
+  long: { provFs: '55cqh', seriFs: '38cqh', numFs: '96cqh' },
+};
+
 const SCREW_POS = [
   ['left', 'top'], ['right', 'top'], ['left', 'bottom'], ['right', 'bottom'],
 ];
@@ -16,22 +23,23 @@ function screwStyle(s, [x, y]) {
   };
 }
 
+// Mỗi size giữ cách khung (pad/border/screw) khác nhau; font-dùng-chung theo RATIO để đồng tỉ lệ chữ/khung ở mọi nơi.
 const SIZES = {
   sm: {
-    long: { pad: '0 2px', gap: 3, radius: 3, provFs: 16, seriFs: 12, numFs: 24, ls: 0.3, border: 2, screwSize: 2, screwOff: 1 },
-    short: { pad: '0 2px', gap: 0, radius: 3, topFs: 16, numFs: 24, ls: 0.3, border: 2, screwSize: 2, screwOff: 1 },
+    long: { pad: '0 2px', gap: 3, radius: 3, ls: 0.3, border: 2, screwSize: 2, screwOff: 1 },
+    short: { pad: '0 2px', gap: 0, radius: 3, ls: 0.3, border: 2, screwSize: 2, screwOff: 1 },
   },
   md: {
-    long: { pad: '0 3px', gap: 6, radius: 5, provFs: 32, seriFs: 24, numFs: 44, ls: 1, border: 3, screwSize: 3, screwOff: 2 },
-    short: { pad: '0 3px', gap: 0, radius: 5, topFs: 34, numFs: 40, ls: 1, border: 3, screwSize: 3, screwOff: 2 },
+    long: { pad: '0 3px', gap: 6, radius: 5, ls: 1, border: 3, screwSize: 3, screwOff: 2 },
+    short: { pad: '0 3px', gap: 0, radius: 5, ls: 1, border: 3, screwSize: 3, screwOff: 2 },
   },
   listLg: {
-    long: { pad: '1px 8px', gap: 10, radius: 6, provFs: 52, seriFs: 38, numFs: 88, ls: 1.2, border: 4, screwSize: 4, screwOff: 3 },
-    short: { pad: '1px 6px', gap: 0, radius: 6, topFs: 50, numFs: 108, ls: 1.2, border: 4, screwSize: 4, screwOff: 3 },
+    long: { pad: '1px 8px', gap: 10, radius: 6, ls: 1.2, border: 4, screwSize: 4, screwOff: 3 },
+    short: { pad: '1px 6px', gap: 0, radius: 6, ls: 1.2, border: 4, screwSize: 4, screwOff: 3 },
   },
   lg: {
-    long: { pad: '1px 8px', gap: 12, radius: 7, provFs: 'clamp(36px,6.5vw,60px)', seriFs: 'clamp(26px,4.8vw,42px)', numFs: 'clamp(60px,12vw,104px)', ls: 1.5, border: 5, screwSize: 5, screwOff: 3 },
-    short: { pad: '1px 5px', gap: 0, radius: 7, topFs: 'clamp(34px,6.5vw,58px)', numFs: 'clamp(72px,14vw,126px)', ls: 1.5, border: 5, screwSize: 5, screwOff: 3 },
+    long: { pad: '1px 8px', gap: 12, radius: 7, ls: 1.5, border: 5, screwSize: 5, screwOff: 3 },
+    short: { pad: '1px 5px', gap: 0, radius: 7, ls: 1.5, border: 5, screwSize: 5, screwOff: 3 },
   },
 };
 
@@ -40,20 +48,19 @@ const BASELINE_NUM_LEN = { short: 6, long: 6 };
 
 function scaleFontSize(fs, ratio) {
   if (ratio >= 1) return fs;
-  if (typeof fs === 'number') return fs * ratio;
-  const m = String(fs).match(/^clamp\((.+),(.+),(.+)\)$/);
+  const m = String(fs).match(/^(-?[\d.]+)cqh$/);
   if (!m) return fs;
-  const scaleTerm = (t) => t.trim().replace(/(-?[\d.]+)(px|vw)/g, (_, n, u) => `${(parseFloat(n) * ratio).toFixed(2)}${u}`);
-  return `clamp(${scaleTerm(m[1])},${scaleTerm(m[2])},${scaleTerm(m[3])})`;
+  return `${(parseFloat(m[1]) * ratio).toFixed(2)}cqh`;
 }
 
 export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'short' }) {
   const isMoto = shape === 'short';
   const kind = shape;
   const s = (SIZES[size] || SIZES.md)[kind];
+  const r = RATIO[kind];
   const numLen = String(num || '').replace(/[.\s]/g, '').length;
   const numScale = Math.min(1, BASELINE_NUM_LEN[kind] / Math.max(numLen, 1));
-  const numFs = scaleFontSize(s.numFs, numScale);
+  const numFs = scaleFontSize(r.numFs, numScale);
   // Hiệu ứng chữ dập nổi (embossed) — đậm hơn: bóng tối đổ dày xuống dưới-phải (thành lõm khuất sáng)
   // + viền sáng trắng rõ hắt lên trên-trái (rìa lõm bắt sáng mạnh), giả lập ánh sáng chiếu chéo từ trên-trái.
   const textColor = '#191919';
@@ -77,6 +84,7 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
     gap: s.gap,
     width: '100%',
     aspectRatio: ASPECT[kind],
+    containerType: 'size',
     padding: s.pad,
     borderRadius: s.radius,
     overflow: 'hidden',
@@ -97,8 +105,8 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
     return (
       <div style={plateStyle}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, fontFamily, fontWeight: 700, color: textColor, textShadow, lineHeight: 1 }}>
-          <span style={{ fontSize: s.topFs }}>{prov}</span>
-          <span style={{ fontSize: s.topFs, opacity: 0.92 }}>{seri}</span>
+          <span style={{ fontSize: r.topFs }}>{prov}</span>
+          <span style={{ fontSize: r.topFs, opacity: 0.92 }}>{seri}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, lineHeight: 1, whiteSpace: 'nowrap' }}>
           {num}
@@ -111,8 +119,8 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   return (
     <div style={plateStyle}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: 1.02, fontFamily, fontWeight: 700, color: textColor, textShadow }}>
-        <span style={{ fontSize: s.provFs }}>{prov}</span>
-        <span style={{ fontSize: s.seriFs, opacity: 0.92 }}>{seri}</span>
+        <span style={{ fontSize: r.provFs }}>{prov}</span>
+        <span style={{ fontSize: r.seriFs, opacity: 0.92 }}>{seri}</span>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, whiteSpace: 'nowrap' }}>
         {num}
