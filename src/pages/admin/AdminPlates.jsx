@@ -5,7 +5,7 @@ import {
   useBulkCreatePlate, useUploadImage, useAdminPlate,
 } from '../../services/adminPlates.js';
 import { useAdminCategories } from '../../services/categories.js';
-import { Select, IconButton, SearchField } from '../../components/index.jsx';
+import { Select, IconButton, SearchField, InfoTip } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 import Button from '../../components/Button.jsx';
 
@@ -373,10 +373,10 @@ export default function AdminPlates({ go, notify }) {
           <span style={{ flex: '1 1 150px' }}>Biển số</span>
           <span style={{ flex: '1 1 90px' }}>Loại</span>
           <span style={{ flex: '1 1 90px' }}>Tỉnh</span>
-          <span style={{ flex: '1 1 130px' }}>Giá (bấm sửa)</span>
-          <span style={{ flex: '1 1 90px' }}>Trạng thái</span>
-          <span style={{ flex: '1 1 60px' }}>HOT</span>
-          <span style={{ flex: '1 1 70px' }}>Hiển thị</span>
+          <span style={{ flex: '1 1 130px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Giá (bấm sửa)</span>
+          <span style={{ flex: '1 1 90px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Trạng thái<InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." /></span>
+          <span style={{ flex: '1 1 60px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>HOT<InfoTip size={12} text="Biển nổi bật — đánh dấu 🔥 để ưu tiên hiện lên đầu trang chủ và danh sách." /></span>
+          <span style={{ flex: '1 1 70px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Hiển thị<InfoTip size={12} text="Bật để biển xuất hiện công khai trên website; tắt để tạm ẩn (khách không thấy)." /></span>
           <span style={{ flex: '0 0 80px' }}>Thao tác</span>
         </div>
 
@@ -572,16 +572,16 @@ function PlateFormModal({
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={form.priceOnRequest} onChange={(e) => setF('priceOnRequest')(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Giá liên hệ</span>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Giá liên hệ<InfoTip size={12} text="Không hiện giá công khai — khách phải gọi/Zalo để hỏi giá. Thường dùng cho biển đắt, giá nhạy cảm." /></span>
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={form.isHot} onChange={(e) => setF('isHot')(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Biển HOT</span>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Biển HOT<InfoTip size={12} text="Đánh dấu biển đẹp/bán chạy để ưu tiên hiện lên đầu trang chủ và danh sách, gắn nhãn 🔥." /></span>
           </label>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Kiểu đăng biển</span>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Kiểu đăng biển<InfoTip size={12} text="Cách đăng biển: Sở hữu trực tiếp = hiển thị vô hạn tới khi bán; Đấu giá trung gian = chỉ hiện tới hạn, quá hạn tự ẩn." /></span>
           <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
               <input type="radio" name="listingType" checked={form.listingType === 'direct'} onChange={() => setF('listingType')('direct')} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />

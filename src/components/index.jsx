@@ -1,6 +1,77 @@
+import { useRef, useState } from 'react';
 import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2, ChevronDown,
-  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History } from 'lucide-react';
+  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History, Info } from 'lucide-react';
 import { Select as BaseSelect } from '@base-ui/react/select';
+import Button from './Button.jsx';
+import { apiClient } from '../services/apiClient.js';
+
+// Icon thông tin — hover để xem giải thích ngắn về khái niệm/label bên cạnh.
+// Bubble dùng position:fixed + tọa độ tính bằng JS khi hover, để thoát khỏi mọi ancestor có
+// overflow:hidden/auto (bảng, card cuộn ngang…) — dùng position:absolute thuần CSS sẽ bị cắt mất.
+export function InfoTip({ text, size = 14, style }) {
+  const ref = useRef(null);
+  const [pos, setPos] = useState(null);
+
+  const show = () => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    setPos({ top: r.top, left: r.left + r.width / 2 });
+  };
+  const hide = () => setPos(null);
+
+  return (
+    <span ref={ref} role="note" aria-label={text}
+      onMouseEnter={show} onMouseLeave={hide} onFocus={show} onBlur={hide} tabIndex={0}
+      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'help',
+        color: 'var(--text-faint)', verticalAlign: 'middle', flexShrink: 0, outline: 'none', ...style }}>
+      <Info size={size} aria-hidden="true" />
+      {pos && (
+        <span role="tooltip"
+          style={{
+            position: 'fixed', top: pos.top - 8, left: pos.left, transform: 'translate(-50%, -100%)',
+            background: 'var(--action-dark)', color: 'var(--white)', padding: '8px 12px', borderRadius: 'var(--radius-md)',
+            width: 'max-content', maxWidth: 280, font: 'var(--type-caption)', lineHeight: 1.55, textAlign: 'left',
+            boxShadow: 'var(--shadow-3)', zIndex: 'var(--z-popover, 70)', pointerEvents: 'none',
+          }}>
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Trường nhập URL ảnh — 2 cách: dán link trực tiếp HOẶC tải ảnh lên (tự đưa qua Cloudinary → điền link).
+// Dùng chung cho mọi chỗ admin gán link ảnh (thumbnail, ảnh đại diện, ảnh trong nội dung…).
+export function ImageUrlInput({ label, value, onChange, placeholder, hint }) {
+  const fileRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const onFile = async (file) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await apiClient.upload('/api/admin/plates/upload', fd);
+      onChange(res.url);
+    } catch (e) {
+      // eslint-disable-next-line no-alert
+      window.alert(e.message || 'Lỗi tải ảnh lên');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
+      <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+        <div style={{ flex: 1 }}><Input value={value} onChange={onChange} placeholder={placeholder} /></div>
+        <Button variant="outline" size="sm" disabled={busy} onClick={() => fileRef.current?.click()} style={{ whiteSpace: 'nowrap' }}>{busy ? 'Đang tải…' : 'Tải ảnh lên'}</Button>
+      </div>
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => onFile(e.target.files[0])} style={{ display: 'none' }} />
+      {hint && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{hint}</span>}
+    </div>
+  );
+}
 
 export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint }) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);

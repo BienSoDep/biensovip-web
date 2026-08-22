@@ -4,6 +4,12 @@ import { useNotifications, useMarkNotificationRead, useMarkNotificationClicked }
 
 const PER_PAGE = 20;
 
+// Broadcast content có thể là HTML (soạn bằng rich text editor) — hiện dạng tóm tắt thuần text ở đây.
+function stripHtml(html) {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -65,7 +71,7 @@ export default function Notifications({ go, notify }) {
                   <span style={{ font: 'var(--type-body-sm)', fontWeight: n.read ? 'var(--fw-regular)' : 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
                     {n.title || (n.type === 'plate_match' ? `Biển ${n.plateNumber || 'mới'} phù hợp tiêu chí của bạn` : 'Thông báo')}
                   </span>
-                  {n.content && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{n.content}</span>}
+                  {n.content && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{stripHtml(n.content)}</span>}
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{timeAgo(n.createdAt)}</span>
                 </div>
               </div>

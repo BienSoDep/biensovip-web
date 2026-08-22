@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Bell, MessageCircle, Star } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Input, Checkbox, Eyebrow } from '../components/index.jsx';
+import PlateVisual from '../components/PlateVisual.jsx';
 
 const SWAP_TRANSITION = { type: 'spring', stiffness: 90, damping: 20, mass: 1 };
 const CONTENT_FADE = { duration: 0.3, ease: [0.22, 1, 0.36, 1] };
@@ -14,6 +15,15 @@ const REGISTER_BENEFITS = [
   { icon: Bell, text: 'Nhận thông báo ngay khi có biển mới hợp mệnh' },
   { icon: MessageCircle, text: 'Theo dõi lịch sử yêu cầu tư vấn của bạn' },
   { icon: Star, text: 'Đánh giá và chia sẻ trải nghiệm sau khi mua' },
+];
+
+// Vài biển "đẹp" tiêu biểu — xoay vòng làm điểm nhấn hình ảnh cho panel, không phụ thuộc API.
+// Kèm ý nghĩa + giá + trạng thái để không chỉ là hình biển trơ trọi.
+const SHOWCASE_PLATES = [
+  { prov: '43', seri: 'A1', num: '888.88', shape: 'short', name: 'Tứ Quý Phát', price: '1.850.000.000đ', hot: true },
+  { prov: '43', seri: 'B2', num: '999.99', shape: 'short', name: 'Tứ Quý Cửu', price: '2.100.000.000đ', hot: true },
+  { prov: '43', seri: 'C1', num: '686.86', shape: 'short', name: 'Lộc Phát Kép', price: '420.000.000đ', hot: false },
+  { prov: '43', seri: 'A2', num: '567.89', shape: 'short', name: 'Sảnh Tiến', price: '365.000.000đ', hot: false },
 ];
 
 export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify }) {
@@ -31,6 +41,14 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
   }, [s, lastEmail]);
 
   const goHome = (e) => { e.preventDefault(); go('home')(); };
+
+  // Xoay biển mẫu mỗi 3.2s — điểm nhấn hình ảnh chính của panel, thay cho khối chữ tĩnh.
+  const [plateIdx, setPlateIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setPlateIdx((i) => (i + 1) % SHOWCASE_PLATES.length), 3200);
+    return () => clearInterval(t);
+  }, []);
+  const plate = SHOWCASE_PLATES[plateIdx];
 
   // Register swaps the two blocks (info panel goes right, form goes left) — order is animated by
   // framer-motion's layout prop so the swap reads as a slide rather than an instant jump.
@@ -51,6 +69,36 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             <a href="#" onClick={goHome} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>
               <ArrowLeft size={14} /> Trang chủ
             </a>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, gap: 'var(--space-4)' }}>
+            <AnimatePresence mode="wait">
+              <motion.div key={plateIdx}
+                initial={{ opacity: 0, rotateY: -18, scale: 0.94 }}
+                animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+                exit={{ opacity: 0, rotateY: 18, scale: 0.94 }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}
+              >
+                <div style={{ width: 'clamp(200px, 22vw, 260px)', filter: 'drop-shadow(0 18px 32px rgba(0,0,0,.18))' }}>
+                  <PlateVisual size="lg" prov={plate.prov} seri={plate.seri} num={plate.num} shape={plate.shape} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{plate.name}</span>
+                    {plate.hot && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '1px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)' }}>🔥 HOT</span>
+                    )}
+                  </div>
+                  <span style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{plate.price}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 5 }}>
+                  {SHOWCASE_PLATES.map((_, i) => (
+                    <span key={i} style={{ width: i === plateIdx ? 16 : 5, height: 5, borderRadius: 'var(--radius-pill)', background: i === plateIdx ? 'var(--action-primary)' : 'var(--border-strong)', transition: 'all 250ms var(--ease-out)' }} />
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           <AnimatePresence mode="wait">

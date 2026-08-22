@@ -485,6 +485,11 @@ export default function App() {
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
+  // Admin đang đăng nhập (staff/super-admin) không được lạc sang site khách hàng — luôn đưa về Dashboard.
+  useEffect(() => {
+    if (st.isAdmin && isPublic) go('dash')();
+  }, [st.isAdmin, isPublic, go]);
+
   // Guest: fetch plate data for localStorage favorite ids via the compare endpoint.
   // Logged-in: use favItems returned by the favorites API.
   const guestFavs = !st.user ? getLocalFavorites() : [];

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
@@ -46,6 +46,13 @@ export default function AdminShell({
     return next;
   });
   const logout = async () => { await authApi.adminLogout(); patch({ user: null, isAdmin: false, screen: 'home' }); };
+
+  // Nhân viên (không phải super-admin) không được vào màn Nhân viên — chặn cả nav lẫn render trực tiếp qua hash.
+  const isSuperAdmin = st.user?.role === 'super-admin';
+  const denied = s === 'astaff' && !isSuperAdmin;
+  useEffect(() => {
+    if (denied) go('dash')();
+  }, [denied, go]);
 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
@@ -115,7 +122,7 @@ export default function AdminShell({
         {s === 'aplates' && <AdminPlates go={go} notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} />}
         {s === 'acontacts' && <AdminContacts notify={notify} />}
-        {s === 'astaff' && <AdminStaff notify={notify} />}
+        {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
         {s === 'acustomers' && <AdminCustomers st={st} setSt={setSt} notify={notify} />}
         {s === 'avideos' && <AdminVideos notify={notify} />}
         {s === 'anotifications' && <AdminNotifications notify={notify} />}

@@ -4,7 +4,7 @@ import {
   usePlateMeanings, useCreatePlateMeaning, useUpdatePlateMeaning, useDeletePlateMeaning, useReseedPlateMeanings,
 } from '../../services/meanings.js';
 import { useAdminPlates } from '../../services/adminPlates.js';
-import { Select, SearchField, IconButton, Switch } from '../../components/index.jsx';
+import { Select, SearchField, IconButton, Switch, InfoTip } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 
 const CATEGORIES = [
@@ -176,7 +176,7 @@ function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }
         </label>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
           <label style={fieldWrap}>
-            <span style={fieldLbl}>Thứ tự</span>
+            <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Thứ tự<InfoTip size={12} text="Thứ tự hiển thị mẫu trên trang biển. Số nhỏ hiện trước. Mẫu chỉ hiện nếu bật Kích hoạt." /></span>
             <input type="number" value={form.sortOrder} onChange={(e) => onSet('sortOrder', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px', width: 120 }} />
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
@@ -343,7 +343,7 @@ function MeaningModal({ form, editId, saving, onSet, onSave, onClose }) {
           <textarea rows={4} placeholder="Mô tả ý nghĩa của phần này…" value={form.content} onChange={(e) => onSet('content', e.target.value)} style={fieldInput} />
         </label>
         <label style={fieldWrap}>
-          <span style={fieldLbl}>Thứ tự hiển thị</span>
+          <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Thứ tự hiển thị<InfoTip size={12} text="Vị trí phần ý nghĩa này trong khối phong thủy của biển. Số nhỏ hiện trước." /></span>
           <input type="number" value={form.sortOrder} onChange={(e) => onSet('sortOrder', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px', width: 120 }} />
         </label>
 

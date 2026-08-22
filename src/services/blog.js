@@ -33,6 +33,21 @@ export function useRelatedPlates(slug, limit = 4) {
   });
 }
 
+export function useAdminBlogTags() {
+  return useQuery({
+    queryKey: ['admin-blog-tags'],
+    queryFn: () => apiClient.get('/api/admin/blog/tags'),
+  });
+}
+
+export function useCreateBlogTag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name) => apiClient.post('/api/admin/blog/tags', { name }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-blog-tags'] }),
+  });
+}
+
 export function useAdminBlogPosts(status, q, page = 1, limit = 50) {
   const params = new URLSearchParams();
   if (status) params.set('status', status);

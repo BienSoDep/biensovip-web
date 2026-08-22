@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
 import { Input, Select } from '../../components/index.jsx';
+import RichTextEditor from '../../components/RichTextEditor.jsx';
 import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
 
@@ -26,6 +27,12 @@ const CHANNELS = [
 ];
 const CHANNEL_LABEL = { web: 'Chuông web', email: 'Email', zalo: 'Zalo', email_zalo: 'Chuông web + Email' };
 
+// Content giờ có thể là HTML (soạn bằng rich text editor) — tóm tắt thuần text cho danh sách "Đã gửi".
+function stripHtml(html) {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 // Xem trước email gần đúng template EmailTemplate.Wrap (logo, thanh cam, tiêu đề, nội dung, liên hệ) — admin thấy email sẽ gửi ra sao trước khi gửi thật.
 function EmailPreview({ title, body }) {
   return (
@@ -38,7 +45,7 @@ function EmailPreview({ title, body }) {
         </div>
         <div style={{ padding: '18px 20px', background: '#ffffff' }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{title || '—'}</div>
-          <div style={{ whiteSpace: 'pre-line', color: '#374151', lineHeight: 1.6 }}>{body || '—'}</div>
+          <div style={{ color: '#374151', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: body || '<p style="color:#9CA3AF">—</p>' }} />
         </div>
         <div style={{ padding: '12px 20px', background: '#fff7ed', color: '#9a3412', fontSize: 12, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <span>📞 081 579 2699</span>
@@ -110,13 +117,13 @@ export default function AdminNotifications({ notify }) {
   const items = data?.items || [];
 
   const send = async () => {
-    if (!title.trim() || !body.trim()) { setErr('Nhập đủ tiêu đề và nội dung.'); return; }
+    if (!title.trim() || !stripHtml(body)) { setErr('Nhập đủ tiêu đề và nội dung.'); return; }
     if (target === 'specific' && selectedUsers.length === 0) { setErr('Chọn ít nhất một người dùng.'); return; }
     setErr('');
     setSending(true);
     try {
       const res = await sendBroadcast.mutateAsync({
-        title: title.trim(), content: body.trim(), channel, target,
+        title: title.trim(), content: body, channel, target,
         userIds: target === 'specific' ? selectedUsers.map((u) => u.id) : undefined,
       });
       setTitle(''); setBody(''); setSelectedUsers([]);
@@ -132,19 +139,25 @@ export default function AdminNotifications({ notify }) {
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <Input label="Tiêu đề" placeholder="VD: Bảo trì hệ thống tối nay" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
-          <textarea rows={6} placeholder="Nội dung thông báo" value={body} onChange={(e) => setBody(e.target.value)} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
-        </label>
+          <RichTextEditor value={body} onChange={setBody} minHeight={180} />
+        </div>
         <Select label="Đối tượng" value={target} options={TARGETS} onChange={setTarget} />
         {target === 'specific' && <UserPicker selected={selectedUsers} onChange={setSelectedUsers} />}
         <Select label="Kênh gửi" value={channel} options={CHANNELS} onChange={setChannel} />
-        {(channel === 'email' || channel === 'email_zalo') && <EmailPreview title={title} body={body} />}
         {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
         <Button variant="dark" size="md" style={{ alignSelf: 'flex-start' }} onClick={send} disabled={sending}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
       </div>
 
-      <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+      <div style={{ flex: '1 1 360px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
+      {(channel === 'email' || channel === 'email_zalo') && (
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+          <EmailPreview title={title} body={body} />
+        </div>
+      )}
+
+      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
         <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đã gửi ({items.length})</span></div>
         {isLoading ? (
           <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
@@ -162,11 +175,12 @@ export default function AdminNotifications({ notify }) {
                 <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{n.title}</span>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{CHANNEL_LABEL[n.channel] || n.channel}</span>
               </div>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{n.content}</span>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stripHtml(n.content)}</span>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{n.recipientCount} người nhận · {n.sentEmailCount} email · {n.sentZaloCount} zalo</span>
             </div>
           ))
         )}
+      </div>
       </div>
 
       <TypeSettingsSection notify={notify} />
@@ -341,19 +355,24 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
   };
 
   return (
-    <div style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+    <div
+      role="button" tabIndex={0}
+      onClick={editing ? onCloseEdit : onEdit}
+      onKeyDown={(e) => { if (e.key === 'Enter') (editing ? onCloseEdit : onEdit)(); }}
+      style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', boxShadow: editing ? 'inset 3px 0 0 var(--action-primary), inset 0 -1px 0 var(--grey-100)' : 'inset 0 -1px 0 var(--grey-100)', background: editing ? 'var(--surface-tint-cream)' : 'transparent', cursor: 'pointer' }}
+    >
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
         <span style={{ flex: '1 1 220px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{TYPE_LABEL[setting.type] || setting.type}</span>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
+        <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
           <input type="checkbox" checked={setting.webEnabled} onChange={() => toggle('webEnabled')} disabled={update.isPending} /> Chuông web
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
+        <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
           <input type="checkbox" checked={setting.emailEnabled} onChange={() => toggle('emailEnabled')} disabled={update.isPending} /> Email
         </label>
-        <Button variant="ghost" size="sm" onClick={editing ? onCloseEdit : onEdit}>{editing ? 'Đóng' : 'Sửa nội dung'}</Button>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{editing ? 'Đang sửa ▸' : ''}</span>
       </div>
       {editing && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 'var(--space-2) var(--space-3)', background: 'var(--white)', borderRadius: 'var(--radius-field)', boxShadow: 'var(--shadow-inset-hairline)' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Mặc định hiện tại</span>
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{setting.defaultTitle}</span>

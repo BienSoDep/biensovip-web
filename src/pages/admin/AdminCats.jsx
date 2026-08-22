@@ -4,7 +4,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Button from '../../components/Button.jsx';
-import { Input, IconButton } from '../../components/index.jsx';
+import { Input, IconButton, InfoTip } from '../../components/index.jsx';
 import { CATEGORY_GROUPS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories } from '../../services/categories.js';
 
 // 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
@@ -130,8 +130,9 @@ export default function AdminCats({ notify }) {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 340px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-          <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+          <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{CATEGORY_GROUPS.find((g) => g.value === group)?.label}</span>
+            <InfoTip text="Thứ tự hiển thị: danh mục ở trên xuất hiện trước trên trang website. Kéo tay cầm ☰ cạnh số thứ tự (1, 2, 3…) để sắp xếp lại." />
           </div>
           {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
           {isError && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>Không tải được danh sách.</div>}

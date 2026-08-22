@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Button from '../components/Button.jsx';
-import { Input, Select, Eyebrow, Badge, Icon } from '../components/index.jsx';
+import { Input, Select, Eyebrow, Badge, Icon, InfoTip } from '../components/index.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
 import { ELEMENTS, PURPOSES, VEHICLES, BUDGETS, scoreColor } from '../lib/fengshui.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -142,7 +142,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
               </span>
               <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Dành cho <b style={{ color: 'var(--text-strong)' }}>{form.name || 'bạn'}</b></span>
-                <span style={{ font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Mệnh {result.element}</span>
+                <span style={{ font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Mệnh {result.element}<InfoTip size={13} text="Ngũ hành (Kim, Mộc, Thủy, Hỏa, Thổ) suy từ ngày sinh. Mỗi mệnh hợp với vài con số riêng — người xưa chọn biển xe theo đó để 'hợp mệnh', cầu may mắn, thuận lợi." /></span>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{result.elementLabel} · sinh {form.year}</span>
               </div>
               <Button variant="ghost" size="sm" onClick={reset}>← Sửa thông tin</Button>
@@ -153,7 +153,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
           {/* Số hợp / tránh */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 'var(--space-4)' }}>
             <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Con số hợp mệnh {result.element}</span>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Con số hợp mệnh {result.element}<InfoTip size={12} text="Con số tương sinh với mệnh của bạn. Chọn biển có các số này sẽ được xem là hợp phong thủy." /></span>
               <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                 {result.luckyDigits.map((d) => <Badge key={d} tone="mint" style={{ width: 40, height: 40, fontSize: 'var(--type-title-3)', justifyContent: 'center' }}>{d}</Badge>)}
               </div>

@@ -177,6 +177,10 @@ textarea:focus-visible {
     transform: none;
   }
 }
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
 @keyframes toastIn {
   from {
     opacity: 0;
@@ -459,6 +463,13 @@ textarea:focus-visible {
   .admin-main {
     padding-top: 64px !important;
   }
+}
+/* Admin: viền/ranh giới đậm hơn public — nhiều bảng/card sát nhau cần phân biệt rõ hơn.
+   Ghi đè token ngay trong scope .admin-main nên mọi ô dùng var(--border-hairline)/var(--grey-100)
+   qua inline style (shadow-inset-hairline, dòng kẻ bảng…) tự động đậm hơn, không cần sửa từng file. */
+.admin-main {
+  --border-hairline: var(--grey-300);
+  --grey-100: var(--grey-200);
 }
 /* Admin sidebar: sticky + tự cuộn — nav dài (14 route) không được đẩy nút Đăng xuất ra ngoài tầm nhìn */
 .admin-sidebar {
@@ -850,3 +861,4 @@ textarea:focus-visible {
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     0 8px 18px -10px rgba(212, 101, 10, 0.35);
 }
+

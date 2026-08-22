@@ -5,6 +5,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
+import { InfoTip } from '../../components/index.jsx';
 import {
   useDashboardSummary, useActionsChart, useTrafficSources, useFunnel, usePlateDistribution,
   useTopInterested, usePlateConversion, useConvertedOrders, useTopContent, useRatings, useIntent,
@@ -129,7 +130,7 @@ export default function Dashboard({ go, st }) {
 
       {/* Funnel */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-        <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Funnel chuyển đổi</h3>
+        <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Funnel chuyển đổi<InfoTip size={12} text="Phễu chuyển đổi: bao nhiêu khách Xem biển → Lưu yêu thích → Liên hệ → Chốt giao dịch. Mỗi bậc nhỏ dần cho thấy điểm khách bỏ lại." /></h3>
         {funnel.isLoading ? (
           <SkeletonBase height={240} />
         ) : funnel.data ? (
@@ -247,7 +248,7 @@ export default function Dashboard({ go, st }) {
                   <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Lưu</th>
                   <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Liên hệ</th>
                   <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Chốt</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Đổi l/hệ</th>
+                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Đổi l/hệ<InfoTip size={12} text="Tỉ lệ chuyển đổi = số lần chốt giao dịch trên số lần liên hệ. Cao = khách hỏi là mua." /></th>
                   <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Xu hướng</th>
                 </tr>
               </thead>
@@ -389,7 +390,7 @@ export default function Dashboard({ go, st }) {
 
         <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhu cầu săn biển</h3>
+            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Nhu cầu săn biển<InfoTip size={12} text="Khách tự đặt 'bộ lọc săn biển' (VD: tứ quý, tổng nút cao). Khi biển khớp xuất hiện hệ thống nhắc họ. Đây là tín hiệu khách đang muốn gì." /></h3>
             {demand.data && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{demand.data.total} bộ lọc đang bật</span>}
           </div>
           {demand.isLoading ? (
@@ -410,7 +411,7 @@ export default function Dashboard({ go, st }) {
       {/* Nhân khẩu học khách hàng */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng theo mệnh phong thủy</h3>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Khách hàng theo mệnh phong thủy<InfoTip size={12} text="Phân loại khách theo ngũ hành (Kim/Mộc/Thủy/Hỏa/Thổ) suy từ ngày sinh họ khai khi đăng ký — để hiểu khách thích biển hợp mệnh nào." /></h3>
           {demographics.isLoading ? (
             <SkeletonBase height={240} />
           ) : demographics.data?.byElement?.length > 0 ? (

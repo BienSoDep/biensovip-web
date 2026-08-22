@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useAdminCustomers, useUpdateCustomerStatus } from '../../services/adminCustomers.js';
-import { SearchField, Select, Badge } from '../../components/index.jsx';
+import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail } from '../../services/adminCustomers.js';
+import { SearchField, Select, Badge, IconButton } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 
 const STATUS_OPTS = ['Tất cả', 'Hoạt động', 'Đã khóa', 'Chưa xác thực'];
@@ -14,6 +14,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
   const [confirmLock, setConfirmLock] = useState(null);
+  const [detailId, setDetailId] = useState(null);
 
   const { data, isLoading, isError, refetch } = useAdminCustomers({ status, q: adminQ || undefined, page, perPage: 20 });
   const updateStatus = useUpdateCustomerStatus();
@@ -74,7 +75,9 @@ export default function AdminCustomers({ st, setSt, notify }) {
         )}
 
         {!isLoading && !isError && result.items.map((c) => (
-          <div key={c.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+          <div key={c.id} onClick={() => setDetailId(c.id)} role="button" tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') setDetailId(c.id); }}
+            style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}>
             <span style={{ flex: '1 1 160px', minWidth: 0 }}>
               <span style={{ display: 'block', font: 'var(--type-title-3)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.email || '—'}</span>
               <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.fullName || '—'}</span>
@@ -92,7 +95,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
                 {STATUS_LABEL[c.status] || c.status}
               </span>
             </span>
-            <span style={{ flex: '0 0 88px' }}>
+            <span style={{ flex: '0 0 88px' }} onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="sm" onClick={() => handleToggle(c)}>
                 {c.status === 'locked' ? 'Mở khóa' : 'Khóa'}
               </Button>
@@ -135,6 +138,128 @@ export default function AdminCustomers({ st, setSt, notify }) {
           </div>
         </div>
       )}
+
+      {!!detailId && <CustomerDetailDrawer id={detailId} onClose={() => setDetailId(null)} />}
     </div>
   );
+}
+
+const ELEMENT_LABEL = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
+const GENDER_LABEL = { male: 'Nam', female: 'Nữ', other: 'Khác' };
+const CONTACT_STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt' };
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : '—');
+const fmtDateTime = (d) => (d ? new Date(d).toLocaleString('vi-VN') : '—');
+const fmtVnd = (n) => (n == null ? null : Number(n).toLocaleString('vi-VN') + 'đ');
+
+function DrawerSection({ title, count, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{title}{count != null ? ` (${count})` : ''}</span>
+      {children}
+    </div>
+  );
+}
+
+function CustomerDetailDrawer({ id, onClose }) {
+  const { data, isLoading, isError } = useAdminCustomerDetail(id);
+
+  return (
+    <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', justifyContent: 'flex-end' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'var(--overlay-scrim)', animation: 'fadeIn 140ms var(--ease-out)' }} />
+      <div style={{
+        position: 'relative', width: 'min(480px, 100vw)', height: '100%', background: 'var(--white)',
+        boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', animation: 'slideInRight 220ms var(--ease-out)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-4) var(--space-6)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', flexShrink: 0 }}>
+          <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Chi tiết khách hàng</span>
+          <IconButton name="x" label="Đóng" onClick={onClose} />
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+          {isLoading && <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '48px 0' }}>Đang tải...</div>}
+          {isError && <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '48px 0' }}>Lỗi tải dữ liệu.</div>}
+
+          {data && (
+            <>
+              {/* Hồ sơ cơ bản */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{data.fullName || 'Chưa đặt tên'}</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <Badge tone={data.status === 'active' ? 'mint' : 'rose'}>{data.status === 'active' ? 'Hoạt động' : 'Đã khóa'}</Badge>
+                  <Badge tone={data.emailVerified ? 'mint' : 'neutral'}>{data.emailVerified ? 'Email đã xác thực' : 'Email chưa xác thực'}</Badge>
+                  {data.fengShuiElement && <Badge tone="amber">Mệnh {ELEMENT_LABEL[data.fengShuiElement] || data.fengShuiElement}</Badge>}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4, font: 'var(--type-body-sm)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Email: <span style={{ color: 'var(--text-strong)' }}>{data.email || '—'}</span></span>
+                  <span style={{ color: 'var(--text-muted)' }}>SĐT: <span style={{ color: 'var(--text-strong)' }}>{data.phone || '—'}</span></span>
+                  <span style={{ color: 'var(--text-muted)' }}>Ngày sinh: <span style={{ color: 'var(--text-strong)' }}>{fmtDate(data.birthDate)}</span></span>
+                  <span style={{ color: 'var(--text-muted)' }}>Giới tính: <span style={{ color: 'var(--text-strong)' }}>{GENDER_LABEL[data.gender] || '—'}</span></span>
+                  <span style={{ color: 'var(--text-muted)' }}>Đăng ký: <span style={{ color: 'var(--text-strong)' }}>{fmtDate(data.createdAt)}</span></span>
+                  <span style={{ color: 'var(--text-muted)' }}>Đăng nhập gần nhất: <span style={{ color: 'var(--text-strong)' }}>{fmtDateTime(data.lastLoginAt)}</span></span>
+                </div>
+              </div>
+
+              <DrawerSection title="Biển yêu thích" count={data.favorites.length}>
+                {data.favorites.length === 0 ? <EmptyRow /> : data.favorites.map((f) => (
+                  <RowCard key={f.plateId}
+                    left={f.plateNumber}
+                    right={fmtVnd(f.currentPrice)}
+                    sub={`Lưu lúc ${fmtVnd(f.priceSnapshot)} · ${fmtDate(f.createdAt)}`} />
+                ))}
+              </DrawerSection>
+
+              <DrawerSection title="Biển xem nhiều nhất" count={data.topViewedPlates.length}>
+                {data.topViewedPlates.length === 0 ? <EmptyRow /> : data.topViewedPlates.map((v) => (
+                  <RowCard key={v.plateId} left={v.plateNumber} right={`${v.viewCount} lượt`} sub={`Xem gần nhất ${fmtDateTime(v.lastViewedAt)}`} />
+                ))}
+              </DrawerSection>
+
+              <DrawerSection title="Liên hệ / đặt cọc" count={data.contactRequests.length}>
+                {data.contactRequests.length === 0 ? <EmptyRow /> : data.contactRequests.map((c) => (
+                  <RowCard key={c.id}
+                    left={c.plateNumber || 'Liên hệ chung'}
+                    right={<Badge tone={c.status === 'closed' ? 'mint' : c.status === 'consulting' ? 'blue' : 'neutral'}>{CONTACT_STATUS_LABEL[c.status] || c.status}</Badge>}
+                    sub={`${c.intent === 'deposit' ? 'Đặt cọc' : 'Hỏi mua'}${c.depositAmount ? ' · ' + fmtVnd(c.depositAmount) : ''} · ${fmtDate(c.createdAt)}`} />
+                ))}
+              </DrawerSection>
+
+              <DrawerSection title="Lịch sử tra cứu phong thủy" count={data.fengShuiLookups.length}>
+                {data.fengShuiLookups.length === 0 ? <EmptyRow /> : data.fengShuiLookups.map((h, i) => (
+                  <RowCard key={i} left={`Mệnh ${ELEMENT_LABEL[h.element] || h.element}`} right={fmtDate(h.birthDate)} sub={fmtDateTime(h.createdAt)} />
+                ))}
+              </DrawerSection>
+
+              <DrawerSection title="Tìm kiếm đã lưu" count={data.savedSearches.length}>
+                {data.savedSearches.length === 0 ? <EmptyRow /> : data.savedSearches.map((s) => (
+                  <RowCard key={s.id} left={s.name} right={s.notifyEnabled ? 'Có thông báo' : 'Tắt thông báo'} sub={fmtDate(s.createdAt)} />
+                ))}
+              </DrawerSection>
+
+              <DrawerSection title="Thông báo đã nhận" count={data.notifications.length}>
+                {data.notifications.length === 0 ? <EmptyRow /> : data.notifications.map((n) => (
+                  <RowCard key={n.id} left={n.title || n.type} right={n.read ? 'Đã đọc' : 'Chưa đọc'} sub={fmtDateTime(n.createdAt)} />
+                ))}
+              </DrawerSection>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RowCard({ left, right, sub }) {
+  return (
+    <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{left}</span>
+        <span style={{ flexShrink: 0, color: 'var(--text-muted)' }}>{right}</span>
+      </div>
+      {sub && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{sub}</span>}
+    </div>
+  );
+}
+
+function EmptyRow() {
+  return <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có dữ liệu.</span>;
 }

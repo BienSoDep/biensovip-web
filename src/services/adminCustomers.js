@@ -19,6 +19,14 @@ export function useAdminCustomers(filters) {
   });
 }
 
+export function useAdminCustomerDetail(id) {
+  return useQuery({
+    queryKey: ['admin-customer-detail', id],
+    queryFn: () => apiClient.get(`/api/admin/customers/${id}/detail`),
+    enabled: !!id,
+  });
+}
+
 export function useUpdateCustomerStatus() {
   const qc = useQueryClient();
   return useMutation({

@@ -5,15 +5,13 @@ import TiptapImage from '@tiptap/extension-image';
 import { useEffect, useState, useRef } from 'react';
 import { marked } from 'marked';
 import mammoth from 'mammoth';
-import {
-  Bold, Italic, Strikethrough, Heading2, Heading3, List, ListOrdered,
-  Quote, Code, Link2, Image as ImageIcon, Undo2, Redo2, Eye, X, Upload,
-} from 'lucide-react';
+import { Eye, X, Upload } from 'lucide-react';
 import Button from '../../components/Button.jsx';
-import { Input, Select } from '../../components/index.jsx';
+import { Input, Select, InfoTip } from '../../components/index.jsx';
+import { EditorToolbar } from '../../components/RichTextEditor.jsx';
 import { apiClient } from '../../services/apiClient.js';
-import { useCreateBlogPost, useUpdateBlogPost } from '../../services/blog.js';
-import { useAdminPromoVideos } from '../../services/promoVideoService.js';
+import { useCreateBlogPost, useUpdateBlogPost, useAdminBlogTags, useCreateBlogTag } from '../../services/blog.js';
+import { useAdminPromoVideos, useCreatePromoVideo } from '../../services/promoVideoService.js';
 import { useAdminCategories } from '../../services/categories.js';
 
 function slugify(title) {
@@ -28,60 +26,6 @@ function slugify(title) {
     .slice(0, 300);
 }
 
-function ToolbarButton({ onClick, active, disabled, label, children }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        border: 'none', borderRadius: 'var(--radius-sm)', cursor: disabled ? 'not-allowed' : 'pointer',
-        background: active ? 'var(--action-primary)' : 'transparent',
-        color: active ? 'var(--white)' : 'var(--text-body)',
-        opacity: disabled ? 0.4 : 1,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function EditorToolbar({ editor }) {
-  if (!editor) return null;
-  const addLink = () => {
-    const url = window.prompt('Nhập URL liên kết:');
-    if (url) editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  };
-  const addImage = () => {
-    const url = window.prompt('Nhập URL ảnh:');
-    if (url) editor.chain().focus().setImage({ src: url }).run();
-  };
-
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, padding: '6px 8px', background: 'var(--white)', borderRadius: 'var(--radius-field) var(--radius-field) 0 0', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-      <ToolbarButton label="In đậm" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={16} /></ToolbarButton>
-      <ToolbarButton label="In nghiêng" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={16} /></ToolbarButton>
-      <ToolbarButton label="Gạch ngang" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough size={16} /></ToolbarButton>
-      <div style={{ width: 1, background: 'var(--border-hairline)', margin: '4px 4px' }} />
-      <ToolbarButton label="Tiêu đề H2" active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 size={16} /></ToolbarButton>
-      <ToolbarButton label="Tiêu đề H3" active={editor.isActive('heading', { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}><Heading3 size={16} /></ToolbarButton>
-      <div style={{ width: 1, background: 'var(--border-hairline)', margin: '4px 4px' }} />
-      <ToolbarButton label="Danh sách" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List size={16} /></ToolbarButton>
-      <ToolbarButton label="Danh sách số" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered size={16} /></ToolbarButton>
-      <ToolbarButton label="Trích dẫn" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote size={16} /></ToolbarButton>
-      <ToolbarButton label="Khối mã" active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><Code size={16} /></ToolbarButton>
-      <div style={{ width: 1, background: 'var(--border-hairline)', margin: '4px 4px' }} />
-      <ToolbarButton label="Chèn liên kết" active={editor.isActive('link')} onClick={addLink}><Link2 size={16} /></ToolbarButton>
-      <ToolbarButton label="Chèn ảnh" onClick={addImage}><ImageIcon size={16} /></ToolbarButton>
-      <div style={{ flex: 1 }} />
-      <ToolbarButton label="Hoàn tác" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}><Undo2 size={16} /></ToolbarButton>
-      <ToolbarButton label="Làm lại" disabled={!editor.can().redo()} onClick={() => editor.chain().focus().redo().run()}><Redo2 size={16} /></ToolbarButton>
-    </div>
-  );
-}
 
 export default function Compose({ st, patch, notify }) {
   const editPostId = st.editPostId;
@@ -92,7 +36,8 @@ export default function Compose({ st, patch, notify }) {
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [category, setCategory] = useState('kien-thuc');
-  const [tagsInput, setTagsInput] = useState('');
+  const [tags, setTags] = useState([]);
+  const [newTagInput, setNewTagInput] = useState('');
   const [err, setErr] = useState('');
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -103,9 +48,17 @@ export default function Compose({ st, patch, notify }) {
   const { data: blogCatData } = useAdminCategories('blog_category');
   const categoryOpts = (blogCatData?.items || []).map((c) => ({ value: c.code || c.name, label: c.name }));
   const { data: allVideos } = useAdminPromoVideos();
+  const createVideo = useCreatePromoVideo();
+  const { data: allTagsData } = useAdminBlogTags();
+  const createTag = useCreateBlogTag();
   const [attachedVideos, setAttachedVideos] = useState([]);
+  // Video chờ gắn khi tạo bài mới — sau khi create xong (có id) mới attach vào bài.
+  const [pendingAttach, setPendingAttach] = useState([]);
   const [addVideoId, setAddVideoId] = useState('');
   const [videoBusy, setVideoBusy] = useState(false);
+  const [tiktokUrl, setTiktokUrl] = useState('');
+  const [tiktokBusy, setTiktokBusy] = useState(false);
+  const [tiktokErr, setTiktokErr] = useState('');
 
   const [, forceEditorUpdate] = useState(0);
   const editor = useEditor({
@@ -124,21 +77,26 @@ export default function Compose({ st, patch, notify }) {
       setMetaTitle(full.metaTitle || '');
       setMetaDescription(full.metaDescription || '');
       setCategory(full.category || 'kien-thuc');
-      setTagsInput((full.tags || []).join(', '));
+      setTags(full.tags || []);
       if (full.contentHtml) editor.commands.setContent(full.contentHtml);
       setAttachedVideos(full.videos || []);
     });
   }, [editPostId, editor]);
 
   const attachVideo = async () => {
-    if (!editPostId || !addVideoId) return;
+    if (!addVideoId) return;
     setVideoBusy(true);
     try {
-      await apiClient.post(`/api/admin/blog/posts/${editPostId}/videos`, { promoVideoId: addVideoId, displayOrder: attachedVideos.length });
       const video = (allVideos?.items || []).find((v) => v.id === addVideoId);
-      if (video) setAttachedVideos((v) => [...v, video]);
+      if (!video) return;
+      if (editPostId) {
+        await apiClient.post(`/api/admin/blog/posts/${editPostId}/videos`, { promoVideoId: addVideoId, displayOrder: attachedVideos.length });
+      } else {
+        setPendingAttach((p) => [...p, addVideoId]);
+      }
+      setAttachedVideos((v) => [...v, video]);
       setAddVideoId('');
-      notify('Đã gắn video vào bài viết');
+      notify(editPostId ? 'Đã gắn video vào bài viết' : 'Đã thêm video — sẽ gắn vào bài sau khi lưu');
     } catch (e) {
       notify(e.message || 'Lỗi khi gắn video');
     } finally {
@@ -147,16 +105,41 @@ export default function Compose({ st, patch, notify }) {
   };
 
   const detachVideo = async (videoId) => {
-    if (!editPostId) return;
     setVideoBusy(true);
     try {
-      await apiClient.delete(`/api/admin/blog/posts/${editPostId}/videos/${videoId}`);
+      if (editPostId) await apiClient.delete(`/api/admin/blog/posts/${editPostId}/videos/${videoId}`);
+      else setPendingAttach((p) => p.filter((id) => id !== videoId));
       setAttachedVideos((v) => v.filter((x) => x.id !== videoId));
       notify('Đã gỡ video khỏi bài viết');
     } catch (e) {
       notify(e.message || 'Lỗi khi gỡ video');
     } finally {
       setVideoBusy(false);
+    }
+  };
+
+  // Dán link TikTok → hệ thống tự tạo video trong thư viện + gắn thẳng vào bài viết.
+  const attachByUrl = async () => {
+    const url = tiktokUrl.trim();
+    if (!url) { setTiktokErr('Dán link TikTok vào ô bên trên.'); return; }
+    setTiktokBusy(true);
+    setTiktokErr('');
+    try {
+      const created = await createVideo.mutateAsync({ videoUrl: url, title: null });
+      if (editPostId) {
+        await apiClient.post(`/api/admin/blog/posts/${editPostId}/videos`, { promoVideoId: created.id, displayOrder: attachedVideos.length });
+      } else {
+        setPendingAttach((p) => [...p, created.id]);
+      }
+      setAttachedVideos((prev) => [...prev, created]);
+      setTiktokUrl('');
+      notify(editPostId ? 'Đã thêm video từ link' : 'Đã thêm video từ link — sẽ gắn vào bài sau khi lưu');
+    } catch (e) {
+      if (e.code === 'invalid_url') setTiktokErr('Link không hợp lệ — dán link TikTok dạng https://www.tiktok.com/@…/video/…');
+      else if (e.code === 'duplicate') setTiktokErr('Video này đã tồn tại trong thư viện.');
+      else setTiktokErr(e.message || 'Lỗi khi thêm video.');
+    } finally {
+      setTiktokBusy(false);
     }
   };
 
@@ -225,7 +208,22 @@ export default function Compose({ st, patch, notify }) {
   const plainText = editor?.getText() || '';
   const wordCount = plainText.trim() ? plainText.trim().split(/\s+/).length : 0;
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 200));
-  const tags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 10);
+  // Kho hashtag dùng chung (bảng blog_tags) — chọn lại hoặc gõ tạo mới, không gõ tay tự do nữa.
+  const tagPool = allTagsData?.items || [];
+  const currentTagsLower = new Set(tags.map((t) => t.toLowerCase()));
+  const availableTags = tagPool.filter((t) => !currentTagsLower.has(t.toLowerCase()));
+
+  const toggleTag = (t) => setTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t].slice(0, 10)));
+  const removeTag = (t) => setTags((cur) => cur.filter((x) => x !== t));
+  const createNewTag = async () => {
+    const name = newTagInput.trim();
+    if (!name || tags.length >= 10) return;
+    if (!tagPool.some((t) => t.toLowerCase() === name.toLowerCase())) {
+      try { await createTag.mutateAsync(name); } catch { /* vẫn thêm vào bài viết dù kho lưu lỗi */ }
+    }
+    setTags((cur) => (cur.some((t) => t.toLowerCase() === name.toLowerCase()) ? cur : [...cur, name]));
+    setNewTagInput('');
+  };
 
   const submit = (status) => {
     if (!title.trim()) { setErr('Nhập tiêu đề bài viết.'); return; }
@@ -244,7 +242,20 @@ export default function Compose({ st, patch, notify }) {
       status,
     };
 
-    const onSuccess = () => {
+    const onSuccess = async (data) => {
+      // Bài mới: sau khi create xong mới có id → gắn các video đã chọn trước đó.
+      if (!editPostId && pendingAttach.length) {
+        const newId = data?.id;
+        if (newId) {
+          try {
+            await Promise.all(pendingAttach.map((pv, i) =>
+              apiClient.post(`/api/admin/blog/posts/${newId}/videos`, { promoVideoId: pv, displayOrder: i })
+            ));
+          } catch (e) {
+            notify(e.message || 'Lỗi khi gắn video sau khi lưu');
+          }
+        }
+      }
       notify(status === 'draft' ? 'Đã lưu nháp' : (editPostId ? 'Đã cập nhật bài viết' : 'Đã xuất bản bài viết'));
       patch({ screen: 'aposts', editPostId: null });
     };
@@ -263,7 +274,11 @@ export default function Compose({ st, patch, notify }) {
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <Input label="Tiêu đề" placeholder="VD: Ngũ quý 99999 — vì sao đắt nhất?" value={title} error={err} onChange={onTitleChange} />
-        <Input label="Slug" placeholder="tu-dong-sinh-tu-tieu-de" value={slug} onChange={(e) => { setSlugTouched(true); setSlug(e.target.value); }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Slug</span>
+          <InfoTip size={12} text="Đường dẫn riêng của bài viết, dùng cho URL/SEO. Tự sinh từ tiêu đề (VD: 'phong-thuy-bien-so'). Để trống để hệ thống tự tạo." />
+        </div>
+        <Input placeholder="tu-dong-sinh-tu-tieu-de" value={slug} onChange={(e) => { setSlugTouched(true); setSlug(e.target.value); }} />
         <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
@@ -303,22 +318,78 @@ export default function Compose({ st, patch, notify }) {
             <Input placeholder="hoặc dán URL ảnh trực tiếp" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} />
           </label>
 
-          <Input label="Từ khóa (cách nhau bởi dấu phẩy)" placeholder="phong thủy, biển số đẹp, 68" value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
-          {tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {tags.map((t) => (
-                <span key={t} style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t}</span>
-              ))}
-            </div>
-          )}
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Từ khóa<InfoTip size={12} text="Chọn từ kho hashtag có sẵn hoặc gõ tạo mới. Tối đa 10 từ khóa mỗi bài." /></span>
 
-          <Input label="Meta title (SEO)" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
-          <Input label="Meta description (SEO)" value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
+            {tags.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {tags.map((t) => (
+                  <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 6px 2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', font: 'var(--type-caption)', color: 'var(--white)' }}>
+                    #{t}
+                    <button type="button" onClick={() => removeTag(t)} aria-label={`Bỏ ${t}`} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--white)', display: 'flex', padding: 2 }}><X size={11} /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {availableTags.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Chọn từ kho hashtag:</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 120, overflowY: 'auto' }}>
+                  {availableTags.map((t) => (
+                    <button key={t} type="button" onClick={() => toggleTag(t)} title={`Thêm #${t}`}
+                      style={{ border: '1px dashed var(--border-strong)', background: 'transparent', borderRadius: 'var(--radius-pill)', padding: '2px 10px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>#{t} +</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <div style={{ flex: 1 }}>
+                <Input placeholder="Tạo hashtag mới…" value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} />
+              </div>
+              <Button variant="outline" size="sm" disabled={!newTagInput.trim() || tags.length >= 10} onClick={createNewTag}>Thêm</Button>
+            </div>
+          </label>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Meta title (SEO)</span>
+            <InfoTip size={12} text="Tiêu đề hiện trên tab trình duyệt và dòng đầu kết quả tìm kiếm Google. Để trống sẽ dùng tiêu đề bài viết." />
+          </div>
+          <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
+          <span style={{ font: 'var(--type-caption)', color: metaTitle.length > 60 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
+            {metaTitle.length}/60 ký tự{metaTitle.length > 60 ? ' — Google sẽ cắt bớt phần dư' : ''}
+          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Meta description (SEO)</span>
+            <InfoTip size={12} text="Đoạn mô tả ngắn hiện dưới kết quả tìm kiếm. Nên 1-2 câu tóm tắt nội dung để tăng tỷ lệ nhấp." />
+          </div>
+          <Input value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
+          <span style={{ font: 'var(--type-caption)', color: metaDescription.length > 155 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
+            {metaDescription.length}/155 ký tự{metaDescription.length > 155 ? ' — Google sẽ cắt bớt phần dư' : ''}
+          </span>
         </div>
 
-        {editPostId ? (
-          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Video quảng cáo gắn kèm</span>
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Video quảng cáo gắn kèm<InfoTip size={12} text="Gắn video TikTok quảng cáo vào cuối bài viết để tăng tương tác. Với bài mới, video được lưu lại và tự gắn sau khi bạn xuất bản/lưu." /></span>
+
+            {/* Thêm nhanh bằng link TikTok — tự tạo video + gắn vào bài */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
+              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Thêm nhanh bằng link TikTok</span>
+              <ol style={{ margin: 0, paddingLeft: 18, font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <li>Mở video trên app TikTok.</li>
+                <li>Chạm nút <b>Chia sẻ</b> → chọn <b>Sao chép liên kết</b>.</li>
+                <li>Dán link vào ô dưới và bấm <b>Thêm</b> — hệ thống tự nhận diện, thêm vào thư viện và gắn ngay vào bài viết.</li>
+              </ol>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <Input placeholder="https://www.tiktok.com/@…/video/…" value={tiktokUrl} error={tiktokErr} onChange={(e) => setTiktokUrl(e.target.value)} />
+                </div>
+                <Button variant="primary" size="sm" disabled={!tiktokUrl.trim() || tiktokBusy} onClick={attachByUrl}>{tiktokBusy ? 'Đang thêm…' : 'Thêm'}</Button>
+              </div>
+            </div>
+
             {attachedVideos.length === 0 ? (
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Chưa gắn video nào.</span>
             ) : (
@@ -333,12 +404,7 @@ export default function Compose({ st, patch, notify }) {
               <Select value={addVideoId} options={(allVideos?.items || []).filter((v) => !attachedVideos.some((a) => a.id === v.id)).map((v) => ({ value: v.id, label: v.title || v.platform }))} onChange={setAddVideoId} style={{ flex: 1 }} />
               <Button variant="outline" size="sm" disabled={!addVideoId || videoBusy} onClick={attachVideo}>Gắn</Button>
             </div>
-          </div>
-        ) : (
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)' }}>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Lưu bài viết trước để gắn video quảng cáo.</span>
-          </div>
-        )}
+        </div>
 
         <Button variant="ghost" size="md" onClick={() => setPreviewOpen(true)} disabled={!title.trim()}>
           <Eye size={16} style={{ marginRight: 6 }} />Xem trước

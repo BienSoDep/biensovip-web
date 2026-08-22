@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronUp, ChevronDown, Star, Search } from 'lucide-react';
 import Button from '../../components/Button.jsx';
-import { Input, IconButton, Badge } from '../../components/index.jsx';
+import { Input, ImageUrlInput, IconButton, Badge } from '../../components/index.jsx';
 import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos, useUpdatePromoVideo } from '../../services/promoVideoService.js';
 import TikTokEmbed from '../../components/TikTokEmbed.jsx';
 
@@ -212,7 +212,7 @@ export default function AdminVideos({ notify }) {
             <Input label="URL video" placeholder="https://www.tiktok.com/@…/video/… hoặc https://www.facebook.com/…/videos/…" value={form.videoUrl} error={urlErr} onChange={(e) => setForm((f) => ({ ...f, videoUrl: e.target.value }))} />
             <Input label="Tiêu đề" placeholder="VD: Lăn số ngũ quý 999.99" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
             <Input label="Mô tả" placeholder="Mô tả ngắn cho video / bài đăng" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <Input label="URL ảnh bìa (thumbnail)" placeholder="https://…/thumb.jpg (bỏ trống nếu không có)" value={form.thumbnailUrl} onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))} />
+            <ImageUrlInput label="URL ảnh bìa (thumbnail)" placeholder="https://…/thumb.jpg hoặc tải ảnh lên" value={form.thumbnailUrl} onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))} hint="Dán link trực tiếp hoặc tải ảnh lên — hệ thống tự đưa qua Cloudinary thành link." />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
               <select label="Trạng thái" value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} style={{ height: 40, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-strong)', background: 'var(--white)', font: 'var(--type-body-sm)', color: 'var(--text-strong)', padding: '0 10px' }}>
                 <option value="published">Đã xuất bản</option>
