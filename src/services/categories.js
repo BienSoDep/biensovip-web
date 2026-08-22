@@ -45,6 +45,17 @@ export function useUpdateCategory() {
   });
 }
 
+export function useReorderCategories() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedIds) => apiClient.patch('/api/admin/categories/reorder', { orderedIds }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}
+
 export function useDeleteCategory() {
   const qc = useQueryClient();
   return useMutation({
@@ -56,13 +67,3 @@ export function useDeleteCategory() {
   });
 }
 
-export function useHardDeleteCategory() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id) => apiClient.delete(`/api/admin/categories/${id}/hard`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['categories'] });
-      qc.invalidateQueries({ queryKey: ['admin-categories'] });
-    },
-  });
-}

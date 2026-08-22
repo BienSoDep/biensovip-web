@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ChevronUp, ChevronDown, Star, Search } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, IconButton, Badge } from '../../components/index.jsx';
-import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos, useUpdatePromoVideo, useHardDeletePromoVideo } from '../../services/promoVideoService.js';
+import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos, useUpdatePromoVideo } from '../../services/promoVideoService.js';
 import TikTokEmbed from '../../components/TikTokEmbed.jsx';
 
 const PLATFORM_LABEL = { tiktok: 'TikTok', facebook: 'Facebook' };
@@ -15,7 +15,6 @@ export default function AdminVideos({ notify }) {
   const { data, isLoading, isError, refetch } = useAdminPromoVideos();
   const createVideo = useCreatePromoVideo();
   const deleteVideo = useDeletePromoVideo();
-  const hardDeleteVideo = useHardDeletePromoVideo();
   const reorderVideos = useReorderPromoVideos();
   const updateVideo = useUpdatePromoVideo();
 
@@ -78,10 +77,10 @@ export default function AdminVideos({ notify }) {
     }
   };
 
-  const doDelete = async (hard = false) => {
+  const doDelete = async () => {
     try {
-      await (hard ? hardDeleteVideo : deleteVideo).mutateAsync(delId);
-      notify(hard ? 'Đã xóa vĩnh viễn video' : 'Đã xóa video');
+      await deleteVideo.mutateAsync(delId);
+      notify('Đã xóa video');
     } catch (e) {
       notify(e.message || 'Lỗi khi xóa');
     }
@@ -248,10 +247,9 @@ export default function AdminVideos({ notify }) {
         <div style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <h2 style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Video này sẽ được xóa khỏi trang chủ và mọi bài viết. <b>Xóa vĩnh viễn</b> không thể hoàn tác.</p>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Video này sẽ được ẩn khỏi trang chủ và mọi bài viết. Bạn có thể khôi phục lại sau nếu cần.</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               <Button variant="ghost" size="md" onClick={() => setDelId(null)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={() => doDelete(true)} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa vĩnh viễn</Button>
               <Button variant="primary" size="md" onClick={() => doDelete()}>Xóa</Button>
             </div>
           </div>

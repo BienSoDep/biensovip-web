@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
 import { Input, Select } from '../../components/index.jsx';
-import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail } from '../../services/adminNotificationService.js';
+import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
 
 const TYPE_LABEL = {
@@ -176,37 +177,140 @@ export default function AdminNotifications({ notify }) {
 function TypeSettingsSection({ notify }) {
   const { data, isLoading, isError, refetch } = useNotificationTypeSettings();
   const [editingType, setEditingType] = useState(null);
+  // Title/content đang gõ dở (chưa lưu) của row đang edit — nằm ở section cha để panel preview bên
+  // phải đọc được real-time mà không cần lift state phức tạp qua nhiều tầng props.
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftContent, setDraftContent] = useState('');
+  // Tỉ lệ cột trái (list) tính theo % — kéo divider để chỉnh, nhớ qua localStorage.
+  const [leftPct, setLeftPct] = useState(() => {
+    try { return Number(localStorage.getItem('adminNotifLeftPct')) || 55; } catch { return 55; }
+  });
+  const containerRef = useRef(null);
+  const dragging = useRef(false);
+
+  const editingSetting = (data || []).find((t) => t.type === editingType) || null;
+
+  const startEdit = (setting) => {
+    setEditingType(setting.type);
+    setDraftTitle(setting.titleTemplate || '');
+    setDraftContent(setting.contentTemplate || '');
+  };
+  const closeEdit = () => setEditingType(null);
+
+  const onDividerDown = (e) => {
+    e.preventDefault();
+    dragging.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = Math.min(75, Math.max(25, ((e.clientX - rect.left) / rect.width) * 100));
+      setLeftPct(pct);
+    };
+    const onUp = () => {
+      if (!dragging.current) return;
+      dragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      try { localStorage.setItem('adminNotifLeftPct', String(leftPct)); } catch { /* ignore */ }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leftPct]);
+
+  const showSplit = Boolean(editingType);
 
   return (
-    <div style={{ flex: '1 1 100%', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-      <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Kênh &amp; nội dung thông báo tự động</span>
-        <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt chuông web, email, sửa câu chữ và khung giờ gửi cho từng loại — áp dụng toàn hệ thống.</p>
-      </div>
-      {isLoading ? (
-        <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
-      ) : isError ? (
-        <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span>Lỗi tải dữ liệu</span>
-          <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
+    <div ref={containerRef} style={{ flex: '1 1 100%', minWidth: 0, display: 'flex', alignItems: 'flex-start' }}>
+      <div style={{ flex: showSplit ? `0 0 ${leftPct}%` : '1 1 100%', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Kênh &amp; nội dung thông báo tự động</span>
+          <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt chuông web, email, sửa câu chữ và khung giờ gửi cho từng loại — áp dụng toàn hệ thống.</p>
         </div>
-      ) : (
-        (data || []).map((t) => (
-          <TypeSettingRow key={t.type} setting={t} notify={notify}
-            editing={editingType === t.type}
-            onEdit={() => setEditingType(t.type)}
-            onCloseEdit={() => setEditingType(null)} />
-        ))
+        {isLoading ? (
+          <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
+        ) : isError ? (
+          <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <span>Lỗi tải dữ liệu</span>
+            <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
+          </div>
+        ) : (
+          (data || []).map((t) => (
+            <TypeSettingRow key={t.type} setting={t} notify={notify}
+              editing={editingType === t.type}
+              onEdit={() => startEdit(t)}
+              onCloseEdit={closeEdit}
+              draftTitle={draftTitle} setDraftTitle={setDraftTitle}
+              draftContent={draftContent} setDraftContent={setDraftContent} />
+          ))
+        )}
+      </div>
+
+      {showSplit && (
+        <>
+          <div
+            onMouseDown={onDividerDown}
+            role="separator"
+            aria-orientation="vertical"
+            title="Kéo để đổi tỉ lệ"
+            style={{ flex: '0 0 auto', width: 12, alignSelf: 'stretch', cursor: 'col-resize', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <div style={{ width: 4, height: 40, borderRadius: 'var(--radius-pill)', background: 'var(--border-hairline)' }} />
+          </div>
+          {editingSetting && (
+            <div style={{ flex: `0 0 ${100 - leftPct}%`, minWidth: 280 }}>
+              <LivePreviewPanel setting={editingSetting} title={draftTitle} content={draftContent} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit }) {
+// Panel preview bên phải — gọi backend render HTML thật (EmailTemplate.Wrap, cùng code dùng khi gửi
+// email thật) mỗi khi title/content đổi, debounce 400ms để không gọi API dồn dập theo từng ký tự gõ.
+function LivePreviewPanel({ setting, title, content }) {
+  const preview = usePreviewEmail();
+  const [debouncedTitle] = useDebouncedValue(title, 400);
+  const [debouncedContent] = useDebouncedValue(content, 400);
+  const [html, setHtml] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    preview.mutateAsync({ type: setting.type, title: debouncedTitle || null, content: debouncedContent || null })
+      .then((res) => { if (!cancelled) setHtml(res.html); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setting.type, debouncedTitle, debouncedContent]);
+
+  return (
+    <div style={{ width: '100%', position: 'sticky', top: 'var(--space-4)', background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Xem trước email</span>
+        <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{TYPE_LABEL[setting.type] || setting.type} — cập nhật theo nội dung bạn đang gõ.</p>
+      </div>
+      <div style={{ padding: 'var(--gutter-card)', background: 'var(--surface-sunken)' }}>
+        {html ? (
+          <iframe title="Email preview" srcDoc={html} style={{ width: '100%', height: 640, border: 'none', borderRadius: 'var(--radius-md)', background: '#ffffff' }} />
+        ) : (
+          <div style={{ height: 640, display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải preview…</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTitle, setDraftTitle, draftContent, setDraftContent }) {
   const update = useUpdateNotificationTypeSetting();
   const sendTest = useSendTestEmail();
-  const [title, setTitle] = useState(setting.titleTemplate || '');
-  const [content, setContent] = useState(setting.contentTemplate || '');
   const [triggerHour, setTriggerHour] = useState(setting.triggerHour ?? '');
   const [testEmail, setTestEmail] = useState('');
 
@@ -220,7 +324,7 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit }) {
     try {
       await update.mutateAsync({
         type: setting.type, webEnabled: setting.webEnabled, emailEnabled: setting.emailEnabled,
-        titleTemplate: title.trim() || null, contentTemplate: content.trim() || null,
+        titleTemplate: draftTitle.trim() || null, contentTemplate: draftContent.trim() || null,
         triggerHour: setting.triggerHour !== null ? (triggerHour === '' ? null : Number(triggerHour)) : null,
       });
       notify('Đã lưu');
@@ -255,10 +359,10 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit }) {
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{setting.defaultTitle}</span>
             <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{setting.defaultContent}</span>
           </div>
-          <Input label="Tiêu đề tùy chỉnh (để trống = dùng mặc định ở trên)" placeholder={setting.defaultTitle} value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input label="Tiêu đề tùy chỉnh (để trống = dùng mặc định ở trên)" placeholder={setting.defaultTitle} value={draftTitle} onChange={(e) => setDraftTitle(e.target.value)} />
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nội dung tùy chỉnh (để trống = dùng mặc định ở trên)</span>
-            <textarea rows={2} value={content} placeholder={setting.defaultContent} onChange={(e) => setContent(e.target.value)} style={{ background: 'var(--white)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '8px 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
+            <textarea rows={2} value={draftContent} placeholder={setting.defaultContent} onChange={(e) => setDraftContent(e.target.value)} style={{ background: 'var(--white)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '8px 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
           </label>
           {setting.triggerHour !== null && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 160 }}>

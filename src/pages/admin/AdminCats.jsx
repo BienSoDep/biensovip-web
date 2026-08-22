@@ -1,11 +1,50 @@
 import { useState } from 'react';
+import { GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import Button from '../../components/Button.jsx';
 import { Input, IconButton } from '../../components/index.jsx';
-import { CATEGORY_GROUPS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useHardDeleteCategory } from '../../services/categories.js';
+import { CATEGORY_GROUPS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories } from '../../services/categories.js';
+
+// 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
+// xung đột với click nút Sửa/Xóa trên cùng hàng).
+function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, onEdit, onDelete }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+    boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--white)',
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      <button type="button" {...attributes} {...listeners} aria-label="Kéo để đổi thứ tự"
+        style={{ border: 'none', background: 'transparent', cursor: 'grab', padding: 2, color: 'var(--text-faint)', display: 'flex', touchAction: 'none' }}>
+        <GripVertical size={16} />
+      </button>
+      <span style={{ width: 22, textAlign: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: '2px 0' }}>{idx + 1}</span>
+      <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{c.name}</span>
+      {isBlogCategory && c.code && (
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{c.code}</span>
+      )}
+      {isPriceRange && (
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          {c.minPrice != null ? c.minPrice.toLocaleString('vi-VN') : '0'} - {c.maxPrice != null ? c.maxPrice.toLocaleString('vi-VN') : '∞'}
+        </span>
+      )}
+      {!isBlogCategory && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.plateCount} biển</span>}
+      {isBlogCategory && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.plateCount} bài viết</span>}
+      <IconButton name="pencil" label="Sửa danh mục" size="sm" onClick={() => onEdit(c)} />
+      <IconButton name="trash-2" label="Xóa danh mục" size="sm" onClick={() => onDelete(c)} />
+    </div>
+  );
+}
 
 export default function AdminCats({ notify }) {
   const [group, setGroup] = useState('plate_type');
-  const [form, setForm] = useState({ name: '', displayOrder: 0, minPrice: '', maxPrice: '' });
+  const [form, setForm] = useState({ name: '', displayOrder: 0, minPrice: '', maxPrice: '', code: '' });
   const [formErr, setFormErr] = useState('');
   const [confirmDel, setConfirmDel] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -14,29 +53,34 @@ export default function AdminCats({ notify }) {
   const createCat = useCreateCategory();
   const updateCat = useUpdateCategory();
   const deleteCat = useDeleteCategory();
-  const hardDeleteCat = useHardDeleteCategory();
+  const reorderCats = useReorderCategories();
 
   const items = data?.items || [];
   const isPriceRange = group === 'price_range';
+  const isBlogCategory = group === 'blog_category';
 
-  const resetForm = () => { setForm({ name: '', displayOrder: 0, minPrice: '', maxPrice: '' }); setEditId(null); setFormErr(''); };
+  const resetForm = () => { setForm({ name: '', displayOrder: 0, minPrice: '', maxPrice: '', code: '' }); setEditId(null); setFormErr(''); };
 
   const startEdit = (c) => {
     setEditId(c.id);
-    setForm({ name: c.name, displayOrder: c.displayOrder ?? 0, minPrice: c.minPrice != null ? String(c.minPrice) : '', maxPrice: c.maxPrice != null ? String(c.maxPrice) : '' });
+    setForm({ name: c.name, displayOrder: c.displayOrder ?? 0, minPrice: c.minPrice != null ? String(c.minPrice) : '', maxPrice: c.maxPrice != null ? String(c.maxPrice) : '', code: c.code || '' });
     setFormErr('');
   };
 
   const addCat = () => {
     const name = form.name.trim();
     if (!name) { setFormErr('Nhập tên danh mục.'); return; }
+    if (isBlogCategory && !editId && !form.code.trim()) { setFormErr('Nhập mã danh mục (khớp với giá trị Category của bài viết).'); return; }
     setFormErr('');
     const body = {
       group,
       name,
-      displayOrder: Number(form.displayOrder) || 0,
+      // Item mới luôn thêm cuối danh sách — thứ tự sau đó chỉnh bằng nút mũi tên lên/xuống, không cần
+      // admin tự nhập số tay (dễ nhầm, không biết số nào đang được dùng).
+      displayOrder: editId ? Number(form.displayOrder) || 0 : items.length,
       minPrice: isPriceRange && form.minPrice !== '' ? Number(form.minPrice) : null,
       maxPrice: isPriceRange && form.maxPrice !== '' ? Number(form.maxPrice) : null,
+      code: isBlogCategory ? form.code.trim() : null,
     };
     const opts = {
       onSuccess: () => { resetForm(); notify(editId ? 'Đã cập nhật danh mục' : 'Đã thêm danh mục'); },
@@ -49,10 +93,21 @@ export default function AdminCats({ notify }) {
     else createCat.mutate(body, opts);
   };
 
-  const doDelete = (hard) => {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (e) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = items.findIndex((c) => c.id === active.id);
+    const newIdx = items.findIndex((c) => c.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    reorderCats.mutate(arrayMove(items, oldIdx, newIdx).map((c) => c.id));
+  };
+
+  const doDelete = () => {
     const id = confirmDel.id;
-    (hard ? hardDeleteCat : deleteCat).mutate(id, {
-      onSuccess: () => { notify(hard ? 'Đã xóa vĩnh viễn danh mục' : 'Đã xóa danh mục'); setConfirmDel(null); },
+    deleteCat.mutate(id, {
+      onSuccess: () => { notify('Đã xóa danh mục'); setConfirmDel(null); },
       onError: (err) => {
         if (err.code === 'CATEGORY_IN_USE') notify(`Không thể xóa — đang có ${err.usageCount ?? ''} biển số dùng danh mục này.`);
         else notify(err.message || 'Xóa thất bại.');
@@ -83,26 +138,26 @@ export default function AdminCats({ notify }) {
           {!isLoading && !isError && items.length === 0 && (
             <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có danh mục nào.</div>
           )}
-          {items.map((c) => (
-            <div key={c.id} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-              <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{c.name}</span>
-              {isPriceRange && (
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                  {c.minPrice != null ? c.minPrice.toLocaleString('vi-VN') : '0'} - {c.maxPrice != null ? c.maxPrice.toLocaleString('vi-VN') : '∞'}
-                </span>
-              )}
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.plateCount} biển</span>
-              <IconButton name="pencil" label="Sửa danh mục" size="sm" onClick={() => startEdit(c)} />
-              <IconButton name="trash-2" label="Xóa danh mục" size="sm" onClick={() => setConfirmDel(c)} />
-            </div>
-          ))}
+          <DndContext collisionDetection={closestCenter} sensors={sensors} onDragEnd={handleDragEnd}>
+            <SortableContext items={items.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+              {items.map((c, idx) => (
+                <SortableCategoryRow key={c.id} c={c} idx={idx} isBlogCategory={isBlogCategory} isPriceRange={isPriceRange} onEdit={startEdit} onDelete={setConfirmDel} />
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
         <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{editId ? 'Sửa danh mục' : 'Thêm danh mục mới'}</span>
           <Input label="Tên danh mục" placeholder="VD: Biển tiến" value={form.name} error={formErr}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-          <Input label="Thứ tự hiển thị" type="number" value={form.displayOrder}
-            onChange={(e) => setForm((f) => ({ ...f, displayOrder: e.target.value }))} />
+          {isBlogCategory && (
+            <Input label="Mã danh mục (khớp Category của bài viết, VD: phong-thuy)" placeholder="phong-thuy" value={form.code}
+              disabled={Boolean(editId)}
+              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} />
+          )}
+          {!editId && (
+            <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Danh mục mới thêm vào cuối danh sách — kéo tay cầm ☰ để đổi thứ tự hiển thị trên website.</p>
+          )}
           {isPriceRange && (
             <>
               <Input label="Giá tối thiểu (VND)" type="number" value={form.minPrice}
@@ -124,11 +179,10 @@ export default function AdminCats({ notify }) {
         <div role="alertdialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Danh mục <b>{confirmDel.name}</b> sẽ được xóa. <b>Xóa vĩnh viễn</b> không thể hoàn tác.</p>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Danh mục <b>{confirmDel.name}</b> sẽ được ẩn khỏi hệ thống. Bạn có thể khôi phục lại sau nếu cần.</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               <Button variant="ghost" size="md" onClick={() => setConfirmDel(null)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={() => doDelete(true)} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa vĩnh viễn</Button>
-              <Button variant="primary" size="md" onClick={() => doDelete(false)}>Xóa</Button>
+              <Button variant="primary" size="md" onClick={doDelete}>Xóa</Button>
             </div>
           </div>
         </div>

@@ -41,3 +41,10 @@ export function useSendTestEmail() {
     mutationFn: (body) => apiClient.post('/api/admin/notifications/test-email', body),
   });
 }
+
+// Preview HTML thật (không gửi email) — admin xem trước real-time khi đang gõ tiêu đề/nội dung.
+export function usePreviewEmail() {
+  return useMutation({
+    mutationFn: (body) => apiClient.post('/api/admin/notifications/preview', body),
+  });
+}

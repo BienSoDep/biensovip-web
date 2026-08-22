@@ -3,23 +3,18 @@ import StarterKit from '@tiptap/starter-kit';
 import TiptapLink from '@tiptap/extension-link';
 import TiptapImage from '@tiptap/extension-image';
 import { useEffect, useState, useRef } from 'react';
+import { marked } from 'marked';
+import mammoth from 'mammoth';
 import {
   Bold, Italic, Strikethrough, Heading2, Heading3, List, ListOrdered,
-  Quote, Code, Link2, Image as ImageIcon, Undo2, Redo2, Eye, X,
+  Quote, Code, Link2, Image as ImageIcon, Undo2, Redo2, Eye, X, Upload,
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, Select } from '../../components/index.jsx';
 import { apiClient } from '../../services/apiClient.js';
 import { useCreateBlogPost, useUpdateBlogPost } from '../../services/blog.js';
 import { useAdminPromoVideos } from '../../services/promoVideoService.js';
-
-const CATEGORY_OPTS = [
-  { value: 'phong-thuy', label: 'Phong thủy' },
-  { value: 'phap-ly', label: 'Pháp lý' },
-  { value: 'kien-thuc', label: 'Kiến thức' },
-  { value: 'cau-chuyen', label: 'Câu chuyện khách hàng' },
-  { value: 'general', label: 'Khác' },
-];
+import { useAdminCategories } from '../../services/categories.js';
 
 function slugify(title) {
   return title
@@ -105,6 +100,8 @@ export default function Compose({ st, patch, notify }) {
 
   const createPost = useCreateBlogPost();
   const updatePost = useUpdateBlogPost();
+  const { data: blogCatData } = useAdminCategories('blog_category');
+  const categoryOpts = (blogCatData?.items || []).map((c) => ({ value: c.code || c.name, label: c.name }));
   const { data: allVideos } = useAdminPromoVideos();
   const [attachedVideos, setAttachedVideos] = useState([]);
   const [addVideoId, setAddVideoId] = useState('');
@@ -167,6 +164,43 @@ export default function Compose({ st, patch, notify }) {
     const v = e.target.value;
     setTitle(v);
     if (!slugTouched) setSlug(slugify(v));
+  };
+
+  const importFileInputRef = useRef(null);
+  const [importing, setImporting] = useState(false);
+
+  // Import Markdown (.md) hoặc Word (.docx) — convert sang HTML rồi đổ thẳng vào Tiptap editor.
+  // Markdown: dòng H1 đầu tiên (# Tiêu đề) tự điền vào ô Tiêu đề nếu có, phần còn lại thành nội dung.
+  // Docx: mammoth convert HTML giữ định dạng cơ bản (heading, bold, list, ảnh base64 nhúng sẵn).
+  const onImportFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !editor) return;
+    setImporting(true);
+    try {
+      const ext = file.name.toLowerCase().split('.').pop();
+      let html;
+      if (ext === 'md' || ext === 'markdown') {
+        const text = await file.text();
+        const h1Match = text.match(/^#\s+(.+)$/m);
+        const body = h1Match ? text.replace(h1Match[0], '').trim() : text;
+        if (h1Match && !title.trim()) onTitleChange({ target: { value: h1Match[1].trim() } });
+        html = await marked.parse(body);
+      } else if (ext === 'docx') {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+        html = result.value;
+      } else {
+        notify('Chỉ hỗ trợ file .md hoặc .docx');
+        return;
+      }
+      editor.commands.setContent(html);
+      notify('Đã import nội dung — kiểm tra lại trước khi lưu.');
+    } catch (err) {
+      notify(err.message || 'Import thất bại.');
+    } finally {
+      setImporting(false);
+    }
   };
 
   const onCoverFileChange = async (e) => {
@@ -233,7 +267,14 @@ export default function Compose({ st, patch, notify }) {
         <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{wordCount} từ · ~{readingMinutes} phút đọc</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <input ref={importFileInputRef} type="file" accept=".md,.markdown,.docx" onChange={onImportFileChange} style={{ display: 'none' }} id="content-import" />
+              <button type="button" onClick={() => importFileInputRef.current?.click()} disabled={importing}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: importing ? 'default' : 'pointer', color: 'var(--action-primary)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', padding: 0 }}>
+                <Upload size={14} /> {importing ? 'Đang import…' : 'Import .md/.docx'}
+              </button>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{wordCount} từ · ~{readingMinutes} phút đọc</span>
+            </div>
           </div>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', overflow: 'hidden' }}>
             <EditorToolbar editor={editor} />
@@ -245,7 +286,7 @@ export default function Compose({ st, patch, notify }) {
       </div>
       <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Select label="Danh mục" value={category} options={CATEGORY_OPTS} onChange={setCategory} />
+          <Select label="Danh mục" value={category} options={categoryOpts} onChange={setCategory} />
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ảnh đại diện</span>
@@ -318,7 +359,7 @@ export default function Compose({ st, patch, notify }) {
             </div>
             <article style={{ padding: 'var(--space-8) var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{CATEGORY_OPTS.find((c) => c.value === category)?.label || category}</span>
+                <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{categoryOpts.find((c) => c.value === category)?.label || category}</span>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>~{readingMinutes} phút đọc</span>
               </div>
               <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title || 'Chưa có tiêu đề'}</h1>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   useAdminPlates, useDeletePlate, useUpdatePlateStatus,
   useUpdatePlateVisibility, useUpdatePlate, useCreatePlate,
-  useBulkCreatePlate, useUploadImage, useAdminPlate, useHardDeletePlate,
+  useBulkCreatePlate, useUploadImage, useAdminPlate,
 } from '../../services/adminPlates.js';
 import { useAdminCategories } from '../../services/categories.js';
 import { Select, IconButton, SearchField } from '../../components/index.jsx';
@@ -94,7 +94,6 @@ export default function AdminPlates({ go, notify }) {
   const { data: editDetail } = useAdminPlate(editPlateId);
 
   const deleteMut = useDeletePlate();
-  const hardDeleteMut = useHardDeletePlate();
   const statusMut = useUpdatePlateStatus();
   const visMut = useUpdatePlateVisibility();
   const createMut = useCreatePlate();
@@ -216,17 +215,6 @@ export default function AdminPlates({ go, notify }) {
       await deleteMut.mutateAsync(confirmDelete);
       setConfirmDelete(null);
       notify('Đã xóa (ẩn) biển số');
-    } catch (err) {
-      notify(err.message || 'Lỗi xóa biển số');
-    }
-  };
-
-  const handleHardDelete = async () => {
-    if (!confirmDelete) return;
-    try {
-      await hardDeleteMut.mutateAsync(confirmDelete);
-      setConfirmDelete(null);
-      notify('Đã xóa vĩnh viễn biển số');
     } catch (err) {
       notify(err.message || 'Lỗi xóa biển số');
     }
@@ -494,10 +482,9 @@ export default function AdminPlates({ go, notify }) {
         <div role="alertdialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Biển số này sẽ được xóa. Chọn <b>Xóa</b> để ẩn (khôi phục được) hoặc <b>Xóa vĩnh viễn</b> để xóa hẳn khỏi hệ thống — không thể hoàn tác.</p>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Biển số này sẽ được ẩn khỏi hệ thống. Bạn có thể khôi phục lại sau nếu cần.</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               <Button variant="ghost" size="md" onClick={() => setConfirmDelete(null)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={handleHardDelete} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa vĩnh viễn</Button>
               <Button variant="primary" size="md" onClick={handleDelete} style={{ boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
             </div>
           </div>

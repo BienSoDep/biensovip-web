@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
@@ -38,6 +38,13 @@ export default function AdminShell({
   adminMeta,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Ẩn/hiện sidebar nav — nhớ lựa chọn qua localStorage để không phải bật lại mỗi lần load trang.
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('adminSidebarCollapsed') === '1'; } catch { return false; } });
+  const toggleCollapsed = () => setCollapsed((c) => {
+    const next = !c;
+    try { localStorage.setItem('adminSidebarCollapsed', next ? '1' : '0'); } catch { /* ignore */ }
+    return next;
+  });
   const logout = async () => { await authApi.adminLogout(); patch({ user: null, isAdmin: false, screen: 'home' }); };
 
   return (
@@ -66,18 +73,30 @@ export default function AdminShell({
         </div>
       )}
 
-      <aside className="admin-sidebar" style={{ flex: '0 0 248px', minWidth: 230, background: 'var(--white)', boxShadow: 'inset -1px 0 0 var(--border-hairline)', padding: 'var(--space-5) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: '0 var(--space-5)' }}>
-          <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 32, height: 32, objectFit: 'contain' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}><span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>Duy Đinh</span><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Quản trị</span></div>
-        </div>
-        <AdminSidebarNav s={s} st={st} go={go} />
-        <div style={{ flex: 1 }} />
-        <div style={{ padding: '0 var(--space-5)' }}>
-          <Button variant="ghost" size="sm" fullWidth onClick={logout}>Đăng xuất</Button>
-        </div>
-      </aside>
+      {!collapsed && (
+        <aside className="admin-sidebar" style={{ flex: '0 0 248px', minWidth: 230, background: 'var(--white)', boxShadow: 'inset -1px 0 0 var(--border-hairline)', padding: 'var(--space-5) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '0 var(--space-5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
+              <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}><span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>Duy Đinh</span><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Quản trị</span></div>
+            </div>
+            <button type="button" onClick={toggleCollapsed} aria-label="Ẩn menu" title="Ẩn menu" style={{ flexShrink: 0, width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <PanelLeftClose size={16} />
+            </button>
+          </div>
+          <AdminSidebarNav s={s} st={st} go={go} />
+          <div style={{ flex: 1 }} />
+          <div style={{ padding: '0 var(--space-5)' }}>
+            <Button variant="ghost" size="sm" fullWidth onClick={logout}>Đăng xuất</Button>
+          </div>
+        </aside>
+      )}
       <main className="admin-main" style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        {collapsed && (
+          <button type="button" onClick={toggleCollapsed} aria-label="Hiện menu" title="Hiện menu" style={{ alignSelf: 'flex-start', width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <PanelLeftOpen size={18} />
+          </button>
+        )}
         <Breadcrumb inset items={[{ label: 'Quản trị', onClick: go('dash') }, { label: adminMeta[0] }]} />
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
           <div style={{ flex: '1 1 280px' }}>
