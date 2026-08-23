@@ -75,7 +75,7 @@ export default function App() {
     ms: { name: '', year: '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' }, msResult: null, listNotice: null,
     drawerOpen: false,
     compareIds: [], savedSearches: [], reviews: [], reviewDraft: null,
-    notifications: [], collabs: [], videos: [],
+    notifications: [], videos: [],
     isAdmin: !!(loadAuth()?.isAdmin),
     settings: null,
   });

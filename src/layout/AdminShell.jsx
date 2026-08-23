@@ -21,10 +21,24 @@ import AdminReviews from '../pages/admin/AdminReviews.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
 
+// Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
+// dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
+const NAV_PERM = {
+  aplates: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view',
+  aposts: 'posts:view', compose: 'posts:view', ameanings: 'meanings:view',
+  acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
+  areviews: 'reviews:view', acollabs: 'collaborators:view',
+};
+const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
+
 function AdminSidebarNav({ s, st, go, onNavigate }) {
   return (
     <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 var(--space-3)' }}>
-      {ADMIN_NAV.filter((n) => n[0] !== 'astaff' || st.user?.role === 'super-admin').map((n) => {
+      {ADMIN_NAV.filter((n) => {
+        if (n[0] === 'astaff') return st.user?.role === 'super-admin';
+        const perm = NAV_PERM[n[0]];
+        return !perm || canPerm(st, perm);
+      }).map((n) => {
         const on = s === n[0] || (n[0] === 'aposts' && s === 'compose');
         return (
           <button key={n[0]} type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={() => { go(n[0])(); onNavigate?.(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>{n[1]}</button>
@@ -89,9 +103,9 @@ export default function AdminShell({
     }
   };
 
-  // Nhân viên (không phải super-admin) không được vào màn Nhân viên — chặn cả nav lẫn render trực tiếp qua hash.
+  // Chặn màn không có quyền: astaff chỉ super-admin; các màn khác cần "resource:view".
   const isSuperAdmin = st.user?.role === 'super-admin';
-  const denied = s === 'astaff' && !isSuperAdmin;
+  const denied = (s === 'astaff' && !isSuperAdmin) || (NAV_PERM[s] && !canPerm(st, NAV_PERM[s]));
   useEffect(() => {
     if (denied) go('dash')();
   }, [denied, go]);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import Button from '../../components/Button.jsx';
 import { Input, Select, Switch, Avatar, IconButton, SearchField } from '../../components/index.jsx';
@@ -14,6 +14,18 @@ const ROLE_OPTS = [
 const ROLE_LABEL = { 'super-admin': 'Quản trị viên', staff: 'Nhân viên' };
 const ROLE_FG = { 'super-admin': 'var(--action-primary)', staff: 'var(--blue-600)' };
 
+const PERM_RESOURCES = [
+  ['plates', 'Biển số'], ['categories', 'Danh mục'], ['contacts', 'Yêu cầu liên hệ'],
+  ['posts', 'Bài viết'], ['customers', 'Khách hàng'], ['videos', 'Video'],
+  ['notifications', 'Thông báo'], ['collaborators', 'Cộng tác viên'],
+  ['reviews', 'Đánh giá'], ['meanings', 'Ý nghĩa phong thủy'],
+];
+const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
+// Preset mặc định cho nhân viên: xem + thêm + sửa mọi mục, không quyền xóa.
+const RECOMMENDED = PERM_RESOURCES.flatMap(([r]) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+const slugify = (s) => (s || '').toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+
 export default function AdminStaff({ notify }) {
   const { data, isLoading, isError, refetch } = useAdminStaff();
   const createStaff = useCreateStaff();
@@ -25,7 +37,7 @@ export default function AdminStaff({ notify }) {
   const [delId, setDelId] = useState(null);
   const [selfAction, setSelfAction] = useState(null);
   const [q, setQ] = useState('');
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'staff', active: true });
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
   const [err, setErr] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -35,14 +47,29 @@ export default function AdminStaff({ notify }) {
 
   const field = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
 
+  // Email tự điền từ họ tên (chỉ khi chưa sửa tay). Người dùng vẫn sửa được.
+  const emailTouched = useRef(false);
+  const onNameChange = (e) => {
+    const v = e.target.value;
+    setForm((f) => ({ ...f, fullName: v, email: emailTouched.current ? f.email : (slugify(v) ? `${slugify(v)}@biensovip.com` : '') }));
+  };
+  const onEmailChange = (e) => { emailTouched.current = true; setForm((f) => ({ ...f, email: e.target.value })); };
+  const togglePerm = (perm) => (v) => setForm((f) => {
+    const next = new Set(f.permissions);
+    if (v) next.add(perm); else next.delete(perm);
+    return { ...f, permissions: [...next] };
+  });
+
   const resetForm = () => {
-    setForm({ fullName: '', email: '', password: '', role: 'staff', active: true });
+    setForm({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
+    emailTouched.current = false;
     setErr({}); setEditId(null);
   };
 
   const openAdd = () => { resetForm(); setOpen(true); };
   const openEdit = (x) => {
-    setForm({ fullName: x.fullName || '', email: x.email, password: '', role: x.role, active: x.active });
+    setForm({ fullName: x.fullName || '', email: x.email, password: '', role: x.role, active: x.active, permissions: x.permissions || [] });
+    emailTouched.current = true;
     setErr({}); setEditId(x.id); setOpen(true);
   };
 
@@ -59,10 +86,10 @@ export default function AdminStaff({ notify }) {
     setSaving(true);
     try {
       if (editId) {
-        await updateStaff.mutateAsync({ id: editId, role: form.role, active: form.active });
+        await updateStaff.mutateAsync({ id: editId, role: form.role, active: form.active, permissions: form.role === 'super-admin' ? null : form.permissions });
         notify('Đã cập nhật nhân viên');
       } else {
-        await createStaff.mutateAsync({ email, password: form.password, fullName: form.fullName.trim(), role: form.role });
+        await createStaff.mutateAsync({ email, password: form.password, fullName: form.fullName.trim(), role: form.role, permissions: form.role === 'super-admin' ? null : form.permissions });
         notify('Đã thêm nhân viên');
       }
       setOpen(false);
@@ -171,10 +198,40 @@ export default function AdminStaff({ notify }) {
       <Drawer open={open} onClose={() => setOpen(false)} title={editId ? 'Sửa nhân viên' : 'Thêm nhân viên'} width="min(52%, 720px)">
         <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{editId ? 'Cập nhật thông tin và quyền truy cập.' : 'Nhân viên sẽ có quyền đăng nhập trang quản trị.'}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} error={err.fullName} onChange={field('fullName')} />
-          <Input label="Email" type="email" placeholder="a@biensovip.com" value={form.email} error={err.email} onChange={field('email')} disabled={!!editId} />
+          <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} error={err.fullName} onChange={onNameChange} />
+          <Input label="Email" type="email" placeholder="a@biensovip.com" value={form.email} error={err.email} onChange={onEmailChange} disabled={!!editId} />
           {!editId && <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 6 ký tự" value={form.password} error={err.password} onChange={field('password')} />}
           <Select label="Vai trò" value={form.role} options={ROLE_OPTS} onChange={field('role')} />
+          <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            Quản trị viên có toàn quyền truy cập mọi mục. Nhân viên chỉ vào được các mục được cấp quyền bên dưới.
+          </p>
+          {form.role !== 'super-admin' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '0 0 var(--space-2)' }}>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Quyền truy cập</span>
+                <button type="button" onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Đặt mặc định</button>
+              </div>
+              <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', background: 'var(--surface-sunken)', padding: '8px 12px', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>
+                  <span>Chức năng</span>
+                  {PERM_ACTIONS.map(([, l]) => <span key={l} style={{ textAlign: 'center' }}>{l}</span>)}
+                </div>
+                {PERM_RESOURCES.map(([r, label]) => (
+                  <div key={r} style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', alignItems: 'center', padding: '6px 12px', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+                    <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{label}</span>
+                    {PERM_ACTIONS.map(([a]) => {
+                      const perm = `${r}:${a}`;
+                      return (
+                        <label key={a} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={form.permissions.includes(perm)} onChange={(e) => togglePerm(perm)(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} aria-label={`${label} ${a}`} />
+                        </label>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: 1 }}>Hoạt động</span>
             <Switch checked={form.active} onChange={(v) => setForm((f) => ({ ...f, active: v }))} />
