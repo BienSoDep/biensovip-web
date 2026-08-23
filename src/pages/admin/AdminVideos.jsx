@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
+import { Reorder } from 'framer-motion';
 import { ChevronUp, ChevronDown, Star, Search } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, ImageUrlInput, IconButton, Badge } from '../../components/index.jsx';
 import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos, useUpdatePromoVideo } from '../../services/promoVideoService.js';
 import TikTokEmbed from '../../components/TikTokEmbed.jsx';
+import Modal from '../../components/Modal.jsx';
+import { useDebouncedValue } from '@mantine/hooks';
 
 const PLATFORM_LABEL = { tiktok: 'TikTok', facebook: 'Facebook' };
 const PLATFORM_TONE = { tiktok: 'dark', facebook: 'blue' };
@@ -23,6 +26,7 @@ export default function AdminVideos({ notify }) {
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({ videoUrl: '', title: '', description: '', thumbnailUrl: '', postId: '', postUrl: '', shareCount: '', commentCount: '', viewCount: '', likeCount: '' });
   const [urlErr, setUrlErr] = useState('');
+  const [debouncedUrl] = useDebouncedValue(form.videoUrl, 400);
   const [delId, setDelId] = useState(null);
   const [editId, setEditId] = useState(null);
   const [q, setQ] = useState('');
@@ -95,6 +99,49 @@ export default function AdminVideos({ notify }) {
     reorderVideos.mutate(arr.map((v, i) => ({ id: v.id, displayOrder: i })));
   };
 
+  const handleReorder = (order) => reorderVideos.mutate(order.map((v, i) => ({ id: v.id, displayOrder: i })));
+
+  const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' };
+
+  const renderCard = (v, idx) => (
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--surface-sunken)', display: 'flex', justifyContent: 'center' }}>
+        {v.platform === 'tiktok' ? (
+          <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+        ) : (
+          <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', aspectRatio: RATIO[v.platform] || '16 / 9', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</a>
+        )}
+      </div>
+      <div style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <button type="button" aria-label="Lên" onClick={() => move(idx, -1)} disabled={idx === 0} style={{ border: 'none', background: 'transparent', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.3 : 1, padding: 2, color: 'var(--text-muted)' }}><ChevronUp size={16} /></button>
+          <button type="button" aria-label="Xuống" onClick={() => move(idx, 1)} disabled={idx === videos.length - 1} style={{ border: 'none', background: 'transparent', cursor: idx === videos.length - 1 ? 'default' : 'pointer', opacity: idx === videos.length - 1 ? 0.3 : 1, padding: 2, color: 'var(--text-muted)' }}><ChevronDown size={16} /></button>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.title || 'Video'}</div>
+          <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
+            <Badge tone={PLATFORM_TONE[v.platform] || 'neutral'}>{PLATFORM_LABEL[v.platform] || v.platform}</Badge>
+            <Badge tone={STATUS_TONE[v.status] || 'neutral'}>{STATUS_LABEL[v.status] || v.status}</Badge>
+            {v.isFeatured && <Badge tone="amber">Nổi bật</Badge>}
+          </div>
+          {(v.viewCount != null || v.likeCount != null || v.shareCount != null || v.commentCount != null) && (
+            <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              {v.viewCount != null && <span>👁 {v.viewCount}</span>}
+              {v.likeCount != null && <span>❤️ {v.likeCount}</span>}
+              {v.shareCount != null && <span>↗ {v.shareCount}</span>}
+              {v.commentCount != null && <span>💬 {v.commentCount}</span>}
+            </div>
+          )}
+        </div>
+        <button type="button" aria-label={v.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'} title={v.isFeatured ? 'Đang hiển thị ở trang chủ' : 'Đánh dấu hiển thị ở trang chủ'} onClick={() => updateVideo.mutate({ id: v.id, isFeatured: !v.isFeatured })} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, color: v.isFeatured ? 'var(--status-warning)' : 'var(--grey-400)', display: 'flex', alignItems: 'center' }}>
+          <Star size={18} fill={v.isFeatured ? 'var(--status-warning)' : 'none'} />
+        </button>
+        <IconButton name="pencil" label="Sửa video" size="sm" onClick={() => openEdit(v)} />
+        <IconButton name="trash-2" label="Xóa video" size="sm" onClick={() => setDelId(v.id)} />
+      </div>
+    </div>
+  );
+
   if (isLoading) return <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>;
   if (isError) return (
     <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
@@ -137,49 +184,19 @@ export default function AdminVideos({ notify }) {
       </div>
 
       {filtered.length ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-          {filtered.map((v) => {
-            const realIdx = videos.findIndex((x) => x.id === v.id);
-            return (
-            <div key={v.id} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-              <div style={{ background: 'var(--surface-sunken)', display: 'flex', justifyContent: 'center' }}>
-                {v.platform === 'tiktok' ? (
-                  <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
-                ) : (
-                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', aspectRatio: RATIO[v.platform] || '16 / 9', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</a>
-                )}
-              </div>
-              <div style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <button type="button" aria-label="Lên" onClick={() => move(realIdx, -1)} disabled={realIdx === 0} style={{ border: 'none', background: 'transparent', cursor: realIdx === 0 ? 'default' : 'pointer', opacity: realIdx === 0 ? 0.3 : 1, padding: 2, color: 'var(--text-muted)' }}><ChevronUp size={16} /></button>
-                  <button type="button" aria-label="Xuống" onClick={() => move(realIdx, 1)} disabled={realIdx === videos.length - 1} style={{ border: 'none', background: 'transparent', cursor: realIdx === videos.length - 1 ? 'default' : 'pointer', opacity: realIdx === videos.length - 1 ? 0.3 : 1, padding: 2, color: 'var(--text-muted)' }}><ChevronDown size={16} /></button>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.title || 'Video'}</div>
-                  <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
-                    <Badge tone={PLATFORM_TONE[v.platform] || 'neutral'}>{PLATFORM_LABEL[v.platform] || v.platform}</Badge>
-                    <Badge tone={STATUS_TONE[v.status] || 'neutral'}>{STATUS_LABEL[v.status] || v.status}</Badge>
-                    {v.isFeatured && <Badge tone="amber">Nổi bật</Badge>}
-                  </div>
-                  {(v.viewCount != null || v.likeCount != null || v.shareCount != null || v.commentCount != null) && (
-                    <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                      {v.viewCount != null && <span>👁 {v.viewCount}</span>}
-                      {v.likeCount != null && <span>❤️ {v.likeCount}</span>}
-                      {v.shareCount != null && <span>↗ {v.shareCount}</span>}
-                      {v.commentCount != null && <span>💬 {v.commentCount}</span>}
-                    </div>
-                  )}
-                </div>
-                <button type="button" aria-label={v.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'} title={v.isFeatured ? 'Đang hiển thị ở trang chủ' : 'Đánh dấu hiển thị ở trang chủ'} onClick={() => updateVideo.mutate({ id: v.id, isFeatured: !v.isFeatured })} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 2, color: v.isFeatured ? 'var(--status-warning)' : 'var(--grey-400)', display: 'flex', alignItems: 'center' }}>
-                  <Star size={18} fill={v.isFeatured ? 'var(--status-warning)' : 'none'} />
-                </button>
-                <IconButton name="pencil" label="Sửa video" size="sm" onClick={() => openEdit(v)} />
-                <IconButton name="trash-2" label="Xóa video" size="sm" onClick={() => setDelId(v.id)} />
-              </div>
-            </div>
-            );
-          })}
-        </div>
+        filtered.length === videos.length ? (
+          <Reorder.Group axis="y" values={videos} onReorder={handleReorder} style={gridStyle}>
+            {videos.map((v, idx) => (
+              <Reorder.Item key={v.id} value={v} style={{ listStyle: 'none' }}>
+                {renderCard(v, idx)}
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
+        ) : (
+          <div style={gridStyle}>
+            {filtered.map((v) => renderCard(v, videos.findIndex((x) => x.id === v.id)))}
+          </div>
+        )
       ) : (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-surface)', border: '2px dashed var(--border-strong)', padding: 'var(--space-9) var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
           {videos.length ? (
@@ -202,59 +219,59 @@ export default function AdminVideos({ notify }) {
         <Button variant="primary" size="md" onClick={openAdd}>Thêm video</Button>
       </div>
 
-      {addOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div style={{ width: '100%', maxWidth: 480, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-              <div style={{ flex: 1 }}><h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{editId ? 'Sửa video' : 'Thêm video'}</h2><p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Dán link video từ TikTok / Facebook — hệ thống tự nhận diện nền tảng.</p></div>
-              <IconButton name="x" label="Đóng" onClick={() => setAddOpen(false)} />
-            </div>
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={editId ? 'Sửa video' : 'Thêm video'} maxWidth="480px">
+        <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Dán link video từ TikTok / Facebook — hệ thống tự nhận diện nền tảng.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div>
             <Input label="URL video" placeholder="https://www.tiktok.com/@…/video/… hoặc https://www.facebook.com/…/videos/…" value={form.videoUrl} error={urlErr} onChange={(e) => setForm((f) => ({ ...f, videoUrl: e.target.value }))} />
-            <Input label="Tiêu đề" placeholder="VD: Lăn số ngũ quý 999.99" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
-            <Input label="Mô tả" placeholder="Mô tả ngắn cho video / bài đăng" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
-            <ImageUrlInput label="URL ảnh bìa (thumbnail)" placeholder="https://…/thumb.jpg hoặc tải ảnh lên" value={form.thumbnailUrl} onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))} hint="Dán link trực tiếp hoặc tải ảnh lên — hệ thống tự đưa qua Cloudinary thành link." />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-              <select label="Trạng thái" value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} style={{ height: 40, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-strong)', background: 'var(--white)', font: 'var(--type-body-sm)', color: 'var(--text-strong)', padding: '0 10px' }}>
-                <option value="published">Đã xuất bản</option>
-                <option value="draft">Bản nháp</option>
-              </select>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-strong)', cursor: 'pointer' }}>
-                <input type="checkbox" checked={!!form.isFeatured} onChange={(e) => setForm((f) => ({ ...f, isFeatured: e.target.checked }))} />
-                Nổi bật (hiển thị ở trang chủ)
-              </label>
-            </div>
-            {editId && (
-              <>
-                <Input label="ID bài đăng page" placeholder="VD: 1789… (Facebook post_id / TikTok item id)" value={form.postId} onChange={(e) => setForm((f) => ({ ...f, postId: e.target.value }))} />
-                <Input label="URL bài đăng page" placeholder="https://facebook.com/page/posts/… hoặc https://tiktok.com/@…/video/…" value={form.postUrl} onChange={(e) => setForm((f) => ({ ...f, postUrl: e.target.value }))} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-                  <Input label="Lượt xem" type="number" placeholder="0" value={form.viewCount} onChange={(e) => setForm((f) => ({ ...f, viewCount: e.target.value }))} />
-                  <Input label="Lượt thích" type="number" placeholder="0" value={form.likeCount} onChange={(e) => setForm((f) => ({ ...f, likeCount: e.target.value }))} />
-                  <Input label="Lượt chia sẻ" type="number" placeholder="0" value={form.shareCount} onChange={(e) => setForm((f) => ({ ...f, shareCount: e.target.value }))} />
-                  <Input label="Bình luận" type="number" placeholder="0" value={form.commentCount} onChange={(e) => setForm((f) => ({ ...f, commentCount: e.target.value }))} />
+            {debouncedUrl.trim() && (
+              <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Xem trước:</span>
+                <div style={{ width: 160, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                  <TikTokEmbed videoUrl={debouncedUrl.trim()} title="Xem trước video" />
                 </div>
-              </>
+              </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-              <Button variant="ghost" size="md" onClick={() => setAddOpen(false)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={saveAdd} disabled={createVideo.isPending || updateVideo.isPending}>{editId ? (updateVideo.isPending ? 'Đang lưu…' : 'Lưu thay đổi') : (createVideo.isPending ? 'Đang thêm…' : 'Thêm video')}</Button>
-            </div>
+          </div>
+          <Input label="Tiêu đề" placeholder="VD: Lăn số ngũ quý 999.99" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+          <Input label="Mô tả" placeholder="Mô tả ngắn cho video / bài đăng" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+          <ImageUrlInput label="URL ảnh bìa (thumbnail)" placeholder="https://…/thumb.jpg hoặc tải ảnh lên" value={form.thumbnailUrl} onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))} hint="Dán link trực tiếp hoặc tải ảnh lên — hệ thống tự đưa qua Cloudinary thành link." />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+            <select label="Trạng thái" value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} style={{ height: 40, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-strong)', background: 'var(--white)', font: 'var(--type-body-sm)', color: 'var(--text-strong)', padding: '0 10px' }}>
+              <option value="published">Đã xuất bản</option>
+              <option value="draft">Bản nháp</option>
+            </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-strong)', cursor: 'pointer' }}>
+              <input type="checkbox" checked={!!form.isFeatured} onChange={(e) => setForm((f) => ({ ...f, isFeatured: e.target.checked }))} />
+              Nổi bật (hiển thị ở trang chủ)
+            </label>
+          </div>
+          {editId && (
+            <>
+              <Input label="ID bài đăng page" placeholder="VD: 1789… (Facebook post_id / TikTok item id)" value={form.postId} onChange={(e) => setForm((f) => ({ ...f, postId: e.target.value }))} />
+              <Input label="URL bài đăng page" placeholder="https://facebook.com/page/posts/… hoặc https://tiktok.com/@…/video/…" value={form.postUrl} onChange={(e) => setForm((f) => ({ ...f, postUrl: e.target.value }))} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+                <Input label="Lượt xem" type="number" placeholder="0" value={form.viewCount} onChange={(e) => setForm((f) => ({ ...f, viewCount: e.target.value }))} />
+                <Input label="Lượt thích" type="number" placeholder="0" value={form.likeCount} onChange={(e) => setForm((f) => ({ ...f, likeCount: e.target.value }))} />
+                <Input label="Lượt chia sẻ" type="number" placeholder="0" value={form.shareCount} onChange={(e) => setForm((f) => ({ ...f, shareCount: e.target.value }))} />
+                <Input label="Bình luận" type="number" placeholder="0" value={form.commentCount} onChange={(e) => setForm((f) => ({ ...f, commentCount: e.target.value }))} />
+              </div>
+            </>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setAddOpen(false)}>Hủy</Button>
+            <Button variant="primary" size="md" onClick={saveAdd} disabled={createVideo.isPending || updateVideo.isPending}>{editId ? (updateVideo.isPending ? 'Đang lưu…' : 'Lưu thay đổi') : (createVideo.isPending ? 'Đang thêm…' : 'Thêm video')}</Button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {delId && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <h2 style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Video này sẽ được ẩn khỏi trang chủ và mọi bài viết. Bạn có thể khôi phục lại sau nếu cần.</p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              <Button variant="ghost" size="md" onClick={() => setDelId(null)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={() => doDelete()}>Xóa</Button>
-            </div>
-          </div>
+      <Modal open={delId != null} onClose={() => setDelId(null)} title="Xác nhận xóa" maxWidth="380px">
+        <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Video này sẽ được ẩn khỏi trang chủ và mọi bài viết. Bạn có thể khôi phục lại sau nếu cần.</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <Button variant="ghost" size="md" onClick={() => setDelId(null)}>Hủy</Button>
+          <Button variant="danger" size="md" onClick={doDelete} loading={deleteVideo.isPending}>Xóa</Button>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

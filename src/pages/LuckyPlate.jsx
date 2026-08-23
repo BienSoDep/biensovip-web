@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import html2canvas from 'html2canvas';
 import Button from '../components/Button.jsx';
 import { Input, Select, Eyebrow, Badge, Icon, InfoTip } from '../components/index.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
@@ -34,6 +35,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
   const [form, setForm] = useState({ name: user?.fullName || '', day: bd.day, month: bd.month, year: bd.year, purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' });
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
+  const shareCardRef = useRef(null);
   const lookup = useFengShuiLookup();
   const saveHistory = useSaveFengShuiHistory();
   const isAuthed = !!loadAuth()?.accessToken;
@@ -64,6 +66,18 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasProfileBirthDate]);
 
+  // Deep-link `#/hop-menh?y={year}&t={name}` → tự điền + tra cứu khi mở link chia sẻ.
+  useEffect(() => {
+    const q = window.location.hash.split('?')[1];
+    if (!q) return;
+    const params = new URLSearchParams(q);
+    const y = params.get('y');
+    if (!y) return;
+    setForm((f) => ({ ...f, year: y, name: params.get('t') ? decodeURIComponent(params.get('t')) : f.name }));
+    lookup.mutate({ birthDate: `${y}-01-01`, purpose: 'ca_nhan', budget: null, vehicle: 'Ô tô' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (result && isAuthed && form.year) {
       saveHistory.mutate({ birthDate: `${form.year}-${pad(form.month)}-${pad(form.day)}` });
@@ -88,10 +102,19 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
     window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl), '_blank', 'noopener');
   };
 
+  const downloadPng = async () => {
+    if (!shareCardRef.current) { notify('Không tải ảnh được — đã sao chép liên kết'); shareLink(); return; }
+    try {
+      const canvas = await html2canvas(shareCardRef.current, { scale: 2, backgroundColor: null });
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'ket-qua-hop-menh.png';
+      a.click();
+    } catch { notify('Không tải ảnh được — đã sao chép liên kết'); shareLink(); }
+  };
+
   const viewLuckyPlates = () => {
     const digit = result?.luckyDigits?.[0];
-    const base = '#/danh-sach';
-    window.location.hash = digit !== undefined ? `${base}?q=${digit}` : base;
     onNotice?.({ text: `Bộ lọc hợp mệnh ${result?.element}: biển chứa số ${result?.luckyDigits?.join(', ')}`, q: digit });
     go('list')();
   };
@@ -108,7 +131,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
         <form onSubmit={(e) => { e.preventDefault(); submit(); }} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {isAuthed && !hasProfileBirthDate && (
             <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-              Mẹo: <a href="#" onClick={(e) => { e.preventDefault(); go('profile')(); }}>lưu ngày sinh vào hồ sơ</a> để lần sau vào đây là có kết quả ngay.
+              Mẹo: <button type="button" onClick={() => go('profile')()} style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline', cursor: 'pointer' }}>lưu ngày sinh vào hồ sơ</button> để lần sau vào đây là có kết quả ngay.
             </p>
           )}
           <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.name} onChange={(e) => set('name')(e.target.value)} />
@@ -172,6 +195,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             <Button variant="outline" size="md" onClick={shareLink}><Icon name="copy" size={16} style={{ marginRight: 6 }} />{copied ? 'Đã sao chép' : 'Sao chép liên kết'}</Button>
             <Button variant="outline" size="md" onClick={shareFb}><Icon name="share" size={16} style={{ marginRight: 6 }} />Chia sẻ Facebook</Button>
+            <Button variant="outline" size="md" onClick={downloadPng}><Icon name="download" size={16} style={{ marginRight: 6 }} />Tải ảnh PNG</Button>
           </div>
 
           {/* Top biển ranked */}
@@ -195,7 +219,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
                     {r.explain.map((x, j) => <Badge key={j} tone="neutral">{x}</Badge>)}
                   </div>
                   <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2 }}>
-                    <Button variant="dark" size="sm" onClick={() => { window.location.hash = '#/bien/' + r.plateId; go('detail')(); }}>Xem biển</Button>
+                    <Button variant="dark" size="sm" onClick={() => go('detail', r.plateId)()}>Xem biển</Button>
                     <Button variant="primary" size="sm" onClick={() => notify('Liên hệ Duy Đinh để giữ chỗ')}>Gọi ngay</Button>
                   </div>
                 </div>
@@ -219,6 +243,19 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
           )}
 
           <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{result.disclaimer}</p>
+
+          {/* Card ẩn 1080×720 để html2canvas capture → PNG share. ponytail: render 1 bản cố định,
+              không scale card hiển thị (responsive). */}
+          <div ref={shareCardRef} style={{ position: 'fixed', left: -9999, top: 0, width: 1080, height: 720, background: 'var(--surface-tint-cream)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, fontFamily: 'system-ui, sans-serif', color: '#1F2933' }}>
+            <div style={{ fontSize: 48, fontWeight: 800 }}>Biển số hợp mệnh của tôi</div>
+            <div style={{ width: 88, height: 88, borderRadius: '50%', background: `${el.color}26`, color: el.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={el.icon} size={44} /></div>
+            <div style={{ fontSize: 40, fontWeight: 700 }}>Mệnh {result.element} · {elName(result.element)}</div>
+            {form.name && <div style={{ fontSize: 28, color: '#5A6774' }}>{form.name} · sinh {form.year}</div>}
+            <div style={{ display: 'flex', gap: 12 }}>
+              {result.luckyDigits.map((d) => <span key={d} style={{ width: 56, height: 56, borderRadius: 12, background: '#E6F6EE', color: '#0B7A43', fontSize: 32, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d}</span>)}
+            </div>
+            <div style={{ fontSize: 24, color: '#5A6774' }}>Con số hợp mệnh · Biensovip.com</div>
+          </div>
         </div>
       )}
     </section>

@@ -25,24 +25,40 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
     return () => document.removeEventListener('keydown', handler);
   }, [st.addOpen, st.confirm, st.modal, patch]);
 
-  // Auto-focus first focusable element when modal opens
+  // Auto-focus first focusable + focus-trap + scroll-lock + focus-restore when modal opens
   useEffect(() => {
     const ref = st.addOpen ? addRef : st.confirm ? confirmRef : st.modal ? contactRef : null;
     if (!ref?.current) return;
-    const t = setTimeout(() => {
-      const focusable = ref.current.querySelector('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      if (focusable) focusable.focus();
-    }, 100);
-    return () => clearTimeout(t);
+    const trigger = document.activeElement;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const dialog = ref.current;
+    const focusable = dialog.querySelector('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable) focusable.focus();
+    const onKey = (e) => {
+      if (e.key !== 'Tab') return;
+      const els = Array.from(dialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter((el) => !el.disabled && el.offsetParent !== null);
+      if (!els.length) return;
+      const f = els[0];
+      const l = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === f) { e.preventDefault(); l.focus(); }
+      else if (!e.shiftKey && document.activeElement === l) { e.preventDefault(); f.focus(); }
+    };
+    dialog.addEventListener('keydown', onKey);
+    return () => {
+      dialog.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+      if (trigger && typeof trigger.focus === 'function') trigger.focus();
+    };
   }, [st.addOpen, st.confirm, st.modal]);
 
   return (
     <>
       {st.addOpen && (
-        <div role="dialog" aria-modal="true" aria-labelledby="modal-add-title" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-add-title" aria-describedby="modal-add-desc" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div ref={addRef} style={{ width: '100%', maxWidth: 520, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-              <div style={{ flex: 1 }}><h2 id="modal-add-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{st.editId ? 'Sửa biển số' : 'Thêm biển số'}</h2><p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{st.editId ? 'Cập nhật thông tin biển đang bán.' : 'Biển sẽ xuất hiện ngay ở đầu bảng và trang chủ.'}</p></div>
+              <div style={{ flex: 1 }}><h2 id="modal-add-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{st.editId ? 'Sửa biển số' : 'Thêm biển số'}</h2><p id="modal-add-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{st.editId ? 'Cập nhật thông tin biển đang bán.' : 'Biển sẽ xuất hiện ngay ở đầu bảng và trang chủ.'}</p></div>
               <IconButton name="x" label="Đóng" onClick={() => patch({ addOpen: false, editId: null })} />
             </div>
             <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
@@ -69,10 +85,10 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
       )}
 
       {!!st.confirm && (
-        <div role="alertdialog" aria-modal="true" aria-labelledby="modal-confirm-title" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
+        <div role="alertdialog" aria-modal="true" aria-labelledby="modal-confirm-title" aria-describedby="modal-confirm-desc" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div ref={confirmRef} style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <h2 id="modal-confirm-title" style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{st.confirm.text}</p>
+            <p id="modal-confirm-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{st.confirm.text}</p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="md" onClick={() => patch({ confirm: null })}>Hủy</Button>
               <Button variant="primary" size="md" onClick={doDelete} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
@@ -82,7 +98,7 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
       )}
 
       {st.modal && cur && (
-        <div role="dialog" aria-modal="true" aria-labelledby="modal-contact-title" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-contact-title" aria-describedby="modal-contact-desc" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div ref={contactRef} style={{ width: '100%', maxWidth: 460, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -93,7 +109,7 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
             </div>
             {!st.sent ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                <div><h2 id="modal-contact-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Gửi yêu cầu tư vấn</h2><p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Shop gọi lại trong 15 phút, kể cả chủ nhật.</p></div>
+                <div><h2 id="modal-contact-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Gửi yêu cầu tư vấn</h2><p id="modal-contact-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Shop gọi lại trong 15 phút, kể cả chủ nhật.</p></div>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.mName} error={st.mErr.name} onChange={setField('mName')} />
                 <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
                 <Select label="Mục đích" value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Hỏi chung'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'inquiry' })} />

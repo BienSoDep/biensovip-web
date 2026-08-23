@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { Loader2, MessageCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useAdminContacts, useUpdateContactStatus } from '../../services/adminContacts.js';
-import { Select } from '../../components/index.jsx';
+import { useAdminContacts, useUpdateContactStatus, useContactStats } from '../../services/adminContacts.js';
+import { Select, Badge } from '../../components/index.jsx';
+import { SkeletonTable } from '../../components/Skeleton.jsx';
+import Modal from '../../components/Modal.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
+import { routeFor } from '../../config/routes.js';
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
-const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: '#C75B00', buy: 'var(--blue-700)', hunting: '#7B2D8B' };
+const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: 'var(--accent-orange-ink)', buy: 'var(--blue-700)', hunting: 'var(--accent-purple-ink)' };
+const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên hệ', 'plate-detail': 'Trang biển số' };
 const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Đã tìm thấy'];
 const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Đã tìm thấy': 'found' };
 const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã tìm thấy' };
@@ -33,22 +37,30 @@ export default function AdminContacts({ notify }) {
   const [q] = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
-  const { data, isLoading } = useAdminContacts({ status, intent, q, page, perPage: 20 });
+  const { data, isLoading, isError, refetch } = useAdminContacts({ status, intent, q, page, perPage: 20 });
   const updateStatus = useUpdateContactStatus();
+
+  // UC11 — 1 query stats cho các tab (thay 4 query perPage=1).
+  const { data: stats } = useContactStats({ intent, q });
 
   const result = data ?? { items: [], total: 0, page: 1, perPage: 20 };
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
+  const statusCounts = { all: result.total, new: stats?.new ?? 0, consulting: stats?.consulting ?? 0, closed: stats?.closed ?? 0, found: stats?.found ?? 0 };
 
   const handleStatus = (id, label) => {
+    if (updatingId) return;
+    setUpdatingId(id);
     updateStatus.mutate({ id, status: STATUS_VAL[label] }, {
-      onSuccess: () => toast.success('Đã cập nhật trạng thái'),
-      onError: () => toast.error('Lỗi cập nhật trạng thái'),
+      onSuccess: () => { toast.success('Đã cập nhật trạng thái'); setUpdatingId(null); },
+      onError: () => { toast.error('Lỗi cập nhật trạng thái'); setUpdatingId(null); },
     });
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <style>{'@keyframes bsd-spin { to { transform: rotate(360deg); } } .bsd-spin { animation: bsd-spin 0.8s linear infinite; }'}</style>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
         <input
           value={search}
@@ -67,6 +79,24 @@ export default function AdminContacts({ notify }) {
         <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} yêu cầu</span>
       </div>
 
+      <div role="tablist" aria-label="Lọc theo trạng thái" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        {[['all', 'Tất cả'], ['new', 'Mới'], ['consulting', 'Đang tư vấn'], ['closed', 'Đã chốt'], ['found', 'Đã tìm thấy']].map(([val, label]) => {
+          const active = status === val;
+          return (
+            <button key={val} role="tab" aria-selected={active} onClick={() => { setStatus(val); setPage(1); }}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px', border: 'none',
+                borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                boxShadow: 'var(--shadow-inset-hairline)',
+              }}>
+              <span>{label}</span>
+              <span style={{ display: 'inline-flex', minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', padding: '0 6px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', background: active ? 'rgba(255,255,255,.22)' : 'var(--grey-100)', color: active ? 'var(--text-inverse)' : 'var(--text-muted)' }}>{statusCounts[val]}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 820 }}>
@@ -81,19 +111,32 @@ export default function AdminContacts({ notify }) {
           <span style={{ flex: '1 1 160px' }}>Trạng thái</span>
         </div>
 
-        {isLoading && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', color: 'var(--text-muted)' }}>Đang tải...</div>}
+        {isLoading && <div style={{ padding: 'var(--space-4) var(--gutter-card)' }}><SkeletonTable rows={5} cols={8} /></div>}
 
-        {!isLoading && result.items.map((c) => {
+        {isError && (
+          <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', alignItems: 'center' }}>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Lỗi tải dữ liệu. Vui lòng thử lại.</span>
+            <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
+          </div>
+        )}
+
+        {!isLoading && !isError && result.items.map((c) => {
           const parsed = parsePlateNumber(c.plateNumber);
           return (
-            <div key={c.id} onClick={() => setSelected(c)} title="Xem chi tiết" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}>
+            <div key={c.id} onClick={() => setSelected(c)} role="button" tabIndex={0}
+              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelected(c); } }}
+              title="Xem chi tiết" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}>
               <span style={{ flex: '1 1 96px', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{c.fullName}</span>
-              <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{c.phone}</span>
+              <span style={{ flex: '1 1 88px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                {c.phone}
+                <a href={`tel:${c.phone}`} aria-label={`Gọi ${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={14} /></a>
+                <a href={`https://zalo.me/${c.phone}`} target="_blank" rel="noreferrer" aria-label="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
+              </span>
               <span style={{ flex: '1 1 100px' }}>
                 {parsed ? <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} /> : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
               </span>
               <span style={{ flex: '1 1 72px' }}>
-                <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: INTENT_COLOR[c.intent] + '18', color: INTENT_COLOR[c.intent] }}>
+                <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: `color-mix(in srgb, ${INTENT_COLOR[c.intent] || 'var(--text-muted)'} 16%, transparent)`, color: INTENT_COLOR[c.intent] || 'var(--text-muted)' }}>
                   {INTENT_LABEL[c.intent] || c.intent}
                 </span>
               </span>
@@ -103,13 +146,20 @@ export default function AdminContacts({ notify }) {
                 {new Date(c.createdAt).toLocaleDateString('vi-VN')}
               </span>
               <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
-                <Select
-                  value={STATUS_LABEL[c.status] || c.status}
-                  options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
-                  onChange={(v) => handleStatus(c.id, v)}
-                  variant="pill"
-                  style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}
-                />
+                {updatingId === c.id ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                    <Loader2 size={16} className="bsd-spin" />
+                    <span style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}>{STATUS_LABEL[c.status] || c.status}</span>
+                  </span>
+                ) : (
+                  <Select
+                    value={STATUS_LABEL[c.status] || c.status}
+                    options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
+                    onChange={(v) => handleStatus(c.id, v)}
+                    variant="pill"
+                    style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}
+                  />
+                )}
               </span>
             </div>
           );
@@ -117,13 +167,15 @@ export default function AdminContacts({ notify }) {
         </div>
         </div>
 
-        {!isLoading && result.items.length === 0 && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có yêu cầu nào.</div>}
+        {!isLoading && !isError && result.items.length === 0 && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có yêu cầu nào.</div>}
       </div>
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
+            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page <= 1 ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page <= 1 ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }} aria-label="Trang trước">‹</button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button key={p} onClick={() => setPage(p)} style={{
+            <button key={p} onClick={() => setPage(p)} aria-current={p === page ? 'page' : undefined} style={{
               minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)',
               background: p === page ? 'var(--action-primary)' : 'var(--white)',
               color: p === page ? 'var(--white)' : 'var(--text-body)',
@@ -131,21 +183,20 @@ export default function AdminContacts({ notify }) {
               cursor: 'pointer', boxShadow: 'var(--shadow-inset-hairline)',
             }}>{p}</button>
           ))}
+          <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
+            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page >= totalPages ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page >= totalPages ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }} aria-label="Trang sau">›</button>
         </div>
       )}
 
-      {selected && (
-        <div className="contact-detail-overlay" onClick={() => setSelected(null)}>
-          <div className="contact-detail-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={`Chi tiết yêu cầu của ${selected.fullName}`}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-                <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{selected.fullName}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{(INTENT_LABEL[selected.intent] || selected.intent) + (selected.source ? ' · ' + selected.source : '')}</span>
-              </div>
-              <button type="button" aria-label="Đóng" onClick={() => setSelected(null)} style={{ border: 'none', background: 'var(--surface-muted)', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer', flexShrink: 0 }}><X size={18} /></button>
-            </div>
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.fullName || ''} maxWidth="520px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {selected && (
+            <>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{INTENT_LABEL[selected.intent] || selected.intent}</span>
+                {selected.source && <Badge tone="blue">{SOURCE_LABEL[selected.source] || selected.source}</Badge>}
+              </span>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Điện thoại</span>
                 <a href={`tel:${selected.phone}`} style={{ font: 'var(--type-body)', color: 'var(--text-link)', textDecoration: 'none' }}>{selected.phone}</a>
@@ -154,7 +205,12 @@ export default function AdminContacts({ notify }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Biển quan tâm</span>
                 {selected.plateNumber ? (
-                  <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.plateNumber}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <PlateVisual size="sm" {...(parsePlateNumber(selected.plateNumber) || {})} />
+                    {selected.plateId
+                      ? <a href={routeFor('detail', selected.plateId)} style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)', textDecoration: 'none' }}>Xem biển {selected.plateNumber} →</a>
+                      : <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.plateNumber}</span>}
+                  </span>
                 ) : (
                   <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-faint)' }}>Khách hỏi chung, không có biển cụ thể</span>
                 )}
@@ -179,22 +235,25 @@ export default function AdminContacts({ notify }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái xử lý</span>
-                <Select
-                  value={STATUS_LABEL[selected.status] || selected.status}
-                  options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
-                  onChange={(v) => { handleStatus(selected.id, v); setSelected((s) => ({ ...s, status: STATUS_VAL[v] })); }}
-                  variant="pill"
-                  style={{ color: STATUS_COLOR[selected.status] || 'var(--text-strong)' }}
-                />
+                {updatingId === selected.id ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                    <Loader2 size={16} className="bsd-spin" />
+                    <span style={{ color: STATUS_COLOR[selected.status] || 'var(--text-strong)' }}>{STATUS_LABEL[selected.status] || selected.status}</span>
+                  </span>
+                ) : (
+                  <Select
+                    value={STATUS_LABEL[selected.status] || selected.status}
+                    options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
+                    onChange={(v) => { handleStatus(selected.id, v); setSelected((s) => ({ ...s, status: STATUS_VAL[v] })); }}
+                    variant="pill"
+                    style={{ color: STATUS_COLOR[selected.status] || 'var(--text-strong)' }}
+                  />
+                )}
               </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-5)' }}>
-              <button type="button" onClick={() => setSelected(null)} style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-body)', cursor: 'pointer' }}>Đóng</button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { MessageCircle, Phone, Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Input, Select } from '../components/index.jsx';
+import { Input, Select, Checkbox } from '../components/index.jsx';
 import { useSubmitContact } from '../services/contactService.js';
 import { content } from '../lib/content/index.js';
+import { validatePhone, normalizePhone } from '../lib/phone.js';
 
 const PROCESS_ICONS = [MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound];
 
@@ -24,43 +25,56 @@ function TikTokIcon(props) {
   );
 }
 
-const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt'];
-const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy' };
+const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Săn hộ / tư vấn theo nhu cầu'];
+const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting' };
+const RATE_KEY = 'biensovip_contact_rate';
 
 export default function ChatZaloContact({ notify }) {
-  const [form, setForm] = useState({ fullName: '', phone: '', plateNumber: '', note: '', intent: 'inquiry', depositAmount: '' });
+  const [form, setForm] = useState({ fullName: '', phone: '', email: '', plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' });
   const submit = useSubmitContact();
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const rateLimited = () => {
+    try {
+      const now = Date.now();
+      const ts = (JSON.parse(localStorage.getItem(RATE_KEY)) || []).filter((t) => now - t < 5 * 60 * 1000);
+      localStorage.setItem(RATE_KEY, JSON.stringify([...ts, now]));
+      return ts.length >= 3;
+    } catch { return false; }
+  };
 
   const handleSubmit = () => {
+    if (form.honeypot) return; // bot trap — silently drop
+    if (rateLimited()) { toast.error('Bạn đã gửi quá nhiều yêu cầu, vui lòng thử lại sau ít phút.'); return; }
     if (!form.fullName.trim() || !form.phone.trim()) {
       toast.error('Vui lòng nhập họ tên và số điện thoại.');
       return;
     }
-    if (!/^0\d{8,10}$/.test(form.phone.trim().replace(/[\s\-\.]/g, ''))) {
+    if (!validatePhone(form.phone)) {
       toast.error('Số điện thoại chưa đúng định dạng (VD: 0905221334).');
       return;
     }
-    if (form.intent !== 'inquiry' && !form.plateNumber.trim()) {
+    if ((form.intent === 'deposit_request' || form.intent === 'buy') && !form.plateNumber.trim()) {
       toast.error('Vui lòng nhập biển số quan tâm.');
       return;
     }
 
     submit.mutate({
       fullName: form.fullName.trim(),
-      phone: form.phone.trim(),
+      phone: normalizePhone(form.phone),
+      email: form.email?.trim() || null,
       plateId: null,
       plateNumber: form.plateNumber.trim() || null,
       note: form.note.trim() || null,
       source: 'contact-page',
       intent: form.intent,
       depositAmount: form.intent === 'deposit_request' ? (Number(form.depositAmount.replace(/[^\d]/g, '')) || null) : null,
-      honeypot: null,
+      subscribeToNotifications: !!form.subscribe,
+      honeypot: form.honeypot || null,
     }, {
       onSuccess: () => {
         toast.success('Đã gửi yêu cầu, chúng tôi sẽ liên hệ trong thời gian sớm nhất!');
-        setForm({ fullName: '', phone: '', plateNumber: '', note: '', intent: 'inquiry' });
+        setForm({ fullName: '', phone: '', email: '', plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' });
       },
       onError: (err) => {
         toast.error(err?.message || 'Gửi thất bại, vui lòng thử lại.');
@@ -120,6 +134,7 @@ export default function ChatZaloContact({ notify }) {
             <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-pill)', background: 'var(--surface-tint-cream)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={22} style={{ color: 'var(--action-primary)' }} /></div>
             <div><h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Gửi yêu cầu</h3><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gọi lại trong 15 phút.</span></div>
           </div>
+          <input type="text" name="company" value={form.honeypot} onChange={set('honeypot')} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} />
           <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={set('fullName')} />
           <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={form.phone} onChange={set('phone')} />
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -132,6 +147,8 @@ export default function ChatZaloContact({ notify }) {
           {form.intent === 'deposit_request' && (
             <Input label="Số tiền cọc (VNĐ)" placeholder="VD: 50000000" value={form.depositAmount} onChange={set('depositAmount')} />
           )}
+          <Input label="Email (tùy chọn)" type="email" placeholder="email@example.com" value={form.email} onChange={set('email')} />
+          <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={form.subscribe} onChange={(v) => setForm((f) => ({ ...f, subscribe: !!v }))} />
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
             <textarea rows={3} placeholder="VD: cần sang tên trong tuần này" value={form.note} onChange={set('note')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
           </label>

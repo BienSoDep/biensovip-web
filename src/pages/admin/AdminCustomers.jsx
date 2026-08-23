@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail } from '../../services/adminCustomers.js';
 import { SearchField, Select, Badge, IconButton } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
+import Modal from '../../components/Modal.jsx';
 
 const STATUS_OPTS = ['Tất cả', 'Hoạt động', 'Đã khóa', 'Chưa xác thực'];
 const STATUS_VAL = { 'Hoạt động': 'active', 'Đã khóa': 'locked', 'Chưa xác thực': 'unverified' };
@@ -15,6 +17,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const [page, setPage] = useState(1);
   const [confirmLock, setConfirmLock] = useState(null);
   const [detailId, setDetailId] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   const { data, isLoading, isError, refetch } = useAdminCustomers({ status, q: adminQ || undefined, page, perPage: 20 });
   const updateStatus = useUpdateCustomerStatus();
@@ -23,7 +26,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
 
   const handleToggle = (c) => {
-    const next = c.status === 'active' ? 'locked' : 'active';
+    const next = c.status === 'locked' ? 'active' : 'locked';
     const verb = next === 'locked' ? 'khóa' : 'mở khóa';
     const warning = next === 'locked'
       ? `Khóa tài khoản "${c.email || c.fullName}" sẽ chấm dứt toàn bộ phiên đăng nhập hiện tại của khách hàng này.`
@@ -33,16 +36,18 @@ export default function AdminCustomers({ st, setSt, notify }) {
   };
 
   const doToggle = () => {
-    if (!confirmLock) return;
+    if (!confirmLock || updatingId) return;
+    setUpdatingId(confirmLock.id);
     updateStatus.mutate({ id: confirmLock.id, status: confirmLock.next }, {
-      onSuccess: () => toast.success(`Đã ${confirmLock.verb} tài khoản`),
-      onError: (e) => toast.error(e?.message || `Lỗi ${confirmLock.verb} tài khoản`),
+      onSuccess: () => { toast.success(`Đã ${confirmLock.verb} tài khoản`); setUpdatingId(null); },
+      onError: (e) => { toast.error(e?.message || `Lỗi ${confirmLock.verb} tài khoản`); setUpdatingId(null); },
     });
     setConfirmLock(null);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <style>{'@keyframes bsd-spin { to { transform: rotate(360deg); } } .bsd-spin { animation: bsd-spin 0.8s linear infinite; }'}</style>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
         <SearchField placeholder="Tìm theo email hoặc tên…" value={st.adminQ || ''} onChange={(e) => { setSt((s) => ({ ...s, adminQ: e.target.value })); setPage(1); }} width={260} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -76,7 +81,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
 
         {!isLoading && !isError && result.items.map((c) => (
           <div key={c.id} onClick={() => setDetailId(c.id)} role="button" tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter') setDetailId(c.id); }}
+            onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setDetailId(c.id); } }}
             style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}>
             <span style={{ flex: '1 1 160px', minWidth: 0 }}>
               <span style={{ display: 'block', font: 'var(--type-title-3)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.email || '—'}</span>
@@ -96,9 +101,13 @@ export default function AdminCustomers({ st, setSt, notify }) {
               </span>
             </span>
             <span style={{ flex: '0 0 88px' }} onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" onClick={() => handleToggle(c)}>
-                {c.status === 'locked' ? 'Mở khóa' : 'Khóa'}
-              </Button>
+              {updatingId === c.id ? (
+                <Loader2 size={20} className="bsd-spin" style={{ color: 'var(--text-muted)', margin: '8px 0' }} />
+              ) : (
+                <Button variant="ghost" size="sm" onClick={() => handleToggle(c)}>
+                  {c.status === 'locked' ? 'Mở khóa' : 'Khóa'}
+                </Button>
+              )}
             </span>
           </div>
         ))}
@@ -126,18 +135,15 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </div>
       )}
 
-      {!!confirmLock && (
-        <div role="alertdialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div style={{ width: '100%', maxWidth: 400, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <h2 style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Xác nhận {confirmLock.verb} tài khoản</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{confirmLock.warning}</p>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
-              <Button variant="ghost" size="md" onClick={() => setConfirmLock(null)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={doToggle}>Xác nhận</Button>
-            </div>
+      <Modal open={!!confirmLock} onClose={() => setConfirmLock(null)} title={`Xác nhận ${confirmLock?.verb} tài khoản`} maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{confirmLock?.warning}</p>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+            <Button variant="ghost" size="md" onClick={() => setConfirmLock(null)}>Hủy</Button>
+            <Button variant={confirmLock?.next === 'locked' ? 'danger' : 'primary'} size="md" onClick={doToggle} disabled={!!updatingId}>{updatingId ? 'Đang xử lý…' : 'Xác nhận'}</Button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {!!detailId && <CustomerDetailDrawer id={detailId} onClose={() => setDetailId(null)} />}
     </div>

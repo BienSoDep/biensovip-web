@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Badge, IconButton } from '../../components/index.jsx';
+import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { useAdminBlogPosts, useDeleteBlogPost } from '../../services/blog.js';
 
 const STATUS_TONE = { draft: 'amber', published: 'mint' };
@@ -12,6 +13,8 @@ function formatDate(iso) {
 
 export default function AdminPosts({ st, patch, notify }) {
   const [status, setStatus] = useState('');
+  const [confirmPost, setConfirmPost] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const adminQ = (st?.adminQ || '').trim();
   const { data, isLoading, isError } = useAdminBlogPosts(status || undefined, adminQ || undefined);
   const deletePost = useDeleteBlogPost();
@@ -19,11 +22,14 @@ export default function AdminPosts({ st, patch, notify }) {
 
   const openEditPost = (post) => patch({ screen: 'compose', editPostId: post.id });
 
-  const removePost = (post) => {
-    if (!window.confirm(`Xóa bài "${post.title}"?`)) return;
-    deletePost.mutate(post.id, {
-      onSuccess: () => notify('Đã xóa bài viết'),
-      onError: (err) => notify(err.message || 'Xóa thất bại.'),
+  const confirmRemove = (post) => setConfirmPost(post);
+
+  const removePost = () => {
+    if (!confirmPost || deletingId) return;
+    setDeletingId(confirmPost.id);
+    deletePost.mutate(confirmPost.id, {
+      onSuccess: () => { notify('Đã xóa bài viết'); setDeletingId(null); setConfirmPost(null); },
+      onError: (err) => { notify(err.message || 'Xóa thất bại.'); setDeletingId(null); },
     });
   };
 
@@ -52,7 +58,7 @@ export default function AdminPosts({ st, patch, notify }) {
             <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(a.publishedAt)}</span>
             <span style={{ flex: '0 0 72px', display: 'flex', gap: 'var(--space-2)' }}>
               <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEditPost(a)} />
-              <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => removePost(a)} />
+              <IconButton name="trash-2" label="Xóa" size="sm" disabled={deletingId === a.id} onClick={() => confirmRemove(a)} />
             </span>
           </div>
         ))}
@@ -60,6 +66,17 @@ export default function AdminPosts({ st, patch, notify }) {
         </div>
         {!isLoading && !isError && items.length === 0 && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có bài viết nào.</div>}
       </div>
+
+      <ConfirmModal
+        open={!!confirmPost}
+        onClose={() => setConfirmPost(null)}
+        title="Xóa bài viết"
+        message={`Xóa bài "${confirmPost?.title}"? Thao tác này không thể hoàn tác.`}
+        confirmLabel="Xóa"
+        danger
+        loading={!!deletingId}
+        onConfirm={removePost}
+      />
     </div>
   );
 }

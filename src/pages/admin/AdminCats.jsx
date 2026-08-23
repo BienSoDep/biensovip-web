@@ -4,7 +4,8 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Button from '../../components/Button.jsx';
-import { Input, IconButton, InfoTip } from '../../components/index.jsx';
+import Modal from '../../components/Modal.jsx';
+import { Input, IconButton, InfoTip, Badge } from '../../components/index.jsx';
 import { CATEGORY_GROUPS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories } from '../../services/categories.js';
 
 // 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
@@ -34,7 +35,9 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, onEdit, onD
           {c.minPrice != null ? c.minPrice.toLocaleString('vi-VN') : '0'} - {c.maxPrice != null ? c.maxPrice.toLocaleString('vi-VN') : '∞'}
         </span>
       )}
-      {!isBlogCategory && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.plateCount} biển</span>}
+      {!isBlogCategory && (c.plateCount > 0
+        ? <Badge tone="amber">{c.plateCount} biển</Badge>
+        : <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>0 biển</span>)}
       {isBlogCategory && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.plateCount} bài viết</span>}
       <IconButton name="pencil" label="Sửa danh mục" size="sm" onClick={() => onEdit(c)} />
       <IconButton name="trash-2" label="Xóa danh mục" size="sm" onClick={() => onDelete(c)} />
@@ -47,6 +50,7 @@ export default function AdminCats({ notify }) {
   const [form, setForm] = useState({ name: '', displayOrder: 0, minPrice: '', maxPrice: '', code: '' });
   const [formErr, setFormErr] = useState('');
   const [confirmDel, setConfirmDel] = useState(null);
+  const [deleteErr, setDeleteErr] = useState(null);
   const [editId, setEditId] = useState(null);
 
   const { data, isLoading, isError } = useAdminCategories(group);
@@ -71,6 +75,13 @@ export default function AdminCats({ notify }) {
     const name = form.name.trim();
     if (!name) { setFormErr('Nhập tên danh mục.'); return; }
     if (isBlogCategory && !editId && !form.code.trim()) { setFormErr('Nhập mã danh mục (khớp với giá trị Category của bài viết).'); return; }
+    if (isPriceRange) {
+      const min = form.minPrice !== '' ? Number(form.minPrice) : null;
+      const max = form.maxPrice !== '' ? Number(form.maxPrice) : null;
+      if (min != null && min < 0) { setFormErr('Giá tối thiểu không được âm.'); return; }
+      if (max != null && max < 0) { setFormErr('Giá tối đa không được âm.'); return; }
+      if (min != null && max != null && min > max) { setFormErr('Giá tối thiểu không được lớn hơn giá tối đa.'); return; }
+    }
     setFormErr('');
     const body = {
       group,
@@ -101,19 +112,26 @@ export default function AdminCats({ notify }) {
     const oldIdx = items.findIndex((c) => c.id === active.id);
     const newIdx = items.findIndex((c) => c.id === over.id);
     if (oldIdx < 0 || newIdx < 0) return;
-    reorderCats.mutate(arrayMove(items, oldIdx, newIdx).map((c) => c.id));
+    const next = arrayMove(items, oldIdx, newIdx);
+    reorderCats.mutate(next.map((c) => c.id), {
+      onSuccess: () => notify('Đã cập nhật thứ tự'),
+      onError: () => notify('Lỗi cập nhật thứ tự — thử lại.'),
+    });
   };
 
   const doDelete = () => {
     const id = confirmDel.id;
+    setDeleteErr(null);
     deleteCat.mutate(id, {
-      onSuccess: () => { notify('Đã xóa danh mục'); setConfirmDel(null); },
+      onSuccess: () => { notify('Đã xóa danh mục'); setConfirmDel(null); setDeleteErr(null); },
       onError: (err) => {
-        if (err.code === 'CATEGORY_IN_USE') notify(`Không thể xóa — đang có ${err.usageCount ?? ''} biển số dùng danh mục này.`);
-        else notify(err.message || 'Xóa thất bại.');
+        if (err.code === 'CATEGORY_IN_USE') setDeleteErr({ usageCount: err.usageCount });
+        else { notify(err.message || 'Xóa thất bại.'); setConfirmDel(null); }
       },
     });
   };
+
+  const closeDelete = () => { setConfirmDel(null); setDeleteErr(null); };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -176,18 +194,26 @@ export default function AdminCats({ notify }) {
         </div>
       </div>
 
-      {confirmDel && (
-        <div role="alertdialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Danh mục <b>{confirmDel.name}</b> sẽ được ẩn khỏi hệ thống. Bạn có thể khôi phục lại sau nếu cần.</p>
+      <Modal open={!!confirmDel} onClose={closeDelete} title={deleteErr ? 'Không thể xóa' : 'Xác nhận xóa'} maxWidth="420px">
+        {deleteErr ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+              Danh mục <b>{confirmDel?.name}</b> đang được <b>{deleteErr.usageCount ?? ''} biển số</b> sử dụng nên không thể xóa. Hãy gỡ liên kết hoặc đổi danh mục cho các biển đó trước.
+            </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              <Button variant="ghost" size="md" onClick={() => setConfirmDel(null)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={doDelete}>Xóa</Button>
+              <Button variant="primary" size="md" onClick={closeDelete}>Đã hiểu</Button>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Danh mục <b>{confirmDel?.name}</b> sẽ được ẩn khỏi hệ thống. Bạn có thể khôi phục lại sau nếu cần.</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+              <Button variant="ghost" size="md" onClick={closeDelete} disabled={deleteCat.isPending}>Hủy</Button>
+              <Button variant="danger" size="md" onClick={doDelete} loading={deleteCat.isPending}>Xóa</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -61,6 +61,7 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   const numLen = String(num || '').replace(/[.\s]/g, '').length;
   const numScale = Math.min(1, BASELINE_NUM_LEN[kind] / Math.max(numLen, 1));
   const numFs = scaleFontSize(r.numFs, numScale);
+  const ariaLabel = ['Biển số', prov, seri, num].filter(Boolean).join(' ');
   // Hiệu ứng chữ dập nổi (embossed) — đậm hơn: bóng tối đổ dày xuống dưới-phải (thành lõm khuất sáng)
   // + viền sáng trắng rõ hắt lên trên-trái (rìa lõm bắt sáng mạnh), giả lập ánh sáng chiếu chéo từ trên-trái.
   const textColor = '#191919';
@@ -98,17 +99,17 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   };
 
   const screws = SCREW_POS.map((pos, i) => (
-    <span key={i} style={screwStyle(s, pos)} />
+    <span key={i} aria-hidden style={screwStyle(s, pos)} />
   ));
 
   if (isMoto) {
     return (
-      <div style={plateStyle}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, fontFamily, fontWeight: 700, color: textColor, textShadow, lineHeight: 1 }}>
+      <div style={plateStyle} role="img" aria-label={ariaLabel}>
+        <div aria-hidden style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, fontFamily, fontWeight: 700, color: textColor, textShadow, lineHeight: 1 }}>
           <span style={{ fontSize: r.topFs }}>{prov}</span>
           <span style={{ fontSize: r.topFs, opacity: 0.92 }}>{seri}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, lineHeight: 1, whiteSpace: 'nowrap' }}>
+        <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, lineHeight: 1, whiteSpace: 'nowrap' }}>
           {num}
         </div>
         {screws}
@@ -117,12 +118,12 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   }
 
   return (
-    <div style={plateStyle}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: 1.02, fontFamily, fontWeight: 700, color: textColor, textShadow }}>
+    <div style={plateStyle} role="img" aria-label={ariaLabel}>
+      <div aria-hidden style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: 1.02, fontFamily, fontWeight: 700, color: textColor, textShadow }}>
         <span style={{ fontSize: r.provFs }}>{prov}</span>
         <span style={{ fontSize: r.seriFs, opacity: 0.92 }}>{seri}</span>
       </div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, whiteSpace: 'nowrap' }}>
+      <div aria-hidden style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, whiteSpace: 'nowrap' }}>
         {num}
       </div>
       {screws}

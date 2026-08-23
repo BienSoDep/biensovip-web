@@ -16,3 +16,11 @@ export function useUpdateCollaboratorStatus() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-collaborators'] }),
   });
 }
+
+export function useMarkCommissionsPaid() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/collaborators/${id}/pay-commissions`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-collaborators'] }),
+  });
+}

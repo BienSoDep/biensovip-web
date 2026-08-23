@@ -14,6 +14,7 @@ import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import EmailCapture from '../components/EmailCapture.jsx';
 import { useSubmitContact } from '../services/contactService.js';
+import { validatePhone, normalizePhone } from '../lib/phone.js';
 
 // Debounce a value — waits `delay`ms of silence before committing, so typing doesn't fire
 // a request per keystroke. Pure client-side; React Query then caches each committed value.
@@ -59,13 +60,13 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
       toast.error('Vui lòng nhập họ tên và số điện thoại.');
       return;
     }
-    if (!/^0\d{8,10}$/.test(cForm.phone.trim().replace(/[\s\-\.]/g, ''))) {
+    if (!validatePhone(cForm.phone)) {
       toast.error('Số điện thoại chưa đúng định dạng.');
       return;
     }
     submitContact.mutate({
       fullName: cForm.fullName.trim(),
-      phone: cForm.phone.trim(),
+      phone: normalizePhone(cForm.phone),
       plateId: null,
       note: cForm.note.trim() || null,
       source: 'home-page',
@@ -203,7 +204,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {featuredVideoItems.map((v) => (
-              <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', display: 'flex', justifyContent: 'center' }}>
+              <div key={v.id} className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }}>
                 {v.platform === 'tiktok' ? (
                   <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
                 ) : (

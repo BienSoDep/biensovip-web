@@ -1,10 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
+import { toast } from 'react-hot-toast';
+import { CreditCard, FileText, Users, BadgeCheck } from 'lucide-react';
+import { routeFor } from '../../config/routes.js';
 import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
+import PlateVisual from '../../components/PlateVisual.jsx';
 import { InfoTip } from '../../components/index.jsx';
 import {
   useDashboardSummary, useActionsChart, useTrafficSources, useFunnel, usePlateDistribution,
@@ -13,6 +17,13 @@ import {
 } from '../../services/adminDashboard.js';
 
 const PIE_COLORS = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#ca8a04', '#0891b2', '#6d28d9'];
+
+const KPI_CARDS = [
+  { key: 'totalViews', label: 'Tổng lượt xem', icon: FileText, series: 'views', color: '#2563eb', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
+  { key: 'contactRequests', label: 'Yêu cầu liên hệ', icon: Users, series: 'contacts', color: '#7c3aed', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
+  { key: 'closedContacts', label: 'Đã chốt', icon: BadgeCheck, series: 'closed', color: '#16a34a', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
+  { key: 'soldPlates', label: 'Đã bán', icon: CreditCard, series: 'sold', color: '#ea580c', access: (k) => k?.soldPlates },
+];
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 const ORDER_STATUS_LABEL = { new: 'Mới', consulting: 'Tư vấn', closed: 'Chốt' };
@@ -35,7 +46,11 @@ export default function Dashboard({ go, st }) {
   const [rangeIdx, setRangeIdx] = useState(1); // default 30 days; null nếu đang dùng custom range
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [granularity, setGranularity] = useState('day');
+
+  const reduceMotion = useMemo(
+    () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    []
+  );
 
   const range = useMemo(() => {
     if (rangeIdx === null && customFrom && customTo) {
@@ -44,6 +59,12 @@ export default function Dashboard({ go, st }) {
     const p = PRESETS[rangeIdx ?? 1];
     return { from: p.from(), to: new Date() };
   }, [rangeIdx, customFrom, customTo]);
+
+  // Granularity tự suy ra theo độ dài khoảng thời gian: ≤14 ngày → ngày, ≤90 ngày → tuần, còn lại → tháng
+  const granularity = useMemo(() => {
+    const days = Math.max(1, Math.round((range.to - range.from) / 86400000));
+    return days <= 14 ? 'day' : days <= 90 ? 'week' : 'month';
+  }, [range]);
 
   const summary = useDashboardSummary(range);
   const chart = useActionsChart({ ...range, granularity });
@@ -68,9 +89,16 @@ export default function Dashboard({ go, st }) {
 
   const selectPreset = (i) => { setRangeIdx(i); setCustomFrom(''); setCustomTo(''); };
   const applyCustomRange = (from, to) => {
-    setCustomFrom(from);
-    setCustomTo(to);
-    if (from && to) setRangeIdx(null);
+    if (!from || !to) { setCustomFrom(from); setCustomTo(to); return; }
+    let f = from, t = to;
+    if (f > t) [f, t] = [t, f]; // auto-swap from>to
+    if ((new Date(t) - new Date(f)) / 86400000 > 365) {
+      f = new Date(new Date(t).getTime() - 365 * 86400000).toISOString().slice(0, 10);
+      toast('Khoảng thời gian tối đa 365 ngày — đã tự thu hẹp');
+    }
+    setCustomFrom(f);
+    setCustomTo(t);
+    setRangeIdx(null);
   };
 
   return (
@@ -101,30 +129,26 @@ export default function Dashboard({ go, st }) {
             style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
         </div>
         <div style={{ flex: 1 }} />
-        <select
-          value={granularity}
-          onChange={(e) => setGranularity(e.target.value)}
-          style={{ font: 'var(--type-caption)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-hairline)', background: 'var(--white)' }}
-        >
-          <option value="day">Theo ngày</option>
-          <option value="week">Theo tuần</option>
-          <option value="month">Theo tháng</option>
-        </select>
       </div>
 
       {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
         {summary.isLoading ? (
-          [1, 2, 3, 4, 5, 6].map((i) => <SkeletonBase key={i} height={100} />)
+          [1, 2, 3, 4].map((i) => <SkeletonBase key={i} height={116} />)
         ) : (
-          <>
-            <Kpi label="Tổng lượt xem" value={kpis?.totalViews?.value} delta={fmtPct(kpis?.totalViews?.changePercent)} deltaColor={kpis?.totalViews?.changePercent >= 0 ? 'var(--status-success)' : 'var(--status-danger)'} />
-            <Kpi label="Yêu cầu liên hệ" value={kpis?.contactRequests?.value} delta={fmtPct(kpis?.contactRequests?.changePercent)} deltaColor={kpis?.contactRequests?.changePercent >= 0 ? 'var(--status-success)' : 'var(--status-danger)'} />
-            <Kpi label="Chuyển đổi (liên hệ/xem)" value={kpis?.conversionPercent != null ? `${kpis.conversionPercent}%` : '--'} />
-            <Kpi label="Đã chốt" value={kpis?.closedContacts?.value} delta={fmtPct(kpis?.closedContacts?.changePercent)} deltaColor={kpis?.closedContacts?.changePercent >= 0 ? 'var(--status-success)' : 'var(--status-danger)'} />
-            <Kpi label="Biển đang rao" value={kpis?.activePlates} />
-            <Kpi label="Đã bán" value={kpis?.soldPlates} />
-          </>
+          KPI_CARDS.map((c) => (
+            <KpiCard
+              key={c.key}
+              icon={c.icon}
+              color={c.color}
+              label={c.label}
+              value={c.access(kpis)}
+              delta={c.delta != null ? fmtPct(c.delta(kpis)) : null}
+              deltaColor={c.delta != null ? ((c.delta(kpis) ?? 0) >= 0 ? 'var(--status-success)' : 'var(--status-danger)') : 'var(--text-muted)'}
+              spark={(chart.data?.points || []).map((p) => p[c.series] ?? 0)}
+              animate={!reduceMotion}
+            />
+          ))
         )}
       </div>
 
@@ -148,16 +172,21 @@ export default function Dashboard({ go, st }) {
             <SkeletonBase height={280} />
           ) : chart.data?.points?.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={chart.data.points}>
+              <AreaChart data={chart.data.points}>
+                <defs>
+                  <linearGradient id="gViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2563eb" stopOpacity={0.28} />
+                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="views" stroke="#2563eb" strokeWidth={2} dot={false} name="Xem" />
-                <Line type="monotone" dataKey="calls" stroke="#ca8a04" strokeWidth={2} dot={false} name="Gọi" />
-                <Line type="monotone" dataKey="contacts" stroke="#16a34a" strokeWidth={2} dot={false} name="Liên hệ" />
-              </LineChart>
+                <Area type="monotone" dataKey="views" stroke="#2563eb" strokeWidth={2} fill="url(#gViews)" isAnimationActive={!reduceMotion} animationDuration={700} name="Xem" />
+                <Line type="monotone" dataKey="contacts" stroke="#16a34a" strokeWidth={2} dot={false} isAnimationActive={!reduceMotion} name="Liên hệ" />
+              </AreaChart>
             </ResponsiveContainer>
           ) : (
             <EmptyBlock>Chưa có dữ liệu trong khoảng thời gian này</EmptyBlock>
@@ -165,22 +194,11 @@ export default function Dashboard({ go, st }) {
         </div>
 
         <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nguồn truy cập theo hành vi</h3>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nguồn truy cập</h3>
           {traffic.isLoading ? (
             <SkeletonBase height={280} />
           ) : traffic.data?.items?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={traffic.data.items}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
-                <XAxis dataKey="source" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="visits" name="Xem" stackId="a" fill="#2563eb" />
-                <Bar dataKey="calls" name="Gọi" stackId="a" fill="#ca8a04" />
-                <Bar dataKey="contacts" name="Liên hệ" stackId="a" fill="#16a34a" />
-              </BarChart>
-            </ResponsiveContainer>
+            <TrafficSourcesPie items={traffic.data.items} animate={!reduceMotion} />
           ) : (
             <EmptyBlock>Chưa có dữ liệu nguồn truy cập</EmptyBlock>
           )}
@@ -196,15 +214,7 @@ export default function Dashboard({ go, st }) {
           {interested.isLoading ? (
             <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
           ) : interested.data?.items?.length > 0 ? (
-            interested.data.items.map((p, i) => (
-              <div key={p.plateId} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < interested.data.items.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24 }}>{i + 1}</span>
-                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{p.views} xem</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{p.favorites} lưu</span>
-                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: p.contacts > 0 ? 'var(--status-success)' : 'var(--text-faint)' }}>{p.contacts} liên hệ</span>
-              </div>
-            ))
+            <TopPlatesTable items={interested.data.items} />
           ) : (
             <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có dữ liệu</EmptyBlock></div>
           )}
@@ -579,14 +589,138 @@ export default function Dashboard({ go, st }) {
   );
 }
 
-function Kpi({ label, value, delta, deltaColor }) {
+function useCountUp(target, animate) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!animate) { setVal(Number(target) || 0); return; }
+    const n = Number(target) || 0;
+    if (!n) { setVal(0); return; }
+    let raf;
+    const t0 = performance.now();
+    const dur = 700;
+    const tick = (t) => {
+      const p = Math.min(1, (t - t0) / dur);
+      setVal(Math.round(n * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, animate]);
+  return val;
+}
+
+function Sparkline({ data, color, animate }) {
+  const pts = (data || []).map((v) => ({ v }));
+  if (!pts.length) return null;
   return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
-      <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{value ?? '--'}</span>
+    <div style={{ height: 36, width: '100%' }}>
+      <ResponsiveContainer width="100%" height={36}>
+        <AreaChart data={pts} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+          <defs>
+            <linearGradient id={`spark-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2} fill={`url(#spark-${color.replace('#', '')})`} isAnimationActive={animate} animationDuration={700} dot={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function KpiCard({ icon: Icon, color, label, value, delta, deltaColor, spark, animate }) {
+  const shown = useCountUp(value, animate);
+  return (
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: `${color}1f`, color }}>
+          <Icon size={18} />
+        </span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: 1 }}>{label}</span>
+      </div>
+      <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{shown.toLocaleString('vi-VN')}</span>
       {delta != null && (
         <span style={{ font: 'var(--type-caption)', color: deltaColor }}>{delta} so với kỳ trước</span>
       )}
+      <Sparkline data={spark} color={color} animate={animate} />
+    </div>
+  );
+}
+
+function parsePlate(raw) {
+  if (!raw) return { prov: '', seri: '', num: '' };
+  const s = raw.trim();
+  const idx = Math.max(s.lastIndexOf('-'), s.lastIndexOf(' '));
+  if (idx < 0) return { prov: '', seri: '', num: s };
+  const left = s.slice(0, idx).replace(/[\s-]/g, '');
+  const num = s.slice(idx + 1).trim();
+  const prov = left.match(/^\d{1,2}/)?.[0] || '';
+  const seri = left.slice(prov.length);
+  return { prov, seri, num };
+}
+
+function TrafficSourcesPie({ items, animate }) {
+  const total = items.reduce((acc, it) => acc + (Number(it.visits) || 0), 0);
+  const data = items.map((it, i) => ({
+    name: it.source,
+    value: Number(it.visits) || 0,
+    pct: total > 0 ? Math.round((Number(it.visits) || 0) / total * 100) : 0,
+    fill: PIE_COLORS[i % PIE_COLORS.length],
+  }));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <div style={{ height: 200 }}>
+        <ResponsiveContainer width="100%" height={200}>
+          <PieChart>
+            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={54} outerRadius={90} isAnimationActive={animate} animationDuration={700}>
+              {data.map((d) => <Cell key={d.name} fill={d.fill} />)}
+            </Pie>
+            <Tooltip formatter={(v, n) => [`${v} (${data.find((d) => d.name === n)?.pct ?? 0}%)`, n]} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        {data.map((d) => (
+          <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-caption)' }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: d.fill, flex: '0 0 auto' }} />
+            <span style={{ flex: 1, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
+            <span style={{ color: 'var(--text-muted)' }}>{d.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TopPlatesTable({ items }) {
+  const sorted = [...items].sort((a, b) => (b.views || 0) - (a.views || 0));
+  return (
+    <div>
+      {sorted.map((p, i) => {
+        const parsed = parsePlate(p.plateNumber);
+        const rank = i + 1;
+        return (
+          <div key={p.plateId} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', boxShadow: i < sorted.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
+            <span style={{ width: 24, height: 24, borderRadius: 'var(--radius-sm)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', flex: '0 0 auto',
+              background: rank <= 3 ? '#f59e0b' : 'var(--surface-sunken)', color: rank <= 3 ? 'var(--white)' : 'var(--text-muted)' }}>
+              {rank}
+            </span>
+            <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
+            <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateTypeName || '—'}</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 60px', textAlign: 'right' }}>{p.views ?? 0} xem</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 56px', textAlign: 'right' }}>{p.contacts ?? 0} LH</span>
+            <a
+              href={routeFor('detail', p.plateId)}
+              onClick={(e) => { e.preventDefault(); window.location.hash = routeFor('detail', p.plateId); }}
+              style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--link)', textDecoration: 'none', flex: '0 0 auto' }}
+            >
+              Xem →
+            </a>
+          </div>
+        );
+      })}
     </div>
   );
 }

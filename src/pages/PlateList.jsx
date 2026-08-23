@@ -6,7 +6,7 @@ import PlateCard from '../components/PlateCard.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useCategories } from '../services/categories.js';
-import { usePlates } from '../services/plates.js';
+import { usePlates, useInfinitePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
 import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -25,6 +25,13 @@ const SORT_OPTIONS = [
   { value: 'plate_number', label: 'Số biển A→Z' },
   { value: 'price_asc', label: 'Giá thấp → cao' },
   { value: 'price_desc', label: 'Giá cao → thấp' },
+];
+
+const PRICE_PRESETS = [
+  { label: 'Dưới 200tr', min: '', max: '200000000' },
+  { label: '200tr–500tr', min: '200000000', max: '500000000' },
+  { label: '500tr–1 tỷ', min: '500000000', max: '1000000000' },
+  { label: 'Trên 1 tỷ', min: '1000000000', max: '' },
 ];
 
 function readFiltersFromUrl() {
@@ -79,6 +86,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [infinite, setInfinite] = useState(false);
 
   const activeFilterCount = filters.cat.length + filters.city.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.status ? 1 : 0);
 
@@ -112,13 +120,34 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
   }), [filters]);
 
-  const { data, isLoading, isError, isFetching } = usePlates(apiFilters);
+  const { data, isLoading, isError, isFetching } = usePlates(apiFilters, { enabled: !infinite && filters.perPage !== 0 });
+
+  // Infinite scroll: bật khi toggle bật hoặc chọn "Xem tất cả" (bỏ cap 100).
+  const useInfinite = infinite || filters.perPage === 0;
+  const infiniteFilters = useMemo(() => ({
+    cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
+    q: filters.q || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
+    status: filters.status || undefined, sort: filters.sort, perPage: 18,
+  }), [filters]);
+  const inf = useInfinitePlates(infiniteFilters, { enabled: useInfinite });
   const stagger = useStaggeredReveal();
 
-  const items = data?.items || [];
-  const total = data?.total || 0;
-  const totalPages = data?.totalPages || 1;
-  const page = data?.page || filters.page;
+  useEffect(() => {
+    if (!useInfinite) return;
+    const onScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 640 && inf.hasNextPage && !inf.isFetchingNextPage) inf.fetchNextPage();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [useInfinite, inf.hasNextPage, inf.isFetchingNextPage, inf.fetchNextPage]);
+
+  const infiniteItems = inf.data?.pages?.flatMap((p) => p.items || []) || [];
+  const items = useInfinite ? infiniteItems : (data?.items || []);
+  const total = useInfinite ? (inf.data?.pages?.[0]?.total || 0) : (data?.total || 0);
+  const totalPages = useInfinite ? (inf.data?.pages?.[0]?.totalPages || 1) : (data?.totalPages || 1);
+  const page = useInfinite ? 0 : (data?.page || filters.page);
+  const showSkeleton = useInfinite ? inf.isLoading : (isLoading || isFetching);
+  const showError = useInfinite ? inf.isError : isError;
 
   const toggleArrayFilter = (key, id) => setFilter({
     [key]: filters[key].includes(id) ? filters[key].filter((x) => x !== id) : [...filters[key], id],
@@ -199,6 +228,15 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {PRICE_PRESETS.map((p) => {
+                      const active = filters.priceMin === p.min && filters.priceMax === p.max;
+                      return (
+                        <button key={p.label} type="button" onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
+                          style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
+                      );
+                    })}
+                  </div>
                   <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                     <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMin} onChange={(e) => setFilter({ priceMin: e.target.value })} placeholder="Từ"
                       style={{ flex: 1, minWidth: 0, height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
@@ -256,6 +294,15 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {PRICE_PRESETS.map((p) => {
+                const active = filters.priceMin === p.min && filters.priceMax === p.max;
+                return (
+                  <button key={p.label} type="button" onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
+                    style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
+                );
+              })}
+            </div>
             <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
               <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMin} onChange={(e) => setFilter({ priceMin: e.target.value })} placeholder="Từ"
                 style={{ flex: 1, minWidth: 0, height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
@@ -299,15 +346,16 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
               {hasActiveFilters && <Button variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
-              <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />
+              <button type="button" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm</button>
+              {!infinite && <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />}
               <Select  value={filters.sort} options={SORT_OPTIONS} onChange={(v) => setFilter({ sort: v })} variant="pill" />
             </div>
           </div>
-          {(isLoading || isFetching) ? (
+          {showSkeleton ? (
             <div style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
               {Array.from({ length: items.length || 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
             </div>
-          ) : isError ? (
+          ) : showError ? (
             <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center' }}>
               <span style={{ font: 'var(--type-body)', color: 'var(--status-danger)' }}>Không tải được danh sách biển số.</span>
             </div>
@@ -325,7 +373,10 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               <Button variant="dark" size="md" onClick={clearFilters}>Xóa bộ lọc</Button>
             </div>
           )}
-          {totalPages > 1 && (
+          {useInfinite && inf.isFetchingNextPage && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-4) 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải thêm…</div>
+          )}
+          {!useInfinite && totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)', paddingTop: 'var(--space-3)' }}>
               <Button variant="outline" size="sm" disabled={page === 1} onClick={() => goToPage(Math.max(1, page - 1))}>Trước</Button>
               <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {page} / {totalPages}</span>

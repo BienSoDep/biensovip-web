@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Bell, MessageCircle, Star } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Input, Checkbox, Eyebrow } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
+import { routeFor } from '../config/routes.js';
 
 const SWAP_TRANSITION = { type: 'spring', stiffness: 90, damping: 20, mass: 1 };
 const CONTENT_FADE = { duration: 0.3, ease: [0.22, 1, 0.36, 1] };
@@ -26,10 +27,60 @@ const SHOWCASE_PLATES = [
   { prov: '43', seri: 'A2', num: '567.89', shape: 'short', name: 'Sảnh Tiến', price: '365.000.000đ', hot: false },
 ];
 
-export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify }) {
+function OtpBoxes({ value, onChange }) {
+  const refs = useRef([]);
+  const digits = Array.from({ length: 6 }, (_, i) => (value || '')[i] || '');
+  const focus = (i) => refs.current[i]?.focus();
+  const handle = (i, raw) => {
+    const ch = raw.replace(/\D/g, '').slice(-1);
+    const arr = Array.from({ length: 6 }, (_, k) => (value || '')[k] || '');
+    arr[i] = ch;
+    onChange(arr.join(''));
+    if (ch && i < 5) focus(i + 1);
+  };
+  const onKeyDown = (i, e) => {
+    if (e.key === 'Backspace' && !((value || '')[i]) && i > 0) focus(i - 1);
+  };
+  const onPaste = (e) => {
+    const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    e.preventDefault();
+    onChange(pasted);
+    focus(Math.min(pasted.length, 5));
+  };
+  return (
+    <div style={{ display: 'flex', gap: 8 }} onPaste={onPaste}>
+      {digits.map((d, i) => (
+        <input key={i} ref={(el) => { refs.current[i] = el; }} value={d} inputMode="numeric" autoComplete="one-time-code" maxLength={1} aria-label={`Chữ số ${i + 1}`}
+          onChange={(e) => handle(i, e.target.value)} onKeyDown={(e) => onKeyDown(i, e)}
+          style={{ width: '100%', maxWidth: 48, height: 56, textAlign: 'center', fontSize: 22, fontWeight: 'var(--fw-bold)', border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', color: 'var(--text-strong)', outline: 'none' }} />
+      ))}
+    </div>
+  );
+}
+
+export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp }) {
   const [otpMode, setOtpMode] = useState(false);
   const [remember, setRemember] = useState(true);
   const [lastEmail, setLastEmail] = useState('');
+  const [resendIn, setResendIn] = useState(0);
+
+  const isOtpStep = (s === 'login' && otpMode && st.step === 2) || (s === 'forgot' && st.step === 2);
+
+  useEffect(() => {
+    if (isOtpStep) setResendIn((n) => (n > 0 ? n : 60));
+  }, [isOtpStep]);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
+  const handleResend = async () => {
+    setResendIn(60);
+    if (resendOtp) await resendOtp();
+  };
 
   useEffect(() => {
     try { setLastEmail(localStorage.getItem(LAST_EMAIL_KEY) || ''); } catch { /* ignore */ }
@@ -41,6 +92,12 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
   }, [s, lastEmail]);
 
   const goHome = (e) => { e.preventDefault(); go('home')(); };
+
+  // Register: xác nhận mật khẩu khớp TRƯỚC khi submit.
+  const submitAuth = (remember) => {
+    if (s === 'register' && st.aPw !== st.aPw2) { patch({ aErr: { ...st.aErr, pw2: 'Hai mật khẩu chưa khớp.' } }); return; }
+    authSubmit(remember);
+  };
 
   // Xoay biển mẫu mỗi 3.2s — điểm nhấn hình ảnh chính của panel, thay cho khối chữ tĩnh.
   const [plateIdx, setPlateIdx] = useState(0);
@@ -66,7 +123,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
               <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 38, height: 38, objectFit: 'contain' }} />
               <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>Duy Đinh</span>
             </div>
-            <a href="#" onClick={goHome} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>
+            <a href={routeFor('home')} onClick={goHome} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'none' }}>
               <ArrowLeft size={14} /> Trang chủ
             </a>
           </div>
@@ -164,6 +221,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                   <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
                 )}
                 <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự, có chữ và số" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
+                <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={st.aPw2} error={st.aErr.pw2} onChange={setField('aPw2')} />
                 <Checkbox label="Tôi đồng ý với điều khoản sử dụng" checked={st.aAgree} onChange={(v) => patch({ aAgree: v })} />
                 {st.aErr.agree && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn cần đồng ý với điều khoản để tiếp tục.</span>}
               </div>
@@ -174,19 +232,43 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                   <Checkbox label="Ghi nhớ đăng nhập" checked={remember} onChange={setRemember} />
-                  <a href="#" onClick={(e) => { e.preventDefault(); patch({ aErr: {} }); setOtpMode(true); }} style={{ font: 'var(--type-caption)' }}>Đăng nhập bằng OTP</a>
+                  <button type="button" onClick={() => { patch({ aErr: {} }); setOtpMode(true); }} style={{ border: 'none', background: 'none', padding: 0, font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>Đăng nhập bằng OTP</button>
                 </div>
-                <a href="#" onClick={(e) => { e.preventDefault(); go('forgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)' }}>Quên mật khẩu?</a>
+                <a href={routeFor('forgot')} onClick={(e) => { e.preventDefault(); go('forgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'none' }}>Quên mật khẩu?</a>
               </div>
             )}
             {s === 'login' && otpMode && st.step === 1 && (
               <Input label="Email đã đăng ký" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
             )}
             {s === 'login' && otpMode && st.step === 2 && (
-              <Input label="Mã xác thực 6 số" placeholder="123456" value={st.aOtp} error={st.aErr.otp} onChange={setField('aOtp')} hint="Mã đã gửi tới email của bạn." />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mã xác thực 6 số</span>
+                <OtpBoxes value={st.aOtp} onChange={(v) => patch({ aOtp: v, aErr: { ...st.aErr, otp: '' } })} />
+                {st.aErr.otp && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{st.aErr.otp}</span>}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', font: 'var(--type-caption)' }}>
+                  {resendIn > 0 ? (
+                    <span style={{ color: 'var(--text-muted)' }}>Gửi lại mã sau {resendIn}s</span>
+                  ) : (
+                    <button type="button" onClick={handleResend} style={{ border: 'none', background: 'none', padding: 0, font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>Gửi lại mã</button>
+                  )}
+                </div>
+              </div>
             )}
             {s === 'forgot' && st.step === 1 && <Input label="Email đã đăng ký" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />}
-            {s === 'forgot' && st.step === 2 && <Input label="Mã xác thực 6 số" placeholder="123456" value={st.aOtp} error={st.aErr.otp} onChange={setField('aOtp')} hint="Mã đã gửi tới email của bạn." />}
+            {s === 'forgot' && st.step === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mã xác thực 6 số</span>
+                <OtpBoxes value={st.aOtp} onChange={(v) => patch({ aOtp: v, aErr: { ...st.aErr, otp: '' } })} />
+                {st.aErr.otp && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{st.aErr.otp}</span>}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', font: 'var(--type-caption)' }}>
+                  {resendIn > 0 ? (
+                    <span style={{ color: 'var(--text-muted)' }}>Gửi lại mã sau {resendIn}s</span>
+                  ) : (
+                    <button type="button" onClick={handleResend} style={{ border: 'none', background: 'none', padding: 0, font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>Gửi lại mã</button>
+                  )}
+                </div>
+              </div>
+            )}
             {s === 'forgot' && st.step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
@@ -199,7 +281,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 {st.step === 1 ? 'Gửi mã OTP' : 'Xác nhận & đăng nhập'}
               </Button>
             ) : (
-              <Button variant="primary" size="lg" fullWidth onClick={() => authSubmit(remember)}>{authMeta[2]}</Button>
+              <Button variant="primary" size="lg" fullWidth onClick={() => submitAuth(remember)}>{authMeta[2]}</Button>
             )}
 
             {otpMode && (
@@ -218,7 +300,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             {(s === 'register' || s === 'login') && (
               <p style={{ margin: 0, textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 {s === 'register' ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
-                <a href="#" onClick={(e) => { e.preventDefault(); go(s === 'register' ? 'login' : 'register')(); }}>{s === 'register' ? 'Đăng nhập' : 'Đăng ký ngay'}</a>
+                <a href={routeFor(s === 'register' ? 'login' : 'register')} onClick={(e) => { e.preventDefault(); go(s === 'register' ? 'login' : 'register')(); }} style={{ color: 'var(--action-primary)', textDecoration: 'none' }}>{s === 'register' ? 'Đăng nhập' : 'Đăng ký ngay'}</a>
               </p>
             )}
           </motion.div>

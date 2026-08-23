@@ -70,4 +70,4 @@ export const POSTS = decoratePosts(RAW_POSTS);
 
 export const priceNum = (p) => { const n = String(p).replace(/[^0-9]/g, ''); return n ? parseInt(n, 10) : 0; };
 export const opts = (arr) => arr.map((v) => ({ value: v, label: v }));
-export const validatePhone = (v) => /^0\d{8,10}$/.test(String(v).replace(/[\s.]/g, ''));
+export { validatePhone } from './phone.js';

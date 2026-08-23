@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
+import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { Input, Select } from '../../components/index.jsx';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
 import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail } from '../../services/adminNotificationService.js';
@@ -107,6 +108,8 @@ function UserPicker({ selected, onChange }) {
 export default function AdminNotifications({ notify }) {
   const { data, isLoading, isError, refetch } = useAdminBroadcasts();
   const sendBroadcast = useSendBroadcast();
+  const allUsers = useAdminCustomers({ page: 1, perPage: 1 });
+  const subCount = useSubscriberActiveCount();
 
   const [tab, setTab] = useState('send');
   const [title, setTitle] = useState('');
@@ -116,6 +119,13 @@ export default function AdminNotifications({ notify }) {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
+
+  // Ước lượng số người nhận theo đối tượng hiện tại — cập nhật mỗi khi target/channel/user thay đổi.
+  let recipientEstimate = null;
+  if (target === 'subscribers') recipientEstimate = subCount.data?.count;
+  else if (target === 'specific') recipientEstimate = selectedUsers.length;
+  else if (target === 'all') recipientEstimate = allUsers.data?.total;
+  // 'subscribed' — chưa có endpoint đếm riêng; để trống.
 
   const items = data?.items || [];
   const TABS = [
@@ -183,8 +193,13 @@ export default function AdminNotifications({ notify }) {
               {target === 'subscribers' && (
                 <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gửi email tới danh sách đăng ký nhận tin (footer/banner). Không cần tài khoản.</p>
               )}
+              {recipientEstimate != null && (
+                <span style={{ font: 'var(--type-caption)', color: recipientEstimate === 0 ? 'var(--status-danger)' : 'var(--text-muted)' }}>
+                  ~{recipientEstimate.toLocaleString('vi-VN')} người nhận
+                </span>
+              )}
               {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
-              <Button variant="primary" size="lg" fullWidth onClick={send} disabled={sending}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
+              <Button variant="primary" size="lg" fullWidth onClick={send} disabled={sending || recipientEstimate === 0}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
             </div>
           </div>
 
@@ -233,6 +248,7 @@ export default function AdminNotifications({ notify }) {
 function SubscriberSection({ notify }) {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
+  const [confirmTarget, setConfirmTarget] = useState(null);
   const PER = 15;
   const { data, isLoading } = useAdminSubscribers({ q, page, perPage: PER });
   const count = useSubscriberActiveCount();
@@ -241,10 +257,11 @@ function SubscriberSection({ notify }) {
 
   const items = data?.items || [];
   const total = data?.total || 0;
-  const doRemove = async (id, email) => {
-    if (!window.confirm(`Hủy đăng ký nhận tin của ${email}?`)) return;
-    try { await remove.mutateAsync(id); notify('Đã hủy đăng ký'); }
+  const doRemove = async () => {
+    if (!confirmTarget) return;
+    try { await remove.mutateAsync(confirmTarget.id); notify('Đã hủy đăng ký'); }
     catch (e) { notify(e.message || 'Lỗi'); }
+    finally { setConfirmTarget(null); }
   };
 
   return (
@@ -268,7 +285,7 @@ function SubscriberSection({ notify }) {
                   {s.source} · {new Date(s.createdAt).toLocaleDateString('vi-VN')}{s.unsubscribedAt ? ' · đã hủy' : ''}
                 </div>
               </div>
-              <button type="button" onClick={() => doRemove(s.id, s.email)} disabled={remove.isPending}
+              <button type="button" onClick={() => setConfirmTarget({ id: s.id, email: s.email })} disabled={remove.isPending}
                 style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Hủy</button>
             </div>
           ))
@@ -299,6 +316,17 @@ function SubscriberSection({ notify }) {
           ))
         )}
       </div>
+
+      <ConfirmModal
+        open={!!confirmTarget}
+        onClose={() => setConfirmTarget(null)}
+        title="Hủy đăng ký"
+        message={`Hủy đăng ký nhận tin của ${confirmTarget?.email}?`}
+        confirmLabel="Hủy đăng ký"
+        danger
+        loading={remove.isPending}
+        onConfirm={doRemove}
+      />
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import { contentGet } from '../lib/content/index.js';
+import { routeFor } from '../config/routes.js';
 import EmailCapture from '../components/EmailCapture.jsx';
 
 // UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: thông tin doanh nghiệp thật.
+// Footer link href sinh từ routeFor() để không lệch slug (vd lucky: alias cũ tu-van → hop-menh).
 export default function Footer({ settings }) {
   const T = contentGet;
   const phone = (settings?.phone || '0815792699').replace(/[^0-9]/g, '');
@@ -9,16 +11,16 @@ export default function Footer({ settings }) {
   const zalo = settings?.zalo || '0815792699';
   const email = settings?.email || 'duymc64@gmail.com';
   const exploreLinks = [
-    ['#/danh-sach', T('common.footer.list')],
-    ['#/tu-van', T('common.footer.lucky')],
-    ['#/lien-he', T('common.footer.chat')],
-    ['#/so-sanh', T('common.footer.compare')],
-    ['#/cong-tac-vien', T('common.footer.collab')],
-    ['#/yeu-thich', T('common.footer.fav')],
-    ['#/tin', T('common.footer.blog')],
-    ['#/gioi-thieu', T('common.footer.about')],
+    [routeFor('list'), T('common.footer.list')],
+    [routeFor('lucky'), T('common.footer.lucky')],
+    [routeFor('chat'), T('common.footer.chat')],
+    [routeFor('compare'), T('common.footer.compare')],
+    [routeFor('collab'), T('common.footer.collab')],
+    [routeFor('fav'), T('common.footer.fav')],
+    [routeFor('blog'), T('common.footer.blog')],
+    [routeFor('about'), T('common.footer.about')],
   ];
-  const policyLinks = [['#/dieu-khoan', T('common.footer.terms')], ['#/bao-mat', T('common.footer.privacy')], ['#/sang-ten', T('common.footer.transfer')], ['#/hoi-dap', T('common.footer.faq')]];
+  const policyLinks = [[routeFor('terms'), T('common.footer.terms')], [routeFor('privacy'), T('common.footer.privacy')], [routeFor('transfer'), T('common.footer.transfer')], [routeFor('faq'), T('common.footer.faq')]];
   return (
     <footer style={{ background: 'var(--white)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
       <div className="footer-inner" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'clamp(28px,4vw,52px) var(--pad-page)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)' }}>
@@ -34,19 +36,19 @@ export default function Footer({ settings }) {
           </div>
         </div>
 
-        <div style={{ flex: '1 1 160px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <nav aria-label={T('common.footer.explore_title')} style={{ flex: '1 1 160px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.explore_title')}</span>
           {exploreLinks.map(([href, label]) => (
             <a key={href} href={href} style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)', textDecoration: 'none' }}>{label}</a>
           ))}
-        </div>
+        </nav>
 
-        <div style={{ flex: '1 1 160px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <nav aria-label={T('common.footer.policy_title')} style={{ flex: '1 1 160px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.policy_title')}</span>
           {policyLinks.map(([href, label]) => (
             <a key={href} href={href} style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)', textDecoration: 'none' }}>{label}</a>
           ))}
-        </div>
+        </nav>
 
         <div style={{ flex: '1 1 240px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 'var(--space-5)', alignContent: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{T('common.footer.hotline')}</span><a href={`tel:${phone}`} style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{phoneDisplay}</a></div>

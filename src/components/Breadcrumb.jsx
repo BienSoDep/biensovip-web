@@ -20,6 +20,7 @@ export default function Breadcrumb({ items, keepOnMobile, inset }) {
               key={i}
               type={Tag === 'button' ? 'button' : undefined}
               onClick={Tag === 'button' ? it.onClick : undefined}
+              aria-current={last ? 'page' : undefined}
               className={'breadcrumb-step' + (last ? ' is-current' : '') + (Tag === 'button' ? ' pressable' : '')}
             >
               {first && <Home aria-hidden size={13} />}

@@ -27,6 +27,7 @@ import { usePlateRealtime } from './services/plateRealtime.js';
 import { useNotificationRealtime } from './services/notificationRealtime.js';
 import { useHashRouter } from './hooks/useHashRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
+import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 
 const Home = lazy(() => import('./pages/Home.jsx'));
 const PlateList = lazy(() => import('./pages/PlateList.jsx'));
@@ -179,7 +180,14 @@ export default function App() {
   const notify = (msg) => toast(msg);
   const heroAnim = makeHeroAnim(fanDone);
 
-  const go = (s) => () => patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? st.screen : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
+  const go = (s) => () => {
+    // Route-guard: rời màn Compose khi có thay đổi chưa lưu → xác nhận trước.
+    if (st.screen === 'compose' && s !== 'compose' && isComposeDirty()) {
+      if (!window.confirm('Bạn có thay đổi chưa lưu. Rời đi sẽ mất những thay đổi này?')) return;
+    }
+    resetComposeDirty();
+    patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? st.screen : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
+  };
   const toggleFav = (id) => {
     setSt((s) => {
       const favs = { ...s.favs };
@@ -421,6 +429,16 @@ export default function App() {
     } catch (e) { patch({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
   };
 
+  // Resend OTP — dùng lại đúng endpoint theo luồng hiện tại (login OTP / quên mật khẩu).
+  const resendOtp = async () => {
+    if (s === 'forgot') {
+      try { await authApi.requestPasswordResetOtp(st.aEmail.trim()); notify('Đã gửi lại mã OTP'); }
+      catch { patch({ aErr: { otp: 'Không gửi được mã, thử lại sau.' } }); }
+    } else {
+      await otpLoginRequest();
+    }
+  };
+
   const openAdd = () => patch({ addOpen: true, editId: null, formErr: {}, form: { prov: '', seri: '', num: '', cat: 'Ngũ quý', vehicle: 'Ô tô', status: 'Còn hàng', price: '' } });
   const openEdit = (p) => patch({ addOpen: true, editId: p.id, formErr: {}, form: { prov: p.prov, seri: p.seri, num: p.num, cat: p.cat, vehicle: p.vehicle, status: p.status, price: p.price === 'Giá liên hệ' ? '' : p.price } });
   const setForm = (k) => (v) => setSt((s) => ({ ...s, form: { ...s.form, [k]: v && v.target ? v.target.value : v } }));
@@ -591,7 +609,7 @@ export default function App() {
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} />
+              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} />
             )}
 
             {s === 'verify-email' && <VerifyEmail go={go} />}
@@ -607,9 +625,9 @@ export default function App() {
 
             {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} />}
 
-            {s === 'saved' && <SavedSearches go={go} notify={notify} />}
+            {s === 'saved' && <SavedSearches go={go} notify={notify} user={st.user} />}
 
-            {s === 'reviews' && <Reviews notify={notify} />}
+            {s === 'reviews' && <Reviews notify={notify} go={go} />}
 
             {s === 'notifications' && <Notifications go={go} notify={notify} />}
 

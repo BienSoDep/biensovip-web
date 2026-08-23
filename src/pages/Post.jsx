@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { Share2, Link2, MessageCircle, Minus, Plus } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import LazyImage from '../components/LazyImage.jsx';
@@ -120,8 +121,10 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
   const { data: relatedData } = useRelatedPosts(postId, 3);
   const { data: relatedPlatesData } = useRelatedPlates(postId, 4);
   const [copied, setCopied] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  const { html: contentWithIds, items: tocItems, parts } = useTableOfContents(post?.contentHtml);
+  const contentHtml = useMemo(() => DOMPurify.sanitize(post?.contentHtml || '', { USE_PROFILES: { html: true } }), [post?.contentHtml]);
+  const { html: contentWithIds, items: tocItems, parts } = useTableOfContents(contentHtml);
   const related = relatedData?.items || [];
   const relatedPlates = relatedPlatesData?.items || [];
   const midPlate = relatedPlates[0];
@@ -139,7 +142,34 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
       document.head.appendChild(meta);
     }
     meta.content = post.metaDescription || post.excerpt || '';
+    const og = [
+      ['og:title', post.metaTitle || post.title],
+      ['og:description', post.metaDescription || post.excerpt || ''],
+      ['og:type', 'article'],
+      ['og:image', post.coverImageUrl || ''],
+      ['og:url', typeof window !== 'undefined' ? window.location.href : ''],
+    ].filter(([, v]) => v);
+    og.forEach(([prop, content]) => {
+      let m = document.querySelector(`meta[property="${prop}"]`);
+      if (!m) {
+        m = document.createElement('meta');
+        m.setAttribute('property', prop);
+        document.head.appendChild(m);
+      }
+      m.setAttribute('content', content);
+    });
   }, [post]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.documentElement;
+      const total = el.scrollHeight - el.clientHeight;
+      setProgress(total > 0 ? Math.min(100, Math.round((el.scrollTop / total) * 100)) : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   if (isLoading) {
     return (
@@ -180,7 +210,9 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
   };
 
   return (
-    <article style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
+    <>
+      <div aria-hidden="true" style={{ position: 'fixed', top: 0, left: 0, width: `${progress}%`, height: 3, background: 'var(--action-primary)', zIndex: 'var(--z-header)', transition: 'width 80ms linear' }} />
+      <article style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
       <header style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[post.category] || post.category}</span>
@@ -205,7 +237,7 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
           <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {tocItems.map((item) => (
               <li key={item.id}>
-                <a href={`#${item.id}`} style={{ font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>{item.text}</a>
+                <button type="button" onClick={() => { const el = document.getElementById(item.id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} style={{ border: 'none', background: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>{item.text}</button>
               </li>
             ))}
           </ol>
@@ -319,6 +351,7 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
           </div>
         </div>
       )}
-    </article>
+      </article>
+    </>
   );
 }

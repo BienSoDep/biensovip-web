@@ -6,6 +6,7 @@ import {
 import { useAdminPlates } from '../../services/adminPlates.js';
 import { Select, SearchField, IconButton, Switch, InfoTip } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
+import Modal from '../../components/Modal.jsx';
 
 const CATEGORIES = [
   { value: 'plate_type', label: 'Kiểu biển' },
@@ -30,9 +31,6 @@ const EMPTY_MEANING = { category: 'plate_type', title: '', content: '', sortOrde
 const fieldWrap = { display: 'flex', flexDirection: 'column', gap: 6 };
 const fieldLbl = { font: 'var(--type-label)', color: 'var(--text-strong)' };
 const fieldInput = { minHeight: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '10px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none', resize: 'vertical' };
-const modalCard = { width: '100%', maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' };
-const overlayStyle = { position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' };
-
 export default function AdminMeanings({ notify }) {
   const [tab, setTab] = useState('templates');
 
@@ -61,7 +59,7 @@ function TemplatesTab({ notify }) {
   const [formErr, setFormErr] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const { data, isLoading, isError } = useMeaningTemplates({ category: category || undefined, keyword: keyword || undefined });
+  const { data, isLoading, isError, refetch } = useMeaningTemplates({ category: category || undefined, keyword: keyword || undefined });
   const items = data?.items || [];
 
   const createMut = useCreateTemplate();
@@ -109,7 +107,7 @@ function TemplatesTab({ notify }) {
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
         {isLoading && <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>Đang tải…</div>}
-        {isError && <div style={{ padding: 48, textAlign: 'center', color: 'var(--status-danger)' }}>Không tải được danh sách mẫu.</div>}
+        {isError && <div style={{ padding: 48, textAlign: 'center', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', alignItems: 'center' }}><span>Không tải được danh sách mẫu.</span><Button variant="ghost" size="sm" onClick={() => refetch()}>Thử lại</Button></div>}
         {!isLoading && !isError && items.length === 0 && (
           <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có mẫu nào. Thêm mẫu hoặc kiểm tra bộ lọc.</div>
         )}
@@ -147,50 +145,41 @@ function TemplatesTab({ notify }) {
 
 function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }) {
   return (
-    <div role="dialog" aria-modal="true" style={overlayStyle}>
-      <div style={modalCard}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{editId === 'new' ? 'Thêm mẫu ý nghĩa' : 'Sửa mẫu ý nghĩa'}</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mẫu dùng chung — sửa ở đây KHÔNG ảnh hưởng biển đã seed.</p>
-          </div>
-          <IconButton name="x" label="Đóng" onClick={onClose} />
-        </div>
-
-        <Select label="Loại" value={form.category} options={CATEGORIES}
-          onChange={(v) => onSet('category', v)} style={{ flex: 1 }} />
+    <Modal open onClose={onClose} title={editId === 'new' ? 'Thêm mẫu ý nghĩa' : 'Sửa mẫu ý nghĩa'} maxWidth="560px">
+      <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mẫu dùng chung — sửa ở đây KHÔNG ảnh hưởng biển đã seed.</p>
+      <Select label="Loại" value={form.category} options={CATEGORIES}
+        onChange={(v) => onSet('category', v)} style={{ flex: 1 }} />
+      <label style={fieldWrap}>
+        <span style={fieldLbl}>Key (mã) <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>— thuật toán dò theo key</span></span>
+        <input type="text" placeholder="plate_type:tu_quy_8888" value={form.key} onChange={(e) => onSet('key', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px' }} />
+        {formErr.key && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.key}</span>}
+      </label>
+      <label style={fieldWrap}>
+        <span style={fieldLbl}>Tiêu đề</span>
+        <input type="text" placeholder="Tứ quý 8888" value={form.title} onChange={(e) => onSet('title', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px' }} />
+        {formErr.title && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.title}</span>}
+      </label>
+      <label style={fieldWrap}>
+        <span style={fieldLbl}>Nội dung</span>
+        <textarea rows={4} placeholder="Mô tả ý nghĩa…" value={form.content} onChange={(e) => onSet('content', e.target.value)} style={fieldInput} />
+        {formErr.content && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.content}</span>}
+      </label>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
         <label style={fieldWrap}>
-          <span style={fieldLbl}>Key (mã) <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>— thuật toán dò theo key</span></span>
-          <input type="text" placeholder="plate_type:tu_quy_8888" value={form.key} onChange={(e) => onSet('key', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px' }} />
-          {formErr.key && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.key}</span>}
+          <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Thứ tự<InfoTip size={12} text="Thứ tự hiển thị mẫu trên trang biển. Số nhỏ hiện trước. Mẫu chỉ hiện nếu bật Kích hoạt." /></span>
+          <input type="number" value={form.sortOrder} onChange={(e) => onSet('sortOrder', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px', width: 120 }} />
         </label>
-        <label style={fieldWrap}>
-          <span style={fieldLbl}>Tiêu đề</span>
-          <input type="text" placeholder="Tứ quý 8888" value={form.title} onChange={(e) => onSet('title', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px' }} />
-          {formErr.title && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.title}</span>}
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+          <input type="checkbox" checked={form.active} onChange={(e) => onSet('active', e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
+          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Kích hoạt (dùng để seed)</span>
         </label>
-        <label style={fieldWrap}>
-          <span style={fieldLbl}>Nội dung</span>
-          <textarea rows={4} placeholder="Mô tả ý nghĩa…" value={form.content} onChange={(e) => onSet('content', e.target.value)} style={fieldInput} />
-          {formErr.content && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.content}</span>}
-        </label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
-          <label style={fieldWrap}>
-            <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Thứ tự<InfoTip size={12} text="Thứ tự hiển thị mẫu trên trang biển. Số nhỏ hiện trước. Mẫu chỉ hiện nếu bật Kích hoạt." /></span>
-            <input type="number" value={form.sortOrder} onChange={(e) => onSet('sortOrder', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px', width: 120 }} />
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-            <input type="checkbox" checked={form.active} onChange={(e) => onSet('active', e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Kích hoạt (dùng để seed)</span>
-          </label>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-          <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
-          <Button variant="primary" size="md" onClick={onSave} disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu mẫu'}</Button>
-        </div>
       </div>
-    </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+        <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
+        <Button variant="primary" size="md" onClick={onSave} disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu mẫu'}</Button>
+      </div>
+    </Modal>
   );
 }
 
@@ -202,6 +191,7 @@ function PlatesTab({ notify }) {
   const [editing, setEditing] = useState(null); // null | 'new' | meaning
   const [form, setForm] = useState(EMPTY_MEANING);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmReseed, setConfirmReseed] = useState(false);
 
   const { data: plateData, isLoading: plateLoading } = useAdminPlates({ keyword: plateKeyword, status: 'all', page: 1, perPage: 20 });
   const plates = (plateData?.items || []).filter((p) => p.id);
@@ -240,8 +230,9 @@ function PlatesTab({ notify }) {
     });
   };
 
-  const reseed = () => {
+  const doReseed = () => {
     if (!plate) return;
+    setConfirmReseed(false);
     reseedMut.mutate({ plateNumber: plate.plateNumber }, {
       onSuccess: () => notify('Đã sinh lại ý nghĩa từ mẫu đang kích hoạt'),
       onError: (e) => notify(e.message || 'Sinh lại thất bại.'),
@@ -279,7 +270,7 @@ function PlatesTab({ notify }) {
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.plateNumber}</span>
                 <div style={{ flex: 1 }} />
-                <Button variant="ghost" size="sm" onClick={reseed} disabled={reseedMut.isPending}>{reseedMut.isPending ? 'Đang sinh…' : 'Sinh lại từ mẫu'}</Button>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmReseed(true)} disabled={reseedMut.isPending}>{reseedMut.isPending ? 'Đang sinh…' : 'Sinh lại từ mẫu'}</Button>
                 <Button variant="primary" size="sm" onClick={openAdd}>Thêm ý nghĩa</Button>
               </div>
 
@@ -317,56 +308,55 @@ function PlatesTab({ notify }) {
       {!!confirmDelete && (
         <ConfirmModal title="Xóa ý nghĩa?" onCancel={() => setConfirmDelete(null)} onConfirm={remove} message="Xóa phần ý nghĩa này riêng cho biển đã chọn." />
       )}
+      {confirmReseed && (
+        <Modal open onClose={() => setConfirmReseed(false)} title="Sinh lại từ mẫu" maxWidth="380px">
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Sẽ ghi đè ý nghĩa riêng của biển {plate?.plateNumber} bằng cách sinh lại từ các mẫu đang kích hoạt. Mọi ý nghĩa đã sửa tay sẽ bị thay thế.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setConfirmReseed(false)}>Hủy</Button>
+            <Button variant="primary" size="md" onClick={doReseed}>Sinh lại</Button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
 
 function MeaningModal({ form, editId, saving, onSet, onSave, onClose }) {
   return (
-    <div role="dialog" aria-modal="true" style={overlayStyle}>
-      <div style={modalCard}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{editId === 'new' ? 'Thêm ý nghĩa' : 'Sửa ý nghĩa'}</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chỉ áp dụng cho biển đang chọn — không ảnh hưởng biển khác.</p>
-          </div>
-          <IconButton name="x" label="Đóng" onClick={onClose} />
-        </div>
+    <Modal open onClose={onClose} title={editId === 'new' ? 'Thêm ý nghĩa' : 'Sửa ý nghĩa'} maxWidth="560px">
+      <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chỉ áp dụng cho biển đang chọn — không ảnh hưởng biển khác.</p>
+      <Select label="Loại" value={form.category} options={PLATE_CATEGORIES} onChange={(v) => onSet('category', v)} style={{ flex: 1 }} />
+      <label style={fieldWrap}>
+        <span style={fieldLbl}>Tiêu đề <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>(bỏ trống nếu không cần)</span></span>
+        <input type="text" placeholder="VD: Tứ quý 8888" value={form.title} onChange={(e) => onSet('title', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px' }} />
+      </label>
+      <label style={fieldWrap}>
+        <span style={fieldLbl}>Nội dung</span>
+        <textarea rows={4} placeholder="Mô tả ý nghĩa của phần này…" value={form.content} onChange={(e) => onSet('content', e.target.value)} style={fieldInput} />
+      </label>
+      <label style={fieldWrap}>
+        <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Thứ tự hiển thị<InfoTip size={12} text="Vị trí phần ý nghĩa này trong khối phong thủy của biển. Số nhỏ hiện trước." /></span>
+        <input type="number" value={form.sortOrder} onChange={(e) => onSet('sortOrder', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px', width: 120 }} />
+      </label>
 
-        <Select label="Loại" value={form.category} options={PLATE_CATEGORIES} onChange={(v) => onSet('category', v)} style={{ flex: 1 }} />
-        <label style={fieldWrap}>
-          <span style={fieldLbl}>Tiêu đề <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>(bỏ trống nếu không cần)</span></span>
-          <input type="text" placeholder="VD: Tứ quý 8888" value={form.title} onChange={(e) => onSet('title', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px' }} />
-        </label>
-        <label style={fieldWrap}>
-          <span style={fieldLbl}>Nội dung</span>
-          <textarea rows={4} placeholder="Mô tả ý nghĩa của phần này…" value={form.content} onChange={(e) => onSet('content', e.target.value)} style={fieldInput} />
-        </label>
-        <label style={fieldWrap}>
-          <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Thứ tự hiển thị<InfoTip size={12} text="Vị trí phần ý nghĩa này trong khối phong thủy của biển. Số nhỏ hiện trước." /></span>
-          <input type="number" value={form.sortOrder} onChange={(e) => onSet('sortOrder', e.target.value)} style={{ ...fieldInput, height: 40, padding: '0 14px', width: 120 }} />
-        </label>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-          <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
-          <Button variant="primary" size="md" onClick={onSave} disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu'}</Button>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+        <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
+        <Button variant="primary" size="md" onClick={onSave} disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu'}</Button>
       </div>
-    </div>
+    </Modal>
   );
 }
 
 function ConfirmModal({ title, message, onCancel, onConfirm }) {
   return (
-    <div role="alertdialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
-      <div style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-        <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{title}</h2>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{message}</p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-          <Button variant="ghost" size="md" onClick={onCancel}>Hủy</Button>
-          <Button variant="primary" size="md" onClick={onConfirm} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
-        </div>
+    <Modal open onClose={onCancel} title={title} maxWidth="380px">
+      <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{message}</p>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+        <Button variant="ghost" size="md" onClick={onCancel}>Hủy</Button>
+        <Button variant="primary" size="md" onClick={onConfirm} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
       </div>
-    </div>
+    </Modal>
   );
 }

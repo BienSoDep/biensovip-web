@@ -14,11 +14,12 @@
 --cream-100:#F0EEE7;--cream-50:#F7F6F1;
 
 /* --- Accents used sparingly on badges + promo chips --- */
---amber-500:#F5C542;--amber-400:#F5C542;--amber-100:#FDF2D2;--amber-50:#FFF4E8;
+--amber-500:#F5C542;--amber-400:#F7D070;--amber-100:#FDF2D2;--amber-50:#FFF4E8;
 --mint-500:#3FBF8F;--mint-100:#DFF5EC;
 --rose-500:#E5484D;--rose-100:#FCE7E7;
 --orange-100:#FFE1BF;--orange-50:#FFF4E8;
 --green-50:#EEFCF3;
+--accent-orange-ink:#C75B00;--accent-purple-ink:#7B2D8B;
 
 /* --- Semantic aliases: use these in components --- */
 --text-strong:var(--ink-900);--text-body:var(--ink-700);--text-muted:var(--grey-500);--text-faint:var(--grey-400);--text-inverse:var(--white);--text-link:var(--blue-600);
@@ -36,8 +37,11 @@
 --status-success:var(--mint-500);--status-success-bg:var(--mint-100);--status-success-ink:#1B7A5A;
 --status-warning:var(--amber-500);--status-warning-bg:var(--amber-100);--status-warning-ink:#8A6100;
 --status-danger:var(--rose-500);--status-danger-bg:var(--rose-100);
+--status-info:var(--blue-500);--status-info-bg:var(--blue-100);
 
---focus-ring:0 0 0 3px var(--blue-200);
+--text-disabled:var(--grey-400);--surface-disabled:var(--grey-200);
+--skeleton:var(--grey-100); /* placeholder tone — stronger than sunken for perceived contrast */
+--link:var(--blue-600);--link-visited:var(--blue-700);
 }
 :root{
 --space-0:0;--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;
@@ -52,7 +56,7 @@
 --control-h-sm:32px;--control-h-md:40px;--control-h-lg:48px;
 }
 :root{
---radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:14px;--radius-2xl:18px;--radius-pill:8px;
+--radius-xs:4px;--radius-sm:6px;--radius-md:8px;--radius-lg:10px;--radius-xl:14px;--radius-2xl:18px;--radius-pill:999px;
 --radius-card:var(--radius-lg);      /* product + content cards */
 --radius-control:var(--radius-sm);   /* buttons, chips, nav pills */
 --radius-field:var(--radius-sm);     /* inputs, selects */
@@ -69,6 +73,7 @@
 --shadow-blue:0 8px 20px rgba(59,91,255,.28);
 --shadow-inset-hairline:inset 0 0 0 1px var(--border-hairline);
 --overlay-scrim:rgba(14,15,18,.42);
+--overlay:rgba(14,15,18,.5); /* P1: modal/drawer backdrop — darker than --overlay-scrim */
 --glass-fill:rgba(255,255,255,.72);
 --glass-blur:blur(14px); /* @kind other */
 }
@@ -90,7 +95,7 @@
 /* Sizes — 1280px desktop scale. Display sizes are tight and heavy; body is 15/16px. */
 --fs-display-1:56px;--fs-display-2:44px;--fs-display-3:34px;
 --fs-title-1:26px;--fs-title-2:20px;--fs-title-3:17px;
---fs-body:15px;--fs-body-sm:14px;--fs-caption:13px;--fs-micro:11px;
+--fs-body:15px;--fs-body-sm:14px;--fs-caption:13px;--fs-micro:12px;
 
 --lh-display:1.06; /* @kind font */
 --lh-title:1.25; /* @kind font */
@@ -127,7 +132,7 @@
 --z-header:40;--z-chatbot:70;--z-drawer:80;--z-filter-overlay:85;--z-modal:90;--z-confirm:95;--z-popover:110;--z-toast:120;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{overflow-x:hidden}
+html{overflow-x:hidden;scroll-behavior:smooth;scroll-padding-top:76px}
 body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 h1,h2,h3,h4,p{margin:0}
 a{color:var(--text-link);text-decoration:none;transition:var(--transition-control)}

@@ -12,7 +12,7 @@ export default function EmailCapture({ source = 'newsletter', style }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) { setErr('Nhập email hợp lệ.'); return; }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setErr('Nhập email hợp lệ.'); return; }
     setErr('');
     try {
       await subscribe.mutateAsync({ email: email.trim(), source });
@@ -46,7 +46,7 @@ export default function EmailCapture({ source = 'newsletter', style }) {
               {subscribe.isPending ? 'Đang gửi…' : 'Đăng ký'}
             </Button>
           </form>
-          {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
+          {err && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
         </>
       )}
     </div>

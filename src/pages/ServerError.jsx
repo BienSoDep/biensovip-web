@@ -1,11 +1,13 @@
-import { WifiOff } from 'lucide-react';
+import { useEffect } from 'react';
+import { Server } from 'lucide-react';
 import Button from '../components/Button.jsx';
 
 export default function ServerError({ go }) {
+  useEffect(() => { document.title = 'Lỗi hệ thống · Biensovip'; }, []);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 'var(--space-5)', padding: 'var(--pad-page)', textAlign: 'center', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ width: 72, height: 72, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <WifiOff size={32} style={{ color: 'var(--text-muted)' }} />
+        <Server size={32} style={{ color: 'var(--text-muted)' }} />
       </div>
       <div>
         <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', color: 'var(--text-strong)' }}>500 — Lỗi hệ thống</h1>

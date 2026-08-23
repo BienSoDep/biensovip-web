@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
+import Modal from '../components/Modal.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { SearchField } from '../components/index.jsx';
 import { pill } from '../components/NavBtn.jsx';
@@ -26,7 +27,7 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
       {ADMIN_NAV.filter((n) => n[0] !== 'astaff' || st.user?.role === 'super-admin').map((n) => {
         const on = s === n[0] || (n[0] === 'aposts' && s === 'compose');
         return (
-          <button key={n[0]} type="button" className="pill-btn" data-on={String(on)} data-dark="false" onClick={() => { go(n[0])(); onNavigate?.(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>{n[1]}</button>
+          <button key={n[0]} type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={() => { go(n[0])(); onNavigate?.(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>{n[1]}</button>
         );
       })}
     </nav>
@@ -38,6 +39,35 @@ export default function AdminShell({
   adminMeta,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef(null);
+  const drawerTriggerRef = useRef(null);
+  // Mobile drawer: focus trap + Esc-to-close + trả focus về nút mở khi đóng.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    const trigger = document.activeElement;
+    drawerTriggerRef.current = trigger;
+    const focusables = () =>
+      Array.from(drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+        .filter((el) => !el.disabled && el.offsetParent !== null);
+    const first = focusables()[0];
+    (first || drawer).focus();
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); setDrawerOpen(false); return; }
+      if (e.key !== 'Tab') return;
+      const els = focusables();
+      if (!els.length) return;
+      const f = els[0], l = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === f) { e.preventDefault(); l.focus(); }
+      else if (!e.shiftKey && document.activeElement === l) { e.preventDefault(); f.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      if (drawerTriggerRef.current && typeof drawerTriggerRef.current.focus === 'function') drawerTriggerRef.current.focus();
+    };
+  }, [drawerOpen]);
   // Ẩn/hiện sidebar nav — nhớ lựa chọn qua localStorage để không phải bật lại mỗi lần load trang.
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('adminSidebarCollapsed') === '1'; } catch { return false; } });
   const toggleCollapsed = () => setCollapsed((c) => {
@@ -45,7 +75,19 @@ export default function AdminShell({
     try { localStorage.setItem('adminSidebarCollapsed', next ? '1' : '0'); } catch { /* ignore */ }
     return next;
   });
-  const logout = async () => { await authApi.adminLogout(); patch({ user: null, isAdmin: false, screen: 'home' }); };
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logout = async () => {
+    setLoggingOut(true);
+    try {
+      await authApi.adminLogout();
+      patch({ user: null, isAdmin: false, screen: 'home' });
+    } catch {
+      setLoggingOut(false);
+      setLogoutConfirm(false);
+      notify?.('Đăng xuất thất bại, thử lại');
+    }
+  };
 
   // Nhân viên (không phải super-admin) không được vào màn Nhân viên — chặn cả nav lẫn render trực tiếp qua hash.
   const isSuperAdmin = st.user?.role === 'super-admin';
@@ -56,14 +98,14 @@ export default function AdminShell({
 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
-      <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+      <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" aria-controls="admin-drawer" aria-expanded={drawerOpen} style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
         <Menu size={20} />
       </button>
 
       {drawerOpen && (
         <div className="admin-drawer-overlay" style={{ position: 'fixed', inset: 0, zIndex: 85 }}>
           <div aria-hidden="true" onClick={() => setDrawerOpen(false)} style={{ position: 'absolute', inset: 0, background: 'var(--overlay-scrim)', animation: 'fadeIn 140ms var(--ease-out)' }} />
-          <div role="dialog" aria-modal="true" aria-label="Menu quản trị" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(280px, 85vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-5) 0', animation: 'modalIn 180ms var(--ease-out)' }}>
+          <div ref={drawerRef} id="admin-drawer" role="dialog" aria-modal="true" aria-label="Menu quản trị" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(280px, 85vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-5) 0', animation: 'modalIn 180ms var(--ease-out)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--space-5)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 32, height: 32, objectFit: 'contain' }} />
@@ -74,7 +116,7 @@ export default function AdminShell({
             <AdminSidebarNav s={s} st={st} go={go} onNavigate={() => setDrawerOpen(false)} />
             <div style={{ flex: 1 }} />
             <div style={{ padding: '0 var(--space-5)' }}>
-              <Button variant="ghost" size="sm" fullWidth onClick={() => { logout(); setDrawerOpen(false); }}>Đăng xuất</Button>
+              <Button variant="ghost" size="sm" fullWidth onClick={() => { setDrawerOpen(false); setLogoutConfirm(true); }}>Đăng xuất</Button>
             </div>
           </div>
         </div>
@@ -94,11 +136,11 @@ export default function AdminShell({
           <AdminSidebarNav s={s} st={st} go={go} />
           <div style={{ flex: 1 }} />
           <div style={{ padding: '0 var(--space-5)' }}>
-            <Button variant="ghost" size="sm" fullWidth onClick={logout}>Đăng xuất</Button>
+            <Button variant="ghost" size="sm" fullWidth onClick={() => setLogoutConfirm(true)}>Đăng xuất</Button>
           </div>
         </aside>
       )}
-      <main className="admin-main" style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <main className="admin-main" aria-hidden={drawerOpen ? true : undefined} inert={drawerOpen ? '' : undefined} style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         {collapsed && (
           <button type="button" onClick={toggleCollapsed} aria-label="Hiện menu" title="Hiện menu" style={{ alignSelf: 'flex-start', width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <PanelLeftOpen size={18} />
@@ -132,6 +174,14 @@ export default function AdminShell({
         {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
       </main>
+
+      <Modal open={logoutConfirm} onClose={() => setLogoutConfirm(false)} title="Đăng xuất" maxWidth="360px">
+        <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Bạn có chắc muốn đăng xuất khỏi trang quản trị?</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+          <Button variant="ghost" size="md" onClick={() => setLogoutConfirm(false)}>Hủy</Button>
+          <Button variant="primary" size="md" onClick={logout} loading={loggingOut}>Đăng xuất</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -9,10 +9,12 @@ import { Eye, X, Upload } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, Select, InfoTip } from '../../components/index.jsx';
 import { EditorToolbar } from '../../components/RichTextEditor.jsx';
+import Modal from '../../components/Modal.jsx';
 import { apiClient } from '../../services/apiClient.js';
 import { useCreateBlogPost, useUpdateBlogPost, useAdminBlogTags, useCreateBlogTag } from '../../services/blog.js';
 import { useAdminPromoVideos, useCreatePromoVideo } from '../../services/promoVideoService.js';
 import { useAdminCategories } from '../../services/categories.js';
+import { setComposeDirty, resetComposeDirty } from '../../lib/unsavedGuard.js';
 
 function slugify(title) {
   return title
@@ -41,7 +43,11 @@ export default function Compose({ st, patch, notify }) {
   const [err, setErr] = useState('');
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const fileInputRef = useRef(null);
+  const previewCloseRef = useRef(null);
+  // Ảnh trạng thái "đã lưu" để so sánh phát hiện thay đổi chưa lưu (unsaved-changes guard).
+  const savedRef = useRef({ title: '', slug: '', coverImageUrl: '', metaTitle: '', metaDescription: '', category: 'kien-thuc', tags: [], contentHtml: '' });
 
   const createPost = useCreateBlogPost();
   const updatePost = useUpdateBlogPost();
@@ -80,8 +86,48 @@ export default function Compose({ st, patch, notify }) {
       setTags(full.tags || []);
       if (full.contentHtml) editor.commands.setContent(full.contentHtml);
       setAttachedVideos(full.videos || []);
+      savedRef.current = {
+        title: full.title || '', slug: full.slug || '', coverImageUrl: full.coverImageUrl || '',
+        metaTitle: full.metaTitle || '', metaDescription: full.metaDescription || '',
+        category: full.category || 'kien-thuc', tags: full.tags || [], contentHtml: full.contentHtml || '',
+      };
     });
   }, [editPostId, editor]);
+
+  // Unsaved-changes guard: cảnh báo trước khi đóng/refresh trình duyệt khi có thay đổi chưa lưu.
+  const isDirty = () => {
+    const s = savedRef.current;
+    const c = {
+      title, slug, coverImageUrl, metaTitle, metaDescription, category, tags,
+      contentHtml: editor?.getHTML() || '',
+    };
+    return c.title !== s.title || c.slug !== s.slug || c.coverImageUrl !== s.coverImageUrl ||
+      c.metaTitle !== s.metaTitle || c.metaDescription !== s.metaDescription || c.category !== s.category ||
+      c.tags.length !== (s.tags || []).length || c.tags.some((t, i) => t !== (s.tags || [])[i]) ||
+      c.contentHtml !== (s.contentHtml || '');
+  };
+
+  useEffect(() => {
+    const onBeforeUnload = (e) => {
+      if (!isDirty()) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  });
+
+  // Preview modal a11y: focus nút đóng + Esc đóng.
+  useEffect(() => {
+    if (!previewOpen) return;
+    previewCloseRef.current?.focus();
+    const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); setPreviewOpen(false); } };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [previewOpen]);
+
+  // Route-guard trong-SPA: đăng ký trạng thái dirty cho App/useHashRouter chặn rời trang.
+  useEffect(() => { setComposeDirty(isDirty()); });
 
   const attachVideo = async () => {
     if (!addVideoId) return;
@@ -225,6 +271,14 @@ export default function Compose({ st, patch, notify }) {
     setNewTagInput('');
   };
 
+  // Xuất bản / Cập nhật (bài công khai) — xác nhận trước khi đưa lên public.
+  const publish = () => {
+    if (!title.trim()) { setErr('Nhập tiêu đề bài viết.'); return; }
+    if (!plainText.trim()) { setErr('Bài viết cần có nội dung để đăng.'); return; }
+    setErr('');
+    setConfirmPublish(true);
+  };
+
   const submit = (status) => {
     if (!title.trim()) { setErr('Nhập tiêu đề bài viết.'); return; }
     if (status === 'published' && !plainText.trim()) { setErr('Bài viết cần có nội dung để đăng.'); return; }
@@ -257,6 +311,7 @@ export default function Compose({ st, patch, notify }) {
         }
       }
       notify(status === 'draft' ? 'Đã lưu nháp' : (editPostId ? 'Đã cập nhật bài viết' : 'Đã xuất bản bài viết'));
+      resetComposeDirty();
       patch({ screen: 'aposts', editPostId: null });
     };
     const onError = (e) => {
@@ -412,16 +467,16 @@ export default function Compose({ st, patch, notify }) {
 
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <Button variant="outline" size="md" disabled={saving} onClick={() => submit('draft')} style={{ flex: 1 }}>Lưu nháp</Button>
-          <Button variant="primary" size="md" disabled={saving} onClick={() => submit('published')} style={{ flex: 1 }}>{editPostId ? 'Cập nhật' : 'Xuất bản'}</Button>
+          <Button variant="primary" size="md" disabled={saving} onClick={publish} style={{ flex: 1 }}>{editPostId ? 'Cập nhật' : 'Xuất bản'}</Button>
         </div>
       </div>
 
       {previewOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
+        <div role="dialog" aria-modal="true" aria-label="Xem trước bài viết" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div style={{ width: '100%', maxWidth: 800, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-4) var(--space-6)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
               <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Xem trước bài viết</span>
-              <button type="button" onClick={() => setPreviewOpen(false)} aria-label="Đóng" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }}><X size={22} /></button>
+              <button type="button" ref={previewCloseRef} onClick={() => setPreviewOpen(false)} aria-label="Đóng" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }}><X size={22} /></button>
             </div>
             <article style={{ padding: 'var(--space-8) var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -441,6 +496,20 @@ export default function Compose({ st, patch, notify }) {
             </article>
           </div>
         </div>
+      )}
+
+      {confirmPublish && (
+        <Modal open onClose={() => setConfirmPublish(false)} title={editPostId ? 'Cập nhật bài viết' : 'Xuất bản bài viết'} maxWidth="420px">
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            {editPostId
+              ? 'Cập nhật sẽ đưa bản mới ngay lên website công khai cho mọi người xem. Xác nhận tiếp tục?'
+              : 'Xuất bản sẽ đưa bài viết này công khai lên website. Xác nhận tiếp tục?'}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setConfirmPublish(false)}>Hủy</Button>
+            <Button variant="primary" size="md" onClick={() => { setConfirmPublish(false); submit('published'); }}>Xác nhận</Button>
+          </div>
+        </Modal>
       )}
     </div>
   );

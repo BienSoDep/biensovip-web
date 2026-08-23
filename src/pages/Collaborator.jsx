@@ -1,13 +1,9 @@
+import { useState } from 'react';
 import Button from '../components/Button.jsx';
 import { Input, Badge } from '../components/index.jsx';
 import { validatePhone } from '../lib/mockData.js';
 
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
-const copyText = (text, notify) => {
-  const done = () => notify('Đã sao chép link giới thiệu');
-  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(done).catch(done);
-  else done();
-};
 
 function RegisterForm({ st, patch, notify }) {
   const f = st.collabForm || {};
@@ -47,11 +43,21 @@ function RegisterForm({ st, patch, notify }) {
 
 export default function Collaborator({ st, patch, go, notify }) {
   const me = st.collab;
+  const [copied, setCopied] = useState(false);
   if (!me) return <RegisterForm st={st} patch={patch} notify={notify} />;
 
   const referred = (st.collabs || []).filter((c) => c.referredBy === me.code);
   const active = referred.filter((c) => c.status === 'Active').length;
   const link = (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '') + '#/dang-ky?ref=' + me.code;
+
+  const copyLink = () => {
+    if (!navigator.clipboard?.writeText) { notify('Trình duyệt không hỗ trợ sao chép. Hãy chọn và copy thủ công.'); return; }
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      notify('Đã sao chép link giới thiệu');
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => notify('Không sao chép được. Hãy chọn và copy thủ công.'));
+  };
 
   return (
     <section style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -83,7 +89,7 @@ export default function Collaborator({ st, patch, go, notify }) {
           <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{link}</span>
         </div>
-        <Button variant="primary" size="md" onClick={() => copyText(link, notify)}>Sao chép link</Button>
+        <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
         <Button variant="ghost" size="md" onClick={go('list')}>Xem kho biển số</Button>
       </div>
     </section>

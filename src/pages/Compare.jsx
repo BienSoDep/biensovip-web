@@ -378,6 +378,26 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
                 </>
               );
             })}
+
+            {/* Footer liên hệ theo cột */}
+            <div key="h-contact" style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>Liên hệ</div>
+            {plates.map((p) => {
+              const sold = p.status === 'sold';
+              const phone = p.seller?.phone, zalo = p.seller?.zalo;
+              return (
+                <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                  {sold ? (
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã bán</span>
+                  ) : (
+                    <>
+                      {phone && <a href={`tel:${phone}`} style={{ textDecoration: 'none' }}><Button variant="primary" size="sm">Gọi ngay</Button></a>}
+                      {zalo && <a href={`https://zalo.me/${zalo}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}><Button variant="outline" size="sm">Nhắn Zalo</Button></a>}
+                      {!phone && !zalo && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>—</span>}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

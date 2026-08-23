@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
 function toQueryString(filters) {
@@ -21,6 +21,24 @@ export function usePlates(filters, options) {
   return useQuery({
     queryKey: ['plates', qs],
     queryFn: () => apiClient.get(`/api/plates${qs ? `?${qs}` : ''}`),
+    enabled: options?.enabled,
+  });
+}
+
+export function useInfinitePlates(filters, options) {
+  const { page, ...rest } = filters;
+  return useInfiniteQuery({
+    queryKey: ['plates-infinite', JSON.stringify(rest)],
+    queryFn: ({ pageParam = 1 }) => {
+      const qs = toQueryString({ ...rest, page: pageParam });
+      return apiClient.get(`/api/plates${qs ? `?${qs}` : ''}`);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (last, all) => {
+      const tp = last?.totalPages || 1;
+      const next = all.length + 1;
+      return next <= tp ? next : undefined;
+    },
     enabled: options?.enabled,
   });
 }

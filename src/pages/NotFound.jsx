@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import Button from '../components/Button.jsx';
 import { contentGet } from '../lib/content/index.js';
 
 export default function NotFound({ go }) {
+  useEffect(() => { document.title = 'Trang không tìm thấy · Biensovip'; }, []);
   return (
     <section style={{ position: 'relative', overflow: 'hidden', minHeight: '70vh', background: 'var(--surface-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div aria-hidden style={{ position: 'absolute', top: -60, right: -60, width: 260, height: 260, borderRadius: '50%', background: 'var(--action-primary)', opacity: 0.9 }} />
@@ -17,6 +19,7 @@ export default function NotFound({ go }) {
         <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255,255,255,.66)', maxWidth: 420 }}>{contentGet('common.notfound.desc')}</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'var(--space-3)' }}>
           <Button variant="primary" size="lg" onClick={go('home')}>{contentGet('common.notfound.cta_home')}</Button>
+          <Button variant="outline" size="lg" onClick={go('list')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>Xem kho biển số</Button>
           <Button variant="outline" size="lg" onClick={go('chat')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>{contentGet('common.notfound.cta_chat')}</Button>
         </div>
       </div>

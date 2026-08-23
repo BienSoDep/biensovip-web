@@ -1,36 +1,19 @@
-const SIZES = { sm: 32, md: 40, lg: 48 };
-const VARIANTS = {
-  primary: { background: 'var(--action-primary)', color: 'var(--white)', boxShadow: 'var(--shadow-blue)' },
-  dark: { background: 'var(--action-dark)', color: 'var(--white)' },
-  outline: { background: 'transparent', color: 'var(--text-strong)', boxShadow: 'inset 0 0 0 1.5px var(--border-strong)' },
-  ghost: { background: 'transparent', color: 'var(--text-body)' },
-};
+import { Loader2 } from 'lucide-react';
 
-export default function Button({ variant = 'primary', size = 'md', fullWidth, uppercase, disabled, onClick, children, style, className, type = 'button' }) {
-  const v = VARIANTS[variant] || VARIANTS.primary;
+const SIZES = { sm: 'btn-sm', md: 'btn-md', lg: 'btn-lg' };
+
+export default function Button({ variant = 'primary', size = 'md', fullWidth, uppercase, disabled, loading, onClick, children, style, className, type = 'button', ...rest }) {
+  const cls = [
+    'btn',
+    `btn-${variant}`,
+    SIZES[size] || 'btn-md',
+    fullWidth && 'btn-block',
+    uppercase && 'btn-uppercase',
+    className,
+  ].filter(Boolean).join(' ');
   return (
-    <button
-      type={type}
-      className={`btn-${variant}${className ? ' ' + className : ''}`}
-      disabled={disabled}
-      onClick={onClick}
-      style={{
-        height: SIZES[size] || 40,
-        padding: '0 20px',
-        border: 'none',
-        borderRadius: 'var(--radius-pill)',
-        font: 'var(--type-body-sm)',
-        fontWeight: 'var(--fw-semibold)',
-        letterSpacing: uppercase ? '.04em' : undefined,
-        textTransform: uppercase ? 'uppercase' : undefined,
-        width: fullWidth ? '100%' : undefined,
-        whiteSpace: 'nowrap',
-        opacity: disabled ? 0.5 : 1,
-        transition: 'var(--transition-control)',
-        ...v,
-        ...style,
-      }}
-    >
+    <button type={type} className={cls} disabled={disabled || loading} aria-busy={loading || undefined} onClick={onClick} style={style} {...rest}>
+      {loading && <Loader2 size={16} aria-hidden style={{ animation: 'spin 1s linear infinite' }} />}
       {children}
     </button>
   );

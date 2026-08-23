@@ -5,16 +5,16 @@ const base = {
 };
 
 export function SkeletonText({ width = '100%', height = 16 }) {
-  return <div style={{ ...base, width, height }} />;
+  return <div aria-hidden style={{ ...base, width, height }} />;
 }
 
 export function SkeletonCard({ height = 180 }) {
-  return <div style={{ ...base, height, borderRadius: 'var(--radius-card)' }} />;
+  return <div aria-hidden style={{ ...base, height, borderRadius: 'var(--radius-card)' }} />;
 }
 
 export function SkeletonTable({ rows = 5, cols = 4 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div aria-hidden style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} style={{ display: 'flex', gap: 12 }}>
           {Array.from({ length: cols }, (_, j) => (

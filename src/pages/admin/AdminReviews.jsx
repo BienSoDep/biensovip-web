@@ -12,17 +12,21 @@ const STATUS_OPTS = [
 
 export default function AdminReviews({ notify }) {
   const [status, setStatus] = useState('pending');
+  const [pendingId, setPendingId] = useState(null);
   const { data, isLoading, isError, refetch } = useAdminReviews(status);
   const updateStatus = useUpdateReviewStatus();
 
   const items = data?.items || [];
 
   const act = async (id, next) => {
+    setPendingId(id);
     try {
       await updateStatus.mutateAsync({ id, status: next });
       notify(next === 'approved' ? 'Đã duyệt đánh giá' : 'Đã từ chối đánh giá');
     } catch (e) {
       notify(e.message || 'Lỗi khi cập nhật');
+    } finally {
+      setPendingId(null);
     }
   };
 
@@ -48,20 +52,38 @@ export default function AdminReviews({ notify }) {
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.reviewerName}</span>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{r.plateNumber || '—'}</span>
-                <div style={{ display: 'flex', gap: 2 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= r.rating ? 'var(--amber-400)' : 'none'} style={{ color: n <= r.rating ? 'var(--amber-400)' : 'var(--grey-300)' }} />)}</div>
+                <div role="img" aria-label={`${r.rating}/5 sao`} style={{ display: 'flex', gap: 2 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= r.rating ? 'var(--action-primary)' : 'none'} style={{ color: n <= r.rating ? 'var(--action-primary)' : 'var(--grey-300)' }} aria-hidden />)}</div>
                 <div style={{ flex: 1 }} />
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
               </div>
-              {r.comment && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.comment}</p>}
+              {r.comment && <ReviewComment text={r.comment} />}
               {status === 'pending' && (
                 <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <Button variant="primary" size="sm" onClick={() => act(r.id, 'approved')}>Duyệt</Button>
-                  <Button variant="ghost" size="sm" onClick={() => act(r.id, 'rejected')}>Từ chối</Button>
+                  <Button variant="primary" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'approved')}>{pendingId === r.id ? 'Đang…' : 'Duyệt'}</Button>
+                  <Button variant="ghost" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'rejected')}>Từ chối</Button>
                 </div>
               )}
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function ReviewComment({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  const long = text.length > 160;
+  return (
+    <div>
+      <p style={{
+        margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap',
+        ...(long && !expanded ? { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : {}),
+      }}>{text}</p>
+      {long && (
+        <button type="button" onClick={() => setExpanded((v) => !v)} style={{ border: 'none', background: 'none', padding: 0, marginTop: 4, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>
+          {expanded ? 'Thu gọn' : 'Xem thêm'}
+        </button>
       )}
     </div>
   );

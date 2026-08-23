@@ -1,15 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Badge, IconButton } from '../components/index.jsx';
+import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
+import Modal from '../components/Modal.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { validatePhone, normalizePhone } from '../lib/phone.js';
+import { useSubmitContact } from '../services/contactService.js';
 import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
 import { useCompareIds } from '../services/compareService.js';
 import { usePlateReviews } from '../services/reviewService.js';
 import { content } from '../lib/content/index.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
+const REVIEWS_PER_PAGE = 5;
+
+function maskName(name) {
+  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'Khách hàng';
+  if (parts.length === 1) return parts[0][0] + '***';
+  return `${parts[0]} *** ${parts[parts.length - 1]}`;
+}
+
+const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Săn hộ / tư vấn theo nhu cầu'];
+const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting' };
 
 function LinkButton({ href, target, rel, variant, disabled, onClick, children, style }) {
   const bg = variant === 'outline' ? 'transparent' : 'var(--action-primary)';
@@ -62,10 +76,10 @@ function AutoCarousel({ items, openPlate }) {
       {items.map((p) => {
         const sp = splitPlateNumber(p.plateNumber);
         return (
-          <div key={p.id} onClick={() => openPlate(p.slug || p.id)} className="pressable" style={{ scrollSnapAlign: 'start', flex: '0 0 auto', width: 188, cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+          <a key={p.id} href={`#/bien/${p.slug || p.id}`} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable" aria-label={`Xem biển ${p.plateNumber}`} style={{ scrollSnapAlign: 'start', flex: '0 0 auto', width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
             <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
-          </div>
+          </a>
         );
       })}
     </div>
@@ -84,8 +98,16 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   }, [plateId]);
 
   // Hooks phải chạy vô điều kiện trước mọi early-return (rules-of-hooks)
-  const { data: reviewData } = usePlateReviews(plateId);
+  const [tab, setTab] = useState('info');
+  const [reviewPage, setReviewPage] = useState(1);
+  const { data: reviewData } = usePlateReviews(plateId, { page: reviewPage, perPage: REVIEWS_PER_PAGE });
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
+
+  const submitContact = useSubmitContact();
+  const [contactOpen, setContactOpen] = useState(false);
+  const [cForm, setCForm] = useState({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', subscribe: false, honeypot: '' });
+  const [cErr, setCErr] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const [lightbox, setLightbox] = useState(-1);
   const images = plate?.images || [];
@@ -128,6 +150,35 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const isFav = !!favs?.[plate.id];
   const inCompare = isInList(plate.id);
   const isCar = plate.vehicleType === 'Ô tô';
+  const reviewTotalPages = Math.max(1, Math.ceil((reviewData?.total || 0) / REVIEWS_PER_PAGE));
+
+  const shareUrl = `${location.origin}${location.pathname}#/bien/${plate.slug || plate.id}`;
+  const shareFb = () => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); handleContact('share'); };
+  const shareZalo = () => { window.open(`https://zalo.me/share?url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); handleContact('share'); };
+  const copyLink = async () => {
+    try { await navigator.clipboard.writeText(shareUrl); } catch { /* clipboard blocked */ }
+    setCopied(true);
+    notify('Đã sao chép liên kết');
+    setTimeout(() => setCopied(false), 2000);
+  };
+  const handleContactSubmit = (e) => {
+    e.preventDefault();
+    if (cForm.honeypot) { setContactOpen(false); return; } // bot trap
+    if (!cForm.fullName.trim()) return setCErr('Vui lòng nhập họ tên');
+    if (!validatePhone(cForm.phone)) return setCErr('Số điện thoại không hợp lệ');
+    setCErr('');
+    submitContact.mutate({
+      fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
+      email: cForm.email?.trim() || null, plateId: plate.id, plateNumber: plate.plateNumber,
+      note: cForm.note?.trim() || '', source: 'plate-detail', intent: cForm.intent,
+      depositAmount: null, subscribeToNotifications: !!cForm.subscribe,
+      honeypot: cForm.honeypot || null,
+    }, {
+      onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setContactOpen(false); handleContact('contact'); setCForm({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', subscribe: false, honeypot: '' }); },
+      onError: () => setCErr('Gửi thất bại, vui lòng thử lại.'),
+    });
+  };
+  const setCF = (k) => (e) => setCForm((f) => ({ ...f, [k]: e.target?.value ?? e }));
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -172,7 +223,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')} · {plate.viewCount} lượt xem</p>
             {reviewData?.totalReviews > 0 ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                <div style={{ display: 'flex', gap: 1 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= Math.round(reviewData.averageRating) ? 'var(--amber-400)' : 'none'} style={{ color: n <= Math.round(reviewData.averageRating) ? 'var(--amber-400)' : 'var(--grey-300)' }} />)}</div>
+                <div style={{ display: 'flex', gap: 1 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= Math.round(reviewData.averageRating) ? 'var(--action-primary)' : 'none'} style={{ color: n <= Math.round(reviewData.averageRating) ? 'var(--action-primary)' : 'var(--grey-300)' }} />)}</div>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{reviewData.averageRating.toFixed(1)} ({reviewData.totalReviews} đánh giá)</span>
               </div>
             ) : (
@@ -184,6 +235,9 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
           </div>
           <div className="plate-actions-desktop" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            {!sold && (
+              <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 160px' }}>Chốt biển này</Button>
+            )}
             {plate.seller?.phone && (
               <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 120px' }}>Gọi ngay</LinkButton>
             )}
@@ -193,6 +247,12 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
             <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginRight: 4 }}>Chia sẻ:</span>
+            <IconButton name="share" label="Chia sẻ Facebook" size="lg" onClick={shareFb} />
+            <button type="button" aria-label="Chia sẻ Zalo" onClick={shareZalo} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer' }}><MessageCircle size={24} /></button>
+            <IconButton name={copied ? 'check' : 'copy'} label="Sao chép liên kết" size="lg" onClick={copyLink} />
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 'var(--space-3)' }}>
             <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Loại xe</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.vehicleType}</div></div>
             <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tỉnh / thành</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.province}</div></div>
@@ -201,6 +261,17 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           </div>
         </div>
       </section>
+
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)' }}>
+        <div role="tablist" aria-label="Nội dung biển số" style={{ display: 'flex', gap: 'var(--space-2)', borderBottom: '1px solid var(--border-hairline)' }}>
+          {[['info', 'Thông tin'], ['reviews', `Đánh giá${reviewData?.totalReviews ? ` (${reviewData.totalReviews})` : ''}`]].map(([k, label]) => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 48, padding: '0 20px', border: 'none', borderBottom: tab === k ? '2px solid var(--action-primary)' : '2px solid transparent', background: 'transparent', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: tab === k ? 'var(--fw-semibold)' : 'var(--fw-medium)', color: tab === k ? 'var(--action-primary)' : 'var(--text-muted)' }}>{label}</button>
+          ))}
+        </div>
+      </section>
+
+      {tab === 'info' && (
+      <>
 
       {similar?.sameProvince?.length > 0 && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -255,6 +326,40 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         </div>
       </section>
 
+      </>
+      )}
+
+      {tab === 'reviews' && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {!reviewData || reviewData.totalReviews === 0 ? (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có đánh giá nào cho biển số này.</p>
+            </div>
+          ) : (
+            <>
+              {reviewData.items.map((r) => (
+                <div key={r.id} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <Avatar name={r.reviewerName} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{maskName(r.reviewerName)}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span></div>
+                    <div style={{ flex: 1 }} />
+                    <div style={{ display: 'flex', gap: 2 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= r.rating ? 'var(--action-primary)' : 'none'} style={{ color: n <= r.rating ? 'var(--action-primary)' : 'var(--grey-300)' }} />)}</div>
+                  </div>
+                  {r.comment && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.comment}</p>}
+                </div>
+              ))}
+              {reviewTotalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <Button variant="outline" size="sm" disabled={reviewPage <= 1} onClick={() => setReviewPage((p) => Math.max(1, p - 1))}>Trước</Button>
+                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {reviewPage} / {reviewTotalPages}</span>
+                  <Button variant="outline" size="sm" disabled={reviewPage >= reviewTotalPages} onClick={() => setReviewPage((p) => Math.min(reviewTotalPages, p + 1))}>Sau</Button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
       <div className="plate-actions-mobile">
         <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
@@ -265,6 +370,9 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         )}
         {plate.seller?.zalo && (
           <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => handleContact('contact')} style={{ flex: '1 1 0' }}>Zalo</LinkButton>
+        )}
+        {!sold && (
+          <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 0' }}>Chốt biển này</Button>
         )}
         <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
       </div>
@@ -278,6 +386,39 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           <span className="lightbox-counter">{lightbox + 1}/{images.length}</span>
         </div>
       )}
+
+      <Modal open={contactOpen} onClose={() => setContactOpen(false)} title="Chốt biển này" maxWidth="480px">
+        <form onSubmit={handleContactSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <input type="text" name="company" value={cForm.honeypot} onChange={setCF('honeypot')} tabIndex={-1} autoComplete="off" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} aria-hidden="true" />
+          <div>
+            <Input label="Họ tên" value={cForm.fullName} onChange={setCF('fullName')} placeholder="Tên của bạn" error={cErr === 'Vui lòng nhập họ tên' ? cErr : undefined} required />
+          </div>
+          <div>
+            <Input label="Số điện thoại" type="tel" value={cForm.phone} onChange={setCF('phone')} placeholder="0xxxxxxxxx" error={cErr === 'Số điện thoại không hợp lệ' ? cErr : undefined} required />
+          </div>
+          <div>
+            <Select label="Mục đích" value={cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={INTENT_OPTS.map((o) => ({ value: INTENT_VAL[o], label: o }))} />
+          </div>
+          <div>
+            <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
+          </div>
+          <div>
+            <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />
+          </div>
+          <div>
+            <Input label="Email (tùy chọn)" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" />
+          </div>
+          <div>
+            <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={cForm.subscribe} onChange={(v) => setCForm((f) => ({ ...f, subscribe: !!v }))} />
+          </div>
+          {cErr && (cErr !== 'Vui lòng nhập họ tên' && cErr !== 'Số điện thoại không hợp lệ') && (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{cErr}</span>
+          )}
+          <Button type="submit" variant="primary" size="lg" disabled={submitContact.isPending}>
+            {submitContact.isPending ? 'Đang gửi…' : 'Gửi yêu cầu'}
+          </Button>
+        </form>
+      </Modal>
     </div>
   );
 }

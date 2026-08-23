@@ -34,9 +34,12 @@ export default function Faq({ go }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         {QA.map((item, i) => (
-          <div key={i} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+          <div key={item.q} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
             <button
               type="button"
+              id={`faq-q-${i}`}
+              aria-expanded={open === i}
+              aria-controls={`faq-a-${i}`}
               onClick={() => setOpen(open === i ? null : i)}
               style={{ width: '100%', border: 'none', background: 'transparent', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', textAlign: 'left' }}
             >
@@ -44,7 +47,7 @@ export default function Faq({ go }) {
               <ChevronDown size={18} style={{ color: 'var(--text-muted)', transform: open === i ? 'rotate(180deg)' : 'none', transition: 'transform 180ms var(--ease-out)', flexShrink: 0 }} />
             </button>
             {open === i && (
-              <div style={{ padding: '0 var(--gutter-card) var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)', animation: 'fadeIn 140ms var(--ease-out)' }}>
+              <div id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} style={{ padding: '0 var(--gutter-card) var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)', animation: 'fadeIn 140ms var(--ease-out)' }}>
                 {item.a}
               </div>
             )}

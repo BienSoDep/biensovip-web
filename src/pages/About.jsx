@@ -94,8 +94,15 @@ export default function About({ go }) {
                   {v.platform === 'tiktok' ? (
                     <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
                   ) : (
-                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 300, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                      Xem video
+                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Xem video: ${v.title || ''}`} style={{ position: 'relative', display: 'block', width: '100%', minHeight: 300, borderRadius: 'var(--radius-card)', overflow: 'hidden', background: 'var(--surface-sunken)' }}>
+                      {v.thumbnailUrl ? (
+                        <LazyImage src={v.thumbnailUrl} alt={v.title || ''} style={{ minHeight: 300 }} imgStyle={{ width: '100%', height: '100%', minHeight: 300, objectFit: 'cover', display: 'block' }} skeletonHeight={300} />
+                      ) : (
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 300, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</span>
+                      )}
+                      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>▶</span>
+                      </span>
                     </a>
                   )}
                 </div>
@@ -165,8 +172,8 @@ export default function About({ go }) {
       {/* Contact */}
       <div className="about-contact" style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--space-5)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.shop_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.shop_value')}</span></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.phone_label')}</span><a href="tel:0905000000" style={{ font: 'var(--type-title-3)' }}>{T('about.contact.phone_value')}</a></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.zalo_label')}</span><a href="#" style={{ font: 'var(--type-title-3)' }}>{T('about.contact.zalo_value')}</a></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.phone_label')}</span><a href={`tel:${T('about.contact.phone_value').replace(/[^0-9]/g, '')}`} style={{ font: 'var(--type-title-3)' }}>{T('about.contact.phone_value')}</a></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.zalo_label')}</span><a href={`https://${T('about.contact.zalo_value')}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)' }}>{T('about.contact.zalo_value')}</a></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.address_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.address_value')}</span></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.hours_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.hours_value')}</span></div>
       </div>
