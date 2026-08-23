@@ -1,4 +1,5 @@
 import { contentGet } from '../lib/content/index.js';
+import EmailCapture from '../components/EmailCapture.jsx';
 
 // UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: thông tin doanh nghiệp thật.
 export default function Footer({ settings }) {
@@ -27,6 +28,10 @@ export default function Footer({ settings }) {
             <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>{T('common.brand.name')}</span>
           </div>
           <p className="footer-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 340 }}>{T('common.footer.desc')}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 340 }}>
+            <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>Nhận thông báo mới</span>
+            <EmailCapture source="newsletter" />
+          </div>
         </div>
 
         <div style={{ flex: '1 1 160px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

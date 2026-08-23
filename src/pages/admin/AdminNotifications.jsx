@@ -5,6 +5,7 @@ import { Input, Select } from '../../components/index.jsx';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
 import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
+import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
 
 const TYPE_LABEL = {
   plate_match: 'Biển mới khớp tìm kiếm đã lưu', hot_alert: 'Biển yêu thích đang HOT', re_engage: 'Nhắc quay lại (không hoạt động)',
@@ -18,6 +19,7 @@ const TYPE_LABEL = {
 const TARGETS = [
   { value: 'all', label: 'Tất cả người dùng' },
   { value: 'subscribed', label: 'Đã đăng ký nhận thông báo' },
+  { value: 'subscribers', label: 'Email đăng ký nhận tin (footer/banner)' },
   { value: 'specific', label: 'Chọn người dùng cụ thể' },
 ];
 const CHANNELS = [
@@ -106,6 +108,7 @@ export default function AdminNotifications({ notify }) {
   const { data, isLoading, isError, refetch } = useAdminBroadcasts();
   const sendBroadcast = useSendBroadcast();
 
+  const [tab, setTab] = useState('send');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [target, setTarget] = useState('all');
@@ -115,6 +118,11 @@ export default function AdminNotifications({ notify }) {
   const [sending, setSending] = useState(false);
 
   const items = data?.items || [];
+  const TABS = [
+    { key: 'send', label: 'Gửi thông báo', desc: 'Soạn & gửi tới user hoặc email đăng ký' },
+    { key: 'subscribers', label: 'Email đăng ký', desc: 'Danh sách nhận tin & lịch sử gửi' },
+    { key: 'automation', label: 'Tự động hóa', desc: 'Kênh, nội dung & lịch cho email tự động' },
+  ];
 
   const send = async () => {
     if (!title.trim() || !stripHtml(body)) { setErr('Nhập đủ tiêu đề và nội dung.'); return; }
@@ -136,54 +144,161 @@ export default function AdminNotifications({ notify }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <Input label="Tiêu đề" placeholder="VD: Bảo trì hệ thống tối nay" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
-          <RichTextEditor value={body} onChange={setBody} minHeight={180} />
-        </div>
-        <Select label="Đối tượng" value={target} options={TARGETS} onChange={setTarget} />
-        {target === 'specific' && <UserPicker selected={selectedUsers} onChange={setSelectedUsers} />}
-        <Select label="Kênh gửi" value={channel} options={CHANNELS} onChange={setChannel} />
-        {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
-        <Button variant="dark" size="md" style={{ alignSelf: 'flex-start' }} onClick={send} disabled={sending}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <div>
+        <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Thông báo &amp; Email</h1>
+        <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Gửi thông báo thủ công, quản lý email đăng ký nhận tin và cấu hình email tự động.</p>
       </div>
 
-      <div style={{ flex: '1 1 360px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
-      {(channel === 'email' || channel === 'email_zalo') && (
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <EmailPreview title={title} body={body} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        {TABS.map((t) => (
+          <button key={t.key} type="button" onClick={() => setTab(t.key)}
+            style={{
+              padding: '10px 16px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+              font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
+              background: tab === t.key ? 'var(--action-dark)' : 'var(--white)',
+              color: tab === t.key ? 'var(--white)' : 'var(--text-muted)',
+              boxShadow: 'var(--shadow-inset-hairline)',
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'send' && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
+          <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+            <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Soạn thông báo mới</span>
+            </div>
+            <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <Input label="Tiêu đề" placeholder="VD: Bảo trì hệ thống tối nay" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
+                <RichTextEditor value={body} onChange={setBody} minHeight={180} />
+              </div>
+              <Select label="Đối tượng" value={target} options={TARGETS} onChange={setTarget} />
+              {target === 'specific' && <UserPicker selected={selectedUsers} onChange={setSelectedUsers} />}
+              {target !== 'subscribers' && <Select label="Kênh gửi" value={channel} options={CHANNELS} onChange={setChannel} />}
+              {target === 'subscribers' && (
+                <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gửi email tới danh sách đăng ký nhận tin (footer/banner). Không cần tài khoản.</p>
+              )}
+              {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
+              <Button variant="primary" size="lg" fullWidth onClick={send} disabled={sending}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
+            </div>
+          </div>
+
+          <div style={{ flex: '1 1 360px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
+          {(target === 'subscribers' || channel === 'email' || channel === 'email_zalo') && (
+            <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+              <EmailPreview title={title} body={body} />
+            </div>
+          )}
+
+          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+            <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đã gửi ({items.length})</span></div>
+            {isLoading ? (
+              <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
+            ) : isError ? (
+              <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <span>Lỗi tải dữ liệu</span>
+                <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
+              </div>
+            ) : items.length === 0 ? (
+              <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có thông báo nào được gửi.</div>
+            ) : (
+              items.map((n) => (
+                <div key={n.id} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 4, boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{n.title}</span>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{CHANNEL_LABEL[n.channel] || n.channel}</span>
+                  </div>
+                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stripHtml(n.content)}</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{n.recipientCount} người nhận · {n.sentEmailCount} email · {n.sentZaloCount} zalo</span>
+                </div>
+              ))
+            )}
+          </div>
+          </div>
         </div>
       )}
 
-      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đã gửi ({items.length})</span></div>
+      {tab === 'subscribers' && <SubscriberSection notify={notify} />}
+      {tab === 'automation' && <TypeSettingsSection notify={notify} />}
+    </div>
+  );
+}
+
+// Danh sách email đăng ký nhận tin (footer/banner) + lịch sử blast đã gửi tới subscriber.
+function SubscriberSection({ notify }) {
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const PER = 15;
+  const { data, isLoading } = useAdminSubscribers({ q, page, perPage: PER });
+  const count = useSubscriberActiveCount();
+  const remove = useRemoveSubscriber();
+  const blasts = useAdminBlasts({ page: 1, perPage: 10 });
+
+  const items = data?.items || [];
+  const total = data?.total || 0;
+  const doRemove = async (id, email) => {
+    if (!window.confirm(`Hủy đăng ký nhận tin của ${email}?`)) return;
+    try { await remove.mutateAsync(id); notify('Đã hủy đăng ký'); }
+    catch (e) { notify(e.message || 'Lỗi'); }
+  };
+
+  return (
+    <div style={{ flex: '1 1 100%', minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
+      <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span style={{ flex: 1, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Email đăng ký nhận tin</span>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{count.data?.count ?? '–'} đang hoạt động</span>
+          <Input label="" placeholder="Tìm email / tên" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+        </div>
         {isLoading ? (
-          <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
-        ) : isError ? (
-          <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <span>Lỗi tải dữ liệu</span>
-            <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
-          </div>
+          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
         ) : items.length === 0 ? (
-          <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có thông báo nào được gửi.</div>
+          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có email nào đăng ký.</div>
         ) : (
-          items.map((n) => (
-            <div key={n.id} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 4, boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{n.title}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{CHANNEL_LABEL[n.channel] || n.channel}</span>
+          items.map((s) => (
+            <div key={s.id} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.email}</div>
+                <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
+                  {s.source} · {new Date(s.createdAt).toLocaleDateString('vi-VN')}{s.unsubscribedAt ? ' · đã hủy' : ''}
+                </div>
               </div>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stripHtml(n.content)}</span>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{n.recipientCount} người nhận · {n.sentEmailCount} email · {n.sentZaloCount} zalo</span>
+              <button type="button" onClick={() => doRemove(s.id, s.email)} disabled={remove.isPending}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Hủy</button>
+            </div>
+          ))
+        )}
+        {total > PER && (
+          <div style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', justifyContent: 'center', gap: 'var(--space-2)' }}>
+            <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Trước</button>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{page} / {Math.ceil(total / PER)}</span>
+            <button type="button" onClick={() => setPage((p) => p + 1)} disabled={page * PER >= total} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Sau</button>
+          </div>
+        )}
+      </div>
+
+      <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đợt gửi tới subscriber</span>
+        </div>
+        {blasts.isLoading ? (
+          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
+        ) : (blasts.data?.items || []).length === 0 ? (
+          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa gửi đợt nào tới subscriber.</div>
+        ) : (
+          (blasts.data?.items || []).map((b) => (
+            <div key={b.id} style={{ padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+              <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{b.title}</div>
+              <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{b.sentCount}/{b.totalCount} đã gửi · {new Date(b.createdAt).toLocaleDateString('vi-VN')}</div>
             </div>
           ))
         )}
       </div>
-      </div>
-
-      <TypeSettingsSection notify={notify} />
     </div>
   );
 }
@@ -246,6 +361,26 @@ function TypeSettingsSection({ notify }) {
         <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
           <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Kênh &amp; nội dung thông báo tự động</span>
           <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt chuông web, email, sửa câu chữ và khung giờ gửi cho từng loại — áp dụng toàn hệ thống.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
+            {(() => {
+              const list = data || [];
+              const webOn = list.filter((t) => t.webEnabled).length;
+              const emailOn = list.filter((t) => t.emailEnabled).length;
+              const sent = list.reduce((s, t) => s + (t.emailsSent || 0), 0);
+              const chips = [
+                ['Tổng loại', list.length],
+                ['Chuông web bật', webOn],
+                ['Email bật', emailOn],
+                ['Email đã gửi', sent],
+              ];
+              return chips.map(([label, val]) => (
+                <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 'var(--space-2) var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', minWidth: 96 }}>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
+                  <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{val.toLocaleString('vi-VN')}</span>
+                </div>
+              ));
+            })()}
+          </div>
         </div>
         {isLoading ? (
           <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
@@ -363,6 +498,7 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
     >
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
         <span style={{ flex: '1 1 220px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{TYPE_LABEL[setting.type] || setting.type}</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{setting.emailsSent ?? 0} email</span>
         <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
           <input type="checkbox" checked={setting.webEnabled} onChange={() => toggle('webEnabled')} disabled={update.isPending} /> Chuông web
         </label>
@@ -382,6 +518,7 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nội dung tùy chỉnh (để trống = dùng mặc định ở trên)</span>
             <textarea rows={2} value={draftContent} placeholder={setting.defaultContent} onChange={(e) => setDraftContent(e.target.value)} style={{ background: 'var(--white)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '8px 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Biến có sẵn: {`{UserName}`} · {`{SiteName}`} — thay tự động theo từng người khi gửi.</span>
           </label>
           {setting.triggerHour !== null && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 160 }}>

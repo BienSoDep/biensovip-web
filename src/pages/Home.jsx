@@ -12,6 +12,7 @@ import { useFeaturedPlates, usePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
+import EmailCapture from '../components/EmailCapture.jsx';
 import { useSubmitContact } from '../services/contactService.js';
 
 // Debounce a value — waits `delay`ms of silence before committing, so typing doesn't fire
@@ -110,6 +111,17 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
               <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)' }}>{T('home.hero.plate_price')}</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Banner đăng ký email nhận thông báo — cùng bảng subscriber với ô footer */}
+      <section style={{ padding: '0 var(--pad-page)', margin: 'clamp(8px,2vw,20px) 0' }}>
+        <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-surface)', padding: 'clamp(20px,4vw,40px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhận thông báo biển số mới</span>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 420 }}>Đăng ký email để được báo khi có biển đẹp mới, giá và khuyến mãi — không bỏ lỡ biển hợp ý.</span>
+          </div>
+          <EmailCapture source="banner" style={{ flex: '1 1 300px', maxWidth: 460 }} />
         </div>
       </section>
 
