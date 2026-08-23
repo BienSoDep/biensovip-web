@@ -19,6 +19,15 @@ export function useSendBroadcast() {
   });
 }
 
+// Estimate số người nhận theo target ("all" | "subscribed") — cho dòng "~N người nhận" trước khi gửi.
+export function useNotificationRecipientCount({ target } = {}) {
+  return useQuery({
+    queryKey: [...KEY, 'recipient-count', { target }],
+    queryFn: () => apiClient.get('/api/admin/notifications/recipient-count', { params: { target } }),
+    enabled: target === 'all' || target === 'subscribed',
+  });
+}
+
 const TYPE_SETTINGS_KEY = ['admin', 'notification-type-settings'];
 
 export function useNotificationTypeSettings() {

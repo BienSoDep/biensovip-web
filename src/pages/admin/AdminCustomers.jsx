@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail } from '../../services/adminCustomers.js';
+import { formatDate, formatDateTime } from '../../lib/date.js';
 import { SearchField, Select, Badge, IconButton } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -93,7 +94,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
             </span>
             <span style={{ flex: '1 1 72px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{c.favoritesCount}</span>
             <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-              {c.createdAt ? new Date(c.createdAt).toLocaleDateString('vi-VN') : '—'}
+              {formatDate(c.createdAt)}
             </span>
             <span style={{ flex: '1 1 100px' }}>
               <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: (STATUS_COLOR[c.status] || 'var(--grey-400)') + '18', color: STATUS_COLOR[c.status] || 'var(--text-muted)' }}>
@@ -153,8 +154,8 @@ export default function AdminCustomers({ st, setSt, notify }) {
 const ELEMENT_LABEL = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
 const GENDER_LABEL = { male: 'Nam', female: 'Nữ', other: 'Khác' };
 const CONTACT_STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt' };
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : '—');
-const fmtDateTime = (d) => (d ? new Date(d).toLocaleString('vi-VN') : '—');
+const fmtDate = formatDate;
+const fmtDateTime = formatDateTime;
 const fmtVnd = (n) => (n == null ? null : Number(n).toLocaleString('vi-VN') + 'đ');
 
 function DrawerSection({ title, count, children }) {

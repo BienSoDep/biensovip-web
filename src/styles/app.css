@@ -353,6 +353,14 @@ textarea:focus-visible {
       transform: none;
     }
   }
+  @keyframes slideInRight {
+    from {
+      transform: none;
+    }
+    to {
+      transform: none;
+    }
+  }
 }
 @media (max-width: 768px) {
   :root {
@@ -920,5 +928,16 @@ textarea:focus-visible {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     0 8px 18px -10px rgba(212, 101, 10, 0.35);
+}
+
+/* Print — chỉ giữ nội dung trang, ẩn chrome: header/footer, mục lục, FAB, nút in, back-to-top */
+@media print {
+  header,
+  footer,
+  .no-print,
+  .back-to-top,
+  .chatbot-fab {
+    display: none !important;
+  }
 }
 

@@ -7,6 +7,7 @@ import { useAdminPlates } from '../../services/adminPlates.js';
 import { Select, SearchField, IconButton, Switch, InfoTip } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
+import Drawer from '../../components/Drawer.jsx';
 
 const CATEGORIES = [
   { value: 'plate_type', label: 'Kiểu biển' },
@@ -145,7 +146,7 @@ function TemplatesTab({ notify }) {
 
 function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }) {
   return (
-    <Modal open onClose={onClose} title={editId === 'new' ? 'Thêm mẫu ý nghĩa' : 'Sửa mẫu ý nghĩa'} maxWidth="560px">
+    <Drawer open onClose={onClose} title={editId === 'new' ? 'Thêm mẫu ý nghĩa' : 'Sửa mẫu ý nghĩa'} width="min(52%, 720px)">
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mẫu dùng chung — sửa ở đây KHÔNG ảnh hưởng biển đã seed.</p>
       <Select label="Loại" value={form.category} options={CATEGORIES}
         onChange={(v) => onSet('category', v)} style={{ flex: 1 }} />
@@ -179,7 +180,7 @@ function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }
         <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
         <Button variant="primary" size="md" onClick={onSave} disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu mẫu'}</Button>
       </div>
-    </Modal>
+    </Drawer>
   );
 }
 
@@ -325,7 +326,7 @@ function PlatesTab({ notify }) {
 
 function MeaningModal({ form, editId, saving, onSet, onSave, onClose }) {
   return (
-    <Modal open onClose={onClose} title={editId === 'new' ? 'Thêm ý nghĩa' : 'Sửa ý nghĩa'} maxWidth="560px">
+    <Drawer open onClose={onClose} title={editId === 'new' ? 'Thêm ý nghĩa' : 'Sửa ý nghĩa'} width="min(52%, 720px)">
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chỉ áp dụng cho biển đang chọn — không ảnh hưởng biển khác.</p>
       <Select label="Loại" value={form.category} options={PLATE_CATEGORIES} onChange={(v) => onSet('category', v)} style={{ flex: 1 }} />
       <label style={fieldWrap}>
@@ -345,7 +346,7 @@ function MeaningModal({ form, editId, saving, onSet, onSave, onClose }) {
         <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
         <Button variant="primary" size="md" onClick={onSave} disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu'}</Button>
       </div>
-    </Modal>
+    </Drawer>
   );
 }
 

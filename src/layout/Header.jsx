@@ -6,16 +6,7 @@ import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { contentGet } from '../lib/content/index.js';
 import { useNotifications, useMarkNotificationRead } from '../services/notificationService.js';
 import { useCompareIds } from '../services/compareService.js';
-
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Vừa xong';
-  if (mins < 60) return `${mins} phút trước`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  return `${Math.floor(hours / 24)} ngày trước`;
-}
+import { timeAgo } from '../lib/date.js';
 
 function NotificationBell({ go, openPlate }) {
   const [open, setOpen] = useState(false);

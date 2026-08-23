@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CarFront, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   useAdminPlates, useDeletePlate, useUpdatePlateStatus,
@@ -11,7 +11,9 @@ import { Select, IconButton, SearchField, InfoTip } from '../../components/index
 import PlateVisual from '../../components/PlateVisual.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
+import Drawer from '../../components/Drawer.jsx';
 import Skeleton from '../../components/Skeleton.jsx';
+import { formatDate } from '../../lib/date.js';
 
 // Parse "43A1-999.99" → { prov, seri, num }
 function parsePlateNumber(raw) {
@@ -507,11 +509,11 @@ export default function AdminPlates({ go, notify }) {
                 </select>
                 {p.listingType === 'auction' && (
                   <span style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-muted)' }}>
-                    Đấu giá · hạn {p.auctionEndAt ? new Date(p.auctionEndAt).toLocaleDateString('vi-VN') : '—'}
+                    Đấu giá · hạn {formatDate(p.auctionEndAt)}
                   </span>
                 )}
               </span>
-              <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{p.updatedAt ? new Date(p.updatedAt).toLocaleDateString('vi-VN') : '—'}</span>
+              <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>
               <span style={{ flex: '0 0 80px', display: 'flex', gap: 'var(--space-2)' }}>
                 <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(p)} />
                 <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => setConfirmDelete(p.id)} />
@@ -598,7 +600,7 @@ export default function AdminPlates({ go, notify }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {pendingCount > 0 && (
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--amber-100)', color: 'var(--amber-800)', font: 'var(--type-body-sm)' }}>
-              <span aria-hidden>⚠</span>
+              <span aria-hidden style={{ display: 'inline-flex' }}><TriangleAlert size={16} /></span>
               <span>Biển này đang có <b>{pendingCount}</b> yêu cầu chưa xử lý. Hãy <b>Ẩn thay vì xóa</b> để giữ lịch sử giao dịch.</span>
             </div>
           )}
@@ -651,7 +653,7 @@ function PlateFormModal({
   })();
 
   return (
-    <Modal open onClose={onClose} title={editDetail ? 'Sửa biển số' : 'Thêm biển số'} maxWidth="560px">
+    <Drawer open onClose={onClose} title={editDetail ? 'Sửa biển số' : 'Thêm biển số'} width="min(52%, 720px)">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           {editDetail ? 'Cập nhật thông tin biển đang bán.' : 'Biển sẽ xuất hiện ở đầu bảng và trang chủ.'}
@@ -699,7 +701,7 @@ function PlateFormModal({
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={form.isHot} onChange={(e) => setF('isHot')(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Biển HOT<InfoTip size={12} text="Đánh dấu biển đẹp/bán chạy để ưu tiên hiện lên đầu trang chủ và danh sách, gắn nhãn 🔥." /></span>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Biển HOT<InfoTip size={12} text="Đánh dấu biển đẹp/bán chạy để ưu tiên hiện lên đầu trang chủ và danh sách, gắn nhãn HOT." /></span>
           </label>
         </div>
 
@@ -789,6 +791,6 @@ function PlateFormModal({
           </Button>
         </div>
       </div>
-    </Modal>
+    </Drawer>
   );
 }

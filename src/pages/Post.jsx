@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { format } from 'date-fns';
 import DOMPurify from 'dompurify';
 import { Share2, Link2, MessageCircle, Minus, Plus } from 'lucide-react';
 import Button from '../components/Button.jsx';
@@ -63,7 +64,7 @@ function useReaderPrefs() {
 
 function formatDate(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('vi-VN');
+  return format(new Date(iso), 'dd/MM/yyyy');
 }
 
 function slugifyHeading(text, seen) {

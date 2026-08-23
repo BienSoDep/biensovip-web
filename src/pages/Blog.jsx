@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import { Search } from 'lucide-react';
 import LazyImage from '../components/LazyImage.jsx';
 import Button from '../components/Button.jsx';
@@ -13,7 +14,7 @@ const CATEGORY_LABEL = {
 
 function formatDate(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('vi-VN');
+  return format(new Date(iso), 'dd/MM/yyyy');
 }
 
 export default function Blog({ patch }) {

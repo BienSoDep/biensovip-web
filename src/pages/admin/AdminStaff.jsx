@@ -5,6 +5,7 @@ import { Input, Select, Switch, Avatar, IconButton, SearchField } from '../../co
 import { useAdminStaff, useCreateStaff, useUpdateStaff, useDeleteStaff } from '../../services/adminStaff.js';
 import { loadAuth, clearAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
+import Drawer from '../../components/Drawer.jsx';
 
 const ROLE_OPTS = [
   { value: 'staff', label: 'Nhân viên' },
@@ -167,7 +168,7 @@ export default function AdminStaff({ notify }) {
       )}
 
       {/* Create/Edit modal */}
-      <Modal open={open} onClose={() => setOpen(false)} title={editId ? 'Sửa nhân viên' : 'Thêm nhân viên'} maxWidth="460px">
+      <Drawer open={open} onClose={() => setOpen(false)} title={editId ? 'Sửa nhân viên' : 'Thêm nhân viên'} width="min(52%, 720px)">
         <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{editId ? 'Cập nhật thông tin và quyền truy cập.' : 'Nhân viên sẽ có quyền đăng nhập trang quản trị.'}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} error={err.fullName} onChange={field('fullName')} />
@@ -183,7 +184,7 @@ export default function AdminStaff({ notify }) {
             <Button variant="primary" size="md" onClick={save} disabled={saving}>{saving ? 'Đang lưu…' : editId ? 'Lưu thay đổi' : 'Thêm nhân viên'}</Button>
           </div>
         </div>
-      </Modal>
+      </Drawer>
 
       {/* Deactivate confirmation modal */}
       <Modal open={!!delId} onClose={() => setDelId(null)} title="Xác nhận vô hiệu hóa" maxWidth="380px">

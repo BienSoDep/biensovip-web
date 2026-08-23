@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Bell, MessageCircle, Star } from 'lucide-react';
+import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Input, Checkbox, Eyebrow } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -144,7 +144,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{plate.name}</span>
                     {plate.hot && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '1px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)' }}>🔥 HOT</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '1px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)' }}><Flame size={11} fill="currentColor" /> HOT</span>
                     )}
                   </div>
                   <span style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{plate.price}</span>

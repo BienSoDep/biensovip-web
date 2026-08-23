@@ -1,3 +1,4 @@
+import { Printer } from 'lucide-react';
 import { contentGet, contentItems } from '../lib/content/index.js';
 
 function Rich({ html }) {
@@ -29,12 +30,15 @@ export default function Privacy() {
   const sections = contentItems('privacy.sections');
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{contentGet('privacy.title')}</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('privacy.updated')}</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
+        <div>
+          <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{contentGet('privacy.title')}</h1>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('privacy.updated')}</p>
+        </div>
+        <button type="button" onClick={() => window.print()} className="no-print" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, border: 'none', background: 'var(--surface-sunken)', color: 'var(--text-strong)', padding: '9px 14px', borderRadius: 'var(--radius-field)', cursor: 'pointer', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)' }}><Printer size={16} /> In trang</button>
       </div>
 
-      <nav aria-label="Mục lục" style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+      <nav aria-label="Mục lục" className="no-print" style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mục lục</span>
         <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {sections.map((s) => (

@@ -3,6 +3,7 @@ import { Loader2, MessageCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import { useAdminContacts, useUpdateContactStatus, useContactStats } from '../../services/adminContacts.js';
+import { formatDate, formatDateTime } from '../../lib/date.js';
 import { Select, Badge } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -143,7 +144,7 @@ export default function AdminContacts({ notify }) {
               <span style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
               <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{c.depositAmount != null ? new Intl.NumberFormat('vi-VN').format(c.depositAmount) + ' đ' : '—'}</span>
               <span style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                {new Date(c.createdAt).toLocaleDateString('vi-VN')}
+                {formatDate(c.createdAt)}
               </span>
               <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
                 {updatingId === c.id ? (
@@ -230,7 +231,7 @@ export default function AdminContacts({ notify }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thời gian gửi</span>
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{new Date(selected.createdAt).toLocaleString('vi-VN')}</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{formatDateTime(selected.createdAt)}</span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

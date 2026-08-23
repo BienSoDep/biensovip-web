@@ -313,7 +313,7 @@ export default function Dashboard({ go, st }) {
                     </td>
                     <td style={{ padding: 'var(--space-2)', color: 'var(--text-muted)' }}>{INTENT_LABEL[o.intent] || o.intent}</td>
                     <td style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)', color: o.status === 'closed' ? 'var(--status-success)' : 'var(--text-muted)' }}>{ORDER_STATUS_LABEL[o.status] || o.status}</td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-faint)' }}>{new Date(o.createdAt).toLocaleDateString('vi-VN')}</td>
+                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-faint)' }}>{format(new Date(o.createdAt), 'dd/MM/yyyy')}</td>
                   </tr>
                 ))}
               </tbody>

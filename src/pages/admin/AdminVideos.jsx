@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Reorder } from 'framer-motion';
-import { ChevronUp, ChevronDown, Star, Search } from 'lucide-react';
+import { ChevronUp, ChevronDown, Star, Search, Eye, Heart, Share2, MessageCircle } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, ImageUrlInput, IconButton, Badge } from '../../components/index.jsx';
 import { useAdminPromoVideos, useCreatePromoVideo, useDeletePromoVideo, useReorderPromoVideos, useUpdatePromoVideo } from '../../services/promoVideoService.js';
 import TikTokEmbed from '../../components/TikTokEmbed.jsx';
 import Modal from '../../components/Modal.jsx';
+import Drawer from '../../components/Drawer.jsx';
 import { useDebouncedValue } from '@mantine/hooks';
 
 const PLATFORM_LABEL = { tiktok: 'TikTok', facebook: 'Facebook' };
@@ -126,10 +127,10 @@ export default function AdminVideos({ notify }) {
           </div>
           {(v.viewCount != null || v.likeCount != null || v.shareCount != null || v.commentCount != null) && (
             <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-              {v.viewCount != null && <span>👁 {v.viewCount}</span>}
-              {v.likeCount != null && <span>❤️ {v.likeCount}</span>}
-              {v.shareCount != null && <span>↗ {v.shareCount}</span>}
-              {v.commentCount != null && <span>💬 {v.commentCount}</span>}
+              {v.viewCount != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> {v.viewCount}</span>}
+              {v.likeCount != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Heart size={12} /> {v.likeCount}</span>}
+              {v.shareCount != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Share2 size={12} /> {v.shareCount}</span>}
+              {v.commentCount != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MessageCircle size={12} /> {v.commentCount}</span>}
             </div>
           )}
         </div>
@@ -219,7 +220,7 @@ export default function AdminVideos({ notify }) {
         <Button variant="primary" size="md" onClick={openAdd}>Thêm video</Button>
       </div>
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={editId ? 'Sửa video' : 'Thêm video'} maxWidth="480px">
+      <Drawer open={addOpen} onClose={() => setAddOpen(false)} title={editId ? 'Sửa video' : 'Thêm video'} width="min(52%, 720px)">
         <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Dán link video từ TikTok / Facebook — hệ thống tự nhận diện nền tảng.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div>
@@ -263,7 +264,7 @@ export default function AdminVideos({ notify }) {
             <Button variant="primary" size="md" onClick={saveAdd} disabled={createVideo.isPending || updateVideo.isPending}>{editId ? (updateVideo.isPending ? 'Đang lưu…' : 'Lưu thay đổi') : (createVideo.isPending ? 'Đang thêm…' : 'Thêm video')}</Button>
           </div>
         </div>
-      </Modal>
+      </Drawer>
 
       <Modal open={delId != null} onClose={() => setDelId(null)} title="Xác nhận xóa" maxWidth="380px">
         <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Video này sẽ được ẩn khỏi trang chủ và mọi bài viết. Bạn có thể khôi phục lại sau nếu cần.</p>

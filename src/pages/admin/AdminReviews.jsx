@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Select } from '../../components/index.jsx';
 import { useAdminReviews, useUpdateReviewStatus } from '../../services/adminReviewService.js';
+import { formatDate } from '../../lib/date.js';
 
 const STATUS_OPTS = [
   { value: 'pending', label: 'Chờ duyệt' },
@@ -54,7 +55,7 @@ export default function AdminReviews({ notify }) {
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{r.plateNumber || '—'}</span>
                 <div role="img" aria-label={`${r.rating}/5 sao`} style={{ display: 'flex', gap: 2 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= r.rating ? 'var(--action-primary)' : 'none'} style={{ color: n <= r.rating ? 'var(--action-primary)' : 'var(--grey-300)' }} aria-hidden />)}</div>
                 <div style={{ flex: 1 }} />
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{formatDate(r.createdAt)}</span>
               </div>
               {r.comment && <ReviewComment text={r.comment} />}
               {status === 'pending' && (

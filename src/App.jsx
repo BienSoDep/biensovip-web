@@ -12,6 +12,7 @@ import { useComparePlates } from './services/compareService.js';
 import { contentGet } from './lib/content/index.js';
 import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
+import BackToTop from './components/BackToTop.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import Header from './layout/Header.jsx';
@@ -660,6 +661,8 @@ export default function App() {
           {isPublic && <Footer settings={st.settings} />}
 
           {isPublic && <PromoRails />}
+
+          <BackToTop />
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />

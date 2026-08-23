@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import { Badge, IconButton } from '../../components/index.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { useAdminBlogPosts, useDeleteBlogPost } from '../../services/blog.js';
@@ -8,7 +9,7 @@ const STATUS_LABEL = { draft: 'Bản nháp', published: 'Đã xuất bản' };
 
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('vi-VN');
+  return format(new Date(iso), 'dd/MM/yyyy');
 }
 
 export default function AdminPosts({ st, patch, notify }) {

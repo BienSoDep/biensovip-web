@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
+import { Phone, MessageCircle } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { Input, Select } from '../../components/index.jsx';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
-import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail } from '../../services/adminNotificationService.js';
+import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail, useNotificationRecipientCount } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
 import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
+import { formatDate } from '../../lib/date.js';
 
 const TYPE_LABEL = {
   plate_match: 'Biển mới khớp tìm kiếm đã lưu', hot_alert: 'Biển yêu thích đang HOT', re_engage: 'Nhắc quay lại (không hoạt động)',
@@ -51,8 +53,8 @@ function EmailPreview({ title, body }) {
           <div style={{ color: '#374151', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: body || '<p style="color:#9CA3AF">—</p>' }} />
         </div>
         <div style={{ padding: '12px 20px', background: '#fff7ed', color: '#9a3412', fontSize: 12, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <span>📞 081 579 2699</span>
-          <span>💬 Zalo: biensovip</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Phone size={12} /> 081 579 2699</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MessageCircle size={12} /> Zalo: biensovip</span>
         </div>
         <div style={{ padding: '10px 20px', background: '#f1f2f4', color: '#6b7280', fontSize: 11, textAlign: 'center' }}>
           Biensovip.com — mua bán biển số xe đẹp
@@ -116,6 +118,7 @@ export default function AdminNotifications({ notify }) {
   const [body, setBody] = useState('');
   const [target, setTarget] = useState('all');
   const [channel, setChannel] = useState('email');
+  const subEstimate = useNotificationRecipientCount({ target });
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
@@ -125,7 +128,7 @@ export default function AdminNotifications({ notify }) {
   if (target === 'subscribers') recipientEstimate = subCount.data?.count;
   else if (target === 'specific') recipientEstimate = selectedUsers.length;
   else if (target === 'all') recipientEstimate = allUsers.data?.total;
-  // 'subscribed' — chưa có endpoint đếm riêng; để trống.
+  else if (target === 'subscribed') recipientEstimate = subEstimate.data?.count;
 
   const items = data?.items || [];
   const TABS = [
@@ -282,7 +285,7 @@ function SubscriberSection({ notify }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.email}</div>
                 <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-                  {s.source} · {new Date(s.createdAt).toLocaleDateString('vi-VN')}{s.unsubscribedAt ? ' · đã hủy' : ''}
+                  {s.source} · {formatDate(s.createdAt)}{s.unsubscribedAt ? ' · đã hủy' : ''}
                 </div>
               </div>
               <button type="button" onClick={() => setConfirmTarget({ id: s.id, email: s.email })} disabled={remove.isPending}
@@ -311,7 +314,7 @@ function SubscriberSection({ notify }) {
           (blasts.data?.items || []).map((b) => (
             <div key={b.id} style={{ padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
               <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{b.title}</div>
-              <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{b.sentCount}/{b.totalCount} đã gửi · {new Date(b.createdAt).toLocaleDateString('vi-VN')}</div>
+              <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{b.sentCount}/{b.totalCount} đã gửi · {formatDate(b.createdAt)}</div>
             </div>
           ))
         )}

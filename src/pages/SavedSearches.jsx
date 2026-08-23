@@ -5,21 +5,11 @@ import Button from '../components/Button.jsx';
 import { Switch } from '../components/index.jsx';
 import { useSavedSearches, useUpdateSavedSearch, useDeleteSavedSearch } from '../services/savedSearchService.js';
 import { useNotificationSettings, useUpdateNotificationSettings, useNotifications, useMarkNotificationRead } from '../services/notificationService.js';
+import { timeAgo } from '../lib/date.js';
 
 function stripHtml(html) {
   if (!html) return '';
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Vừa xong';
-  if (mins < 60) return `${mins} phút trước`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} ngày trước`;
-  return new Date(dateStr).toLocaleDateString('vi-VN');
 }
 
 function filterSummary(filtersStr) {
@@ -113,7 +103,7 @@ export default function SavedSearches({ go, notify, user }) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
                     <span style={{ font: 'var(--type-body-sm)', fontWeight: n.read ? 'var(--fw-regular)' : 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{n.title || (n.type === 'plate_match' ? `Biển ${n.plateNumber || 'mới'} phù hợp tiêu chí của bạn` : 'Thông báo')}</span>
                     {n.content && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{stripHtml(n.content)}</span>}
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{timeAgo(n.createdAt)}</span>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{timeAgo(n.createdAt, { capDays: 30 })}</span>
                   </div>
                 </div>
               ))}
