@@ -6,14 +6,15 @@ export default function PromoRails() {
   const items = data?.items || [];
   if (!items.length) return null;
 
-  // ThumbnailUrl thật (lấy qua oEmbed khi thêm video) → hiện ảnh tĩnh cho gọn rail.
-  // Thiếu thumbnail (vd Facebook chưa hỗ trợ oEmbed công khai) → nhúng bằng embed chính thức của nền tảng.
+  // TikTok: thumbnailUrl lưu tĩnh trong DB là link CDN có x-expires ngắn hạn (hết hạn → 403) —
+  // luôn fetch oEmbed runtime qua TikTokEmbed thay vì dùng field DB (giống Home.jsx "Video nổi bật").
+  // Nền tảng khác (chưa hỗ trợ oEmbed công khai, vd Facebook): dùng thumbnailUrl tĩnh nếu có.
   const renderItem = (v) => (
     <div key={v.id} className={`promo-rail__item${v.platform === 'tiktok' ? ' promo-rail__item--tiktok' : ''}`}>
-      {v.thumbnailUrl ? (
-        <img src={v.thumbnailUrl} alt={v.title || 'Video quảng cáo'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-      ) : v.platform === 'tiktok' ? (
+      {v.platform === 'tiktok' ? (
         <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+      ) : v.thumbnailUrl ? (
+        <img src={v.thumbnailUrl} alt={v.title || 'Video quảng cáo'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       ) : (
         <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Xem video</a>
       )}
