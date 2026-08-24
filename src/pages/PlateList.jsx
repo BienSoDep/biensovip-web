@@ -21,7 +21,6 @@ const SORT_OPTIONS = [
   { value: 'newest', label: 'Mới nhất' },
   { value: 'hot_first', label: 'Nổi bật trước' },
   { value: 'most_viewed', label: 'Xem nhiều nhất' },
-  { value: 'ending_soon', label: 'Sắp hết hạn đấu giá' },
   { value: 'plate_number', label: 'Số biển A→Z' },
   { value: 'price_asc', label: 'Giá thấp → cao' },
   { value: 'price_desc', label: 'Giá cao → thấp' },

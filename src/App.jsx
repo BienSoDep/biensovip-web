@@ -52,6 +52,7 @@ const Terms = lazy(() => import('./pages/Terms.jsx'));
 const Privacy = lazy(() => import('./pages/Privacy.jsx'));
 const TransferGuide = lazy(() => import('./pages/TransferGuide.jsx'));
 const Faq = lazy(() => import('./pages/Faq.jsx'));
+const GmailCallback = lazy(() => import('./pages/GmailCallback.jsx'));
 const AdminShell = lazy(() => import('./layout/AdminShell.jsx'));
 const Modals = lazy(() => import('./layout/Modals.jsx'));
 const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
@@ -550,6 +551,7 @@ export default function App() {
     acustomers: ['Khách hàng', (st.contacts || []).length + ' khách hàng trong hệ thống'],
     avideos: ['Video', 'Quản lý video TikTok/Facebook'],
     anotifications: ['Thông báo', 'Gửi thông báo đến người dùng'],
+    aemailtpl: ['Mẫu email', 'Kéo-thả dựng bố cục email cho các loại thông báo'],
     acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
     areviews: ['Đánh giá', 'Kiểm duyệt đánh giá của khách hàng'],
     ameanings: ['Ý nghĩa phong thủy', 'Mẫu ý nghĩa chung và ý nghĩa riêng cho từng biển'],
@@ -641,6 +643,7 @@ export default function App() {
             {s === 'transfer' && <TransferGuide go={go} />}
 
             {s === 'faq' && <Faq go={go} />}
+            {s === 'gmailCallback' && <GmailCallback go={go} />}
 
             {s === 'blog' && <Blog st={st} patch={patch} />}
 

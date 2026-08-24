@@ -4,24 +4,15 @@ import PlateVisual from './PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
-const AUCTION_SOON_DAYS = 3;
-
-function auctionDaysLeft(auctionEndAt) {
-  if (!auctionEndAt) return null;
-  const diffMs = new Date(auctionEndAt).getTime() - Date.now();
-  return Math.ceil(diffMs / 86400000);
-}
 
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
   status, badge, fav, onFav, onCompare, inCompare, onOpen, onBuy, style, plateSize = 'md',
-  contact, listingType, auctionEndAt,
+  contact,
 }) {
   const { prov, seri, num } = splitPlateNumber(plateNumber);
   const sold = status === 'sold';
   const meta = [vehicleType, province].filter(Boolean).join(' · ');
-  const daysLeft = listingType === 'auction' ? auctionDaysLeft(auctionEndAt) : null;
-  const auctionEndingSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= AUCTION_SOON_DAYS;
 
   return (
     <Card tone="sunken" pad="10px" style={{ height: '100%', ...style }}>
@@ -32,7 +23,6 @@ export default function PlateCard({
               {type && <Badge tone="dark">{type}</Badge>}
               {isHot && <Badge tone="rose">VIP</Badge>}
               {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
-              {auctionEndingSoon && <Badge tone="amber">Còn {daysLeft <= 0 ? '<1' : daysLeft} ngày đấu giá</Badge>}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               {onFav && (

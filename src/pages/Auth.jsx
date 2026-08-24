@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import Modal from '../components/Modal.jsx';
 import { Input, Checkbox, Eyebrow } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
+import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
+import { useGoogleLogin, useGoogleConfirmLink } from '../services/googleAuth.js';
 import { routeFor } from '../config/routes.js';
 
 const SWAP_TRANSITION = { type: 'spring', stiffness: 90, damping: 20, mass: 1 };
@@ -92,6 +95,42 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
   }, [s, lastEmail]);
 
   const goHome = (e) => { e.preventDefault(); go('home')(); };
+
+  // UC29 — Đăng nhập Google. 409 = email đã có tài khoản, cần xác nhận OTP trước khi liên kết.
+  const googleLogin = useGoogleLogin();
+  const googleConfirmLink = useGoogleConfirmLink();
+  const [googleLinkPending, setGoogleLinkPending] = useState(null); // { email, idToken } | null
+  const [linkOtp, setLinkOtp] = useState('');
+  const [linkErr, setLinkErr] = useState('');
+
+  const handleGoogleCredential = (idToken) => {
+    setLinkErr('');
+    googleLogin.mutate(idToken, {
+      onSuccess: () => go('home')(),
+      onError: (e) => {
+        if (e?.code === 'LINK_CONFIRMATION_REQUIRED') {
+          // Backend không trả email trong body lỗi (tránh lộ) — decode JWT payload phía FE để lấy email hiển thị.
+          try {
+            const payload = JSON.parse(atob(idToken.split('.')[1]));
+            setGoogleLinkPending({ email: payload.email, idToken });
+          } catch { setGoogleLinkPending({ email: '', idToken }); }
+        } else {
+          setLinkErr(e?.message || 'Đăng nhập Google thất bại.');
+        }
+      },
+    });
+  };
+
+  const confirmGoogleLink = () => {
+    if (!linkOtp.trim()) { setLinkErr('Nhập mã OTP đã gửi tới email.'); return; }
+    googleConfirmLink.mutate(
+      { email: googleLinkPending.email, otpCode: linkOtp.trim(), idToken: googleLinkPending.idToken },
+      {
+        onSuccess: () => { setGoogleLinkPending(null); go('home')(); },
+        onError: (e) => setLinkErr(e?.message || 'Xác nhận thất bại.'),
+      },
+    );
+  };
 
   // Register: xác nhận mật khẩu khớp TRƯỚC khi submit.
   const submitAuth = (remember) => {
@@ -297,6 +336,18 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 {st.step > 1 ? '← Quay lại bước trước' : '← Quay lại đăng nhập'}
               </Button>
             )}
+            {(s === 'register' || s === 'login') && !otpMode && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', margin: '4px 0' }}>
+                  <span style={{ flex: 1, height: 1, background: 'var(--border-hairline)' }} />
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Hoặc</span>
+                  <span style={{ flex: 1, height: 1, background: 'var(--border-hairline)' }} />
+                </div>
+                <GoogleSignInButton onCredential={handleGoogleCredential} />
+                {linkErr && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', textAlign: 'center' }}>{linkErr}</span>}
+              </>
+            )}
+
             {(s === 'register' || s === 'login') && (
               <p style={{ margin: 0, textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 {s === 'register' ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
@@ -307,6 +358,19 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
           </AnimatePresence>
         </motion.div>
       </div>
+
+      <Modal open={!!googleLinkPending} onClose={() => setGoogleLinkPending(null)} title="Xác nhận liên kết Google" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Email <b>{googleLinkPending?.email}</b> đã có tài khoản. Nhập mã OTP vừa gửi tới email để xác nhận liên kết với Google.
+          </p>
+          <Input label="Mã OTP" value={linkOtp} onChange={(e) => setLinkOtp(e.target.value)} error={linkErr} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setGoogleLinkPending(null)}>Hủy</Button>
+            <Button variant="primary" size="md" onClick={confirmGoogleLink} loading={googleConfirmLink.isPending}>Xác nhận</Button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }

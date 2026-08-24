@@ -8,12 +8,13 @@ import RichTextEditor from '../../components/RichTextEditor.jsx';
 import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail, useNotificationRecipientCount } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
 import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
+import { useAdminEmailTemplates, useUpdateEmailTemplate } from '../../services/emailTemplates.js';
 import { formatDate } from '../../lib/date.js';
 
 const TYPE_LABEL = {
   plate_match: 'Biển mới khớp tìm kiếm đã lưu', hot_alert: 'Biển yêu thích đang HOT', re_engage: 'Nhắc quay lại (không hoạt động)',
   price_drop: 'Biển yêu thích giảm giá', ai_pick: 'Gợi ý AI', digest: 'Email tổng hợp hàng ngày',
-  plate_sold: 'Biển yêu thích đã bán', auction_ending: 'Sắp hết hạn đấu giá (admin)', auction_expired: 'Đã hết hạn đấu giá (admin)',
+  plate_sold: 'Biển yêu thích đã bán',
   fengshui_match: 'Biển mới hợp mệnh', contact_status: 'Cập nhật yêu cầu liên hệ', new_review: 'Đánh giá mới trên biển đang theo dõi',
   search_stale: 'Tìm kiếm đã lưu chưa có kết quả', viewed_price_drop: 'Giảm giá biển đã xem', compare_price_drop: 'Giảm giá biển đang so sánh',
   profile_incomplete: 'Nhắc hoàn thiện hồ sơ', collaborator_commission: 'Hoa hồng CTV đã thanh toán (email)',
@@ -494,6 +495,24 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
   const [triggerHour, setTriggerHour] = useState(setting.triggerHour ?? '');
   const [testEmail, setTestEmail] = useState('');
 
+  // UC27 — dropdown "Layout email": liệt kê template áp dụng type này + tùy chọn "Mặc định hệ thống".
+  const { data: templatesData } = useAdminEmailTemplates();
+  const updateTemplate = useUpdateEmailTemplate();
+  const templates = templatesData?.items || templatesData || [];
+  const applicableTemplates = templates.filter((t) => (t.appliesTo || []).includes(setting.type));
+  const activeTemplate = applicableTemplates.find((t) => t.isActive);
+  const setEmailLayout = (templateId) => {
+    if (!templateId) {
+      const current = applicableTemplates.find((t) => t.isActive);
+      if (current) updateTemplate.mutate({ id: current.id, isActive: false }, { onSuccess: () => notify('Đã đặt về layout mặc định hệ thống') });
+      return;
+    }
+    updateTemplate.mutate({ id: templateId, isActive: true }, {
+      onSuccess: () => notify('Đã áp dụng layout email'),
+      onError: (err) => notify(err.message || 'Có lỗi xảy ra.'),
+    });
+  };
+
   const toggle = (field) => {
     update.mutate({ type: setting.type, webEnabled: setting.webEnabled, emailEnabled: setting.emailEnabled,
       titleTemplate: setting.titleTemplate, contentTemplate: setting.contentTemplate, triggerHour: setting.triggerHour,
@@ -558,6 +577,13 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
                 style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 10px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
             </label>
           )}
+          <div style={{ maxWidth: 280 }}>
+            <Select label="Layout email (UC27)" value={activeTemplate?.id || ''} onChange={setEmailLayout}
+              options={[{ value: '', label: 'Mặc định hệ thống' }, ...applicableTemplates.map((t) => ({ value: t.id, label: t.name }))]} />
+            {applicableTemplates.length === 0 && (
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có template nào gắn cho loại này — tạo ở trang "Mẫu email".</span>
+            )}
+          </div>
           <Button variant="dark" size="sm" style={{ alignSelf: 'flex-start' }} onClick={saveEdit} disabled={update.isPending}>{update.isPending ? 'Đang lưu…' : 'Lưu'}</Button>
           <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-end', flexWrap: 'wrap', boxShadow: 'inset 0 1px 0 var(--border-hairline)', paddingTop: 'var(--space-2)' }}>
             <div style={{ flex: '1 1 220px' }}>
