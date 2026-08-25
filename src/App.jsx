@@ -545,16 +545,17 @@ export default function App() {
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
     acontacts: ['Yêu cầu liên hệ', 'Quản lý yêu cầu liên hệ từ khách'],
-    astaff: ['Nhân viên', st.staff.length + ' nhân viên trong hệ thống'],
-    aposts: ['Bài viết', st.posts.filter((p) => p.status === 'Đã xuất bản').length + ' bài đang hiển thị'],
+    astaff: ['Nhân viên', 'Quản lý tài khoản nhân viên và phân quyền'],
+    aposts: ['Bài viết', 'Quản lý bài viết blog'],
     compose: ['Viết bài mới', 'Bài sẽ có slug và meta riêng để tối ưu SEO'],
-    acustomers: ['Khách hàng', (st.contacts || []).length + ' khách hàng trong hệ thống'],
+    acustomers: ['Khách hàng', 'Quản lý tài khoản khách hàng'],
     avideos: ['Video', 'Quản lý video TikTok/Facebook'],
     anotifications: ['Thông báo', 'Gửi thông báo đến người dùng'],
     aemailtpl: ['Mẫu email', 'Kéo-thả dựng bố cục email cho các loại thông báo'],
     acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
     areviews: ['Đánh giá', 'Kiểm duyệt đánh giá của khách hàng'],
     ameanings: ['Ý nghĩa phong thủy', 'Mẫu ý nghĩa chung và ý nghĩa riêng cho từng biển'],
+    aauditlog: ['Nhật ký hệ thống', 'Lịch sử thay đổi dữ liệu trong hệ thống'],
   }[s] || ['', ''];
 
   const authMeta = {

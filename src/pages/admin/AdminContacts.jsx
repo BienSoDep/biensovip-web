@@ -2,13 +2,19 @@ import { useState } from 'react';
 import { Loader2, MessageCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useAdminContacts, useUpdateContactStatus, useContactStats } from '../../services/adminContacts.js';
+import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact } from '../../services/adminContacts.js';
+import { useAdminStaff } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { Select, Badge } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Modal from '../../components/Modal.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
+import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
+import InternalNotesPanel from '../../components/InternalNotesPanel.jsx';
+import Button from '../../components/Button.jsx';
+import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { routeFor } from '../../config/routes.js';
+import { loadAuth } from '../../lib/authStore.js';
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: 'var(--accent-orange-ink)', buy: 'var(--blue-700)', hunting: 'var(--accent-purple-ink)' };
@@ -39,9 +45,17 @@ export default function AdminContacts({ notify }) {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [assignedTo, setAssignedTo] = useState('all');
+  const { exportCsv, loading: exporting } = useExportCsv('/api/admin/contact-requests');
+  const { data: staffData } = useAdminStaff();
+  const staffList = staffData?.items || [];
+  const currentUserId = loadAuth()?.user?.id;
 
-  const { data, isLoading, isError, refetch } = useAdminContacts({ status, intent, q, page, perPage: 20 });
+  const { data, isLoading, isError, refetch } = useAdminContacts({ status, intent, q, page, perPage: 20, assignedTo, ...(fromDate && { fromDate }), ...(toDate && { toDate }) });
   const updateStatus = useUpdateContactStatus();
+  const assignContact = useAssignContact();
 
   // UC11 — 1 query stats cho các tab (thay 4 query perPage=1).
   const { data: stats } = useContactStats({ intent, q });
@@ -77,6 +91,23 @@ export default function AdminContacts({ notify }) {
           <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Mục đích:</span>
           <Select value={intent === 'all' ? 'Tất cả' : INTENT_LABEL[intent]} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => { setIntent(v === 'Tất cả' ? 'all' : INTENT_VAL[v]); setPage(1); }} variant="pill" />
         </div>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          Từ ngày
+          <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          Đến ngày
+          <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
+        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Phụ trách:</span>
+          <Select value={assignedTo === 'all' ? 'Tất cả' : assignedTo === 'me' ? 'Của tôi' : 'Chưa gán'}
+            options={[{ value: 'Tất cả', label: 'Tất cả' }, { value: 'Của tôi', label: 'Của tôi' }, { value: 'Chưa gán', label: 'Chưa gán' }]}
+            onChange={(v) => { setAssignedTo(v === 'Tất cả' ? 'all' : v === 'Của tôi' ? 'me' : 'unassigned'); setPage(1); }} variant="pill" />
+        </div>
+        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, intent, q, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
+          {exporting ? 'Đang xuất…' : 'Xuất CSV'}
+        </Button>
         <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} yêu cầu</span>
       </div>
 
@@ -109,6 +140,7 @@ export default function AdminContacts({ notify }) {
           <span style={{ flex: '1 1 120px' }}>Ghi chú</span>
           <span style={{ flex: '1 1 80px' }}>Đặt cọc</span>
           <span style={{ flex: '1 1 64px' }}>Thời gian</span>
+          <span style={{ flex: '1 1 120px' }}>Phụ trách</span>
           <span style={{ flex: '1 1 160px' }}>Trạng thái</span>
         </div>
 
@@ -146,7 +178,21 @@ export default function AdminContacts({ notify }) {
               <span style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 {formatDate(c.createdAt)}
               </span>
-              <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 120px' }}>
+                <Select
+                  value={c.assignedStaffId ? (c.assignedStaffName || '—') : 'Chưa gán'}
+                  options={[{ value: 'Chưa gán', label: 'Chưa gán' }, ...staffList.map((s) => ({ value: s.fullName, label: s.fullName, _id: s.id }))]}
+                  onChange={(v) => {
+                    if (v === 'Chưa gán') { assignContact.mutate({ id: c.id, staffId: null }); return; }
+                    const staff = staffList.find((s) => s.fullName === v);
+                    if (staff) assignContact.mutate({ id: c.id, staffId: staff.id });
+                  }}
+                  variant="pill"
+                  style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)' }}
+                />
+              </span>
+              <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+                <AuditHistoryButton entityType="contact_request" entityId={c.id} />
                 {updatingId === c.id ? (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                     <Loader2 size={16} className="bsd-spin" />
@@ -251,6 +297,8 @@ export default function AdminContacts({ notify }) {
                   />
                 )}
               </div>
+
+              <InternalNotesPanel entityType="contact_request" entityId={selected.id} />
             </>
           )}
         </div>

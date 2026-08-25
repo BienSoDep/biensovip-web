@@ -21,6 +21,7 @@ import AdminCollaborators from '../pages/admin/AdminCollaborators.jsx';
 import AdminReviews from '../pages/admin/AdminReviews.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
+import AdminAuditLog from '../pages/admin/AdminAuditLog.jsx';
 
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
@@ -36,7 +37,7 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
   return (
     <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 var(--space-3)' }}>
       {ADMIN_NAV.filter((n) => {
-        if (n[0] === 'astaff') return st.user?.role === 'super-admin';
+        if (n[0] === 'astaff' || n[0] === 'aauditlog') return st.user?.role === 'super-admin';
         const perm = NAV_PERM[n[0]];
         return !perm || canPerm(st, perm);
       }).map((n) => {
@@ -186,6 +187,7 @@ export default function AdminShell({
         {s === 'aemailtpl' && <EmailBuilder notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}
+        {s === 'aauditlog' && <AdminAuditLog />}
         {s === 'ameanings' && <AdminMeanings notify={notify} />}
         {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}

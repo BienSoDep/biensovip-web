@@ -10,6 +10,8 @@ import { useAdminCategories } from '../../services/categories.js';
 import { Select, IconButton, SearchField, InfoTip } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 import Button from '../../components/Button.jsx';
+import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
+import { useExportCsv } from '../../hooks/useExportCsv.js';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import Skeleton from '../../components/Skeleton.jsx';
@@ -66,7 +68,10 @@ const ERR_MSG = {
 export default function AdminPlates({ go, notify }) {
   const [status, setStatus] = useState('all');
   const [keyword, setKeyword] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
+  const { exportCsv, loading: exporting } = useExportCsv('/api/admin/plates');
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [debouncedKeyword] = useDebouncedValue(keyword, 250);
 
@@ -88,7 +93,7 @@ export default function AdminPlates({ go, notify }) {
   // Bulk selection: Set of plate ids on current page
   const [selected, setSelected] = useState(new Set());
 
-  const filters = { status, keyword: debouncedKeyword, page, perPage: 20 };
+  const filters = { status, keyword: debouncedKeyword, page, perPage: 20, ...(fromDate && { fromDate }), ...(toDate && { toDate }) };
   const { data, isLoading } = useAdminPlates(filters);
   const plates = data?.items || [];
   const total = data?.total || 0;
@@ -396,7 +401,18 @@ export default function AdminPlates({ go, notify }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
         <Select label="Trạng thái" value={status} options={STATUS_OPTIONS} onChange={(v) => { setStatus(v); setPage(1); }} />
         <SearchField placeholder="Tìm biển số…" value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} width={220} />
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          Từ ngày
+          <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          Đến ngày
+          <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
+        </label>
         <div style={{ flex: 1 }} />
+        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword: debouncedKeyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
+          {exporting ? 'Đang xuất…' : 'Xuất CSV'}
+        </Button>
         <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
       </div>
 
@@ -501,9 +517,10 @@ export default function AdminPlates({ go, notify }) {
                 </select>
               </span>
               <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>
-              <span style={{ flex: '0 0 80px', display: 'flex', gap: 'var(--space-2)' }}>
+              <span style={{ flex: '0 0 104px', display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                 <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(p)} />
                 <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => setConfirmDelete(p.id)} />
+                <AuditHistoryButton entityType="plate" entityId={p.id} />
               </span>
             </div>
           );

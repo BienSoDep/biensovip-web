@@ -6,6 +6,8 @@ import { formatDate, formatDateTime } from '../../lib/date.js';
 import { SearchField, Select, Badge, IconButton } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
+import InternalNotesPanel from '../../components/InternalNotesPanel.jsx';
+import { useExportCsv } from '../../hooks/useExportCsv.js';
 
 const STATUS_OPTS = ['Tất cả', 'Hoạt động', 'Đã khóa', 'Chưa xác thực'];
 const STATUS_VAL = { 'Hoạt động': 'active', 'Đã khóa': 'locked', 'Chưa xác thực': 'unverified' };
@@ -22,6 +24,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
 
   const { data, isLoading, isError, refetch } = useAdminCustomers({ status, q: adminQ || undefined, page, perPage: 20 });
   const updateStatus = useUpdateCustomerStatus();
+  const { exportCsv, loading: exporting } = useExportCsv('/api/admin/customers');
 
   const result = data ?? { items: [], total: 0, page: 1, perPage: 20 };
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
@@ -55,6 +58,9 @@ export default function AdminCustomers({ st, setSt, notify }) {
           <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái:</span>
           <Select value={status === 'all' ? 'Tất cả' : (STATUS_LABEL[status] || 'Chưa xác thực')} options={STATUS_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }} variant="pill" />
         </div>
+        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, q: adminQ || undefined }).catch((e) => notify(e.message))}>
+          {exporting ? 'Đang xuất…' : 'Xuất CSV'}
+        </Button>
         <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} khách hàng</span>
       </div>
 
@@ -247,6 +253,8 @@ function CustomerDetailDrawer({ id, onClose }) {
                   <RowCard key={n.id} left={n.title || n.type} right={n.read ? 'Đã đọc' : 'Chưa đọc'} sub={fmtDateTime(n.createdAt)} />
                 ))}
               </DrawerSection>
+
+              <InternalNotesPanel entityType="customer" entityId={id} />
             </>
           )}
         </div>

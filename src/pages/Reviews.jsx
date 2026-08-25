@@ -126,6 +126,12 @@ export default function Reviews({ notify, go }) {
                     <div style={{ display: 'flex', gap: 2 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= r.rating ? 'var(--action-primary)' : 'none'} style={{ color: n <= r.rating ? 'var(--action-primary)' : 'var(--grey-300)' }} />)}</div>
                   </div>
                   {r.comment && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.comment}</p>}
+                  {r.adminReply && (
+                    <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>Phản hồi từ cửa hàng</span>
+                      <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.adminReply}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

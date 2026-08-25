@@ -2,7 +2,9 @@ import { useState } from 'react';
 import Button from '../../components/Button.jsx';
 import { Select } from '../../components/index.jsx';
 import Modal from '../../components/Modal.jsx';
+import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
 import { useAdminCollaborators, useUpdateCollaboratorStatus, useMarkCommissionsPaid } from '../../services/adminCollaborators.js';
+import { useExportCsv } from '../../hooks/useExportCsv.js';
 
 const STATUSES = ['active', 'pending', 'locked'];
 const STATUS_LABEL = { active: 'Hoạt động', pending: 'Chờ duyệt', locked: 'Bị khóa' };
@@ -19,6 +21,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
   const { data, isLoading, isError, refetch } = useAdminCollaborators(adminQ || undefined);
   const updateStatus = useUpdateCollaboratorStatus();
   const markPaid = useMarkCommissionsPaid();
+  const { exportCsv, loading: exporting } = useExportCsv('/api/admin/collaborators');
   const collabs = data?.items || [];
   const f = st.admCtv || 'Tất cả';
   const list = collabs.filter((c) => f === 'Tất cả' || c.status === f);
@@ -77,6 +80,9 @@ export default function AdminCollaborators({ st, patch, notify }) {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <Select label="Trạng thái" value={f} options={[{ value: 'Tất cả', label: 'Tất cả' }, ...opts(STATUSES)]} onChange={(v) => patch({ admCtv: v })} />
+        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ q: adminQ || undefined }).catch((e) => notify(e.message))}>
+          {exporting ? 'Đang xuất…' : 'Xuất CSV'}
+        </Button>
       </div>
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
@@ -106,6 +112,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                 Chi trả {money(c.commissionPending)}
               </button>
             </span>
+            <AuditHistoryButton entityType="collaborator" entityId={c.id} />
           </div>
         ))}
         </div>
