@@ -18,7 +18,7 @@ const PERM_RESOURCES = [
   ['plates', 'Biển số'], ['categories', 'Danh mục'], ['contacts', 'Yêu cầu liên hệ'],
   ['posts', 'Bài viết'], ['customers', 'Khách hàng'], ['videos', 'Video'],
   ['notifications', 'Thông báo'], ['collaborators', 'Cộng tác viên'],
-  ['reviews', 'Đánh giá'], ['meanings', 'Ý nghĩa phong thủy'],
+  ['reviews', 'Đánh giá'], ['meanings', 'Ý nghĩa phong thủy'], ['chatbot', 'Trợ lý AI'],
 ];
 const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
 // Preset mặc định cho nhân viên: xem + thêm + sửa mọi mục, không quyền xóa.

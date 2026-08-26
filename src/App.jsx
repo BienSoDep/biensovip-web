@@ -555,6 +555,7 @@ export default function App() {
     acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
     areviews: ['Đánh giá', 'Kiểm duyệt đánh giá của khách hàng'],
     ameanings: ['Ý nghĩa phong thủy', 'Mẫu ý nghĩa chung và ý nghĩa riêng cho từng biển'],
+    achatbot: ['Trợ lý AI', 'Lịch sử hội thoại và cấu hình trợ lý chatbot'],
     aauditlog: ['Nhật ký hệ thống', 'Lịch sử thay đổi dữ liệu trong hệ thống'],
   }[s] || ['', ''];
 

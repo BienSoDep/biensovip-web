@@ -1,20 +1,52 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles } from 'lucide-react';
-import { useSendChatbotMessage } from '../services/chatbotService.js';
+import { useSendChatbotMessage, useChatbotHistory } from '../services/chatbotService.js';
 
 const ACTION_LABEL = { chat_with_staff: 'Chat với nhân viên', contact_form: 'Để lại thông tin liên hệ' };
+const SESSION_KEY = 'bsv.chatSessionId';
+const GREETING = { from: 'bot', text: 'Chào bạn! Tôi là trợ lý Biensovip. Bạn cần tư vấn gì về biển số ạ?' };
+
+function loadStoredSessionId() {
+  try { return localStorage.getItem(SESSION_KEY); } catch { return null; }
+}
+function storeSessionId(id) {
+  try { localStorage.setItem(SESSION_KEY, id); } catch { /* ignore */ }
+}
+function clearStoredSessionId() {
+  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+}
 
 export default function AiChatbot({ go }) {
   const [open, setOpen] = useState(false);
-  const [msgs, setMsgs] = useState([{ from: 'bot', text: 'Chào bạn! Tôi là trợ lý Biensovip. Bạn cần tư vấn gì về biển số ạ?' }]);
+  const [msgs, setMsgs] = useState([GREETING]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
+  const restoredRef = useRef(false);
   const bottomRef = useRef(null);
   const panelRef = useRef(null);
   const fabRef = useRef(null);
   const sendMessage = useSendChatbotMessage();
+  const storedId = !restoredRef.current ? loadStoredSessionId() : null;
+  const history = useChatbotHistory(storedId);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, sendMessage.isPending]);
+
+  // Khôi phục hội thoại cũ từ localStorage — chỉ chạy 1 lần khi có kết quả history.
+  useEffect(() => {
+    if (restoredRef.current || !storedId) return;
+    if (history.isSuccess) {
+      restoredRef.current = true;
+      if (history.data?.messages?.length) {
+        setSessionId(storedId);
+        setMsgs(history.data.messages.map((m) => ({ from: m.role === 'user' ? 'user' : 'bot', text: m.content })));
+      } else {
+        clearStoredSessionId();
+      }
+    } else if (history.isError) {
+      restoredRef.current = true;
+      clearStoredSessionId();
+    }
+  }, [history.isSuccess, history.isError, history.data, storedId]);
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +79,8 @@ export default function AiChatbot({ go }) {
     try {
       const res = await sendMessage.mutateAsync({ sessionId, message: v });
       setSessionId(res.sessionId);
-      setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions }]);
+      storeSessionId(res.sessionId);
+      setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions, plates: res.plates }]);
     } catch (e) {
       if (e.status === 429) {
         setMsgs((m) => [...m, { from: 'bot', text: e.message || 'Bạn đã gửi quá nhiều tin nhắn, vui lòng thử lại sau ít phút.' }]);
@@ -61,6 +94,11 @@ export default function AiChatbot({ go }) {
     setOpen(false);
     if (action === 'chat_with_staff') go?.('chat')();
     else if (action === 'contact_form') go?.('chat')();
+  };
+
+  const openPlate = (slugOrId) => {
+    setOpen(false);
+    go?.('detail', slugOrId)();
   };
 
   return (
@@ -81,6 +119,11 @@ export default function AiChatbot({ go }) {
             {msgs.map((m, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: m.from === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
                 <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: m.from === 'user' ? 'var(--radius-pill)' : 'var(--radius-md)', background: m.from === 'user' ? 'var(--action-primary)' : 'var(--surface-sunken)', color: m.from === 'user' ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)', whiteSpace: 'pre-wrap' }}>{m.text}</div>
+                {m.plates?.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: '90%', width: '100%' }}>
+                    {m.plates.map((p) => <PlateMiniCard key={p.slugOrId} plate={p} onOpen={() => openPlate(p.slugOrId)} />)}
+                  </div>
+                )}
                 {m.actions?.length > 0 && (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {m.actions.map((a) => (
@@ -109,5 +152,23 @@ export default function AiChatbot({ go }) {
         </div>
       )}
     </>
+  );
+}
+
+function PlateMiniCard({ plate, onOpen }) {
+  const price = plate.priceOnRequest ? 'Giá liên hệ' : `${Number(plate.price).toLocaleString('vi-VN')}đ`;
+  const sold = plate.status === 'Sold';
+  return (
+    <button type="button" onClick={onOpen} disabled={sold} style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8,
+      border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)',
+      padding: '8px 12px', cursor: sold ? 'default' : 'pointer', textAlign: 'left', width: '100%',
+    }}>
+      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{plate.plateNumber}</span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {sold && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Đã bán</span>}
+        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{price}</span>
+      </span>
+    </button>
   );
 }

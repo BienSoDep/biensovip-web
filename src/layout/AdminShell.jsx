@@ -19,6 +19,7 @@ import AdminNotifications from '../pages/admin/AdminNotifications.jsx';
 import EmailBuilder from '../pages/admin/EmailBuilder.jsx';
 import AdminCollaborators from '../pages/admin/AdminCollaborators.jsx';
 import AdminReviews from '../pages/admin/AdminReviews.jsx';
+import AdminChatbot from '../pages/admin/AdminChatbot.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
 import AdminAuditLog from '../pages/admin/AdminAuditLog.jsx';
@@ -32,6 +33,7 @@ const NAV_PERM = {
   aposts: 'posts:view', compose: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', aemailtpl: 'email_templates:view',
+  achatbot: 'chatbot:view',
 };
 const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
@@ -207,6 +209,7 @@ export default function AdminShell({
         {s === 'aemailtpl' && <EmailBuilder notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}
+        {s === 'achatbot' && <AdminChatbot notify={notify} />}
         {s === 'aauditlog' && <AdminAuditLog />}
         {s === 'ameanings' && <AdminMeanings notify={notify} />}
         {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}

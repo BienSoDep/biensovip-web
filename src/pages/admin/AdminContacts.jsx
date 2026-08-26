@@ -19,7 +19,7 @@ import { loadAuth } from '../../lib/authStore.js';
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: 'var(--accent-orange-ink)', buy: 'var(--blue-700)', hunting: 'var(--accent-purple-ink)' };
-const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên hệ', 'plate-detail': 'Trang biển số' };
+const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên hệ', 'plate-detail': 'Trang biển số', 'chatbot': 'Trợ lý AI' };
 const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Đã tìm thấy'];
 const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Đã tìm thấy': 'found' };
 const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã tìm thấy' };
