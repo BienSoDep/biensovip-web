@@ -3,6 +3,7 @@ import { Loader2, MessageCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact } from '../../services/adminContacts.js';
+import { useCreatePaymentLink } from '../../services/paymentLinks.js';
 import { useAdminStaff } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { Select, Badge } from '../../components/index.jsx';
@@ -56,6 +57,8 @@ export default function AdminContacts({ notify }) {
   const { data, isLoading, isError, refetch } = useAdminContacts({ status, intent, q, page, perPage: 20, assignedTo, ...(fromDate && { fromDate }), ...(toDate && { toDate }) });
   const updateStatus = useUpdateContactStatus();
   const assignContact = useAssignContact();
+  const createPaymentLink = useCreatePaymentLink();
+  const [creatingLinkFor, setCreatingLinkFor] = useState(null);
 
   // UC11 — 1 query stats cho các tab (thay 4 query perPage=1).
   const { data: stats } = useContactStats({ intent, q });
@@ -63,6 +66,16 @@ export default function AdminContacts({ notify }) {
   const result = data ?? { items: [], total: 0, page: 1, perPage: 20 };
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
   const statusCounts = { all: result.total, new: stats?.new ?? 0, consulting: stats?.consulting ?? 0, closed: stats?.closed ?? 0, found: stats?.found ?? 0 };
+
+  const handleCreatePaymentLink = (contact) => {
+    if (!contact.plateId || !contact.depositAmount) return;
+    setCreatingLinkFor(contact.id);
+    createPaymentLink.mutate({ contactRequestId: contact.id, amount: contact.depositAmount }, {
+      onSuccess: (link) => { toast.success('Đã tạo link ZaloPay — gửi cho khách qua Zalo OA'); setSelected((s) => ({ ...s, paymentLink: link })); },
+      onError: (e) => toast.error(e.message === 'zalopay_not_configured' ? 'Chưa cấu hình ZaloPay Merchant' : 'Tạo link thất bại'),
+      onSettled: () => setCreatingLinkFor(null),
+    });
+  };
 
   const handleStatus = (id, label) => {
     if (updatingId) return;
@@ -267,6 +280,21 @@ export default function AdminContacts({ notify }) {
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Đặt cọc</span>
                 <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.depositAmount != null ? new Intl.NumberFormat('vi-VN').format(selected.depositAmount) + ' đ' : '—'}</span>
               </div>
+
+              {selected.plateId && selected.depositAmount != null && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thanh toán ZaloPay</span>
+                  {selected.paymentLink?.paymentUrl ? (
+                    <a href={selected.paymentLink.paymentUrl} target="_blank" rel="noreferrer" style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)' }}>
+                      Mở link đã tạo — gửi cho khách qua Zalo OA →
+                    </a>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled={creatingLinkFor === selected.id} onClick={() => handleCreatePaymentLink(selected)}>
+                      {creatingLinkFor === selected.id ? 'Đang tạo…' : 'Tạo link ZaloPay'}
+                    </Button>
+                  )}
+                </div>
+              )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Ghi chú yêu cầu</span>
