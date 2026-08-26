@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { GripVertical } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
 import { Input, IconButton, InfoTip, Badge } from '../../components/index.jsx';
-import { CATEGORY_GROUPS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories } from '../../services/categories.js';
+import { CATEGORY_GROUPS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories, useRestoreCategory } from '../../services/categories.js';
 
 // 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
 // xung đột với click nút Sửa/Xóa trên cùng hàng).
@@ -57,6 +58,7 @@ export default function AdminCats({ notify }) {
   const createCat = useCreateCategory();
   const updateCat = useUpdateCategory();
   const deleteCat = useDeleteCategory();
+  const restoreCat = useRestoreCategory();
   const reorderCats = useReorderCategories();
 
   const items = data?.items || [];
@@ -123,7 +125,18 @@ export default function AdminCats({ notify }) {
     const id = confirmDel.id;
     setDeleteErr(null);
     deleteCat.mutate(id, {
-      onSuccess: () => { notify('Đã xóa danh mục'); setConfirmDel(null); setDeleteErr(null); },
+      onSuccess: () => {
+        setConfirmDel(null); setDeleteErr(null);
+        toast((t) => (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            Đã xóa danh mục
+            <button type="button" onClick={() => { toast.dismiss(t.id); restoreCat.mutate(id, { onSuccess: () => notify('Đã hoàn tác') }); }}
+              style={{ border: 'none', background: 'none', color: 'var(--action-primary)', fontWeight: 'var(--fw-bold)', cursor: 'pointer', textDecoration: 'underline' }}>
+              Hoàn tác
+            </button>
+          </span>
+        ), { duration: 5000 });
+      },
       onError: (err) => {
         if (err.code === 'CATEGORY_IN_USE') setDeleteErr({ usageCount: err.usageCount });
         else { notify(err.message || 'Xóa thất bại.'); setConfirmDel(null); }

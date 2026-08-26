@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { Badge, IconButton } from '../../components/index.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
+import ConfirmBulkModal from '../../components/ConfirmBulkModal.jsx';
 import { useAdminBlogPosts, useDeleteBlogPost } from '../../services/blog.js';
 
 const STATUS_TONE = { draft: 'amber', published: 'mint' };
@@ -16,6 +17,9 @@ export default function AdminPosts({ st, patch, notify }) {
   const [status, setStatus] = useState('');
   const [confirmPost, setConfirmPost] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const adminQ = (st?.adminQ || '').trim();
   const { data, isLoading, isError } = useAdminBlogPosts(status || undefined, adminQ || undefined);
   const deletePost = useDeleteBlogPost();
@@ -34,6 +38,20 @@ export default function AdminPosts({ st, patch, notify }) {
     });
   };
 
+  const toggleSelect = (id) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSelectAll = () => setSelected((s) => (s.size === items.length ? new Set() : new Set(items.map((a) => a.id))));
+
+  const bulkDelete = async () => {
+    setBulkDeleting(true);
+    const ids = [...selected];
+    const results = await Promise.allSettled(ids.map((id) => deletePost.mutateAsync(id)));
+    const ok = results.filter((r) => r.status === 'fulfilled').length;
+    setSelected(new Set());
+    setConfirmBulkDelete(false);
+    setBulkDeleting(false);
+    notify(`Đã xóa ${ok} bài viết`);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -48,12 +66,14 @@ export default function AdminPosts({ st, patch, notify }) {
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 520 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+          <span style={{ flex: '0 0 24px' }}>{items.length > 0 && <input type="checkbox" checked={selected.size === items.length} onChange={toggleSelectAll} />}</span>
           <span style={{ flex: '2 1 180px' }}>Tiêu đề</span><span style={{ flex: '1 1 96px' }}>Trạng thái</span><span style={{ flex: '1 1 96px' }}>Ngày đăng</span><span style={{ flex: '0 0 72px' }}>Thao tác</span>
         </div>
         {isLoading && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
         {isError && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>Không tải được danh sách.</div>}
         {!isLoading && !isError && items.map((a) => (
           <div key={a.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+            <span style={{ flex: '0 0 24px' }}><input type="checkbox" checked={selected.has(a.id)} onChange={() => toggleSelect(a.id)} /></span>
             <span style={{ flex: '2 1 180px', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{a.title}</span>
             <span style={{ flex: '1 1 96px' }}><Badge tone={STATUS_TONE[a.status] || 'neutral'}>{STATUS_LABEL[a.status] || a.status}</Badge></span>
             <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(a.publishedAt)}</span>
@@ -68,6 +88,13 @@ export default function AdminPosts({ st, patch, notify }) {
         {!isLoading && !isError && items.length === 0 && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có bài viết nào.</div>}
       </div>
 
+      {selected.size > 0 && (
+        <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 80, display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)', background: 'var(--text-strong)', color: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-4)' }}>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--white)' }}>Đã chọn {selected.size} bài</span>
+          <button type="button" onClick={() => setConfirmBulkDelete(true)} style={{ border: 'none', background: 'var(--status-danger)', color: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'pointer' }}>Xóa</button>
+        </div>
+      )}
+
       <ConfirmModal
         open={!!confirmPost}
         onClose={() => setConfirmPost(null)}
@@ -77,6 +104,17 @@ export default function AdminPosts({ st, patch, notify }) {
         danger
         loading={!!deletingId}
         onConfirm={removePost}
+      />
+
+      <ConfirmBulkModal
+        open={confirmBulkDelete}
+        onClose={() => setConfirmBulkDelete(false)}
+        onConfirm={bulkDelete}
+        count={selected.size}
+        actionLabel="xóa"
+        itemLabel="bài viết"
+        danger
+        loading={bulkDeleting}
       />
     </div>
   );

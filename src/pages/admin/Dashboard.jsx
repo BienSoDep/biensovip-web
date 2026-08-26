@@ -15,6 +15,29 @@ import {
   useTopInterested, usePlateConversion, useConvertedOrders, useTopContent, useRatings, useIntent,
   useCollaboratorPerf, useDemand, useCustomerDemographics, useSearchInsights, useCompareInsights, useTrafficHeatmap,
 } from '../../services/adminDashboard.js';
+import { useSystemHealth } from '../../services/systemHealth.js';
+
+const HEALTH_LABEL = { ok: 'Ổn định', degraded: 'Cần chú ý', down: 'Sự cố' };
+const HEALTH_COLOR = { ok: 'var(--status-success-ink)', degraded: 'var(--status-warning-ink)', down: 'var(--status-danger)' };
+
+function SystemHealthWidget() {
+  const { data, isLoading } = useSystemHealth();
+  if (isLoading || !data) return null;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Tình trạng hệ thống</span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
+        <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.emailStatus] || 'var(--text-faint)', display: 'inline-block' }} />
+        Email: <b style={{ color: HEALTH_COLOR[data.emailStatus] }}>{HEALTH_LABEL[data.emailStatus] || data.emailStatus}</b>
+        {data.lastEmailFailedAt && data.emailStatus === 'down' && <span style={{ color: 'var(--text-faint)' }}>(lỗi lúc {new Date(data.lastEmailFailedAt).toLocaleString('vi-VN')})</span>}
+      </span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
+        <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.dbStatus] || 'var(--text-faint)', display: 'inline-block' }} />
+        Database: <b style={{ color: HEALTH_COLOR[data.dbStatus] }}>{HEALTH_LABEL[data.dbStatus] || data.dbStatus}</b>
+      </span>
+    </div>
+  );
+}
 
 const PIE_COLORS = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#ca8a04', '#0891b2', '#6d28d9'];
 
@@ -103,6 +126,8 @@ export default function Dashboard({ go, st }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
+
+      {isSuperAdmin && <SystemHealthWidget />}
 
       {/* Date range + granularity */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>

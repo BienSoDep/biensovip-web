@@ -26,6 +26,12 @@ export function useAdminPlate(id) {
   });
 }
 
+// UC35 — kiểm tra xung đột sửa đồng thời trước khi submit (gọi trực tiếp, không phải hook).
+export async function checkPlateVersion(id, updatedAt) {
+  const result = await apiClient.get(`/api/admin/plates/${id}/version-check?updatedAt=${encodeURIComponent(updatedAt)}`);
+  return result.conflict;
+}
+
 function invalidate(qc) {
   qc.invalidateQueries({ queryKey: ['admin-plates'] });
   qc.invalidateQueries({ queryKey: ['admin-plate'] });
@@ -63,6 +69,15 @@ export function useDeletePlate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => apiClient.delete(`/api/admin/plates/${id}`),
+    onSuccess: () => invalidate(qc),
+  });
+}
+
+// UC35 — hoàn tác xóa mềm (undo toast 5s)
+export function useRestorePlate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/plates/${id}/restore`),
     onSuccess: () => invalidate(qc),
   });
 }

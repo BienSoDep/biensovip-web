@@ -3,7 +3,8 @@ import Button from '../../components/Button.jsx';
 import { Select } from '../../components/index.jsx';
 import Modal from '../../components/Modal.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
-import { useAdminCollaborators, useUpdateCollaboratorStatus, useMarkCommissionsPaid } from '../../services/adminCollaborators.js';
+import CollaboratorCommissionsModal from '../../components/CollaboratorCommissionsModal.jsx';
+import { useAdminCollaborators, useUpdateCollaboratorStatus } from '../../services/adminCollaborators.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 
 const STATUSES = ['active', 'pending', 'locked'];
@@ -20,7 +21,6 @@ export default function AdminCollaborators({ st, patch, notify }) {
   const adminQ = (st.adminQ || '').trim();
   const { data, isLoading, isError, refetch } = useAdminCollaborators(adminQ || undefined);
   const updateStatus = useUpdateCollaboratorStatus();
-  const markPaid = useMarkCommissionsPaid();
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/collaborators');
   const collabs = data?.items || [];
   const f = st.admCtv || 'Tất cả';
@@ -30,7 +30,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
 
   const [updatingId, setUpdatingId] = useState(null);
   const [confirm, setConfirm] = useState(null); // { id, to }
-  const [payId, setPayId] = useState(null);
+  const [detailCollab, setDetailCollab] = useState(null);
 
   const applyStatus = (id, v) => {
     setUpdatingId(id);
@@ -40,19 +40,6 @@ export default function AdminCollaborators({ st, patch, notify }) {
       onSettled: () => { setUpdatingId(null); setConfirm(null); },
     });
   };
-
-  const doPay = async () => {
-    if (!payId) return;
-    try {
-      const count = await markPaid.mutateAsync(payId);
-      notify(count > 0 ? `Đã đánh dấu chi trả ${count} khoản hoa hồng` : 'Không có hoa hồng chờ chi trả');
-    } catch {
-      notify('Cập nhật chi trả thất bại');
-    }
-    setPayId(null);
-  };
-
-  const payTarget = collabs.find((c) => c.id === payId);
 
   if (isLoading) return <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>;
   if (isError) return (
@@ -105,11 +92,11 @@ export default function AdminCollaborators({ st, patch, notify }) {
                 {updatingId === c.id && <span aria-hidden style={spinnerStyle} />}
               </span>
             </span>
-            <span style={{ flex: '0 0 120px' }}>
-              <button type="button" onClick={() => setPayId(c.id)} disabled={!c.commissionPending}
-                title={c.commissionPending > 0 ? `Hoa hồng chờ chi trả: ${money(c.commissionPending)}` : 'Không có hoa hồng chờ chi trả'}
-                style={{ border: 'none', borderRadius: 'var(--radius-pill)', padding: '4px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: c.commissionPending > 0 ? 'pointer' : 'default', background: c.commissionPending > 0 ? 'var(--surface-tint-cream)' : 'var(--surface-sunken)', color: c.commissionPending > 0 ? 'var(--action-primary)' : 'var(--text-faint)' }}>
-                Chi trả {money(c.commissionPending)}
+            <span style={{ flex: '0 0 120px', display: 'flex', gap: 6 }}>
+              <button type="button" onClick={() => setDetailCollab(c)}
+                title="Xem chi tiết hoa hồng"
+                style={{ border: 'none', borderRadius: 'var(--radius-pill)', padding: '4px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', background: 'var(--surface-tint-cream)', color: 'var(--action-primary)' }}>
+                Chi tiết
               </button>
             </span>
             <AuditHistoryButton entityType="collaborator" entityId={c.id} />
@@ -132,15 +119,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
         </div>
       </Modal>
 
-      <Modal open={payId != null} onClose={() => setPayId(null)} title="Xác nhận chi trả" maxWidth="380px">
-        <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-          Đánh dấu tất cả hoa hồng đang chờ của CTV <b>{payTarget ? payTarget.fullName : ''}</b> là đã chi trả (chuyển ra ngoài hệ thống thủ công)?
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-          <Button variant="ghost" size="md" onClick={() => setPayId(null)}>Hủy</Button>
-          <Button variant="primary" size="md" onClick={doPay} loading={markPaid.isPending}>Xác nhận chi trả</Button>
-        </div>
-      </Modal>
+      <CollaboratorCommissionsModal collaborator={detailCollab} onClose={() => setDetailCollab(null)} notify={notify} />
 
       <style>{'@keyframes bs-spin{to{transform:rotate(360deg)}}'}</style>
     </div>

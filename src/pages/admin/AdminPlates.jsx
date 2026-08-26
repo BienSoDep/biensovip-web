@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
+import toast from 'react-hot-toast';
 import {
   useAdminPlates, useDeletePlate, useUpdatePlateStatus,
   useUpdatePlateVisibility, useUpdatePlate, useCreatePlate,
-  useBulkCreatePlate, useUploadImage, useAdminPlate,
+  useBulkCreatePlate, useUploadImage, useAdminPlate, checkPlateVersion, useRestorePlate,
 } from '../../services/adminPlates.js';
 import { useAdminCategories } from '../../services/categories.js';
 import { Select, IconButton, SearchField, InfoTip } from '../../components/index.jsx';
@@ -13,6 +14,7 @@ import Button from '../../components/Button.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import Modal from '../../components/Modal.jsx';
+import ConfirmBulkModal from '../../components/ConfirmBulkModal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import Skeleton from '../../components/Skeleton.jsx';
 import { formatDate } from '../../lib/date.js';
@@ -81,6 +83,21 @@ export default function AdminPlates({ go, notify }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const restoreMut = useRestorePlate();
+
+  // UC35 — toast "Đã xóa N mục — Hoàn tác" 5s cho soft-delete.
+  const undoToast = (count, ids) => {
+    toast((t) => (
+      <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        Đã xóa {count} biển
+        <button type="button" onClick={() => { toast.dismiss(t.id); Promise.allSettled(ids.map((id) => restoreMut.mutateAsync(id))).then(() => notify('Đã hoàn tác')); }}
+          style={{ border: 'none', background: 'none', color: 'var(--action-primary)', fontWeight: 'var(--fw-bold)', cursor: 'pointer', textDecoration: 'underline' }}>
+          Hoàn tác
+        </button>
+      </span>
+    ), { duration: 5000 });
+  };
 
   // Quick-add + paste/CSV
   const [quickNum, setQuickNum] = useState('');
@@ -166,6 +183,8 @@ export default function AdminPlates({ go, notify }) {
     setFormErr({});
   };
 
+  const [loadedUpdatedAt, setLoadedUpdatedAt] = useState(null);
+
   // Populate form when edit detail loads
   useEffect(() => {
     if (editDetail && editId && editId === editPlateId) {
@@ -181,6 +200,7 @@ export default function AdminPlates({ go, notify }) {
         fengShuiMeaning: editDetail.fengShuiMeaning || '',
         images: (editDetail.images || []).map((img) => img.url),
       });
+      setLoadedUpdatedAt(editDetail.updatedAt || null);
     }
   }, [editDetail]); // ponytail: runs once when detail arrives; editId/editPlateId stable at this point
 
@@ -212,6 +232,7 @@ export default function AdminPlates({ go, notify }) {
     if (!form.plateTypeId) errs.plateTypeId = 'Chọn loại biển';
     if (!form.provinceId) errs.provinceId = 'Chọn tỉnh/thành';
     if (!form.vehicleTypeId) errs.vehicleTypeId = 'Chọn loại xe';
+    if (!form.priceOnRequest && num(form.price) < 0) errs.price = 'Giá không được âm';
     setFormErr(errs);
     if (Object.keys(errs).length) return;
 
@@ -233,6 +254,14 @@ export default function AdminPlates({ go, notify }) {
       if (typeof editId === 'string' && editId === 'new') {
         await createMut.mutateAsync(body);
       } else {
+        if (loadedUpdatedAt) {
+          const conflict = await checkPlateVersion(editId, loadedUpdatedAt);
+          if (conflict) {
+            notify('Dữ liệu đã bị đổi bởi người khác — tải lại trang trước khi lưu để tránh ghi đè.');
+            setSaving(false);
+            return;
+          }
+        }
         await updateMut.mutateAsync({ id: editId, body });
       }
       setEditId(null);
@@ -240,7 +269,7 @@ export default function AdminPlates({ go, notify }) {
       setForm(INITIAL_FORM);
       notify(typeof editId === 'string' ? 'Đã thêm biển số mới' : 'Đã cập nhật biển số');
     } catch (err) {
-      notify(err.message || 'Lỗi lưu biển số');
+      notify(err.code === 'network' ? 'Mất kết nối — kiểm tra mạng và thử lại' : (err.message || 'Lỗi lưu biển số'));
     } finally {
       setSaving(false);
     }
@@ -248,10 +277,11 @@ export default function AdminPlates({ go, notify }) {
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
+    const id = confirmDelete;
     try {
-      await deleteMut.mutateAsync(confirmDelete);
+      await deleteMut.mutateAsync(id);
       setConfirmDelete(null);
-      notify('Đã xóa (ẩn) biển số');
+      undoToast(1, [id]);
     } catch (err) {
       notify(err.message || 'Lỗi xóa biển số');
     }
@@ -271,8 +301,10 @@ export default function AdminPlates({ go, notify }) {
     if (!ids.length) return;
     const results = await Promise.allSettled(ids.map((id) => deleteMut.mutateAsync(id)));
     const ok = results.filter((r) => r.status === 'fulfilled').length;
+    const okIds = ids.filter((_, i) => results[i].status === 'fulfilled');
     setSelected(new Set());
-    notify(`Đã xóa ${ok} biển`);
+    setConfirmBulkDelete(false);
+    undoToast(ok, okIds);
   };
 
   // Delete dialog — plate pending contacts: block hard delete, offer hide instead
@@ -578,7 +610,7 @@ export default function AdminPlates({ go, notify }) {
             <option value="sold">Đã bán</option>
             <option value="inactive">Hết hạn</option>
           </select>
-          <button type="button" onClick={bulkDelete} style={{ border: 'none', background: 'var(--status-danger)', color: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'pointer' }}>Xóa</button>
+          <button type="button" onClick={() => setConfirmBulkDelete(true)} style={{ border: 'none', background: 'var(--status-danger)', color: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'pointer' }}>Xóa</button>
         </div>
       )}
 
@@ -619,6 +651,17 @@ export default function AdminPlates({ go, notify }) {
           </div>
         </div>
       </Modal>
+
+      <ConfirmBulkModal
+        open={confirmBulkDelete}
+        onClose={() => setConfirmBulkDelete(false)}
+        onConfirm={bulkDelete}
+        count={selected.size}
+        actionLabel="xóa"
+        itemLabel="biển số"
+        danger
+        loading={deleteMut.isPending}
+      />
     </div>
   );
 }

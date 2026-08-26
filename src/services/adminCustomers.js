@@ -36,3 +36,32 @@ export function useUpdateCustomerStatus() {
     },
   });
 }
+
+// UC35 — sửa thông tin cơ bản khách hàng
+export function useUpdateCustomer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }) => apiClient.patch(`/api/admin/customers/${id}`, body),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: ['admin-customers'] });
+      qc.invalidateQueries({ queryKey: ['admin-customer-detail', id] });
+    },
+  });
+}
+
+// UC35 — xem/force-logout session khách hàng
+export function useCustomerSessions(id) {
+  return useQuery({
+    queryKey: ['admin-customer-sessions', id],
+    queryFn: () => apiClient.get(`/api/admin/customers/${id}/sessions`),
+    enabled: !!id,
+  });
+}
+
+export function useRevokeCustomerSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, sessionId }) => apiClient.delete(`/api/admin/customers/${id}/sessions/${sessionId}`),
+    onSuccess: (_, { id }) => qc.invalidateQueries({ queryKey: ['admin-customer-sessions', id] }),
+  });
+}

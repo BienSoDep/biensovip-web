@@ -67,3 +67,15 @@ export function useDeleteCategory() {
   });
 }
 
+// UC35 — hoàn tác xóa mềm (undo toast 5s)
+export function useRestoreCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/categories/${id}/restore`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}
+

@@ -22,6 +22,8 @@ import AdminReviews from '../pages/admin/AdminReviews.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
 import AdminAuditLog from '../pages/admin/AdminAuditLog.jsx';
+import GlobalSearch from '../components/GlobalSearch.jsx';
+import { useNotificationCounts } from '../services/systemHealth.js';
 
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
@@ -33,7 +35,18 @@ const NAV_PERM = {
 };
 const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
+// UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
+const BADGE_NAV = { acontacts: 'newContacts', areviews: 'newReviews', acollabs: 'newCollaborators' };
+const LAST_SEEN_KEY = 'bsd_admin_last_seen';
+
 function AdminSidebarNav({ s, st, go, onNavigate }) {
+  const lastSeenAt = (() => { try { return localStorage.getItem(LAST_SEEN_KEY) || new Date(Date.now() - 86400000).toISOString(); } catch { return new Date(Date.now() - 86400000).toISOString(); } })();
+  const { data: counts } = useNotificationCounts(lastSeenAt);
+
+  const markSeen = (navKey) => {
+    if (BADGE_NAV[navKey]) { try { localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString()); } catch { /* ignore */ } }
+  };
+
   return (
     <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 var(--space-3)' }}>
       {ADMIN_NAV.filter((n) => {
@@ -42,8 +55,15 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
         return !perm || canPerm(st, perm);
       }).map((n) => {
         const on = s === n[0] || (n[0] === 'aposts' && s === 'compose');
+        const badgeKey = BADGE_NAV[n[0]];
+        const badgeCount = badgeKey && counts ? counts[badgeKey] : 0;
         return (
-          <button key={n[0]} type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={() => { go(n[0])(); onNavigate?.(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>{n[1]}</button>
+          <button key={n[0]} type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={() => { markSeen(n[0]); go(n[0])(); onNavigate?.(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>
+            <span style={{ flex: 1 }}>{n[1]}</span>
+            {badgeCount > 0 && (
+              <span aria-label={`${badgeCount} mới`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: on ? 'rgba(255,255,255,.28)' : 'var(--status-danger)', color: on ? 'var(--text-inverse)' : '#fff', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{badgeCount > 99 ? '99+' : badgeCount}</span>
+            )}
+          </button>
         );
       })}
     </nav>
@@ -200,6 +220,8 @@ export default function AdminShell({
           <Button variant="primary" size="md" onClick={logout} loading={loggingOut}>Đăng xuất</Button>
         </div>
       </Modal>
+
+      <GlobalSearch go={go} patch={patch} />
     </div>
   );
 }

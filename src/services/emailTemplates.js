@@ -43,6 +43,15 @@ export function useDeleteEmailTemplate() {
   });
 }
 
+// UC35 — nhân bản template
+export function useDuplicateEmailTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/email-templates/${id}/duplicate`),
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
 // Preview template đã lưu (theo id).
 export function usePreviewEmailTemplate() {
   return useMutation({

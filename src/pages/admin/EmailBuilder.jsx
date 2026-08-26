@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Copy } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -9,7 +9,7 @@ import Modal from '../../components/Modal.jsx';
 import { Input, IconButton, Select, Badge } from '../../components/index.jsx';
 import {
   useAdminEmailTemplates, useEmailTemplate, useCreateEmailTemplate, useUpdateEmailTemplate,
-  useDeleteEmailTemplate, usePreviewDraftEmailTemplate,
+  useDeleteEmailTemplate, usePreviewDraftEmailTemplate, useDuplicateEmailTemplate,
 } from '../../services/emailTemplates.js';
 
 // Block Catalog — khớp EmailBlockSchema.cs (backend) §5 spec UC27. Không cho thêm type mới ở đây mà
@@ -170,6 +170,7 @@ export default function EmailBuilder({ notify }) {
   const createTpl = useCreateEmailTemplate();
   const updateTpl = useUpdateEmailTemplate();
   const deleteTpl = useDeleteEmailTemplate();
+  const duplicateTpl = useDuplicateEmailTemplate();
   const previewDraft = usePreviewDraftEmailTemplate();
 
   const items = listData?.items || listData || [];
@@ -287,7 +288,9 @@ export default function EmailBuilder({ notify }) {
               background: 'var(--white)', cursor: 'pointer', font: 'var(--type-caption)',
             }}>
             {t.name}{t.isActive && <Badge tone="mint">Active</Badge>}
-            <span role="button" tabIndex={-1} onClick={(e) => { e.stopPropagation(); setConfirmDel(t); }}
+            <span role="button" tabIndex={-1} title="Nhân bản" onClick={(e) => { e.stopPropagation(); duplicateTpl.mutate(t.id, { onSuccess: () => notify('Đã nhân bản template'), onError: (err) => notify(err.message || 'Nhân bản thất bại.') }); }}
+              style={{ color: 'var(--text-faint)', display: 'flex' }}><Copy size={12} /></span>
+            <span role="button" tabIndex={-1} title="Xóa" onClick={(e) => { e.stopPropagation(); setConfirmDel(t); }}
               style={{ color: 'var(--text-faint)', display: 'flex' }}><Trash2 size={12} /></span>
           </button>
         ))}

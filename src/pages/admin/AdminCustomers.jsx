@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail } from '../../services/adminCustomers.js';
+import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail, useUpdateCustomer, useCustomerSessions, useRevokeCustomerSession } from '../../services/adminCustomers.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { SearchField, Select, Badge, IconButton } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
@@ -152,7 +152,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </div>
       </Modal>
 
-      {!!detailId && <CustomerDetailDrawer id={detailId} onClose={() => setDetailId(null)} />}
+      {!!detailId && <CustomerDetailDrawer id={detailId} onClose={() => setDetailId(null)} notify={notify} />}
     </div>
   );
 }
@@ -173,8 +173,25 @@ function DrawerSection({ title, count, children }) {
   );
 }
 
-function CustomerDetailDrawer({ id, onClose }) {
+function CustomerDetailDrawer({ id, onClose, notify }) {
   const { data, isLoading, isError } = useAdminCustomerDetail(id);
+  const updateCustomer = useUpdateCustomer();
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ fullName: '', email: '', phone: '' });
+  const { data: sessions, isLoading: sessionsLoading } = useCustomerSessions(id);
+  const revokeSession = useRevokeCustomerSession();
+
+  const startEdit = () => {
+    setEditForm({ fullName: data?.fullName || '', email: data?.email || '', phone: data?.phone || '' });
+    setEditing(true);
+  };
+
+  const saveEdit = () => {
+    updateCustomer.mutate({ id, ...editForm }, {
+      onSuccess: () => { notify?.('Đã cập nhật thông tin khách hàng'); setEditing(false); },
+      onError: (e) => notify?.(e.message || 'Lỗi cập nhật'),
+    });
+  };
 
   return (
     <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', justifyContent: 'flex-end' }}>
@@ -196,21 +213,63 @@ function CustomerDetailDrawer({ id, onClose }) {
             <>
               {/* Hồ sơ cơ bản */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{data.fullName || 'Chưa đặt tên'}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                  <span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{data.fullName || 'Chưa đặt tên'}</span>
+                  {!editing && <Button variant="ghost" size="sm" onClick={startEdit}>Sửa</Button>}
+                </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   <Badge tone={data.status === 'active' ? 'mint' : 'rose'}>{data.status === 'active' ? 'Hoạt động' : 'Đã khóa'}</Badge>
                   <Badge tone={data.emailVerified ? 'mint' : 'neutral'}>{data.emailVerified ? 'Email đã xác thực' : 'Email chưa xác thực'}</Badge>
                   {data.fengShuiElement && <Badge tone="amber">Mệnh {ELEMENT_LABEL[data.fengShuiElement] || data.fengShuiElement}</Badge>}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4, font: 'var(--type-body-sm)' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Email: <span style={{ color: 'var(--text-strong)' }}>{data.email || '—'}</span></span>
-                  <span style={{ color: 'var(--text-muted)' }}>SĐT: <span style={{ color: 'var(--text-strong)' }}>{data.phone || '—'}</span></span>
-                  <span style={{ color: 'var(--text-muted)' }}>Ngày sinh: <span style={{ color: 'var(--text-strong)' }}>{fmtDate(data.birthDate)}</span></span>
-                  <span style={{ color: 'var(--text-muted)' }}>Giới tính: <span style={{ color: 'var(--text-strong)' }}>{GENDER_LABEL[data.gender] || '—'}</span></span>
-                  <span style={{ color: 'var(--text-muted)' }}>Đăng ký: <span style={{ color: 'var(--text-strong)' }}>{fmtDate(data.createdAt)}</span></span>
-                  <span style={{ color: 'var(--text-muted)' }}>Đăng nhập gần nhất: <span style={{ color: 'var(--text-strong)' }}>{fmtDateTime(data.lastLoginAt)}</span></span>
-                </div>
+                {editing ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                      Họ tên
+                      <input value={editForm.fullName} onChange={(e) => setEditForm((f) => ({ ...f, fullName: e.target.value }))}
+                        style={{ height: 36, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-field)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                      Email
+                      <input value={editForm.email} onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                        style={{ height: 36, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-field)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                      SĐT
+                      <input value={editForm.phone} onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                        style={{ height: 36, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-field)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
+                    </label>
+                    <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                      <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>Hủy</Button>
+                      <Button variant="primary" size="sm" disabled={updateCustomer.isPending} onClick={saveEdit}>Lưu</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4, font: 'var(--type-body-sm)' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Email: <span style={{ color: 'var(--text-strong)' }}>{data.email || '—'}</span></span>
+                    <span style={{ color: 'var(--text-muted)' }}>SĐT: <span style={{ color: 'var(--text-strong)' }}>{data.phone || '—'}</span></span>
+                    <span style={{ color: 'var(--text-muted)' }}>Ngày sinh: <span style={{ color: 'var(--text-strong)' }}>{fmtDate(data.birthDate)}</span></span>
+                    <span style={{ color: 'var(--text-muted)' }}>Giới tính: <span style={{ color: 'var(--text-strong)' }}>{GENDER_LABEL[data.gender] || '—'}</span></span>
+                    <span style={{ color: 'var(--text-muted)' }}>Đăng ký: <span style={{ color: 'var(--text-strong)' }}>{fmtDate(data.createdAt)}</span></span>
+                    <span style={{ color: 'var(--text-muted)' }}>Đăng nhập gần nhất: <span style={{ color: 'var(--text-strong)' }}>{fmtDateTime(data.lastLoginAt)}</span></span>
+                  </div>
+                )}
               </div>
+
+              <DrawerSection title="Phiên đăng nhập" count={sessions?.length}>
+                {sessionsLoading ? <EmptyRow /> : !sessions?.length ? <EmptyRow /> : sessions.map((s) => (
+                  <div key={s.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{s.deviceLabel || 'Thiết bị không rõ'}</span>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{s.ipAddress || '—'} · Hoạt động gần nhất {fmtDateTime(s.lastActiveAt)}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" disabled={revokeSession.isPending}
+                      onClick={() => revokeSession.mutate({ id, sessionId: s.id }, { onSuccess: () => notify?.('Đã đăng xuất phiên này') })}>
+                      Đăng xuất
+                    </Button>
+                  </div>
+                ))}
+              </DrawerSection>
 
               <DrawerSection title="Biển yêu thích" count={data.favorites.length}>
                 {data.favorites.length === 0 ? <EmptyRow /> : data.favorites.map((f) => (
