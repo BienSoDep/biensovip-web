@@ -4,6 +4,7 @@ import { MessageCircle, Phone, Send, MessageSquare, ClipboardCheck, HandCoins, F
 import Button from '../components/Button.jsx';
 import { Input, Select, Checkbox } from '../components/index.jsx';
 import { useSubmitContact } from '../services/contactService.js';
+import { logZaloClick } from '../services/zaloClicks.js';
 import { content } from '../lib/content/index.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 
@@ -98,7 +99,7 @@ export default function ChatZaloContact({ notify }) {
               <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhắn Zalo</h3>
               <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{content.info.phone_display} · phản hồi {content.info.reply_time}</p>
             </div>
-            <Button variant="primary" size="md" onClick={() => { window.open(`https://zalo.me/${content.info.zalo}`, '_blank'); notify('Đang mở Zalo...'); }} style={{ flexShrink: 0 }}>Mở Zalo</Button>
+            <Button variant="primary" size="md" onClick={() => { logZaloClick(null, 'contact_page'); window.open(`https://zalo.me/${content.info.zalo}`, '_blank'); notify('Đang mở Zalo...'); }} style={{ flexShrink: 0 }}>Mở Zalo</Button>
           </div>
 
           <div style={{ flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>

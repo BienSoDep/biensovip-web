@@ -5,6 +5,7 @@ import Modal from '../../components/Modal.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
 import CollaboratorCommissionsModal from '../../components/CollaboratorCommissionsModal.jsx';
 import { useAdminCollaborators, useUpdateCollaboratorStatus } from '../../services/adminCollaborators.js';
+import { useZaloClickStats } from '../../services/zaloClicks.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 
 const STATUSES = ['active', 'pending', 'locked'];
@@ -27,6 +28,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
   const list = collabs.filter((c) => f === 'Tất cả' || c.status === f);
   const totalEarned = collabs.reduce((a, c) => a + (Number(c.commissionEarned) || 0), 0);
   const pendingPayout = collabs.reduce((a, c) => a + (Number(c.commissionPending) || 0), 0);
+  const { data: zaloStats } = useZaloClickStats();
 
   const [updatingId, setUpdatingId] = useState(null);
   const [confirm, setConfirm] = useState(null); // { id, to }
@@ -57,6 +59,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
           ['Hoa hồng chờ chi trả', money(pendingPayout), 'var(--status-warning)'],
           ['Tổng CTV', String(collabs.length), 'var(--text-strong)'],
           ['Đang hoạt động', String(collabs.filter((c) => c.status === 'active').length), 'var(--text-strong)'],
+          ['Lượt bấm Nhắn Zalo', String(zaloStats?.totalClicks ?? 0), 'var(--action-primary)'],
         ].map(([label, value, color]) => (
           <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
