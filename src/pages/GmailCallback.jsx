@@ -14,7 +14,7 @@ export default function GmailCallback({ go }) {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    const params = new URLSearchParams(window.location.search);
     if (params.get('linked') === '1') setResult({ ok: true });
     else setResult({ ok: false, message: MESSAGES[params.get('error')] || 'Có lỗi xảy ra khi liên kết Google.' });
   }, []);

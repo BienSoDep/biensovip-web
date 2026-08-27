@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import Button from '../../components/Button.jsx';
-import { Input, Select, Switch, Avatar, IconButton, SearchField } from '../../components/index.jsx';
+import { Input, Select, Switch, Avatar, IconButton, SearchField, InfoTip } from '../../components/index.jsx';
 import { useAdminStaff, useCreateStaff, useUpdateStaff, useDeleteStaff } from '../../services/adminStaff.js';
 import { loadAuth, clearAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
@@ -230,6 +230,10 @@ export default function AdminStaff({ notify }) {
                   </div>
                 ))}
               </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 'var(--space-2)' }}>
+                <input type="checkbox" checked={form.permissions.includes('plates_cost:view')} onChange={(e) => togglePerm('plates_cost:view')(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Xem giá vốn biển số<InfoTip size={12} text="Cho phép nhân viên này xem/nhập giá vốn nội bộ của biển số — không liên quan giá bán công khai." /></span>
+              </label>
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>

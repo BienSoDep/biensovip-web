@@ -10,6 +10,7 @@ import { usePlates, useInfinitePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
 import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
+import { routeFor } from '../config/routes.js';
 
 const PER_PAGE_OPTIONS = [
   { value: '9', label: '9 / trang' },
@@ -34,8 +35,7 @@ const PRICE_PRESETS = [
 ];
 
 function readFiltersFromUrl() {
-  const qIdx = window.location.hash.indexOf('?');
-  const params = new URLSearchParams(qIdx >= 0 ? window.location.hash.slice(qIdx + 1) : '');
+  const params = new URLSearchParams(window.location.search);
   return {
     cat: params.getAll('cat'),
     city: params.getAll('city'),
@@ -65,9 +65,9 @@ function writeFiltersToUrl(filters) {
   if (filters.priceMax) params.set('priceMax', filters.priceMax);
   if (filters.status) params.set('status', filters.status);
   const qs = params.toString();
-  const base = window.location.hash.split('?')[0] || '#/danh-sach';
+  const base = window.location.pathname || '/danh-sach';
   const next = qs ? `${base}?${qs}` : base;
-  if (next !== window.location.hash) history.replaceState(null, '', next);
+  if (next !== window.location.pathname + window.location.search) history.replaceState(null, '', next);
 }
 
 export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice, contact }) {
@@ -79,6 +79,21 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const { data: plateTypes } = useCategories('plate_type');
   const { data: provinces } = useCategories('province');
   const { data: vehicleTypes } = useCategories('vehicle_type');
+
+  // SEO — landing "ẩn" cho tổ hợp tỉnh/loại xe qua filter query (ưu tiên Đà Nẵng + xe máy —
+  // thị trường chính, đối thủ làm sơ sài mảng này). Ghi đè title/desc base của useSeo(list) khi
+  // filter tỉnh/loại xe đang active, để mỗi tổ hợp URL có tiêu đề riêng thay vì dùng chung 1 title.
+  useEffect(() => {
+    if (!provinces || !vehicleTypes) return;
+    const cityNames = filters.city.map((id) => provinces.find((c) => c.id === id)?.name).filter(Boolean);
+    const vehicleName = vehicleTypes.find((v) => v.id === filters.vehicle)?.name;
+    if (!cityNames.length && !vehicleName) return;
+    const parts = [vehicleName, cityNames.join(', ')].filter(Boolean);
+    const label = parts.join(' tại ');
+    document.title = `Biển số đẹp ${label} | Biensovip — Biển số đẹp Đà Nẵng`;
+    const desc = document.head.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', `Danh sách biển số đẹp ${label} — giá tốt, hồ sơ rõ ràng, tư vấn phong thủy theo mệnh. Cập nhật liên tục.`);
+  }, [filters.city, filters.vehicle, provinces, vehicleTypes]);
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const createSavedSearch = useCreateSavedSearch();
   const isLoggedIn = !!loadAuth()?.accessToken;
@@ -166,6 +181,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     onCompare: () => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id),
     inCompare: isInList(p.id),
     onOpen: () => openPlate(p.id),
+    href: routeFor('detail', p.slug || p.id),
     onBuy: () => openBuy?.(p.id),
     contact,
   });

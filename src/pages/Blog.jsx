@@ -6,6 +6,7 @@ import Button from '../components/Button.jsx';
 import PostCardSkeleton from '../components/skeletons/PostCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useBlogPosts } from '../services/blog.js';
+import { routeFor } from '../config/routes.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -78,7 +79,7 @@ export default function Blog({ patch }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
               {items.map((p, i) => (
                 <article key={p.id} itemScope itemType="https://schema.org/Article" className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'var(--transition-card)', ...stagger(i) }}>
-                  <a href={'#/bai-viet/' + p.slug} onClick={(e) => { e.preventDefault(); patch({ screen: 'post', postId: p.slug }); }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
+                  <a href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); patch({ screen: 'post', postId: p.slug }); }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
                     <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 170, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={170} />
                     <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>

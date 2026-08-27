@@ -6,12 +6,12 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS } from '@dnd-kit/utilities';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
-import { Input, IconButton, InfoTip, Badge } from '../../components/index.jsx';
-import { CATEGORY_GROUPS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories, useRestoreCategory } from '../../services/categories.js';
+import { Input, IconButton, InfoTip, Badge, Switch } from '../../components/index.jsx';
+import { CATEGORY_GROUPS, REGIONS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories, useRestoreCategory, useSetCategoryActive, useSetRegionActive } from '../../services/categories.js';
 
 // 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
 // xung đột với click nút Sửa/Xóa trên cùng hàng).
-function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, onEdit, onDelete }) {
+function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, isToggleable, onEdit, onDelete, onToggleActive }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -28,6 +28,11 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, onEdit, onD
       </button>
       <span style={{ width: 22, textAlign: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: '2px 0' }}>{idx + 1}</span>
       <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{c.name}</span>
+      {c.region && (
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: '2px 8px' }}>
+          {REGIONS.find((r) => r.value === c.region)?.label || c.region}
+        </span>
+      )}
       {isBlogCategory && c.code && (
         <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{c.code}</span>
       )}
@@ -40,6 +45,7 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, onEdit, onD
         ? <Badge tone="amber">{c.plateCount} biển</Badge>
         : <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>0 biển</span>)}
       {isBlogCategory && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.plateCount} bài viết</span>}
+      {isToggleable && <Switch checked={c.isActive} onChange={() => onToggleActive(c)} />}
       <IconButton name="pencil" label="Sửa danh mục" size="sm" onClick={() => onEdit(c)} />
       <IconButton name="trash-2" label="Xóa danh mục" size="sm" onClick={() => onDelete(c)} />
     </div>
@@ -60,10 +66,27 @@ export default function AdminCats({ notify }) {
   const deleteCat = useDeleteCategory();
   const restoreCat = useRestoreCategory();
   const reorderCats = useReorderCategories();
+  const setCategoryActive = useSetCategoryActive();
+  const setRegionActive = useSetRegionActive();
 
   const items = data?.items || [];
   const isPriceRange = group === 'price_range';
   const isBlogCategory = group === 'blog_category';
+  const isToggleable = group === 'province' || group === 'vehicle_type';
+
+  const toggleActive = (c) => {
+    setCategoryActive.mutate({ id: c.id, isActive: !c.isActive }, {
+      onSuccess: () => notify(c.isActive ? `Đã tắt ${c.name}` : `Đã bật ${c.name}`),
+      onError: (err) => notify(err.message || 'Có lỗi xảy ra.'),
+    });
+  };
+
+  const toggleRegion = (region, isActive) => {
+    setRegionActive.mutate({ region, isActive }, {
+      onSuccess: () => notify(isActive ? 'Đã bật cả miền' : 'Đã tắt cả miền'),
+      onError: (err) => notify(err.message || 'Có lỗi xảy ra.'),
+    });
+  };
 
   const resetForm = () => { setForm({ name: '', displayOrder: 0, minPrice: '', maxPrice: '', code: '' }); setEditId(null); setFormErr(''); };
 
@@ -170,10 +193,21 @@ export default function AdminCats({ notify }) {
           {!isLoading && !isError && items.length === 0 && (
             <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có danh mục nào.</div>
           )}
+          {group === 'province' && (
+            <div style={{ padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt cả miền:</span>
+              {REGIONS.map((r) => (
+                <span key={r.value} style={{ display: 'inline-flex', gap: 4 }}>
+                  <Button variant="outline" size="sm" onClick={() => toggleRegion(r.value, true)} disabled={setRegionActive.isPending}>Bật {r.label}</Button>
+                  <Button variant="outline" size="sm" onClick={() => toggleRegion(r.value, false)} disabled={setRegionActive.isPending}>Tắt {r.label}</Button>
+                </span>
+              ))}
+            </div>
+          )}
           <DndContext collisionDetection={closestCenter} sensors={sensors} onDragEnd={handleDragEnd}>
             <SortableContext items={items.map((c) => c.id)} strategy={verticalListSortingStrategy}>
               {items.map((c, idx) => (
-                <SortableCategoryRow key={c.id} c={c} idx={idx} isBlogCategory={isBlogCategory} isPriceRange={isPriceRange} onEdit={startEdit} onDelete={setConfirmDel} />
+                <SortableCategoryRow key={c.id} c={c} idx={idx} isBlogCategory={isBlogCategory} isPriceRange={isPriceRange} isToggleable={isToggleable} onEdit={startEdit} onDelete={setConfirmDel} onToggleActive={toggleActive} />
               ))}
             </SortableContext>
           </DndContext>

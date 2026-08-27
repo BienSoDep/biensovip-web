@@ -8,6 +8,7 @@ import PlateVisual from '../components/PlateVisual.jsx';
 import { contentGet } from '../lib/content/index.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { useBlogPost, useRelatedPosts, useRelatedPlates } from '../services/blog.js';
+import { routeFor } from '../config/routes.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -341,7 +342,7 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
           <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bài viết liên quan</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(220px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {related.map((p) => (
-              <a key={p.id} href={'#/bai-viet/' + p.slug} onClick={(e) => { e.preventDefault(); openRelated(p.slug); }} style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', color: 'inherit', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+              <a key={p.id} href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); openRelated(p.slug); }} style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', color: 'inherit', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
                 <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 120, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={120} />
                 <div style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.title}</span>

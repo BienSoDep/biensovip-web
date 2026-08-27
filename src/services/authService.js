@@ -107,6 +107,19 @@ export async function restoreSession() {
   }
 }
 
+// ── Admin 2FA (TOTP, tùy chọn) ──
+export async function setup2fa() {
+  return apiClient.post('/api/admin/auth/2fa/setup');
+}
+
+export async function enable2fa(code) {
+  return apiClient.post('/api/admin/auth/2fa/enable', { code });
+}
+
+export async function disable2fa(password) {
+  return apiClient.post('/api/admin/auth/2fa/disable', { password });
+}
+
 // ── Restore admin session ──
 export async function restoreAdminSession() {
   const auth = loadAuth();

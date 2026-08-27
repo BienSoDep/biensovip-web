@@ -13,6 +13,7 @@ import { useCompareIds } from '../services/compareService.js';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import EmailCapture from '../components/EmailCapture.jsx';
+import { routeFor } from '../config/routes.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 
@@ -170,6 +171,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
                   onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
                   inCompare={isInList(p.id)}
                   onOpen={() => openPlate(p.id)}
+                  href={routeFor('detail', p.slug || p.id)}
                   onBuy={() => openBuy?.(p.id)}
                   contact={contact}
                   style={stagger(i)} />
@@ -189,6 +191,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
                 onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
                 inCompare={isInList(p.id)}
                 onOpen={() => openPlate(p.id)}
+                href={routeFor('detail', p.slug || p.id)}
                 onBuy={() => openBuy?.(p.id)}
                 style={stagger(i)} />
             ))}

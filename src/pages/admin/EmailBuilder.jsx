@@ -6,6 +6,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } 
 import { CSS } from '@dnd-kit/utilities';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
+import EmailTemplateVersionHistoryModal from '../../components/EmailTemplateVersionHistoryModal.jsx';
 import { Input, IconButton, Select, Badge } from '../../components/index.jsx';
 import {
   useAdminEmailTemplates, useEmailTemplate, useCreateEmailTemplate, useUpdateEmailTemplate,
@@ -164,6 +165,7 @@ export default function EmailBuilder({ notify }) {
   const [sampleType, setSampleType] = useState('plate_match');
   const [confirmDel, setConfirmDel] = useState(null);
   const [nameErr, setNameErr] = useState('');
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const { data: listData, isLoading, isError } = useAdminEmailTemplates();
   const { data: detail } = useEmailTemplate(editingId);
@@ -352,8 +354,15 @@ export default function EmailBuilder({ notify }) {
               {editingId && (
                 <Button variant="ghost" size="md" onClick={setActive} disabled={updateTpl.isPending}>Đặt làm mặc định</Button>
               )}
+              {editingId && (
+                <Button variant="ghost" size="md" onClick={() => setHistoryOpen(true)}>Lịch sử phiên bản</Button>
+              )}
             </div>
           </div>
+
+          {editingId && (
+            <EmailTemplateVersionHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} templateId={editingId} notify={notify} />
+          )}
 
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', display: 'block', marginBottom: 'var(--space-3)' }}>Thuộc tính khối đang chọn</span>

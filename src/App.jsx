@@ -20,13 +20,13 @@ import Footer from './layout/Footer.jsx';
 import MobileDrawer from './layout/MobileDrawer.jsx';
 import PromoRails from './components/PromoRails.jsx';
 import PageSkeleton from './components/skeletons/PageSkeleton.jsx';
-import { parseRoute, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
+import { parseRoute, routeFor, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
 import { usePlateDetail } from './services/plateDetail.js';
 import { useBlogPost } from './services/blog.js';
 import { usePlateRealtime } from './services/plateRealtime.js';
 import { useNotificationRealtime } from './services/notificationRealtime.js';
-import { useHashRouter } from './hooks/useHashRouter.js';
+import { usePathRouter } from './hooks/usePathRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 
@@ -40,6 +40,7 @@ const Profile = lazy(() => import('./pages/Profile.jsx'));
 const LuckyPlate = lazy(() => import('./pages/LuckyPlate.jsx'));
 const About = lazy(() => import('./pages/About.jsx'));
 const Blog = lazy(() => import('./pages/Blog.jsx'));
+const ProvinceLandingPage = lazy(() => import('./pages/ProvinceLandingPage.jsx'));
 const Post = lazy(() => import('./pages/Post.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 const ChatZaloContact = lazy(() => import('./pages/ChatZaloContact.jsx'));
@@ -58,7 +59,7 @@ const Modals = lazy(() => import('./layout/Modals.jsx'));
 const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
 export default function App() {
-  const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.hash) : { screen: 'home' };
+  const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.pathname) : { screen: 'home' };
   const [favItems, setFavItems] = useState([]);
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home', device: 'desktop',
@@ -174,7 +175,7 @@ export default function App() {
     }
   }, [st.user]);
 
-  useHashRouter(st, patch);
+  usePathRouter(st, patch);
 
   // Scroll to top whenever the page changes (route, plate, or post).
   useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.curId, st.postId]);
@@ -293,11 +294,15 @@ export default function App() {
   };
 
   // Thử đăng nhập như admin sau khi form user thất bại (401) — cùng ô email/password.
-  // true = đã đăng nhập thành công + điều hướng dashboard; false = không phải tài khoản admin.
+  // true = đã đăng nhập thành công (hoặc chuyển bước 2FA) + điều hướng; false = không phải tài khoản admin.
   const tryAdminLogin = async (email, password) => {
     try {
       const result = await adminLoginRequest(email, password);
       if (!result.ok) return false;
+      if (result.data.twoFactorRequired) {
+        patch({ aErr: {}, aPw: '', a2faToken: result.data.twoFactorToken, a2faCode: '' });
+        return true;
+      }
       const { accessToken, refreshToken, admin } = result.data;
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
       patch({ aErr: {}, aPw: '', screen: 'dash', user: admin, isAdmin: true });
@@ -305,6 +310,24 @@ export default function App() {
       return true;
     } catch {
       return false;
+    }
+  };
+
+  const submitAdmin2fa = async () => {
+    if (!/^[0-9a-f]{6,10}$/i.test(st.a2faCode.trim())) { patch({ aErr: { otp: 'Nhập mã 6 số hoặc mã khôi phục.' } }); return; }
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/2fa/verify`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ twoFactorToken: st.a2faToken, code: st.a2faCode.trim() }),
+      });
+      const body = await resp.json();
+      if (!resp.ok || !body?.success) { patch({ aErr: { otp: body?.error?.message || 'Mã không đúng.' } }); return; }
+      const { accessToken, refreshToken, admin } = body.data;
+      saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
+      patch({ aErr: {}, a2faCode: '', a2faToken: null, screen: 'dash', user: admin, isAdmin: true });
+      notify('Đăng nhập quản trị thành công');
+    } catch {
+      patch({ aErr: { otp: 'Không kết nối được server.' } });
     }
   };
 
@@ -522,6 +545,7 @@ export default function App() {
         fav: true,
         onFav: () => { toggleFav(p.id); notify('Đã bỏ khỏi yêu thích'); },
         onOpen: () => openPlate(p.id),
+        href: routeFor('detail', p.slug || p.id),
         onBuy: () => openBuy(p.id),
       }))
     : guestFavItems.map((p) => ({
@@ -530,6 +554,7 @@ export default function App() {
         fav: true,
         onFav: () => { toggleFav(p.id); notify('Đã bỏ khỏi yêu thích'); },
         onOpen: () => openPlate(p.id),
+        href: routeFor('detail', p.slug || p.id),
         onBuy: () => openBuy(p.id),
       }));
 
@@ -614,7 +639,7 @@ export default function App() {
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} />
+              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} />
             )}
 
             {s === 'verify-email' && <VerifyEmail go={go} />}
@@ -648,6 +673,8 @@ export default function App() {
             {s === 'gmailCallback' && <GmailCallback go={go} />}
 
             {s === 'blog' && <Blog st={st} patch={patch} />}
+
+            {s === 'provinceLanding' && <ProvinceLandingPage provinceCode={st.provinceCode || '43'} openPlate={openPlate} onBuy={openBuy} contact={contact} />}
 
             {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} />}
 

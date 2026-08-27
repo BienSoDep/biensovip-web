@@ -40,7 +40,7 @@ const STATUS_OPTIONS = [
 
 const INITIAL_FORM = {
   plateNumber: '', plateTypeId: '', provinceId: '', vehicleTypeId: '',
-  price: '', priceOnRequest: false, isHot: false,
+  price: '', costPrice: '', priceOnRequest: false, isHot: false,
   description: '', fengShuiMeaning: '', images: [],
 };
 
@@ -67,7 +67,9 @@ const ERR_MSG = {
   EMPTY: 'Bỏ trống',
 };
 
-export default function AdminPlates({ go, notify }) {
+const canViewCost = (st) => st?.user?.role === 'super-admin' || st?.user?.permissions?.includes('*') || st?.user?.permissions?.includes('plates_cost:view');
+
+export default function AdminPlates({ go, notify, st }) {
   const [status, setStatus] = useState('all');
   const [keyword, setKeyword] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -194,6 +196,7 @@ export default function AdminPlates({ go, notify }) {
         provinceId: editDetail.provinceId || '',
         vehicleTypeId: editDetail.vehicleTypeId || '',
         price: editDetail.priceOnRequest ? '' : String(editDetail.price || ''),
+        costPrice: editDetail.costPrice != null ? String(editDetail.costPrice) : '',
         priceOnRequest: editDetail.priceOnRequest || false,
         isHot: editDetail.isHot || false,
         description: editDetail.description || '',
@@ -242,6 +245,7 @@ export default function AdminPlates({ go, notify }) {
       provinceId: form.provinceId,
       vehicleTypeId: form.vehicleTypeId,
       price: form.priceOnRequest ? 0 : num(form.price),
+      costPrice: form.costPrice.trim() ? num(form.costPrice) : null,
       priceOnRequest: form.priceOnRequest,
       isHot: form.isHot,
       description: form.description || null,
@@ -618,6 +622,7 @@ export default function AdminPlates({ go, notify }) {
       {editId != null && (
         <PlateFormModal
           form={form} setF={setF} formErr={formErr}
+          showCost={canViewCost(st)}
           saving={saving} uploading={uploading}
           plateTypes={catOpts(plateTypes)}
           provinces={catOpts(provinces)}
@@ -669,7 +674,7 @@ export default function AdminPlates({ go, notify }) {
 // ── Plate Form Modal ──
 
 function PlateFormModal({
-  form, setF, formErr, saving, uploading,
+  form, setF, formErr, saving, uploading, showCost,
   plateTypes, provinces, vehicleTypes,
   editDetail, onPlateNumberChange, onSave, onUpload, onRemoveImage, onClose,
 }) {
@@ -742,6 +747,19 @@ function PlateFormModal({
               />
             </label>
           </div>
+          {showCost && (
+            <div style={{ flex: '1 1 180px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Giá vốn<InfoTip size={12} text="Chỉ hiện với người có quyền xem giá vốn — không công khai, dùng tính lợi nhuận nội bộ." /></span>
+                <input
+                  type="text" placeholder="1.500.000.000" value={form.costPrice ?? ''}
+                  onChange={setF('costPrice')}
+                  style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
+                    boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
+                />
+              </label>
+            </div>
+          )}
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={form.priceOnRequest} onChange={(e) => setF('priceOnRequest')(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
             <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Giá liên hệ<InfoTip size={12} text="Không hiện giá công khai — khách phải gọi/Zalo để hỏi giá. Thường dùng cho biển đắt, giá nhạy cảm." /></span>

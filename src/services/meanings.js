@@ -76,6 +76,12 @@ export function useDeletePlateMeaning(plateId) {
   });
 }
 
+// Xem trước những ý nghĩa sẽ được thêm nếu bấm "Sinh lại từ mẫu" — không ghi DB.
+export async function previewSeedPlateMeanings(plateId, plateNumber) {
+  const result = await apiClient.post(`/api/admin/plates/${plateId}/meanings/seed-preview`, { plateNumber });
+  return result;
+}
+
 export function useReseedPlateMeanings(plateId) {
   const qc = useQueryClient();
   return useMutation({

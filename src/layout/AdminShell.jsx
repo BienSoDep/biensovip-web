@@ -7,6 +7,7 @@ import Breadcrumb from '../components/Breadcrumb.jsx';
 import { SearchField } from '../components/index.jsx';
 import { pill } from '../components/NavBtn.jsx';
 import * as authApi from '../services/authService.js';
+import { apiClient } from '../services/apiClient.js';
 import Dashboard from '../pages/admin/Dashboard.jsx';
 import AdminPlates from '../pages/admin/AdminPlates.jsx';
 import AdminCats from '../pages/admin/AdminCats.jsx';
@@ -24,6 +25,7 @@ import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
 import AdminAuditLog from '../pages/admin/AdminAuditLog.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
+import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import { useNotificationCounts } from '../services/systemHealth.js';
 
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
@@ -115,6 +117,7 @@ export default function AdminShell({
   });
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [twoFaOpen, setTwoFaOpen] = useState(false);
   const logout = async () => {
     setLoggingOut(true);
     try {
@@ -153,7 +156,8 @@ export default function AdminShell({
             </div>
             <AdminSidebarNav s={s} st={st} go={go} onNavigate={() => setDrawerOpen(false)} />
             <div style={{ flex: 1 }} />
-            <div style={{ padding: '0 var(--space-5)' }}>
+            <div style={{ padding: '0 var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <Button variant="ghost" size="sm" fullWidth onClick={() => { setDrawerOpen(false); setTwoFaOpen(true); }}>Bảo mật</Button>
               <Button variant="ghost" size="sm" fullWidth onClick={() => { setDrawerOpen(false); setLogoutConfirm(true); }}>Đăng xuất</Button>
             </div>
           </div>
@@ -173,7 +177,8 @@ export default function AdminShell({
           </div>
           <AdminSidebarNav s={s} st={st} go={go} />
           <div style={{ flex: 1 }} />
-          <div style={{ padding: '0 var(--space-5)' }}>
+          <div style={{ padding: '0 var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="sm" fullWidth onClick={() => setTwoFaOpen(true)}>Bảo mật</Button>
             <Button variant="ghost" size="sm" fullWidth onClick={() => setLogoutConfirm(true)}>Đăng xuất</Button>
           </div>
         </aside>
@@ -199,7 +204,7 @@ export default function AdminShell({
         </div>
 
         {s === 'dash' && <Dashboard st={st} go={go} />}
-        {s === 'aplates' && <AdminPlates go={go} notify={notify} />}
+        {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} />}
         {s === 'acontacts' && <AdminContacts notify={notify} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
@@ -223,6 +228,19 @@ export default function AdminShell({
           <Button variant="primary" size="md" onClick={logout} loading={loggingOut}>Đăng xuất</Button>
         </div>
       </Modal>
+
+      <TwoFactorSettingsModal
+        open={twoFaOpen}
+        onClose={() => setTwoFaOpen(false)}
+        twoFactorEnabled={!!st.user?.twoFactorEnabled}
+        notify={notify}
+        onChanged={async () => {
+          try {
+            const admin = await apiClient.get('/api/admin/auth/me');
+            if (admin) patch({ user: admin });
+          } catch { /* ignore — modal already shows toast result */ }
+        }}
+      />
 
       <GlobalSearch go={go} patch={patch} />
     </div>

@@ -10,8 +10,10 @@ import { useSubmitContact } from '../services/contactService.js';
 import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
 import { logZaloClick } from '../services/zaloClicks.js';
 import { useCompareIds } from '../services/compareService.js';
+import { routeFor } from '../config/routes.js';
 import { usePlateReviews } from '../services/reviewService.js';
 import { formatDate } from '../lib/date.js';
+import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { content } from '../lib/content/index.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
@@ -78,7 +80,7 @@ function AutoCarousel({ items, openPlate }) {
       {items.map((p) => {
         const sp = splitPlateNumber(p.plateNumber);
         return (
-          <a key={p.id} href={`#/bien/${p.slug || p.id}`} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable" aria-label={`Xem biển ${p.plateNumber}`} style={{ scrollSnapAlign: 'start', flex: '0 0 auto', width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+          <a key={p.id} href={routeFor('detail', p.slug || p.id)} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable" aria-label={`Xem biển ${p.plateNumber}`} style={{ scrollSnapAlign: 'start', flex: '0 0 auto', width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
             <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
           </a>
@@ -189,7 +191,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,4vw,52px)', display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: '100%', maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-xl)', padding: 24 }}>
               {plate.images?.length > 0 ? (
-                <img src={plate.images[0]} alt={plate.plateNumber} onClick={() => setLightbox(0)} style={{ width: '100%', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
+                <img src={optimizeImageUrl(plate.images[0])} alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(' tại ')}`} onClick={() => setLightbox(0)} style={{ width: '100%', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
               ) : isCar ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
@@ -209,7 +211,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           {plate.images?.length > 1 && (
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {plate.images.slice(1).map((url, i) => (
-                <img key={i} src={url} alt={`${plate.plateNumber} ${i + 2}`} onClick={() => setLightbox(i + 1)} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
+                <img key={i} src={optimizeImageUrl(url)} alt={`Ảnh ${i + 2} biển số ${plate.plateNumber}`} onClick={() => setLightbox(i + 1)} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
               ))}
             </div>
           )}
@@ -307,7 +309,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
                   {m.title && <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{m.title}</h3>}
                   <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', whiteSpace: 'pre-line' }}>{m.content}</p>
                   {m.blogSlug && (
-                    <button type="button" onClick={() => openPost?.(m.blogSlug)} style={{ alignSelf: 'flex-start', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem chi tiết →</button>
+                    <a href={routeFor('post', m.blogSlug)} onClick={(e) => { e.preventDefault(); openPost?.(m.blogSlug); }} style={{ alignSelf: 'flex-start', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem chi tiết →</a>
                   )}
                 </div>
               </div>
@@ -389,7 +391,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         <div className="detail-lightbox" onClick={() => setLightbox(-1)}>
           <button type="button" className="lightbox-close" aria-label="Đóng" onClick={() => setLightbox(-1)}><X size={24} /></button>
           <button type="button" className="lightbox-nav lightbox-prev" aria-label="Ảnh trước" onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + images.length) % images.length); }}><ChevronLeft size={28} /></button>
-          <img src={images[lightbox]} alt={`${plate.plateNumber} ${lightbox + 1}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)' }} />
+          <img src={optimizeImageUrl(images[lightbox])} alt={`Ảnh ${lightbox + 1} biển số ${plate.plateNumber}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)' }} />
           <button type="button" className="lightbox-nav lightbox-next" aria-label="Ảnh tiếp" onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % images.length); }}><ChevronRight size={28} /></button>
           <span className="lightbox-counter">{lightbox + 1}/{images.length}</span>
         </div>

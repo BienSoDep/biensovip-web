@@ -65,3 +65,23 @@ export function usePreviewDraftEmailTemplate() {
     mutationFn: ({ layoutJson, sampleType }) => apiClient.post('/api/admin/email-templates/preview-draft', { layoutJson, sampleType }),
   });
 }
+
+// Versioning (item #5) — lịch sử + rollback
+export function useEmailTemplateVersions(id) {
+  return useQuery({
+    queryKey: [...KEY, id, 'versions'],
+    queryFn: () => apiClient.get(`/api/admin/email-templates/${id}/versions`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useRollbackEmailTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, versionId }) => apiClient.post(`/api/admin/email-templates/${id}/versions/${versionId}/rollback`),
+    onSuccess: (_, { id }) => {
+      invalidateAll(qc);
+      qc.invalidateQueries({ queryKey: [...KEY, id, 'versions'] });
+    },
+  });
+}

@@ -66,9 +66,9 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasProfileBirthDate]);
 
-  // Deep-link `#/hop-menh?y={year}&t={name}` → tự điền + tra cứu khi mở link chia sẻ.
+  // Deep-link `/hop-menh?y={year}&t={name}` → tự điền + tra cứu khi mở link chia sẻ.
   useEffect(() => {
-    const q = window.location.hash.split('?')[1];
+    const q = window.location.search.slice(1);
     if (!q) return;
     const params = new URLSearchParams(q);
     const y = params.get('y');

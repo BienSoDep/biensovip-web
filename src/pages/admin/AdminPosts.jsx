@@ -13,6 +13,11 @@ function formatDate(iso) {
   return format(new Date(iso), 'dd/MM/yyyy');
 }
 
+function formatDateTime(iso) {
+  if (!iso) return '—';
+  return format(new Date(iso), 'dd/MM/yyyy HH:mm');
+}
+
 export default function AdminPosts({ st, patch, notify }) {
   const [status, setStatus] = useState('');
   const [confirmPost, setConfirmPost] = useState(null);
@@ -75,8 +80,14 @@ export default function AdminPosts({ st, patch, notify }) {
           <div key={a.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
             <span style={{ flex: '0 0 24px' }}><input type="checkbox" checked={selected.has(a.id)} onChange={() => toggleSelect(a.id)} /></span>
             <span style={{ flex: '2 1 180px', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{a.title}</span>
-            <span style={{ flex: '1 1 96px' }}><Badge tone={STATUS_TONE[a.status] || 'neutral'}>{STATUS_LABEL[a.status] || a.status}</Badge></span>
-            <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(a.publishedAt)}</span>
+            <span style={{ flex: '1 1 96px' }}>
+              {a.status === 'draft' && a.scheduledPublishAt
+                ? <Badge tone="blue">Hẹn giờ</Badge>
+                : <Badge tone={STATUS_TONE[a.status] || 'neutral'}>{STATUS_LABEL[a.status] || a.status}</Badge>}
+            </span>
+            <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              {a.status === 'draft' && a.scheduledPublishAt ? formatDateTime(a.scheduledPublishAt) : formatDate(a.publishedAt)}
+            </span>
             <span style={{ flex: '0 0 72px', display: 'flex', gap: 'var(--space-2)' }}>
               <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEditPost(a)} />
               <IconButton name="trash-2" label="Xóa" size="sm" disabled={deletingId === a.id} onClick={() => confirmRemove(a)} />

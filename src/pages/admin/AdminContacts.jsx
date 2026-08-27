@@ -268,7 +268,7 @@ export default function AdminContacts({ notify }) {
                   <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                     <PlateVisual size="sm" {...(parsePlateNumber(selected.plateNumber) || {})} />
                     {selected.plateId
-                      ? <a href={routeFor('detail', selected.plateId)} style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)', textDecoration: 'none' }}>Xem biển {selected.plateNumber} →</a>
+                      ? <a href={routeFor('detail', selected.plateId)} onClick={(e) => { e.preventDefault(); history.pushState(null, '', routeFor('detail', selected.plateId)); window.dispatchEvent(new PopStateEvent('popstate')); }} style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)', textDecoration: 'none' }}>Xem biển {selected.plateNumber} →</a>
                       : <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.plateNumber}</span>}
                   </span>
                 ) : (

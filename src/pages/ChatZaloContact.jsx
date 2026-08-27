@@ -26,8 +26,8 @@ function TikTokIcon(props) {
   );
 }
 
-const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Săn hộ / tư vấn theo nhu cầu'];
-const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting' };
+const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Săn hộ / tư vấn theo nhu cầu', 'Yêu cầu về dữ liệu cá nhân'];
+const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting', 'Yêu cầu về dữ liệu cá nhân': 'data_request' };
 const RATE_KEY = 'biensovip_contact_rate';
 
 export default function ChatZaloContact({ notify }) {

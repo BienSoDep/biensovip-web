@@ -6,6 +6,7 @@ import { InfoTip } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { useCompareIds, useComparePlates } from '../services/compareService.js';
 import { useScorePlates } from '../services/fengshuiService.js';
+import { routeFor } from '../config/routes.js';
 import { splitPlateNumber, formatPrice, splitFengShuiParagraphs } from '../lib/plateFormat.js';
 import { compareInsights, patternScore } from '../lib/compareInsights.js';
 
@@ -118,7 +119,7 @@ function BirthDatePrompt({ onSubmit }) {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-5)', textAlign: 'center' }}>
       <Sparkles size={28} style={{ color: 'var(--action-primary)' }} />
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', maxWidth: 420 }}>
-        Nhập ngày sinh để xem điểm <strong>hợp mệnh</strong><InfoTip size={12} text="Điểm 0-100 cho biết biển 'hợp' với mệnh ngũ hành của bạn đến đâu, tính theo các con số trong biển (VD tứ quý 8888 rất hợp mệnh Hỏa)." /> của từng biển trong biểu đồ so sánh — hoặc <a href="#/register" style={{ color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>đăng ký tài khoản</a> để lưu lại cho lần sau.
+        Nhập ngày sinh để xem điểm <strong>hợp mệnh</strong><InfoTip size={12} text="Điểm 0-100 cho biết biển 'hợp' với mệnh ngũ hành của bạn đến đâu, tính theo các con số trong biển (VD tứ quý 8888 rất hợp mệnh Hỏa)." /> của từng biển trong biểu đồ so sánh — hoặc <a href={routeFor('register')} onClick={(e) => { e.preventDefault(); history.pushState(null, '', routeFor('register')); window.dispatchEvent(new PopStateEvent('popstate')); }} style={{ color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>đăng ký tài khoản</a> để lưu lại cho lần sau.
       </p>
       <form
         onSubmit={(e) => { e.preventDefault(); if (valid) onSubmit(`${year}-${pad(month)}-${pad(day)}`); }}

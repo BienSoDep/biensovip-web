@@ -62,7 +62,7 @@ function OtpBoxes({ value, onChange }) {
   );
 }
 
-export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp }) {
+export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp, submitAdmin2fa }) {
   const [otpMode, setOtpMode] = useState(false);
   const [remember, setRemember] = useState(true);
   const [lastEmail, setLastEmail] = useState('');
@@ -265,7 +265,14 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 {st.aErr.agree && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn cần đồng ý với điều khoản để tiếp tục.</span>}
               </div>
             )}
-            {s === 'login' && !otpMode && (
+            {s === 'login' && !!st.a2faToken && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nhập mã xác thực 2 lớp</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Mở app xác thực (Google Authenticator/Authy) và nhập mã 6 số, hoặc dùng 1 mã khôi phục.</span>
+                <Input label="Mã xác thực" placeholder="123456" value={st.a2faCode || ''} error={st.aErr.otp} onChange={setField('a2faCode')} />
+              </div>
+            )}
+            {s === 'login' && !otpMode && !st.a2faToken && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Email hoặc số điện thoại" placeholder="email@example.com hoặc 09xx xxx xxx" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
                 <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
@@ -315,7 +322,9 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
               </div>
             )}
 
-            {otpMode ? (
+            {s === 'login' && !!st.a2faToken ? (
+              <Button variant="primary" size="lg" fullWidth onClick={submitAdmin2fa}>Xác nhận</Button>
+            ) : otpMode ? (
               <Button variant="primary" size="lg" fullWidth onClick={() => (st.step === 1 ? otpLoginRequest() : otpLoginVerify(remember))}>
                 {st.step === 1 ? 'Gửi mã OTP' : 'Xác nhận & đăng nhập'}
               </Button>
@@ -336,7 +345,13 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 {st.step > 1 ? '← Quay lại bước trước' : '← Quay lại đăng nhập'}
               </Button>
             )}
-            {(s === 'register' || s === 'login') && !otpMode && (
+            {s === 'login' && !!st.a2faToken && (
+              <Button variant="ghost" size="md" fullWidth onClick={() => patch({ a2faToken: null, a2faCode: '', aErr: {} })}>
+                ← Quay lại đăng nhập
+              </Button>
+            )}
+
+            {(s === 'register' || s === 'login') && !otpMode && !st.a2faToken && (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', margin: '4px 0' }}>
                   <span style={{ flex: 1, height: 1, background: 'var(--border-hairline)' }} />
@@ -348,7 +363,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
               </>
             )}
 
-            {(s === 'register' || s === 'login') && (
+            {(s === 'register' || s === 'login') && !st.a2faToken && (
               <p style={{ margin: 0, textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 {s === 'register' ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
                 <a href={routeFor(s === 'register' ? 'login' : 'register')} onClick={(e) => { e.preventDefault(); go(s === 'register' ? 'login' : 'register')(); }} style={{ color: 'var(--action-primary)', textDecoration: 'none' }}>{s === 'register' ? 'Đăng nhập' : 'Đăng ký ngay'}</a>

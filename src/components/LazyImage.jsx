@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import SkeletonBase from './skeletons/SkeletonBase.jsx';
+import { optimizeImageUrl } from '../lib/cloudinary.js';
 
 export default function LazyImage({ src, alt, style, imgStyle, skeletonHeight }) {
   const ref = useRef(null);
@@ -34,7 +35,7 @@ export default function LazyImage({ src, alt, style, imgStyle, skeletonHeight })
       ) : (
         inView && (
           <img
-            src={src}
+            src={optimizeImageUrl(src)}
             alt={alt}
             loading="lazy"
             decoding="async"

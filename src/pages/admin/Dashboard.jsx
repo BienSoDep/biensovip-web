@@ -16,6 +16,7 @@ import {
   useCollaboratorPerf, useDemand, useCustomerDemographics, useSearchInsights, useCompareInsights, useTrafficHeatmap,
 } from '../../services/adminDashboard.js';
 import { useSystemHealth } from '../../services/systemHealth.js';
+import { useExportReport } from '../../hooks/useExportCsv.js';
 
 const HEALTH_LABEL = { ok: 'Ổn định', degraded: 'Cần chú ý', down: 'Sự cố' };
 const HEALTH_COLOR = { ok: 'var(--status-success-ink)', degraded: 'var(--status-warning-ink)', down: 'var(--status-danger)' };
@@ -89,10 +90,19 @@ export default function Dashboard({ go, st }) {
     return days <= 14 ? 'day' : days <= 90 ? 'week' : 'month';
   }, [range]);
 
+  // So sánh kỳ trước — cùng độ dài, liền kề trước range hiện tại (áp dụng cho Funnel trước, tránh gọi thêm
+  // API cho mọi bảng phân tích — xem ADMIN-PANEL-AUDIT.md mục "so sánh 2 khoảng thời gian").
+  const [compareFunnel, setCompareFunnel] = useState(false);
+  const prevRange = useMemo(() => {
+    const spanMs = range.to - range.from;
+    return { from: new Date(range.from.getTime() - spanMs), to: new Date(range.from.getTime()) };
+  }, [range]);
+
   const summary = useDashboardSummary(range);
   const chart = useActionsChart({ ...range, granularity });
   const traffic = useTrafficSources(range);
   const funnel = useFunnel(range);
+  const funnelPrev = useFunnel(prevRange, compareFunnel);
   const distProvince = usePlateDistribution('province');
   const distVehicle = usePlateDistribution('vehicle_type');
   const interested = useTopInterested({ ...range, limit: 8 });
@@ -107,6 +117,7 @@ export default function Dashboard({ go, st }) {
   const searchInsights = useSearchInsights({ ...range, limit: 10 });
   const compareInsights = useCompareInsights({ ...range, limit: 10 });
   const heatmap = useTrafficHeatmap(range);
+  const { exportReport, loading: exportingReport } = useExportReport('/api/admin/dashboard/export');
 
   const kpis = summary.data;
 
@@ -154,6 +165,16 @@ export default function Dashboard({ go, st }) {
             style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
         </div>
         <div style={{ flex: 1 }} />
+        <button type="button" disabled={exportingReport}
+          onClick={() => exportReport('xlsx', { from: range.from.toISOString(), to: range.to.toISOString() }).catch((e) => toast.error(e.message))}
+          style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--surface-muted)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
+          {exportingReport ? 'Đang xuất…' : 'Xuất Excel'}
+        </button>
+        <button type="button" disabled={exportingReport}
+          onClick={() => exportReport('pdf', { from: range.from.toISOString(), to: range.to.toISOString() }).catch((e) => toast.error(e.message))}
+          style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--surface-muted)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
+          {exportingReport ? 'Đang xuất…' : 'Xuất PDF'}
+        </button>
       </div>
 
       {/* KPI cards */}
@@ -179,11 +200,31 @@ export default function Dashboard({ go, st }) {
 
       {/* Funnel */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-        <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Funnel chuyển đổi<InfoTip size={12} text="Phễu chuyển đổi: bao nhiêu khách Xem biển → Lưu yêu thích → Liên hệ → Chốt giao dịch. Mỗi bậc nhỏ dần cho thấy điểm khách bỏ lại." /></h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', margin: '0 0 var(--space-4)' }}>
+          <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Funnel chuyển đổi<InfoTip size={12} text="Phễu chuyển đổi: bao nhiêu khách Xem biển → Lưu yêu thích → Liên hệ → Chốt giao dịch. Mỗi bậc nhỏ dần cho thấy điểm khách bỏ lại." /></h3>
+          <div style={{ flex: 1 }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            <input type="checkbox" checked={compareFunnel} onChange={(e) => setCompareFunnel(e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--action-primary)' }} />
+            So sánh với kỳ trước
+          </label>
+        </div>
         {funnel.isLoading ? (
           <SkeletonBase height={240} />
         ) : funnel.data ? (
-          <FunnelView data={funnel.data} />
+          compareFunnel ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-6)' }}>
+              <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+                <span style={{ display: 'block', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', marginBottom: 8 }}>Kỳ hiện tại</span>
+                <FunnelView data={funnel.data} />
+              </div>
+              <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+                <span style={{ display: 'block', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', marginBottom: 8 }}>Kỳ trước ({format(prevRange.from, 'dd/MM')} – {format(prevRange.to, 'dd/MM')})</span>
+                {funnelPrev.isLoading ? <SkeletonBase height={200} /> : funnelPrev.data ? <FunnelView data={funnelPrev.data} /> : <EmptyBlock>Không có dữ liệu kỳ trước</EmptyBlock>}
+              </div>
+            </div>
+          ) : (
+            <FunnelView data={funnel.data} />
+          )
         ) : (
           <EmptyBlock>Chưa có dữ liệu funnel</EmptyBlock>
         )}
@@ -738,7 +779,7 @@ function TopPlatesTable({ items }) {
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 56px', textAlign: 'right' }}>{p.contacts ?? 0} LH</span>
             <a
               href={routeFor('detail', p.plateId)}
-              onClick={(e) => { e.preventDefault(); window.location.hash = routeFor('detail', p.plateId); }}
+              onClick={(e) => { e.preventDefault(); history.pushState(null, '', routeFor('detail', p.plateId)); window.dispatchEvent(new PopStateEvent('popstate')); }}
               style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--link)', textDecoration: 'none', flex: '0 0 auto' }}
             >
               Xem →

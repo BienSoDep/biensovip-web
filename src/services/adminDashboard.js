@@ -27,12 +27,13 @@ export function useTrafficSources({ from, to }) {
   });
 }
 
-export function useFunnel({ from, to }) {
+export function useFunnel({ from, to }, enabled = true) {
   const qs = buildRange(from, to);
   return useQuery({
     queryKey: ['dashboard-funnel', qs],
     queryFn: () => apiClient.get(`/api/admin/dashboard/funnel?${qs}`),
     placeholderData: (prev) => prev,
+    enabled,
   });
 }
 

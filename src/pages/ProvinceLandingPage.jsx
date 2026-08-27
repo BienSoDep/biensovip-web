@@ -1,0 +1,87 @@
+import { useState } from 'react';
+import { ChevronDown, MessageCircle } from 'lucide-react';
+import Button from '../components/Button.jsx';
+import PlateCard from '../components/PlateCard.jsx';
+import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
+import { useProvinceLanding } from '../services/landing.js';
+import { useSeo } from '../hooks/useSeo.js';
+import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
+import { routeFor } from '../config/routes.js';
+
+function FaqAccordion({ faqs }) {
+  const [openIdx, setOpenIdx] = useState(0);
+  if (!faqs?.length) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+      {faqs.map((f, i) => {
+        const open = openIdx === i;
+        return (
+          <div key={i} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            <button type="button" onClick={() => setOpenIdx(open ? -1 : i)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '14px 16px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+              {f.question}
+              <ChevronDown size={18} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 160ms var(--ease-out)', flexShrink: 0 }} />
+            </button>
+            {open && (
+              <p style={{ margin: 0, padding: '0 16px 16px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{f.answer}</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function ProvinceLandingPage({ provinceCode = '43', openPlate, onBuy, contact }) {
+  const { data, isLoading, isError } = useProvinceLanding(provinceCode);
+  useSeo('provinceLanding', { landing: data });
+  const stagger = useStaggeredReveal();
+
+  return (
+    <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
+        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
+          {data?.title || 'Kho Biển Số Đẹp'}
+        </h1>
+        {data?.intro && (
+          <div style={{ font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }} dangerouslySetInnerHTML={{ __html: data.intro }} />
+        )}
+      </section>
+
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-6)' }}>
+        {isError ? (
+          <p style={{ font: 'var(--type-body)', color: 'var(--text-muted)' }}>Không tải được dữ liệu. Vui lòng thử lại.</p>
+        ) : isLoading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            {Array.from({ length: 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
+          </div>
+        ) : data?.plates?.length ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            {data.plates.map((p, i) => (
+              <PlateCard key={p.id}
+                plateNumber={p.plateNumber} type={p.type} province={p.province} vehicleType={p.vehicleType}
+                price={p.price} priceOnRequest={p.priceOnRequest} isHot={p.isHot} thumbnailUrl={p.thumbnailUrl}
+                status={p.status} onOpen={() => openPlate?.(p.slug || p.id)}
+                href={routeFor('detail', p.slug || p.id)}
+                onBuy={() => onBuy?.(p.id)} contact={contact} style={stagger(i)} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Hiện chưa có biển còn hàng phù hợp — liên hệ Zalo để chúng tôi tìm biển theo yêu cầu.</p>
+            <a href="#chat" onClick={(e) => { e.preventDefault(); onBuy?.(null); }}>
+              <Button variant="primary" size="md"><MessageCircle size={16} style={{ marginRight: 6 }} />Săn biển theo yêu cầu</Button>
+            </a>
+          </div>
+        )}
+      </section>
+
+      {data?.faqs?.length > 0 && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <h2 style={{ margin: 0, font: 'var(--type-display-3)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
+          <FaqAccordion faqs={data.faqs} />
+        </section>
+      )}
+    </div>
+  );
+}

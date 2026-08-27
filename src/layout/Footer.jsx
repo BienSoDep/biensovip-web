@@ -19,6 +19,7 @@ export default function Footer({ settings }) {
     [routeFor('fav'), T('common.footer.fav')],
     [routeFor('blog'), T('common.footer.blog')],
     [routeFor('about'), T('common.footer.about')],
+    [routeFor('provinceLanding'), 'Biển số Đà Nẵng'],
   ];
   const policyLinks = [[routeFor('terms'), T('common.footer.terms')], [routeFor('privacy'), T('common.footer.privacy')], [routeFor('transfer'), T('common.footer.transfer')], [routeFor('faq'), T('common.footer.faq')]];
   return (

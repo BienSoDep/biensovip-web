@@ -79,3 +79,33 @@ export function useRestoreCategory() {
   });
 }
 
+export const REGIONS = [
+  { value: 'bac', label: 'Bắc' },
+  { value: 'trung', label: 'Trung' },
+  { value: 'nam', label: 'Nam' },
+];
+
+// Market control — bật/tắt hoạt động 1 tỉnh/loại xe
+export function useSetCategoryActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isActive }) => apiClient.patch(`/api/admin/categories/${id}/active`, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}
+
+// Market control — bật/tắt hàng loạt mọi tỉnh trong 1 miền
+export function useSetRegionActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ region, isActive }) => apiClient.patch(`/api/admin/categories/region/${region}/active`, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] });
+      qc.invalidateQueries({ queryKey: ['admin-categories'] });
+    },
+  });
+}
+

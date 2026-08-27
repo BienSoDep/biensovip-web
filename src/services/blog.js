@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
+// Concurrent-edit warning — kiểm tra xung đột sửa đồng thời trước khi submit (gọi trực tiếp, không phải hook).
+export async function checkBlogPostVersion(id, updatedAt) {
+  const result = await apiClient.get(`/api/admin/blog/posts/${id}/version-check?updatedAt=${encodeURIComponent(updatedAt)}`);
+  return result.conflict;
+}
+
 export function useBlogPosts(page = 1, limit = 20) {
   return useQuery({
     queryKey: ['blog-posts', page, limit],
@@ -87,5 +93,25 @@ export function useDeleteBlogPost() {
   return useMutation({
     mutationFn: (id) => apiClient.delete(`/api/admin/blog/posts/${id}`),
     onSuccess: () => invalidateBlog(qc),
+  });
+}
+
+// Versioning (item #5) — lịch sử + rollback
+export function useBlogPostVersions(postId) {
+  return useQuery({
+    queryKey: ['blog-post-versions', postId],
+    queryFn: () => apiClient.get(`/api/admin/blog/posts/${postId}/versions`),
+    enabled: !!postId,
+  });
+}
+
+export function useRollbackBlogPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, versionId }) => apiClient.post(`/api/admin/blog/posts/${postId}/versions/${versionId}/rollback`),
+    onSuccess: (_, { postId }) => {
+      invalidateBlog(qc);
+      qc.invalidateQueries({ queryKey: ['blog-post-versions', postId] });
+    },
   });
 }

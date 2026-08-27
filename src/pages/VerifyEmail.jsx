@@ -4,11 +4,8 @@ import Button from '../components/Button.jsx';
 import { verifyEmail } from '../services/authService.js';
 
 export default function VerifyEmail({ go }) {
-  // Capture token once at mount (before hash router normalizes away the query string).
-  const [token] = useState(() => {
-    const m = window.location.hash.match(/[?&]token=([^&]+)/);
-    return m ? decodeURIComponent(m[1]) : '';
-  });
+  // Capture token once at mount (before router normalizes away the query string).
+  const [token] = useState(() => new URLSearchParams(window.location.search).get('token') || '');
   const [status, setStatus] = useState('loading'); // loading | ok | fail
   const [msg, setMsg] = useState('');
 

@@ -2,12 +2,13 @@ import { Card, Badge, IconButton } from './index.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { optimizeImageUrl } from '../lib/cloudinary.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
-  status, badge, fav, onFav, onCompare, inCompare, onOpen, onBuy, style, plateSize = 'md',
+  status, badge, fav, onFav, onCompare, inCompare, onOpen, href, onBuy, style, plateSize = 'md',
   contact,
 }) {
   const { prov, seri, num } = splitPlateNumber(plateNumber);
@@ -37,9 +38,9 @@ export default function PlateCard({
           </div>
         </div>
 
-        <div role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }} className="pressable plate-card-stage" style={{ cursor: 'pointer', position: 'relative', borderRadius: 'var(--radius-md)', padding: 16 }}>
+        <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} className="pressable plate-card-stage" style={{ cursor: 'pointer', position: 'relative', borderRadius: 'var(--radius-md)', padding: 16, display: 'block', textDecoration: 'none' }}>
           {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt={plateNumber} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+            <img src={optimizeImageUrl(thumbnailUrl)} alt={`Biển số ${plateNumber}${meta ? ' — ' + meta : ''}`} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
           ) : (
             <div style={{ maxWidth: plateSize === 'listLg' ? 420 : undefined, margin: plateSize === 'listLg' ? '0 auto' : undefined }}>
               <PlateVisual size={plateSize} prov={prov} seri={seri} num={num} shape="short" />
@@ -50,11 +51,11 @@ export default function PlateCard({
               <span style={{ font: 'var(--type-title-2)', letterSpacing: '.2em', color: 'var(--white)' }}>ĐÃ BÁN</span>
             </div>
           )}
-        </div>
+        </a>
 
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', flexDirection: 'column', gap: 8, marginTop: 'auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-            <button type="button" onClick={onOpen} style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'var(--type-title-3)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</button>
+            <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} style={{ textDecoration: 'none', padding: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</a>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta}</span>
           </div>
           <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>

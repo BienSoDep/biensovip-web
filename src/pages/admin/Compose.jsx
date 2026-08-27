@@ -10,8 +10,9 @@ import Button from '../../components/Button.jsx';
 import { Input, Select, InfoTip } from '../../components/index.jsx';
 import { EditorToolbar } from '../../components/RichTextEditor.jsx';
 import Modal from '../../components/Modal.jsx';
+import BlogVersionHistoryModal from '../../components/BlogVersionHistoryModal.jsx';
 import { apiClient } from '../../services/apiClient.js';
-import { useCreateBlogPost, useUpdateBlogPost, useAdminBlogTags, useCreateBlogTag } from '../../services/blog.js';
+import { useCreateBlogPost, useUpdateBlogPost, useAdminBlogTags, useCreateBlogTag, checkBlogPostVersion } from '../../services/blog.js';
 import { useAdminPromoVideos, useCreatePromoVideo } from '../../services/promoVideoService.js';
 import { useAdminCategories } from '../../services/categories.js';
 import { setComposeDirty, resetComposeDirty } from '../../lib/unsavedGuard.js';
@@ -38,6 +39,9 @@ export default function Compose({ st, patch, notify }) {
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [category, setCategory] = useState('kien-thuc');
+  const [scheduledPublishAt, setScheduledPublishAt] = useState('');
+  const [loadedUpdatedAt, setLoadedUpdatedAt] = useState(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [tags, setTags] = useState([]);
   const [newTagInput, setNewTagInput] = useState('');
   const [err, setErr] = useState('');
@@ -73,7 +77,7 @@ export default function Compose({ st, patch, notify }) {
     onUpdate: () => forceEditorUpdate((n) => n + 1),
   });
 
-  useEffect(() => {
+  const loadPost = () => {
     if (!editPostId || !editor) return;
     apiClient.get(`/api/admin/blog/posts/${editPostId}`).then((full) => {
       setTitle(full.title || '');
@@ -83,6 +87,8 @@ export default function Compose({ st, patch, notify }) {
       setMetaTitle(full.metaTitle || '');
       setMetaDescription(full.metaDescription || '');
       setCategory(full.category || 'kien-thuc');
+      setScheduledPublishAt(full.scheduledPublishAt ? full.scheduledPublishAt.slice(0, 16) : '');
+      setLoadedUpdatedAt(full.updatedAt || null);
       setTags(full.tags || []);
       if (full.contentHtml) editor.commands.setContent(full.contentHtml);
       setAttachedVideos(full.videos || []);
@@ -92,6 +98,10 @@ export default function Compose({ st, patch, notify }) {
         category: full.category || 'kien-thuc', tags: full.tags || [], contentHtml: full.contentHtml || '',
       };
     });
+  };
+
+  useEffect(() => {
+    loadPost();
   }, [editPostId, editor]);
 
   // Unsaved-changes guard: cảnh báo trước khi đóng/refresh trình duyệt khi có thay đổi chưa lưu.
@@ -126,7 +136,7 @@ export default function Compose({ st, patch, notify }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [previewOpen]);
 
-  // Route-guard trong-SPA: đăng ký trạng thái dirty cho App/useHashRouter chặn rời trang.
+  // Route-guard trong-SPA: đăng ký trạng thái dirty cho App/usePathRouter chặn rời trang.
   useEffect(() => { setComposeDirty(isDirty()); });
 
   const attachVideo = async () => {
@@ -279,10 +289,20 @@ export default function Compose({ st, patch, notify }) {
     setConfirmPublish(true);
   };
 
-  const submit = (status) => {
+  const submit = async (status) => {
     if (!title.trim()) { setErr('Nhập tiêu đề bài viết.'); return; }
     if (status === 'published' && !plainText.trim()) { setErr('Bài viết cần có nội dung để đăng.'); return; }
     setErr('');
+
+    if (editPostId && loadedUpdatedAt) {
+      try {
+        const conflict = await checkBlogPostVersion(editPostId, loadedUpdatedAt);
+        if (conflict) {
+          notify('Bài viết đã bị sửa bởi người khác — tải lại trang trước khi lưu để tránh ghi đè.');
+          return;
+        }
+      } catch { /* version-check lỗi mạng — không chặn lưu, chỉ là cảnh báo phụ */ }
+    }
 
     const body = {
       title: title.trim(),
@@ -294,6 +314,7 @@ export default function Compose({ st, patch, notify }) {
       category,
       tags,
       status,
+      scheduledPublishAt: status === 'draft' && scheduledPublishAt ? new Date(scheduledPublishAt).toISOString() : null,
     };
 
     const onSuccess = async (data) => {
@@ -465,11 +486,25 @@ export default function Compose({ st, patch, notify }) {
           <Eye size={16} style={{ marginRight: 6 }} />Xem trước
         </Button>
 
+        {editPostId && (
+          <Button variant="ghost" size="md" onClick={() => setHistoryOpen(true)}>Lịch sử phiên bản</Button>
+        )}
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          Lịch xuất bản (tùy chọn)<InfoTip size={12} text="Lưu nháp kèm thời điểm này — hệ thống tự chuyển sang Đã xuất bản đúng giờ, không cần vào sửa lại." />
+          <input type="datetime-local" value={scheduledPublishAt} onChange={(e) => setScheduledPublishAt(e.target.value)}
+            style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
+        </label>
+
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <Button variant="outline" size="md" disabled={saving} onClick={() => submit('draft')} style={{ flex: 1 }}>Lưu nháp</Button>
+          <Button variant="outline" size="md" disabled={saving} onClick={() => submit('draft')} style={{ flex: 1 }}>{scheduledPublishAt ? 'Lưu & hẹn giờ' : 'Lưu nháp'}</Button>
           <Button variant="primary" size="md" disabled={saving} onClick={publish} style={{ flex: 1 }}>{editPostId ? 'Cập nhật' : 'Xuất bản'}</Button>
         </div>
       </div>
+
+      {editPostId && (
+        <BlogVersionHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} postId={editPostId} notify={notify} onRolledBack={loadPost} />
+      )}
 
       {previewOpen && (
         <div role="dialog" aria-modal="true" aria-label="Xem trước bài viết" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>

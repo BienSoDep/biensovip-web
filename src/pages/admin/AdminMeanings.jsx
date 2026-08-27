@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   useMeaningTemplates, useCreateTemplate, useUpdateTemplate, useDeleteTemplate,
   usePlateMeanings, useCreatePlateMeaning, useUpdatePlateMeaning, useDeletePlateMeaning, useReseedPlateMeanings,
+  previewSeedPlateMeanings,
 } from '../../services/meanings.js';
 import { useAdminPlates } from '../../services/adminPlates.js';
 import { Select, SearchField, IconButton, Switch, InfoTip } from '../../components/index.jsx';
@@ -193,6 +194,8 @@ function PlatesTab({ notify }) {
   const [form, setForm] = useState(EMPTY_MEANING);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmReseed, setConfirmReseed] = useState(false);
+  const [reseedPreview, setReseedPreview] = useState(null); // null = đang tải | [] | list
+  const [reseedPreviewErr, setReseedPreviewErr] = useState('');
 
   const { data: plateData, isLoading: plateLoading } = useAdminPlates({ keyword: plateKeyword, status: 'all', page: 1, perPage: 20 });
   const plates = (plateData?.items || []).filter((p) => p.id);
@@ -229,6 +232,19 @@ function PlatesTab({ notify }) {
       onSuccess: () => { setConfirmDelete(null); notify('Đã xóa ý nghĩa'); },
       onError: (e) => notify(e.message || 'Xóa thất bại.'),
     });
+  };
+
+  const openReseedPreview = async () => {
+    if (!plate) return;
+    setConfirmReseed(true);
+    setReseedPreview(null);
+    setReseedPreviewErr('');
+    try {
+      const items = await previewSeedPlateMeanings(plate.id, plate.plateNumber);
+      setReseedPreview(items);
+    } catch (e) {
+      setReseedPreviewErr(e.message || 'Không xem trước được.');
+    }
   };
 
   const doReseed = () => {
@@ -271,7 +287,7 @@ function PlatesTab({ notify }) {
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.plateNumber}</span>
                 <div style={{ flex: 1 }} />
-                <Button variant="ghost" size="sm" onClick={() => setConfirmReseed(true)} disabled={reseedMut.isPending}>{reseedMut.isPending ? 'Đang sinh…' : 'Sinh lại từ mẫu'}</Button>
+                <Button variant="ghost" size="sm" onClick={openReseedPreview} disabled={reseedMut.isPending}>{reseedMut.isPending ? 'Đang sinh…' : 'Sinh lại từ mẫu'}</Button>
                 <Button variant="primary" size="sm" onClick={openAdd}>Thêm ý nghĩa</Button>
               </div>
 
@@ -310,13 +326,35 @@ function PlatesTab({ notify }) {
         <ConfirmModal title="Xóa ý nghĩa?" onCancel={() => setConfirmDelete(null)} onConfirm={remove} message="Xóa phần ý nghĩa này riêng cho biển đã chọn." />
       )}
       {confirmReseed && (
-        <Modal open onClose={() => setConfirmReseed(false)} title="Sinh lại từ mẫu" maxWidth="380px">
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Sẽ ghi đè ý nghĩa riêng của biển {plate?.plateNumber} bằng cách sinh lại từ các mẫu đang kích hoạt. Mọi ý nghĩa đã sửa tay sẽ bị thay thế.
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
-            <Button variant="ghost" size="md" onClick={() => setConfirmReseed(false)}>Hủy</Button>
-            <Button variant="primary" size="md" onClick={doReseed}>Sinh lại</Button>
+        <Modal open onClose={() => setConfirmReseed(false)} title="Sinh lại từ mẫu" maxWidth="480px">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+              Sinh từ các mẫu đang kích hoạt cho biển {plate?.plateNumber}. Ý nghĩa đã có (trùng danh mục + tiêu đề) sẽ được giữ nguyên, không ghi đè — chỉ thêm phần mới.
+            </p>
+            {reseedPreview === null && !reseedPreviewErr && (
+              <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Đang xem trước…</div>
+            )}
+            {reseedPreviewErr && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{reseedPreviewErr}</span>}
+            {reseedPreview !== null && reseedPreview.length === 0 && (
+              <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Không có mẫu nào khớp với số biển này.</div>
+            )}
+            {reseedPreview !== null && reseedPreview.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
+                {reseedPreview.map((p, i) => (
+                  <div key={i} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', opacity: p.alreadyExists ? 0.55 : 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.title || catLabel(p.category)}</span>
+                      {p.alreadyExists && <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-faint)' }}>(đã có — bỏ qua)</span>}
+                    </div>
+                    <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)', marginTop: 4, whiteSpace: 'pre-line' }}>{p.content}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+              <Button variant="ghost" size="md" onClick={() => setConfirmReseed(false)}>Hủy</Button>
+              <Button variant="primary" size="md" onClick={doReseed} disabled={reseedPreview === null}>Sinh lại</Button>
+            </div>
           </div>
         </Modal>
       )}
