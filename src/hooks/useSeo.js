@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { contentGet, contentItems } from '../lib/content/index.js';
 
 const SITE = 'https://biensodep.vercel.app';
 const BRAND = 'Biển số đẹp Đà Nẵng — Duy Đinh';
@@ -148,6 +149,19 @@ export function useSeo(screen, data) {
       title = 'Hướng dẫn sang tên biển số | ' + BRAND;
       desc = 'Hướng dẫn thủ tục sang tên đổi chủ biển số xe mới nhất — hồ sơ, phí, quy trình chi tiết.';
       canonical = SITE + '/sang-ten';
+      const steps = contentItems('transfer.steps');
+      if (steps.length) {
+        ld = {
+          '@context': 'https://schema.org', '@type': 'HowTo',
+          name: contentGet('transfer.title') || 'Hướng dẫn sang tên biển số',
+          description: desc,
+          step: steps.map((s) => ({
+            '@type': 'HowToStep',
+            name: s.title,
+            text: s.desc,
+          })),
+        };
+      }
     } else if (screen === 'faq') {
       title = 'Câu hỏi thường gặp | ' + BRAND;
       canonical = SITE + '/hoi-dap';
