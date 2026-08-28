@@ -73,7 +73,7 @@ export function ImageUrlInput({ label, value, onChange, placeholder, hint }) {
   );
 }
 
-export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint }) {
+export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint, disabled, required, min }) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   const errId = error && inputId ? inputId + '-err' : undefined;
   return (
@@ -85,12 +85,16 @@ export function Input({ id, label, placeholder, value, error, onChange, type = '
         placeholder={placeholder}
         value={value ?? ''}
         onChange={onChange}
+        disabled={disabled}
+        required={required}
+        min={min}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={errId}
         style={{
           height: 40, border: 'none', borderRadius: 'var(--radius-field)',
           background: 'var(--surface-sunken)', boxShadow: error ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
           padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none',
+          opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'text',
         }}
       />
       {error ? <span id={errId} role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{error}</span>
@@ -182,12 +186,13 @@ export function Radio({ label, checked, onChange }) {
   );
 }
 
-export function Switch({ checked, onChange, label }) {
+export function Switch({ checked, onChange, label, disabled }) {
   return (
-    <button type="button" role="switch" aria-checked={!!checked} aria-label={label || 'Công tắc'} onClick={() => onChange(!checked)}
+    <button type="button" role="switch" aria-checked={!!checked} aria-label={label || 'Công tắc'} disabled={disabled} onClick={() => onChange(!checked)}
       style={{
         width: 40, height: 24, borderRadius: 'var(--radius-pill)', border: 'none', position: 'relative',
         background: checked ? 'var(--action-primary)' : 'var(--grey-300)', transition: 'var(--transition-control)',
+        opacity: disabled ? 0.6 : 1, cursor: disabled ? 'default' : 'pointer',
       }}>
       <span style={{
         position: 'absolute', top: 3, left: checked ? 19 : 3, width: 18, height: 18, borderRadius: '50%',

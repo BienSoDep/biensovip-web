@@ -6,6 +6,7 @@ import { useAdminStaff, useCreateStaff, useUpdateStaff, useDeleteStaff } from '.
 import { loadAuth, clearAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
+import { SkeletonTable } from '../../components/Skeleton.jsx';
 
 const ROLE_OPTS = [
   { value: 'staff', label: 'Nhân viên' },
@@ -19,6 +20,7 @@ const PERM_RESOURCES = [
   ['posts', 'Bài viết'], ['customers', 'Khách hàng'], ['videos', 'Video'],
   ['notifications', 'Thông báo'], ['collaborators', 'Cộng tác viên'],
   ['reviews', 'Đánh giá'], ['meanings', 'Ý nghĩa phong thủy'], ['chatbot', 'Trợ lý AI'],
+  ['email_templates', 'Mẫu email'], ['subscribers', 'Người đăng ký nhận tin'],
 ];
 const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
 // Preset mặc định cho nhân viên: xem + thêm + sửa mọi mục, không quyền xóa.
@@ -158,7 +160,7 @@ export default function AdminStaff({ notify }) {
       </div>
 
       {isLoading ? (
-        <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
+        <div style={{ padding: 'var(--gutter-card)' }}><SkeletonTable rows={5} cols={5} /></div>
       ) : isError ? (
         <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <span>Lỗi tải dữ liệu</span>
@@ -199,7 +201,7 @@ export default function AdminStaff({ notify }) {
         <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{editId ? 'Cập nhật thông tin và quyền truy cập.' : 'Nhân viên sẽ có quyền đăng nhập trang quản trị.'}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} error={err.fullName} onChange={onNameChange} />
-          <Input label="Email" type="email" placeholder="a@biensovip.com" value={form.email} error={err.email} onChange={onEmailChange} disabled={!!editId} />
+          <Input label="Email" type="email" placeholder="a@biensovip.com" value={form.email} error={err.email} onChange={onEmailChange} disabled={!!editId} hint={editId ? 'Không thể đổi email sau khi tạo tài khoản' : undefined} />
           {!editId && <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 6 ký tự" value={form.password} error={err.password} onChange={field('password')} />}
           <Select label="Vai trò" value={form.role} options={ROLE_OPTS} onChange={field('role')} />
           <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>

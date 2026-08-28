@@ -7,6 +7,7 @@ import CollaboratorCommissionsModal from '../../components/CollaboratorCommissio
 import { useAdminCollaborators, useUpdateCollaboratorStatus } from '../../services/adminCollaborators.js';
 import { useZaloClickStats } from '../../services/zaloClicks.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
+import { SkeletonTable } from '../../components/Skeleton.jsx';
 
 const STATUSES = ['active', 'pending', 'locked'];
 const STATUS_LABEL = { active: 'Hoạt động', pending: 'Chờ duyệt', locked: 'Bị khóa' };
@@ -43,7 +44,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
     });
   };
 
-  if (isLoading) return <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>;
+  if (isLoading) return <div style={{ padding: 'var(--gutter-card)' }}><SkeletonTable rows={5} cols={5} /></div>;
   if (isError) return (
     <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       <span>Lỗi tải dữ liệu</span>

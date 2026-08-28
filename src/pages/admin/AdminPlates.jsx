@@ -112,7 +112,7 @@ export default function AdminPlates({ go, notify, st }) {
   // Bulk selection: Set of plate ids on current page
   const [selected, setSelected] = useState(new Set());
 
-  const filters = { status, keyword: debouncedKeyword, page, perPage: 20, ...(fromDate && { fromDate }), ...(toDate && { toDate }) };
+  const filters = { status, keyword: debouncedKeyword, page, perPage: 20, ...(fromDate && { fromDate }), ...(toDate && { toDate }), ...(sort && { sortBy: sort.key, sortDir: sort.dir }) };
   const { data, isLoading } = useAdminPlates(filters);
   const plates = data?.items || [];
   const total = data?.total || 0;
@@ -126,18 +126,9 @@ export default function AdminPlates({ go, notify, st }) {
     return next;
   });
 
-  // Sắp xếp client-side trên trang đã load (admin list endpoint chưa hỗ trợ sort param).
-  const sortedPlates = sort ? [...plates].sort((a, b) => {
-    const k = sort.key;
-    let av, bv;
-    if (k === 'price') { av = Number(a.price) || 0; bv = Number(b.price) || 0; }
-    else if (k === 'updatedAt') { av = a.updatedAt || ''; bv = b.updatedAt || ''; }
-    else { av = a[k] || ''; bv = b[k] || ''; }
-    const cmp = typeof av === 'number' ? av - bv : String(av).localeCompare(String(bv), 'vi');
-    return sort.dir === 'asc' ? cmp : -cmp;
-  }) : plates;
+  const sortedPlates = plates;
 
-  const toggleSort = (key) => setSort((s) => (s?.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }));
+  const toggleSort = (key) => { setSort((s) => (s?.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' })); setPage(1); };
 
   const { data: plateTypesData } = useAdminCategories('plate_type');
   const { data: provincesData } = useAdminCategories('province');
@@ -291,9 +282,11 @@ export default function AdminPlates({ go, notify, st }) {
     }
   };
 
+  const STATUS_LABEL = { available: 'Còn hàng', sold: 'Đã bán', inactive: 'Hết hạn' };
   const bulkStatus = async (status) => {
     const ids = plates.filter((p) => selected.has(p.id)).map((p) => p.id);
     if (!ids.length) return;
+    if (!window.confirm(`Đổi trạng thái ${ids.length} biển thành "${STATUS_LABEL[status] || status}"?`)) return;
     const results = await Promise.allSettled(ids.map((id) => statusMut.mutateAsync({ id, status })));
     const ok = results.filter((r) => r.status === 'fulfilled').length;
     setSelected(new Set());
@@ -381,6 +374,7 @@ export default function AdminPlates({ go, notify, st }) {
   const commitPrice = (p) => {
     if (!cell) return;
     const price = num(cell.value);
+    if (price < 0) { notify('Giá không được âm'); setCell(null); return; }
     updateMut.mutate({ id: p.id, body: { price, priceOnRequest: false } }, {
       onSuccess: () => notify('Đã cập nhật giá'),
       onError: (err) => { notify(err.message || 'Lỗi cập nhật giá'); setCell(null); },
@@ -493,7 +487,7 @@ export default function AdminPlates({ go, notify, st }) {
 
       {/* Table — grid notion, edit inline */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 900 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           <span style={{ flex: '0 0 34px' }}>

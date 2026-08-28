@@ -134,7 +134,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
   }), [filters]);
 
-  const { data, isLoading, isError, isFetching } = usePlates(apiFilters, { enabled: !infinite && filters.perPage !== 0 });
+  const { data, isLoading, isError, isFetching, refetch } = usePlates(apiFilters, { enabled: !infinite && filters.perPage !== 0 });
 
   // Infinite scroll: bật khi toggle bật hoặc chọn "Xem tất cả" (bỏ cap 100).
   const useInfinite = infinite || filters.perPage === 0;
@@ -371,8 +371,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               {Array.from({ length: items.length || 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
             </div>
           ) : showError ? (
-            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center' }}>
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
               <span style={{ font: 'var(--type-body)', color: 'var(--status-danger)' }}>Không tải được danh sách biển số.</span>
+              <Button variant="outline" size="md" onClick={() => (useInfinite ? inf.refetch() : refetch())}>Thử lại</Button>
             </div>
           ) : items.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

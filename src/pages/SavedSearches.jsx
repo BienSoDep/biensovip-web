@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import { Bell, Trash2, Pencil, Check, X, Mail } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Switch } from '../components/index.jsx';
@@ -26,7 +25,7 @@ function filterSummary(filtersStr) {
 
 export default function SavedSearches({ go, notify, user }) {
   const [tab, setTab] = useState('criteria');
-  const { data: items, isLoading, isError } = useSavedSearches();
+  const { data: items, isLoading, isError, refetch } = useSavedSearches();
   const updateSearch = useUpdateSavedSearch();
   const deleteSearch = useDeleteSavedSearch();
   const [editingId, setEditingId] = useState(null);
@@ -56,10 +55,8 @@ export default function SavedSearches({ go, notify, user }) {
   };
 
   const remove = (s) => {
-    toast('Xóa tiêu chí này?', {
-      duration: 4000,
-      action: { label: 'Xóa', onClick: () => deleteSearch.mutate(s.id, { onError: () => notify('Không xóa được, thử lại sau.'), onSuccess: () => notify('Đã xóa tiêu chí') }) },
-    });
+    if (!window.confirm(`Xóa tiêu chí "${s.name}"?`)) return;
+    deleteSearch.mutate(s.id, { onError: () => notify('Không xóa được, thử lại sau.'), onSuccess: () => notify('Đã xóa tiêu chí') });
   };
 
   const tabBtn = (key, label, count) => (
@@ -149,7 +146,7 @@ export default function SavedSearches({ go, notify, user }) {
       ) : isError ? (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
           <span style={{ font: 'var(--type-body)', color: 'var(--status-danger)' }}>Không tải được danh sách tiêu chí.</span>
-          <Button variant="outline" size="md" onClick={() => window.location.reload()}>Thử lại</Button>
+          <Button variant="outline" size="md" onClick={() => refetch()}>Thử lại</Button>
         </div>
       ) : !items?.length ? (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>

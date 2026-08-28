@@ -143,7 +143,7 @@ export default function AdminContacts({ notify }) {
       </div>
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 820 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           <span style={{ flex: '1 1 96px' }}>Khách hàng</span>

@@ -23,7 +23,7 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, isToggleabl
   return (
     <div ref={setNodeRef} style={style}>
       <button type="button" {...attributes} {...listeners} aria-label="Kéo để đổi thứ tự"
-        style={{ border: 'none', background: 'transparent', cursor: 'grab', padding: 2, color: 'var(--text-faint)', display: 'flex', touchAction: 'none' }}>
+        style={{ border: 'none', background: 'transparent', cursor: 'grab', width: 44, height: 44, color: 'var(--text-faint)', display: 'flex', alignItems: 'center', justifyContent: 'center', touchAction: 'none' }}>
         <GripVertical size={16} />
       </button>
       <span style={{ width: 22, textAlign: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: '2px 0' }}>{idx + 1}</span>

@@ -30,7 +30,7 @@ const SHOWCASE_PLATES = [
   { prov: '43', seri: 'A2', num: '567.89', shape: 'short', name: 'Sảnh Tiến', price: '365.000.000đ', hot: false },
 ];
 
-function OtpBoxes({ value, onChange }) {
+function OtpBoxes({ value, onChange, error, disabled }) {
   const refs = useRef([]);
   const digits = Array.from({ length: 6 }, (_, i) => (value || '')[i] || '');
   const focus = (i) => refs.current[i]?.focus();
@@ -54,9 +54,10 @@ function OtpBoxes({ value, onChange }) {
   return (
     <div style={{ display: 'flex', gap: 8 }} onPaste={onPaste}>
       {digits.map((d, i) => (
-        <input key={i} ref={(el) => { refs.current[i] = el; }} value={d} inputMode="numeric" autoComplete="one-time-code" maxLength={1} aria-label={`Chữ số ${i + 1}`}
+        <input key={i} ref={(el) => { refs.current[i] = el; }} value={d} inputMode="numeric" autoComplete="one-time-code" maxLength={1} aria-label={`Chữ số ${i + 1}`} disabled={disabled}
+          aria-invalid={!!error}
           onChange={(e) => handle(i, e.target.value)} onKeyDown={(e) => onKeyDown(i, e)}
-          style={{ width: '100%', maxWidth: 48, height: 56, textAlign: 'center', fontSize: 22, fontWeight: 'var(--fw-bold)', border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', color: 'var(--text-strong)', outline: 'none' }} />
+          style={{ width: '100%', maxWidth: 48, height: 56, textAlign: 'center', fontSize: 22, fontWeight: 'var(--fw-bold)', border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', boxShadow: error ? 'inset 0 0 0 2px var(--status-danger)' : 'var(--shadow-inset-hairline)', color: 'var(--text-strong)', outline: 'none', opacity: disabled ? 0.5 : 1 }} />
       ))}
     </div>
   );
@@ -69,6 +70,12 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
   const [resendIn, setResendIn] = useState(0);
 
   const isOtpStep = (s === 'login' && otpMode && st.step === 2) || (s === 'forgot' && st.step === 2);
+
+  // Chuyển tab login↔register để dở dang otpMode/step từ tab trước — không reset thì quay lại login
+  // vẫn còn kẹt ở màn OTP hoặc step 2 cũ.
+  useEffect(() => {
+    if (s !== 'login') { setOtpMode(false); }
+  }, [s]);
 
   useEffect(() => {
     if (isOtpStep) setResendIn((n) => (n > 0 ? n : 60));
@@ -259,8 +266,8 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 ) : (
                   <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
                 )}
-                <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự, có chữ và số" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
-                <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={st.aPw2} error={st.aErr.pw2} onChange={setField('aPw2')} />
+                <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự, có chữ và số" value={st.aPw} error={st.aErr.pw} onChange={(e) => patch({ aPw: e.target.value, aErr: { ...st.aErr, pw: '', pw2: '' } })} />
+                <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={st.aPw2} error={st.aErr.pw2} onChange={(e) => patch({ aPw2: e.target.value, aErr: { ...st.aErr, pw2: '' } })} />
                 <Checkbox label="Tôi đồng ý với điều khoản sử dụng" checked={st.aAgree} onChange={(v) => patch({ aAgree: v })} />
                 {st.aErr.agree && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn cần đồng ý với điều khoản để tiếp tục.</span>}
               </div>
@@ -278,7 +285,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
                 <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                   <Checkbox label="Ghi nhớ đăng nhập" checked={remember} onChange={setRemember} />
-                  <button type="button" onClick={() => { patch({ aErr: {} }); setOtpMode(true); }} style={{ border: 'none', background: 'none', padding: 0, font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>Đăng nhập bằng OTP</button>
+                  <button type="button" onClick={() => { patch({ aErr: {}, aPw: '' }); setOtpMode(true); }} style={{ border: 'none', background: 'none', padding: 0, font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>Đăng nhập bằng OTP</button>
                 </div>
                 <a href={routeFor('forgot')} onClick={(e) => { e.preventDefault(); go('forgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'none' }}>Quên mật khẩu?</a>
               </div>
@@ -289,7 +296,8 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             {s === 'login' && otpMode && st.step === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mã xác thực 6 số</span>
-                <OtpBoxes value={st.aOtp} onChange={(v) => patch({ aOtp: v, aErr: { ...st.aErr, otp: '' } })} />
+                <OtpBoxes value={st.aOtp} onChange={(v) => patch({ aOtp: v, aErr: { ...st.aErr, otp: '' } })}
+                  error={st.aErr.otp} disabled={/sai quá|khóa/.test(st.aErr.otp || '')} />
                 {st.aErr.otp && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{st.aErr.otp}</span>}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', font: 'var(--type-caption)' }}>
                   {resendIn > 0 ? (
@@ -304,7 +312,8 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             {s === 'forgot' && st.step === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mã xác thực 6 số</span>
-                <OtpBoxes value={st.aOtp} onChange={(v) => patch({ aOtp: v, aErr: { ...st.aErr, otp: '' } })} />
+                <OtpBoxes value={st.aOtp} onChange={(v) => patch({ aOtp: v, aErr: { ...st.aErr, otp: '' } })}
+                  error={st.aErr.otp} disabled={/sai quá|khóa/.test(st.aErr.otp || '')} />
                 {st.aErr.otp && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{st.aErr.otp}</span>}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', font: 'var(--type-caption)' }}>
                   {resendIn > 0 ? (

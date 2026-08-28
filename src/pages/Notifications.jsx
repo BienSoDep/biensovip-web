@@ -13,7 +13,7 @@ function stripHtml(html) {
 
 export default function Notifications({ go, notify }) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isError } = useNotifications({ page, limit: PER_PAGE });
+  const { data, isLoading, isError, refetch } = useNotifications({ page, limit: PER_PAGE });
   const markRead = useMarkNotificationRead();
   const markClicked = useMarkNotificationClicked();
 
@@ -41,7 +41,7 @@ export default function Notifications({ go, notify }) {
       ) : isError ? (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '72px var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
           <span style={{ font: 'var(--type-title-2)', color: 'var(--status-danger)' }}>Không tải được thông báo</span>
-          <Button variant="outline" size="md" onClick={() => window.location.reload()}>Thử lại</Button>
+          <Button variant="outline" size="md" onClick={() => refetch()}>Thử lại</Button>
         </div>
       ) : items.length === 0 ? (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '72px var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>

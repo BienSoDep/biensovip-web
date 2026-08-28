@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
 
-export default function Faq({ go }) {
+export default function Faq({ go, zalo }) {
   const [open, setOpen] = useState(null);
   const QA = contentItems('faq.items');
 
@@ -60,7 +60,7 @@ export default function Faq({ go }) {
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 480 }}>{contentGet('faq.not_found_desc')}</p>
         <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
           <Button variant="primary" size="md" onClick={go('chat')}>{contentGet('faq.cta_request')}</Button>
-          <Button variant="outline" size="md" onClick={() => window.open('https://zalo.me/0905221334', '_blank')}>{contentGet('faq.cta_zalo')}</Button>
+          <Button variant="outline" size="md" onClick={() => window.open(`https://zalo.me/${(zalo || '0905221334').replace(/[^0-9]/g, '')}`, '_blank')}>{contentGet('faq.cta_zalo')}</Button>
         </div>
       </div>
     </div>

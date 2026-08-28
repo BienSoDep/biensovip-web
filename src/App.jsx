@@ -13,6 +13,7 @@ import { contentGet } from './lib/content/index.js';
 import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
 import BackToTop from './components/BackToTop.jsx';
+import CompareBar from './components/CompareBar.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
 import Header from './layout/Header.jsx';
@@ -41,6 +42,7 @@ const LuckyPlate = lazy(() => import('./pages/LuckyPlate.jsx'));
 const About = lazy(() => import('./pages/About.jsx'));
 const Blog = lazy(() => import('./pages/Blog.jsx'));
 const ProvinceLandingPage = lazy(() => import('./pages/ProvinceLandingPage.jsx'));
+const PlateTypeLandingPage = lazy(() => import('./pages/PlateTypeLandingPage.jsx'));
 const Post = lazy(() => import('./pages/Post.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 const ChatZaloContact = lazy(() => import('./pages/ChatZaloContact.jsx'));
@@ -64,7 +66,7 @@ export default function App() {
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home', device: 'desktop',
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
-    favs: {}, curId: initRoute.detailId || 'p1',
+    favs: {}, curId: initRoute.detailId || 'p1', typeSlug: initRoute.typeSlug || 'tu-quy', provinceCode: initRoute.provinceCode || '43',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mDeposit: '', mErr: {},
     aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aErr: {}, step: 1, redirectTo: null, user: loadAuth()?.user || null,
     plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
@@ -667,14 +669,16 @@ export default function App() {
 
             {s === 'privacy' && <Privacy />}
 
-            {s === 'transfer' && <TransferGuide go={go} />}
+            {s === 'transfer' && <TransferGuide go={go} zalo={st.settings?.zalo} />}
 
-            {s === 'faq' && <Faq go={go} />}
+            {s === 'faq' && <Faq go={go} zalo={st.settings?.zalo} />}
             {s === 'gmailCallback' && <GmailCallback go={go} />}
 
             {s === 'blog' && <Blog st={st} patch={patch} />}
 
             {s === 'provinceLanding' && <ProvinceLandingPage provinceCode={st.provinceCode || '43'} openPlate={openPlate} onBuy={openBuy} contact={contact} />}
+
+            {s === 'plateTypeLanding' && <PlateTypeLandingPage typeSlug={st.typeSlug || 'tu-quy'} openPlate={openPlate} onBuy={openBuy} contact={contact} />}
 
             {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} />}
 
@@ -711,6 +715,8 @@ export default function App() {
               <AiChatbot go={go} />
             </Suspense>
           )}
+
+          {isPublic && st.screen !== 'compare' && <CompareBar go={go} />}
 
         </div>
         </main>

@@ -4,6 +4,7 @@ import Button from './Button.jsx';
 import { Select } from './index.jsx';
 import { useCollaboratorCommissions, usePayCommissions } from '../services/adminCollaborators.js';
 import { formatDate, formatDateTime } from '../lib/date.js';
+import { SkeletonTable } from './Skeleton.jsx';
 
 const STATUS_OPTS = [
   { value: 'all', label: 'Tất cả' },
@@ -57,7 +58,7 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
         </div>
 
         {isLoading ? (
-          <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Đang tải…</div>
+          <SkeletonTable rows={4} cols={5} />
         ) : items.length === 0 ? (
           <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Không có khoản hoa hồng nào.</div>
         ) : (

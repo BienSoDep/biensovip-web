@@ -8,6 +8,7 @@ import TikTokEmbed from '../../components/TikTokEmbed.jsx';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import { useDebouncedValue } from '@mantine/hooks';
+import { SkeletonCard } from '../../components/Skeleton.jsx';
 
 const PLATFORM_LABEL = { tiktok: 'TikTok', facebook: 'Facebook' };
 const PLATFORM_TONE = { tiktok: 'dark', facebook: 'blue' };
@@ -143,7 +144,7 @@ export default function AdminVideos({ notify }) {
     </div>
   );
 
-  if (isLoading) return <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>;
+  if (isLoading) return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 'var(--space-4)' }}>{Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} height={220} />)}</div>;
   if (isError) return (
     <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       <span>Lỗi tải dữ liệu</span>
@@ -194,9 +195,12 @@ export default function AdminVideos({ notify }) {
             ))}
           </Reorder.Group>
         ) : (
-          <div style={gridStyle}>
-            {filtered.map((v) => renderCard(v, videos.findIndex((x) => x.id === v.id)))}
-          </div>
+          <>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>Đang lọc — bỏ bộ lọc để kéo sắp xếp lại thứ tự.</div>
+            <div style={gridStyle}>
+              {filtered.map((v) => renderCard(v, videos.findIndex((x) => x.id === v.id)))}
+            </div>
+          </>
         )
       ) : (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-surface)', border: '2px dashed var(--border-strong)', padding: 'var(--space-9) var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>

@@ -32,9 +32,10 @@ export default function Reviews({ notify, go }) {
   const total = data?.totalReviews ?? 0;
   const totalPages = data ? Math.max(1, Math.ceil((data.total || 0) / perPage)) : 1;
   const loggedIn = !!loadAuth()?.accessToken;
+  const breakdown = data?.ratingBreakdown || {};
   const dist = [5, 4, 3, 2, 1].map((n) => {
-    const count = reviews.filter((r) => r.rating === n).length;
-    return { stars: n, count, pct: reviews.length ? Math.round((count / reviews.length) * 100) : 0 };
+    const count = breakdown[n] ?? 0;
+    return { stars: n, count, pct: total ? Math.round((count / total) * 100) : 0 };
   });
 
   const submit = async () => {

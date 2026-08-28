@@ -21,6 +21,7 @@ export default function AiChatbot({ go }) {
   const [msgs, setMsgs] = useState([GREETING]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
+  const [rateLimited, setRateLimited] = useState(false);
   const restoredRef = useRef(false);
   const bottomRef = useRef(null);
   const panelRef = useRef(null);
@@ -70,9 +71,9 @@ export default function AiChatbot({ go }) {
     };
   }, [open]);
 
-  const send = async () => {
-    const v = input.trim();
-    if (!v || sendMessage.isPending) return;
+  const send = async (text) => {
+    const v = (text ?? input).trim();
+    if (!v || sendMessage.isPending || rateLimited) return;
     setMsgs((m) => [...m, { from: 'user', text: v }]);
     setInput('');
 
@@ -83,6 +84,7 @@ export default function AiChatbot({ go }) {
       setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions, plates: res.plates }]);
     } catch (e) {
       if (e.status === 429) {
+        setRateLimited(true);
         setMsgs((m) => [...m, { from: 'bot', text: e.message || 'Bạn đã gửi quá nhiều tin nhắn, vui lòng thử lại sau ít phút.' }]);
       } else {
         setMsgs((m) => [...m, { from: 'bot', text: 'Trợ lý AI đang bận, vui lòng chat với nhân viên.', actions: ['chat_with_staff', 'contact_form'] }]);
@@ -140,14 +142,19 @@ export default function AiChatbot({ go }) {
             )}
             <div ref={bottomRef} />
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 var(--space-3) var(--space-2)' }}>
-            {['Ý nghĩa biển số này là gì?', 'Còn hàng không?', 'Cách đặt cọc?'].map((qr) => (
-              <button key={qr} onClick={() => setInput(qr)} style={{ border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '5px 12px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>{qr}</button>
-            ))}
-          </div>
+          {msgs.length === 1 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 var(--space-3) var(--space-2)' }}>
+              {['Ý nghĩa biển số này là gì?', 'Còn hàng không?', 'Cách đặt cọc?'].map((qr) => (
+                <button key={qr} onClick={() => send(qr)} disabled={sendMessage.isPending} style={{ border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '5px 12px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: sendMessage.isPending ? 'default' : 'pointer', opacity: sendMessage.isPending ? 0.6 : 1 }}>{qr}</button>
+              ))}
+            </div>
+          )}
+          {rateLimited && (
+            <div style={{ padding: '0 var(--space-3) var(--space-2)', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn đã gửi quá nhiều tin nhắn. Vui lòng chat với nhân viên hoặc thử lại sau.</div>
+          )}
           <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-3)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-            <input type="text" placeholder="Nhập câu hỏi..." aria-label="Câu hỏi" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} style={{ flex: 1, height: 40, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }} />
-            <button onClick={send} disabled={sendMessage.isPending} style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: sendMessage.isPending ? 'default' : 'pointer', opacity: sendMessage.isPending ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={16} /></button>
+            <input type="text" placeholder={rateLimited ? 'Đã tạm khóa gửi tin...' : 'Nhập câu hỏi...'} aria-label="Câu hỏi" disabled={rateLimited} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} style={{ flex: 1, height: 40, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', opacity: rateLimited ? 0.6 : 1 }} />
+            <button onClick={() => send()} disabled={sendMessage.isPending || rateLimited} style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: sendMessage.isPending || rateLimited ? 'default' : 'pointer', opacity: sendMessage.isPending || rateLimited ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={16} /></button>
           </div>
         </div>
       )}

@@ -17,7 +17,7 @@ export function usePathRouter(st, patch) {
         }
         resetComposeDirty();
       }
-      patch((x) => ({ ...x, screen: r.screen, curId: r.detailId || x.curId, postId: r.postId || x.postId, provinceCode: r.provinceCode || x.provinceCode }));
+      patch((x) => ({ ...x, screen: r.screen, curId: r.detailId || x.curId, postId: r.postId || x.postId, provinceCode: r.provinceCode || x.provinceCode, typeSlug: r.typeSlug || x.typeSlug }));
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -26,7 +26,7 @@ export function usePathRouter(st, patch) {
 
   useEffect(() => {
     const scr = st.screen;
-    const target = scr === 'detail' ? routeFor('detail', st.curId) : scr === 'post' ? routeFor('post', st.postId) : scr === 'provinceLanding' ? routeFor('provinceLanding', st.provinceCode) : routeFor(scr);
+    const target = scr === 'detail' ? routeFor('detail', st.curId) : scr === 'post' ? routeFor('post', st.postId) : scr === 'provinceLanding' ? routeFor('provinceLanding', st.provinceCode) : scr === 'plateTypeLanding' ? routeFor('plateTypeLanding', st.typeSlug) : routeFor(scr);
     if (window.location.pathname !== target) history.pushState(null, '', target + window.location.search);
   }, [st.screen, st.curId, st.postId]);
 }

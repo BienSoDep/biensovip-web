@@ -930,6 +930,20 @@ textarea:focus-visible {
     0 8px 18px -10px rgba(212, 101, 10, 0.35);
 }
 
+/* Admin dense tables on tablet/narrow: scroll-shadow gợi ý còn nội dung ẩn 2 bên khi overflow-x auto —
+   background-attachment scroll trick (2 gradient bám theo scroll container + 2 shadow cố định theo viewport). */
+.admin-table-scroll {
+  background:
+    linear-gradient(to right, var(--white) 30%, rgba(255,255,255,0)),
+    linear-gradient(to left, var(--white) 30%, rgba(255,255,255,0)) 100% 0,
+    linear-gradient(to right, rgba(0,0,0,0.08), rgba(0,0,0,0)),
+    linear-gradient(to left, rgba(0,0,0,0.08), rgba(0,0,0,0)) 100% 0;
+  background-repeat: no-repeat;
+  background-color: var(--white);
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
 /* Print — chỉ giữ nội dung trang, ẩn chrome: header/footer, mục lục, FAB, nút in, back-to-top */
 @media print {
   header,

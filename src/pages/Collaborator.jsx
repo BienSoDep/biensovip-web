@@ -1,17 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { Input, Badge } from '../components/index.jsx';
 import { validatePhone } from '../lib/phone.js';
 import { useRegisterCollaborator, useCollaboratorDashboard } from '../services/collaborators.js';
-import { useCollaboratorLogin, useCollaboratorForgotPasswordRequestOtp, useCollaboratorForgotPasswordReset } from '../services/collaboratorAuth.js';
+import { useCollaboratorLogin, useCollaboratorLogout, useCollaboratorForgotPasswordRequestOtp, useCollaboratorForgotPasswordReset } from '../services/collaboratorAuth.js';
 import { loadCollaboratorAuth } from '../lib/collaboratorAuthStore.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import { useCollaboratorGoogleLogin, useCollaboratorGoogleConfirmLink } from '../services/googleAuth.js';
 import { useGmailStatus, useGmailOAuthUrl, useUnlinkGmail } from '../services/gmailLink.js';
+import { SkeletonCard } from '../components/Skeleton.jsx';
 
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
-const CODE_KEY = 'bsv.ctvCode';
+
+// Fallback copy cho trình duyệt cũ / context không có Clipboard API (vd HTTP không phải HTTPS).
+function fallbackCopy(text, onOk) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) onOk();
+  } catch { /* trình duyệt không hỗ trợ — bỏ qua, không crash */ }
+}
 
 function RegisterForm({ onRegistered }) {
   const [f, setF] = useState({});
@@ -49,9 +64,9 @@ function RegisterForm({ onRegistered }) {
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-7) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', textAlign: 'center' }}>
           <span style={{ font: 'var(--type-display-3)', color: 'var(--text-strong)' }}>Đã gửi hồ sơ đăng ký</span>
           <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Hồ sơ của bạn đang chờ admin duyệt. Khi được duyệt, bạn sẽ nhận mã giới thiệu riêng — quay lại trang này và nhập mã để xem dashboard.
+            Hồ sơ của bạn đang chờ admin duyệt. Khi được duyệt, đăng nhập lại bằng email/mật khẩu vừa tạo để xem dashboard và mã giới thiệu riêng.
           </span>
-          <Button variant="ghost" size="md" onClick={onRegistered}>Về trang chủ</Button>
+          <Button variant="ghost" size="md" onClick={onRegistered}>Đăng nhập</Button>
         </div>
       </section>
     );
@@ -216,18 +231,6 @@ function ForgotPasswordForm({ onDone }) {
   );
 }
 
-function LookupForm({ onFound }) {
-  const [code, setCode] = useState('');
-  return (
-    <section style={{ maxWidth: 560, margin: '0 auto', padding: '0 var(--pad-page) var(--space-9)' }}>
-      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-5) var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)', flex: '1 1 240px' }}>Đã là CTV? Nhập mã giới thiệu để xem dashboard.</span>
-        <Input placeholder="Mã giới thiệu (VD: CTV7K9X2A)" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
-        <Button variant="outline" size="md" onClick={() => code.trim() && onFound(code.trim())}>Xem dashboard</Button>
-      </div>
-    </section>
-  );
-}
 
 // UC30 — khu "Cài đặt tài khoản": liên kết/hủy liên kết Gmail cá nhân để gửi email cho khách.
 // Chỉ hiện khi CTV đăng nhập bằng JWT (loadCollaboratorAuth có token) — chế độ tra-cứu-bằng-mã cũ
@@ -287,8 +290,12 @@ function GmailLinkSection() {
 function DashboardBody({ data, onReset }) {
   const [copied, setCopied] = useState(false);
   const copyLink = () => {
-    if (!navigator.clipboard?.writeText) return;
-    navigator.clipboard.writeText(data.referralUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+    const onOk = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(data.referralUrl).then(onOk).catch(() => fallbackCopy(data.referralUrl, onOk));
+    } else {
+      fallbackCopy(data.referralUrl, onOk);
+    }
   };
 
   if (data.status !== 'active') {
@@ -298,7 +305,7 @@ function DashboardBody({ data, onReset }) {
         <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           {data.status === 'pending' ? 'Hồ sơ của bạn đang chờ admin duyệt.' : 'Tài khoản CTV đã bị khóa. Liên hệ admin để biết thêm.'}
         </span>
-        <Button variant="ghost" size="sm" onClick={onReset}>Quay lại</Button>
+        <Button variant="ghost" size="sm" onClick={onReset}>Đăng xuất</Button>
       </section>
     );
   }
@@ -350,22 +357,26 @@ function DashboardBody({ data, onReset }) {
 
       <GmailLinkSection />
 
-      <Button variant="ghost" size="sm" onClick={onReset}>Không phải bạn? Đổi mã</Button>
+      <Button variant="ghost" size="sm" onClick={onReset}>Đăng xuất</Button>
     </section>
   );
 }
 
-function Dashboard({ code, onReset }) {
-  const { data, isLoading, isError } = useCollaboratorDashboard(code);
+function Dashboard({ onReset }) {
+  const { data, isLoading, isError } = useCollaboratorDashboard(true);
 
   if (isLoading) {
-    return <section style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-9) var(--pad-page)' }}>Đang tải…</section>;
+    return (
+      <section style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-9) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <SkeletonCard height={120} /><SkeletonCard height={200} />
+      </section>
+    );
   }
   if (isError || !data) {
     return (
       <section style={{ maxWidth: 560, margin: '0 auto', padding: 'var(--space-9) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tìm thấy mã CTV này.</span>
-        <Button variant="ghost" size="sm" onClick={onReset}>Thử mã khác</Button>
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được hồ sơ CTV. Vui lòng đăng nhập lại.</span>
+        <Button variant="ghost" size="sm" onClick={onReset}>Đăng nhập lại</Button>
       </section>
     );
   }
@@ -373,21 +384,13 @@ function Dashboard({ code, onReset }) {
 }
 
 export default function Collaborator({ go }) {
-  const [code, setCode] = useState(() => { try { return localStorage.getItem(CODE_KEY) || ''; } catch { return ''; } });
+  const [loggedIn, setLoggedIn] = useState(() => Boolean(loadCollaboratorAuth()?.accessToken));
   const [mode, setMode] = useState('register'); // register | login | forgot
+  const collaboratorLogout = useCollaboratorLogout();
 
-  useEffect(() => {
-    try { code ? localStorage.setItem(CODE_KEY, code) : localStorage.removeItem(CODE_KEY); } catch { /* ignore */ }
-  }, [code]);
+  const logout = () => { collaboratorLogout.mutate(undefined, { onSettled: () => setLoggedIn(false) }); };
 
-  // Đã đăng nhập JWT (UC28) từ trước — vào thẳng dashboard theo referralCode của session.
-  useEffect(() => {
-    if (code) return;
-    const auth = loadCollaboratorAuth();
-    if (auth?.collaborator?.referralCode) setCode(auth.collaborator.referralCode);
-  }, [code]);
-
-  if (code) return <Dashboard code={code} onReset={() => setCode('')} />;
+  if (loggedIn) return <Dashboard onReset={logout} />;
 
   if (mode === 'login') {
     return (
@@ -396,10 +399,7 @@ export default function Collaborator({ go }) {
           <Button variant="ghost" size="sm" onClick={() => setMode('register')}>← Đăng ký mới</Button>
         </div>
         <LoginForm
-          onLoggedIn={() => {
-            const auth = loadCollaboratorAuth();
-            if (auth?.collaborator?.referralCode) setCode(auth.collaborator.referralCode);
-          }}
+          onLoggedIn={() => setLoggedIn(true)}
           onForgotPassword={() => setMode('forgot')}
         />
       </>
@@ -412,11 +412,10 @@ export default function Collaborator({ go }) {
 
   return (
     <>
-      <LookupForm onFound={setCode} />
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)', textAlign: 'right' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) 0', textAlign: 'right' }}>
         <Button variant="ghost" size="sm" onClick={() => setMode('login')}>Đã có tài khoản? Đăng nhập</Button>
       </div>
-      <RegisterForm onRegistered={() => go('home')()} />
+      <RegisterForm onRegistered={() => setMode('login')} />
     </>
   );
 }

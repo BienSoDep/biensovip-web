@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Fragment } from 'react';
 import { ArrowLeftRight, X, Sparkles } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
@@ -340,8 +340,8 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
               const values = row.key === 'price' ? [] : plates.map((p) => p[row.key]);
               const allSame = values.length >= 2 && values.every((v) => v && v === values[0]);
               return (
-              <>
-                <div key={`h-${row.key}`} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>{row.label}</div>
+              <Fragment key={row.key}>
+                <div style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>{row.label}</div>
                 {plates.map((p) => (
                   <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', background: allSame ? 'var(--green-50)' : undefined }}>
                     {row.key === 'price' ? (
@@ -351,7 +351,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
                     )}
                   </div>
                 ))}
-              </>
+              </Fragment>
               );
             })}
 
@@ -369,14 +369,14 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
             ) : fengShuiRows.map((row, ri) => {
               const allSame = row.values.length >= 2 && row.values.every((v) => v.text && v.text === row.values[0].text);
               return (
-                <>
-                  <div key={`h-fs-${ri}`} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>{ri === 0 && <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 4 }}>Ý nghĩa phong thủy</span>}{row.label}</div>
+                <Fragment key={row.label}>
+                  <div style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)' }}>{ri === 0 && <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 4 }}>Ý nghĩa phong thủy</span>}{row.label}</div>
                   {row.values.map((v) => (
                     <div key={v.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left', background: allSame ? 'var(--green-50)' : undefined }}>
                       {v.text || <span style={{ color: 'var(--text-muted)', textAlign: 'center', display: 'block' }}>–</span>}
                     </div>
                   ))}
-                </>
+                </Fragment>
               );
             })}
 

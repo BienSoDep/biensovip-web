@@ -2,7 +2,7 @@ import { PhoneCall } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
 
-export default function TransferGuide({ go }) {
+export default function TransferGuide({ go, zalo }) {
   const steps = contentItems('transfer.steps');
   const notes = contentItems('transfer.notes');
   const updated = contentGet('transfer.updated');
@@ -35,7 +35,7 @@ export default function TransferGuide({ go }) {
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('transfer.need_help_desc')}</p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-          <Button variant="primary" size="md" onClick={() => window.open('https://zalo.me/0905221334', '_blank')}>{contentGet('transfer.cta_zalo')}</Button>
+          <Button variant="primary" size="md" onClick={() => window.open(`https://zalo.me/${(zalo || '0905221334').replace(/[^0-9]/g, '')}`, '_blank')}>{contentGet('transfer.cta_zalo')}</Button>
           <Button variant="outline" size="md" onClick={go('list')}>{contentGet('transfer.cta_list')}</Button>
         </div>
       </div>

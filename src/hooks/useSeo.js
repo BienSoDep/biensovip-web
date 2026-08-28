@@ -153,7 +153,7 @@ export function useSeo(screen, data) {
       canonical = SITE + '/hoi-dap';
     } else if (screen === 'notfound') {
       title = 'Không tìm thấy trang | ' + BRAND;
-    } else if (screen === 'provinceLanding' && data?.landing) {
+    } else if ((screen === 'provinceLanding' || screen === 'plateTypeLanding') && data?.landing) {
       const l = data.landing;
       title = l.title + ' | ' + BRAND;
       desc = (l.intro || '').replace(/<[^>]+>/g, '').slice(0, 300) || DEFAULT_DESC;

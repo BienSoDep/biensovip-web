@@ -8,3 +8,11 @@ export function useProvinceLanding(provinceCode, vehicle) {
     enabled: !!provinceCode,
   });
 }
+
+export function usePlateTypeLanding(typeSlug, province) {
+  return useQuery({
+    queryKey: ['landing', 'plate-type', typeSlug, province],
+    queryFn: () => apiClient.get(`/api/landing/plate-type/${typeSlug}`, { params: { province } }),
+    enabled: !!typeSlug,
+  });
+}

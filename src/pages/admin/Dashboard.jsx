@@ -166,12 +166,12 @@ export default function Dashboard({ go, st }) {
         </div>
         <div style={{ flex: 1 }} />
         <button type="button" disabled={exportingReport}
-          onClick={() => exportReport('xlsx', { from: range.from.toISOString(), to: range.to.toISOString() }).catch((e) => toast.error(e.message))}
+          onClick={() => exportReport('xlsx', { from: range.from.toISOString(), to: range.to.toISOString() }).catch(() => toast.error('Xuất báo cáo thất bại, vui lòng thử lại.'))}
           style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--surface-muted)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
           {exportingReport ? 'Đang xuất…' : 'Xuất Excel'}
         </button>
         <button type="button" disabled={exportingReport}
-          onClick={() => exportReport('pdf', { from: range.from.toISOString(), to: range.to.toISOString() }).catch((e) => toast.error(e.message))}
+          onClick={() => exportReport('pdf', { from: range.from.toISOString(), to: range.to.toISOString() }).catch(() => toast.error('Xuất báo cáo thất bại, vui lòng thử lại.'))}
           style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--surface-muted)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
           {exportingReport ? 'Đang xuất…' : 'Xuất PDF'}
         </button>
@@ -631,6 +631,21 @@ export default function Dashboard({ go, st }) {
           )}
         </div>
       </div>
+
+      {/* Bulk retry — khi nhiều block lỗi cùng lúc (vd mất mạng), tránh phải cuộn click "Thử lại" từng cái */}
+      {(() => {
+        const allQueries = [summary, chart, traffic, funnel, distProvince, distVehicle, interested, conversion,
+          orders, topContent, ratings, intent, ...(isSuperAdmin ? [collabPerf] : []), demand, demographics,
+          searchInsights, compareInsights, heatmap];
+        const failedCount = allQueries.filter((q) => q.isError).length;
+        if (failedCount < 2) return null;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-tint-rose, #fdecec)', borderRadius: 'var(--radius-card)' }}>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>{failedCount} mục tải lỗi.</span>
+            <button type="button" onClick={() => allQueries.forEach((q) => q.isError && q.refetch())} style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', textDecoration: 'underline' }}>Thử lại tất cả</button>
+          </div>
+        );
+      })()}
 
       {/* Error states */}
       {summary.isError && <ErrorBlock onRetry={() => summary.refetch()} />}

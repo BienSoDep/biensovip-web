@@ -86,7 +86,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result]);
 
-  const el = result ? ELEMENTS[result.element] : null;
+  const el = result ? ELEMENTS[result.element] || { icon: 'sparkles', color: 'var(--action-primary)', desc: '' } : null;
 
   const shareUrl = useMemo(
     () => (result && form.year ? `${location.origin}${location.pathname}#/hop-menh?y=${form.year}` : ''),

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDebouncedValue } from '@mantine/hooks';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail, useUpdateCustomer, useCustomerSessions, useRevokeCustomerSession } from '../../services/adminCustomers.js';
@@ -7,6 +8,8 @@ import { SearchField, Select, Badge, IconButton } from '../../components/index.j
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
 import InternalNotesPanel from '../../components/InternalNotesPanel.jsx';
+import { SkeletonTable, SkeletonText } from '../../components/Skeleton.jsx';
+import { validatePhone } from '../../lib/phone.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 
 const STATUS_OPTS = ['Tất cả', 'Hoạt động', 'Đã khóa', 'Chưa xác thực'];
@@ -16,13 +19,14 @@ const STATUS_COLOR = { active: 'var(--status-success-ink)', locked: 'var(--statu
 
 export default function AdminCustomers({ st, setSt, notify }) {
   const adminQ = (st.adminQ || '').trim();
+  const [debouncedQ] = useDebouncedValue(adminQ, 300);
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
   const [confirmLock, setConfirmLock] = useState(null);
   const [detailId, setDetailId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
-  const { data, isLoading, isError, refetch } = useAdminCustomers({ status, q: adminQ || undefined, page, perPage: 20 });
+  const { data, isLoading, isError, refetch } = useAdminCustomers({ status, q: debouncedQ || undefined, page, perPage: 20 });
   const updateStatus = useUpdateCustomerStatus();
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/customers');
 
@@ -77,7 +81,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
           <span style={{ flex: '0 0 88px' }}>Hành động</span>
         </div>
 
-        {isLoading && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', color: 'var(--text-muted)' }}>Đang tải...</div>}
+        {isLoading && <div style={{ padding: 'var(--gutter-card)' }}><SkeletonTable rows={6} cols={5} /></div>}
 
         {isError && (
           <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', alignItems: 'center' }}>
@@ -174,7 +178,7 @@ function DrawerSection({ title, count, children }) {
 }
 
 function CustomerDetailDrawer({ id, onClose, notify }) {
-  const { data, isLoading, isError } = useAdminCustomerDetail(id);
+  const { data, isLoading, isError, refetch } = useAdminCustomerDetail(id);
   const updateCustomer = useUpdateCustomer();
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ fullName: '', email: '', phone: '' });
@@ -187,6 +191,9 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
   };
 
   const saveEdit = () => {
+    if (!editForm.fullName.trim()) return notify?.('Vui lòng nhập họ tên');
+    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) return notify?.('Email không hợp lệ');
+    if (editForm.phone && !validatePhone(editForm.phone)) return notify?.('Số điện thoại không hợp lệ');
     updateCustomer.mutate({ id, ...editForm }, {
       onSuccess: () => { notify?.('Đã cập nhật thông tin khách hàng'); setEditing(false); },
       onError: (e) => notify?.(e.message || 'Lỗi cập nhật'),
@@ -206,8 +213,13 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          {isLoading && <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '48px 0' }}>Đang tải...</div>}
-          {isError && <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '48px 0' }}>Lỗi tải dữ liệu.</div>}
+          {isLoading && <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}><SkeletonText height={80} /><SkeletonText height={120} /><SkeletonText height={80} /></div>}
+          {isError && (
+            <div style={{ textAlign: 'center', padding: '48px 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', alignItems: 'center' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Lỗi tải dữ liệu.</span>
+              <Button variant="ghost" size="sm" onClick={() => refetch()}>Thử lại</Button>
+            </div>
+          )}
 
           {data && (
             <>
@@ -264,7 +276,7 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{s.ipAddress || '—'} · Hoạt động gần nhất {fmtDateTime(s.lastActiveAt)}</span>
                     </div>
                     <Button variant="ghost" size="sm" disabled={revokeSession.isPending}
-                      onClick={() => revokeSession.mutate({ id, sessionId: s.id }, { onSuccess: () => notify?.('Đã đăng xuất phiên này') })}>
+                      onClick={() => { if (window.confirm('Đăng xuất khách khỏi phiên này?')) revokeSession.mutate({ id, sessionId: s.id }, { onSuccess: () => notify?.('Đã đăng xuất phiên này') }); }}>
                       Đăng xuất
                     </Button>
                   </div>

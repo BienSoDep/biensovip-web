@@ -8,6 +8,8 @@ import RichTextEditor from '../../components/RichTextEditor.jsx';
 import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail, useNotificationRecipientCount } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
 import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
+import { SkeletonTable } from '../../components/Skeleton.jsx';
+import { canPerm } from '../../layout/AdminShell.jsx';
 import { useAdminEmailTemplates, useUpdateEmailTemplate } from '../../services/emailTemplates.js';
 import { formatDate } from '../../lib/date.js';
 
@@ -108,8 +110,9 @@ function UserPicker({ selected, onChange }) {
   );
 }
 
-export default function AdminNotifications({ notify }) {
-  const { data, isLoading, isError, refetch } = useAdminBroadcasts();
+export default function AdminNotifications({ notify, st }) {
+  const [sentPage, setSentPage] = useState(1);
+  const { data, isLoading, isError, refetch } = useAdminBroadcasts({ page: sentPage, perPage: 20 });
   const sendBroadcast = useSendBroadcast();
   const allUsers = useAdminCustomers({ page: 1, perPage: 1 });
   const subCount = useSubscriberActiveCount();
@@ -132,9 +135,10 @@ export default function AdminNotifications({ notify }) {
   else if (target === 'subscribed') recipientEstimate = subEstimate.data?.count;
 
   const items = data?.items || [];
+  const canSubscribers = !st || canPerm(st, 'subscribers:view');
   const TABS = [
     { key: 'send', label: 'Gửi thông báo', desc: 'Soạn & gửi tới user hoặc email đăng ký' },
-    { key: 'subscribers', label: 'Email đăng ký', desc: 'Danh sách nhận tin & lịch sử gửi' },
+    ...(canSubscribers ? [{ key: 'subscribers', label: 'Email đăng ký', desc: 'Danh sách nhận tin & lịch sử gửi' }] : []),
     { key: 'automation', label: 'Tự động hóa', desc: 'Kênh, nội dung & lịch cho email tự động' },
   ];
 
@@ -203,7 +207,7 @@ export default function AdminNotifications({ notify }) {
                 </span>
               )}
               {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
-              <Button variant="primary" size="lg" fullWidth onClick={send} disabled={sending || recipientEstimate === 0}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
+              <Button variant="primary" size="lg" fullWidth onClick={send} disabled={sending || recipientEstimate == null || recipientEstimate === 0}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
             </div>
           </div>
 
@@ -217,7 +221,7 @@ export default function AdminNotifications({ notify }) {
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
             <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đã gửi ({items.length})</span></div>
             {isLoading ? (
-              <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
+              <div style={{ padding: 'var(--gutter-card)' }}><SkeletonTable rows={4} cols={1} /></div>
             ) : isError ? (
               <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 <span>Lỗi tải dữ liệu</span>
@@ -236,6 +240,13 @@ export default function AdminNotifications({ notify }) {
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{n.recipientCount} người nhận · {n.sentEmailCount} email · {n.sentZaloCount} zalo</span>
                 </div>
               ))
+            )}
+            {!isLoading && !isError && data?.total > 20 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)' }}>
+                <button type="button" disabled={sentPage <= 1} onClick={() => setSentPage((p) => Math.max(1, p - 1))} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage <= 1 ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage <= 1 ? 'default' : 'pointer' }}>‹ Trước</button>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Trang {sentPage} / {Math.max(1, Math.ceil(data.total / 20))}</span>
+                <button type="button" disabled={sentPage >= Math.ceil(data.total / 20)} onClick={() => setSentPage((p) => p + 1)} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage >= Math.ceil(data.total / 20) ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage >= Math.ceil(data.total / 20) ? 'default' : 'pointer' }}>Sau ›</button>
+              </div>
             )}
           </div>
           </div>
@@ -368,8 +379,9 @@ function TypeSettingsSection({ notify }) {
   useEffect(() => {
     const onMove = (e) => {
       if (!dragging.current || !containerRef.current) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const rect = containerRef.current.getBoundingClientRect();
-      const pct = Math.min(75, Math.max(25, ((e.clientX - rect.left) / rect.width) * 100));
+      const pct = Math.min(75, Math.max(25, ((clientX - rect.left) / rect.width) * 100));
       setLeftPct(pct);
     };
     const onUp = () => {
@@ -381,7 +393,12 @@ function TypeSettingsSection({ notify }) {
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('touchmove', onMove);
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leftPct]);
 
@@ -437,10 +454,11 @@ function TypeSettingsSection({ notify }) {
         <>
           <div
             onMouseDown={onDividerDown}
+            onTouchStart={onDividerDown}
             role="separator"
             aria-orientation="vertical"
             title="Kéo để đổi tỉ lệ"
-            style={{ flex: '0 0 auto', width: 12, alignSelf: 'stretch', cursor: 'col-resize', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ flex: '0 0 auto', width: 24, alignSelf: 'stretch', cursor: 'col-resize', touchAction: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <div style={{ width: 4, height: 40, borderRadius: 'var(--radius-pill)', background: 'var(--border-hairline)' }} />
           </div>

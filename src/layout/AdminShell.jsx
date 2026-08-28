@@ -37,7 +37,7 @@ const NAV_PERM = {
   areviews: 'reviews:view', acollabs: 'collaborators:view', aemailtpl: 'email_templates:view',
   achatbot: 'chatbot:view',
 };
-const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
+export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
 const BADGE_NAV = { acontacts: 'newContacts', areviews: 'newReviews', acollabs: 'newCollaborators' };
@@ -210,7 +210,7 @@ export default function AdminShell({
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
         {s === 'acustomers' && <AdminCustomers st={st} setSt={setSt} notify={notify} />}
         {s === 'avideos' && <AdminVideos notify={notify} />}
-        {s === 'anotifications' && <AdminNotifications notify={notify} />}
+        {s === 'anotifications' && <AdminNotifications notify={notify} st={st} />}
         {s === 'aemailtpl' && <EmailBuilder notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}

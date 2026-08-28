@@ -67,7 +67,7 @@ export default function About({ go }) {
             </div>
           ))}
         </div>
-        <button type="button" className="about-timeline-toggle pressable" onClick={() => setTimelineOpen((v) => !v)} style={{ display: 'none', border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', height: 36, padding: '0 16px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer', alignSelf: 'flex-start' }}>{timelineOpen ? T('about.timeline.toggle_close') : T('about.timeline.toggle_open')}</button>
+        <button type="button" className="about-timeline-toggle pressable" aria-expanded={timelineOpen} onClick={() => setTimelineOpen((v) => !v)} style={{ display: 'none', border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', height: 36, padding: '0 16px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer', alignSelf: 'flex-start' }}>{timelineOpen ? T('about.timeline.toggle_close') : T('about.timeline.toggle_open')}</button>
       </div>
 
       {/* Values */}

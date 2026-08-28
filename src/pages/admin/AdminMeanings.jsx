@@ -121,7 +121,7 @@ function TemplatesTab({ notify }) {
               <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginTop: 8 }}>{catLabel(t.category)} · <code>{t.key}</code> · thứ tự {t.sortOrder}</div>
             </span>
             <span style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--space-2)' }}>
-              <Switch checked={t.active} onChange={() => updateMut.mutate({ id: t.id, body: { active: !t.active } }, { onError: (e) => notify(e.message || 'Lỗi cập nhật.') })} label="Kích hoạt" />
+              <Switch checked={t.active} disabled={updateMut.isPending} onChange={() => updateMut.mutate({ id: t.id, body: { active: !t.active } }, { onError: (e) => notify(e.message || 'Lỗi cập nhật.') })} label="Kích hoạt" />
               <span style={{ display: 'flex', gap: 'var(--space-2)' }}>
                 <IconButton name="pencil" label="Sửa mẫu" size="sm" onClick={() => openEdit(t)} />
                 <IconButton name="trash-2" label="Xóa mẫu" size="sm" onClick={() => setConfirmDelete(t)} />
@@ -211,7 +211,7 @@ function PlatesTab({ notify }) {
   useEffect(() => {
     if (!plate) return;
     if (!plates.length || !plates.some((p) => p.id === plate.id)) {
-      if (plateKeyword.trim() && !plateLoading) setPlate(null);
+      if (plateKeyword.trim() && !plateLoading) { setPlate(null); notify?.('Biển đang chọn không còn khớp tìm kiếm, đã bỏ chọn.'); }
     }
   }, [plates, plateKeyword, plateLoading, plate]);
 
@@ -353,7 +353,7 @@ function PlatesTab({ notify }) {
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="md" onClick={() => setConfirmReseed(false)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={doReseed} disabled={reseedPreview === null}>Sinh lại</Button>
+              <Button variant="primary" size="md" onClick={doReseed} disabled={reseedPreview === null || reseedMut.isPending}>{reseedMut.isPending ? 'Đang sinh…' : 'Sinh lại'}</Button>
             </div>
           </div>
         </Modal>

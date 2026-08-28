@@ -109,7 +109,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
 
   const submitContact = useSubmitContact();
   const [contactOpen, setContactOpen] = useState(false);
-  const [cForm, setCForm] = useState({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', subscribe: false, honeypot: '' });
+  const [cForm, setCForm] = useState({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' });
   const [cErr, setCErr] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -175,10 +175,11 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
       email: cForm.email?.trim() || null, plateId: plate.id, plateNumber: plate.plateNumber,
       note: cForm.note?.trim() || '', source: 'plate-detail', intent: cForm.intent,
-      depositAmount: null, subscribeToNotifications: !!cForm.subscribe,
+      depositAmount: cForm.intent === 'deposit_request' && cForm.depositAmount ? Number(cForm.depositAmount) : null,
+      subscribeToNotifications: !!cForm.subscribe,
       honeypot: cForm.honeypot || null,
     }, {
-      onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setContactOpen(false); handleContact('contact'); setCForm({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', subscribe: false, honeypot: '' }); },
+      onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setContactOpen(false); handleContact('contact'); setCForm({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' }); },
       onError: () => setCErr('Gửi thất bại, vui lòng thử lại.'),
     });
   };
@@ -243,7 +244,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 160px' }}>Chốt biển này</Button>
             )}
             {plate.seller?.phone && (
-              <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 120px' }}>Gọi ngay</LinkButton>
+              <LinkButton href={`tel:${plate.seller.phone}`} variant="outline" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 120px' }}>Gọi ngay</LinkButton>
             )}
             {plate.seller?.zalo && (
               <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { logZaloClick(plate.id, 'plate_detail'); handleContact('contact'); }} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
@@ -409,6 +410,11 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           <div>
             <Select label="Mục đích" value={cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={INTENT_OPTS.map((o) => ({ value: INTENT_VAL[o], label: o }))} />
           </div>
+          {cForm.intent === 'deposit_request' && (
+            <div>
+              <Input label="Số tiền muốn đặt cọc (đ, tùy chọn)" type="number" min="0" value={cForm.depositAmount} onChange={setCF('depositAmount')} placeholder="Ví dụ: 5000000" />
+            </div>
+          )}
           <div>
             <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
           </div>
