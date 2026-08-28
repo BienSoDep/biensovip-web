@@ -180,7 +180,7 @@ export default function App() {
   usePathRouter(st, patch);
 
   // Scroll to top whenever the page changes (route, plate, or post).
-  useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.curId, st.postId]);
+  useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.curId, st.postId, st.provinceCode, st.typeSlug]);
 
   const notify = (msg) => toast(msg);
   const heroAnim = makeHeroAnim(fanDone);

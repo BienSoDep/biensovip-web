@@ -113,12 +113,9 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             {favCount > 0 && (<span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{favCount}</span>)}
           </div>
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 12px 4px 4px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)' }}>
-              <button type="button" onClick={go('profile')} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
-                <Avatar name={typeof user === 'string' ? user : (user.identifier || user.email || 'U')} size="sm" />
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')}</span>
-              </button>
-            </div>
+            <button type="button" onClick={go('profile')} aria-label={typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')} title={typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')} style={{ display: 'flex', alignItems: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
+              <Avatar name={typeof user === 'string' ? user : (user.identifier || user.email || 'U')} size="sm" />
+            </button>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="sm" onClick={go('login')}>{T('common.auth.login')}</Button>

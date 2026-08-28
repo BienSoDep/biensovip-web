@@ -39,7 +39,7 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
           {title || 'Kho Biển Số Đẹp'}
         </h1>
         {intro && (
-          <div style={{ font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }} dangerouslySetInnerHTML={{ __html: intro }} />
+          <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }} dangerouslySetInnerHTML={{ __html: intro }} />
         )}
       </section>
 

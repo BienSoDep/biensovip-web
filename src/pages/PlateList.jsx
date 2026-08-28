@@ -70,8 +70,11 @@ function writeFiltersToUrl(filters) {
   if (next !== window.location.pathname + window.location.search) history.replaceState(null, '', next);
 }
 
+const PROVINCE_VISIBLE_COUNT = 10;
+
 export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice, contact }) {
   const [filters, setFilters] = useState(readFiltersFromUrl);
+  const [provinceExpanded, setProvinceExpanded] = useState(false);
   useEffect(() => { writeFiltersToUrl(filters); }, [filters]);
 
   const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch, page: patch.page ?? 1 }));
@@ -85,8 +88,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   // filter tỉnh/loại xe đang active, để mỗi tổ hợp URL có tiêu đề riêng thay vì dùng chung 1 title.
   useEffect(() => {
     if (!provinces || !vehicleTypes) return;
-    const cityNames = filters.city.map((id) => provinces.find((c) => c.id === id)?.name).filter(Boolean);
-    const vehicleName = vehicleTypes.find((v) => v.id === filters.vehicle)?.name;
+    const cityNames = filters.city.map((id) => provinces.items?.find((c) => c.id === id)?.name).filter(Boolean);
+    const vehicleName = vehicleTypes.items?.find((v) => v.id === filters.vehicle)?.name;
     if (!cityNames.length && !vehicleName) return;
     const parts = [vehicleName, cityNames.join(', ')].filter(Boolean);
     const label = parts.join(' tại ');
@@ -220,12 +223,18 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tỉnh / thành</span>
-                  {(provinces?.items || []).map((c) => (
+                  {(provinceExpanded ? (provinces?.items || []) : (provinces?.items || []).slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                       <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
                     </div>
                   ))}
+                  {(provinces?.items?.length || 0) > PROVINCE_VISIBLE_COUNT && (
+                    <button type="button" onClick={() => setProvinceExpanded((v) => !v)}
+                      style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>
+                      {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinces.items.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
+                    </button>
+                  )}
                 </div>
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -286,12 +295,18 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tỉnh / thành</span>
-            {(provinces?.items || []).map((c) => (
+            {(provinceExpanded ? (provinces?.items || []) : (provinces?.items || []).slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
               </div>
             ))}
+            {(provinces?.items?.length || 0) > PROVINCE_VISIBLE_COUNT && (
+              <button type="button" onClick={() => setProvinceExpanded((v) => !v)}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>
+                {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinces.items.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
+              </button>
+            )}
           </div>
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
