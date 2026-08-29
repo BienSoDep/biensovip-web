@@ -34,6 +34,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [confirm, setConfirm] = useState(null); // { id, to }
   const [detailCollab, setDetailCollab] = useState(null);
+  const [rateDraft, setRateDraft] = useState({}); // { [id]: string (%) }
 
   const applyStatus = (id, v) => {
     setUpdatingId(id);
@@ -41,6 +42,21 @@ export default function AdminCollaborators({ st, patch, notify }) {
       onSuccess: () => notify('Đã cập nhật trạng thái CTV'),
       onError: () => notify('Cập nhật trạng thái thất bại'),
       onSettled: () => { setUpdatingId(null); setConfirm(null); },
+    });
+  };
+
+  const applyRate = (c) => {
+    const raw = rateDraft[c.id];
+    const pct = Number(raw);
+    if (raw === undefined || raw === '' || Number.isNaN(pct) || pct < 0 || pct > 100) {
+      notify('Hệ số hoa hồng phải là số từ 0-100');
+      return;
+    }
+    setUpdatingId(c.id);
+    updateStatus.mutate({ id: c.id, status: c.status, commissionRate: pct / 100 }, {
+      onSuccess: () => notify('Đã cập nhật hệ số hoa hồng'),
+      onError: () => notify('Cập nhật hệ số thất bại'),
+      onSettled: () => setUpdatingId(null),
     });
   };
 
@@ -80,7 +96,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 620 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-          <span style={{ flex: '1 1 120px' }}>Tên</span><span style={{ flex: '1 1 110px' }}>Điện thoại</span><span style={{ flex: '1 1 120px' }}>Mã giới thiệu</span><span style={{ flex: '1 1 96px' }}>Hoa hồng</span><span style={{ flex: '1 1 120px' }}>Trạng thái</span><span style={{ flex: '0 0 120px' }}>Chi trả</span>
+          <span style={{ flex: '1 1 120px' }}>Tên</span><span style={{ flex: '1 1 110px' }}>Điện thoại</span><span style={{ flex: '1 1 120px' }}>Mã giới thiệu</span><span style={{ flex: '1 1 96px' }}>Hoa hồng</span><span style={{ flex: '1 1 140px' }}>Hệ số %</span><span style={{ flex: '1 1 120px' }}>Trạng thái</span><span style={{ flex: '0 0 120px' }}>Chi trả</span>
         </div>
         {list.map((c) => (
           <div key={c.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
@@ -88,6 +104,20 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <span style={{ flex: '1 1 110px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{c.phone}</span>
             <span style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-body)' }}>{c.referralCode}</span>
             <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{money(c.commissionEarned)}</span>
+            <span style={{ flex: '1 1 140px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input
+                type="number" min="0" max="100" step="0.5"
+                placeholder={c.commissionRate != null ? String(c.commissionRate * 100) : '5 (mặc định)'}
+                value={rateDraft[c.id] ?? (c.commissionRate != null ? String(c.commissionRate * 100) : '')}
+                onChange={(e) => setRateDraft((d) => ({ ...d, [c.id]: e.target.value }))}
+                style={{ width: 64, padding: '4px 6px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-caption)' }}
+              />
+              <button type="button" onClick={() => applyRate(c)} disabled={updatingId === c.id}
+                title="Lưu hệ số hoa hồng riêng CTV này"
+                style={{ border: 'none', borderRadius: 'var(--radius-pill)', padding: '4px 10px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', background: 'var(--surface-tint-cream)', color: 'var(--action-primary)' }}>
+                Lưu
+              </button>
+            </span>
             <span style={{ flex: '1 1 120px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ pointerEvents: updatingId === c.id ? 'none' : undefined, opacity: updatingId === c.id ? 0.6 : 1, display: 'inline-block' }}>

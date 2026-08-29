@@ -382,7 +382,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             </div>
           </div>
           {showSkeleton ? (
-            <div style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            <div className="plate-grid" style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
               {Array.from({ length: items.length || 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
             </div>
           ) : showError ? (
@@ -393,7 +393,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           ) : items.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{total} biển số</span>
-              <div style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+              <div className="plate-grid" style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
                 {items.map((p, i) => <PlateCard key={p.id} {...cardProps(p)} plateSize={filters.view === 'list' ? 'listLg' : 'md'} style={stagger(i)} />)}
               </div>
             </div>

@@ -68,7 +68,7 @@ export default function App() {
     cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
     favs: {}, curId: initRoute.detailId || 'p1', typeSlug: initRoute.typeSlug || 'tu-quy', provinceCode: initRoute.provinceCode || '43',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mDeposit: '', mErr: {},
-    aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aErr: {}, step: 1, redirectTo: null, user: loadAuth()?.user || null,
+    aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aReferral: '', aErr: {}, step: 1, redirectTo: null, user: loadAuth()?.user || null,
     plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
     cats: CATS.map((c) => ({ name: c })), newCat: '', catErr: '',
     adminQ: '', admCat: 'Tất cả', admStatus: 'Tất cả',
@@ -228,6 +228,18 @@ export default function App() {
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
   const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {} });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
+  // UC25 — nhặt mã giới thiệu từ ?ref= (backdrop: /r/{code} redirect kèm query) rồi xoá khỏi URL,
+  // để pre-fill field đăng ký + giữ qua mọi điều hướng SPA (cookie ref_code HttpOnly, JS không đọc được).
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref && ref.trim()) {
+      patch({ aReferral: ref.trim() });
+      // UC25 — user đang đăng nhập bấm link giới thiệu → tự gắn CTV (first-link-wins), bỏ qua nếu lỗi.
+      if (st.user) authApi.linkReferral(ref.trim()).catch(() => {});
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Liên hệ shop cho card biển số: ưu tiên settings từ backend, fallback số mặc định (info.json).
   const contact = {
     phone: (st.settings?.phone || '0815792699').replace(/[^0-9]/g, ''),
@@ -357,7 +369,7 @@ export default function App() {
       if (Object.keys(err).length) { patch({ aErr: err }); return; }
       try {
         const identifier = (isPhone ? st.aPhone : st.aEmail).trim();
-        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier, password: st.aPw, fullName: st.aName.trim() });
+        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier, password: st.aPw, fullName: st.aName.trim(), referralCode: st.aReferral?.trim() || undefined });
         if (!isPhone) rememberEmail(identifier);
         // Đăng ký xong tự đăng nhập luôn → chuyển thẳng vào Profile để mời điền ngày sinh
         // (cần cho tính năng hợp mệnh) — Profile có nút bỏ qua nếu login tự động lỡ thất bại.
@@ -705,7 +717,7 @@ export default function App() {
           </Suspense>
 
           {isPublic && st.settings?.zalo && !import.meta.env.VITE_FB_PAGE_ID && (
-            <a href={`https://zalo.me/${st.settings.zalo.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo" title="Chat qua Zalo" style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 80, width: 48, height: 48, borderRadius: '50%', background: '#0068FF', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', transition: 'var(--transition-control)', cursor: 'pointer' }}>
+            <a href={`https://zalo.me/${st.settings.zalo.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo" title="Chat qua Zalo" className="zalo-fab" style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 80, width: 48, height: 48, borderRadius: '50%', background: '#0068FF', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', transition: 'var(--transition-control)', cursor: 'pointer' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.02 2 10.98c0 2.94 1.69 5.52 4.23 6.94l-1.06 3.18a.5.5 0 0 0 .66.63l3.55-1.38c.82.23 1.68.35 2.62.35 5.52 0 10-4.02 10-8.98S17.52 2 12 2Z" fill="#fff" fillOpacity=".12" stroke="#fff" strokeWidth="1.5"/><path d="M8.5 9.5h.01M12 9.5h.01M15.5 9.5h.01" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><path d="M8.5 13.5s1.5 2 3.5 2 3.5-2 3.5-2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
             </a>
           )}

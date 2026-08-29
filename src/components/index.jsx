@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2, ChevronDown,
-  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History, Info } from 'lucide-react';
+  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History, Info, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { Select as BaseSelect } from '@base-ui/react/select';
 import Button from './Button.jsx';
 import { apiClient } from '../services/apiClient.js';
@@ -76,27 +76,37 @@ export function ImageUrlInput({ label, value, onChange, placeholder, hint }) {
 export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint, disabled, required, min }) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   const errId = error && inputId ? inputId + '-err' : undefined;
+  const isPassword = type === 'password';
+  const [reveal, setReveal] = useState(false);
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
-      <input
-        id={inputId}
-        type={type}
-        placeholder={placeholder}
-        value={value ?? ''}
-        onChange={onChange}
-        disabled={disabled}
-        required={required}
-        min={min}
-        aria-invalid={error ? 'true' : undefined}
-        aria-describedby={errId}
-        style={{
-          height: 40, border: 'none', borderRadius: 'var(--radius-field)',
-          background: 'var(--surface-sunken)', boxShadow: error ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
-          padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none',
-          opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'text',
-        }}
-      />
+      <span style={{ position: 'relative', display: 'flex' }}>
+        <input
+          id={inputId}
+          type={isPassword && reveal ? 'text' : type}
+          placeholder={placeholder}
+          value={value ?? ''}
+          onChange={onChange}
+          disabled={disabled}
+          required={required}
+          min={min}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={errId}
+          style={{
+            height: 40, width: '100%', border: 'none', borderRadius: 'var(--radius-field)',
+            background: 'var(--surface-sunken)', boxShadow: error ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
+            padding: isPassword ? '0 40px 0 14px' : '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none',
+            opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'text',
+          }}
+        />
+        {isPassword && (
+          <button type="button" onClick={(e) => { e.preventDefault(); setReveal((r) => !r); }} aria-label={reveal ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} tabIndex={-1}
+            style={{ position: 'absolute', right: 10, top: 0, height: 40, display: 'flex', alignItems: 'center', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+            {reveal ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+      </span>
       {error ? <span id={errId} role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{error}</span>
         : hint ? <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{hint}</span> : null}
     </label>
@@ -231,7 +241,7 @@ export function Eyebrow({ tone = 'blue', children, className }) {
 
 const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check, 'plus-circle': PlusCircle, 'check-circle': CheckCircle2,
   flame: Flame, droplets: Droplets, mountain: Mountain, wind: Wind, zap: Zap,
-  sparkles: Sparkles, copy: Copy, download: Download, share: Share2, history: History };
+  sparkles: Sparkles, copy: Copy, download: Download, share: Share2, history: History, key: KeyRound };
 
 export function Icon({ name, size = 18 }) {
   const I = ICONS[name];

@@ -48,14 +48,14 @@ export default function Footer({ settings }) {
         <nav aria-label="Kho biển theo loại" style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={navStyle}>Kho biển theo loại</span>
           {PLATE_TYPE_LANDINGS.map((p) => (
-            <a key={p.slug} href={'/' + p.slug} style={linkStyle}>Biển {p.name}</a>
+            <a key={p.slug} href={routeFor('post', p.slug)} style={linkStyle}>Biển {p.name}</a>
           ))}
         </nav>
 
         <nav aria-label="Kho biển theo tỉnh" style={{ flex: '1 1 170px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={navStyle}>Kho biển theo tỉnh</span>
           {PROVINCE_LANDINGS.slice(0, 10).map((p) => (
-            <a key={p.slug} href={'/' + p.slug} style={linkStyle}>Biển {p.name || p.code}</a>
+            <a key={p.slug} href={routeFor('post', p.slug)} style={linkStyle}>Biển {p.name || p.code}</a>
           ))}
           <a href={routeFor('list')} style={{ ...linkStyle, fontWeight: 'var(--fw-semibold)' }}>Xem tất cả tỉnh →</a>
         </nav>

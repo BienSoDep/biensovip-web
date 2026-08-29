@@ -18,6 +18,8 @@ import ConfirmBulkModal from '../../components/ConfirmBulkModal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import Skeleton from '../../components/Skeleton.jsx';
 import { formatDate } from '../../lib/date.js';
+import { analyzePlateNumber } from '../../lib/compareInsights.js';
+import { NUT_MEANING } from '../../lib/fengshui.js';
 
 // Parse "43A1-999.99" → { prov, seri, num }
 function parsePlateNumber(raw) {
@@ -31,6 +33,48 @@ function parsePlateNumber(raw) {
   const seri = left.slice(prov.length);
   return { prov, seri, num };
 }
+
+// --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
+// options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
+const OTO_LETTERS = 'ABCDFHMNPTV';
+function allSame(series, k) { return !!series && series.length >= k && new Set(series.slice(-k)).size === 1; }
+function detectPlateTypeId(serial, plateTypes) {
+  const byName = (n) => (plateTypes.find((o) => (o.label || '').toLowerCase().includes(n)) || {}).value || '';
+  if (!serial) return '';
+  if (allSame(serial, 5)) return byName('ngũ quý');
+  if (allSame(serial, 4)) return byName('tứ quý');
+  if (allSame(serial, 3)) return byName('tam hoa');
+  const last2 = serial.slice(-2);
+  if (last2 === '68' || last2 === '86') return byName('lộc phát');
+  if (last2 === '39' || last2 === '79') return byName('thần tài');
+  for (let i = 0; i + 2 < serial.length; i++) {
+    const a = +serial[i], b = +serial[i + 1], c = +serial[i + 2];
+    if (a && a + 1 === b && b + 1 === c) return byName('sảnh tiến');
+  }
+  return '';
+}
+function detectVehicleTypeId(seri, vehicleTypes) {
+  const first = (seri || '').trim().charAt(0).toUpperCase();
+  const isOto = !first || OTO_LETTERS.indexOf(first) >= 0;
+  const key = isOto ? 'ô tô' : 'xe máy';
+  return (vehicleTypes.find((o) => (o.label || '').toLowerCase().includes(key)) || {}).value || '';
+}
+function composeFengShuiMeaning(fullPlate) {
+  const { patterns } = analyzePlateNumber(fullPlate);
+  const serial = parsePlateNumber(fullPlate).num.replace(/\D/g, '');
+  const parts = [];
+  if (patterns.length) parts.push(patterns.join(', ') + '.');
+  const digitMeans = serial.split('').map((d) => NUT_MEANING[d]).filter(Boolean);
+  if (digitMeans.length) parts.push(`Từng số: ${digitMeans.join(' - ')}.`);
+  return parts.join(' ');
+}
+
+const CAND_FIELDS = [
+  { key: 'provinceId', label: 'Tỉnh/thành' },
+  { key: 'plateTypeId', label: 'Loại biển' },
+  { key: 'vehicleTypeId', label: 'Loại xe' },
+  { key: 'fengShuiMeaning', label: 'Ý nghĩa phong thủy' },
+];
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tất cả' },
@@ -679,6 +723,46 @@ function PlateFormModal({
     }
   };
 
+  // Auto-fill: candidates sinh từ biển số; mỗi field có toggle thêm/xóa riêng + "Thêm tất cả".
+  const [candidates, setCandidates] = useState(null);
+  const [candOn, setCandOn] = useState({});
+  const generateCandidates = () => {
+    const raw = (form.plateNumber || '').trim();
+    const { prov, seri, num } = parsePlateNumber(raw);
+    const serial = num.replace(/\D/g, '');
+    const provinceId = (provinces.find((o) => (o.code || '').trim() === (prov || '').trim()) || {}).value || '';
+    const cand = {
+      provinceId,
+      plateTypeId: detectPlateTypeId(serial, plateTypes),
+      vehicleTypeId: detectVehicleTypeId(seri, vehicleTypes),
+      fengShuiMeaning: composeFengShuiMeaning(raw),
+    };
+    setCandidates(cand);
+    const on = {};
+    CAND_FIELDS.forEach((f) => { on[f.key] = !!cand[f.key]; });
+    setCandOn(on);
+  };
+  const toggleCandidate = (key) => {
+    const next = !candOn[key];
+    setCandOn((prev) => ({ ...prev, [key]: next }));
+    setF(key)(next ? candidates[key] : '');
+  };
+  const applyAll = () => {
+    const on = {};
+    CAND_FIELDS.forEach((f) => {
+      const v = candidates?.[f.key];
+      if (v) { on[f.key] = true; setF(f.key)(v); } else { on[f.key] = false; }
+    });
+    setCandOn(on);
+  };
+  const candRows = candidates ? CAND_FIELDS.filter((f) => candidates[f.key]) : [];
+  // Hiển thị tên thật (label) thay vì id category cho các field trong panel gợi ý.
+  const candidateLabel = (key, value) => {
+    const map = { provinceId: provinces, plateTypeId: plateTypes, vehicleTypeId: vehicleTypes }[key];
+    if (map) return (map.find((o) => o.value === value) || {}).label || value;
+    return value;
+  };
+
   const moveImage = (i, dir) => {
     const arr = [...(form.images || [])];
     const j = i + dir;
@@ -707,15 +791,34 @@ function PlateFormModal({
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số</span>
-          <input
-            type="text" placeholder="43A1-999.99" value={form.plateNumber ?? ''}
-            onChange={(e) => onPlateNumberChange(e.target.value)}
-            style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
-              boxShadow: formErr.plateNumber ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
-              padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
-          />
+          <span style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+            <input
+              type="text" placeholder="43A1-999.99" value={form.plateNumber ?? ''}
+              onChange={(e) => onPlateNumberChange(e.target.value)}
+              style={{ height: 40, flex: '1 1 auto', border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
+                boxShadow: formErr.plateNumber ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
+                padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
+            />
+            <Button variant="outline" size="sm" onClick={generateCandidates} disabled={!(form.plateNumber || '').trim()} style={{ whiteSpace: 'nowrap' }}>Tự động điền</Button>
+          </span>
           {formErr.plateNumber && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.plateNumber}</span>}
         </label>
+
+        {candRows.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Gợi ý từ biển số</span>
+              <Button variant="primary" size="sm" onClick={applyAll} style={{ whiteSpace: 'nowrap' }}>Thêm tất cả</Button>
+            </div>
+            {candRows.map(({ key, label }) => (
+              <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={!!candOn[key]} onChange={() => toggleCandidate(key)} style={{ width: 16, height: 16, accentColor: 'var(--action-primary)' }} />
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)', flex: '0 0 140px' }}>{label}</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', flex: '1 1 auto', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{candidateLabel(key, candidates[key])}</span>
+              </label>
+            ))}
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
           <Select label="Loại biển" value={form.plateTypeId} options={plateTypes} onChange={setF('plateTypeId')} style={{ flex: '1 1 140px' }} />

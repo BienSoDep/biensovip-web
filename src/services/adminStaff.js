@@ -24,6 +24,14 @@ export function useUpdateStaff() {
   });
 }
 
+export function useResetStaffPassword() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, newPassword }) => apiClient.patch(`/api/admin/staff/${id}/password`, { newPassword }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-staff'] }),
+  });
+}
+
 export function useDeleteStaff() {
   const qc = useQueryClient();
   return useMutation({

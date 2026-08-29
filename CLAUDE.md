@@ -8,11 +8,11 @@ Frontend cho Biensovip.com — nền tảng mua bán biển số xe đẹp.
 |-------|-----------|
 | Runtime | React 19, Vite 8 |
 | Language | JavaScript (JSX) — NO TypeScript |
-| Routing | Hash-based custom router (`useHashRouter`) |
+| Routing | Custom path router (`usePathRouter` — dựa trên `window.location.pathname`) |
 | UI | `@base-ui/react`, custom CSS tokens |
 | Animation | `framer-motion` |
 | Icons | `lucide-react` |
-| Editor | `@tiptap/react` (rich text) |
+| Editor | `@tiptap/react` (rich text, blog compose) |
 | Charts | `recharts` (admin dashboard) |
 | Toast | `react-hot-toast` |
 | Hooks | `@mantine/hooks` |
@@ -31,154 +31,107 @@ biensovip-web/
 ├── index.html
 └── src/
     ├── main.jsx                    # Entry — StrictMode
-    ├── App.jsx                     # Root component — all state + routing
+    ├── App.jsx                     # Root — state + routing + data orchestration
     ├── animations/
     │   └── heroAnim.js             # Hero section animations
     ├── assets/                     # Static images
     ├── common/
     │   └── constants.js            # PER_PAGE, shared constants
     ├── components/
-    │   ├── index.jsx               # Re-export barrel
+    │   ├── index.jsx               # Barrel: Input, Select, Button, Badge, Icon*, Card, InfoTip, ImageUrlInput…
+    │   ├── Modal.jsx / Drawer.jsx  # Overlay + body scroll-lock (bù scrollbar để không nhích layout)
+    │   ├── ConfirmModal.jsx        # Xác nhận thao tác (xoá, bulk…)
+    │   ├── GlobalSearch.jsx        # Tìm kiếm toàn site
+    │   ├── LandingBody.jsx         # Nội dung landing tỉnh/loại biển + khối liên kết bài viết blog
+    │   ├── RichTextEditor.jsx      # Tiptap wrapper (blog compose)
+    │   ├── PlateCard.jsx / PlateVisual.jsx
+    │   ├── LazyImage.jsx           # Lazy-load ảnh
+    │   ├── BackToTop.jsx, CompareBar.jsx, PromoRails.jsx, TikTokEmbed.jsx
+    │   ├── InternalNotesPanel.jsx, AuditHistoryButton.jsx, EmailCapture.jsx
+    │   ├── GoogleSignInButton.jsx, TwoFactorSettingsModal.jsx
     │   ├── AiChatbot.jsx           # AI chatbot floating widget
-    │   ├── Breadcrumb.jsx          # Breadcrumb navigation
-    │   ├── Button.jsx              # Reusable button
-    │   ├── ErrorBoundary.jsx       # React error boundary
-    │   ├── LazyImage.jsx           # Lazy-loaded image
-    │   ├── NavBtn.jsx              # Navigation button + darkPill util
-    │   ├── PlateCard.jsx           # Plate card component
-    │   ├── PlateVisual.jsx         # Plate visual display
-    │   ├── RequireAuth.jsx         # Auth guard wrapper
-    │   ├── Skeleton.jsx            # Skeleton barrel
-    │   └── skeletons/
-    │       ├── SkeletonBase.jsx    # Base skeleton primitives
-    │       ├── PlateCardSkeleton.jsx
-    │       ├── PostCardSkeleton.jsx
-    │       ├── DetailSkeleton.jsx
-    │       └── PageSkeleton.jsx    # Route-level skeleton
+    │   ├── RequireAuth.jsx         # Auth guard
+    │   ├── Breadcrumb.jsx, NavBtn.jsx, Button.jsx, ErrorBoundary.jsx, Skeleton.jsx
+    │   └── skeletons/              # Skeleton primitives per pattern
     ├── config/
-    │   └── routes.js               # Route definitions (PUBLIC_SCREENS, ADMIN_SCREENS, parseRoute, routeFor)
-    ├── contexts/                    # .gitkeep — empty, ready for React Context
-    ├── controllers/                 # .gitkeep — empty, ready for business logic
+    │   └── routes.js               # PUBLIC_SCREENS, ADMIN_SCREENS, parseRoute, routeFor, PROVINCE_LANDINGS, PLATE_TYPE_LANDINGS
+    ├── contexts/                   # React Context (nếu cần)
+    ├── controllers/                # Logic phức tạp/không-UI
     ├── hooks/
-    │   ├── useDelayedLoading.js    # Delay spinner to avoid flash
-    │   ├── useHashRouter.js        # Custom hash-based routing
-    │   ├── useSeo.js               # Dynamic document title + meta
-    │   └── useStaggeredReveal.js   # Staggered animation reveal
+    │   ├── usePathRouter.js        # Path-based routing (parse pathname → screen)
+    │   ├── useDelayedLoading.js, useStaggeredReveal.js, useExportCsv.js, useSeo.js
     ├── layout/
     │   ├── AdminShell.jsx          # Admin layout wrapper
-    │   ├── Footer.jsx              # Site footer
-    │   ├── Header.jsx              # Site header + navigation
-    │   ├── MobileDrawer.jsx        # Mobile slide-out menu
-    │   └── Modals.jsx              # Centralized modals (contact, plate edit, confirm delete, etc.)
+    │   ├── Footer.jsx              # Footer — link tỉnh/loại-biển trỏ thẳng `/bai-viet/{slug}`
+    │   ├── Header.jsx, MobileDrawer.jsx, Modals.jsx
     ├── lib/
-    │   ├── authStore.js            # localStorage auth (loadAuth, saveAuth)
-    │   ├── mockData.js             # Mock data: plates, posts, contacts, CATS, etc.
-    │   └── content/
-    │       ├── index.js            # Content loader (contentGet)
-    │       └── vi/                 # Vietnamese content JSON
-    │           ├── about.json
-    │           ├── common.json
-    │           ├── faq.json
-    │           ├── home.json
-    │           ├── plates.json
-    │           ├── posts.json
-    │           ├── privacy.json
-    │           ├── terms.json
-    │           └── transfer.json
+    │   ├── authStore.js            # JWT/auth localStorage
+    │   ├── cloudinary.js           # Upload ảnh → Cloudinary
+    │   ├── plateFormat.js, phone.js, date.js, fengshui.js, compareInsights.js, unsavedGuard.js
+    │   ├── mockData.js             # LEGACY — chỉ còn import trong App.jsx/Modals.jsx (opts). KHÔNG dùng cho dữ liệu chính.
+    │   └── content/vi/*.json       # Nội dung tiếng Việt tĩnh
     ├── pages/
-    │   ├── About.jsx
-    │   ├── Auth.jsx                # Register, Login, Forgot password, Admin login
-    │   ├── Blog.jsx                # Blog listing
-    │   ├── ChatZaloContact.jsx     # Chat widget + Zalo + Contact form
-    │   ├── Collaborator.jsx        # Collaborator registration
-    │   ├── Compare.jsx             # Multi-plate comparison
-    │   ├── Faq.jsx
-    │   ├── Fav.jsx                 # Favorites list
-    │   ├── Home.jsx                # Landing page + hero
-    │   ├── LuckyPlate.jsx          # Fengshui plate finder
-    │   ├── NotFound.jsx            # 404 page
-    │   ├── Notifications.jsx       # User notifications
-    │   ├── PlateDetail.jsx         # Single plate detail
-    │   ├── PlateList.jsx           # Plate listing + search + filter
-    │   ├── Post.jsx                # Single blog post
-    │   ├── Privacy.jsx
-    │   ├── Reviews.jsx             # User reviews
-    │   ├── SavedSearches.jsx       # Saved search alerts
-    │   ├── ServerError.jsx         # 500 error page
-    │   ├── Terms.jsx
-    │   ├── TransferGuide.jsx       # License plate transfer guide
+    │   ├── Auth.jsx                # register/login/forgot/adminLogin + OTP + Google (2 cột info/form)
+    │   ├── Home.jsx, Blog.jsx (phân trang 12/bài), Post.jsx, PlateList.jsx, PlateDetail.jsx
+    │   ├── ProvinceLandingPage.jsx, PlateTypeLandingPage.jsx   # Landing tỉnh/loại biển
+    │   ├── Profile.jsx, VerifyEmail.jsx, GmailCallback.jsx
+    │   ├── LuckyPlate.jsx, Compare.jsx, Fav.jsx, SavedSearches.jsx, Reviews.jsx, Notifications.jsx
+    │   ├── ChatZaloContact.jsx, Collaborator.jsx, TransferGuide.jsx
+    │   ├── About.jsx, Faq.jsx, Terms.jsx, Privacy.jsx
+    │   ├── NotFound.jsx, ServerError.jsx
     │   └── admin/
-    │       ├── AdminCats.jsx       # Category management
-    │       ├── AdminCollaborators.jsx
-    │       ├── AdminContacts.jsx   # Contact requests
-    │       ├── AdminCustomers.jsx  # Customer management
-    │       ├── AdminMeanings.jsx   # Meaning template + per-plate meaning management
-    │       ├── AdminNotifications.jsx
-    │       ├── AdminPlates.jsx     # Plate CRUD
-    │       ├── AdminPosts.jsx      # Blog post management
-    │       ├── AdminReviews.jsx    # Review moderation
-    │       ├── AdminStaff.jsx      # Staff management (RBAC)
-    │       ├── AdminVideos.jsx     # Promo video management
-    │       ├── Compose.jsx         # Blog post editor (Tiptap)
-    │       └── Dashboard.jsx       # Admin dashboard (KPI + charts)
-    ├── services/                    # .gitkeep — empty, ready for API calls
+    │       ├── Dashboard.jsx, AdminPlates.jsx, AdminCats.jsx, AdminContacts.jsx, AdminCustomers.jsx
+    │       ├── AdminStaff.jsx (RBAC + đổi mật khẩu nhân viên), AdminPosts.jsx, Compose.jsx
+    │       ├── AdminMeanings.jsx, AdminVideos.jsx, AdminReviews.jsx, AdminNotifications.jsx
+    │       ├── AdminCollaborators.jsx, AdminChatbot.jsx, AdminAuditLog.jsx, EmailBuilder.jsx
+    ├── services/                    # API clients — mỗi domain 1 file (dùng `apiClient`)
+    │   ├── apiClient.js             # fetch wrapper (JWT, ApiResponse<T>, upload)
+    │   ├── authService.js, plates.js, plateDetail.js, blog.js, categories.js, landing.js
+    │   ├── adminStaff.js, adminPlates.js, adminDashboard.js, adminAuditLog.js, …
+    │   └── (40 file — xem thư mục)
     └── styles/
-        ├── app.css                 # Main stylesheet
-        ├── skeleton.css            # Skeleton animation styles
-        └── tokens.css              # CSS custom properties (design tokens)
+        ├── app.css                 # Main stylesheet (gồm @media mobile: FAB, plate-grid 1 cột…)
+        ├── skeleton.css
+        └── tokens.css              # Design tokens CSS (màu/spacing/radius — KHÔNG hardcode)
 ```
 
 ## Architecture patterns
 
 ### State management
-- **No global state library.** All state in `App.jsx` via `useState` + `patch()` helper.
-- `patch()`: partial state update — `patch({ screen: 'home' })` or functional `patch(s => ({...s, page: s.page + 1}))`
-- State passed down as props. No Redux, no Context yet (`contexts/` is empty).
-- Auth persisted to localStorage via `authStore.js`.
+- **No global state library.** State trong `App.jsx` (`useState` + `patch()` partial update).
+- `patch()`: cập nhật một phần state — `patch({ screen: 'home' })` hoặc functional.
+- State truyền xuống qua props. Auth persist qua `lib/authStore.js` (JWT).
 
 ### Routing
-- **Hash-based.** Custom `useHashRouter` hook parses `window.location.hash`.
-- Route config in `config/routes.js`: `ADMIN_SCREENS`, `PUBLIC_SCREENS`, `parseRoute()`, `routeFor()`.
-- Hash format: `#/screen` or `#/screen/param`.
-- Navigation via `go('screen')()` — sets state, not URL push.
+- **Path-based.** `usePathRouter` parse `window.location.pathname` → screen + params.
+- Route config trong `config/routes.js`: `PUBLIC_SCREENS`, `ADMIN_SCREENS`, `parseRoute()`, `routeFor()`, `PROVINCE_LANDINGS`, `PLATE_TYPE_LANDINGS`.
+- Điều hướng qua `go('screen')()`.
 
-### Data layer
-- **Current: mock data.** `lib/mockData.js` exports `PLATES`, `POSTS`, `CATS`, `CONTACTS`, `STAFF` — all in-memory arrays.
-- State mutations operate directly on these arrays (CRUD updates `st.plates` directly).
-- **Future: API.** `services/` folder reserved for API client. Pattern expected: replace mock imports with API calls.
+### Data layer — REAL API (đã tích hợp backend)
+- **Mọi dữ liệu chính qua API.** `services/apiClient.js` bọc `fetch` (tự gắn JWT, unwrap `ApiResponse<T>`, hàm `upload`).
+- Mỗi domain một service file trong `services/` (authService, plates, blog, categories, adminStaff…).
+- Các page gọi service hook/function, KHÔNG dùng `lib/mockData.js` cho dữ liệu chính. `mockData.js` còn import trong `App.jsx`/`Modals.jsx` chỉ để lấy `opts` (legacy, không phải data source).
 
 ### Code splitting
-- All page components loaded via `React.lazy(() => import(...))`.
-- `Suspense` wraps each route with `<PageSkeleton screen={s} />` fallback.
-- Admin shell, modals, and AI chatbot also lazy-loaded.
-
-### Content system
-- Vietnamese content in `lib/content/vi/*.json` — flat JSON files.
-- `contentGet('common.breadcrumb.home')` — dot-notation access.
-- No i18n library. Vietnamese only.
+- Page component load qua `React.lazy(() => import(...))` + `<Suspense>` fallback `<PageSkeleton>`.
+- Admin shell, modals, AI chatbot cũng lazy-load.
 
 ### CSS
-- Design tokens in `tokens.css` — CSS custom properties (`--surface-page`, `--radius-md`, `--type-caption`, etc.).
-- `app.css` — all component styles.
-- `skeleton.css` — shimmer animation for skeleton loaders.
-- No CSS modules, no Tailwind, no CSS-in-JS.
+- Design tokens trong `tokens.css` — CSS custom properties. KHÔNG hardcode màu/spacing/radius (xem FRONTEND-DESIGN-RULES.md).
+- `app.css` — mọi style component + responsive mobile.
+- Không CSS modules, không Tailwind, không CSS-in-JS.
 
 ### Skeleton loading
-- `useDelayedLoading` hook: delays spinner display to avoid flash on fast loads.
-- `useStaggeredReveal`: staggered animation for list items.
-- Skeleton components per pattern: card, post, detail, page-level.
-- `LazyImage` component: placeholder while image loads.
+- `useDelayedLoading` tránh flash spinner. `useStaggeredReveal` cho list. `LazyImage` placeholder khi ảnh chưa load.
 
 ### Error handling
-- `ErrorBoundary` wraps entire app.
-- `ServerError` page for critical failures.
-- 404: `NotFound` page with navigation back.
+- `ErrorBoundary` bọc toàn app. `ServerError` cho lỗi nghiêm trọng. `NotFound` 404.
 
 ## Key dependencies
 
 | Package | Usage |
 |---------|-------|
-| `@base-ui/react` | Unstyled accessible UI primitives |
+| `@base-ui/react` | Unstyled accessible UI primitives (Select…) |
 | `@mantine/hooks` | `useDebouncedValue`, utility hooks |
 | `@tiptap/react` | Rich text editor (blog compose) |
 | `framer-motion` | Page transitions, hero animations, staggered lists |
@@ -198,49 +151,55 @@ npm run preview       # Preview production build
 npm run validate:content  # Validate content JSON files
 ```
 
+Backend phải chạy song song (`dotnet run --project src/Biensovip.Api`) — frontend gọi API trực tiếp.
+
 ## Conventions
 
 ### Naming
-- **Components:** PascalCase, `.jsx` extension
-- **Hooks:** camelCase `use` prefix, `.js` extension
-- **Lib/utils:** camelCase, `.js` extension
-- **Pages:** PascalCase, `.jsx` extension
-- **Folders:** lowercase, kebab-case for multi-word (e.g. `lib/content/`)
+- **Components:** PascalCase `.jsx`. **Hooks:** camelCase `use` prefix `.js`.
+- **Lib/utils:** camelCase `.js`. **Pages:** PascalCase `.jsx`. **Folders:** lowercase kebab-case.
+- **Service files:** camelCase `.js` trong `services/`.
 
 ### Component patterns
-- Functional components only — no class components.
-- Destructure props in signature: `function Comp({ a, b })`.
-- No PropTypes — plain JavaScript.
-- Export default for page components, named exports for shared components.
+- Functional components only. Destructure props trong signature. Không PropTypes (plain JS).
+- Export default cho page, named export cho shared component.
+- One component per file (trừ barrel `index.jsx`).
 
-### File organization
-- One component per file (except barrel `index.jsx`).
-- Page components in `pages/` or `pages/admin/`.
-- Shared components in `components/`.
-- Business logic separation planned: `controllers/` for non-UI logic, `services/` for API.
+### Input password — eye toggle (TOÀN CỤC)
+- `Input` (`components/index.jsx`) tự hiện nút 👁 hiện/ẩn khi `type === 'password'` — áp dụng mọi form mật khẩu (register/login/admin). Button toggle có `e.preventDefault()` tránh trigger label-default.
+- KHÔNG thêm eye riêng từng nơi — đã nằm trong `Input`.
 
-### Mock data
-- All mock data in `lib/mockData.js`.
-- Fixed IDs (`p1`, `p2` for plates; `a1`, `a2` for posts; `c123` for contacts).
-- `priceNum()` helper parses price strings to numbers for sorting.
-- `validatePhone()` for Vietnamese phone number format.
+## Screens
 
-## Screens (current implementation)
+### Public
+`home, list, detail, register, login, forgot, fav, profile, lucky, about, blog, post, chat, compare, saved, reviews, notifications, collab, terms, privacy, transfer, faq, gmailCallback, provinceLanding, plateTypeLanding, notfound`
 
-### Public (21 routes)
-`home`, `list`, `detail`, `register`, `login`, `forgot`, `fav`, `lucky`, `about`, `blog`, `post`, `chat`, `compare`, `saved`, `reviews`, `notifications`, `collab`, `terms`, `privacy`, `transfer`, `faq`
-
-### Admin (14 routes)
-`dash`, `adminLogin`, `aplates`, `acats`, `acontacts`, `aposts`, `compose`, `acustomers`, `astaff`, `avideos`, `anotifications`, `acollabs`, `areviews`, `ameanings`
+### Admin
+`dash, adminLogin, aplates, acats, acontacts, aposts, compose, acustomers, astaff, avideos, anotifications, aemailtpl, acollabs, areviews, ameanings, achatbot, aauditlog`
 
 ### Error
-`notfound`, `servererror`
+`notfound, servererror`
+
+## Tính năng đã triển khai (mới — theo đúng code hiện tại)
+
+### Admin đổi mật khẩu nhân viên
+- Backend: `PATCH /api/admin/staff/{id}/password` (`StaffService.ResetPasswordAsync`) — validate ≥6, hash BCrypt, revoke sessions, ghi audit (action `update` + changes marker `reset_password` — do DB check constraint chỉ cho phép action whitelist).
+- Frontend: `services/adminStaff.js` `useResetStaffPassword()` + nút "Đổi mật khẩu" mỗi hàng trong `AdminStaff.jsx` → modal nhập mật khẩu mới.
+- Khi nhân viên quên mật khẩu: admin đổi rồi gửi lại cho nhân viên.
+
+### Blog phân trang
+- `Blog.jsx`: 12 bài/trang, nút Trước/Sau. Khi lọc (category/tìm kiếm) load limit 100 client-side. Đổi filter reset về trang 1.
+
+### Footer link → bài viết blog
+- `Footer.jsx`: link loại biển & tỉnh trỏ thẳng `/bai-viet/{slug}` (bài blog), không trỏ landing tỉnh — đúng kiểu bài blog hệ thống.
+
+### Mobile responsive fixes
+- `app.css`: FAB (chatbot/zalo/back-to-top) thu về 44px ≤768px; `plate-grid` 1 cột ≤480px; hero-desc `text-overflow:ellipsis`; hero badge/price `flexWrap:wrap`.
+- `Modal.jsx`/`Drawer.jsx`: scroll-lock bù scrollbar (`paddingRight = scrollbarWidth`) — không làm layout nhích ngang khi mở overlay.
 
 ## Integration with backend
 
-- **Current state:** Frontend operates on mock data. No API integration yet.
-- **Planned:** `services/` folder will contain API client modules.
-- Backend URL: will use `VITE_API_URL` env var (not yet implemented).
-- Auth: currently localStorage mock (`authStore.js`), will be replaced with JWT token management.
-- API response format: `ApiResponse<T>` wrapper expected from backend.
+- **Đã tích hợp real API.** Backend URL qua `VITE_API_URL`. Response dùng `ApiResponse<T>`.
+- Auth: JWT access/refresh, login/register/OTP/Google. Admin riêng (`AdminOnly`/`SuperAdminOnly`).
+- Admin RBAC: quản lý staff + phân quyền resource×action (xem ROLES-PERMISSIONS.md).
 - All docs: [../biensodep-infrastructure/docs/](../biensodep-infrastructure/docs/)

@@ -34,3 +34,26 @@ export function useCollaboratorDashboard(enabled) {
     retry: false,
   });
 }
+
+// UC25 — danh sách khách đã đăng ký dưới mã giới thiệu của CTV (JWT CTV, pattern như dashboard).
+export function useCollaboratorCustomers(enabled) {
+  return useQuery({
+    queryKey: ['collaborator-customers'],
+    queryFn: async () => {
+      const auth = loadCollaboratorAuth();
+      const res = await fetch(`${BASE_URL}/api/collaborators/customers`, {
+        headers: { Authorization: `Bearer ${auth?.accessToken || ''}` },
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.success) {
+        const err = new Error(body?.error?.message || 'Có lỗi xảy ra.');
+        err.code = body?.error?.code;
+        err.status = res.status;
+        throw err;
+      }
+      return body.data;
+    },
+    enabled: !!enabled,
+    retry: false,
+  });
+}

@@ -3,7 +3,7 @@ import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { Input, Badge } from '../components/index.jsx';
 import { validatePhone } from '../lib/phone.js';
-import { useRegisterCollaborator, useCollaboratorDashboard } from '../services/collaborators.js';
+import { useRegisterCollaborator, useCollaboratorDashboard, useCollaboratorCustomers } from '../services/collaborators.js';
 import { useCollaboratorLogin, useCollaboratorLogout, useCollaboratorForgotPasswordRequestOtp, useCollaboratorForgotPasswordReset } from '../services/collaboratorAuth.js';
 import { loadCollaboratorAuth } from '../lib/collaboratorAuthStore.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
@@ -289,6 +289,7 @@ function GmailLinkSection() {
 
 function DashboardBody({ data, onReset }) {
   const [copied, setCopied] = useState(false);
+  const customers = useCollaboratorCustomers(data.status === 'active');
   const copyLink = () => {
     const onOk = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
     if (navigator.clipboard?.writeText) {
@@ -323,6 +324,7 @@ function DashboardBody({ data, onReset }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
         {[
           ['Lượt click', String(data.clicks), 'var(--text-strong)'],
+          ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)'],
           ['Giao dịch thành công', String(data.successfulDeals), 'var(--status-success)'],
           ['Chờ duyệt', money(data.pending), 'var(--status-warning)'],
           ['Đã duyệt / đã chi trả', money(data.approved + data.paid), 'var(--status-success)'],
@@ -354,6 +356,22 @@ function DashboardBody({ data, onReset }) {
           ))}
         </div>
       )}
+
+      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng đã giới thiệu</span>
+        {customers.isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
+        {!customers.isLoading && customers.isError && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được danh sách khách.</span>}
+        {!customers.isLoading && !customers.isError && customers.data?.users?.length === 0 && (
+          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có khách nào đăng ký bằng mã giới thiệu của bạn.</span>
+        )}
+        {customers.data?.users?.map((u) => (
+          <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
+            <span style={{ font: 'var(--type-body-sm)' }}>{u.fullName || '—'}</span>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{u.phone || '—'}</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</span>
+          </div>
+        ))}
+      </div>
 
       <GmailLinkSection />
 

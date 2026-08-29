@@ -84,7 +84,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const T = contentGet;
   const { ids: compareIds } = useCompareIds();
   const compareCount = compareIds.length;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare')], ['blog', T('common.nav.blog')], ['about', T('common.nav.about')], ['chat', T('common.nav.contact')]];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare')], ['blog', T('common.nav.blog')], ['about', T('common.nav.about')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 'var(--z-header)', background: 'var(--glass-fill)', backdropFilter: 'var(--glass-blur)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
       <div className="header-row" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '14px var(--pad-page)', display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-3)' }}>

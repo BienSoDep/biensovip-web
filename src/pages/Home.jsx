@@ -107,9 +107,9 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
               <img src="/assets/hero-plate-right.png" alt="Biển số 43K 556.68" style={{ position: 'absolute', left: '25%', top: '47%', width: '71%', zIndex: 2, transform: 'rotate(7deg)', animation: heroAnim('fanRight', 180) }} />
               <img src="/assets/hero-plate-main.png" alt="Biển số 43A1 999.99" style={{ position: 'absolute', left: '8%', top: '15%', width: '84%', zIndex: 3, transform: 'rotate(-5deg)', animation: heroAnim('fanMain', 0) }} />
             </div>
-            <div style={{ width: '100%', maxWidth: 520, display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: '0 4px' }}>
+            <div className="hero-plate-badge-row" style={{ width: '100%', maxWidth: 520, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', padding: '0 4px' }}>
               <Badge tone="rose">{T('home.hero.plate_badge')}</Badge>
-              <div style={{ flex: 1 }} />
+              <div style={{ flex: '1 1 auto' }} />
               <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)' }}>{T('home.hero.plate_price')}</span>
             </div>
           </div>

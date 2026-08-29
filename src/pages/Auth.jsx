@@ -163,7 +163,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
   return (
     <section style={{ minHeight: '100vh', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ minHeight: '100vh', display: 'flex', flexWrap: 'wrap' }}>
-        <motion.div layout transition={SWAP_TRANSITION} style={{ order: infoOrder, zIndex: 1, position: 'relative', flex: '1 1 420px', background: 'var(--surface-hero)', borderRadius: infoRadius, padding: 'clamp(28px,4vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 'var(--space-8)', minHeight: '100vh' }}>
+        <motion.div className="auth-info" layout transition={SWAP_TRANSITION} style={{ order: infoOrder, zIndex: 1, position: 'relative', flex: '1 1 420px', background: 'var(--surface-hero)', borderRadius: infoRadius, padding: 'clamp(28px,4vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 'var(--space-8)', minHeight: '100vh' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
               <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 38, height: 38, objectFit: 'contain' }} />
@@ -252,6 +252,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
             {s === 'register' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.aName} error={st.aErr.name} onChange={setField('aName')} />
+                <Input label="Mã giới thiệu (không bắt buộc)" placeholder="Mã CTV giới thiệu bạn" value={st.aReferral} error={st.aErr.referral} onChange={setField('aReferral')} />
                 <div style={{ display: 'flex', gap: 8, background: 'var(--surface-sunken)', padding: 4, borderRadius: 'var(--radius-pill)' }}>
                   {['email', 'phone'].map((t) => (
                     <button key={t} type="button" onClick={() => patch({ aIdType: t, aErr: { ...st.aErr, email: '', phone: '' } })}

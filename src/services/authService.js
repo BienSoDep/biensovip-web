@@ -2,8 +2,8 @@ import { apiClient } from './apiClient.js';
 import { loadAuth, saveAuth } from '../lib/authStore.js';
 
 // ── Register ──
-export async function register({ identifierType, identifier, password, fullName }) {
-  return apiClient.post('/api/auth/register', { identifierType, identifier, password, fullName });
+export async function register({ identifierType, identifier, password, fullName, referralCode }) {
+  return apiClient.post('/api/auth/register', { identifierType, identifier, password, fullName, referralCode });
 }
 
 // ── Login ──
@@ -26,6 +26,11 @@ export async function verifyLoginOtp(email, code, remember = true) {
     saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user }, remember);
   }
   return data;
+}
+
+// ── UC25 — gắn CTV cho user đã đăng ký tự do (first-link-wins) ──
+export async function linkReferral(referralCode) {
+  return apiClient.put('/api/users/referral', { referralCode });
 }
 
 // ── Refresh token ──

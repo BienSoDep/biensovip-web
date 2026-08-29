@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import Button from '../../components/Button.jsx';
 import { Input, Select, Switch, Avatar, IconButton, SearchField, InfoTip } from '../../components/index.jsx';
-import { useAdminStaff, useCreateStaff, useUpdateStaff, useDeleteStaff } from '../../services/adminStaff.js';
+import { useAdminStaff, useCreateStaff, useUpdateStaff, useDeleteStaff, useResetStaffPassword } from '../../services/adminStaff.js';
 import { loadAuth, clearAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
@@ -33,11 +33,16 @@ export default function AdminStaff({ notify }) {
   const createStaff = useCreateStaff();
   const updateStaff = useUpdateStaff();
   const deleteStaff = useDeleteStaff();
+  const resetStaffPassword = useResetStaffPassword();
 
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [delId, setDelId] = useState(null);
   const [selfAction, setSelfAction] = useState(null);
+  const [pwId, setPwId] = useState(null);
+  const [pwValue, setPwValue] = useState('');
+  const [pwErr, setPwErr] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
   const [q, setQ] = useState('');
   const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
   const [err, setErr] = useState({});
@@ -115,6 +120,22 @@ export default function AdminStaff({ notify }) {
     setDelId(null);
   };
 
+  const openResetPassword = (x) => { setPwId(x.id); setPwValue(''); setPwErr(''); };
+  const confirmResetPassword = async () => {
+    if (!pwValue || pwValue.length < 6) { setPwErr('Mật khẩu tối thiểu 6 ký tự.'); return; }
+    setPwSaving(true);
+    try {
+      await resetStaffPassword.mutateAsync({ id: pwId, newPassword: pwValue });
+      notify('Đã đổi mật khẩu. Gửi mật khẩu mới cho nhân viên qua kênh an toàn.');
+      setPwId(null);
+    } catch (e) {
+      setPwErr(e.message || 'Lỗi khi đổi mật khẩu.');
+    } finally {
+      setPwSaving(false);
+    }
+  };
+  const pwTarget = items.find((x) => x.id === pwId);
+
   const toggleActive = async (x) => {
     try {
       await updateStaff.mutateAsync({ id: x.id, active: !x.active });
@@ -186,6 +207,7 @@ export default function AdminStaff({ notify }) {
               <span style={{ flex: '1 1 80px' }}><Switch checked={x.active} onChange={() => handleToggleActive(x)} /></span>
               <span style={{ flex: '0 0 72px', display: 'flex', gap: 'var(--space-2)' }}>
                 <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(x)} />
+                <IconButton name="key" label="Đổi mật khẩu" size="sm" onClick={() => openResetPassword(x)} />
                 <IconButton name="trash-2" label="Vô hiệu hóa" size="sm" onClick={() => handleDelete(x)} />
               </span>
             </div>
@@ -258,6 +280,20 @@ export default function AdminStaff({ notify }) {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="md" onClick={() => setDelId(null)}>Hủy</Button>
             <Button variant="danger" size="md" onClick={confirmDelete}>Vô hiệu hóa</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Admin đổi mật khẩu nhân viên — dùng khi nhân viên quên mật khẩu, không có tự khôi phục */}
+      <Modal open={!!pwId} onClose={() => setPwId(null)} title="Đổi mật khẩu nhân viên" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Đặt mật khẩu mới cho <b>{pwTarget ? (pwTarget.fullName || pwTarget.email) : ''}</b>. Nhân viên sẽ bị đăng xuất khỏi mọi phiên hiện tại. Gửi mật khẩu mới cho nhân viên qua kênh an toàn (không qua email/tin nhắn công khai).
+          </p>
+          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pwValue} error={pwErr} onChange={(e) => { setPwValue(e.target.value); setPwErr(''); }} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setPwId(null)}>Hủy</Button>
+            <Button variant="primary" size="md" onClick={confirmResetPassword} disabled={pwSaving}>{pwSaving ? 'Đang lưu…' : 'Đổi mật khẩu'}</Button>
           </div>
         </div>
       </Modal>

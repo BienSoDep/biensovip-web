@@ -18,22 +18,29 @@ function formatDate(iso) {
   return format(new Date(iso), 'dd/MM/yyyy');
 }
 
+const PAGE_SIZE = 12;
+
 export default function Blog({ patch }) {
   const stagger = useStaggeredReveal();
-  // Backend /blog/posts chỉ hỗ trợ page+limit (không q/category) → load hết (cap 100) rồi lọc client-side.
-  const { data, isLoading, isError, refetch, isFetching } = useBlogPosts(1, 100);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
+  const [page, setPage] = useState(1);
+  const isFiltering = !!(query || category);
+  // Backend /blog/posts chỉ hỗ trợ page+limit (không q/category) → khi đang lọc, load cap 100 rồi
+  // lọc client-side; khi không lọc, phân trang thật (limit nhỏ) để tránh tải dữ liệu lớn mỗi lần vào trang.
+  const { data, isLoading, isError, refetch, isFetching } = useBlogPosts(isFiltering ? 1 : page, isFiltering ? 100 : PAGE_SIZE);
 
   const all = data?.items || [];
-  const items = all.filter((p) => {
+  const items = isFiltering ? all.filter((p) => {
     if (category && p.category !== category) return false;
     if (query) {
       const q = query.trim().toLowerCase();
       if (!(p.title || '').toLowerCase().includes(q) && !(p.excerpt || '').toLowerCase().includes(q)) return false;
     }
     return true;
-  });
+  }) : all;
+  const total = data?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const categories = ['', ...Object.keys(CATEGORY_LABEL)];
 
   return (
@@ -48,12 +55,12 @@ export default function Blog({ patch }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 360 }}>
             <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)' }} />
-            <input type="search" placeholder="Tìm bài viết…" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Tìm bài viết"
+            <input type="search" placeholder="Tìm bài viết…" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} aria-label="Tìm bài viết"
               style={{ width: '100%', height: 44, padding: '0 14px 0 40px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {categories.map((c) => (
-              <button key={c || 'all'} type="button" onClick={() => setCategory(c)}
+              <button key={c || 'all'} type="button" onClick={() => { setCategory(c); setPage(1); }}
                 style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
                   background: category === c ? 'var(--action-primary)' : 'var(--white)', color: category === c ? 'var(--white)' : 'var(--text-muted)', boxShadow: 'var(--shadow-inset-hairline)' }}>
                 {c ? CATEGORY_LABEL[c] : 'Tất cả'}
@@ -93,6 +100,13 @@ export default function Blog({ patch }) {
                 </article>
               ))}
             </div>
+            {!isFiltering && totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)', paddingTop: 'var(--space-4)' }}>
+                <Button variant="outline" size="md" disabled={page <= 1 || isFetching} onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>← Trước</Button>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {page}/{totalPages}</span>
+                <Button variant="outline" size="md" disabled={page >= totalPages || isFetching} onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Sau →</Button>
+              </div>
+            )}
           </>
         )}
       </section>
