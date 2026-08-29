@@ -79,6 +79,18 @@ textarea:focus-visible {
   outline: 2px solid var(--action-primary) !important;
   outline-offset: 2px;
 }
+
+/* Header sticky che khuất phần trên element khi focus — thiếu scroll-margin-top
+   khiến trình duyệt tự cuộn lên vài chục px để lộ hết element (cảm giác "nhích"
+   mỗi khi bấm bất kỳ đâu sau khi đã cuộn trang xuống). */
+button,
+a,
+input,
+select,
+textarea,
+[tabindex] {
+  scroll-margin-top: 84px;
+}
 [data-pressable],
 .pressable {
   cursor: pointer;
