@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Button from '../components/Button.jsx';
-import { Input, Select, Eyebrow } from '../components/index.jsx';
+import { Input, Select, Eyebrow, Icon } from '../components/index.jsx';
 import { updateProfile, changePassword } from '../services/authService.js';
 import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
 
@@ -60,8 +60,17 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
 
   return (
     <section style={{ maxWidth: 640, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <Eyebrow tone="blue">{onboarding ? 'Chào mừng bạn mới' : 'Tài khoản'}</Eyebrow>
+      <div
+        style={
+          onboarding
+            ? { display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)' }
+            : { display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }
+        }
+      >
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: onboarding ? 'var(--accent-orange-ink)' : 'var(--blue-600)' }}>
+          {onboarding && <Icon name="sparkles" size={14} />}
+          {onboarding ? 'Chào mừng bạn mới' : 'Tài khoản'}
+        </span>
         <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
           {onboarding ? 'Hoàn thiện hồ sơ của bạn' : 'Thông tin cá nhân'}
         </h1>

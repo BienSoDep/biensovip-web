@@ -706,7 +706,7 @@ export default function App() {
             )}
           </Suspense>
 
-          {isPublic && <Footer settings={st.settings} />}
+          {isPublic && <Footer settings={st.settings} patch={patch} />}
 
           {isPublic && <PromoRails />}
 

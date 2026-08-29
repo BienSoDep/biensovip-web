@@ -1,11 +1,19 @@
 import { contentGet } from '../lib/content/index.js';
-import { routeFor, PROVINCE_LANDINGS, PLATE_TYPE_LANDINGS } from '../config/routes.js';
+import { routeFor, parseRoute, PROVINCE_LANDINGS, PLATE_TYPE_LANDINGS } from '../config/routes.js';
 import EmailCapture from '../components/EmailCapture.jsx';
 
 // UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: thông tin doanh nghiệp thật.
 // Footer link href sinh từ routeFor() để không lệch slug (vd lucky: alias cũ tu-van → hop-menh).
-export default function Footer({ settings }) {
+export default function Footer({ settings, patch }) {
   const T = contentGet;
+  // Href thật giữ nguyên (SEO — crawler/mở tab mới/right-click vẫn dùng URL chuẩn).
+  // Click chuột trái thường thì điều hướng qua router SPA thay vì full-page reload (UX — tránh giật/trắng trang khi đổi route).
+  const navClick = (e) => {
+    if (!patch || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    const r = parseRoute(new URL(e.currentTarget.href).pathname);
+    patch((x) => ({ ...x, screen: r.screen, curId: r.detailId || x.curId, postId: r.postId || x.postId, provinceCode: r.provinceCode || x.provinceCode, typeSlug: r.typeSlug || x.typeSlug }));
+  };
   const phone = (settings?.phone || '0815792699').replace(/[^0-9]/g, '');
   const phoneDisplay = (settings?.phone || '0815792699').replace(/[^0-9]/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
   const zalo = settings?.zalo || '0815792699';
@@ -41,29 +49,29 @@ export default function Footer({ settings }) {
         <nav aria-label={T('common.footer.explore_title')} style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={navStyle}>{T('common.footer.explore_title')}</span>
           {exploreLinks.map(([href, label]) => (
-            <a key={href} href={href} style={linkStyle}>{label}</a>
+            <a key={href} href={href} onClick={navClick} style={linkStyle}>{label}</a>
           ))}
         </nav>
 
         <nav aria-label="Kho biển theo loại" style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={navStyle}>Kho biển theo loại</span>
           {PLATE_TYPE_LANDINGS.map((p) => (
-            <a key={p.slug} href={routeFor('post', p.slug)} style={linkStyle}>Biển {p.name}</a>
+            <a key={p.slug} href={routeFor('post', p.slug)} onClick={navClick} style={linkStyle}>Biển {p.name}</a>
           ))}
         </nav>
 
         <nav aria-label="Kho biển theo tỉnh" style={{ flex: '1 1 170px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={navStyle}>Kho biển theo tỉnh</span>
           {PROVINCE_LANDINGS.slice(0, 10).map((p) => (
-            <a key={p.slug} href={routeFor('post', p.slug)} style={linkStyle}>Biển {p.name || p.code}</a>
+            <a key={p.slug} href={routeFor('post', p.slug)} onClick={navClick} style={linkStyle}>Biển {p.name || p.code}</a>
           ))}
-          <a href={routeFor('list')} style={{ ...linkStyle, fontWeight: 'var(--fw-semibold)' }}>Xem tất cả tỉnh →</a>
+          <a href={routeFor('list')} onClick={navClick} style={{ ...linkStyle, fontWeight: 'var(--fw-semibold)' }}>Xem tất cả tỉnh →</a>
         </nav>
 
         <nav aria-label={T('common.footer.policy_title')} style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={navStyle}>{T('common.footer.policy_title')}</span>
           {policyLinks.map(([href, label]) => (
-            <a key={href} href={href} style={linkStyle}>{label}</a>
+            <a key={href} href={href} onClick={navClick} style={linkStyle}>{label}</a>
           ))}
         </nav>
 
