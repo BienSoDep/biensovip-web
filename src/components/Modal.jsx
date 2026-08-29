@@ -22,7 +22,10 @@ export default function Modal({ open, onClose, title, labelledBy, maxWidth = '48
     const trigger = document.activeElement;
     triggerRef.current = trigger;
     const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
 
     const focusables = () =>
       Array.from(
@@ -56,6 +59,7 @@ export default function Modal({ open, onClose, title, labelledBy, maxWidth = '48
     return () => {
       dialog.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
       if (triggerRef.current && typeof triggerRef.current.focus === 'function') triggerRef.current.focus();
     };
   }, [open]);

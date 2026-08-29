@@ -30,7 +30,7 @@ function FaqAccordion({ faqs }) {
   );
 }
 
-export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact }) {
+export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact, blogPost }) {
   const stagger = useStaggeredReveal();
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -40,6 +40,21 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
         </h1>
         {intro && (
           <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }} dangerouslySetInnerHTML={{ __html: intro }} />
+        )}
+        {blogPost && (
+          <div style={{ marginTop: 'var(--space-6)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'center' }}>
+            {blogPost.coverImageUrl && (
+              <img src={blogPost.coverImageUrl} alt={blogPost.title} loading="lazy" style={{ width: 'min(100%, 220px)', height: 150, objectFit: 'cover', flexShrink: 0, display: 'block' }} />
+            )}
+            <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-4)' }}>
+              <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)', alignSelf: 'flex-start' }}>Bài viết chi tiết</span>
+              <h2 style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{blogPost.title}</h2>
+              {blogPost.excerpt && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{blogPost.excerpt}</p>}
+              <a href={routeFor('post', blogPost.slug)}>
+                <Button variant="primary" size="md">Đọc tiếp →</Button>
+              </a>
+            </div>
+          </div>
         )}
       </section>
 
