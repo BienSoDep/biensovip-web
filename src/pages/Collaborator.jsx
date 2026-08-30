@@ -4,10 +4,9 @@ import Modal from '../components/Modal.jsx';
 import { Input, Badge } from '../components/index.jsx';
 import { validatePhone } from '../lib/phone.js';
 import { useRegisterCollaborator, useCollaboratorDashboard, useCollaboratorCustomers } from '../services/collaborators.js';
-import { useCollaboratorLogin, useCollaboratorLogout, useCollaboratorForgotPasswordRequestOtp, useCollaboratorForgotPasswordReset } from '../services/collaboratorAuth.js';
-import { loadCollaboratorAuth } from '../lib/collaboratorAuthStore.js';
+import { useCollaboratorLogin, useCollaboratorLogout, useCollaboratorForgotPasswordRequestOtp, useCollaboratorForgotPasswordReset, useCollaboratorGoogleLogin, useCollaboratorGoogleConfirmLink } from '../services/collaboratorAuth.js';
+import { loadAuth } from '../lib/authStore.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
-import { useCollaboratorGoogleLogin, useCollaboratorGoogleConfirmLink } from '../services/googleAuth.js';
 import { useGmailStatus, useGmailOAuthUrl, useUnlinkGmail } from '../services/gmailLink.js';
 import { SkeletonCard } from '../components/Skeleton.jsx';
 
@@ -107,8 +106,8 @@ function LoginForm({ onLoggedIn, onForgotPassword }) {
             const payload = JSON.parse(atob(idToken.split('.')[1]));
             setGoogleLinkPending({ email: payload.email, idToken });
           } catch { setGoogleLinkPending({ email: '', idToken }); }
-        } else if (e?.code === 'COLLABORATOR_NOT_REGISTERED') {
-          setGoogleErr('Email này chưa đăng ký làm cộng tác viên. Vui lòng đăng ký trước.');
+        } else if (e?.code === 'GOOGLE_EMAIL_NOT_VERIFIED') {
+          setGoogleErr('Email Google chưa được xác thực.');
         } else {
           setGoogleErr(e?.message || 'Đăng nhập Google thất bại.');
         }
@@ -136,9 +135,8 @@ function LoginForm({ onLoggedIn, onForgotPassword }) {
     login.mutate({ email: email.trim(), password }, {
       onSuccess: () => onLoggedIn(),
       onError: (e) => {
-        if (e?.code === 'COLLABORATOR_PENDING') setErr({ form: 'Tài khoản đang chờ admin duyệt.' });
-        else if (e?.code === 'COLLABORATOR_LOCKED') setErr({ form: 'Tài khoản đã bị khóa.' });
-        else if (e?.code === 'PASSWORD_NOT_SET') setErr({ form: 'Tài khoản chưa đặt mật khẩu — dùng "Quên mật khẩu" để đặt lần đầu.' });
+        if (e?.code === 'ACCOUNT_LOCKED') setErr({ form: 'Tài khoản đã bị khóa.' });
+        else if (e?.code === 'INVALID_CREDENTIALS') setErr({ form: 'Email hoặc mật khẩu không đúng.' });
         else setErr({ form: e?.message || 'Đăng nhập thất bại.' });
       },
     });
@@ -225,10 +223,10 @@ function ForgotPasswordForm({ onDone }) {
 
 
 // UC30 — khu "Cài đặt tài khoản": liên kết/hủy liên kết Gmail cá nhân để gửi email cho khách.
-// Chỉ hiện khi CTV đăng nhập bằng JWT (loadCollaboratorAuth có token) — chế độ tra-cứu-bằng-mã cũ
+// Chỉ hiện khi CTV đăng nhập bằng JWT (loadAuth có token) — chế độ tra-cứu-bằng-mã cũ
 // không đủ tin cậy để liên kết OAuth nhạy cảm này.
 function GmailLinkSection() {
-  const isLoggedIn = Boolean(loadCollaboratorAuth()?.accessToken);
+  const isLoggedIn = Boolean(loadAuth()?.accessToken);
   const { data: status, isLoading } = useGmailStatus();
   const oauthUrl = useGmailOAuthUrl();
   const unlink = useUnlinkGmail();
@@ -394,7 +392,9 @@ function Dashboard({ onReset }) {
 }
 
 export default function Collaborator({ go }) {
-  const [loggedIn, setLoggedIn] = useState(() => Boolean(loadCollaboratorAuth()?.accessToken));
+  // P2 — CTV gộp vào User: "đã đăng nhập CTV" = có token User + user này là CTV (is_collaborator).
+  const isCtv = () => Boolean(loadAuth()?.accessToken) && Boolean(loadAuth()?.user?.isCollaborator);
+  const [loggedIn, setLoggedIn] = useState(() => isCtv());
   const [mode, setMode] = useState('register'); // register | login | forgot
   const collaboratorLogout = useCollaboratorLogout();
 

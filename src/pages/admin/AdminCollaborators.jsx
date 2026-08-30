@@ -33,15 +33,16 @@ export default function AdminCollaborators({ st, patch, notify }) {
 
   const [updatingId, setUpdatingId] = useState(null);
   const [confirm, setConfirm] = useState(null); // { id, to }
+  const [reasonDraft, setReasonDraft] = useState('');
   const [detailCollab, setDetailCollab] = useState(null);
   const [rateDraft, setRateDraft] = useState({}); // { [id]: string (%) }
 
   const applyStatus = (id, v) => {
     setUpdatingId(id);
-    updateStatus.mutate({ id, status: v }, {
+    updateStatus.mutate({ id, status: v, suspendReason: v === 'locked' ? (reasonDraft.trim() || undefined) : undefined }, {
       onSuccess: () => notify('Đã cập nhật trạng thái CTV'),
       onError: () => notify('Cập nhật trạng thái thất bại'),
-      onSettled: () => { setUpdatingId(null); setConfirm(null); },
+      onSettled: () => { setUpdatingId(null); setConfirm(null); setReasonDraft(''); },
     });
   };
 
@@ -142,9 +143,16 @@ export default function AdminCollaborators({ st, patch, notify }) {
       </div>
 
       <Modal open={confirm != null} onClose={() => setConfirm(null)} title="Xác nhận đổi trạng thái" maxWidth="380px">
-        <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+        <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           Bạn có chắc muốn đổi trạng thái CTV này sang <b>{confirm ? STATUS_LABEL[confirm.to] || confirm.to : ''}</b>?
         </p>
+        {confirm?.to === 'locked' && (
+          <input
+            type="text" maxLength={255} value={reasonDraft} onChange={(e) => setReasonDraft(e.target.value)}
+            placeholder="Lý do khóa (ghi để lưu vết cho CTV)"
+            style={{ width: '100%', marginBottom: 'var(--space-3)', padding: '8px 10px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
+          />
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <Button variant="ghost" size="md" onClick={() => setConfirm(null)}>Hủy</Button>
           <Button variant="primary" size="md" disabled={updatingId === confirm?.id} onClick={() => confirm && applyStatus(confirm.id, confirm.to)}>

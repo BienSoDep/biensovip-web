@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
-import { loadCollaboratorAuth } from '../lib/collaboratorAuthStore.js';
+import { loadAuth } from '../lib/authStore.js';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -17,7 +17,7 @@ export function useCollaboratorDashboard(enabled) {
   return useQuery({
     queryKey: ['collaborator-dashboard'],
     queryFn: async () => {
-      const auth = loadCollaboratorAuth();
+      const auth = loadAuth();
       const res = await fetch(`${BASE_URL}/api/collaborators/dashboard`, {
         headers: { Authorization: `Bearer ${auth?.accessToken || ''}` },
       });
@@ -40,7 +40,7 @@ export function useCollaboratorCustomers(enabled) {
   return useQuery({
     queryKey: ['collaborator-customers'],
     queryFn: async () => {
-      const auth = loadCollaboratorAuth();
+      const auth = loadAuth();
       const res = await fetch(`${BASE_URL}/api/collaborators/customers`, {
         headers: { Authorization: `Bearer ${auth?.accessToken || ''}` },
       });
