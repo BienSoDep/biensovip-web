@@ -596,6 +596,7 @@ export default function App() {
     ameanings: ['Ý nghĩa phong thủy', 'Mẫu ý nghĩa chung và ý nghĩa riêng cho từng biển'],
     achatbot: ['Trợ lý AI', 'Lịch sử hội thoại và cấu hình trợ lý chatbot'],
     aauditlog: ['Nhật ký hệ thống', 'Lịch sử thay đổi dữ liệu trong hệ thống'],
+    arisklog: ['Rủi ro CTV', 'Phát hiện bất thường và rà soát cộng tác viên'],
   }[s] || ['', ''];
 
   const authMeta = {

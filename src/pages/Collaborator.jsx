@@ -28,49 +28,41 @@ function fallbackCopy(text, onOk) {
   } catch { /* trình duyệt không hỗ trợ — bỏ qua, không crash */ }
 }
 
-function RegisterForm({ onRegistered }) {
+// P1.1 auto-active: sau khi đăng ký xong, tự đăng nhập luôn (tài khoản active tức thì, không chờ admin).
+// Email trở thành định danh đăng nhập — bắt buộc để auto-login vào dashboard ngay.
+function RegisterForm({ onLoggedIn }) {
   const [f, setF] = useState({});
   const [err, setErr] = useState({});
-  const [done, setDone] = useState(false);
   const register = useRegisterCollaborator();
+  const login = useCollaboratorLogin();
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   const submit = () => {
     const e2 = {};
     if (!(f.fullName || '').trim()) e2.fullName = 'Vui lòng nhập họ tên.';
+    if (!(f.email || '').trim()) e2.email = 'Vui lòng nhập email để đăng nhập.';
+    else if (!/^\S+@\S+\.\S+$/.test(f.email.trim())) e2.email = 'Email không đúng định dạng.';
     if (!validatePhone(f.phone || '')) e2.phone = 'Số điện thoại chưa đúng định dạng.';
     if (!(f.bankAccount || '').trim()) e2.bankAccount = 'Vui lòng nhập số tài khoản nhận hoa hồng.';
     if (!(f.password || '').trim() || f.password.length < 8) e2.password = 'Mật khẩu cần ít nhất 8 ký tự.';
     if (f.password !== f.confirmPassword) e2.confirmPassword = 'Mật khẩu xác nhận không khớp.';
     if (Object.keys(e2).length) { setErr(e2); return; }
     setErr({});
-    register.mutate(
-      { fullName: f.fullName.trim(), phone: f.phone.trim(), email: f.email?.trim() || null, bankAccount: f.bankAccount.trim(), password: f.password },
-      {
-        onSuccess: () => setDone(true),
-        onError: (e) => {
-          if (e?.code === 'DUPLICATE_PHONE') setErr({ phone: 'Số điện thoại đã đăng ký CTV.' });
-          else if (e?.code === 'DUPLICATE_EMAIL') setErr({ email: 'Email đã đăng ký CTV.' });
-          else if (e?.code === 'PASSWORD_TOO_SHORT') setErr({ password: 'Mật khẩu cần ít nhất 8 ký tự.' });
-          else setErr({ form: e?.message || 'Đăng ký thất bại, thử lại.' });
-        },
+    const body = { fullName: f.fullName.trim(), phone: f.phone.trim(), email: f.email.trim(), bankAccount: f.bankAccount.trim(), password: f.password };
+    register.mutate(body, {
+      // Auto-active → đăng ký xong là active, tự đăng nhập vào dashboard ngay.
+      onSuccess: () => login.mutate({ email: body.email, password: body.password }, {
+        onSuccess: () => onLoggedIn(),
+        onError: () => onLoggedIn(), // đăng ký đã thành công; nếu auto-login trục trặc vẫn thả user về xem hồ sơ
+      }),
+      onError: (e) => {
+        if (e?.code === 'DUPLICATE_PHONE') setErr({ phone: 'Số điện thoại đã đăng ký CTV.' });
+        else if (e?.code === 'DUPLICATE_EMAIL') setErr({ email: 'Email đã đăng ký CTV.' });
+        else if (e?.code === 'PASSWORD_TOO_SHORT') setErr({ password: 'Mật khẩu cần ít nhất 8 ký tự.' });
+        else setErr({ form: e?.message || 'Đăng ký thất bại, thử lại.' });
       },
-    );
+    });
   };
-
-  if (done) {
-    return (
-      <section style={{ maxWidth: 560, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)' }}>
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-7) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', textAlign: 'center' }}>
-          <span style={{ font: 'var(--type-display-3)', color: 'var(--text-strong)' }}>Đã gửi hồ sơ đăng ký</span>
-          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Hồ sơ của bạn đang chờ admin duyệt. Khi được duyệt, đăng nhập lại bằng email/mật khẩu vừa tạo để xem dashboard và mã giới thiệu riêng.
-          </span>
-          <Button variant="ghost" size="md" onClick={onRegistered}>Đăng nhập</Button>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section style={{ maxWidth: 560, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -81,12 +73,12 @@ function RegisterForm({ onRegistered }) {
         </div>
         <Input label="Họ tên" placeholder="Nguyễn Văn A" value={f.fullName || ''} onChange={set('fullName')} error={err.fullName} />
         <Input label="Số điện thoại" placeholder="0905 221 334" value={f.phone || ''} onChange={set('phone')} error={err.phone} />
-        <Input label="Email (tùy chọn)" placeholder="ban@gmail.com" value={f.email || ''} onChange={set('email')} error={err.email} />
+        <Input label="Email" placeholder="ban@gmail.com" value={f.email || ''} onChange={set('email')} error={err.email} />
         <Input label="Số tài khoản nhận hoa hồng" placeholder="Ngân hàng · số tài khoản" value={f.bankAccount || ''} onChange={set('bankAccount')} error={err.bankAccount} />
         <Input label="Mật khẩu" type="password" placeholder="Ít nhất 8 ký tự" value={f.password || ''} onChange={set('password')} error={err.password} />
         <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={f.confirmPassword || ''} onChange={set('confirmPassword')} error={err.confirmPassword} />
         {err.form && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err.form}</span>}
-        <Button variant="primary" size="lg" fullWidth onClick={submit} loading={register.isPending}>Đăng ký ngay</Button>
+        <Button variant="primary" size="lg" fullWidth onClick={submit} loading={register.isPending || login.isPending}>Đăng ký ngay</Button>
       </div>
     </section>
   );
@@ -299,12 +291,12 @@ function DashboardBody({ data, onReset }) {
     }
   };
 
-  if (data.status !== 'active') {
+  if (data.status === 'locked') {
     return (
       <section style={{ maxWidth: 560, margin: '0 auto', padding: 'var(--space-9) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <Badge tone={data.status === 'pending' ? 'amber' : 'rose'}>{data.status === 'pending' ? 'Chờ duyệt' : 'Bị khóa'}</Badge>
+        <Badge tone="rose">Bị khóa</Badge>
         <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-          {data.status === 'pending' ? 'Hồ sơ của bạn đang chờ admin duyệt.' : 'Tài khoản CTV đã bị khóa. Liên hệ admin để biết thêm.'}
+          Tài khoản CTV đã bị khóa. Liên hệ admin để biết thêm.
         </span>
         <Button variant="ghost" size="sm" onClick={onReset}>Đăng xuất</Button>
       </section>
@@ -433,7 +425,7 @@ export default function Collaborator({ go }) {
       <div style={{ maxWidth: 560, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) 0', textAlign: 'right' }}>
         <Button variant="ghost" size="sm" onClick={() => setMode('login')}>Đã có tài khoản? Đăng nhập</Button>
       </div>
-      <RegisterForm onRegistered={() => setMode('login')} />
+      <RegisterForm onLoggedIn={() => setLoggedIn(true)} />
     </>
   );
 }

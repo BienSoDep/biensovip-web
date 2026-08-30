@@ -24,6 +24,7 @@ import AdminChatbot from '../pages/admin/AdminChatbot.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
 import AdminAuditLog from '../pages/admin/AdminAuditLog.jsx';
+import AdminRiskLog from '../pages/admin/AdminRiskLog.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import { useNotificationCounts } from '../services/systemHealth.js';
@@ -54,7 +55,7 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
   return (
     <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 var(--space-3)' }}>
       {ADMIN_NAV.filter((n) => {
-        if (n[0] === 'astaff' || n[0] === 'aauditlog') return st.user?.role === 'super-admin';
+        if (n[0] === 'astaff' || n[0] === 'aauditlog' || n[0] === 'arisklog') return st.user?.role === 'super-admin';
         const perm = NAV_PERM[n[0]];
         return !perm || canPerm(st, perm);
       }).map((n) => {
@@ -216,6 +217,7 @@ export default function AdminShell({
         {s === 'areviews' && <AdminReviews notify={notify} />}
         {s === 'achatbot' && <AdminChatbot notify={notify} />}
         {s === 'aauditlog' && <AdminAuditLog />}
+        {s === 'arisklog' && <AdminRiskLog />}
         {s === 'ameanings' && <AdminMeanings notify={notify} />}
         {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}

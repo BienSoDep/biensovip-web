@@ -9,8 +9,8 @@ import { useZaloClickStats } from '../../services/zaloClicks.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 
-const STATUSES = ['active', 'pending', 'locked'];
-const STATUS_LABEL = { active: 'Hoạt động', pending: 'Chờ duyệt', locked: 'Bị khóa' };
+const STATUSES = ['active', 'locked']; // P1.1 bỏ 'pending' — đăng ký auto-active, không còn trạng thái chờ duyệt
+const STATUS_LABEL = { active: 'Hoạt động', locked: 'Bị khóa' };
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
 const opts = (arr) => arr.map((v) => ({ value: v, label: STATUS_LABEL[v] || v }));
 
