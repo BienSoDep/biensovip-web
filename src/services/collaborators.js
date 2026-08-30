@@ -4,9 +4,19 @@ import { loadAuth } from '../lib/authStore.js';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 
-export function useRegisterCollaborator() {
+// Nội dung trang ưu đãi CTV — admin chỉnh, mọi người đọc được.
+export function useCollaboratorBenefitContent() {
+  return useQuery({
+    queryKey: ['collaborator-benefit-content'],
+    queryFn: () => apiClient.get('/api/collaborators/benefit-content'),
+    staleTime: 60_000,
+  });
+}
+
+// User đăng nhập nâng cấp chính mình thành CTV (tự-activate, không tạo User mới).
+export function useBecomeCollaborator() {
   return useMutation({
-    mutationFn: (body) => apiClient.post('/api/collaborators/register', body),
+    mutationFn: (bankAccount) => apiClient.post('/api/collaborators/become', { bankAccount }),
   });
 }
 

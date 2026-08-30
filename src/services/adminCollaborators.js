@@ -50,3 +50,20 @@ export function usePayCommissions(collaboratorId) {
     },
   });
 }
+
+// Nội dung trang ưu đãi CTV — admin đọc/sửa.
+export function useAdminCollaboratorBenefitContent() {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: ['admin-collaborator-benefit-content'],
+    queryFn: () => apiClient.get('/api/admin/collaborators/benefit-content'),
+  });
+  const update = useMutation({
+    mutationFn: (body) => apiClient.put('/api/admin/collaborators/benefit-content', body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-collaborator-benefit-content'] });
+      qc.invalidateQueries({ queryKey: ['collaborator-benefit-content'] });
+    },
+  });
+  return { ...query, update };
+}

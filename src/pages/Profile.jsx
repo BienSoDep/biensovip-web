@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import Button from '../components/Button.jsx';
 import { Input, Select, Eyebrow, Icon } from '../components/index.jsx';
-import { updateProfile, changePassword } from '../services/authService.js';
+import { updateProfile, changePassword, refreshToken } from '../services/authService.js';
 import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
+import { useBecomeCollaborator } from '../services/collaborators.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const yearOpts = (() => { const a = []; for (let y = CURRENT_YEAR; y >= 1950; y--) a.push({ value: String(y), label: String(y) }); return a; })();
@@ -114,6 +115,7 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
         <>
           <ChangePasswordSection notify={notify} />
           <NotificationSettingsSection notify={notify} />
+          <BecomeCollaboratorSection go={go} notify={notify} user={user} onUserUpdate={onUserUpdate} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--grey-100)' }}>
             <Button variant="ghost" onClick={onLogout} fullWidth style={{ color: 'var(--status-danger)' }}>Đăng xuất</Button>
           </div>
@@ -195,6 +197,77 @@ function NotificationSettingsSection({ notify }) {
         <div style={{ maxWidth: 220 }}>
           <Select label="Khung giờ nhận email tổng hợp" value={hour} options={NOTIFY_HOUR_OPTS} onChange={changeHour} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+// CTV gộp vào User — user đăng nhập tự-activate từ profile. Sau kích hoạt refresh token để
+// JWT có claim `collaborator` (policy CollaboratorOnly đọc claim, không đọc DB), rồi đẩy user mới lên App.
+function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
+  const become = useBecomeCollaborator();
+  const [bankAccount, setBankAccount] = useState('');
+  const [busy, setBusy] = useState(false);
+  const needsEmailVerify = user?.identifierType === 'email' && !user?.emailVerified;
+
+  const isCtv = Boolean(user?.isCollaborator);
+
+  const activate = async () => {
+    if (!bankAccount.trim()) { notify('Nhập số tài khoản nhận hoa hồng trước khi kích hoạt.'); return; }
+    setBusy(true);
+    try {
+      await become.mutateAsync(bankAccount.trim());
+      const data = await refreshToken();
+      if (data?.user) onUserUpdate?.(data.user);
+      notify('Bạn đã trở thành Cộng tác viên');
+    } catch (e) {
+      const code = e?.code;
+      if (code === 'EMAIL_NOT_VERIFIED') notify('Xác thực email trước khi trở thành CTV.');
+      else notify(e?.message || 'Kích hoạt thất bại, thử lại sau.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <Eyebrow tone="blue">Cộng tác viên</Eyebrow>
+      <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        {isCtv ? (
+          <>
+            <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Bạn đang là Cộng tác viên</h3>
+            {user?.ctvReferralCode && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ font: 'var(--type-body)', color: 'var(--text-muted)' }}>Mã giới thiệu:</span>
+                <span style={{ font: 'var(--type-title-3)', fontWeight: 700, color: 'var(--text-strong)', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-pill)', padding: '6px 14px' }}>{user.ctvReferralCode}</span>
+              </div>
+            )}
+          </>
+        ) : needsEmailVerify ? (
+          <>
+            <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+              Xác thực email trước khi kích hoạt tài khoản Cộng tác viên (để nhận thông báo hoa hồng).
+            </p>
+            <Button variant="primary" size="md" style={{ alignSelf: 'flex-start' }} onClick={() => go('verify-email')()}>Xác thực email</Button>
+          </>
+        ) : (
+          <>
+            <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+              Giới thiệu khách mua biển số đẹp, nhận hoa hồng trên mỗi giao dịch thành công. Kích hoạt ngay từ tài khoản này — không cần đăng ký riêng.
+            </p>
+            <Input
+              label="Số tài khoản nhận hoa hồng"
+              placeholder="Số tài khoản ngân hàng"
+              value={bankAccount}
+              onChange={(e) => setBankAccount(e.target.value)}
+            />
+            <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start' }}>
+              {busy ? 'Đang kích hoạt...' : 'Kích hoạt CTV'}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
