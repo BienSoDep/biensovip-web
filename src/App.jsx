@@ -12,7 +12,6 @@ import { useComparePlates } from './services/compareService.js';
 import { contentGet } from './lib/content/index.js';
 import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
-import BackToTop from './components/BackToTop.jsx';
 import CompareBar from './components/CompareBar.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
@@ -179,8 +178,10 @@ export default function App() {
 
   usePathRouter(st, patch);
 
-  // Scroll to top whenever the page changes (route, plate, or post).
-  useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.curId, st.postId, st.provinceCode, st.typeSlug]);
+  // Scroll to top whenever the page changes (route change only — curId also
+  // doubles as the id for buy/contact modals, so it must NOT be a dep here
+  // or opening a modal on a list page yanks the scroll to top).
+  useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.postId, st.provinceCode, st.typeSlug]);
 
   const notify = (msg) => toast(msg);
   const heroAnim = makeHeroAnim(fanDone);
@@ -711,8 +712,6 @@ export default function App() {
           {isPublic && <Footer settings={st.settings} patch={patch} />}
 
           {isPublic && <PromoRails />}
-
-          <BackToTop />
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />

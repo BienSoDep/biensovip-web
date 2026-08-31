@@ -18,10 +18,11 @@ function NotificationBell({ go, openPlate }) {
   const close = () => { setOpen(false); bellRef.current?.focus(); };
 
   useEffect(() => {
+    if (!open) return;
     const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) close(); };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;

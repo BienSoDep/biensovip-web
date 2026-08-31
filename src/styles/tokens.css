@@ -132,7 +132,21 @@
 --z-header:40;--z-chatbot:70;--z-drawer:80;--z-filter-overlay:85;--z-modal:90;--z-confirm:95;--z-popover:110;--z-toast:120;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{overflow-x:hidden;scroll-behavior:smooth;scroll-padding-top:76px}
+/* scroll-behavior:smooth removed from html — it animated the browser's native
+   "scroll focused element into view" correction below, making it read as the
+   whole page flying to top. Explicit scrollIntoView/scrollTo calls (TOC
+   links, pagination) pass their own behavior option and are unaffected. */
+html{overflow-x:hidden;scroll-padding-top:76px}
+/* The sticky header (72px) overlaps page content instead of reserving space,
+   so any button/link near the top of a scrolled list sits geometrically
+   under it. Clicking such an element focuses it, and the browser "corrects"
+   by scrolling it clear of the header — which without a safe-zone hint
+   overshoots toward the top of the whole page. scroll-padding-top (on the
+   scroller) and scroll-margin-top (on the target) both tell that correction
+   where the real visible edge is, so it nudges by a few px instead of firing
+   a page-wide jump. main.jsx additionally calls focus({preventScroll:true})
+   on pointerdown so the correction is skipped outright where possible. */
+a,button,input,select,textarea,[tabindex]{scroll-margin-top:76px}
 body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 h1,h2,h3,h4,p{margin:0}
 a{color:var(--text-link);text-decoration:none;transition:var(--transition-control)}
