@@ -39,6 +39,7 @@ export default function AdminStaff({ notify }) {
   const [editId, setEditId] = useState(null);
   const [delId, setDelId] = useState(null);
   const [selfAction, setSelfAction] = useState(null);
+  const [busy, setBusy] = useState(false); // chặn double-submit cho khóa/tự khóa tài khoản
   const [pwId, setPwId] = useState(null);
   const [pwValue, setPwValue] = useState('');
   const [pwErr, setPwErr] = useState('');
@@ -109,13 +110,16 @@ export default function AdminStaff({ notify }) {
   };
 
   const confirmDelete = async () => {
-    if (!delId) return;
+    if (!delId || busy) return;
+    setBusy(true);
     try {
       await deleteStaff.mutateAsync(delId);
       notify('Đã vô hiệu hóa tài khoản');
     } catch (e) {
       if (e.status === 409) toast.error('Phải còn ít nhất một tài khoản super-admin');
       else toast.error(e.message || 'Lỗi khi xóa');
+    } finally {
+      setBusy(false);
     }
     setDelId(null);
   };
@@ -137,12 +141,16 @@ export default function AdminStaff({ notify }) {
   const pwTarget = items.find((x) => x.id === pwId);
 
   const toggleActive = async (x) => {
+    if (busy) return;
+    setBusy(true);
     try {
       await updateStaff.mutateAsync({ id: x.id, active: !x.active });
       notify(x.active ? 'Đã vô hiệu hóa tài khoản' : 'Đã kích hoạt tài khoản');
     } catch (e) {
       if (e.status === 409) toast.error('Phải còn ít nhất một tài khoản super-admin');
       else toast.error(e.message || 'Lỗi khi cập nhật');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -161,12 +169,15 @@ export default function AdminStaff({ notify }) {
   };
 
   const confirmSelf = async () => {
-    if (!selfAction) return;
+    if (!selfAction || busy) return;
+    setBusy(true);
     try {
       if (selfAction.type === 'delete') await deleteStaff.mutateAsync(selfAction.id);
       else await updateStaff.mutateAsync({ id: selfAction.id, active: false });
     } catch (e) {
       toast.error(e.message || 'Lỗi khi cập nhật');
+      setBusy(false);
+      return;
     }
     setSelfAction(null);
     clearAuth();
@@ -204,11 +215,11 @@ export default function AdminStaff({ notify }) {
                 </span>
               </span>
               <span style={{ flex: '1 1 110px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: ROLE_FG[x.role] || 'var(--text-strong)' }}>{ROLE_LABEL[x.role] || x.role}</span>
-              <span style={{ flex: '1 1 80px' }}><Switch checked={x.active} onChange={() => handleToggleActive(x)} /></span>
-              <span style={{ flex: '0 0 72px', display: 'flex', gap: 'var(--space-2)' }}>
-                <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(x)} />
-                <IconButton name="key" label="Đổi mật khẩu" size="sm" onClick={() => openResetPassword(x)} />
-                <IconButton name="trash-2" label="Vô hiệu hóa" size="sm" onClick={() => handleDelete(x)} />
+              <span style={{ flex: '1 1 80px' }}><Switch checked={x.active} disabled={busy} onChange={() => handleToggleActive(x)} /></span>
+              <span style={{ flex: '0 0 144px', display: 'flex', gap: 'var(--space-2)' }}>
+                <IconButton name="pencil" label="Sửa" onClick={() => openEdit(x)} />
+                <IconButton name="key" label="Đổi mật khẩu" onClick={() => openResetPassword(x)} />
+                <IconButton name="trash-2" label="Vô hiệu hóa" disabled={busy} onClick={() => handleDelete(x)} />
               </span>
             </div>
           ))}
@@ -236,12 +247,12 @@ export default function AdminStaff({ notify }) {
                 <button type="button" onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Đặt mặc định</button>
               </div>
               <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', background: 'var(--surface-sunken)', padding: '8px 12px', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>
+                <div className="perm-matrix-row" style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', background: 'var(--surface-sunken)', padding: '8px 12px', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>
                   <span>Chức năng</span>
                   {PERM_ACTIONS.map(([, l]) => <span key={l} style={{ textAlign: 'center' }}>{l}</span>)}
                 </div>
                 {PERM_RESOURCES.map(([r, label]) => (
-                  <div key={r} style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', alignItems: 'center', padding: '6px 12px', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+                  <div key={r} className="perm-matrix-row" style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', alignItems: 'center', padding: '6px 12px', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
                     <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{label}</span>
                     {PERM_ACTIONS.map(([a]) => {
                       const perm = `${r}:${a}`;
@@ -279,7 +290,7 @@ export default function AdminStaff({ notify }) {
           </p>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="md" onClick={() => setDelId(null)}>Hủy</Button>
-            <Button variant="danger" size="md" onClick={confirmDelete}>Vô hiệu hóa</Button>
+            <Button variant="danger" size="md" onClick={confirmDelete} disabled={busy} loading={busy}>Vô hiệu hóa</Button>
           </div>
         </div>
       </Modal>
@@ -304,7 +315,7 @@ export default function AdminStaff({ notify }) {
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Bạn đang thực hiện thao tác trên chính tài khoản đang đăng nhập. Hành động này sẽ đăng xuất bạn ngay lập tức. Bạn có chắc chắn muốn tiếp tục?</p>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="md" onClick={() => setSelfAction(null)}>Hủy</Button>
-            <Button variant="danger" size="md" onClick={confirmSelf}>Tiếp tục</Button>
+            <Button variant="danger" size="md" onClick={confirmSelf} disabled={busy} loading={busy}>Tiếp tục</Button>
           </div>
         </div>
       </Modal>

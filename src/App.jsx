@@ -192,7 +192,7 @@ export default function App() {
       if (!window.confirm('Bạn có thay đổi chưa lưu. Rời đi sẽ mất những thay đổi này?')) return;
     }
     resetComposeDirty();
-    patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? st.screen : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
+    patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
   };
   const toggleFav = (id) => {
     setSt((s) => {
@@ -212,7 +212,16 @@ export default function App() {
     } else {
       const isFav = st.favs[id];
       if (isFav) removeLocalFavorite(id);
-      else addLocalFavorite(id);
+      else {
+        addLocalFavorite(id);
+        // Gợi ý 1 lần/phiên — guest không biết dữ liệu chỉ lưu tạm trên trình duyệt này cho tới khi rời trang Fav.
+        try {
+          if (!sessionStorage.getItem('bsd_guest_fav_hint')) {
+            sessionStorage.setItem('bsd_guest_fav_hint', '1');
+            notify('Đã lưu tạm trên trình duyệt này — đăng nhập để giữ vĩnh viễn');
+          }
+        } catch { /* sessionStorage bị chặn — bỏ qua gợi ý */ }
+      }
     }
   };
   const clearAllFavs = async () => {
@@ -227,7 +236,11 @@ export default function App() {
   };
   const openPlate = (id) => patch({ screen: 'detail', curId: id, modal: false });
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
-  const openBuy = (id) => patch({ curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {} });
+  const openBuy = (id) => patch({
+    curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {},
+    mName: st.user?.fullName || '',
+    mPhone: st.user?.identifierType === 'phone' ? (st.user?.identifier || '') : '',
+  });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
   // UC25 — nhặt mã giới thiệu từ ?ref= (backdrop: /r/{code} redirect kèm query) rồi xoá khỏi URL,
   // để pre-fill field đăng ký + giữ qua mọi điều hướng SPA (cookie ref_code HttpOnly, JS không đọc được).
@@ -247,8 +260,6 @@ export default function App() {
     zalo: (st.settings?.zalo || '0815792699').replace(/[^0-9]/g, ''),
   };
 
-  const catNames = st.cats.map((c) => c.name);
-
   const cards = (list) => list.map((p) => ({
     ...p,
     fav: !!st.favs[p.id],
@@ -259,7 +270,9 @@ export default function App() {
     onBuy: () => openBuy(p.id),
   }));
 
+  const [mSending, setMSending] = useState(false);
   const submitContact = async () => {
+    if (mSending) return; // chặn double-submit khi bấm nhanh 2 lần
     const err = {};
     if (!st.mName.trim()) err.name = 'Vui lòng nhập họ tên.';
     if (!st.mPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
@@ -270,6 +283,7 @@ export default function App() {
     const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.curId || '');
     const intent = st.mIntent === 'deposit_request' ? 'deposit_request' : 'inquiry';
     const depositAmount = intent === 'deposit_request' ? (Number(String(st.mDeposit || '').replace(/[^\d]/g, '')) || null) : null;
+    setMSending(true);
     try {
       const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/contact-requests`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -294,6 +308,8 @@ export default function App() {
       notify('Đã gửi yêu cầu tư vấn');
     } catch {
       patch({ mErr: { name: 'Không kết nối được server.' } });
+    } finally {
+      setMSending(false);
     }
   };
 
@@ -353,6 +369,25 @@ export default function App() {
   // Hồ sơ chưa đủ để dùng tính năng hợp mệnh + phân khúc khách hàng (thiếu bất kỳ trường nào).
   const isProfileIncomplete = (user) => !user?.fullName?.trim() || !user?.birthDate || !user?.gender;
 
+  // Validate 1 field khi rời khỏi ô (onBlur) — chỉ báo lỗi sớm, không chặn gõ tiếp; dùng lại
+  // đúng rule của authSubmit register để tránh 2 nguồn chân lý validate khác nhau.
+  const blurValidateRegisterField = (field) => () => {
+    if (st.screen !== 'register') return;
+    const err = { ...st.aErr };
+    if (field === 'name') {
+      if (!st.aName.trim()) err.name = 'Vui lòng nhập họ tên.'; else delete err.name;
+    } else if (field === 'email' && st.aIdType === 'email') {
+      if (st.aEmail.trim() && !st.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.'; else delete err.email;
+    } else if (field === 'phone' && st.aIdType === 'phone') {
+      if (st.aPhone.trim() && !validatePhone(st.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).'; else delete err.phone;
+    } else if (field === 'pw') {
+      if (st.aPw && st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.'; else delete err.pw;
+    } else if (field === 'pw2') {
+      if (st.aPw2 && st.aPw !== st.aPw2) err.pw2 = 'Hai mật khẩu chưa khớp.'; else delete err.pw2;
+    }
+    patch({ aErr: err });
+  };
+
   const authSubmit = async (remember = true) => {
     const s = st.screen;
     const err = {};
@@ -401,7 +436,7 @@ export default function App() {
         if (isProfileIncomplete(data.user)) {
           patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, aPw: '' });
         } else {
-          patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', aPw: '', redirectTo: null });
+          patch({ aErr: {}, user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, aPw: '', redirectTo: null });
         }
         notify('Đăng nhập thành công');
         favApi.syncFavorites(); // fire-and-forget: merge local → server
@@ -462,7 +497,7 @@ export default function App() {
       if (isProfileIncomplete(data.user)) {
         patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, step: 1, aOtp: '', redirectTo: null });
       } else {
-        patch({ aErr: {}, user: data.user, screen: st.redirectTo || 'home', step: 1, aOtp: '', redirectTo: null });
+        patch({ aErr: {}, user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, step: 1, aOtp: '', redirectTo: null });
       }
       notify('Đăng nhập thành công');
       favApi.syncFavorites();
@@ -477,45 +512,6 @@ export default function App() {
     } else {
       await otpLoginRequest();
     }
-  };
-
-  const openAdd = () => patch({ addOpen: true, editId: null, formErr: {}, form: { prov: '', seri: '', num: '', cat: 'Ngũ quý', vehicle: 'Ô tô', status: 'Còn hàng', price: '' } });
-  const openEdit = (p) => patch({ addOpen: true, editId: p.id, formErr: {}, form: { prov: p.prov, seri: p.seri, num: p.num, cat: p.cat, vehicle: p.vehicle, status: p.status, price: p.price === 'Giá liên hệ' ? '' : p.price } });
-  const setForm = (k) => (v) => setSt((s) => ({ ...s, form: { ...s.form, [k]: v && v.target ? v.target.value : v } }));
-
-  const savePlate = () => {
-    const f = st.form;
-    const err = {};
-    if (!/^\d{2}$/.test(String(f.prov || '').trim())) err.prov = 'Mã tỉnh gồm 2 số.';
-    if (!String(f.seri || '').trim()) err.seri = 'Nhập seri.';
-    if (!String(f.num || '').trim()) err.num = 'Nhập số biển.';
-    if (Object.keys(err).length) { patch({ formErr: err }); return; }
-    const price = String(f.price || '').trim();
-    const row = {
-      prov: f.prov.trim(), seri: f.seri.trim().toUpperCase(), num: f.num.trim(), cat: f.cat,
-      vehicle: f.vehicle, city: f.prov === '92' ? 'Quảng Nam' : (f.prov === '75' ? 'Huế' : 'Đà Nẵng'),
-      price: price || 'Giá liên hệ', status: f.status, updated: 'Vừa xong',
-    };
-    setSt((s) => {
-      if (s.editId) {
-        return { ...s, plates: s.plates.map((p) => (p.id === s.editId ? { ...p, ...row } : p)), addOpen: false, editId: null, formErr: {} };
-      }
-      return { ...s, plates: [{ id: 'p' + Date.now(), isNew: true, ...row }, ...s.plates], addOpen: false, formErr: {} };
-    });
-    notify(st.editId ? 'Đã cập nhật biển số' : 'Đã thêm biển số mới');
-  };
-
-  const askDelete = (kind, id, text) => patch({ confirm: { kind, id, text } });
-  const doDelete = () => {
-    const c = st.confirm;
-    if (!c) return;
-    setSt((s) => {
-      if (c.kind === 'plate') return { ...s, plates: s.plates.filter((p) => p.id !== c.id), confirm: null };
-      if (c.kind === 'post') return { ...s, posts: s.posts.filter((p) => p.id !== c.id), confirm: null };
-      if (c.kind === 'cat') return { ...s, cats: s.cats.filter((x) => x.name !== c.id), confirm: null };
-      return { ...s, confirm: null };
-    });
-    notify('Đã xóa');
   };
 
   const s = st.screen;
@@ -654,22 +650,22 @@ export default function App() {
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
-            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} />}
+            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} />
+              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} />
             )}
 
             {s === 'verify-email' && <VerifyEmail go={go} />}
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
 
-            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} />}
+            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} contact={contact} />}
             {s === 'profile' && <Profile go={go} notify={notify} user={st.user} onboarding={!!st.profileOnboarding} onUserUpdate={(u) => patch({ user: u, profileOnboarding: false })} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
             {s === 'about' && <About go={go} />}
 
-            {s === 'chat' && <ChatZaloContact notify={notify} />}
+            {s === 'chat' && <ChatZaloContact notify={notify} user={st.user} />}
 
             {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} />}
 
@@ -704,7 +700,7 @@ export default function App() {
               <RequireAuth st={st} go={go}>
                 <AdminShell
                   s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
-                  adminMeta={adminMeta} askDelete={askDelete}
+                  adminMeta={adminMeta}
                 />
               </RequireAuth>
             )}
@@ -715,7 +711,7 @@ export default function App() {
           {isPublic && <PromoRails />}
 
           <Suspense fallback={null}>
-            <Modals st={st} patch={patch} setForm={setForm} savePlate={savePlate} doDelete={doDelete} cur={cur} submitContact={submitContact} setField={setField} catNames={catNames} />
+            <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} />
           </Suspense>
 
           {isPublic && st.settings?.zalo && !import.meta.env.VITE_FB_PAGE_ID && (

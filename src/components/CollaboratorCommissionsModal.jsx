@@ -63,40 +63,46 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
           <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Không có khoản hoa hồng nào.</div>
         ) : (
           <div style={{ border: '1px solid var(--grey-100)', borderRadius: 'var(--radius-field)', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', padding: '8px 12px', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>
-              <span style={{ flex: '0 0 24px' }}>
-                {payable.length > 0 && <input type="checkbox" checked={selected.length === payable.length} onChange={toggleAll} />}
-              </span>
-              <span style={{ flex: '1 1 80px' }}>Ngày</span>
-              <span style={{ flex: '1 1 90px' }}>Biển số</span>
-              <span style={{ flex: '1 1 80px' }}>Số tiền</span>
-              <span style={{ flex: '1 1 80px' }}>Trạng thái</span>
-              <span style={{ flex: '1 1 120px' }}>Chi trả</span>
-            </div>
-            {items.map((c) => (
-              <div key={c.id} style={{ display: 'flex', gap: 'var(--space-2)', padding: '8px 12px', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-caption)' }}>
-                <span style={{ flex: '0 0 24px' }}>
-                  {(c.status === 'pending' || c.status === 'approved') && (
-                    <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggle(c.id)} />
-                  )}
-                </span>
-                <span style={{ flex: '1 1 80px', color: 'var(--text-muted)' }}>{formatDate(c.createdAt)}</span>
-                <span style={{ flex: '1 1 90px' }}>{c.plateNumber || '—'}</span>
-                <span style={{ flex: '1 1 80px', fontWeight: 'var(--fw-semibold)' }}>{money(c.amount)}</span>
-                <span style={{ flex: '1 1 80px' }}>{STATUS_OPTS.find((o) => o.value === c.status)?.label || c.status}</span>
-                <span style={{ flex: '1 1 120px', color: 'var(--text-faint)' }}>
-                  {c.status === 'paid' ? `${c.paidByLabel || '—'} · ${formatDateTime(c.paidAt)}` : '—'}
-                </span>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <div style={{ minWidth: 520 }}>
+                <div style={{ display: 'flex', gap: 'var(--space-2)', padding: '8px 12px', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>
+                  <span style={{ flex: '0 0 24px' }}>
+                    {payable.length > 0 && <input type="checkbox" checked={selected.length === payable.length} onChange={toggleAll} />}
+                  </span>
+                  <span style={{ flex: '1 1 80px' }}>Ngày</span>
+                  <span style={{ flex: '1 1 90px' }}>Biển số</span>
+                  <span style={{ flex: '1 1 80px' }}>Số tiền</span>
+                  <span style={{ flex: '1 1 80px' }}>Trạng thái</span>
+                  <span style={{ flex: '1 1 120px' }}>Chi trả</span>
+                </div>
+                {items.map((c) => (
+                  <div key={c.id} style={{ display: 'flex', gap: 'var(--space-2)', padding: '8px 12px', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-caption)' }}>
+                    <span style={{ flex: '0 0 24px' }}>
+                      {(c.status === 'pending' || c.status === 'approved') && (
+                        <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggle(c.id)} />
+                      )}
+                    </span>
+                    <span style={{ flex: '1 1 80px', color: 'var(--text-muted)' }}>{formatDate(c.createdAt)}</span>
+                    <span style={{ flex: '1 1 90px' }}>{c.plateNumber || '—'}</span>
+                    <span style={{ flex: '1 1 80px', fontWeight: 'var(--fw-semibold)' }}>{money(c.amount)}</span>
+                    <span style={{ flex: '1 1 80px' }}>{STATUS_OPTS.find((o) => o.value === c.status)?.label || c.status}</span>
+                    <span style={{ flex: '1 1 120px', color: 'var(--text-faint)' }}>
+                      {c.status === 'paid' ? `${c.paidByLabel || '—'} · ${formatDateTime(c.paidAt)}` : '—'}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         )}
 
         {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)' }}>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button key={p} onClick={() => setPage(p)} style={{ minWidth: 32, height: 32, border: 'none', borderRadius: 'var(--radius-field)', background: p === page ? 'var(--action-primary)' : 'var(--white)', color: p === page ? 'var(--white)' : 'var(--text-body)', cursor: 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}>{p}</button>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <button type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+              style={{ minWidth: 32, height: 32, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page <= 1 ? 'var(--text-faint)' : 'var(--text-body)', cursor: page <= 1 ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }} aria-label="Trang trước">‹</button>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{page}/{totalPages}</span>
+            <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              style={{ minWidth: 32, height: 32, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page >= totalPages ? 'var(--text-faint)' : 'var(--text-body)', cursor: page >= totalPages ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }} aria-label="Trang sau">›</button>
           </div>
         )}
 

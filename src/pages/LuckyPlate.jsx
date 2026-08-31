@@ -7,32 +7,23 @@ import { ELEMENTS, PURPOSES, VEHICLES, BUDGETS, scoreColor } from '../lib/fengsh
 import { loadAuth } from '../lib/authStore.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
-const yearOpts = (() => { const a = []; for (let y = CURRENT_YEAR; y >= 1950; y--) a.push({ value: String(y), label: String(y) }); return a; })();
-const monthOpts = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
-const dayOpts = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+const MIN_BIRTH_DATE = '1900-01-01';
+const MAX_BIRTH_DATE = `${CURRENT_YEAR}-12-31`;
 const toOpts = (arr) => arr.map((o) => ({ value: o.label, label: o.label }));
 
-function validBirthDate({ day, month, year }) {
-  const d = Number(day), m = Number(month), y = Number(year);
-  if (!d || !m || !y) return false;
-  if (y < 1900 || y > CURRENT_YEAR) return false;
+function validBirthDate(iso) {
+  if (!iso) return false;
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d || y < 1900 || y > CURRENT_YEAR) return false;
   const dt = new Date(y, m - 1, d);
   return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
 }
 
-const pad = (n) => String(n).padStart(2, '0');
 const EL_DISP = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
 const elName = (k) => EL_DISP[k] || k;
 
-function splitBirthDate(iso) {
-  if (!iso) return { day: '', month: '', year: '' };
-  const [y, m, d] = iso.split('-');
-  return { day: String(Number(d)), month: String(Number(m)), year: y };
-}
-
-export default function LuckyPlate({ go, notify, onNotice, user }) {
-  const bd = splitBirthDate(user?.birthDate);
-  const [form, setForm] = useState({ name: user?.fullName || '', day: bd.day, month: bd.month, year: bd.year, purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' });
+export default function LuckyPlate({ go, notify, onNotice, user, contact }) {
+  const [form, setForm] = useState({ name: user?.fullName || '', birthDate: user?.birthDate || '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' });
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
   const shareCardRef = useRef(null);
@@ -45,18 +36,18 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = () => {
-    if (!validBirthDate(form)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
+    if (!validBirthDate(form.birthDate)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
     setErr('');
     const budgetCap = BUDGETS.find((b) => b.label === form.budget)?.cap ?? null;
     lookup.mutate({
-      birthDate: `${form.year}-${pad(form.month)}-${pad(form.day)}`,
+      birthDate: form.birthDate,
       purpose: PURPOSES.find((p) => p.label === form.purpose)?.key || 'ca_nhan',
       budget: budgetCap,
       vehicle: form.vehicle,
     }, { onError: () => notify('Không tra cứu được, thử lại sau.') });
   };
 
-  const reset = () => { lookup.reset(); setForm((f) => ({ ...f, day: '', month: '', year: '' })); };
+  const reset = () => { lookup.reset(); setForm((f) => ({ ...f, birthDate: '' })); };
 
   const result = lookup.data;
 
@@ -73,14 +64,14 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
     const params = new URLSearchParams(q);
     const y = params.get('y');
     if (!y) return;
-    setForm((f) => ({ ...f, year: y, name: params.get('t') ? decodeURIComponent(params.get('t')) : f.name }));
+    setForm((f) => ({ ...f, birthDate: `${y}-01-01`, name: params.get('t') ? decodeURIComponent(params.get('t')) : f.name }));
     lookup.mutate({ birthDate: `${y}-01-01`, purpose: 'ca_nhan', budget: null, vehicle: 'Ô tô' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (result && isAuthed && form.year) {
-      saveHistory.mutate({ birthDate: `${form.year}-${pad(form.month)}-${pad(form.day)}` });
+    if (result && isAuthed && form.birthDate) {
+      saveHistory.mutate({ birthDate: form.birthDate });
       history.refetch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,9 +79,10 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
 
   const el = result ? ELEMENTS[result.element] || { icon: 'sparkles', color: 'var(--action-primary)', desc: '' } : null;
 
+  const shareYear = form.birthDate ? form.birthDate.split('-')[0] : '';
   const shareUrl = useMemo(
-    () => (result && form.year ? `${location.origin}${location.pathname}#/hop-menh?y=${form.year}` : ''),
-    [result, form.year],
+    () => (result && shareYear ? `${location.origin}${location.pathname}#/hop-menh?y=${shareYear}` : ''),
+    [result, shareYear],
   );
 
   const shareLink = () => {
@@ -136,16 +128,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
           )}
           <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.name} onChange={(e) => set('name')(e.target.value)} />
 
-          <div>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ngày sinh (dương lịch)</span>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 6 }}>
-              <div style={{ flex: 1 }}><Select label="Ngày" value={form.day} options={dayOpts} onChange={set('day')} /></div>
-              <div style={{ flex: 1 }}><Select label="Tháng" value={form.month} options={monthOpts} onChange={set('month')} /></div>
-              <div style={{ flex: 1.4 }}><Select label="Năm" value={form.year} options={yearOpts} onChange={set('year')} /></div>
-            </div>
-            {err && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
-            <p style={{ margin: '6px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tính theo dương lịch. Nếu chỉ nhớ ngày âm lịch, hãy quy đổi trước khi nhập.</p>
-          </div>
+          <Input type="date" label="Ngày sinh (dương lịch)" value={form.birthDate} min={MIN_BIRTH_DATE} max={MAX_BIRTH_DATE} error={err} hint="Tính theo dương lịch. Nếu chỉ nhớ ngày âm lịch, hãy quy đổi trước khi nhập." onChange={(e) => set('birthDate')(e.target.value)} />
 
           <Select label="Mục đích sử dụng" value={form.purpose} options={toOpts(PURPOSES)} onChange={set('purpose')} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
@@ -220,7 +203,9 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
                   </div>
                   <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2 }}>
                     <Button variant="dark" size="sm" onClick={() => go('detail', r.plateId)()}>Xem biển</Button>
-                    <Button variant="primary" size="sm" onClick={() => notify('Liên hệ Duy Đinh để giữ chỗ')}>Gọi ngay</Button>
+                    <a href={`tel:${contact?.phone || '0815792699'}`} style={{ textDecoration: 'none' }}>
+                      <Button variant="primary" size="sm">Gọi ngay</Button>
+                    </a>
                   </div>
                 </div>
               ))}
@@ -236,7 +221,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                   <Badge tone="blue">Mệnh {elName(h.element)}</Badge>
                   <span style={{ flex: 1 }}>{h.birthDate}</span>
-                  <Button variant="ghost" size="sm" onClick={() => { setForm((f) => ({ ...f, year: String(h.birthDate).slice(0, 4) })); }}>Xem lại</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setForm((f) => ({ ...f, birthDate: h.birthDate })); }}>Xem lại</Button>
                 </div>
               ))}
             </div>

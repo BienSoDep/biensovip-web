@@ -184,6 +184,7 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
   const [editForm, setEditForm] = useState({ fullName: '', email: '', phone: '' });
   const { data: sessions, isLoading: sessionsLoading } = useCustomerSessions(id);
   const revokeSession = useRevokeCustomerSession();
+  const [confirmRevoke, setConfirmRevoke] = useState(null); // { sessionId, deviceLabel, ipAddress }
 
   const startEdit = () => {
     setEditForm({ fullName: data?.fullName || '', email: data?.email || '', phone: data?.phone || '' });
@@ -276,7 +277,7 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{s.ipAddress || '—'} · Hoạt động gần nhất {fmtDateTime(s.lastActiveAt)}</span>
                     </div>
                     <Button variant="ghost" size="sm" disabled={revokeSession.isPending}
-                      onClick={() => { if (window.confirm('Đăng xuất khách khỏi phiên này?')) revokeSession.mutate({ id, sessionId: s.id }, { onSuccess: () => notify?.('Đã đăng xuất phiên này') }); }}>
+                      onClick={() => setConfirmRevoke({ sessionId: s.id, deviceLabel: s.deviceLabel, ipAddress: s.ipAddress })}>
                       Đăng xuất
                     </Button>
                   </div>
@@ -330,6 +331,20 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
           )}
         </div>
       </div>
+      <Modal open={!!confirmRevoke} onClose={() => setConfirmRevoke(null)} title="Đăng xuất phiên đăng nhập" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Đăng xuất khách khỏi thiết bị <b>{confirmRevoke?.deviceLabel || 'không rõ'}</b>{confirmRevoke?.ipAddress ? ` (${confirmRevoke.ipAddress})` : ''}?
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setConfirmRevoke(null)}>Hủy</Button>
+            <Button variant="danger" size="md" disabled={revokeSession.isPending} loading={revokeSession.isPending}
+              onClick={() => revokeSession.mutate({ id, sessionId: confirmRevoke.sessionId }, { onSuccess: () => { notify?.('Đã đăng xuất phiên này'); setConfirmRevoke(null); } })}>
+              Đăng xuất
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

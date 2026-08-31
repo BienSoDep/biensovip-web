@@ -44,7 +44,7 @@ export default function Compose({ st, patch, notify }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tags, setTags] = useState([]);
   const [newTagInput, setNewTagInput] = useState('');
-  const [err, setErr] = useState('');
+  const [err, setErr] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
@@ -283,16 +283,16 @@ export default function Compose({ st, patch, notify }) {
 
   // Xuất bản / Cập nhật (bài công khai) — xác nhận trước khi đưa lên public.
   const publish = () => {
-    if (!title.trim()) { setErr('Nhập tiêu đề bài viết.'); return; }
-    if (!plainText.trim()) { setErr('Bài viết cần có nội dung để đăng.'); return; }
-    setErr('');
+    if (!title.trim()) { setErr({ field: 'title', message: 'Nhập tiêu đề bài viết.' }); return; }
+    if (!plainText.trim()) { setErr({ field: 'content', message: 'Bài viết cần có nội dung để đăng.' }); return; }
+    setErr(null);
     setConfirmPublish(true);
   };
 
   const submit = async (status) => {
-    if (!title.trim()) { setErr('Nhập tiêu đề bài viết.'); return; }
-    if (status === 'published' && !plainText.trim()) { setErr('Bài viết cần có nội dung để đăng.'); return; }
-    setErr('');
+    if (!title.trim()) { setErr({ field: 'title', message: 'Nhập tiêu đề bài viết.' }); return; }
+    if (status === 'published' && !plainText.trim()) { setErr({ field: 'content', message: 'Bài viết cần có nội dung để đăng.' }); return; }
+    setErr(null);
 
     if (editPostId && loadedUpdatedAt) {
       try {
@@ -336,8 +336,8 @@ export default function Compose({ st, patch, notify }) {
       patch({ screen: 'aposts', editPostId: null });
     };
     const onError = (e) => {
-      if (e.code === 'slug_taken') setErr('Đường dẫn này đã được sử dụng, vui lòng chọn slug khác.');
-      else setErr(e.message || 'Có lỗi xảy ra.');
+      if (e.code === 'slug_taken') setErr({ field: 'slug', message: 'Đường dẫn này đã được sử dụng, vui lòng chọn slug khác.' });
+      else setErr({ field: null, message: e.message || 'Có lỗi xảy ra.' });
     };
 
     if (editPostId) updatePost.mutate({ id: editPostId, body }, { onSuccess, onError });
@@ -349,12 +349,12 @@ export default function Compose({ st, patch, notify }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <Input label="Tiêu đề" placeholder="VD: Ngũ quý 99999 — vì sao đắt nhất?" value={title} error={err} onChange={onTitleChange} />
+        <Input label="Tiêu đề" placeholder="VD: Ngũ quý 99999 — vì sao đắt nhất?" value={title} error={err?.field === 'title' ? err.message : undefined} onChange={onTitleChange} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Slug</span>
           <InfoTip size={12} text="Đường dẫn riêng của bài viết, dùng cho URL/SEO. Tự sinh từ tiêu đề (VD: 'phong-thuy-bien-so'). Để trống để hệ thống tự tạo." />
         </div>
-        <Input placeholder="tu-dong-sinh-tu-tieu-de" value={slug} onChange={(e) => { setSlugTouched(true); setSlug(e.target.value); }} />
+        <Input placeholder="tu-dong-sinh-tu-tieu-de" value={slug} error={err?.field === 'slug' ? err.message : undefined} onChange={(e) => { setSlugTouched(true); setSlug(e.target.value); }} />
         <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
@@ -367,13 +367,15 @@ export default function Compose({ st, patch, notify }) {
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{wordCount} từ · ~{readingMinutes} phút đọc</span>
             </div>
           </div>
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', overflow: 'hidden', boxShadow: err?.field === 'content' ? 'inset 0 0 0 1.5px var(--status-danger)' : undefined }}>
             <EditorToolbar editor={editor} />
             <div style={{ padding: '12px 14px', minHeight: 320 }}>
               <EditorContent editor={editor} />
             </div>
           </div>
+          {err?.field === 'content' && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err.message}</span>}
         </label>
+        {err && !err.field && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err.message}</span>}
       </div>
       <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -496,7 +498,7 @@ export default function Compose({ st, patch, notify }) {
             style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
         </label>
 
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <div className="compose-actions-mobile" style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <Button variant="outline" size="md" disabled={saving} onClick={() => submit('draft')} style={{ flex: 1 }}>{scheduledPublishAt ? 'Lưu & hẹn giờ' : 'Lưu nháp'}</Button>
           <Button variant="primary" size="md" disabled={saving} onClick={publish} style={{ flex: 1 }}>{editPostId ? 'Cập nhật' : 'Xuất bản'}</Button>
         </div>

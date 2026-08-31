@@ -58,10 +58,10 @@ export default function Blog({ patch }) {
             <input type="search" placeholder="Tìm bài viết…" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} aria-label="Tìm bài viết"
               style={{ width: '100%', height: 44, padding: '0 14px 0 40px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div className="blog-category-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {categories.map((c) => (
               <button key={c || 'all'} type="button" onClick={() => { setCategory(c); setPage(1); }}
-                style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
+                style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', flexShrink: 0,
                   background: category === c ? 'var(--action-primary)' : 'var(--white)', color: category === c ? 'var(--white)' : 'var(--text-muted)', boxShadow: 'var(--shadow-inset-hairline)' }}>
                 {c ? CATEGORY_LABEL[c] : 'Tất cả'}
               </button>

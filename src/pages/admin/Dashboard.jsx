@@ -315,8 +315,8 @@ export default function Dashboard({ go, st }) {
         {conversion.isLoading ? (
           <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={220} /></div>
         ) : conversion.data?.items?.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
               <thead>
                 <tr style={{ color: 'var(--text-faint)', textAlign: 'left' }}>
                   <th style={{ padding: 'var(--space-2) var(--gutter-card)', fontWeight: 'var(--fw-semibold)' }}>Biển số</th>
@@ -358,8 +358,8 @@ export default function Dashboard({ go, st }) {
         {orders.isLoading ? (
           <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={220} /></div>
         ) : orders.data?.items?.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
               <thead>
                 <tr style={{ color: 'var(--text-faint)', textAlign: 'left' }}>
                   <th style={{ padding: 'var(--space-2) var(--gutter-card)', fontWeight: 'var(--fw-semibold)' }}>Biển số</th>

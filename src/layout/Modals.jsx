@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { opts } from '../lib/mockData.js';
 import Button from '../components/Button.jsx';
 import { Input, Select, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -7,27 +6,23 @@ import PlateVisual from '../components/PlateVisual.jsx';
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request' };
 
-export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, submitContact, setField, catNames }) {
-  const addRef = useRef(null);
-  const confirmRef = useRef(null);
+export default function Modals({ st, patch, cur, submitContact, mSending, setField }) {
   const contactRef = useRef(null);
 
   // Escape key closes any open modal
   useEffect(() => {
-    if (!st.addOpen && !st.confirm && !st.modal) return;
+    if (!st.modal) return;
     const handler = (e) => {
       if (e.key !== 'Escape') return;
-      if (st.addOpen) patch({ addOpen: false, editId: null });
-      if (st.confirm) patch({ confirm: null });
       if (st.modal) patch({ modal: false, sent: false });
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [st.addOpen, st.confirm, st.modal, patch]);
+  }, [st.modal, patch]);
 
   // Auto-focus first focusable + focus-trap + scroll-lock + focus-restore when modal opens
   useEffect(() => {
-    const ref = st.addOpen ? addRef : st.confirm ? confirmRef : st.modal ? contactRef : null;
+    const ref = st.modal ? contactRef : null;
     if (!ref?.current) return;
     const trigger = document.activeElement;
     const prevOverflow = document.body.style.overflow;
@@ -50,53 +45,10 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
       document.body.style.overflow = prevOverflow;
       if (trigger && typeof trigger.focus === 'function') trigger.focus();
     };
-  }, [st.addOpen, st.confirm, st.modal]);
+  }, [st.modal]);
 
   return (
     <>
-      {st.addOpen && (
-        <div role="dialog" aria-modal="true" aria-labelledby="modal-add-title" aria-describedby="modal-add-desc" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div ref={addRef} style={{ width: '100%', maxWidth: 520, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-              <div style={{ flex: 1 }}><h2 id="modal-add-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{st.editId ? 'Sửa biển số' : 'Thêm biển số'}</h2><p id="modal-add-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{st.editId ? 'Cập nhật thông tin biển đang bán.' : 'Biển sẽ xuất hiện ngay ở đầu bảng và trang chủ.'}</p></div>
-              <IconButton name="x" label="Đóng" onClick={() => patch({ addOpen: false, editId: null })} />
-            </div>
-            <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-              <Input label="Mã tỉnh" placeholder="43" value={st.form.prov || ''} error={st.formErr.prov} onChange={setForm('prov')} />
-              <Input label="Seri" placeholder="A1" value={st.form.seri || ''} error={st.formErr.seri} onChange={setForm('seri')} />
-            </div>
-            <Input label="Số biển" placeholder="999.99" value={st.form.num || ''} error={st.formErr.num} onChange={setForm('num')} />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-              <Select label="Danh mục" value={st.form.cat || 'Ngũ quý'} options={opts(catNames)} onChange={setForm('cat')} />
-              <Select label="Loại xe" value={st.form.vehicle || 'Ô tô'} options={opts(['Ô tô', 'Xe máy'])} onChange={setForm('vehicle')} />
-              <Select label="Trạng thái" value={st.form.status || 'Còn hàng'} options={opts(['Còn hàng', 'Đã bán', 'Ẩn'])} onChange={setForm('status')} />
-            </div>
-            <Input label="Giá" placeholder="2.150.000.000" hint="Để trống nếu bán theo giá liên hệ" value={st.form.price || ''} onChange={setForm('price')} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: 1 }}>Xem trước</span>
-              <PlateVisual size="sm" prov={st.form.prov || '43'} seri={st.form.seri || 'A1'} num={st.form.num || '000.00'} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-              <Button variant="ghost" size="md" onClick={() => patch({ addOpen: false, editId: null })}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={savePlate}>{st.editId ? 'Lưu thay đổi' : 'Thêm biển số'}</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!!st.confirm && (
-        <div role="alertdialog" aria-modal="true" aria-labelledby="modal-confirm-title" aria-describedby="modal-confirm-desc" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div ref={confirmRef} style={{ width: '100%', maxWidth: 380, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <h2 id="modal-confirm-title" style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Xác nhận xóa</h2>
-            <p id="modal-confirm-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{st.confirm.text}</p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-              <Button variant="ghost" size="md" onClick={() => patch({ confirm: null })}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={doDelete} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {st.modal && cur && (
         <div role="dialog" aria-modal="true" aria-labelledby="modal-contact-title" aria-describedby="modal-contact-desc" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div ref={contactRef} style={{ width: '100%', maxWidth: 460, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'modalIn 180ms var(--ease-out)' }}>
@@ -120,7 +72,7 @@ export default function Modals({ st, patch, setForm, savePlate, doDelete, cur, s
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
                   <textarea rows={3} placeholder="VD: cần sang tên trong tuần này" value={st.mNote} onChange={setField('mNote')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
                 </label>
-                <Button variant="primary" size="lg" fullWidth onClick={submitContact}>Gửi yêu cầu</Button>
+                <Button variant="primary" size="lg" fullWidth onClick={submitContact} disabled={mSending} loading={mSending}>Gửi yêu cầu</Button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'fadeIn 140ms var(--ease-out)' }}>

@@ -4,8 +4,8 @@ import { apiClient } from './apiClient.js';
 const PUBLIC_KEY = ['promo-videos'];
 const ADMIN_KEY = ['admin', 'promo-videos'];
 
-export function usePromoVideos() {
-  return useQuery({ queryKey: PUBLIC_KEY, queryFn: () => apiClient.get('/api/promo-videos') });
+export function usePromoVideos({ enabled = true } = {}) {
+  return useQuery({ queryKey: PUBLIC_KEY, queryFn: () => apiClient.get('/api/promo-videos'), enabled });
 }
 
 export function useFeaturedPromoVideos(limit = 3) {

@@ -73,7 +73,7 @@ export function ImageUrlInput({ label, value, onChange, placeholder, hint }) {
   );
 }
 
-export function Input({ id, label, placeholder, value, error, onChange, type = 'text', hint, disabled, required, min }) {
+export function Input({ id, label, placeholder, value, error, onChange, onBlur, type = 'text', hint, disabled, required, min, max }) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   const errId = error && inputId ? inputId + '-err' : undefined;
   const isPassword = type === 'password';
@@ -88,9 +88,11 @@ export function Input({ id, label, placeholder, value, error, onChange, type = '
           placeholder={placeholder}
           value={value ?? ''}
           onChange={onChange}
+          onBlur={onBlur}
           disabled={disabled}
           required={required}
           min={min}
+          max={max}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={errId}
           style={{

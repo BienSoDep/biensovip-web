@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useDebouncedValue } from '@mantine/hooks';
 import { SlidersHorizontal, X, LayoutGrid, List as ListIcon } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Select, Checkbox, Radio, Input, Icon } from '../components/index.jsx';
@@ -130,12 +131,14 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     }
   };
 
+  const [qDebounced] = useDebouncedValue(filters.q, 300);
+
   const apiFilters = useMemo(() => ({
     cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
-    q: filters.q || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
+    q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
     status: filters.status || undefined, sort: filters.sort, page: filters.page,
     perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
-  }), [filters]);
+  }), [filters, qDebounced]);
 
   const { data, isLoading, isError, isFetching, refetch } = usePlates(apiFilters, { enabled: !infinite && filters.perPage !== 0 });
 
@@ -143,9 +146,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const useInfinite = infinite || filters.perPage === 0;
   const infiniteFilters = useMemo(() => ({
     cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
-    q: filters.q || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
+    q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
     status: filters.status || undefined, sort: filters.sort, perPage: 18,
-  }), [filters]);
+  }), [filters, qDebounced]);
   const inf = useInfinitePlates(infiniteFilters, { enabled: useInfinite });
   const stagger = useStaggeredReveal();
 
@@ -375,8 +378,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               </div>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-              {hasActiveFilters && <Button variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
-              <button type="button" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm</button>
+              {hasActiveFilters && <Button className="list-toolbar-secondary" variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
+              <button type="button" className="list-toolbar-secondary" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm: {infinite ? 'Bật' : 'Tắt'}</button>
               {!infinite && <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />}
               <Select  value={filters.sort} options={SORT_OPTIONS} onChange={(v) => setFilter({ sort: v })} variant="pill" />
             </div>

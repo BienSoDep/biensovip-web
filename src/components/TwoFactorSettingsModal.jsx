@@ -87,9 +87,10 @@ export default function TwoFactorSettingsModal({ open, onClose, twoFactorEnabled
         {step === 'recovery' && (
           <>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>Lưu lại 10 mã khôi phục này — mỗi mã dùng được 1 lần khi mất điện thoại. Sẽ không hiện lại.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', fontFamily: 'monospace', font: 'var(--type-body-sm)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', fontFamily: 'monospace', font: 'var(--type-body-sm)' }}>
               {recoveryCodes.map((c) => <span key={c}>{c}</span>)}
             </div>
+            <Button variant="outline" size="sm" onClick={() => { navigator.clipboard?.writeText(recoveryCodes.join('\n')).then(() => notify?.('Đã sao chép mã khôi phục')).catch(() => {}); }}>Sao chép tất cả</Button>
             <Button variant="primary" size="md" onClick={close}>Đã lưu, đóng</Button>
           </>
         )}

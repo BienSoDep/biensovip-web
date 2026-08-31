@@ -51,10 +51,11 @@ export default function AdminPosts({ st, patch, notify }) {
     const ids = [...selected];
     const results = await Promise.allSettled(ids.map((id) => deletePost.mutateAsync(id)));
     const ok = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.length - ok;
     setSelected(new Set());
     setConfirmBulkDelete(false);
     setBulkDeleting(false);
-    notify(`Đã xóa ${ok} bài viết`);
+    notify(failed > 0 ? `Đã xóa ${ok} bài viết — ${failed} bài xóa thất bại` : `Đã xóa ${ok} bài viết`);
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '../components/Button.jsx';
 import { Input, Select, Eyebrow, Icon } from '../components/index.jsx';
 import { updateProfile, changePassword, refreshToken } from '../services/authService.js';
@@ -6,43 +6,76 @@ import { useNotificationSettings, useUpdateNotificationSettings } from '../servi
 import { useBecomeCollaborator } from '../services/collaborators.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
-const yearOpts = (() => { const a = []; for (let y = CURRENT_YEAR; y >= 1950; y--) a.push({ value: String(y), label: String(y) }); return a; })();
-const monthOpts = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
-const dayOpts = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+const MIN_DATE = '1900-01-01';
+const MAX_DATE = `${CURRENT_YEAR}-12-31`;
 const GENDER_OPTS = [{ value: 'male', label: 'Nam' }, { value: 'female', label: 'Nữ' }, { value: 'other', label: 'Khác' }];
-const pad = (n) => String(n).padStart(2, '0');
 
-function splitBirthDate(iso) {
-  if (!iso) return { day: '', month: '', year: '' };
-  const [y, m, d] = iso.split('-');
-  return { day: String(Number(d)), month: String(Number(m)), year: y };
-}
-
-function validBirthDate({ day, month, year }) {
-  const d = Number(day), m = Number(month), y = Number(year);
-  if (!d || !m || !y) return false;
-  if (y < 1900 || y > CURRENT_YEAR) return false;
+function validBirthDate(iso) {
+  if (!iso) return false;
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d || y < 1900 || y > CURRENT_YEAR) return false;
   const dt = new Date(y, m - 1, d);
   return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
 }
 
+function GenderPicker({ value, onChange }) {
+  return (
+    <div>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Giới tính (không bắt buộc)</span>
+      <div role="radiogroup" aria-label="Giới tính" style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 6, flexWrap: 'wrap' }}>
+        {GENDER_OPTS.map((opt) => {
+          const active = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(active ? '' : opt.value)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 16px',
+                border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
+                color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)',
+              }}
+            >
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: active ? 'var(--text-inverse)' : 'var(--grey-300)',
+              }} />
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Profile({ go, notify, user, onboarding, onUserUpdate, onLogout }) {
-  const bd = splitBirthDate(user?.birthDate);
-  const [form, setForm] = useState({ fullName: user?.fullName || '', day: bd.day, month: bd.month, year: bd.year, gender: user?.gender || '' });
+  // Đến từ "Trở thành CTV" (trang Collaborator) qua hash #become-ctv → cuộn thẳng tới section CTV
+  // thay vì bắt user tự cuộn qua Thông tin/Đổi mật khẩu/Thông báo ở trên.
+  useEffect(() => {
+    if (window.location.hash === '#become-ctv') {
+      document.getElementById('become-ctv')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  const [form, setForm] = useState({ fullName: user?.fullName || '', birthDate: user?.birthDate || '', gender: user?.gender || '' });
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const hasBirthDate = form.day && form.month && form.year;
-
   const save = async () => {
-    if (hasBirthDate && !validBirthDate(form)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
+    if (form.birthDate && !validBirthDate(form.birthDate)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
     setErr('');
     setSaving(true);
     try {
       const updated = await updateProfile({
         fullName: form.fullName.trim() || undefined,
-        birthDate: hasBirthDate ? `${form.year}-${pad(form.month)}-${pad(form.day)}` : undefined,
+        birthDate: form.birthDate || undefined,
         gender: form.gender || undefined,
       });
       onUserUpdate?.(updated);
@@ -89,17 +122,9 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
         </div>
         <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={(e) => set('fullName')(e.target.value)} />
 
-        <div>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ngày sinh (dương lịch)</span>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 6 }}>
-            <div style={{ flex: 1 }}><Select label="Ngày" value={form.day} options={dayOpts} onChange={set('day')} /></div>
-            <div style={{ flex: 1 }}><Select label="Tháng" value={form.month} options={monthOpts} onChange={set('month')} /></div>
-            <div style={{ flex: 1.4 }}><Select label="Năm" value={form.year} options={yearOpts} onChange={set('year')} /></div>
-          </div>
-          {err && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
-        </div>
+        <Input type="date" label="Ngày sinh (dương lịch)" value={form.birthDate} min={MIN_DATE} max={MAX_DATE} error={err} onChange={(e) => set('birthDate')(e.target.value)} />
 
-        <Select label="Giới tính (không bắt buộc)" value={form.gender} options={GENDER_OPTS} onChange={set('gender')} />
+        <GenderPicker value={form.gender} onChange={set('gender')} />
 
         <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
           <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ flex: 1 }}>
@@ -220,6 +245,7 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
       const data = await refreshToken();
       if (data?.user) onUserUpdate?.(data.user);
       notify('Bạn đã trở thành Cộng tác viên');
+      go('collab')();
     } catch (e) {
       const code = e?.code;
       if (code === 'EMAIL_NOT_VERIFIED') notify('Xác thực email trước khi trở thành CTV.');
@@ -230,7 +256,7 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+    <div id="become-ctv" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <Eyebrow tone="blue">Cộng tác viên</Eyebrow>
       <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {isCtv ? (

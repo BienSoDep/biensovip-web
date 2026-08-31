@@ -150,9 +150,9 @@ export default function AdminContacts({ notify }) {
           <span style={{ flex: '1 1 88px' }}>Điện thoại</span>
           <span style={{ flex: '1 1 100px' }}>Biển quan tâm</span>
           <span style={{ flex: '1 1 72px' }}>Mục đích</span>
-          <span style={{ flex: '1 1 120px' }}>Ghi chú</span>
+          <span className="contact-col-note" style={{ flex: '1 1 120px' }}>Ghi chú</span>
           <span style={{ flex: '1 1 80px' }}>Đặt cọc</span>
-          <span style={{ flex: '1 1 64px' }}>Thời gian</span>
+          <span className="contact-col-time" style={{ flex: '1 1 64px' }}>Thời gian</span>
           <span style={{ flex: '1 1 120px' }}>Phụ trách</span>
           <span style={{ flex: '1 1 160px' }}>Trạng thái</span>
         </div>
@@ -186,9 +186,9 @@ export default function AdminContacts({ notify }) {
                   {INTENT_LABEL[c.intent] || c.intent}
                 </span>
               </span>
-              <span style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
+              <span className="contact-col-note" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
               <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{c.depositAmount != null ? new Intl.NumberFormat('vi-VN').format(c.depositAmount) + ' đ' : '—'}</span>
-              <span style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              <span className="contact-col-time" style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 {formatDate(c.createdAt)}
               </span>
               <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 120px' }}>
@@ -201,7 +201,7 @@ export default function AdminContacts({ notify }) {
                     if (staff) assignContact.mutate({ id: c.id, staffId: staff.id });
                   }}
                   variant="pill"
-                  style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)' }}
+                  style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)', boxShadow: 'inset 0 0 0 1px var(--grey-200)' }}
                 />
               </span>
               <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
@@ -268,7 +268,7 @@ export default function AdminContacts({ notify }) {
                   <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                     <PlateVisual size="sm" {...(parsePlateNumber(selected.plateNumber) || {})} />
                     {selected.plateId
-                      ? <a href={routeFor('detail', selected.plateId)} onClick={(e) => { e.preventDefault(); history.pushState(null, '', routeFor('detail', selected.plateId)); window.dispatchEvent(new PopStateEvent('popstate')); }} style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)', textDecoration: 'none' }}>Xem biển {selected.plateNumber} →</a>
+                      ? <a href={routeFor('detail', selected.plateId)} target="_blank" rel="noreferrer" style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)', textDecoration: 'none' }}>Xem biển {selected.plateNumber} →</a>
                       : <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.plateNumber}</span>}
                   </span>
                 ) : (

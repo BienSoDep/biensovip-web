@@ -82,7 +82,7 @@ export default function Fav({ favCards, user, onClearAll, go, notify, contact })
                 <span style={{ position: 'absolute', top: 8, left: 8, zIndex: 2, background: 'var(--amber-400)', color: '#7A5A00', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', padding: '3px 10px', borderRadius: 'var(--radius-pill)' }}>Giá đã đổi</span>
               )}
               <button type="button" aria-label="Bỏ lưu" onClick={() => removeWithUndo(p)}
-                style={{ position: 'absolute', top: 8, right: 8, zIndex: 2, border: 'none', cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-2)', color: 'var(--status-danger)', borderRadius: 'var(--radius-pill)', padding: '5px 10px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>Bỏ lưu</button>
+                style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, border: 'none', cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-2)', color: 'var(--status-danger)', borderRadius: 'var(--radius-pill)', padding: '7px 12px', minHeight: 32, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>Bỏ lưu</button>
               <PlateCard {...p} contact={contact} />
             </div>
           ))}

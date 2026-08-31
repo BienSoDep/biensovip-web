@@ -239,7 +239,7 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
           <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {tocItems.map((item) => (
               <li key={item.id}>
-                <button type="button" onClick={() => { const el = document.getElementById(item.id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} style={{ border: 'none', background: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>{item.text}</button>
+                <button type="button" onClick={() => { const el = document.getElementById(item.id); if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 84; window.scrollTo({ top: y, behavior: 'smooth' }); } }} style={{ border: 'none', background: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>{item.text}</button>
               </li>
             ))}
           </ol>

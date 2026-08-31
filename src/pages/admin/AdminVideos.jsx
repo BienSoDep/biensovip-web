@@ -57,6 +57,7 @@ export default function AdminVideos({ notify }) {
   const saveAdd = async () => {
     const url = form.videoUrl.trim();
     if (!url) { setUrlErr('Nhập link video.'); return; }
+    if (!/tiktok\.com|facebook\.com|fb\.watch/i.test(url)) { setUrlErr('Chỉ nhận link TikTok hoặc Facebook.'); return; }
     try {
       if (editId) {
         await updateVideo.mutateAsync({
@@ -232,7 +233,7 @@ export default function AdminVideos({ notify }) {
             {debouncedUrl.trim() && (
               <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Xem trước:</span>
-                <div style={{ width: 160, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                <div style={{ width: 'min(220px, 60%)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                   <TikTokEmbed videoUrl={debouncedUrl.trim()} title="Xem trước video" />
                 </div>
               </div>

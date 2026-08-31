@@ -103,7 +103,7 @@ export default function AdminInterestLeads({ notify }) {
                     </Badge>
                   </span>
                   <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(lead.lastActivityAt)}</span>
-                  <span style={{ flex: '1 1 180px', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ flex: '1 1 220px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     {lead.contacted ? (
                       <Badge tone="mint">Đã liên hệ</Badge>
                     ) : !lead.assignedStaffId ? (

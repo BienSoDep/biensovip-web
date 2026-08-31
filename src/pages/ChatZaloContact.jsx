@@ -30,8 +30,13 @@ const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', '
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting', 'Yêu cầu về dữ liệu cá nhân': 'data_request' };
 const RATE_KEY = 'biensovip_contact_rate';
 
-export default function ChatZaloContact({ notify }) {
-  const [form, setForm] = useState({ fullName: '', phone: '', email: '', plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' });
+export default function ChatZaloContact({ notify, user }) {
+  const [form, setForm] = useState({
+    fullName: user?.fullName || '',
+    phone: user?.identifierType === 'phone' ? (user?.identifier || '') : '',
+    email: user?.identifierType === 'email' ? (user?.identifier || '') : '',
+    plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '',
+  });
   const submit = useSubmitContact();
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -53,6 +58,10 @@ export default function ChatZaloContact({ notify }) {
     }
     if (!validatePhone(form.phone)) {
       toast.error('Số điện thoại chưa đúng định dạng (VD: 0905221334).');
+      return;
+    }
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      toast.error('Email chưa đúng định dạng.');
       return;
     }
     if ((form.intent === 'deposit_request' || form.intent === 'buy') && !form.plateNumber.trim()) {

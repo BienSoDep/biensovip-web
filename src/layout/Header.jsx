@@ -12,7 +12,7 @@ function NotificationBell({ go, openPlate }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const bellRef = useRef(null);
-  const { data } = useNotifications({ limit: 5, enabled: true });
+  const { data } = useNotifications({ limit: 5, enabled: true, refetchInterval: 60000 });
   const markRead = useMarkNotificationRead();
 
   const close = () => { setOpen(false); bellRef.current?.focus(); };

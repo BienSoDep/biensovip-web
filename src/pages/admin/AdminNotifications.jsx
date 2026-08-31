@@ -206,6 +206,9 @@ export default function AdminNotifications({ notify, st }) {
                   ~{recipientEstimate.toLocaleString('vi-VN')} người nhận
                 </span>
               )}
+              {target === 'specific' && selectedUsers.length === 0 && (
+                <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Chọn ít nhất 1 người dùng để gửi.</span>
+              )}
               {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
               <Button variant="primary" size="lg" fullWidth onClick={send} disabled={sending || recipientEstimate == null || recipientEstimate === 0}>{sending ? 'Đang gửi…' : 'Gửi thông báo'}</Button>
             </div>

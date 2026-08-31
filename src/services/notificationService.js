@@ -3,12 +3,13 @@ import { apiClient } from './apiClient.js';
 
 const KEY = ['me', 'notifications'];
 
-export function useNotifications({ unreadOnly, page, limit, enabled = true } = {}) {
+export function useNotifications({ unreadOnly, page, limit, enabled = true, refetchInterval } = {}) {
   return useQuery({
     queryKey: [...KEY, { unreadOnly, page, limit }],
     queryFn: () => apiClient.get('/api/me/notifications', { params: { unreadOnly, page, limit } }),
     placeholderData: (prev) => prev,
     enabled,
+    refetchInterval,
   });
 }
 

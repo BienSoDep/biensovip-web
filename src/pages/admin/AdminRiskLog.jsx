@@ -19,6 +19,10 @@ const STATUS_OPTS = [
 export default function AdminRiskLog() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  // Track theo id đang xử lý — mutation.isPending là state chung, dùng thẳng sẽ làm
+  // TẤT CẢ hàng cùng disable/loading khi chỉ 1 hàng đang được bấm.
+  const [pendingFlagId, setPendingFlagId] = useState(null);
+  const [pendingEvent, setPendingEvent] = useState(null); // { id, action }
   const resolveEvent = useResolveRiskEvent();
   const resolveFlags = useResolveCollaboratorFlags();
 
@@ -51,7 +55,8 @@ export default function AdminRiskLog() {
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: 1 }}>
                   {(c.flags || []).map((f) => `${f.rule} (+${f.points})`).join(' · ')}
                 </span>
-                <Button variant="ghost" size="sm" loading={resolveFlags.isPending} onClick={() => resolveFlags.mutate(c.id)}>Cho qua</Button>
+                <Button variant="ghost" size="sm" loading={pendingFlagId === c.id} disabled={pendingFlagId != null && pendingFlagId !== c.id}
+                  onClick={() => { setPendingFlagId(c.id); resolveFlags.mutate(c.id, { onSettled: () => setPendingFlagId(null) }); }}>Cho qua</Button>
               </div>
             ))}
           </div>
@@ -84,8 +89,10 @@ export default function AdminRiskLog() {
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>+{e.points}</span>
               {e.status === 'Open' ? (
                 <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
-                  <Button variant="ghost" size="sm" loading={resolveEvent.isPending} onClick={() => resolveEvent.mutate({ id: e.id, action: 'resolve' })}>Xử lý</Button>
-                  <Button variant="ghost" size="sm" loading={resolveEvent.isPending} onClick={() => resolveEvent.mutate({ id: e.id, action: 'dismiss' })}>Bỏ qua</Button>
+                  <Button variant="ghost" size="sm" loading={pendingEvent?.id === e.id && pendingEvent.action === 'resolve'} disabled={pendingEvent != null && pendingEvent.id !== e.id}
+                    onClick={() => { setPendingEvent({ id: e.id, action: 'resolve' }); resolveEvent.mutate({ id: e.id, action: 'resolve' }, { onSettled: () => setPendingEvent(null) }); }}>Xử lý</Button>
+                  <Button variant="ghost" size="sm" loading={pendingEvent?.id === e.id && pendingEvent.action === 'dismiss'} disabled={pendingEvent != null && pendingEvent.id !== e.id}
+                    onClick={() => { setPendingEvent({ id: e.id, action: 'dismiss' }); resolveEvent.mutate({ id: e.id, action: 'dismiss' }, { onSettled: () => setPendingEvent(null) }); }}>Bỏ qua</Button>
                 </div>
               ) : (
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{STATUS_LABEL[e.status]}</span>

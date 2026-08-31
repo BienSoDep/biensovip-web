@@ -206,7 +206,7 @@ function BenefitLanding({ go }) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-2)' }}>
           {isLoggedIn ? (
-            <Button variant="primary" size="lg" onClick={() => go('profile')()}>Trở thành CTV</Button>
+            <Button variant="primary" size="lg" onClick={() => { window.location.hash = 'become-ctv'; go('profile')(); }}>Trở thành CTV</Button>
           ) : (
             <>
               <Button variant="primary" size="lg" onClick={() => go('login')()}>Đăng nhập để trở thành CTV</Button>

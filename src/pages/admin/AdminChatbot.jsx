@@ -154,12 +154,16 @@ function SettingsTab({ notify }) {
   const set = (field, value) => setForm({ ...current, [field]: value });
 
   const save = async () => {
+    const temperature = Number(current.temperature);
+    const maxTokens = Number(current.maxTokens);
+    const rateLimitPerHour = Number(current.rateLimitPerHour);
+    if (Number.isNaN(temperature) || temperature < 0 || temperature > 2) { notify('Temperature phải từ 0 đến 2.'); return; }
+    if (!Number.isFinite(maxTokens) || maxTokens < 1) { notify('Max tokens phải là số ≥ 1.'); return; }
+    if (!Number.isFinite(rateLimitPerHour) || rateLimitPerHour < 1) { notify('Rate limit phải là số ≥ 1.'); return; }
     try {
       await update.mutateAsync({
         systemPrompt: current.systemPrompt,
-        temperature: Number(current.temperature),
-        maxTokens: Number(current.maxTokens),
-        rateLimitPerHour: Number(current.rateLimitPerHour),
+        temperature, maxTokens, rateLimitPerHour,
         enabled: current.enabled,
       });
       notify('Đã lưu cấu hình trợ lý');
@@ -177,6 +181,9 @@ function SettingsTab({ notify }) {
           style={{ resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', padding: '10px 12px', font: 'var(--type-body-sm)', fontFamily: 'inherit' }} />
       </label>
 
+      <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', background: 'var(--amber-50)', color: 'var(--status-warning-ink)', font: 'var(--type-caption)' }}>
+        Thay đổi 3 giá trị dưới đây ảnh hưởng ngay lập tức tới trợ lý AI đang chạy công khai trên site.
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--space-3)' }}>
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Temperature (0–2)</span>

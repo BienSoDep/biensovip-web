@@ -90,7 +90,7 @@ function AutoCarousel({ items, openPlate }) {
   );
 }
 
-export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify }) {
+export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify, user }) {
   const { data: plate, isLoading, isError } = usePlateDetail(plateId);
   const { data: similar } = useSimilarPlates(plateId, 8);
   const logView = useLogPlateView();
@@ -109,8 +109,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
 
   const submitContact = useSubmitContact();
   const [contactOpen, setContactOpen] = useState(false);
-  const [cForm, setCForm] = useState({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' });
-  const [cErr, setCErr] = useState('');
+  const [cSent, setCSent] = useState(false);
+  const [cForm, setCForm] = useState({
+    fullName: user?.fullName || '',
+    phone: user?.identifierType === 'phone' ? (user?.identifier || '') : '',
+    email: user?.identifierType === 'email' ? (user?.identifier || '') : '',
+    note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '',
+  });
+  const [cErr, setCErr] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const [lightbox, setLightbox] = useState(-1);
@@ -168,9 +174,10 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const handleContactSubmit = (e) => {
     e.preventDefault();
     if (cForm.honeypot) { setContactOpen(false); return; } // bot trap
-    if (!cForm.fullName.trim()) return setCErr('Vui lòng nhập họ tên');
-    if (!validatePhone(cForm.phone)) return setCErr('Số điện thoại không hợp lệ');
-    setCErr('');
+    if (!cForm.fullName.trim()) return setCErr({ field: 'fullName', message: 'Vui lòng nhập họ tên' });
+    if (!validatePhone(cForm.phone)) return setCErr({ field: 'phone', message: 'Số điện thoại không hợp lệ' });
+    if (cForm.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email.trim())) return setCErr({ field: 'email', message: 'Email chưa đúng định dạng' });
+    setCErr(null);
     submitContact.mutate({
       fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
       email: cForm.email?.trim() || null, plateId: plate.id, plateNumber: plate.plateNumber,
@@ -179,8 +186,8 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       subscribeToNotifications: !!cForm.subscribe,
       honeypot: cForm.honeypot || null,
     }, {
-      onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setContactOpen(false); handleContact('contact'); setCForm({ fullName: '', phone: '', email: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' }); },
-      onError: () => setCErr('Gửi thất bại, vui lòng thử lại.'),
+      onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setCSent(true); handleContact('contact'); },
+      onError: () => setCErr({ field: null, message: 'Gửi thất bại, vui lòng thử lại.' }),
     });
   };
   const setCF = (k) => (e) => setCForm((f) => ({ ...f, [k]: e.target?.value ?? e }));
@@ -212,7 +219,12 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           {plate.images?.length > 1 && (
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {plate.images.slice(1).map((url, i) => (
-                <img key={i} src={optimizeImageUrl(url)} alt={`Ảnh ${i + 2} biển số ${plate.plateNumber}`} onClick={() => setLightbox(i + 1)} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
+                <div key={i} className={i >= 4 ? 'plate-thumb-extra' : undefined} style={{ position: 'relative' }}>
+                  <img src={optimizeImageUrl(url)} alt={`Ảnh ${i + 2} biển số ${plate.plateNumber}`} onClick={() => setLightbox(i + 1)} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
+                  {i === 3 && plate.images.length - 1 > 4 && (
+                    <div className="plate-thumb-more" onClick={() => setLightbox(i + 1)} style={{ position: 'absolute', inset: 0, borderRadius: 'var(--radius-md)', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'none', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'zoom-in' }}>+{plate.images.length - 1 - 4}</div>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -252,7 +264,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
             <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <div className="plate-share-row" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginRight: 4 }}>Chia sẻ:</span>
             <IconButton name="share" label="Chia sẻ Facebook" size="lg" onClick={shareFb} />
             <button type="button" aria-label="Chia sẻ Zalo" onClick={shareZalo} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer' }}><MessageCircle size={24} /></button>
@@ -299,8 +311,8 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Phân tích chi tiết theo con số, ngũ hành, vận trình sự nghiệp &amp; tài lộc.</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {plate.meanings.map((m) => (
-              <div key={m.id} style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexWrap: 'wrap' }}>
+            {plate.meanings.map((m, mi) => (
+              <div key={m.id} className={mi >= 2 ? 'meanings-extra' : undefined} style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexWrap: 'wrap' }}>
                 {m.imageUrl && (
                   <div style={{ flex: '1 1 240px', maxWidth: 300, minHeight: 180 }}>
                     <img src={m.imageUrl} alt={m.title || 'Phong thủy'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -398,42 +410,60 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         </div>
       )}
 
-      <Modal open={contactOpen} onClose={() => setContactOpen(false)} title="Chốt biển này" maxWidth="480px">
-        <form onSubmit={handleContactSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <input type="text" name="company" value={cForm.honeypot} onChange={setCF('honeypot')} tabIndex={-1} autoComplete="off" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} aria-hidden="true" />
-          <div>
-            <Input label="Họ tên" value={cForm.fullName} onChange={setCF('fullName')} placeholder="Tên của bạn" error={cErr === 'Vui lòng nhập họ tên' ? cErr : undefined} required />
-          </div>
-          <div>
-            <Input label="Số điện thoại" type="tel" value={cForm.phone} onChange={setCF('phone')} placeholder="0xxxxxxxxx" error={cErr === 'Số điện thoại không hợp lệ' ? cErr : undefined} required />
-          </div>
-          <div>
-            <Select label="Mục đích" value={cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={INTENT_OPTS.map((o) => ({ value: INTENT_VAL[o], label: o }))} />
-          </div>
-          {cForm.intent === 'deposit_request' && (
+      <Modal open={contactOpen} onClose={() => { setContactOpen(false); setCSent(false); }} title="Chốt biển này" maxWidth="480px">
+        {!cSent ? (
+          <form onSubmit={handleContactSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <input type="text" name="company" value={cForm.honeypot} onChange={setCF('honeypot')} tabIndex={-1} autoComplete="off" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} aria-hidden="true" />
             <div>
-              <Input label="Số tiền muốn đặt cọc (đ, tùy chọn)" type="number" min="0" value={cForm.depositAmount} onChange={setCF('depositAmount')} placeholder="Ví dụ: 5000000" />
+              <Input label="Họ tên" value={cForm.fullName} onChange={setCF('fullName')} placeholder="Tên của bạn" error={cErr?.field === 'fullName' ? cErr.message : undefined} required />
             </div>
-          )}
-          <div>
-            <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
+            <div>
+              <Input label="Số điện thoại" type="tel" value={cForm.phone} onChange={setCF('phone')} placeholder="0xxxxxxxxx" error={cErr?.field === 'phone' ? cErr.message : undefined} required />
+            </div>
+            <div>
+              <Select label="Mục đích" value={cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={INTENT_OPTS.map((o) => ({ value: INTENT_VAL[o], label: o }))} />
+            </div>
+            {cForm.intent === 'deposit_request' && (
+              <div>
+                <Input label="Số tiền muốn đặt cọc (đ, tùy chọn)" type="number" min="0" value={cForm.depositAmount} onChange={setCF('depositAmount')} placeholder="Ví dụ: 5000000" />
+              </div>
+            )}
+            <div>
+              <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
+            </div>
+            <div>
+              <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />
+            </div>
+            <div>
+              <Input label="Email (tùy chọn)" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" error={cErr?.field === 'email' ? cErr.message : undefined} />
+            </div>
+            <div>
+              <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={cForm.subscribe} onChange={(v) => setCForm((f) => ({ ...f, subscribe: !!v }))} />
+            </div>
+            {cErr && !cErr.field && (
+              <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{cErr.message}</span>
+            )}
+            <Button type="submit" variant="primary" size="lg" disabled={submitContact.isPending}>
+              {submitContact.isPending ? 'Đang gửi…' : 'Gửi yêu cầu'}
+            </Button>
+          </form>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'fadeIn 140ms var(--ease-out)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
+              <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-bg)', color: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
+              <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Cảm ơn bạn</span>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Yêu cầu đã được ghi nhận. Chúng tôi gọi lại trong 15 phút.</span>
+            </div>
+            <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Muốn giữ chỗ nhanh? Chuyển khoản cọc:</span>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Ngân hàng</span><span style={{ color: 'var(--text-strong)' }}>Vietcombank — Đà Nẵng</span></div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Số tài khoản</span><span style={{ color: 'var(--text-strong)' }}>0041 0000 998877</span></div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Chủ tài khoản</span><span style={{ color: 'var(--text-strong)' }}>DINH VAN DUY</span></div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Nội dung CK</span><span style={{ color: 'var(--text-strong)' }}>COC {plate.plateNumber}</span></div>
+            </div>
+            <Button variant="outline" size="md" fullWidth onClick={() => { setContactOpen(false); setCSent(false); }}>Đóng</Button>
           </div>
-          <div>
-            <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />
-          </div>
-          <div>
-            <Input label="Email (tùy chọn)" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" />
-          </div>
-          <div>
-            <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={cForm.subscribe} onChange={(v) => setCForm((f) => ({ ...f, subscribe: !!v }))} />
-          </div>
-          {cErr && (cErr !== 'Vui lòng nhập họ tên' && cErr !== 'Số điện thoại không hợp lệ') && (
-            <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{cErr}</span>
-          )}
-          <Button type="submit" variant="primary" size="lg" disabled={submitContact.isPending}>
-            {submitContact.isPending ? 'Đang gửi…' : 'Gửi yêu cầu'}
-          </Button>
-        </form>
+        )}
       </Modal>
     </div>
   );

@@ -515,6 +515,10 @@ textarea,
   .similar-plate-extra {
     display: none !important;
   }
+  /* Detail: fengshui meaning cards capped at 2 on mobile — nội dung phụ dài trước CTA chính */
+  .meanings-extra {
+    display: none !important;
+  }
   /* Admin: sidebar becomes a drawer opened via fixed top-left hamburger button */
   .admin-sidebar {
     display: none !important;
@@ -565,6 +569,24 @@ textarea,
   .tablet-stack > * {
     flex: 1 1 100% !important;
   }
+  /* Tablet dọc: permission matrix (AdminStaff) — cột checkbox hẹp hơn để nhãn không ép xuống 2 dòng */
+  .perm-matrix-row {
+    grid-template-columns: 1fr repeat(4, 40px) !important;
+    font-size: 12px !important;
+  }
+  /* Tablet: header nav-pills chật chỗ — giảm gap để đỡ phải cuộn ngang ẩn scrollbar */
+  .header-nav-pills {
+    gap: 8px !important;
+  }
+  /* Tablet: ẩn cột phụ (không phải thao tác chính) trong bảng admin — giảm cuộn ngang */
+  .contact-col-note, .contact-col-time,
+  .plate-col-new, .plate-col-updated {
+    display: none !important;
+  }
+  /* Tablet: EmailBuilder — Preview lên trên Canvas vì cần xác nhận trước khi lưu */
+  .email-builder-preview {
+    order: -1;
+  }
 }
 /* Detail: mobile sticky bottom action bar */
 .plate-actions-mobile {
@@ -597,10 +619,48 @@ textarea,
   .chatbot-fab { bottom: 16px !important; right: 16px !important; }
   .zalo-fab { bottom: 68px !important; right: 16px !important; }
   .back-to-top { bottom: 68px !important; left: 16px !important; }
+  /* Detail: hàng chia sẻ không đóng góp quyết định mua — ẩn trên mobile, đã có sticky Gọi/Zalo/Chốt biển */
+  .plate-share-row {
+    display: none !important;
+  }
+  /* Compose: nút Lưu nháp/Xuất bản dính đáy màn hình thay vì ở cuối sidebar dài */
+  .compose-actions-mobile {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    margin: 0 !important;
+    padding: 10px var(--pad-page) calc(10px + env(safe-area-inset-bottom));
+    background: var(--glass-fill);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: 0 -1px 0 var(--border-hairline);
+  }
 }
 @media (max-width: 480px) {
   .plate-grid {
     grid-template-columns: 1fr !important;
+  }
+  /* Danh sách: ẩn hành động phụ (lưu tìm kiếm, toggle cuộn) để giữ trọng tâm view/sắp xếp */
+  .list-toolbar-secondary {
+    display: none !important;
+  }
+  /* Detail: giới hạn 4 ảnh thumbnail phụ, còn lại gộp vào "+N" mở lightbox */
+  .plate-thumb-extra {
+    display: none !important;
+  }
+  .plate-thumb-more {
+    display: flex !important;
+  }
+  /* Blog: dãy category cuộn ngang 1 hàng thay vì wrap nhiều dòng che nội dung chính */
+  .blog-category-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .blog-category-row::-webkit-scrollbar {
+    display: none;
   }
 }
 /* Detail: image lightbox */

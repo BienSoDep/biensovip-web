@@ -25,9 +25,11 @@ export default function InternalNotesPanel({ entityType, entityId }) {
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ghi chú tiến trình xử lý…"
+          onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submit(); } }}
+          placeholder="Ghi chú tiến trình xử lý… (Ctrl+Enter để gửi)"
           rows={2}
-          style={{ flex: 1, resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', padding: '8px 12px', font: 'var(--type-body-sm)' }}
+          disabled={addNote.isPending}
+          style={{ flex: 1, resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', padding: '8px 12px', font: 'var(--type-body-sm)', opacity: addNote.isPending ? 0.6 : 1 }}
         />
         <button type="button" onClick={submit} disabled={!draft.trim() || addNote.isPending}
           style={{ alignSelf: 'flex-start', border: 'none', borderRadius: 'var(--radius-field)', padding: '8px 14px', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: draft.trim() ? 'pointer' : 'default', opacity: draft.trim() ? 1 : 0.5 }}>

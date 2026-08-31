@@ -44,7 +44,7 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
         {blogPost && (
           <div style={{ marginTop: 'var(--space-6)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'center' }}>
             {blogPost.coverImageUrl && (
-              <img src={blogPost.coverImageUrl} alt={blogPost.title} loading="lazy" style={{ width: 'min(100%, 220px)', height: 150, objectFit: 'cover', flexShrink: 0, display: 'block' }} />
+              <img src={blogPost.coverImageUrl} alt={blogPost.title} loading="lazy" style={{ width: 'min(100%, 220px)', aspectRatio: '16/9', objectFit: 'cover', flexShrink: 0, display: 'block' }} />
             )}
             <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-4)' }}>
               <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)', alignSelf: 'flex-start' }}>Bài viết chi tiết</span>

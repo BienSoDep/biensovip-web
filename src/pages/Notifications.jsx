@@ -53,7 +53,8 @@ export default function Notifications({ go, notify }) {
         <>
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
             {items.map((n) => (
-              <div key={n.id} onClick={() => handleClick(n)}
+              <div key={n.id} onClick={() => handleClick(n)} role="button" tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(n); } }}
                 style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', gap: 'var(--space-3)', cursor: 'pointer', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: n.read ? 'var(--white)' : 'var(--surface-tint-blue)', transition: 'background 120ms' }}>
                 <span style={{ width: 8, height: 8, marginTop: 6, borderRadius: '50%', flexShrink: 0, background: n.read ? 'var(--grey-300)' : 'var(--action-primary)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>

@@ -18,7 +18,7 @@ function ToolbarButton({ onClick, active, disabled, label, children }) {
       disabled={disabled}
       onClick={onClick}
       style={{
-        width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
         border: 'none', borderRadius: 'var(--radius-sm)', cursor: disabled ? 'not-allowed' : 'pointer',
         background: active ? 'var(--action-primary)' : 'transparent',
         color: active ? 'var(--text-inverse)' : 'var(--text-body)',
@@ -68,7 +68,7 @@ export function EditorToolbar({ editor }) {
     }
   };
 
-  const rowStyle = { display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px 6px' };
+  const rowStyle = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, padding: '4px 8px 6px' };
   const fieldStyle = { flex: 1, padding: '6px 10px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-sm)', font: 'var(--type-body-sm)', background: 'var(--surface-sunken)' };
 
   return (

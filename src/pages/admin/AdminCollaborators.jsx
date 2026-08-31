@@ -111,11 +111,15 @@ export default function AdminCollaborators({ st, patch, notify }) {
                 placeholder={c.commissionRate != null ? String(c.commissionRate * 100) : '5 (mặc định)'}
                 value={rateDraft[c.id] ?? (c.commissionRate != null ? String(c.commissionRate * 100) : '')}
                 onChange={(e) => setRateDraft((d) => ({ ...d, [c.id]: e.target.value }))}
-                style={{ width: 64, padding: '4px 6px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-caption)' }}
+                style={{
+                  width: 64, minHeight: 36, padding: '8px 6px', borderRadius: 'var(--radius-input)',
+                  border: (() => { const v = rateDraft[c.id]; if (v === undefined || v === '') return '1px solid var(--border-hairline)'; const n = Number(v); return Number.isNaN(n) || n < 0 || n > 100 ? '1.5px solid var(--status-danger)' : '1px solid var(--border-hairline)'; })(),
+                  font: 'var(--type-caption)',
+                }}
               />
               <button type="button" onClick={() => applyRate(c)} disabled={updatingId === c.id}
                 title="Lưu hệ số hoa hồng riêng CTV này"
-                style={{ border: 'none', borderRadius: 'var(--radius-pill)', padding: '4px 10px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', background: 'var(--surface-tint-cream)', color: 'var(--action-primary)' }}>
+                style={{ border: 'none', borderRadius: 'var(--radius-pill)', padding: '8px 12px', minHeight: 36, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', background: 'var(--surface-tint-cream)', color: 'var(--action-primary)' }}>
                 Lưu
               </button>
             </span>

@@ -312,7 +312,7 @@ export default function EmailBuilder({ notify }) {
         </div>
 
         {/* Cột 2: Canvas + Props panel */}
-        <div style={{ flex: '1 1 320px', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
+        <div className="email-builder-canvas" style={{ flex: '1 1 320px', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Tên template" placeholder="VD: Digest mặc định 2026" value={name} error={nameErr}
               onChange={(e) => setName(e.target.value)} />
@@ -371,7 +371,7 @@ export default function EmailBuilder({ notify }) {
         </div>
 
         {/* Cột 3: Preview */}
-        <div style={{ flex: '1 1 360px', minWidth: 300, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div className="email-builder-preview" style={{ flex: '1 1 360px', minWidth: 300, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Select label="Xem trước với dữ liệu mẫu" value={sampleType} onChange={setSampleType}
             options={NOTIFICATION_TYPES} />
           {previewErr && <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{previewErr}</p>}

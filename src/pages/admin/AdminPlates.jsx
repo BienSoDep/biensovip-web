@@ -264,6 +264,25 @@ export default function AdminPlates({ go, notify, st }) {
 
   const removeImage = (url) => setForm((f) => ({ ...f, images: f.images.filter((u) => u !== url) }));
 
+  // Validate 1 field ngay khi rời khỏi ô — báo lỗi sớm thay vì dồn hết về lúc bấm "Lưu biển số"
+  // ở cuối drawer dài. Dùng lại đúng rule của handleSave để không lệch 2 nguồn validate.
+  const blurValidateField = (field, valueOverride) => () => {
+    setFormErr((prev) => {
+      const next = { ...prev };
+      const v = (val) => (valueOverride !== undefined ? valueOverride : val);
+      if (field === 'plateNumber') {
+        if (!v(form.plateNumber).trim()) next.plateNumber = 'Vui lòng nhập biển số'; else delete next.plateNumber;
+      } else if (field === 'plateTypeId') {
+        if (!v(form.plateTypeId)) next.plateTypeId = 'Chọn loại biển'; else delete next.plateTypeId;
+      } else if (field === 'provinceId') {
+        if (!v(form.provinceId)) next.provinceId = 'Chọn tỉnh/thành'; else delete next.provinceId;
+      } else if (field === 'vehicleTypeId') {
+        if (!v(form.vehicleTypeId)) next.vehicleTypeId = 'Chọn loại xe'; else delete next.vehicleTypeId;
+      }
+      return next;
+    });
+  };
+
   const handleSave = async () => {
     const errs = {};
     if (!form.plateNumber.trim()) errs.plateNumber = 'Vui lòng nhập biển số';
@@ -454,8 +473,8 @@ export default function AdminPlates({ go, notify, st }) {
 
   const totalPages = Math.max(1, Math.ceil(total / 20));
 
-  const SortHeader = ({ label, sortKey, style }) => (
-    <button type="button" onClick={() => toggleSort(sortKey)}
+  const SortHeader = ({ label, sortKey, style, className }) => (
+    <button type="button" className={className} onClick={() => toggleSort(sortKey)}
       aria-sort={sort?.key === sortKey ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
       style={{ ...style, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit' }}>
       {label}
@@ -545,9 +564,9 @@ export default function AdminPlates({ go, notify, st }) {
           <span style={{ flex: '1 1 88px' }}>Loại xe</span>
           <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />
           <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />
-          <span style={{ flex: '0 0 48px' }}>Mới</span>
+          <span className="plate-col-new" style={{ flex: '0 0 48px' }}>Mới</span>
           <span style={{ flex: '1 1 100px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Trạng thái<InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." /></span>
-          <SortHeader label="Cập nhật" sortKey="updatedAt" style={{ flex: '1 1 96px' }} />
+          <SortHeader label="Cập nhật" sortKey="updatedAt" className="plate-col-updated" style={{ flex: '1 1 96px' }} />
           <span style={{ flex: '0 0 80px' }}>Thao tác</span>
         </div>
 
@@ -573,7 +592,7 @@ export default function AdminPlates({ go, notify, st }) {
               <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.vehicleTypeName}</span>
               <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>
               <span style={{ flex: '1 1 110px' }}>{renderCell(p, 'price')}</span>
-              <span style={{ flex: '0 0 48px' }}>
+              <span className="plate-col-new" style={{ flex: '0 0 48px' }}>
                 {isNewPlate(p) ? (
                   <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--mint-100)', color: 'var(--mint-700)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>Mới</span>
                 ) : (
@@ -590,7 +609,7 @@ export default function AdminPlates({ go, notify, st }) {
                   <option value="sold">Đã bán</option>
                 </select>
               </span>
-              <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>
+              <span className="plate-col-updated" style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>
               <span style={{ flex: '0 0 104px', display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                 <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(p)} />
                 <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => setConfirmDelete(p.id)} />
@@ -660,6 +679,7 @@ export default function AdminPlates({ go, notify, st }) {
       {editId != null && (
         <PlateFormModal
           form={form} setF={setF} formErr={formErr}
+          notify={notify}
           showCost={canViewCost(st)}
           saving={saving} uploading={uploading}
           plateTypes={catOpts(plateTypes)}
@@ -712,7 +732,7 @@ export default function AdminPlates({ go, notify, st }) {
 // ── Plate Form Modal ──
 
 function PlateFormModal({
-  form, setF, formErr, saving, uploading, showCost,
+  form, setF, formErr, saving, uploading, showCost, notify,
   plateTypes, provinces, vehicleTypes,
   editDetail, onPlateNumberChange, onSave, onUpload, onRemoveImage, onClose,
 }) {
@@ -741,6 +761,7 @@ function PlateFormModal({
     const on = {};
     CAND_FIELDS.forEach((f) => { on[f.key] = !!cand[f.key]; });
     setCandOn(on);
+    if (!Object.values(cand).some(Boolean)) notify?.('Không tự nhận diện được thông tin từ biển số này — vui lòng chọn tay.');
   };
   const toggleCandidate = (key) => {
     const next = !candOn[key];
@@ -795,6 +816,7 @@ function PlateFormModal({
             <input
               type="text" placeholder="43A1-999.99" value={form.plateNumber ?? ''}
               onChange={(e) => onPlateNumberChange(e.target.value)}
+              onBlur={blurValidateField('plateNumber')}
               style={{ height: 40, flex: '1 1 auto', border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
                 boxShadow: formErr.plateNumber ? 'inset 0 0 0 1.5px var(--status-danger)' : 'var(--shadow-inset-hairline)',
                 padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
@@ -821,9 +843,9 @@ function PlateFormModal({
         )}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-          <Select label="Loại biển" value={form.plateTypeId} options={plateTypes} onChange={setF('plateTypeId')} style={{ flex: '1 1 140px' }} />
-          <Select label="Tỉnh/thành" value={form.provinceId} options={provinces} onChange={setF('provinceId')} style={{ flex: '1 1 140px' }} />
-          <Select label="Loại xe" value={form.vehicleTypeId} options={vehicleTypes} onChange={setF('vehicleTypeId')} style={{ flex: '1 1 140px' }} />
+          <Select label="Loại biển" value={form.plateTypeId} options={plateTypes} onChange={(v) => { setF('plateTypeId')(v); blurValidateField('plateTypeId', v)(); }} style={{ flex: '1 1 140px' }} />
+          <Select label="Tỉnh/thành" value={form.provinceId} options={provinces} onChange={(v) => { setF('provinceId')(v); blurValidateField('provinceId', v)(); }} style={{ flex: '1 1 140px' }} />
+          <Select label="Loại xe" value={form.vehicleTypeId} options={vehicleTypes} onChange={(v) => { setF('vehicleTypeId')(v); blurValidateField('vehicleTypeId', v)(); }} style={{ flex: '1 1 140px' }} />
         </div>
         {(formErr.plateTypeId || formErr.provinceId || formErr.vehicleTypeId) && (
           <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>

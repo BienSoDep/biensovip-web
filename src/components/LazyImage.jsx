@@ -7,6 +7,7 @@ export default function LazyImage({ src, alt, style, imgStyle, skeletonHeight })
   const [inView, setInView] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     const el = ref.current;
@@ -23,18 +24,22 @@ export default function LazyImage({ src, alt, style, imgStyle, skeletonHeight })
     if (loaded || failed || !src) return;
     const t = setTimeout(() => setFailed(true), 8000);
     return () => clearTimeout(t);
-  }, [src, loaded, failed]);
+  }, [src, loaded, failed, retryKey]);
+
+  const retry = () => { setFailed(false); setLoaded(false); setRetryKey((k) => k + 1); };
 
   return (
     <div ref={ref} style={{ position: 'relative', overflow: 'hidden', ...style }}>
       {!loaded && <SkeletonBase width="100%" height={skeletonHeight || '100%'} radius={0} style={{ position: 'absolute', inset: 0 }} />}
       {failed ? (
-        <div role="img" aria-label={alt || 'Hình ảnh'} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-muted)', color: 'var(--text-muted)', font: 'var(--type-caption)', ...imgStyle }}>
-          {alt || 'Không tải được hình'}
-        </div>
+        <button type="button" onClick={retry} aria-label={`Tải lại ${alt || 'hình ảnh'}`} style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'var(--surface-muted)', color: 'var(--text-muted)', font: 'var(--type-caption)', border: 'none', cursor: 'pointer', ...imgStyle }}>
+          <span>{alt || 'Không tải được hình'}</span>
+          <span style={{ color: 'var(--action-primary)', textDecoration: 'underline' }}>Tải lại</span>
+        </button>
       ) : (
         inView && (
           <img
+            key={retryKey}
             src={optimizeImageUrl(src)}
             alt={alt}
             loading="lazy"

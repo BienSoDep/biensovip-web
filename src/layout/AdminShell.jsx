@@ -193,7 +193,7 @@ export default function AdminShell({
           </button>
         )}
         <Breadcrumb inset items={[{ label: 'Quản trị', onClick: go('dash') }, { label: adminMeta[0] }]} />
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
+        <div className="tablet-stack" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
           <div style={{ flex: '1 1 280px' }}>
             <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{adminMeta[0]}</h1>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{adminMeta[1]}</p>

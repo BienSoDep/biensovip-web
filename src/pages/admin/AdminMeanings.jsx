@@ -334,7 +334,12 @@ function PlatesTab({ notify }) {
             {reseedPreview === null && !reseedPreviewErr && (
               <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Đang xem trước…</div>
             )}
-            {reseedPreviewErr && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{reseedPreviewErr}</span>}
+            {reseedPreviewErr && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{reseedPreviewErr}</span>
+                <Button variant="ghost" size="sm" onClick={openReseedPreview}>Thử lại</Button>
+              </div>
+            )}
             {reseedPreview !== null && reseedPreview.length === 0 && (
               <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Không có mẫu nào khớp với số biển này.</div>
             )}

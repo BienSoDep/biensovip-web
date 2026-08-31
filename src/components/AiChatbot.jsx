@@ -75,10 +75,10 @@ export default function AiChatbot({ go }) {
     const v = (text ?? input).trim();
     if (!v || sendMessage.isPending || rateLimited) return;
     setMsgs((m) => [...m, { from: 'user', text: v }]);
-    setInput('');
 
     try {
       const res = await sendMessage.mutateAsync({ sessionId, message: v });
+      setInput('');
       setSessionId(res.sessionId);
       storeSessionId(res.sessionId);
       setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions, plates: res.plates }]);
@@ -87,6 +87,7 @@ export default function AiChatbot({ go }) {
         setRateLimited(true);
         setMsgs((m) => [...m, { from: 'bot', text: e.message || 'Bạn đã gửi quá nhiều tin nhắn, vui lòng thử lại sau ít phút.' }]);
       } else {
+        setInput(v);
         setMsgs((m) => [...m, { from: 'bot', text: 'Trợ lý AI đang bận, vui lòng chat với nhân viên.', actions: ['chat_with_staff', 'contact_form'] }]);
       }
     }

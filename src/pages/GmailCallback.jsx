@@ -19,6 +19,13 @@ export default function GmailCallback({ go }) {
     else setResult({ ok: false, message: MESSAGES[params.get('error')] || 'Có lỗi xảy ra khi liên kết Google.' });
   }, []);
 
+  useEffect(() => {
+    if (!result?.ok) return;
+    const t = setTimeout(() => go('collab')(), 2000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
+
   return (
     <section style={{ maxWidth: 480, margin: '0 auto', padding: 'var(--space-9) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', minHeight: '60vh', justifyContent: 'center' }}>
       {result?.ok ? (

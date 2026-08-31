@@ -1,10 +1,21 @@
+import { useEffect, useState } from 'react';
 import { usePromoVideos } from '../services/promoVideoService.js';
 import TikTokEmbed from './TikTokEmbed.jsx';
 
 export default function PromoRails() {
-  const { data } = usePromoVideos();
+  // Rail chỉ hiện ở màn ≥1600px (CSS) — chặn fetch/render (kể cả TikTok oEmbed bên trong)
+  // trên các màn phổ biến hơn thay vì chỉ ẩn bằng CSS sau khi đã tải.
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1600px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1600px)');
+    const onChange = () => setWide(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  const { data } = usePromoVideos({ enabled: wide });
   const items = data?.items || [];
-  if (!items.length) return null;
+  if (!wide || !items.length) return null;
 
   // TikTok: thumbnailUrl lưu tĩnh trong DB là link CDN có x-expires ngắn hạn (hết hạn → 403) —
   // luôn fetch oEmbed runtime qua TikTokEmbed thay vì dùng field DB (giống Home.jsx "Video nổi bật").
