@@ -594,6 +594,7 @@ export default function App() {
     aemailtpl: ['Mẫu email', 'Kéo-thả dựng bố cục email cho các loại thông báo'],
     acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
     acollabcontent: ['Nội dung ưu đãi CTV', 'Chỉnh nội dung trang giới thiệu ưu đãi cho cộng tác viên'],
+    ainterestleads: ['Khách quan tâm', 'Khách thả tim hoặc xem lại nhiều lần — chủ động nhận tư vấn'],
     areviews: ['Đánh giá', 'Kiểm duyệt đánh giá của khách hàng'],
     ameanings: ['Ý nghĩa phong thủy', 'Mẫu ý nghĩa chung và ý nghĩa riêng cho từng biển'],
     achatbot: ['Trợ lý AI', 'Lịch sử hội thoại và cấu hình trợ lý chatbot'],

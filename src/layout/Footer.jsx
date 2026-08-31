@@ -26,7 +26,6 @@ export default function Footer({ settings, patch }) {
     [routeFor('collab'), T('common.footer.collab')],
     [routeFor('fav'), T('common.footer.fav')],
     [routeFor('blog'), T('common.footer.blog')],
-    [routeFor('about'), T('common.footer.about')],
   ];
   const policyLinks = [[routeFor('terms'), T('common.footer.terms')], [routeFor('privacy'), T('common.footer.privacy')], [routeFor('transfer'), T('common.footer.transfer')], [routeFor('faq'), T('common.footer.faq')]];
   const navStyle = { font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' };

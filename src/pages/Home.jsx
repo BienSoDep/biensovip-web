@@ -258,7 +258,6 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
             <Button variant="primary" size="lg" onClick={go('blog')}>{T('home.guide.cta_blog')}</Button>
-            <Button variant="outline" size="lg" onClick={go('about')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>{T('home.guide.cta_about')}</Button>
           </div>
         </div>
       </section>

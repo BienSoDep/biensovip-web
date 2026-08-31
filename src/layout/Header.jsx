@@ -85,7 +85,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const T = contentGet;
   const { ids: compareIds } = useCompareIds();
   const compareCount = compareIds.length;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare')], ['blog', T('common.nav.blog')], ['about', T('common.nav.about')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare')], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 'var(--z-header)', background: 'var(--glass-fill)', backdropFilter: 'var(--glass-blur)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
       <div className="header-row" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '14px var(--pad-page)', display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -97,7 +97,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{T('common.brand.tagline_header')}</span>
           </div>
         </a>
-        <nav className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-2)', overflowX: 'auto', scrollbarWidth: 'none', minWidth: 0 }}>
+        <nav className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', overflowX: 'auto', scrollbarWidth: 'none', minWidth: 0 }}>
           {nav.map(([key, label], i) => (
             <NavBtn key={key} onClick={go(String(key))} aria-current={s === key ? 'page' : undefined} {...pill(s === key)}>
               {label}

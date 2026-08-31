@@ -20,6 +20,7 @@ import AdminNotifications from '../pages/admin/AdminNotifications.jsx';
 import EmailBuilder from '../pages/admin/EmailBuilder.jsx';
 import AdminCollaborators from '../pages/admin/AdminCollaborators.jsx';
 import AdminCollaboratorContent from '../pages/admin/AdminCollaboratorContent.jsx';
+import AdminInterestLeads from '../pages/admin/AdminInterestLeads.jsx';
 import AdminReviews from '../pages/admin/AdminReviews.jsx';
 import AdminChatbot from '../pages/admin/AdminChatbot.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
@@ -36,7 +37,7 @@ const NAV_PERM = {
   aplates: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view',
   aposts: 'posts:view', compose: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
-  areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', aemailtpl: 'email_templates:view',
+  areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
   achatbot: 'chatbot:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
@@ -216,6 +217,7 @@ export default function AdminShell({
         {s === 'aemailtpl' && <EmailBuilder notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'acollabcontent' && <AdminCollaboratorContent notify={notify} />}
+        {s === 'ainterestleads' && <AdminInterestLeads notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}
         {s === 'achatbot' && <AdminChatbot notify={notify} />}
         {s === 'aauditlog' && <AdminAuditLog />}

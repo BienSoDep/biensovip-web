@@ -42,7 +42,7 @@ export default function MobileDrawer({ open, onClose, s, go, user, patch, notify
           <button type="button" aria-label="Đóng menu" onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }}><X size={22} /></button>
         </div>
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: 'var(--space-3)' }}>
-          {[['list', 'Biển số'], ['lucky', 'Hợp mệnh'], ['fav', 'Yêu thích'], ['blog', 'Tin phong thủy'], ['about', 'Về chúng tôi']].map((n) => (
+          {[['list', 'Biển số'], ['lucky', 'Hợp mệnh'], ['fav', 'Yêu thích'], ['blog', 'Tin phong thủy']].map((n) => (
             <button key={n[0]} onClick={() => { go(n[0])(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === n[0]) }}>{n[1]}</button>
           ))}
         </nav>
