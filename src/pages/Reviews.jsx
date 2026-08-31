@@ -79,7 +79,7 @@ export default function Reviews({ notify, go }) {
               {dist.map((d) => (
                 <div key={d.stars} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', width: 28 }}>{d.stars}★</span>
-                  <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--grey-100)', overflow: 'hidden' }}><div style={{ height: '100%', borderRadius: 3, background: 'var(--action-primary)', width: d.pct + '%', transition: 'width 300ms var(--ease-out)' }} /></div>
+                  <div style={{ flex: 1, height: 6, borderRadius: 'var(--radius-xs)', background: 'var(--grey-100)', overflow: 'hidden' }}><div style={{ height: '100%', borderRadius: 'var(--radius-xs)', background: 'var(--action-primary)', width: d.pct + '%', transition: 'width 300ms var(--ease-out)' }} /></div>
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', width: 28, textAlign: 'right' }}>{d.count}</span>
                 </div>
               ))}

@@ -48,7 +48,7 @@ function EmailPreview({ title, body }) {
       <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Xem trước email</span>
       <div style={{ maxWidth: 520, background: '#f6f7f9', borderRadius: 'var(--radius-md)', overflow: 'hidden', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 20px', background: '#ffffff', borderBottom: '3px solid #F97316' }}>
-          <span style={{ width: 26, height: 26, borderRadius: 6, background: '#F97316', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>B</span>
+          <span style={{ width: 26, height: 26, borderRadius: 'var(--radius-sm)', background: '#F97316', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>B</span>
           <span style={{ fontWeight: 700, color: '#111827' }}>Biensovip</span>
         </div>
         <div style={{ padding: '18px 20px', background: '#ffffff' }}>

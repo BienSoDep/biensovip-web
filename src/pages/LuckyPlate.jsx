@@ -252,7 +252,7 @@ export default function LuckyPlate({ go, notify, onNotice, user }) {
             <div style={{ fontSize: 40, fontWeight: 700 }}>Mệnh {result.element} · {elName(result.element)}</div>
             {form.name && <div style={{ fontSize: 28, color: '#5A6774' }}>{form.name} · sinh {form.year}</div>}
             <div style={{ display: 'flex', gap: 12 }}>
-              {result.luckyDigits.map((d) => <span key={d} style={{ width: 56, height: 56, borderRadius: 12, background: '#E6F6EE', color: '#0B7A43', fontSize: 32, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d}</span>)}
+              {result.luckyDigits.map((d) => <span key={d} style={{ width: 56, height: 56, borderRadius: 'var(--radius-md)', background: '#E6F6EE', color: '#0B7A43', fontSize: 32, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d}</span>)}
             </div>
             <div style={{ fontSize: 24, color: '#5A6774' }}>Con số hợp mệnh · Biensovip.com</div>
           </div>

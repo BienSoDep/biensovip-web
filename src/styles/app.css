@@ -708,7 +708,7 @@ textarea,
   right: 0;
 }
 .promo-rail__item {
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--surface-sunken);
   box-shadow: var(--shadow-2);
