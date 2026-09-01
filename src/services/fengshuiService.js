@@ -1,6 +1,16 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
+// SOLID-VIOLATIONS.md #12 — nguồn duy nhất Purpose/Industry, thay lib/fengshui.js tự mirror tay.
+// Danh sách hiếm đổi → staleTime dài, tránh refetch mỗi lần mount.
+export function useFengShuiOptions() {
+  return useQuery({
+    queryKey: ['fengshui-options'],
+    queryFn: () => apiClient.get('/api/fengshui/options'),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
 export function useFengShuiLookup() {
   return useMutation({
     mutationFn: ({ birthDate, purpose, budget, vehicle, industry }) =>

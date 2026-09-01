@@ -35,11 +35,16 @@ const PRICE_PRESETS = [
   { label: 'Trên 1 tỷ', min: '1000000000', max: '' },
 ];
 
+// Quan niệm dân gian tránh số xui — lọc loại trừ biển chứa chuỗi số này (không phải bốc thuốc y khoa,
+// chỉ theo quan niệm phổ biến khách hàng hay hỏi).
+const AVOID_NUMBER_PRESETS = ['4', '7', '49', '53', '13'];
+
 function readFiltersFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return {
     cat: params.getAll('cat'),
     city: params.getAll('city'),
+    avoidNumbers: params.getAll('avoidNumbers'),
     vehicle: params.get('vehicle') || '',
     q: params.get('q') || '',
     sort: params.get('sort') || 'newest',
@@ -56,6 +61,7 @@ function writeFiltersToUrl(filters) {
   const params = new URLSearchParams();
   filters.cat.forEach((id) => params.append('cat', id));
   filters.city.forEach((id) => params.append('city', id));
+  filters.avoidNumbers.forEach((n) => params.append('avoidNumbers', n));
   if (filters.vehicle) params.set('vehicle', filters.vehicle);
   if (filters.q) params.set('q', filters.q);
   if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
@@ -106,9 +112,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [filterOpen, setFilterOpen] = useState(false);
   const [infinite, setInfinite] = useState(false);
 
-  const activeFilterCount = filters.cat.length + filters.city.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.status ? 1 : 0);
+  const activeFilterCount = filters.cat.length + filters.city.length + filters.avoidNumbers.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.status ? 1 : 0);
 
-  const hasActiveFilters = filters.cat.length > 0 || filters.city.length > 0 || !!filters.vehicle || !!filters.q || !!filters.priceMin || !!filters.priceMax || !!filters.status;
+  const hasActiveFilters = filters.cat.length > 0 || filters.city.length > 0 || filters.avoidNumbers.length > 0 || !!filters.vehicle || !!filters.q || !!filters.priceMin || !!filters.priceMax || !!filters.status;
 
   const openSaveModal = () => {
     if (!isLoggedIn) { notify?.('Vui lòng đăng nhập để lưu tìm kiếm.'); go?.('login')(); return; }
@@ -134,7 +140,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [qDebounced] = useDebouncedValue(filters.q, 300);
 
   const apiFilters = useMemo(() => ({
-    cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
+    cat: filters.cat, city: filters.city, avoidNumbers: filters.avoidNumbers, vehicle: filters.vehicle || undefined,
     q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
     status: filters.status || undefined, sort: filters.sort, page: filters.page,
     perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
@@ -145,7 +151,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   // Infinite scroll: bật khi toggle bật hoặc chọn "Xem tất cả" (bỏ cap 100).
   const useInfinite = infinite || filters.perPage === 0;
   const infiniteFilters = useMemo(() => ({
-    cat: filters.cat, city: filters.city, vehicle: filters.vehicle || undefined,
+    cat: filters.cat, city: filters.city, avoidNumbers: filters.avoidNumbers, vehicle: filters.vehicle || undefined,
     q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
     status: filters.status || undefined, sort: filters.sort, perPage: 18,
   }), [filters, qDebounced]);
@@ -173,7 +179,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     [key]: filters[key].includes(id) ? filters[key].filter((x) => x !== id) : [...filters[key], id],
   });
 
-  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
+  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], avoidNumbers: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
 
   const goToPage = (p) => {
     setFilters((f) => ({ ...f, page: p }));
@@ -197,6 +203,21 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
+      </section>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <button type="button" onClick={() => setFilter({ cat: [] })}
+          style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: filters.cat.length === 0 ? 'var(--fw-bold)' : 'var(--fw-medium)', background: filters.cat.length === 0 ? 'var(--action-primary)' : 'var(--surface-sunken)', color: filters.cat.length === 0 ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: filters.cat.length === 0 ? 'none' : 'var(--shadow-inset-hairline)' }}>
+          Tất cả
+        </button>
+        {(plateTypes?.items || []).map((c) => {
+          const active = filters.cat.length === 1 && filters.cat[0] === c.id;
+          return (
+            <button key={c.id} type="button" onClick={() => setFilter({ cat: active ? [] : [c.id] })}
+              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--surface-sunken)', color: active ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)' }}>
+              {c.name}
+            </button>
+          );
+        })}
       </section>
       <section className="list-filter-toggle-row" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', display: 'none' }}>
         <button type="button" onClick={() => setFilterOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer' }}>
@@ -274,6 +295,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                 </div>
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tránh số</span>
+                  {AVOID_NUMBER_PRESETS.map((n) => (
+                    <Checkbox key={n} label={`Tránh ${n}`} checked={filters.avoidNumbers.includes(n)} onChange={() => toggleArrayFilter('avoidNumbers', n)} />
+                  ))}
+                </div>
+                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trạng thái</span>
                   <Checkbox label="Chỉ xem biển đã bán" checked={filters.status === 'sold'} onChange={() => setFilter({ status: filters.status === 'sold' ? '' : 'sold' })} />
                 </div>
@@ -343,6 +371,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMax} onChange={(e) => setFilter({ priceMax: e.target.value })} placeholder="Đến"
                 style={{ flex: 1, minWidth: 0, height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
             </div>
+          </div>
+          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tránh số</span>
+            {AVOID_NUMBER_PRESETS.map((n) => (
+              <Checkbox key={n} label={`Tránh ${n}`} checked={filters.avoidNumbers.includes(n)} onChange={() => toggleArrayFilter('avoidNumbers', n)} />
+            ))}
           </div>
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

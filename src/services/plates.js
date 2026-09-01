@@ -5,6 +5,7 @@ function toQueryString(filters) {
   const params = new URLSearchParams();
   if (filters.cat?.length) filters.cat.forEach((id) => params.append('cat', id));
   if (filters.city?.length) filters.city.forEach((id) => params.append('city', id));
+  if (filters.avoidNumbers?.length) filters.avoidNumbers.forEach((n) => params.append('avoidNumbers', n));
   if (filters.vehicle) params.set('vehicle', filters.vehicle);
   if (filters.priceMin != null) params.set('priceMin', filters.priceMin);
   if (filters.priceMax != null) params.set('priceMax', filters.priceMax);
