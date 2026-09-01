@@ -28,7 +28,9 @@ function useDebounced(value, delay = 300) {
   return debounced;
 }
 
-export default function Home({ st, patch, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact }) {
+export default function Home({ settings, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact }) {
+  const [q, setQ] = useState('');
+  const [cat, setCat] = useState('Tất cả');
   const stagger = useStaggeredReveal();
   const T = contentGet;
   const { data: plateTypes } = useCategories('plate_type');
@@ -41,8 +43,8 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
   // Home search: catId/qDebounced empty = show featured plates as before.
   // Any non-empty selection replaces that section with live search results (usePlates is React
   // Query, so identical filters within the session are served from cache instead of refetching).
-  const debouncedQ = useDebounced(st.q, 300);
-  const selectedCatId = st.cat !== 'Tất cả' ? (plateTypes?.items || []).find((c) => c.name === st.cat)?.id : null;
+  const debouncedQ = useDebounced(q, 300);
+  const selectedCatId = cat !== 'Tất cả' ? (plateTypes?.items || []).find((c) => c.name === cat)?.id : null;
   const isSearching = !!debouncedQ.trim() || !!selectedCatId;
   const searchFilters = { q: debouncedQ.trim() || undefined, cat: selectedCatId ? [selectedCatId] : undefined, perPage: 12 };
   const { data: searchResult, isLoading: searchLoading } = usePlates(searchFilters, { enabled: isSearching });
@@ -53,8 +55,8 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
 
   const submitContact = useSubmitContact();
   const [cForm, setCForm] = useState({ fullName: '', phone: '', note: '' });
-  const zalo = (st.settings?.zalo || '').replace(/[^0-9]/g, '');
-  const hotline = st.settings?.phone || '';
+  const zalo = (settings?.zalo || '').replace(/[^0-9]/g, '');
+  const hotline = settings?.phone || '';
 
   const handleContactSubmit = () => {
     if (!cForm.fullName.trim() || !cForm.phone.trim()) {
@@ -129,11 +131,11 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
 
       <section style={{ maxWidth: 'var(--width-content)', margin: '-26px auto 0', padding: '0 var(--pad-page)', position: 'relative', zIndex: 5 }}>
         <div className="home-search-bar" style={{ background: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <div className="home-search-field" style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder={T('home.search.placeholder')} value={st.q} onChange={(e) => patch({ q: e.target.value, page: 1 })} width="100%" /></div>
+          <div className="home-search-field" style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder={T('home.search.placeholder')} value={q} onChange={(e) => setQ(e.target.value)} width="100%" /></div>
           <div className="home-search-cats" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
-            <NavBtn onClick={() => patch({ cat: 'Tất cả', page: 1 })} {...pill(st.cat === 'Tất cả')}>{T('home.search.all')}</NavBtn>
+            <NavBtn onClick={() => setCat('Tất cả')} {...pill(cat === 'Tất cả')}>{T('home.search.all')}</NavBtn>
             {(plateTypes?.items || []).map((c) => (
-              <NavBtn key={c.id} onClick={() => patch({ cat: c.name, page: 1 })} {...pill(st.cat === c.name)}>{c.name}</NavBtn>
+              <NavBtn key={c.id} onClick={() => setCat(c.name)} {...pill(cat === c.name)}>{c.name}</NavBtn>
             ))}
           </div>
           <Button variant="primary" size="md" onClick={go('list')} className="home-search-btn">{T('home.search.button')}</Button>
@@ -147,7 +149,7 @@ export default function Home({ st, patch, go, notify, heroAnim, openPlate, openB
             {isSearching ? `${searchItems.length} biển số phù hợp` : T('home.featured.title')}
           </h2>
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            {isSearching ? [debouncedQ.trim() && `đuôi "${debouncedQ.trim()}"`, selectedCatId && st.cat].filter(Boolean).join(' · ') : T('home.featured.desc')}
+            {isSearching ? [debouncedQ.trim() && `đuôi "${debouncedQ.trim()}"`, selectedCatId && cat].filter(Boolean).join(' · ') : T('home.featured.desc')}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={go('list')}>{isSearching ? 'Xem tất cả →' : T('home.featured.all')}</Button>

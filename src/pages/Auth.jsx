@@ -63,7 +63,7 @@ function OtpBoxes({ value, onChange, error, disabled }) {
   );
 }
 
-export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp, submitAdmin2fa, blurValidateRegisterField }) {
+export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp, submitAdmin2fa, blurValidateRegisterField }) {
   const [otpMode, setOtpMode] = useState(false);
   const [remember, setRemember] = useState(true);
   const [lastEmail, setLastEmail] = useState('');
@@ -351,7 +351,7 @@ export default function Auth({ st, s, patch, go, setField, authMeta, authSubmit,
               </Button>
             )}
             {s === 'forgot' && (
-              <Button variant="ghost" size="md" fullWidth onClick={() => (st.step > 1 ? patch({ step: st.step - 1, aErr: {} }) : patch({ screen: 'login', aErr: {} }))}>
+              <Button variant="ghost" size="md" fullWidth onClick={() => { if (st.step > 1) patch({ step: st.step - 1, aErr: {} }); else { patch({ aErr: {} }); onNavigate('login'); } }}>
                 {st.step > 1 ? '← Quay lại bước trước' : '← Quay lại đăng nhập'}
               </Button>
             )}

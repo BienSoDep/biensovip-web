@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import {
-  PLATES, CATS, POSTS, CONTACTS, STAFF,
-  validatePhone,
-} from './lib/mockData.js';
+import { validatePhone } from './lib/mockData.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
 import * as authApi from './services/authService.js';
 import * as favApi from './services/favoriteService.js';
@@ -62,26 +59,25 @@ export default function App() {
   const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.pathname) : { screen: 'home' };
   const [favItems, setFavItems] = useState([]);
   const [st, setSt] = useState({
-    screen: initRoute.screen || 'home', device: 'desktop',
-    cat: 'Tất cả', q: '', cities: {}, catFilters: {}, vehicle: 'Tất cả', sort: 'new', page: 1,
+    screen: initRoute.screen || 'home',
     favs: {}, curId: initRoute.detailId || 'p1', typeSlug: initRoute.typeSlug || 'tu-quy', provinceCode: initRoute.provinceCode || '43',
     modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mDeposit: '', mErr: {},
-    aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '', aResetToken: '', aAgree: false, aReferral: '', aErr: {}, step: 1, redirectTo: null, user: loadAuth()?.user || null,
-    plates: PLATES.slice(), posts: POSTS.slice(), contacts: CONTACTS.slice(), staff: STAFF.slice(),
-    cats: CATS.map((c) => ({ name: c })), newCat: '', catErr: '',
-    adminQ: '', admCat: 'Tất cả', admStatus: 'Tất cả',
-    addOpen: false, editId: null, form: {}, formErr: {},
-    confirm: null, picker: false, sync: true,
-    postCat: 'Tất cả', postId: initRoute.postId || 'a1',
-    editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '',
-    ms: { name: '', year: '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' }, msResult: null, listNotice: null,
+    redirectTo: null, user: loadAuth()?.user || null,
+    adminQ: '',
+    postId: initRoute.postId || 'a1',
+    editPostId: null,
+    listNotice: null,
     drawerOpen: false,
-    compareIds: [], savedSearches: [], reviews: [], reviewDraft: null,
-    notifications: [], videos: [],
     isAdmin: !!(loadAuth()?.isAdmin),
     settings: null,
   });
   const patch = (p) => setSt((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
+  // Trạng thái form Auth (register/login/forgot/2FA) — thuần scratch input, App còn lại không đọc.
+  const [ast, setAst] = useState({
+    aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '',
+    aResetToken: '', aAgree: false, aReferral: '', aErr: {}, step: 1, a2faToken: null, a2faCode: '',
+  });
+  const patchAuth = (p) => setAst((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
   const fanDone = useRef(false);
 
   // UC09 realtime — admin thêm/sửa/xóa biển → public tự cập nhật tức thì
@@ -191,7 +187,8 @@ export default function App() {
       if (!window.confirm('Bạn có thay đổi chưa lưu. Rời đi sẽ mất những thay đổi này?')) return;
     }
     resetComposeDirty();
-    patch({ screen: s, modal: false, sent: false, picker: false, addOpen: false, confirm: null, aErr: {}, step: s === 'forgot' ? 1 : st.step, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo, ...(s !== 'compose' ? { editPostId: null, cTitle: '', cBody: '', cCat: 'Ý nghĩa biển số', cErr: '' } : {}), drawerOpen: false });
+    patchAuth({ aErr: {}, step: s === 'forgot' ? 1 : ast.step });
+    patch({ screen: s, modal: false, sent: false, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo, ...(s !== 'compose' ? { editPostId: null } : {}), drawerOpen: false });
   };
   const toggleFav = (id) => {
     setSt((s) => {
@@ -241,12 +238,13 @@ export default function App() {
     mPhone: st.user?.identifierType === 'phone' ? (st.user?.identifier || '') : '',
   });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
+  const setAuthField = (k) => (e) => patchAuth({ [k]: e && e.target ? e.target.value : e });
   // UC25 — nhặt mã giới thiệu từ ?ref= (backdrop: /r/{code} redirect kèm query) rồi xoá khỏi URL,
   // để pre-fill field đăng ký + giữ qua mọi điều hướng SPA (cookie ref_code HttpOnly, JS không đọc được).
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get('ref');
     if (ref && ref.trim()) {
-      patch({ aReferral: ref.trim() });
+      patchAuth({ aReferral: ref.trim() });
       // UC25 — user đang đăng nhập bấm link giới thiệu → tự gắn CTV (first-link-wins), bỏ qua nếu lỗi.
       if (st.user) authApi.linkReferral(ref.trim()).catch(() => {});
       window.history.replaceState(null, '', window.location.pathname);
@@ -258,16 +256,6 @@ export default function App() {
     phone: (st.settings?.phone || '0815792699').replace(/[^0-9]/g, ''),
     zalo: (st.settings?.zalo || '0815792699').replace(/[^0-9]/g, ''),
   };
-
-  const cards = (list) => list.map((p) => ({
-    ...p,
-    fav: !!st.favs[p.id],
-    sold: !!p.sold || p.status === 'Đã bán',
-    meta: p.vehicle + ' · ' + p.city,
-    onFav: () => { toggleFav(p.id); notify(st.favs[p.id] ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); },
-    onOpen: () => openPlate(p.id),
-    onBuy: () => openBuy(p.id),
-  }));
 
   const [mSending, setMSending] = useState(false);
   const submitContact = async () => {
@@ -330,12 +318,13 @@ export default function App() {
       const result = await adminLoginRequest(email, password);
       if (!result.ok) return false;
       if (result.data.twoFactorRequired) {
-        patch({ aErr: {}, aPw: '', a2faToken: result.data.twoFactorToken, a2faCode: '' });
+        patchAuth({ aErr: {}, aPw: '', a2faToken: result.data.twoFactorToken, a2faCode: '' });
         return true;
       }
       const { accessToken, refreshToken, admin } = result.data;
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
-      patch({ aErr: {}, aPw: '', screen: 'dash', user: admin, isAdmin: true });
+      patchAuth({ aErr: {}, aPw: '' });
+      patch({ screen: 'dash', user: admin, isAdmin: true });
       notify('Đăng nhập quản trị thành công');
       return true;
     } catch {
@@ -344,20 +333,21 @@ export default function App() {
   };
 
   const submitAdmin2fa = async () => {
-    if (!/^[0-9a-f]{6,10}$/i.test(st.a2faCode.trim())) { patch({ aErr: { otp: 'Nhập mã 6 số hoặc mã khôi phục.' } }); return; }
+    if (!/^[0-9a-f]{6,10}$/i.test(ast.a2faCode.trim())) { patchAuth({ aErr: { otp: 'Nhập mã 6 số hoặc mã khôi phục.' } }); return; }
     try {
       const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/2fa/verify`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ twoFactorToken: st.a2faToken, code: st.a2faCode.trim() }),
+        body: JSON.stringify({ twoFactorToken: ast.a2faToken, code: ast.a2faCode.trim() }),
       });
       const body = await resp.json();
-      if (!resp.ok || !body?.success) { patch({ aErr: { otp: body?.error?.message || 'Mã không đúng.' } }); return; }
+      if (!resp.ok || !body?.success) { patchAuth({ aErr: { otp: body?.error?.message || 'Mã không đúng.' } }); return; }
       const { accessToken, refreshToken, admin } = body.data;
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
-      patch({ aErr: {}, a2faCode: '', a2faToken: null, screen: 'dash', user: admin, isAdmin: true });
+      patchAuth({ aErr: {}, a2faCode: '', a2faToken: null });
+      patch({ screen: 'dash', user: admin, isAdmin: true });
       notify('Đăng nhập quản trị thành công');
     } catch {
-      patch({ aErr: { otp: 'Không kết nối được server.' } });
+      patchAuth({ aErr: { otp: 'Không kết nối được server.' } });
     }
   };
 
@@ -372,70 +362,73 @@ export default function App() {
   // đúng rule của authSubmit register để tránh 2 nguồn chân lý validate khác nhau.
   const blurValidateRegisterField = (field) => () => {
     if (st.screen !== 'register') return;
-    const err = { ...st.aErr };
+    const err = { ...ast.aErr };
     if (field === 'name') {
-      if (!st.aName.trim()) err.name = 'Vui lòng nhập họ tên.'; else delete err.name;
-    } else if (field === 'email' && st.aIdType === 'email') {
-      if (st.aEmail.trim() && !st.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.'; else delete err.email;
-    } else if (field === 'phone' && st.aIdType === 'phone') {
-      if (st.aPhone.trim() && !validatePhone(st.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).'; else delete err.phone;
+      if (!ast.aName.trim()) err.name = 'Vui lòng nhập họ tên.'; else delete err.name;
+    } else if (field === 'email' && ast.aIdType === 'email') {
+      if (ast.aEmail.trim() && !ast.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.'; else delete err.email;
+    } else if (field === 'phone' && ast.aIdType === 'phone') {
+      if (ast.aPhone.trim() && !validatePhone(ast.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).'; else delete err.phone;
     } else if (field === 'pw') {
-      if (st.aPw && st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.'; else delete err.pw;
+      if (ast.aPw && ast.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.'; else delete err.pw;
     } else if (field === 'pw2') {
-      if (st.aPw2 && st.aPw !== st.aPw2) err.pw2 = 'Hai mật khẩu chưa khớp.'; else delete err.pw2;
+      if (ast.aPw2 && ast.aPw !== ast.aPw2) err.pw2 = 'Hai mật khẩu chưa khớp.'; else delete err.pw2;
     }
-    patch({ aErr: err });
+    patchAuth({ aErr: err });
   };
 
   const authSubmit = async (remember = true) => {
     const s = st.screen;
     const err = {};
     if (s === 'register') {
-      const isPhone = st.aIdType === 'phone';
-      if (!st.aName.trim()) err.name = 'Vui lòng nhập họ tên.';
+      const isPhone = ast.aIdType === 'phone';
+      if (!ast.aName.trim()) err.name = 'Vui lòng nhập họ tên.';
       if (isPhone) {
-        if (!st.aPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
-        else if (!validatePhone(st.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
-      } else if (!st.aEmail.trim() || !st.aEmail.includes('@')) {
+        if (!ast.aPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
+        else if (!validatePhone(ast.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
+      } else if (!ast.aEmail.trim() || !ast.aEmail.includes('@')) {
         err.email = 'Email chưa đúng định dạng.';
       }
-      if (st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
-      if (!st.aAgree) err.agree = true;
-      if (Object.keys(err).length) { patch({ aErr: err }); return; }
+      if (ast.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
+      if (!ast.aAgree) err.agree = true;
+      if (Object.keys(err).length) { patchAuth({ aErr: err }); return; }
       try {
-        const identifier = (isPhone ? st.aPhone : st.aEmail).trim();
-        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier, password: st.aPw, fullName: st.aName.trim(), referralCode: st.aReferral?.trim() || undefined });
+        const identifier = (isPhone ? ast.aPhone : ast.aEmail).trim();
+        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier, password: ast.aPw, fullName: ast.aName.trim(), referralCode: ast.aReferral?.trim() || undefined });
         if (!isPhone) rememberEmail(identifier);
         // Đăng ký xong tự đăng nhập luôn → chuyển thẳng vào Profile để mời điền ngày sinh
         // (cần cho tính năng hợp mệnh) — Profile có nút bỏ qua nếu login tự động lỡ thất bại.
         try {
-          const data = await authApi.login({ identifier, password: st.aPw, remember });
-          patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, aPw: '' });
+          const data = await authApi.login({ identifier, password: ast.aPw, remember });
+          patchAuth({ aErr: {}, aPw: '' });
+          patch({ user: data.user, screen: 'profile', profileOnboarding: true });
           notify('Đăng ký thành công!');
           favApi.syncFavorites();
         } catch {
-          patch({ aErr: {}, screen: 'login', aPw: '', step: 1 });
+          patchAuth({ aErr: {}, aPw: '', step: 1 });
+          patch({ screen: 'login' });
           notify(isPhone ? 'Đăng ký thành công! Vui lòng đăng nhập.' : 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
         }
       } catch (e) {
-        if (e.status === 409) patch({ aErr: { [isPhone ? 'phone' : 'email']: isPhone ? 'Số điện thoại đã được sử dụng.' : 'Email đã được sử dụng.' } });
-        else patch({ aErr: { [isPhone ? 'phone' : 'email']: e.message || 'Đăng ký thất bại.' } });
+        if (e.status === 409) patchAuth({ aErr: { [isPhone ? 'phone' : 'email']: isPhone ? 'Số điện thoại đã được sử dụng.' : 'Email đã được sử dụng.' } });
+        else patchAuth({ aErr: { [isPhone ? 'phone' : 'email']: e.message || 'Đăng ký thất bại.' } });
       }
       return;
     }
     if (s === 'login') {
-      if (!st.aEmail.trim()) err.email = 'Vui lòng nhập email hoặc số điện thoại.';
-      if (st.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
-      if (Object.keys(err).length) { patch({ aErr: err }); return; }
+      if (!ast.aEmail.trim()) err.email = 'Vui lòng nhập email hoặc số điện thoại.';
+      if (ast.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
+      if (Object.keys(err).length) { patchAuth({ aErr: err }); return; }
       try {
-        const data = await authApi.login({ identifier: st.aEmail.trim(), password: st.aPw, remember });
-        rememberEmail(st.aEmail.trim());
+        const data = await authApi.login({ identifier: ast.aEmail.trim(), password: ast.aPw, remember });
+        rememberEmail(ast.aEmail.trim());
         // Hồ sơ chưa đủ (họ tên/ngày sinh/giới tính) → mời điền luôn thay vì vào thẳng trang cũ,
         // để tính năng hợp mệnh + phân khúc khách hàng có dữ liệu ngay từ lần đăng nhập đầu.
+        patchAuth({ aErr: {}, aPw: '' });
         if (isProfileIncomplete(data.user)) {
-          patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, aPw: '' });
+          patch({ user: data.user, screen: 'profile', profileOnboarding: true });
         } else {
-          patch({ aErr: {}, user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, aPw: '', redirectTo: null });
+          patch({ user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
         }
         notify('Đăng nhập thành công');
         favApi.syncFavorites(); // fire-and-forget: merge local → server
@@ -443,71 +436,73 @@ export default function App() {
         // Sai với endpoint user — thử lại như tài khoản quản trị trước khi báo lỗi.
         // 1 form, 1 ô nhập, tự nhận diện loại tài khoản qua endpoint nào chấp nhận.
         if (e.status === 401) {
-          const adminOk = await tryAdminLogin(st.aEmail.trim(), st.aPw);
+          const adminOk = await tryAdminLogin(ast.aEmail.trim(), ast.aPw);
           if (adminOk) return;
-          patch({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
+          patchAuth({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
         }
-        else if (e.status === 429) patch({ aErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
-        else patch({ aErr: { email: e.message || 'Đăng nhập thất bại.' } });
+        else if (e.status === 429) patchAuth({ aErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
+        else patchAuth({ aErr: { email: e.message || 'Đăng nhập thất bại.' } });
       }
       return;
     }
-    if (st.step === 1) {
-      if (!st.aEmail.trim() || !st.aEmail.includes('@')) { patch({ aErr: { email: 'Vui lòng nhập email đã đăng ký.' } }); return; }
+    if (ast.step === 1) {
+      if (!ast.aEmail.trim() || !ast.aEmail.includes('@')) { patchAuth({ aErr: { email: 'Vui lòng nhập email đã đăng ký.' } }); return; }
       try {
-        await authApi.requestPasswordResetOtp(st.aEmail.trim());
-        patch({ aErr: {}, step: 2 });
+        await authApi.requestPasswordResetOtp(ast.aEmail.trim());
+        patchAuth({ aErr: {}, step: 2 });
         notify('Đã gửi mã OTP tới email của bạn');
-      } catch { patch({ aErr: { email: 'Không gửi được email, thử lại sau.' } }); }
+      } catch { patchAuth({ aErr: { email: 'Không gửi được email, thử lại sau.' } }); }
       return;
     }
-    if (st.step === 2) {
-      if (!/^\d{6}$/.test(st.aOtp)) { patch({ aErr: { otp: 'Mã gồm 6 chữ số.' } }); return; }
+    if (ast.step === 2) {
+      if (!/^\d{6}$/.test(ast.aOtp)) { patchAuth({ aErr: { otp: 'Mã gồm 6 chữ số.' } }); return; }
       try {
-        const data = await authApi.verifyPasswordResetOtp(st.aEmail.trim(), st.aOtp);
-        patch({ aErr: {}, step: 3, aResetToken: data?.resetToken || '' });
-      } catch (e) { patch({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
+        const data = await authApi.verifyPasswordResetOtp(ast.aEmail.trim(), ast.aOtp);
+        patchAuth({ aErr: {}, step: 3, aResetToken: data?.resetToken || '' });
+      } catch (e) { patchAuth({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
       return;
     }
-    if (st.aPw.length < 8) { patch({ aErr: { pw: 'Mật khẩu tối thiểu 8 ký tự.' } }); return; }
-    if (st.aPw !== st.aPw2) { patch({ aErr: { pw2: 'Hai mật khẩu chưa khớp.' } }); return; }
+    if (ast.aPw.length < 8) { patchAuth({ aErr: { pw: 'Mật khẩu tối thiểu 8 ký tự.' } }); return; }
+    if (ast.aPw !== ast.aPw2) { patchAuth({ aErr: { pw2: 'Hai mật khẩu chưa khớp.' } }); return; }
     try {
-      await authApi.resetPassword(st.aResetToken, st.aPw);
-      patch({ aErr: {}, screen: 'login', step: 1, aPw: '', aPw2: '', aResetToken: '' });
+      await authApi.resetPassword(ast.aResetToken, ast.aPw);
+      patchAuth({ aErr: {}, step: 1, aPw: '', aPw2: '', aResetToken: '' });
+      patch({ screen: 'login' });
       notify('Đã đặt lại mật khẩu');
-    } catch (e) { patch({ aErr: { pw: e.message || 'Đặt lại mật khẩu thất bại.' } }); }
+    } catch (e) { patchAuth({ aErr: { pw: e.message || 'Đặt lại mật khẩu thất bại.' } }); }
   };
 
   // OTP login: passwordless sign-in, separate from forgot-password (no password change).
   const otpLoginRequest = async () => {
-    if (!st.aEmail.trim() || !st.aEmail.includes('@')) { patch({ aErr: { email: 'Vui lòng nhập email đã đăng ký.' } }); return; }
+    if (!ast.aEmail.trim() || !ast.aEmail.includes('@')) { patchAuth({ aErr: { email: 'Vui lòng nhập email đã đăng ký.' } }); return; }
     try {
-      await authApi.requestLoginOtp(st.aEmail.trim());
-      patch({ aErr: {}, step: 2 });
+      await authApi.requestLoginOtp(ast.aEmail.trim());
+      patchAuth({ aErr: {}, step: 2 });
       notify('Đã gửi mã OTP tới email của bạn');
-    } catch { patch({ aErr: { email: 'Không gửi được email, thử lại sau.' } }); }
+    } catch { patchAuth({ aErr: { email: 'Không gửi được email, thử lại sau.' } }); }
   };
 
   const otpLoginVerify = async (remember = true) => {
-    if (!/^\d{6}$/.test(st.aOtp)) { patch({ aErr: { otp: 'Mã gồm 6 chữ số.' } }); return; }
+    if (!/^\d{6}$/.test(ast.aOtp)) { patchAuth({ aErr: { otp: 'Mã gồm 6 chữ số.' } }); return; }
     try {
-      const data = await authApi.verifyLoginOtp(st.aEmail.trim(), st.aOtp, remember);
-      rememberEmail(st.aEmail.trim());
+      const data = await authApi.verifyLoginOtp(ast.aEmail.trim(), ast.aOtp, remember);
+      rememberEmail(ast.aEmail.trim());
+      patchAuth({ aErr: {}, step: 1, aOtp: '' });
       if (isProfileIncomplete(data.user)) {
-        patch({ aErr: {}, user: data.user, screen: 'profile', profileOnboarding: true, step: 1, aOtp: '', redirectTo: null });
+        patch({ user: data.user, screen: 'profile', profileOnboarding: true, redirectTo: null });
       } else {
-        patch({ aErr: {}, user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, step: 1, aOtp: '', redirectTo: null });
+        patch({ user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
       }
       notify('Đăng nhập thành công');
       favApi.syncFavorites();
-    } catch (e) { patch({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
+    } catch (e) { patchAuth({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
   };
 
   // Resend OTP — dùng lại đúng endpoint theo luồng hiện tại (login OTP / quên mật khẩu).
   const resendOtp = async () => {
     if (s === 'forgot') {
-      try { await authApi.requestPasswordResetOtp(st.aEmail.trim()); notify('Đã gửi lại mã OTP'); }
-      catch { patch({ aErr: { otp: 'Không gửi được mã, thử lại sau.' } }); }
+      try { await authApi.requestPasswordResetOtp(ast.aEmail.trim()); notify('Đã gửi lại mã OTP'); }
+      catch { patchAuth({ aErr: { otp: 'Không gửi được mã, thử lại sau.' } }); }
     } else {
       await otpLoginRequest();
     }
@@ -519,10 +514,9 @@ export default function App() {
   const { data: modalPlate } = usePlateDetail(st.modal ? st.curId : null);
   const { data: seoPost } = useBlogPost(s === 'post' ? st.postId : null);
 
-  // UC07 — modal liên hệ ưu tiên dữ liệu biển thật (GUID từ API), fallback mock st.plates.
-  const cur0 = st.plates.find((p) => p.id === st.curId);
-  let cur = cur0 ? { ...cur0, title: cur0.prov + cur0.seri + ' · ' + cur0.num, sub: 'Biển ' + String(cur0.vehicle).toLowerCase() + ' · ' + cur0.city + (cur0.hot ? ' · còn 1 số duy nhất' : ''), ref: cur0.prov + cur0.seri + String(cur0.num).replace('.', '') } : null;
-  if (!cur && st.modal && modalPlate) {
+  // UC07 — modal liên hệ dùng dữ liệu biển thật (GUID từ API).
+  let cur = null;
+  if (st.modal && modalPlate) {
     const { prov, seri, num } = splitPlateNumber(modalPlate.plateNumber);
     cur = {
       id: modalPlate.id,
@@ -568,13 +562,6 @@ export default function App() {
         onBuy: () => openBuy(p.id),
       }));
 
-  const admQ = st.adminQ.trim().toLowerCase();
-  const admPlates = st.plates.filter((p) => {
-    if (st.admCat !== 'Tất cả' && p.cat !== st.admCat) return false;
-    if (st.admStatus !== 'Tất cả' && p.status !== st.admStatus) return false;
-    if (admQ && (p.prov + p.seri + ' ' + p.num + ' ' + p.cat).toLowerCase().indexOf(admQ) < 0) return false;
-    return true;
-  });
   const adminMeta = {
     dash: ['Tổng quan', 'Chào buổi sáng, đây là tình hình hôm nay.'],
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
@@ -604,7 +591,7 @@ export default function App() {
       ['Lấy lại mật khẩu', 'Nhập email đã đăng ký để nhận mã xác thực.', 'Gửi mã OTP'],
       ['Nhập mã xác thực', 'Mã 6 số đã được gửi tới email của bạn.', 'Xác nhận mã'],
       ['Đặt mật khẩu mới', 'Chọn mật khẩu tối thiểu 8 ký tự.', 'Hoàn tất'],
-    ][st.step - 1],
+    ][ast.step - 1],
   }[s] || ['', '', ''];
 
 
@@ -645,14 +632,14 @@ export default function App() {
           })()}
 
           <Suspense fallback={<PageSkeleton screen={s} />}>
-            {s === 'home' && <Home st={st} patch={patch} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} contact={contact} />}
+            {s === 'home' && <Home settings={st.settings} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} contact={contact} />}
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} />
+              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} />
             )}
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
@@ -672,7 +659,7 @@ export default function App() {
 
             {s === 'notifications' && <Notifications go={go} notify={notify} />}
 
-            {s === 'collab' && <Collaborator st={st} patch={patch} go={go} notify={notify} />}
+            {s === 'collab' && <Collaborator go={go} notify={notify} />}
 
             {s === 'terms' && <Terms />}
 
@@ -683,7 +670,7 @@ export default function App() {
             {s === 'faq' && <Faq go={go} zalo={st.settings?.zalo} />}
             {s === 'gmailCallback' && <GmailCallback go={go} />}
 
-            {s === 'blog' && <Blog st={st} patch={patch} />}
+            {s === 'blog' && <Blog patch={patch} />}
 
             {s === 'provinceLanding' && <ProvinceLandingPage provinceCode={st.provinceCode || '43'} openPlate={openPlate} onBuy={openBuy} contact={contact} />}
 
