@@ -34,7 +34,6 @@ const Home = lazy(() => import('./pages/Home.jsx'));
 const PlateList = lazy(() => import('./pages/PlateList.jsx'));
 const PlateDetail = lazy(() => import('./pages/PlateDetail.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail.jsx'));
 const Fav = lazy(() => import('./pages/Fav.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const LuckyPlate = lazy(() => import('./pages/LuckyPlate.jsx'));
@@ -656,11 +655,9 @@ export default function App() {
               <Auth st={st} s={s} patch={patch} go={go} setField={setField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} />
             )}
 
-            {s === 'verify-email' && <VerifyEmail go={go} />}
-
             {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
 
-            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} contact={contact} />}
+            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} contact={contact} openPlate={openPlate} onUserUpdate={(u) => patch({ user: u })} />}
             {s === 'profile' && <Profile go={go} notify={notify} user={st.user} onboarding={!!st.profileOnboarding} onUserUpdate={(u) => patch({ user: u, profileOnboarding: false })} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
             {s === 'about' && <About go={go} />}

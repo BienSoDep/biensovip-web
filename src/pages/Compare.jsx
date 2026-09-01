@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState, Fragment } from 'react';
 import { ArrowLeftRight, X, Sparkles } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
-import { InfoTip } from '../components/index.jsx';
+import { InfoTip, DateInputVN } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { useCompareIds, useComparePlates } from '../services/compareService.js';
 import { useScorePlates } from '../services/fengshuiService.js';
 import { routeFor } from '../config/routes.js';
 import { splitPlateNumber, formatPrice, splitFengShuiParagraphs } from '../lib/plateFormat.js';
 import { compareInsights, patternScore } from '../lib/compareInsights.js';
+import { PURPOSES, INDUSTRIES } from '../lib/fengshui.js';
 
 const ROW_LABELS = [
   { key: 'type', label: 'Loại biển' },
@@ -53,9 +54,38 @@ function priceScores(plates) {
 
 const CHART_COLORS = ['#F97316', '#2563EB', '#16A34A'];
 
+// Bullet-select nhỏ gọn cho Mục đích/Ngành trong Compare — cùng pattern LuckyPlate.jsx (dropdown gây lỗi hiển thị trống).
+function InlinePicker({ label, value, onChange, options }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
+      <div role="radiogroup" aria-label={label} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {options.map((opt) => {
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(opt)}
+              style={{
+                height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                font: 'var(--type-caption)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
+                color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+              }}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const CURRENT_YEAR = new Date().getFullYear();
-const MIN_BIRTH_DATE = '1900-01-01';
-const MAX_BIRTH_DATE = `${CURRENT_YEAR}-12-31`;
 
 function BirthDatePrompt({ onSubmit }) {
   const [date, setDate] = useState('');
@@ -78,18 +108,7 @@ function BirthDatePrompt({ onSubmit }) {
         onSubmit={(e) => { e.preventDefault(); if (valid) onSubmit(date); }}
         style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end' }}
       >
-        <input
-          type="date"
-          value={date}
-          min={MIN_BIRTH_DATE}
-          max={MAX_BIRTH_DATE}
-          onChange={(e) => setDate(e.target.value)}
-          style={{
-            height: 40, padding: '0 12px', borderRadius: 'var(--radius-field)',
-            background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)',
-            border: 'none', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none',
-          }}
-        />
+        <DateInputVN value={date} onChange={(e) => setDate(e.target.value)} />
         <Button type="submit" variant="primary" size="md" disabled={!valid}>Xem điểm hợp mệnh</Button>
       </form>
     </div>
@@ -106,6 +125,8 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
     : (allPlates || []).filter((p) => ids.includes(p.id));
 
   const [birthDate, setBirthDate] = useState(user?.birthDate || null);
+  const [purpose, setPurpose] = useState('Đi lại cá nhân');
+  const [industry, setIndustry] = useState(INDUSTRIES[0].label);
   const scoreMutation = useScorePlates();
 
   const removePlate = (id) => {
@@ -130,9 +151,15 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
   // Chấm điểm hợp mệnh khi có ngày sinh + đủ biển hợp lệ.
   useEffect(() => {
     if (!birthDate || plates.length < 2) return;
-    scoreMutation.mutate({ birthDate, plateIds: plates.map((p) => p.id) });
+    const purposeKey = PURPOSES.find((p) => p.label === purpose)?.key || 'ca_nhan';
+    scoreMutation.mutate({
+      birthDate,
+      plateIds: plates.map((p) => p.id),
+      purpose: purposeKey,
+      industry: purposeKey === 'kinh_doanh' ? (INDUSTRIES.find((i) => i.label === industry)?.key || null) : null,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [birthDate, plates.map((p) => p.id).join(',')]);
+  }, [birthDate, purpose, industry, plates.map((p) => p.id).join(',')]);
 
   // Empty: no IDs at all
   if (ids.length === 0) {
@@ -254,20 +281,28 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
           {!birthDate ? (
             <BirthDatePrompt onSubmit={setBirthDate} />
           ) : (
-            <div style={{ width: '100%', height: 340 }}>
-              <ResponsiveContainer>
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="var(--orange-100)" />
-                  <PolarAngleAxis dataKey="axis" tick={{ fontSize: 13, fill: 'var(--text-body)' }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                  {plates.map((p, i) => (
-                    <Radar key={p.id} name={p.plateNumber} dataKey={p.plateNumber} stroke={CHART_COLORS[i % 3]} fill={CHART_COLORS[i % 3]} fillOpacity={0.25} />
-                  ))}
-                  <Legend />
-                  <Tooltip />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+                <InlinePicker label="Mục đích sử dụng" value={purpose} onChange={setPurpose} options={PURPOSES.map((p) => p.label)} />
+                {purpose === 'Kinh doanh' && (
+                  <InlinePicker label="Ngành kinh doanh" value={industry} onChange={setIndustry} options={INDUSTRIES.map((i) => i.label)} />
+                )}
+              </div>
+              <div style={{ width: '100%', height: 340 }}>
+                <ResponsiveContainer>
+                  <RadarChart data={radarData}>
+                    <PolarGrid stroke="var(--orange-100)" />
+                    <PolarAngleAxis dataKey="axis" tick={{ fontSize: 13, fill: 'var(--text-body)' }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    {plates.map((p, i) => (
+                      <Radar key={p.id} name={p.plateNumber} dataKey={p.plateNumber} stroke={CHART_COLORS[i % 3]} fill={CHART_COLORS[i % 3]} fillOpacity={0.25} />
+                    ))}
+                    <Legend />
+                    <Tooltip />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
           )}
         </div>
       )}

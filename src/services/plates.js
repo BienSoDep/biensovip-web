@@ -39,6 +39,8 @@ export function useInfinitePlates(filters, options) {
       const next = all.length + 1;
       return next <= tp ? next : undefined;
     },
+    getPreviousPageParam: (_first, _all, firstPageParam) => (firstPageParam > 1 ? firstPageParam - 1 : undefined),
+    maxPages: 6,
     enabled: options?.enabled,
   });
 }

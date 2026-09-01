@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import Button from '../components/Button.jsx';
-import { Input, Select, Eyebrow, Badge, Icon, InfoTip } from '../components/index.jsx';
+import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN } from '../components/index.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
-import { ELEMENTS, PURPOSES, VEHICLES, BUDGETS, scoreColor } from '../lib/fengshui.js';
+import { useSubmitContact } from '../services/contactService.js';
+import { updateProfile } from '../services/authService.js';
+import { ELEMENTS, PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget, scoreColor } from '../lib/fengshui.js';
 import { loadAuth } from '../lib/authStore.js';
+import { validatePhone, normalizePhone } from '../lib/phone.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
-const MIN_BIRTH_DATE = '1900-01-01';
-const MAX_BIRTH_DATE = `${CURRENT_YEAR}-12-31`;
-const toOpts = (arr) => arr.map((o) => ({ value: o.label, label: o.label }));
-
 function validBirthDate(iso) {
   if (!iso) return false;
   const [y, m, d] = iso.split('-').map(Number);
@@ -22,8 +21,119 @@ function validBirthDate(iso) {
 const EL_DISP = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
 const elName = (k) => EL_DISP[k] || k;
 
-export default function LuckyPlate({ go, notify, onNotice, user, contact }) {
-  const [form, setForm] = useState({ name: user?.fullName || '', birthDate: user?.birthDate || '', purpose: 'Kinh doanh', vehicle: 'Ô tô', budget: 'Mọi ngân sách' });
+// Bullet-select tái dùng cho Loại xe / Mục đích / Ngành kinh doanh — dropdown gây lỗi hiển thị trống.
+function BulletPicker({ label, value, onChange, options }) {
+  return (
+    <div>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>
+      <div role="radiogroup" aria-label={label} style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 6, flexWrap: 'wrap' }}>
+        {options.map((opt) => {
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(opt)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 16px',
+                border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
+                color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)',
+              }}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function VehiclePicker({ value, onChange }) {
+  return <BulletPicker label="Loại xe" value={value} onChange={onChange} options={VEHICLES} />;
+}
+
+function PurposePicker({ value, onChange }) {
+  return <BulletPicker label="Mục đích sử dụng" value={value} onChange={onChange} options={PURPOSES.map((p) => p.label)} />;
+}
+
+function IndustryPicker({ value, onChange }) {
+  return <BulletPicker label="Ngành kinh doanh" value={value} onChange={onChange} options={INDUSTRIES.map((i) => i.label)} />;
+}
+
+// Nút "Yêu cầu tư vấn" tại card gợi ý hợp mệnh — guest chỉ cần SĐT gửi thẳng (không bắt đăng nhập,
+// mục tiêu tăng lượng contact); user đã đăng nhập nhưng thiếu SĐT (đăng ký bằng email) thì lưu SĐT
+// vào profile trước rồi mới gửi, để lần sau không phải hỏi lại.
+function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
+  const submitContact = useSubmitContact();
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const send = (phoneToUse, fullName) => {
+    submitContact.mutate({
+      fullName: fullName || 'Khách hàng', phone: normalizePhone(phoneToUse),
+      plateId: plate.plateId, plateNumber: plate.plateNumber,
+      note: '', source: 'lucky_plate', intent: 'inquiry',
+      depositAmount: null, subscribeToNotifications: false, honeypot: null,
+    }, {
+      onSuccess: () => { notify('Đã gửi yêu cầu tư vấn — admin sẽ liên hệ sớm.'); setSent(true); setOpen(false); },
+      onError: () => notify('Gửi thất bại, vui lòng thử lại.'),
+    });
+  };
+
+  const submitPhone = async () => {
+    if (!validatePhone(phone)) { notify('Số điện thoại không hợp lệ.'); return; }
+    setBusy(true);
+    try {
+      if (user) {
+        const updated = await updateProfile({ phone });
+        onUserUpdate?.(updated);
+        send(phone, user.fullName);
+      } else {
+        send(phone, '');
+      }
+    } catch (e) {
+      notify(e?.message || 'Có lỗi xảy ra, thử lại sau.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const click = () => {
+    if (sent) return;
+    if (user?.phone) { send(user.phone, user.fullName); return; }
+    setOpen(true);
+  };
+
+  if (sent) return <Button variant="ghost" size="sm" disabled>Đã gửi yêu cầu</Button>;
+
+  return open ? (
+    <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ width: 180 }}><Input placeholder="Số điện thoại của bạn" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+      <Button variant="primary" size="sm" onClick={submitPhone} disabled={busy}>{busy ? 'Đang gửi...' : 'Gửi'}</Button>
+      <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Hủy</Button>
+    </div>
+  ) : (
+    <Button variant="outline" size="sm" onClick={click}>Yêu cầu tư vấn</Button>
+  );
+}
+
+export default function LuckyPlate({ go, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
+  const [form, setForm] = useState({
+    name: user?.fullName || '',
+    birthDate: user?.birthDate || '',
+    purpose: PURPOSES.find((p) => p.key === user?.preferredPurpose)?.label || 'Kinh doanh',
+    industry: INDUSTRIES[0].label,
+    vehicle: user?.preferredVehicle || 'Ô tô',
+    budgetStep: BUDGET_STEPS.length - 1,
+  });
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
   const shareCardRef = useRef(null);
@@ -38,24 +148,19 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact }) {
   const submit = () => {
     if (!validBirthDate(form.birthDate)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
     setErr('');
-    const budgetCap = BUDGETS.find((b) => b.label === form.budget)?.cap ?? null;
+    const purposeKey = PURPOSES.find((p) => p.label === form.purpose)?.key || 'ca_nhan';
     lookup.mutate({
       birthDate: form.birthDate,
-      purpose: PURPOSES.find((p) => p.label === form.purpose)?.key || 'ca_nhan',
-      budget: budgetCap,
+      purpose: purposeKey,
+      budget: BUDGET_STEPS[form.budgetStep] ?? null,
       vehicle: form.vehicle,
+      industry: purposeKey === 'kinh_doanh' ? (INDUSTRIES.find((i) => i.label === form.industry)?.key || null) : null,
     }, { onError: () => notify('Không tra cứu được, thử lại sau.') });
   };
 
   const reset = () => { lookup.reset(); setForm((f) => ({ ...f, birthDate: '' })); };
 
   const result = lookup.data;
-
-  // Có ngày sinh trong hồ sơ (đăng nhập + đã điền Profile) → tra cứu luôn, khỏi bắt nhập lại.
-  useEffect(() => {
-    if (hasProfileBirthDate && !result && !lookup.isPending) submit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasProfileBirthDate]);
 
   // Deep-link `/hop-menh?y={year}&t={name}` → tự điền + tra cứu khi mở link chia sẻ.
   useEffect(() => {
@@ -128,13 +233,25 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact }) {
           )}
           <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.name} onChange={(e) => set('name')(e.target.value)} />
 
-          <Input type="date" label="Ngày sinh (dương lịch)" value={form.birthDate} min={MIN_BIRTH_DATE} max={MAX_BIRTH_DATE} error={err} hint="Tính theo dương lịch. Nếu chỉ nhớ ngày âm lịch, hãy quy đổi trước khi nhập." onChange={(e) => set('birthDate')(e.target.value)} />
+          <DateInputVN label="Ngày sinh (dương lịch)" value={form.birthDate} error={err} hint="Tính theo dương lịch. Nếu chỉ nhớ ngày âm lịch, hãy quy đổi trước khi nhập." onChange={(e) => set('birthDate')(e.target.value)} />
 
-          <Select label="Mục đích sử dụng" value={form.purpose} options={toOpts(PURPOSES)} onChange={set('purpose')} />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-            <div style={{ flex: '1 1 180px' }}><Select label="Loại xe" value={form.vehicle} options={toOpts(VEHICLES)} onChange={set('vehicle')} /></div>
-            <div style={{ flex: '1 1 220px' }}><Select label="Ngân sách" value={form.budget} options={toOpts(BUDGETS)} onChange={set('budget')} /></div>
-          </div>
+          <PurposePicker value={form.purpose} onChange={set('purpose')} />
+          {form.purpose === 'Kinh doanh' && <IndustryPicker value={form.industry} onChange={set('industry')} />}
+          <VehiclePicker value={form.vehicle} onChange={set('vehicle')} />
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'flex', justifyContent: 'space-between' }}>
+              <span>Ngân sách</span>
+              <span style={{ color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>
+                {form.budgetStep === 0 ? `Dưới ${formatBudget(BUDGET_STEPS[0])}` : `Tối đa ${formatBudget(BUDGET_STEPS[form.budgetStep])}`}
+              </span>
+            </span>
+            <input
+              type="range" min={0} max={BUDGET_STEPS.length - 1} step={1} value={form.budgetStep}
+              onChange={(e) => set('budgetStep')(Number(e.target.value))}
+              style={{ width: '100%', accentColor: 'var(--action-primary)' }}
+            />
+          </label>
 
           <Button variant="primary" size="lg" fullWidth onClick={submit} disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
         </form>
@@ -201,11 +318,17 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact }) {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
                     {r.explain.map((x, j) => <Badge key={j} tone="neutral">{x}</Badge>)}
                   </div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2 }}>
-                    <Button variant="dark" size="sm" onClick={() => go('detail', r.plateId)()}>Xem biển</Button>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2, flexWrap: 'wrap' }}>
+                    <Button variant="dark" size="sm" onClick={() => openPlate(r.plateId)}>Xem biển</Button>
                     <a href={`tel:${contact?.phone || '0815792699'}`} style={{ textDecoration: 'none' }}>
                       <Button variant="primary" size="sm">Gọi ngay</Button>
                     </a>
+                    {contact?.zalo && (
+                      <a href={`https://zalo.me/${contact.zalo}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                        <Button variant="outline" size="sm">Nhắn Zalo</Button>
+                      </a>
+                    )}
+                    <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />
                   </div>
                 </div>
               ))}

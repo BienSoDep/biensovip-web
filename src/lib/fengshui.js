@@ -13,18 +13,32 @@ export const ELEMENTS = {
 export const PURPOSES = [
   { label: 'Kinh doanh', key: 'kinh_doanh' },
   { label: 'Đi lại cá nhân', key: 'ca_nhan' },
+  { label: 'Xe gia đình', key: 'xe_gia_dinh' },
+  { label: 'Xe dịch vụ (taxi/công nghệ)', key: 'xe_dich_vu' },
   { label: 'Sang tên / sưu tầm', key: 'sua_tam' },
+];
+
+// Ngành kinh doanh (chỉ hỏi khi Purpose=kinh_doanh) — ảnh hưởng trọng số chấm điểm backend.
+export const INDUSTRIES = [
+  { label: 'Bán lẻ / thương mại', key: 'ban_le' },
+  { label: 'Vận tải / logistics', key: 'van_tai' },
+  { label: 'Dịch vụ', key: 'dich_vu' },
+  { label: 'Bất động sản / xây dựng', key: 'bat_dong_san' },
 ];
 
 export const VEHICLES = ['Ô tô', 'Xe máy'];
 
-export const BUDGETS = [
-  { label: 'Mọi ngân sách', cap: null },
-  { label: 'Dưới 100 triệu', cap: 100_000_000 },
-  { label: '100 – 500 triệu', cap: 500_000_000 },
-  { label: '500 triệu – 1 tỷ', cap: 1_000_000_000 },
-  { label: 'Trên 1 tỷ', cap: null }, // ponytail: backend chỉ hỗ trợ ngưỡng trên — "trên 1 tỷ" xem như mọi ngân sách.
+// Bậc thang cho slider ngân sách (kéo chọn ngưỡng tối đa) — bậc cuối = không giới hạn (cap: null).
+export const BUDGET_STEPS = [
+  5_000_000, 100_000_000, 150_000_000, 200_000_000, 300_000_000,
+  500_000_000, 700_000_000, 1_000_000_000, 1_500_000_000, 2_000_000_000, null,
 ];
+
+export const formatBudget = (cap) => {
+  if (cap == null) return 'Không giới hạn';
+  if (cap >= 1_000_000_000) return `${(cap / 1_000_000_000).toFixed(cap % 1_000_000_000 ? 1 : 0)} tỷ`;
+  return `${(cap / 1_000_000).toFixed(0)} triệu`;
+};
 
 // Màu thanh điểm theo mức (spec 16 §7): >=80 mint, 60–79 primary, <60 warning.
 export const scoreColor = (score) => {

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import Button from '../components/Button.jsx';
-import { Input, Select, Eyebrow, Icon } from '../components/index.jsx';
-import { updateProfile, changePassword, refreshToken } from '../services/authService.js';
+import { Input, Select, Eyebrow, Icon, DateInputVN } from '../components/index.jsx';
+import { updateProfile, changePassword, refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
 import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
 import { useBecomeCollaborator } from '../services/collaborators.js';
+import { PURPOSES, VEHICLES } from '../lib/fengshui.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
-const MIN_DATE = '1900-01-01';
-const MAX_DATE = `${CURRENT_YEAR}-12-31`;
 const GENDER_OPTS = [{ value: 'male', label: 'Nam' }, { value: 'female', label: 'Nữ' }, { value: 'other', label: 'Khác' }];
 
 function validBirthDate(iso) {
@@ -54,6 +53,40 @@ function GenderPicker({ value, onChange }) {
   );
 }
 
+// Bullet-select đơn giản tái dùng cho Loại xe/Mục đích thường dùng — cùng pattern GenderPicker,
+// cho phép bỏ chọn (click lại option đang active → rỗng) vì đây là preference không bắt buộc.
+function BulletPicker({ label, value, onChange, options }) {
+  return (
+    <div>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label} (không bắt buộc)</span>
+      <div role="radiogroup" aria-label={label} style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 6, flexWrap: 'wrap' }}>
+        {options.map((opt) => {
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(active ? '' : opt)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 16px',
+                border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
+                color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)',
+              }}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Profile({ go, notify, user, onboarding, onUserUpdate, onLogout }) {
   // Đến từ "Trở thành CTV" (trang Collaborator) qua hash #become-ctv → cuộn thẳng tới section CTV
   // thay vì bắt user tự cuộn qua Thông tin/Đổi mật khẩu/Thông báo ở trên.
@@ -63,7 +96,11 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
     }
   }, []);
 
-  const [form, setForm] = useState({ fullName: user?.fullName || '', birthDate: user?.birthDate || '', gender: user?.gender || '' });
+  const purposeLabelFromKey = (key) => PURPOSES.find((p) => p.key === key)?.label || '';
+  const [form, setForm] = useState({
+    fullName: user?.fullName || '', birthDate: user?.birthDate || '', gender: user?.gender || '',
+    preferredVehicle: user?.preferredVehicle || '', preferredPurpose: purposeLabelFromKey(user?.preferredPurpose),
+  });
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
@@ -77,6 +114,8 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
         fullName: form.fullName.trim() || undefined,
         birthDate: form.birthDate || undefined,
         gender: form.gender || undefined,
+        preferredVehicle: form.preferredVehicle || undefined,
+        preferredPurpose: PURPOSES.find((p) => p.label === form.preferredPurpose)?.key || undefined,
       });
       onUserUpdate?.(updated);
       notify('Đã lưu thông tin');
@@ -122,9 +161,12 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
         </div>
         <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={(e) => set('fullName')(e.target.value)} />
 
-        <Input type="date" label="Ngày sinh (dương lịch)" value={form.birthDate} min={MIN_DATE} max={MAX_DATE} error={err} onChange={(e) => set('birthDate')(e.target.value)} />
+        <DateInputVN label="Ngày sinh (dương lịch)" value={form.birthDate} error={err} onChange={(e) => set('birthDate')(e.target.value)} />
 
         <GenderPicker value={form.gender} onChange={set('gender')} />
+
+        <BulletPicker label="Loại xe thường dùng" value={form.preferredVehicle} onChange={set('preferredVehicle')} options={VEHICLES} />
+        <BulletPicker label="Mục đích sử dụng biển thường xuyên" value={form.preferredPurpose} onChange={set('preferredPurpose')} options={PURPOSES.map((p) => p.label)} />
 
         <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
           <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ flex: 1 }}>
@@ -185,7 +227,7 @@ function ChangePasswordSection({ notify }) {
   );
 }
 
-const NOTIFY_HOUR_OPTS = Array.from({ length: 24 }, (_, h) => ({ value: String(h), label: `${pad(h)}:00` }));
+const NOTIFY_HOUR_OPTS = Array.from({ length: 24 }, (_, h) => ({ value: String(h), label: `${String(h).padStart(2, '0')}:00` }));
 
 function NotificationSettingsSection({ notify }) {
   const { data, isLoading } = useNotificationSettings();
@@ -233,7 +275,40 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
   const become = useBecomeCollaborator();
   const [bankAccount, setBankAccount] = useState('');
   const [busy, setBusy] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpBusy, setOtpBusy] = useState(false);
   const needsEmailVerify = user?.identifierType === 'email' && !user?.emailVerified;
+
+  const sendOtp = async () => {
+    setOtpBusy(true);
+    try {
+      await requestEmailVerifyOtp();
+      setOtpSent(true);
+      notify('Đã gửi mã xác thực tới email của bạn.');
+    } catch (e) {
+      notify(e?.message || 'Gửi mã thất bại, thử lại sau.');
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
+  const confirmOtp = async () => {
+    if (otpCode.trim().length !== 6) { notify('Nhập đủ 6 số của mã xác thực.'); return; }
+    setOtpBusy(true);
+    try {
+      await confirmEmailVerifyOtp(otpCode.trim());
+      const data = await refreshToken();
+      if (data?.user) onUserUpdate?.(data.user);
+      notify('Xác thực email thành công.');
+      setOtpSent(false);
+      setOtpCode('');
+    } catch (e) {
+      notify(e?.message || 'Mã xác thực không đúng hoặc đã hết hạn.');
+    } finally {
+      setOtpBusy(false);
+    }
+  };
 
   const isCtv = Boolean(user?.isCollaborator);
 
@@ -275,7 +350,17 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
               Xác thực email trước khi kích hoạt tài khoản Cộng tác viên (để nhận thông báo hoa hồng).
             </p>
-            <Button variant="primary" size="md" style={{ alignSelf: 'flex-start' }} onClick={() => go('verify-email')()}>Xác thực email</Button>
+            {!otpSent ? (
+              <Button variant="primary" size="md" style={{ alignSelf: 'flex-start' }} onClick={sendOtp} disabled={otpBusy}>
+                {otpBusy ? 'Đang gửi...' : 'Gửi mã xác thực'}
+              </Button>
+            ) : (
+              <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+                <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
+                <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
+              </div>
+            )}
           </>
         ) : (
           <>

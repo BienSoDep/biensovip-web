@@ -80,6 +80,12 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* Ô ngày/tháng/năm trong DateInputVN: khung ngoài (span cha) đã tự vẽ viền khi focus,
+   outline riêng từng ô con gây cảm giác 2 khung lồng nhau — tắt riêng cho input con này. */
+.date-vn-input:focus-visible {
+  outline: none !important;
+}
+
 /* Header sticky che khuất phần trên element khi focus — thiếu scroll-margin-top
    khiến trình duyệt tự cuộn lên vài chục px để lộ hết element (cảm giác "nhích"
    mỗi khi bấm bất kỳ đâu sau khi đã cuộn trang xuống). */

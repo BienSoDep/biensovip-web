@@ -3,8 +3,8 @@ import { apiClient } from './apiClient.js';
 
 export function useFengShuiLookup() {
   return useMutation({
-    mutationFn: ({ birthDate, purpose, budget, vehicle }) =>
-      apiClient.post('/api/fengshui/lookup', { birthDate, purpose, budget, vehicle }),
+    mutationFn: ({ birthDate, purpose, budget, vehicle, industry }) =>
+      apiClient.post('/api/fengshui/lookup', { birthDate, purpose, budget, vehicle, industry }),
   });
 }
 
@@ -25,7 +25,7 @@ export function useFengShuiHistory(enabled) {
 // UC16 Compare — chấm điểm hợp mệnh cho danh sách biển cụ thể (1-3 biển).
 export function useScorePlates() {
   return useMutation({
-    mutationFn: ({ birthDate, plateIds }) =>
-      apiClient.post('/api/fengshui/score-plates', { birthDate, plateIds }),
+    mutationFn: ({ birthDate, plateIds, purpose, industry }) =>
+      apiClient.post('/api/fengshui/score-plates', { birthDate, plateIds, purpose, industry }),
   });
 }

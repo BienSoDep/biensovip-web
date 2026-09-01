@@ -67,17 +67,22 @@ export async function getMe() {
   return apiClient.get('/api/auth/me');
 }
 
-// ── Update profile (BirthDate/Gender cần cho tính năng hợp mệnh) ──
-export async function updateProfile({ fullName, birthDate, gender } = {}) {
-  const data = await apiClient.patch('/api/auth/me', { fullName, birthDate, gender });
+// ── Update profile (BirthDate/Gender cần cho tính năng hợp mệnh; Phone để gửi yêu cầu tư vấn;
+// preferredVehicle/preferredPurpose để prefill form tra hợp mệnh lần sau) ──
+export async function updateProfile({ fullName, birthDate, gender, phone, preferredVehicle, preferredPurpose } = {}) {
+  const data = await apiClient.patch('/api/auth/me', { fullName, birthDate, gender, phone, preferredVehicle, preferredPurpose });
   const auth = loadAuth();
   if (auth) saveAuth({ ...auth, user: data });
   return data;
 }
 
-// ── Verify email ──
-export async function verifyEmail(token) {
-  return apiClient.post('/api/auth/verify-email', { token });
+// ── Xác minh email tự chủ trong Profile (OTP) ──
+export async function requestEmailVerifyOtp() {
+  return apiClient.post('/api/auth/email/verify-otp/request');
+}
+
+export async function confirmEmailVerifyOtp(code) {
+  return apiClient.post('/api/auth/email/verify-otp/confirm', { code });
 }
 
 // ── Forgot password ──

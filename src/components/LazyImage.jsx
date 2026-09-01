@@ -20,13 +20,15 @@ export default function LazyImage({ src, alt, style, imgStyle, skeletonHeight })
   }, []);
 
   // Hình treo (không load cũng không lỗi) → fallback sau 8s thay vì skeleton vô hạn.
+  // Chỉ đếm khi ảnh đã vào viewport và bắt đầu tải (inView) — nếu đếm từ lúc mount,
+  // ảnh cuối trang chưa kịp cuộn tới đã bị đánh dấu "failed" trước khi <img> tồn tại.
   useEffect(() => {
-    if (loaded || failed || !src) return;
+    if (!inView || loaded || failed || !src) return;
     const t = setTimeout(() => setFailed(true), 8000);
     return () => clearTimeout(t);
-  }, [src, loaded, failed, retryKey]);
+  }, [inView, src, loaded, failed, retryKey]);
 
-  const retry = () => { setFailed(false); setLoaded(false); setRetryKey((k) => k + 1); };
+  const retry = (e) => { e.preventDefault(); e.stopPropagation(); setFailed(false); setLoaded(false); setRetryKey((k) => k + 1); };
 
   return (
     <div ref={ref} style={{ position: 'relative', overflow: 'hidden', ...style }}>
