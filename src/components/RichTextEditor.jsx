@@ -115,7 +115,8 @@ export function EditorToolbar({ editor }) {
 // trích dẫn) + chèn ảnh (dán link hoặc tải lên qua Cloudinary). value/onChange nhận HTML string.
 export default function RichTextEditor({ value, onChange, minHeight = 220, placeholder }) {
   const editor = useEditor({
-    extensions: [StarterKit, TiptapLink, TiptapImage],
+    immediatelyRender: false,
+    extensions: [StarterKit.configure({ link: false }), TiptapLink, TiptapImage],
     content: value || '',
     editorProps: placeholder ? { attributes: { 'data-placeholder': placeholder } } : undefined,
     onUpdate: ({ editor: ed }) => onChange(ed.getHTML()),
