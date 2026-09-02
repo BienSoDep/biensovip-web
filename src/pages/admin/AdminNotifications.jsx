@@ -4,7 +4,6 @@ import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { Input, Select } from '../../components/index.jsx';
-import RichTextEditor from '../../components/RichTextEditor.jsx';
 import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail, useNotificationRecipientCount } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
 import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
@@ -39,6 +38,13 @@ const CHANNEL_LABEL = { web: 'Chuông web', email: 'Email', zalo: 'Zalo', email_
 function stripHtml(html) {
   if (!html) return '';
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Textarea nhập plain text (RichTextEditor/Tiptap crash trên trang này — xem RichTextEditor.jsx) —
+// escape rồi wrap từng dòng trống-cách-nhau thành <p>, giữ tương thích với content HTML backend đã dùng.
+function plainTextToHtml(text) {
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return text.split(/\n{2,}/).map((p) => `<p>${esc(p).replace(/\n/g, '<br/>')}</p>`).join('');
 }
 
 // Xem trước email gần đúng template EmailTemplate.Wrap (logo, thanh cam, tiêu đề, nội dung, liên hệ) — admin thấy email sẽ gửi ra sao trước khi gửi thật.
@@ -119,7 +125,8 @@ export default function AdminNotifications({ notify, st }) {
 
   const [tab, setTab] = useState('send');
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const [plainBody, setPlainBody] = useState('');
+  const body = plainTextToHtml(plainBody);
   const [target, setTarget] = useState('all');
   const [channel, setChannel] = useState('email');
   const subEstimate = useNotificationRecipientCount({ target });
@@ -152,7 +159,7 @@ export default function AdminNotifications({ notify, st }) {
         title: title.trim(), content: body, channel, target,
         userIds: target === 'specific' ? selectedUsers.map((u) => u.id) : undefined,
       });
-      setTitle(''); setBody(''); setSelectedUsers([]);
+      setTitle(''); setPlainBody(''); setSelectedUsers([]);
       notify(res.recipientCount > 0 ? `Đã gửi thông báo tới ${res.recipientCount} người dùng` : 'Đã tạo thông báo nhưng không có người nhận hợp lệ');
     } catch (e) {
       setErr(e.message || 'Lỗi khi gửi.');
@@ -193,7 +200,11 @@ export default function AdminNotifications({ notify, st }) {
               <Input label="Tiêu đề" placeholder="VD: Bảo trì hệ thống tối nay" value={title} onChange={(e) => setTitle(e.target.value)} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
-                <RichTextEditor value={body} onChange={setBody} minHeight={180} />
+                <textarea
+                  rows={7} value={plainBody} onChange={(e) => setPlainBody(e.target.value)}
+                  placeholder="Nhập nội dung thông báo…"
+                  style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }}
+                />
               </div>
               <Select label="Đối tượng" value={target} options={TARGETS} onChange={setTarget} />
               {target === 'specific' && <UserPicker selected={selectedUsers} onChange={setSelectedUsers} />}

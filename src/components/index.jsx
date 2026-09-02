@@ -129,7 +129,9 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
 
   const digits = (s) => s.replace(/\D/g, '');
   const emit = (dd, mm, yyyy) => {
-    if (dd && mm && yyyy && yyyy.length === 4) onChange({ target: { value: `${yyyy}-${mm}-${dd}` } });
+    // Zero-pad ngày/tháng — backend nhận JSON DateTime chuẩn ISO (yyyy-MM-dd), "1990-5-15" (thiếu
+    // pad) làm System.Text.Json từ chối parse → 500. Cho phép gõ dở 1 chữ số, chỉ emit khi đủ 2 số.
+    if (dd?.length === 2 && mm?.length === 2 && yyyy?.length === 4) onChange({ target: { value: `${yyyy}-${mm}-${dd}` } });
     else onChange({ target: { value: '' } });
   };
 

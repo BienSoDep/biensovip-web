@@ -90,13 +90,14 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
-  // Restore admin session on mount
+  // Restore admin session on mount — giữ nguyên screen từ URL hiện tại (deep-link/hard-reload) nếu
+  // đã là màn admin hợp lệ; chỉ mặc định về 'dash' khi URL ban đầu không phải màn admin nào (VD "/").
   useEffect(() => {
     const auth = loadAuth();
     if (auth?.isAdmin && auth?.accessToken) {
       authApi.restoreAdminSession().then((session) => {
         if (session?.user) {
-          patch({ user: session.user, isAdmin: true, screen: 'dash' });
+          patch((s) => ({ ...s, user: session.user, isAdmin: true, screen: ADMIN_SCREENS.includes(s.screen) ? s.screen : 'dash' }));
         }
       });
     }
