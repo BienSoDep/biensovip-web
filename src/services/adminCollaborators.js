@@ -12,7 +12,7 @@ export function useAdminCollaborators(q) {
 export function useUpdateCollaboratorStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status, commissionRate, suspendReason }) => apiClient.patch(`/api/admin/collaborators/${id}`, { status, commissionRate, suspendReason }),
+    mutationFn: ({ id, status, commissionRate, suspendReason, sendEmail }) => apiClient.patch(`/api/admin/collaborators/${id}`, { status, commissionRate, suspendReason, sendEmail }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-collaborators'] }),
   });
 }

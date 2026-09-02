@@ -34,15 +34,16 @@ export default function AdminCollaborators({ st, patch, notify }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [confirm, setConfirm] = useState(null); // { id, to }
   const [reasonDraft, setReasonDraft] = useState('');
+  const [sendLockEmail, setSendLockEmail] = useState(false);
   const [detailCollab, setDetailCollab] = useState(null);
   const [rateDraft, setRateDraft] = useState({}); // { [id]: string (%) }
 
   const applyStatus = (id, v) => {
     setUpdatingId(id);
-    updateStatus.mutate({ id, status: v, suspendReason: v === 'locked' ? (reasonDraft.trim() || undefined) : undefined }, {
+    updateStatus.mutate({ id, status: v, suspendReason: v === 'locked' ? (reasonDraft.trim() || undefined) : undefined, sendEmail: v === 'locked' && sendLockEmail }, {
       onSuccess: () => notify('Đã cập nhật trạng thái CTV'),
       onError: () => notify('Cập nhật trạng thái thất bại'),
-      onSettled: () => { setUpdatingId(null); setConfirm(null); setReasonDraft(''); },
+      onSettled: () => { setUpdatingId(null); setConfirm(null); setReasonDraft(''); setSendLockEmail(false); },
     });
   };
 
@@ -97,7 +98,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 620 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-          <span style={{ flex: '1 1 120px' }}>Tên</span><span style={{ flex: '1 1 110px' }}>Điện thoại</span><span style={{ flex: '1 1 120px' }}>Mã giới thiệu</span><span style={{ flex: '1 1 96px' }}>Hoa hồng</span><span style={{ flex: '1 1 140px' }}>Hệ số %</span><span style={{ flex: '1 1 120px' }}>Trạng thái</span><span style={{ flex: '0 0 120px' }}>Chi trả</span>
+          <span style={{ flex: '1 1 120px' }}>Tên</span><span style={{ flex: '1 1 110px' }}>Điện thoại</span><span style={{ flex: '1 1 120px' }}>Mã giới thiệu</span><span style={{ flex: '1 1 96px' }}>Hoa hồng</span><span style={{ flex: '1 1 150px' }}>Hệ số %</span><span style={{ flex: '1 1 120px' }}>Trạng thái</span><span style={{ flex: '0 0 120px' }}>Chi trả</span>
         </div>
         {list.map((c) => (
           <div key={c.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
@@ -105,14 +106,15 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <span style={{ flex: '1 1 110px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{c.phone}</span>
             <span style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-body)' }}>{c.referralCode}</span>
             <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{money(c.commissionEarned)}</span>
-            <span style={{ flex: '1 1 140px', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', gap: 6 }}>
               <input
                 type="number" min="0" max="100" step="0.5"
-                placeholder={c.commissionRate != null ? String(c.commissionRate * 100) : '5 (mặc định)'}
+                title={c.commissionRate == null ? 'Chưa set riêng — đang dùng mặc định 5%' : undefined}
+                placeholder={c.commissionRate != null ? String(c.commissionRate * 100) : '5'}
                 value={rateDraft[c.id] ?? (c.commissionRate != null ? String(c.commissionRate * 100) : '')}
                 onChange={(e) => setRateDraft((d) => ({ ...d, [c.id]: e.target.value }))}
                 style={{
-                  width: 64, minHeight: 36, padding: '8px 6px', borderRadius: 'var(--radius-input)',
+                  width: 52, minHeight: 36, padding: '8px 6px', borderRadius: 'var(--radius-input)',
                   border: (() => { const v = rateDraft[c.id]; if (v === undefined || v === '') return '1px solid var(--border-hairline)'; const n = Number(v); return Number.isNaN(n) || n < 0 || n > 100 ? '1.5px solid var(--status-danger)' : '1px solid var(--border-hairline)'; })(),
                   font: 'var(--type-caption)',
                 }}
@@ -126,7 +128,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <span style={{ flex: '1 1 120px' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ pointerEvents: updatingId === c.id ? 'none' : undefined, opacity: updatingId === c.id ? 0.6 : 1, display: 'inline-block' }}>
-                  <Select value={c.status} options={opts(STATUSES)} onChange={(v) => setConfirm({ id: c.id, to: v })} variant="pill" style={{ whiteSpace: 'nowrap', color: 'var(--text-strong)' }} />
+                  <Select value={c.status} options={opts(STATUSES)} onChange={(v) => setConfirm({ id: c.id, to: v, hasEmail: !!c.email })} variant="pill" style={{ whiteSpace: 'nowrap', color: 'var(--text-strong)' }} />
                 </span>
                 {updatingId === c.id && <span aria-hidden style={spinnerStyle} />}
               </span>
@@ -151,11 +153,17 @@ export default function AdminCollaborators({ st, patch, notify }) {
           Bạn có chắc muốn đổi trạng thái CTV này sang <b>{confirm ? STATUS_LABEL[confirm.to] || confirm.to : ''}</b>?
         </p>
         {confirm?.to === 'locked' && (
-          <input
-            type="text" maxLength={255} value={reasonDraft} onChange={(e) => setReasonDraft(e.target.value)}
-            placeholder="Lý do khóa (ghi để lưu vết cho CTV)"
-            style={{ width: '100%', marginBottom: 'var(--space-3)', padding: '8px 10px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
-          />
+          <>
+            <input
+              type="text" maxLength={255} value={reasonDraft} onChange={(e) => setReasonDraft(e.target.value)}
+              placeholder="Lý do khóa (ghi để lưu vết cho CTV)"
+              style={{ width: '100%', marginBottom: 'var(--space-3)', padding: '8px 10px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
+            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-3)', font: 'var(--type-body-sm)', color: confirm.hasEmail ? 'var(--text-strong)' : 'var(--text-faint)', cursor: confirm.hasEmail ? 'pointer' : 'default' }}>
+              <input type="checkbox" checked={sendLockEmail} disabled={!confirm.hasEmail} onChange={(e) => setSendLockEmail(e.target.checked)} />
+              Gửi email thông báo lý do + liên hệ hỗ trợ Zalo{!confirm.hasEmail && ' (CTV này chưa có email)'}
+            </label>
+          </>
         )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <Button variant="ghost" size="md" onClick={() => setConfirm(null)}>Hủy</Button>

@@ -55,7 +55,7 @@ const ADMIN_INFO = {
   avideos: 'Video TikTok/Facebook giới thiệu biển. Dán link để hệ thống tự nhận diện nền tảng và tạo ảnh xem trước.',
   anotifications: 'Soạn/gửi thông báo thủ công tới khách, quản lý email đăng ký nhận tin và cấu hình email tự động theo sự kiện.',
   aemailtpl: 'Kéo-thả dựng bố cục email dùng chung cho các loại thông báo tự động.',
-  acollabs: 'Danh sách cộng tác viên giới thiệu khách — theo dõi hoa hồng và duyệt thanh toán.',
+  acollabs: 'Danh sách cộng tác viên giới thiệu khách. Quy trình: CTV đăng ký tự kích hoạt ngay (không cần duyệt) → chia sẻ link giới thiệu → khách đặt cọc/mua qua link → hoa hồng tự tính (mặc định 5%, chỉnh riêng từng CTV ở cột "Hệ số") → hoa hồng ở trạng thái "Chờ duyệt" cho tới khi bạn xác nhận đã chuyển khoản và bấm chi trả trong mục hoa hồng của từng CTV.',
   acollabcontent: 'Nội dung trang giới thiệu ưu đãi hiển thị cho người muốn trở thành cộng tác viên.',
   ainterestleads: 'Khách thả tim/xem 1 biển nhiều lần nhưng chưa để lại liên hệ. Bấm "Nhận tư vấn" để chủ động liên hệ trước.',
   areviews: 'Duyệt đánh giá khách gửi trước khi hiển thị công khai trên trang chi tiết biển; có thể trả lời đánh giá.',

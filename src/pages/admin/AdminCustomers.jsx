@@ -23,6 +23,8 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
   const [confirmLock, setConfirmLock] = useState(null);
+  const [lockReason, setLockReason] = useState('');
+  const [sendLockEmail, setSendLockEmail] = useState(false);
   const [detailId, setDetailId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
@@ -40,13 +42,15 @@ export default function AdminCustomers({ st, setSt, notify }) {
       ? `Khóa tài khoản "${c.email || c.fullName}" sẽ chấm dứt toàn bộ phiên đăng nhập hiện tại của khách hàng này.`
       : `Mở khóa tài khoản "${c.email || c.fullName}" — khách hàng sẽ có thể đăng nhập trở lại.`;
 
-    setConfirmLock({ id: c.id, next, verb, warning });
+    setLockReason('');
+    setSendLockEmail(false);
+    setConfirmLock({ id: c.id, next, verb, warning, hasEmail: !!c.email });
   };
 
   const doToggle = () => {
     if (!confirmLock || updatingId) return;
     setUpdatingId(confirmLock.id);
-    updateStatus.mutate({ id: confirmLock.id, status: confirmLock.next }, {
+    updateStatus.mutate({ id: confirmLock.id, status: confirmLock.next, reason: confirmLock.next === 'locked' ? lockReason.trim() || undefined : undefined, sendEmail: confirmLock.next === 'locked' && sendLockEmail }, {
       onSuccess: () => { toast.success(`Đã ${confirmLock.verb} tài khoản`); setUpdatingId(null); },
       onError: (e) => { toast.error(e?.message || `Lỗi ${confirmLock.verb} tài khoản`); setUpdatingId(null); },
     });
@@ -149,6 +153,20 @@ export default function AdminCustomers({ st, setSt, notify }) {
       <Modal open={!!confirmLock} onClose={() => setConfirmLock(null)} title={`Xác nhận ${confirmLock?.verb} tài khoản`} maxWidth="420px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{confirmLock?.warning}</p>
+          {confirmLock?.next === 'locked' && (
+            <>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                Lý do khóa (khách sẽ thấy lý do này khi đăng nhập)
+                <textarea rows={3} value={lockReason} onChange={(e) => setLockReason(e.target.value)}
+                  placeholder="VD: Phát hiện hoạt động bất thường trên tài khoản…"
+                  style={{ border: '1px solid var(--border-hairline)', padding: '8px 10px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical' }} />
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: confirmLock.hasEmail ? 'var(--text-strong)' : 'var(--text-faint)', cursor: confirmLock.hasEmail ? 'pointer' : 'default' }}>
+                <input type="checkbox" checked={sendLockEmail} disabled={!confirmLock.hasEmail} onChange={(e) => setSendLockEmail(e.target.checked)} />
+                Gửi email thông báo lý do + liên hệ hỗ trợ Zalo{!confirmLock.hasEmail && ' (tài khoản này chưa có email)'}
+              </label>
+            </>
+          )}
           <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
             <Button variant="ghost" size="md" onClick={() => setConfirmLock(null)}>Hủy</Button>
             <Button variant={confirmLock?.next === 'locked' ? 'danger' : 'primary'} size="md" onClick={doToggle} disabled={!!updatingId}>{updatingId ? 'Đang xử lý…' : 'Xác nhận'}</Button>

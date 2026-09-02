@@ -317,7 +317,9 @@ export default function App() {
   const tryAdminLogin = async (email, password) => {
     try {
       const result = await adminLoginRequest(email, password);
-      if (!result.ok) return false;
+      // 403 = tài khoản nhân viên bị admin khóa (lý do trong result.message) — khác "không phải tài
+      // khoản admin" (result.ok=false không có message rõ) — báo lý do thật thay vì rơi về generic.
+      if (!result.ok) return result.status === 403 && result.message ? { locked: true, reason: result.message } : false;
       if (result.data.twoFactorRequired) {
         patchAuth({ aErr: {}, aPw: '', a2faToken: result.data.twoFactorToken, a2faCode: '' });
         return true;
@@ -437,11 +439,14 @@ export default function App() {
         // Sai với endpoint user — thử lại như tài khoản quản trị trước khi báo lỗi.
         // 1 form, 1 ô nhập, tự nhận diện loại tài khoản qua endpoint nào chấp nhận.
         if (e.status === 401) {
-          const adminOk = await tryAdminLogin(ast.aEmail.trim(), ast.aPw);
-          if (adminOk) return;
-          patchAuth({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
+          const adminResult = await tryAdminLogin(ast.aEmail.trim(), ast.aPw);
+          if (adminResult === true) return;
+          if (adminResult && adminResult.locked) patchAuth({ aErr: { pw: adminResult.reason, lockedReason: adminResult.reason } });
+          else patchAuth({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
         }
         else if (e.status === 429) patchAuth({ aErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
+        // 403 + code ACCOUNT_LOCKED_BY_ADMIN — khóa thủ công bởi admin, message là lý do admin ghi.
+        else if (e.status === 403 && e.code === 'ACCOUNT_LOCKED_BY_ADMIN') patchAuth({ aErr: { pw: e.message, lockedReason: e.message } });
         else patchAuth({ aErr: { email: e.message || 'Đăng nhập thất bại.' } });
       }
       return;
@@ -641,7 +646,7 @@ export default function App() {
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} />
+              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
             )}
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}

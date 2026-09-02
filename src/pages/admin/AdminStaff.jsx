@@ -44,6 +44,9 @@ export default function AdminStaff({ notify }) {
   const [pwValue, setPwValue] = useState('');
   const [pwErr, setPwErr] = useState('');
   const [pwSaving, setPwSaving] = useState(false);
+  const [lockTarget, setLockTarget] = useState(null); // { id, hasEmail }
+  const [lockReason, setLockReason] = useState('');
+  const [sendLockEmail, setSendLockEmail] = useState(false);
   const [q, setQ] = useState('');
   const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
   const [err, setErr] = useState({});
@@ -140,11 +143,11 @@ export default function AdminStaff({ notify }) {
   };
   const pwTarget = items.find((x) => x.id === pwId);
 
-  const toggleActive = async (x) => {
+  const toggleActive = async (x, reason, sendEmail) => {
     if (busy) return;
     setBusy(true);
     try {
-      await updateStaff.mutateAsync({ id: x.id, active: !x.active });
+      await updateStaff.mutateAsync({ id: x.id, active: !x.active, suspendReason: x.active ? reason : undefined, sendEmail: x.active ? sendEmail : undefined });
       notify(x.active ? 'Đã vô hiệu hóa tài khoản' : 'Đã kích hoạt tài khoản');
     } catch (e) {
       if (e.status === 409) toast.error('Phải còn ít nhất một tài khoản super-admin');
@@ -158,9 +161,18 @@ export default function AdminStaff({ notify }) {
   const isSelf = (x) => me && (x.id === me.id || (me.email && x.email === me.email));
   const delTarget = items.find((x) => x.id === delId);
 
+  // Khóa (active → inactive): mở modal hỏi lý do + email. Mở khóa: bật lại ngay, không cần lý do.
   const handleToggleActive = (x) => {
     if (isSelf(x) && x.active) { setSelfAction({ type: 'deactivate', id: x.id }); return; }
+    if (x.active) { setLockReason(''); setSendLockEmail(false); setLockTarget({ id: x.id, hasEmail: !!x.email }); return; }
     toggleActive(x);
+  };
+
+  const confirmLockStaff = () => {
+    const x = items.find((i) => i.id === lockTarget?.id);
+    if (!x) { setLockTarget(null); return; }
+    toggleActive(x, lockReason.trim() || undefined, sendLockEmail);
+    setLockTarget(null);
   };
 
   const handleDelete = (x) => {
@@ -291,6 +303,27 @@ export default function AdminStaff({ notify }) {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="md" onClick={() => setDelId(null)}>Hủy</Button>
             <Button variant="danger" size="md" onClick={confirmDelete} disabled={busy} loading={busy}>Vô hiệu hóa</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Vô hiệu hóa (khóa) qua công tắc trạng thái — hỏi lý do + tùy chọn gửi email */}
+      <Modal open={!!lockTarget} onClose={() => setLockTarget(null)} title="Xác nhận vô hiệu hóa tài khoản" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Tài khoản sẽ bị đăng xuất khỏi mọi phiên hiện tại.</p>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            Lý do khóa (nhân viên sẽ thấy lý do này khi đăng nhập)
+            <textarea rows={3} value={lockReason} onChange={(e) => setLockReason(e.target.value)}
+              placeholder="VD: Nghỉ việc, vi phạm quy định nội bộ…"
+              style={{ border: '1px solid var(--border-hairline)', padding: '8px 10px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical' }} />
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: lockTarget?.hasEmail ? 'var(--text-strong)' : 'var(--text-faint)', cursor: lockTarget?.hasEmail ? 'pointer' : 'default' }}>
+            <input type="checkbox" checked={sendLockEmail} disabled={!lockTarget?.hasEmail} onChange={(e) => setSendLockEmail(e.target.checked)} />
+            Gửi email thông báo lý do + liên hệ hỗ trợ Zalo
+          </label>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setLockTarget(null)}>Hủy</Button>
+            <Button variant="danger" size="md" onClick={confirmLockStaff} disabled={busy} loading={busy}>Vô hiệu hóa</Button>
           </div>
         </div>
       </Modal>

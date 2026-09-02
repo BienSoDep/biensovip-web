@@ -63,7 +63,7 @@ function OtpBoxes({ value, onChange, error, disabled }) {
   );
 }
 
-export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp, submitAdmin2fa, blurValidateRegisterField }) {
+export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp, submitAdmin2fa, blurValidateRegisterField, zalo }) {
   const [otpMode, setOtpMode] = useState(false);
   const [remember, setRemember] = useState(true);
   const [lastEmail, setLastEmail] = useState('');
@@ -282,6 +282,17 @@ export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta,
             )}
             {s === 'login' && !otpMode && !st.a2faToken && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                {st.aErr.lockedReason && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 'var(--space-4)', borderRadius: 'var(--radius-card)', background: 'var(--status-danger-bg, #FEF2F2)', border: '1px solid var(--status-danger, #DC2626)' }}>
+                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-danger-ink, #991B1B)' }}>Tài khoản của bạn đã bị khóa</span>
+                    <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger-ink, #991B1B)' }}>{st.aErr.lockedReason}</span>
+                    {zalo && (
+                      <a href={`https://zalo.me/${zalo}`} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'none' }}>
+                        Liên hệ bộ phận hỗ trợ qua Zalo →
+                      </a>
+                    )}
+                  </div>
+                )}
                 <Input label="Email hoặc số điện thoại" placeholder="email@example.com hoặc 09xx xxx xxx" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} />
                 <Input label="Mật khẩu" type="password" placeholder="••••••••" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>

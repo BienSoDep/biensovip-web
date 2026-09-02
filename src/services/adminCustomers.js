@@ -30,7 +30,7 @@ export function useAdminCustomerDetail(id) {
 export function useUpdateCustomerStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }) => apiClient.patch(`/api/admin/customers/${id}/status`, { status }),
+    mutationFn: ({ id, status, reason, sendEmail }) => apiClient.patch(`/api/admin/customers/${id}/status`, { status, reason, sendEmail }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-customers'] });
     },
