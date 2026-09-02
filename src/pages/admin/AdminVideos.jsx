@@ -112,7 +112,17 @@ export default function AdminVideos({ notify }) {
         {v.platform === 'tiktok' ? (
           <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
         ) : (
-          <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', aspectRatio: RATIO[v.platform] || '16 / 9', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</a>
+          <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Xem video Facebook: ${v.title || ''}`}
+            style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', aspectRatio: RATIO[v.platform] || '16 / 9', overflow: 'hidden', background: 'var(--surface-sunken)' }}>
+            {v.thumbnailUrl ? (
+              <img src={v.thumbnailUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            ) : (
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{v.title || 'Xem video'}</span>
+            )}
+            <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>▶</span>
+            </span>
+          </a>
         )}
       </div>
       <div style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>

@@ -543,6 +543,25 @@ textarea,
   --border-hairline: var(--grey-300);
   --grey-100: var(--grey-200);
 }
+/* Admin/staff: bỏ toàn bộ bo tròn — chuyển kiểu vuông truyền thống, không đụng site public.
+   Ghi đè token radius trong scope .admin-shell nên mọi nơi dùng var(--radius-*) qua inline style
+   tự động về vuông, không cần sửa từng trang. */
+.admin-shell {
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-pill: 0;
+  --radius-card: 0;
+  --radius-control: 0;
+  --radius-field: 0;
+  --radius-surface: 0;
+}
+.admin-shell, .admin-shell * {
+  border-radius: 0 !important;
+}
 /* Admin sidebar: sticky + tự cuộn — nav dài (14 route) không được đẩy nút Đăng xuất ra ngoài tầm nhìn */
 .admin-sidebar {
   position: sticky;

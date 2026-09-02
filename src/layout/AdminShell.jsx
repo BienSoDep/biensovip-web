@@ -4,7 +4,7 @@ import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
-import { SearchField } from '../components/index.jsx';
+import { SearchField, AdminInfoBanner } from '../components/index.jsx';
 import { pill } from '../components/NavBtn.jsx';
 import * as authApi from '../services/authService.js';
 import { apiClient } from '../services/apiClient.js';
@@ -27,6 +27,7 @@ import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
 import AdminAuditLog from '../pages/admin/AdminAuditLog.jsx';
 import AdminRiskLog from '../pages/admin/AdminRiskLog.jsx';
+import AdminGuide from '../pages/admin/AdminGuide.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import { useNotificationCounts } from '../services/systemHealth.js';
@@ -41,6 +42,29 @@ const NAV_PERM = {
   achatbot: 'chatbot:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
+
+// Banner thông tin ngắn đầu mỗi trang quản lý — 1 nơi cho toàn bộ, thay vì sửa từng trang.
+const ADMIN_INFO = {
+  dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
+  aplates: 'Quản lý toàn bộ biển số rao bán. Đổi trạng thái Còn hàng/Đã bán khi có giao dịch, cập nhật giá đúng lúc để khách không thấy giá cũ.',
+  acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
+  acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
+  aposts: 'Bài viết blog — nội dung SEO cho landing tỉnh/loại biển và tin phong thủy. Bấm "Đăng bài mới" để soạn bài.',
+  astaff: 'Chỉ Quản trị viên thấy trang này. Tạo tài khoản nhân viên, phân quyền theo từng resource, khóa/mở tài khoản hoặc đổi mật khẩu hộ khi nhân viên quên.',
+  acustomers: 'Danh sách tài khoản khách đã đăng ký — xem lịch sử mua và biển yêu thích của từng khách.',
+  avideos: 'Video TikTok/Facebook giới thiệu biển. Dán link để hệ thống tự nhận diện nền tảng và tạo ảnh xem trước.',
+  anotifications: 'Soạn/gửi thông báo thủ công tới khách, quản lý email đăng ký nhận tin và cấu hình email tự động theo sự kiện.',
+  aemailtpl: 'Kéo-thả dựng bố cục email dùng chung cho các loại thông báo tự động.',
+  acollabs: 'Danh sách cộng tác viên giới thiệu khách — theo dõi hoa hồng và duyệt thanh toán.',
+  acollabcontent: 'Nội dung trang giới thiệu ưu đãi hiển thị cho người muốn trở thành cộng tác viên.',
+  ainterestleads: 'Khách thả tim/xem 1 biển nhiều lần nhưng chưa để lại liên hệ. Bấm "Nhận tư vấn" để chủ động liên hệ trước.',
+  areviews: 'Duyệt đánh giá khách gửi trước khi hiển thị công khai trên trang chi tiết biển; có thể trả lời đánh giá.',
+  ameanings: 'Mẫu ý nghĩa phong thủy chung theo loại biển/con số, và ý nghĩa riêng gắn cho từng biển cụ thể.',
+  achatbot: 'Lịch sử hội thoại chatbot AI với khách — bật/tắt và chỉnh cấu hình trả lời tự động.',
+  aauditlog: 'Chỉ Quản trị viên thấy trang này. Lịch sử mọi thay đổi dữ liệu (ai sửa gì, khi nào) — dùng để truy vết khi có sai sót.',
+  arisklog: 'Chỉ Quản trị viên thấy trang này. Cảnh báo tự động khi phát hiện dấu hiệu bất thường ở cộng tác viên — rà soát và xử lý.',
+  compose: 'Soạn bài viết mới — điền tiêu đề, nội dung, ảnh bìa rồi đăng hoặc lưu nháp.',
+};
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
 const BADGE_NAV = { acontacts: 'newContacts', areviews: 'newReviews', acollabs: 'newCollaborators' };
@@ -141,7 +165,7 @@ export default function AdminShell({
   }, [denied, go]);
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
+    <div className="admin-shell" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
       <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" aria-controls="admin-drawer" aria-expanded={drawerOpen} style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
         <Menu size={20} />
       </button>
@@ -153,7 +177,7 @@ export default function AdminShell({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--space-5)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 32, height: 32, objectFit: 'contain' }} />
-                <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>Quản trị</span>
+                <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span>
               </div>
               <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Đóng menu" style={{ width: 44, height: 44, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={22} /></button>
             </div>
@@ -172,7 +196,7 @@ export default function AdminShell({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '0 var(--space-5)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
               <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
-              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}><span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>Duy Đinh</span><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Quản trị</span></div>
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}><span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>Duy Đinh</span><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: isSuperAdmin ? 'var(--action-primary)' : 'var(--text-muted)' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span></div>
             </div>
             <button type="button" onClick={toggleCollapsed} aria-label="Ẩn menu" title="Ẩn menu" style={{ flexShrink: 0, width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <PanelLeftClose size={16} />
@@ -206,7 +230,12 @@ export default function AdminShell({
           )}
         </div>
 
+        {ADMIN_INFO[s] && (
+          <AdminInfoBanner storageKey={s} title="Về trang này">{ADMIN_INFO[s]}</AdminInfoBanner>
+        )}
+
         {s === 'dash' && <Dashboard st={st} go={go} />}
+        {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} go={go} />}
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} />}
         {s === 'acontacts' && <AdminContacts notify={notify} />}

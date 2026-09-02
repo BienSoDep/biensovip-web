@@ -565,6 +565,7 @@ export default function App() {
 
   const adminMeta = {
     dash: ['Tổng quan', 'Chào buổi sáng, đây là tình hình hôm nay.'],
+    aguide: ['Hướng dẫn sử dụng', 'Các tính năng theo vai trò của bạn'],
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
     acontacts: ['Yêu cầu liên hệ', 'Quản lý yêu cầu liên hệ từ khách'],
