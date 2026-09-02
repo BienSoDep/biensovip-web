@@ -678,7 +678,7 @@ export default function AdminPlates({ go, notify, st }) {
       {/* Modal: Add/Edit — only render when modal is open */}
       {editId != null && (
         <PlateFormModal
-          form={form} setF={setF} formErr={formErr}
+          form={form} setF={setF} formErr={formErr} blurValidateField={blurValidateField}
           notify={notify}
           showCost={canViewCost(st)}
           saving={saving} uploading={uploading}
@@ -732,7 +732,7 @@ export default function AdminPlates({ go, notify, st }) {
 // ── Plate Form Modal ──
 
 function PlateFormModal({
-  form, setF, formErr, saving, uploading, showCost, notify,
+  form, setF, formErr, blurValidateField, saving, uploading, showCost, notify,
   plateTypes, provinces, vehicleTypes,
   editDetail, onPlateNumberChange, onSave, onUpload, onRemoveImage, onClose,
 }) {
