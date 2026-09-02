@@ -47,6 +47,12 @@ export const scoreColor = (score) => {
   return 'var(--status-warning)';
 };
 
+// Map key mệnh dạng ASCII thường (backend enum FengShuiElement: kim/moc/thuy/hoa/tho — dùng ở
+// FengShuiLookupHistory) sang nhãn tiếng Việt hiển thị. Khác key space với ELEMENTS ở trên
+// (ELEMENTS dùng key tiếng Việt viết hoa, cho kết quả chấm điểm ScorePlatesAsync).
+const ELEMENT_ASCII_LABEL = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
+export const elementAsciiLabel = (k) => ELEMENT_ASCII_LABEL[k] || k;
+
 export const NUT_MEANING = {
   1: 'Đứng đầu, có chí', 2: 'Tài vận cân bằng', 3: 'Phát triển, nhiều cơ hội', 4: 'Vững chắc',
   5: 'Danh lợi song toàn', 6: 'Thuận tài lộc', 7: 'Quyền uy, khí chất', 8: 'Phát đạt', 9: 'Viên mãn', 0: 'Đỉnh cao đã qua',

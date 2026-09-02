@@ -15,16 +15,10 @@ import { usePlateReviews } from '../services/reviewService.js';
 import { formatDate } from '../lib/date.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { content } from '../lib/content/index.js';
+import { maskName } from '../lib/textMask.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 const REVIEWS_PER_PAGE = 5;
-
-function maskName(name) {
-  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return 'Khách hàng';
-  if (parts.length === 1) return parts[0][0] + '***';
-  return `${parts[0]} *** ${parts[parts.length - 1]}`;
-}
 
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Săn hộ / tư vấn theo nhu cầu'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting' };

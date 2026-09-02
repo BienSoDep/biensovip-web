@@ -1,21 +1,14 @@
 import { useEffect, useState } from 'react';
 import Button from '../components/Button.jsx';
+import BulletPicker from '../components/BulletPicker.jsx';
 import { Input, Select, Eyebrow, Icon, DateInputVN } from '../components/index.jsx';
 import { updateProfile, changePassword, refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
 import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
 import { useBecomeCollaborator } from '../services/collaborators.js';
 import { PURPOSES, VEHICLES } from '../lib/fengshui.js';
+import { validBirthDate } from '../lib/date.js';
 
-const CURRENT_YEAR = new Date().getFullYear();
 const GENDER_OPTS = [{ value: 'male', label: 'Nam' }, { value: 'female', label: 'Nữ' }, { value: 'other', label: 'Khác' }];
-
-function validBirthDate(iso) {
-  if (!iso) return false;
-  const [y, m, d] = iso.split('-').map(Number);
-  if (!y || !m || !d || y < 1900 || y > CURRENT_YEAR) return false;
-  const dt = new Date(y, m - 1, d);
-  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
-}
 
 function GenderPicker({ value, onChange }) {
   return (
@@ -45,40 +38,6 @@ function GenderPicker({ value, onChange }) {
                 background: active ? 'var(--text-inverse)' : 'var(--grey-300)',
               }} />
               {opt.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// Bullet-select đơn giản tái dùng cho Loại xe/Mục đích thường dùng — cùng pattern GenderPicker,
-// cho phép bỏ chọn (click lại option đang active → rỗng) vì đây là preference không bắt buộc.
-function BulletPicker({ label, value, onChange, options }) {
-  return (
-    <div>
-      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label} (không bắt buộc)</span>
-      <div role="radiogroup" aria-label={label} style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 6, flexWrap: 'wrap' }}>
-        {options.map((opt) => {
-          const active = value === opt;
-          return (
-            <button
-              key={opt}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => onChange(active ? '' : opt)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 16px',
-                border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-                font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
-                color: active ? 'var(--text-inverse)' : 'var(--text-body)',
-                boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)',
-              }}
-            >
-              {opt}
             </button>
           );
         })}
@@ -165,8 +124,8 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
 
         <GenderPicker value={form.gender} onChange={set('gender')} />
 
-        <BulletPicker label="Loại xe thường dùng" value={form.preferredVehicle} onChange={set('preferredVehicle')} options={VEHICLES} />
-        <BulletPicker label="Mục đích sử dụng biển thường xuyên" value={form.preferredPurpose} onChange={set('preferredPurpose')} options={PURPOSES.map((p) => p.label)} />
+        <BulletPicker label="Loại xe thường dùng" value={form.preferredVehicle} onChange={set('preferredVehicle')} options={VEHICLES} allowDeselect labelSuffix=" (không bắt buộc)" />
+        <BulletPicker label="Mục đích sử dụng biển thường xuyên" value={form.preferredPurpose} onChange={set('preferredPurpose')} options={PURPOSES.map((p) => p.label)} allowDeselect labelSuffix=" (không bắt buộc)" />
 
         <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
           <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ flex: 1 }}>

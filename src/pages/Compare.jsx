@@ -2,14 +2,16 @@ import { useEffect, useMemo, useState, Fragment } from 'react';
 import { ArrowLeftRight, X, Sparkles } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
+import BulletPicker from '../components/BulletPicker.jsx';
 import { InfoTip, DateInputVN } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { useCompareIds, useComparePlates } from '../services/compareService.js';
 import { useScorePlates } from '../services/fengshuiService.js';
 import { routeFor } from '../config/routes.js';
-import { splitPlateNumber, formatPrice, splitFengShuiParagraphs } from '../lib/plateFormat.js';
-import { compareInsights, patternScore } from '../lib/compareInsights.js';
+import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { compareInsights, patternScore, buildFengShuiRows, priceScores } from '../lib/compareInsights.js';
 import { PURPOSES, INDUSTRIES } from '../lib/fengshui.js';
+import { validBirthDate } from '../lib/date.js';
 
 const ROW_LABELS = [
   { key: 'type', label: 'Loại biển' },
@@ -18,85 +20,11 @@ const ROW_LABELS = [
   { key: 'price', label: 'Giá' },
 ];
 
-// Đoạn không có nhãn rõ (VD câu mở đầu "Con số 1 – Nhất: ...") gom vào 1 hàng chung "Ý nghĩa con số".
-const UNLABELED_ROW = 'Ý nghĩa con số';
-
-// Union toàn bộ nhãn đoạn xuất hiện ở bất kỳ biển nào → mỗi nhãn 1 hàng riêng trong bảng so sánh.
-function buildFengShuiRows(plates) {
-  const perPlate = plates.map((p) => {
-    const paras = splitFengShuiParagraphs(p.fengShuiMeaning);
-    const byLabel = {};
-    for (const para of paras) {
-      const label = para.label ? para.label.replace(/:$/, '') : UNLABELED_ROW;
-      byLabel[label] = byLabel[label] ? `${byLabel[label]} ${para.rest}` : para.rest;
-    }
-    return { id: p.id, byLabel };
-  });
-  const labelOrder = [];
-  for (const pp of perPlate) for (const label of Object.keys(pp.byLabel)) if (!labelOrder.includes(label)) labelOrder.push(label);
-  return labelOrder.map((label) => ({
-    label,
-    values: perPlate.map((pp) => ({ id: pp.id, text: pp.byLabel[label] || null })),
-  }));
-}
-
-// Chuẩn hóa giá trong nhóm đang so sánh → điểm 0-100 (rẻ nhất = 100, đắt nhất = điểm sàn 20).
-function priceScores(plates) {
-  const prices = plates.map((p) => p.price).filter((v) => typeof v === 'number' && v > 0);
-  if (prices.length < 2) return plates.map(() => 100);
-  const min = Math.min(...prices), max = Math.max(...prices);
-  if (min === max) return plates.map(() => 100);
-  return plates.map((p) => {
-    if (typeof p.price !== 'number' || p.price <= 0) return 50;
-    return Math.round(100 - ((p.price - min) / (max - min)) * 80);
-  });
-}
-
 const CHART_COLORS = ['#F97316', '#2563EB', '#16A34A'];
-
-// Bullet-select nhỏ gọn cho Mục đích/Ngành trong Compare — cùng pattern LuckyPlate.jsx (dropdown gây lỗi hiển thị trống).
-function InlinePicker({ label, value, onChange, options }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
-      <div role="radiogroup" aria-label={label} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {options.map((opt) => {
-          const active = value === opt;
-          return (
-            <button
-              key={opt}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => onChange(opt)}
-              style={{
-                height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-                font: 'var(--type-caption)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
-                color: active ? 'var(--text-inverse)' : 'var(--text-body)',
-              }}
-            >
-              {opt}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-const CURRENT_YEAR = new Date().getFullYear();
 
 function BirthDatePrompt({ onSubmit }) {
   const [date, setDate] = useState('');
-
-  const valid = (() => {
-    if (!date) return false;
-    const [y, m, d] = date.split('-').map(Number);
-    if (!y || !m || !d || y < 1900 || y > CURRENT_YEAR) return false;
-    const dt = new Date(y, m - 1, d);
-    return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
-  })();
+  const valid = validBirthDate(date);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-5)', textAlign: 'center' }}>
@@ -283,9 +211,9 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
           ) : (
             <>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-                <InlinePicker label="Mục đích sử dụng" value={purpose} onChange={setPurpose} options={PURPOSES.map((p) => p.label)} />
+                <BulletPicker label="Mục đích sử dụng" value={purpose} onChange={setPurpose} options={PURPOSES.map((p) => p.label)} size="sm" />
                 {purpose === 'Kinh doanh' && (
-                  <InlinePicker label="Ngành kinh doanh" value={industry} onChange={setIndustry} options={INDUSTRIES.map((i) => i.label)} />
+                  <BulletPicker label="Ngành kinh doanh" value={industry} onChange={setIndustry} options={INDUSTRIES.map((i) => i.label)} size="sm" />
                 )}
               </div>
               <div style={{ width: '100%', height: 340 }}>

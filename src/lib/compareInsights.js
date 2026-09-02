@@ -1,5 +1,7 @@
 // Port từ Biensovip.Application.Services.MeaningAnalyzer (backend) — cùng thuật toán, chỉ phần
 // nhận diện mẫu đẹp + ngũ hành theo số cuối (không cần gọi API, đủ để so sánh điểm chung/riêng).
+import { splitFengShuiParagraphs } from './plateFormat.js';
+
 const ELEMENT_LABEL = { moc: 'Mộc', hoa: 'Hỏa', tho: 'Thổ', kim: 'Kim', thuy: 'Thủy' };
 
 function elementForDigit(d) {
@@ -110,4 +112,38 @@ export function patternScore(patterns) {
   const weight = (label) => (label.startsWith('Tứ quý') ? 40 : label.startsWith('Tam hoa') ? 30 : 20);
   const score = patterns.reduce((sum, label) => sum + weight(label), 20);
   return Math.min(100, score);
+}
+
+// Đoạn không có nhãn rõ (VD câu mở đầu "Con số 1 – Nhất: ...") gom vào 1 hàng chung "Ý nghĩa con số".
+const UNLABELED_ROW = 'Ý nghĩa con số';
+
+// Union toàn bộ nhãn đoạn xuất hiện ở bất kỳ biển nào → mỗi nhãn 1 hàng riêng trong bảng so sánh.
+export function buildFengShuiRows(plates) {
+  const perPlate = plates.map((p) => {
+    const paras = splitFengShuiParagraphs(p.fengShuiMeaning);
+    const byLabel = {};
+    for (const para of paras) {
+      const label = para.label ? para.label.replace(/:$/, '') : UNLABELED_ROW;
+      byLabel[label] = byLabel[label] ? `${byLabel[label]} ${para.rest}` : para.rest;
+    }
+    return { id: p.id, byLabel };
+  });
+  const labelOrder = [];
+  for (const pp of perPlate) for (const label of Object.keys(pp.byLabel)) if (!labelOrder.includes(label)) labelOrder.push(label);
+  return labelOrder.map((label) => ({
+    label,
+    values: perPlate.map((pp) => ({ id: pp.id, text: pp.byLabel[label] || null })),
+  }));
+}
+
+// Chuẩn hóa giá trong nhóm đang so sánh → điểm 0-100 (rẻ nhất = 100, đắt nhất = điểm sàn 20).
+export function priceScores(plates) {
+  const prices = plates.map((p) => p.price).filter((v) => typeof v === 'number' && v > 0);
+  if (prices.length < 2) return plates.map(() => 100);
+  const min = Math.min(...prices), max = Math.max(...prices);
+  if (min === max) return plates.map(() => 100);
+  return plates.map((p) => {
+    if (typeof p.price !== 'number' || p.price <= 0) return 50;
+    return Math.round(100 - ((p.price - min) / (max - min)) * 80);
+  });
 }

@@ -1,58 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import Button from '../components/Button.jsx';
+import BulletPicker from '../components/BulletPicker.jsx';
 import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN } from '../components/index.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { updateProfile } from '../services/authService.js';
-import { ELEMENTS, PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget, scoreColor } from '../lib/fengshui.js';
+import { ELEMENTS, PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget, scoreColor, elementAsciiLabel } from '../lib/fengshui.js';
 import { loadAuth } from '../lib/authStore.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
-
-const CURRENT_YEAR = new Date().getFullYear();
-function validBirthDate(iso) {
-  if (!iso) return false;
-  const [y, m, d] = iso.split('-').map(Number);
-  if (!y || !m || !d || y < 1900 || y > CURRENT_YEAR) return false;
-  const dt = new Date(y, m - 1, d);
-  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
-}
-
-const EL_DISP = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
-const elName = (k) => EL_DISP[k] || k;
-
-// Bullet-select tái dùng cho Loại xe / Mục đích / Ngành kinh doanh — dropdown gây lỗi hiển thị trống.
-function BulletPicker({ label, value, onChange, options }) {
-  return (
-    <div>
-      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>
-      <div role="radiogroup" aria-label={label} style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 6, flexWrap: 'wrap' }}>
-        {options.map((opt) => {
-          const active = value === opt;
-          return (
-            <button
-              key={opt}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => onChange(opt)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 16px',
-                border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-                font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
-                color: active ? 'var(--text-inverse)' : 'var(--text-body)',
-                boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)',
-              }}
-            >
-              {opt}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+import { validBirthDate } from '../lib/date.js';
 
 function VehiclePicker({ value, onChange }) {
   return <BulletPicker label="Loại xe" value={value} onChange={onChange} options={VEHICLES} />;
@@ -342,7 +299,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
               <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử tra cứu</span>
               {history.data.map((h) => (
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                  <Badge tone="blue">Mệnh {elName(h.element)}</Badge>
+                  <Badge tone="blue">Mệnh {elementAsciiLabel(h.element)}</Badge>
                   <span style={{ flex: 1 }}>{h.birthDate}</span>
                   <Button variant="ghost" size="sm" onClick={() => { setForm((f) => ({ ...f, birthDate: h.birthDate })); }}>Xem lại</Button>
                 </div>
@@ -357,7 +314,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
           <div ref={shareCardRef} style={{ position: 'fixed', left: -9999, top: 0, width: 1080, height: 720, background: 'var(--surface-tint-cream)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, fontFamily: 'system-ui, sans-serif', color: '#1F2933' }}>
             <div style={{ fontSize: 48, fontWeight: 800 }}>Biển số hợp mệnh của tôi</div>
             <div style={{ width: 88, height: 88, borderRadius: '50%', background: `${el.color}26`, color: el.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={el.icon} size={44} /></div>
-            <div style={{ fontSize: 40, fontWeight: 700 }}>Mệnh {result.element} · {elName(result.element)}</div>
+            <div style={{ fontSize: 40, fontWeight: 700 }}>Mệnh {result.element} · {elementAsciiLabel(result.element)}</div>
             {form.name && <div style={{ fontSize: 28, color: '#5A6774' }}>{form.name} · sinh {form.year}</div>}
             <div style={{ display: 'flex', gap: 12 }}>
               {result.luckyDigits.map((d) => <span key={d} style={{ width: 56, height: 56, borderRadius: 'var(--radius-md)', background: '#E6F6EE', color: '#0B7A43', fontSize: 32, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d}</span>)}

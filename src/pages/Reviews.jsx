@@ -6,13 +6,7 @@ import { usePlates } from '../services/plates.js';
 import { usePlateReviews, useCreateReview } from '../services/reviewService.js';
 import { loadAuth } from '../lib/authStore.js';
 import { formatDate } from '../lib/date.js';
-
-function maskName(name) {
-  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return 'Khách hàng';
-  if (parts.length === 1) return parts[0][0] + '***';
-  return `${parts[0]} *** ${parts[parts.length - 1]}`;
-}
+import { maskName } from '../lib/textMask.js';
 
 export default function Reviews({ notify, go }) {
   const { data: soldData } = usePlates({ status: 'Sold', perPage: 100 });

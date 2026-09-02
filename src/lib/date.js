@@ -26,3 +26,14 @@ export function formatDateTime(dateStr) {
   if (!dateStr) return '—';
   return format(new Date(dateStr), 'dd/MM/yyyy HH:mm');
 }
+
+// Validate ngày sinh dạng ISO 'yyyy-mm-dd' — hợp lệ thật (không phải chỉ khớp regex, VD 2024-02-30
+// bị từ chối), năm trong khoảng [1900, năm hiện tại]. Trước đây định nghĩa trùng ở LuckyPlate.jsx/Profile.jsx.
+export function validBirthDate(iso) {
+  if (!iso) return false;
+  const [y, m, d] = iso.split('-').map(Number);
+  const currentYear = new Date().getFullYear();
+  if (!y || !m || !d || y < 1900 || y > currentYear) return false;
+  const dt = new Date(y, m - 1, d);
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+}
