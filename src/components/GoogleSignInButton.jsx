@@ -36,6 +36,9 @@ export default function GoogleSignInButton({ onCredential, disabled }) {
     return () => { cancelled = true; };
   }, [clientId, disabled, onCredential]);
 
+  // TẠM ẨN — redirect URI Google Cloud Console chưa đồng bộ domain production mới (biensovip.com).
+  // Bật lại: xoá dòng return null này sau khi đã cập nhật Authorized redirect URIs.
+  if (true) return null;
   if (!clientId) return null;
   return <div ref={ref} style={{ display: 'flex', justifyContent: 'center' }} />;
 }
