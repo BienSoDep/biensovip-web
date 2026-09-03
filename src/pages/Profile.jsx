@@ -4,9 +4,10 @@ import BulletPicker from '../components/BulletPicker.jsx';
 import { Input, Select, Eyebrow, Icon, DateInputVN } from '../components/index.jsx';
 import { updateProfile, changePassword, refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
 import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
-import { useBecomeCollaborator } from '../services/collaborators.js';
+import { useBecomeCollaborator, useUpdateBankInfo } from '../services/collaborators.js';
 import { PURPOSES, VEHICLES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
+import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
 
 const GENDER_OPTS = [{ value: 'male', label: 'Nam' }, { value: 'female', label: 'Nữ' }, { value: 'other', label: 'Khác' }];
 
@@ -232,12 +233,19 @@ function NotificationSettingsSection({ notify }) {
 // JWT có claim `collaborator` (policy CollaboratorOnly đọc claim, không đọc DB), rồi đẩy user mới lên App.
 function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
   const become = useBecomeCollaborator();
+  const updateBank = useUpdateBankInfo();
   const [bankAccount, setBankAccount] = useState('');
+  const [bankCode, setBankCode] = useState('');
+  const [bankAccountHolder, setBankAccountHolder] = useState('');
+  const [banks, setBanks] = useState([]);
   const [busy, setBusy] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpBusy, setOtpBusy] = useState(false);
-  const needsEmailVerify = user?.identifierType === 'email' && !user?.emailVerified;
+  const [editingBank, setEditingBank] = useState(false);
+  const needsEmailVerify = user?.identifierType === 'email' && !user?.verified;
+
+  useEffect(() => { fetchVietQrBanks().then(setBanks); }, []);
 
   const sendOtp = async () => {
     setOtpBusy(true);
@@ -273,9 +281,10 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
 
   const activate = async () => {
     if (!bankAccount.trim()) { notify('Nhập số tài khoản nhận hoa hồng trước khi kích hoạt.'); return; }
+    if (!bankCode) { notify('Chọn ngân hàng trước khi kích hoạt.'); return; }
     setBusy(true);
     try {
-      await become.mutateAsync(bankAccount.trim());
+      await become.mutateAsync({ bankAccount: bankAccount.trim(), bankCode, bankAccountHolder: bankAccountHolder.trim() || undefined });
       const data = await refreshToken();
       if (data?.user) onUserUpdate?.(data.user);
       notify('Bạn đã trở thành Cộng tác viên');
@@ -289,6 +298,25 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
     }
   };
 
+  const saveBankInfo = async () => {
+    if (!bankAccount.trim()) { notify('Nhập số tài khoản.'); return; }
+    if (!bankCode) { notify('Chọn ngân hàng.'); return; }
+    setBusy(true);
+    try {
+      await updateBank.mutateAsync({ bankAccount: bankAccount.trim(), bankCode, bankAccountHolder: bankAccountHolder.trim() || undefined });
+      const data = await refreshToken();
+      if (data?.user) onUserUpdate?.(data.user);
+      notify('Đã cập nhật thông tin ngân hàng.');
+      setEditingBank(false);
+    } catch (e) {
+      notify(e?.message || 'Cập nhật thất bại, thử lại sau.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const qrPreviewUrl = vietQrImageUrl(bankCode, bankAccount.trim());
+
   return (
     <div id="become-ctv" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <Eyebrow tone="blue">Cộng tác viên</Eyebrow>
@@ -300,6 +328,39 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ font: 'var(--type-body)', color: 'var(--text-muted)' }}>Mã giới thiệu:</span>
                 <span style={{ font: 'var(--type-title-3)', fontWeight: 700, color: 'var(--text-strong)', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-pill)', padding: '6px 14px' }}>{user.ctvReferralCode}</span>
+              </div>
+            )}
+            {!editingBank ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Ngân hàng nhận hoa hồng</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>
+                    {user?.bankCode ? (banks.find((b) => b.value === user.bankCode)?.label || user.bankCode) : 'Chưa cập nhật'}
+                    {user?.bankAccount ? ` — ${user.bankAccount}` : ''}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setBankAccount(user?.bankAccount || '');
+                    setBankCode(user?.bankCode || '');
+                    setBankAccountHolder(user?.bankAccountHolder || '');
+                    setEditingBank(true);
+                  }}>Sửa</Button>
+                </div>
+                {user?.bankAccountHolder && (
+                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chủ tài khoản: {user.bankAccountHolder}</span>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
+                <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+                <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
+                {qrPreviewUrl && (
+                  <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 160, height: 160, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
+                )}
+                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <Button variant="primary" size="md" onClick={saveBankInfo} disabled={busy}>{busy ? 'Đang lưu...' : 'Lưu'}</Button>
+                  <Button variant="ghost" size="md" onClick={() => setEditingBank(false)} disabled={busy}>Hủy</Button>
+                </div>
               </div>
             )}
           </>
@@ -327,12 +388,22 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
               Giới thiệu khách mua biển số đẹp, nhận hoa hồng trên mỗi giao dịch thành công. Kích hoạt ngay từ tài khoản này — không cần đăng ký riêng.
             </p>
+            <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
             <Input
               label="Số tài khoản nhận hoa hồng"
               placeholder="Số tài khoản ngân hàng"
               value={bankAccount}
               onChange={(e) => setBankAccount(e.target.value)}
             />
+            <Input
+              label="Tên chủ tài khoản (không bắt buộc)"
+              placeholder="NGUYEN VAN A"
+              value={bankAccountHolder}
+              onChange={(e) => setBankAccountHolder(e.target.value)}
+            />
+            {qrPreviewUrl && (
+              <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 160, height: 160, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
+            )}
             <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start' }}>
               {busy ? 'Đang kích hoạt...' : 'Kích hoạt CTV'}
             </Button>

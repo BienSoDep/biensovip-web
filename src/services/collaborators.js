@@ -16,7 +16,16 @@ export function useCollaboratorBenefitContent() {
 // User đăng nhập nâng cấp chính mình thành CTV (tự-activate, không tạo User mới).
 export function useBecomeCollaborator() {
   return useMutation({
-    mutationFn: (bankAccount) => apiClient.post('/api/collaborators/become', { bankAccount }),
+    mutationFn: ({ bankAccount, bankCode, bankAccountHolder }) =>
+      apiClient.post('/api/collaborators/become', { bankAccount, bankCode, bankAccountHolder }),
+  });
+}
+
+// UC25 §7 — CTV tự cập nhật ngân hàng sau khi đã active.
+export function useUpdateBankInfo() {
+  return useMutation({
+    mutationFn: ({ bankAccount, bankCode, bankAccountHolder }) =>
+      apiClient.patch('/api/collaborators/bank-info', { bankAccount, bankCode, bankAccountHolder }),
   });
 }
 

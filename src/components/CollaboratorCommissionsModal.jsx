@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from './Modal.jsx';
 import Button from './Button.jsx';
 import { Select } from './index.jsx';
 import { useCollaboratorCommissions, usePayCommissions, useCancelCommission } from '../services/adminCollaborators.js';
 import { formatDate, formatDateTime } from '../lib/date.js';
 import { SkeletonTable } from './Skeleton.jsx';
+import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
 
 const STATUS_OPTS = [
   { value: 'all', label: 'Tất cả' },
@@ -26,6 +27,9 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
   const cancelCommission = useCancelCommission(collaborator?.id);
   const [cancelId, setCancelId] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [banks, setBanks] = useState([]);
+
+  useEffect(() => { fetchVietQrBanks().then(setBanks); }, []);
 
   const items = data?.items || [];
   const total = data?.total || 0;
@@ -67,6 +71,22 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
   return (
     <Modal open={!!collaborator} onClose={onClose} title={`Hoa hồng — ${collaborator?.fullName || ''}`} maxWidth="720px">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        {(collaborator?.bankAccount || collaborator?.bankCode) && (
+          <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)' }}>
+            {vietQrImageUrl(collaborator.bankCode, collaborator.bankAccount) && (
+              <img src={vietQrImageUrl(collaborator.bankCode, collaborator.bankAccount)} alt="QR chuyển khoản" style={{ width: 84, height: 84, borderRadius: 'var(--radius-field)', flexShrink: 0 }} />
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+                {banks.find((b) => b.value === collaborator.bankCode)?.label || collaborator.bankCode || 'Chưa chọn ngân hàng'}
+              </span>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>STK: {collaborator.bankAccount || '—'}</span>
+              {collaborator.bankAccountHolder && (
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Chủ TK: {collaborator.bankAccountHolder} — đối chiếu với tên CTV: {collaborator.fullName}</span>
+              )}
+            </div>
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)' }}>
           <Select value={status} options={STATUS_OPTS} onChange={(v) => { setStatus(v); setPage(1); setSelected([]); }} />
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{total} khoản</span>
