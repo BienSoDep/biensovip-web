@@ -633,8 +633,7 @@ export default function App() {
               liệu tỉnh/category đã fetch — không có sẵn ở tầng App) — bỏ qua ở đây tránh render 2 lần. */}
           {isPublic && (function () {
             let trail = [];
-            if (s === 'list') trail = [{ label: 'Biển số' }];
-            else if (s === 'fav') trail = [{ label: 'Yêu thích' }];
+            if (s === 'fav') trail = [{ label: 'Yêu thích' }];
             else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'lucky') trail = [{ label: 'Tư vấn biển hợp mệnh' }];

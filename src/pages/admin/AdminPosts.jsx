@@ -18,8 +18,12 @@ function formatDateTime(iso) {
   return format(new Date(iso), 'dd/MM/yyyy HH:mm');
 }
 
+// Lưu filter trạng thái vào sessionStorage — mở "Compose" sửa bài (unmount AdminPosts) rồi quay lại
+// không bị reset về "Tất cả".
+const STATUS_KEY = 'bsd_admin_posts_status';
+
 export default function AdminPosts({ st, patch, notify }) {
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(() => { try { return sessionStorage.getItem(STATUS_KEY) || ''; } catch { return ''; } });
   const [confirmPost, setConfirmPost] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [selected, setSelected] = useState(new Set());
@@ -62,7 +66,7 @@ export default function AdminPosts({ st, patch, notify }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
         {[{ v: '', l: 'Tất cả' }, { v: 'draft', l: 'Bản nháp' }, { v: 'published', l: 'Đã xuất bản' }].map((o) => (
-          <button key={o.v} type="button" onClick={() => setStatus(o.v)}
+          <button key={o.v} type="button" onClick={() => { setStatus(o.v); try { sessionStorage.setItem(STATUS_KEY, o.v); } catch { /* storage blocked */ } }}
             style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: status === o.v ? 'var(--action-dark)' : 'var(--surface-muted)', color: status === o.v ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)' }}>
             {o.l}
           </button>

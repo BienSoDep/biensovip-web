@@ -13,6 +13,7 @@ import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
 import { routeFor } from '../config/routes.js';
 import { readFiltersFromUrl, writeFiltersToUrl } from '../lib/plateListFilters.js';
+import Breadcrumb from '../components/Breadcrumb.jsx';
 
 const PER_PAGE_OPTIONS = [
   { value: '9', label: '9 / trang' },
@@ -135,6 +136,16 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const total = useInfinite ? (inf.data?.pages?.[0]?.total || 0) : (data?.total || 0);
   const totalPages = useInfinite ? (inf.data?.pages?.[0]?.totalPages || 1) : (data?.totalPages || 1);
   const page = useInfinite ? 0 : (data?.page || filters.page);
+
+  // Khôi phục vị trí cuộn đã lưu (quay lại từ trang chi tiết biển) — chỉ chạy 1 lần sau khi có dữ liệu,
+  // tránh cuộn hụt trong lúc trang còn đang load skeleton.
+  const loading = useInfinite ? inf.isLoading : isLoading;
+  useEffect(() => {
+    if (loading || !items.length) return;
+    const y = Number(sessionStorage.getItem('bsd_plate_list_scroll') || 0);
+    if (y > 0) { window.scrollTo(0, y); sessionStorage.removeItem('bsd_plate_list_scroll'); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
   const showSkeleton = useInfinite ? inf.isLoading : (isLoading || isFetching);
   const showError = useInfinite ? inf.isError : isError;
 
@@ -149,20 +160,39 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Lưu vị trí cuộn trước khi vào chi tiết biển — bộ lọc đã tự lưu qua URL (readFiltersFromUrl),
+  // chỉ còn vị trí cuộn cần lưu riêng để quay lại không phải lướt tìm lại từ đầu.
+  const saveScrollBeforeOpen = () => {
+    try { sessionStorage.setItem('bsd_plate_list_scroll', String(window.scrollY)); } catch { /* storage blocked */ }
+  };
+
   const cardProps = (p) => ({
     ...p,
     fav: !!favs?.[p.id],
     onFav: onFav ? () => onFav(p.id) : undefined,
     onCompare: () => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id),
     inCompare: isInList(p.id),
-    onOpen: () => openPlate(p.id),
+    onOpen: () => { saveScrollBeforeOpen(); openPlate(p.id); },
     href: routeFor('detail', p.slug || p.id),
     onBuy: () => openBuy?.(p.id),
     contact,
   });
 
+  // Breadcrumb bám theo filter tỉnh/loại biển đang chọn (chỉ khi đúng 1 giá trị — nhiều lựa chọn thì
+  // không còn 1 "đường dẫn" rõ ràng để hiện, giữ flat "Biển số").
+  const activeProvince = filters.city.length === 1 ? (provinces?.items || []).find((c) => c.id === filters.city[0]) : null;
+  const activeType = filters.cat.length === 1 ? (plateTypes?.items || []).find((c) => c.id === filters.cat[0]) : null;
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
+      {go && (
+        <Breadcrumb items={[
+          { label: 'Trang chủ', onClick: go('home') },
+          { label: 'Biển số', onClick: (activeProvince || activeType) ? () => setFilters((f) => ({ ...f, city: [], cat: [] })) : undefined },
+          ...(activeProvince ? [{ label: activeProvince.name }] : []),
+          ...(activeType ? [{ label: activeType.name }] : []),
+        ]} />
+      )}
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
