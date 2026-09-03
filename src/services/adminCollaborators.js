@@ -51,6 +51,18 @@ export function usePayCommissions(collaboratorId) {
   });
 }
 
+export function useCancelCommission(collaboratorId) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commissionId, reason }) =>
+      apiClient.post(`/api/admin/collaborators/commissions/${commissionId}/cancel`, { reason }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['collaborator-commissions', collaboratorId] });
+      qc.invalidateQueries({ queryKey: ['admin-collaborators'] });
+    },
+  });
+}
+
 // Nội dung trang ưu đãi CTV — admin đọc/sửa.
 export function useAdminCollaboratorBenefitContent() {
   const qc = useQueryClient();

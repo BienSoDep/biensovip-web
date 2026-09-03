@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Modal from './Modal.jsx';
 import Button from './Button.jsx';
 import { Select } from './index.jsx';
-import { useCollaboratorCommissions, usePayCommissions } from '../services/adminCollaborators.js';
+import { useCollaboratorCommissions, usePayCommissions, useCancelCommission } from '../services/adminCollaborators.js';
 import { formatDate, formatDateTime } from '../lib/date.js';
 import { SkeletonTable } from './Skeleton.jsx';
 
@@ -23,6 +23,9 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
   const [payForm, setPayForm] = useState(null); // { total, amount, note }
   const { data, isLoading } = useCollaboratorCommissions(collaborator?.id, { status, page, limit: 20 });
   const payCommissions = usePayCommissions(collaborator?.id);
+  const cancelCommission = useCancelCommission(collaborator?.id);
+  const [cancelId, setCancelId] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   const items = data?.items || [];
   const total = data?.total || 0;
@@ -46,6 +49,18 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
       setPayForm(null);
     } catch (e) {
       notify(e.message || 'Lỗi khi chi trả');
+    }
+  };
+
+  const submitCancel = async () => {
+    try {
+      await cancelCommission.mutateAsync({ commissionId: cancelId, reason: cancelReason.trim() || undefined });
+      notify('Đã hủy khoản hoa hồng');
+      setSelected((s) => s.filter((id) => id !== cancelId));
+      setCancelId(null);
+      setCancelReason('');
+    } catch (e) {
+      notify(e.message || 'Lỗi khi hủy');
     }
   };
 
@@ -74,6 +89,7 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
                   <span style={{ flex: '1 1 80px' }}>Số tiền</span>
                   <span style={{ flex: '1 1 80px' }}>Trạng thái</span>
                   <span style={{ flex: '1 1 120px' }}>Chi trả</span>
+                  <span style={{ flex: '0 0 56px' }}></span>
                 </div>
                 {items.map((c) => (
                   <div key={c.id} style={{ display: 'flex', gap: 'var(--space-2)', padding: '8px 12px', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-caption)' }}>
@@ -88,6 +104,14 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
                     <span style={{ flex: '1 1 80px' }}>{STATUS_OPTS.find((o) => o.value === c.status)?.label || c.status}</span>
                     <span style={{ flex: '1 1 120px', color: 'var(--text-faint)' }}>
                       {c.status === 'paid' ? `${c.paidByLabel || '—'} · ${formatDateTime(c.paidAt)}` : '—'}
+                    </span>
+                    <span style={{ flex: '0 0 56px' }}>
+                      {(c.status === 'pending' || c.status === 'approved') && (
+                        <button type="button" onClick={() => { setCancelId(c.id); setCancelReason(''); }}
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--status-danger)', font: 'var(--type-caption)', padding: 0 }}>
+                          Hủy
+                        </button>
+                      )}
                     </span>
                   </div>
                 ))}
@@ -110,6 +134,22 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)', padding: '10px 14px', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-field)' }}>
             <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>Đã chọn {selected.length} khoản — tổng {money(selectedSum)}</span>
             <Button variant="primary" size="sm" onClick={openPayForm}>Xác nhận chi trả</Button>
+          </div>
+        )}
+
+        {cancelId && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: '12px 14px', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-field)' }}>
+            <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Hủy khoản hoa hồng này?</span>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              Lý do (tùy chọn)
+              <input value={cancelReason} onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="VD: giao dịch không thành, phát hiện gian lận…"
+                style={{ height: 36, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-field)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
+            </label>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+              <Button variant="ghost" size="sm" onClick={() => setCancelId(null)}>Đóng</Button>
+              <Button variant="danger" size="sm" disabled={cancelCommission.isPending} onClick={submitCancel}>Xác nhận hủy</Button>
+            </div>
           </div>
         )}
 

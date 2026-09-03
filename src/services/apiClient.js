@@ -70,6 +70,9 @@ async function request(path, options = {}) {
       body = await res.json().catch(() => null);
     } else {
       clearAuth();
+      // Báo App.jsx session hết hạn để dọn st.user trong bộ nhớ — clearAuth() chỉ xóa
+      // localStorage, không tự sync React state, nếu không sẽ gọi API lặp vô hạn (401 loop).
+      window.dispatchEvent(new Event('bsd-session-expired'));
     }
   }
 

@@ -98,6 +98,9 @@ export default function App() {
       authApi.restoreAdminSession().then((session) => {
         if (session?.user) {
           patch((s) => ({ ...s, user: session.user, isAdmin: true, screen: ADMIN_SCREENS.includes(s.screen) ? s.screen : 'dash' }));
+        } else {
+          // Session hết hạn/không hợp lệ — dọn state trong bộ nhớ (localStorage đã bị restoreAdminSession xóa)
+          patch((s) => ({ ...s, user: null, isAdmin: false }));
         }
       });
     }
@@ -151,6 +154,14 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { saveAuth({ user: st.user, isAdmin: st.isAdmin }); }, [st.user, st.isAdmin]);
+
+  // Session hết hạn (refresh token fail) ở bất kỳ API call nào — apiClient đã clear localStorage,
+  // ở đây dọn state trong bộ nhớ theo, tránh 401 loop / màn hình giật do st.user cũ vẫn truthy.
+  useEffect(() => {
+    const onExpired = () => patch((s) => ({ ...s, user: null, isAdmin: false }));
+    window.addEventListener('bsd-session-expired', onExpired);
+    return () => window.removeEventListener('bsd-session-expired', onExpired);
+  }, []);
 
   // Init favs from localStorage (guest) or API (user)
   useEffect(() => {
