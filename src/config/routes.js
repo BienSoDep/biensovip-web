@@ -1,4 +1,4 @@
-export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'dash', 'aplates', 'acats', 'acontacts', 'atransactions', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog'];
+export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'adminForgot', 'adminReset', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'dash', 'aplates', 'acats', 'acontacts', 'atransactions', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog'];
 
 // Market control — landing page tỉnh/thành. Slug sinh từ tên tỉnh bỏ dấu (khớp BlogService.GenerateSlug
 // phía backend), map ngược 2 chiều để routeFor()/parseRoute() không cần gọi API mới biết slug<->code.
@@ -85,6 +85,7 @@ const PLATE_TYPE_SLUGS = new Set(PLATE_TYPE_LANDINGS.map((p) => p.slug));
 
 export const ROUTE_MAP = {
   'list': 'danh-sach', 'register': 'dang-ky', 'login': 'dang-nhap', 'forgot': 'quen-mat-khau',
+  'adminForgot': 'quen-mat-khau-quan-tri', 'adminReset': 'dat-lai-mat-khau-quan-tri',
   'fav': 'yeu-thich', 'profile': 'tai-khoan', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'hop-menh',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acats': 'admin/danh-muc',
   'acontacts': 'admin/lien-he', 'atransactions': 'admin/giao-dich', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'aemailtpl': 'admin/mau-email', 'acollabs': 'admin/cong-tac-vien', 'acollabcontent': 'admin/noi-dung-ctv', 'ainterestleads': 'admin/khach-quan-tam', 'areviews': 'admin/danh-gia', 'ameanings': 'admin/y-nghia', 'achatbot': 'admin/tro-ly-ai', 'compose': 'admin/them-bai', 'aauditlog': 'admin/nhat-ky-he-thong', 'arisklog': 'admin/rui-ro-ctv', 'aguide': 'admin/huong-dan',
@@ -114,4 +115,4 @@ export function parseRoute(pathname) {
 }
 
 export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'atransactions', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'aguide'];
-export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'notfound'];
+export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'notfound', 'adminForgot', 'adminReset'];

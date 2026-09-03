@@ -300,6 +300,7 @@ export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta,
                   <button type="button" onClick={() => { patch({ aErr: {}, aPw: '' }); setOtpMode(true); }} style={{ border: 'none', background: 'none', padding: 0, font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>Đăng nhập bằng OTP</button>
                 </div>
                 <a href={routeFor('forgot')} onClick={(e) => { e.preventDefault(); go('forgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'none' }}>Quên mật khẩu?</a>
+                <a href={routeFor('adminForgot')} onClick={(e) => { e.preventDefault(); go('adminForgot')(); }} style={{ alignSelf: 'flex-end', font: 'var(--type-caption)', color: 'var(--text-muted)', textDecoration: 'none' }}>Quên mật khẩu quản trị?</a>
               </div>
             )}
             {s === 'login' && otpMode && st.step === 1 && (

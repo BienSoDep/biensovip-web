@@ -130,6 +130,24 @@ export async function disable2fa(password) {
   return apiClient.post('/api/admin/auth/2fa/disable', { password });
 }
 
+// ── Quên mật khẩu quản trị — link reset gửi về hộp mail khôi phục cố định, không phải email nhập vào ──
+export async function requestAdminPasswordReset(email) {
+  return apiClient.post('/api/admin/auth/forgot-password', { email });
+}
+
+export async function resetAdminPassword(token, newPassword) {
+  return apiClient.post('/api/admin/auth/reset-password', { token, newPassword });
+}
+
+// ── Admin tự link + xác thực email dự phòng (dùng để nhận link reset mật khẩu) ──
+export async function requestRecoveryEmailOtp(recoveryEmail) {
+  return apiClient.post('/api/admin/auth/recovery-email/request-otp', { recoveryEmail });
+}
+
+export async function verifyRecoveryEmail(recoveryEmail, code) {
+  return apiClient.post('/api/admin/auth/recovery-email/verify', { recoveryEmail, code });
+}
+
 // ── Restore admin session ──
 export async function restoreAdminSession() {
   const auth = loadAuth();

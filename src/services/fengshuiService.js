@@ -13,8 +13,8 @@ export function useFengShuiOptions() {
 
 export function useFengShuiLookup() {
   return useMutation({
-    mutationFn: ({ birthDate, purpose, budget, vehicle, industry }) =>
-      apiClient.post('/api/fengshui/lookup', { birthDate, purpose, budget, vehicle, industry }),
+    mutationFn: ({ birthDate, purpose, budget, vehicle, industry, catIds, cityIds, vehicleTypeId, priceMin, priceMax, q, avoidNumbers }) =>
+      apiClient.post('/api/fengshui/lookup', { birthDate, purpose, budget, vehicle, industry, catIds, cityIds, vehicleTypeId, priceMin, priceMax, q, avoidNumbers }),
   });
 }
 

@@ -95,7 +95,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
             <p className="hero-desc" style={{ margin: 0, maxWidth: 'var(--width-prose)', font: 'var(--type-body)', color: 'var(--text-body)' }}>{T('home.hero.desc')}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }} className="hero-cta-row">
               <Button variant="primary" size="lg" uppercase onClick={go('list')}>{T('home.hero.cta_list')}</Button>
-              <Button variant="outline" size="lg" onClick={() => notify(T('home.hero.zalo_notify'))}>{T('home.hero.cta_zalo')}</Button>
+              <Button variant="outline" size="lg" onClick={() => { window.open(`https://zalo.me/${zalo}`, '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', paddingTop: 'var(--space-6)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_1_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span></div>

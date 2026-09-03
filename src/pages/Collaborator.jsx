@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Share2, Link2, HandCoins, Wallet, UserPlus } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge } from '../components/index.jsx';
 import { useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent } from '../services/collaborators.js';
@@ -7,6 +9,18 @@ import { loadAuth } from '../lib/authStore.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import { useGmailStatus, useGmailOAuthUrl, useUnlinkGmail } from '../services/gmailLink.js';
 import { SkeletonCard } from '../components/Skeleton.jsx';
+import CounterStat from '../components/CounterStat.jsx';
+import CollaboratorIllustration from '../components/CollaboratorIllustration.jsx';
+
+// Số liệu minh họa — CHƯA có API thống kê public tổng CTV/hoa hồng đã trả, dùng số tĩnh tạm.
+// TODO: thay bằng API thật khi backend có endpoint /api/collaborators/stats.
+const STATS = [
+  { icon: UserPlus, value: 50, suffix: '+', label: 'CTV đang hoạt động' },
+  { icon: Wallet, value: 100, suffix: 'tr+', label: 'Đã chi trả hoa hồng' },
+  { icon: HandCoins, value: 5, suffix: '%', label: 'Hoa hồng mặc định' },
+];
+
+const STEP_ICONS = [UserPlus, Share2, Link2, HandCoins];
 
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
 
@@ -77,7 +91,7 @@ function GmailLinkSection() {
   );
 }
 
-function DashboardBody({ data, onReset }) {
+function DashboardBody({ data, onReset, go }) {
   const [copied, setCopied] = useState(false);
   const customers = useCollaboratorCustomers(data.status === 'active');
   const copyLink = () => {
@@ -134,6 +148,7 @@ function DashboardBody({ data, onReset }) {
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{data.referralUrl}</span>
         </div>
         <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
+        <Button variant="outline" size="md" onClick={() => { window.location.hash = 'become-ctv'; go('profile')(); }}>Sửa thông tin ngân hàng</Button>
       </div>
 
       {data.recent?.length > 0 && (
@@ -171,7 +186,7 @@ function DashboardBody({ data, onReset }) {
   );
 }
 
-function Dashboard({ onReset }) {
+function Dashboard({ onReset, go }) {
   const { data, isLoading, isError } = useCollaboratorDashboard(true);
 
   if (isLoading) {
@@ -189,7 +204,7 @@ function Dashboard({ onReset }) {
       </section>
     );
   }
-  return <DashboardBody data={data} onReset={onReset} />;
+  return <DashboardBody data={data} onReset={onReset} go={go} />;
 }
 
 // Quy trình 4 bước — cố định, không qua admin chỉnh (khác nội dung ưu đãi bodyHtml).
@@ -206,13 +221,25 @@ function ProcessSteps() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Quy trình nhận hoa hồng — 4 bước đơn giản</span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 'var(--gutter-section)' }}>
-        {PROCESS_STEPS.map((s) => (
-          <div key={s.n} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)' }}>{s.n}</span>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{s.title}</span>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.6 }}>{s.desc}</span>
-          </div>
-        ))}
+        {PROCESS_STEPS.map((s, i) => {
+          const StepIcon = STEP_ICONS[i];
+          return (
+            <motion.div key={s.n}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.4, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 'var(--radius-pill)', background: 'var(--surface-tint-cream)', color: 'var(--action-primary)' }}>
+                <StepIcon size={20} />
+              </span>
+              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{s.n}. {s.title}</span>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.6 }}>{s.desc}</span>
+            </motion.div>
+          );
+        })}
       </div>
       <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Cách tính hoa hồng</span>
@@ -230,11 +257,40 @@ function BenefitLanding({ go }) {
   const body = data?.bodyHtml || '';
 
   return (
-    <section style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
+    <section style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
       {isLoading && <SkeletonCard height={120} />}
-      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-8) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <h1 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }} dangerouslySetInnerHTML={{ __html: title }} />
-        {body && <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', font: 'var(--type-body)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: body }} />}
+
+      {/* Hero — nội dung + minh họa SVG song song, illustration tự vẽ tay bằng token màu site */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)', background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-8) var(--gutter-card)', overflow: 'hidden' }}>
+        <div style={{ flex: '1 1 360px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', minWidth: 0 }}>
+          <h1 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }} dangerouslySetInnerHTML={{ __html: title }} />
+          {body && <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', font: 'var(--type-body)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: body }} />}
+        </div>
+        <div style={{ flex: '1 1 260px', maxWidth: 320, minWidth: 220 }}>
+          <CollaboratorIllustration />
+        </div>
+      </div>
+
+      {/* Số liệu thuyết phục — counter đếm dần khi cuộn tới. Số minh họa, cập nhật khi có API thật. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 'var(--gutter-section)' }}>
+        {STATS.map((s, i) => {
+          const StatIcon = s.icon;
+          return (
+            <motion.div key={s.label}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.4, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+            >
+              <StatIcon size={22} color="var(--action-primary)" />
+              <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
+                <CounterStat value={s.value} suffix={s.suffix} />
+              </span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{s.label}</span>
+            </motion.div>
+          );
+        })}
       </div>
 
       <ProcessSteps />
@@ -263,7 +319,7 @@ export default function Collaborator({ go }) {
 
   const logout = () => { collaboratorLogout.mutate(undefined, { onSettled: () => setLoggedIn(false) }); };
 
-  if (loggedIn) return <Dashboard onReset={logout} />;
+  if (loggedIn) return <Dashboard onReset={logout} go={go} />;
 
   // Chưa là CTV (đăng nhập hay không) → trang ưu đãi + nút đưa qua profile/login.
   return <BenefitLanding go={go} />;

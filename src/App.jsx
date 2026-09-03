@@ -31,6 +31,8 @@ const Home = lazy(() => import('./pages/Home.jsx'));
 const PlateList = lazy(() => import('./pages/PlateList.jsx'));
 const PlateDetail = lazy(() => import('./pages/PlateDetail.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
+const AdminForgotPassword = lazy(() => import('./pages/AdminForgotPassword.jsx'));
+const AdminResetPassword = lazy(() => import('./pages/AdminResetPassword.jsx'));
 const Fav = lazy(() => import('./pages/Fav.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const LuckyPlate = lazy(() => import('./pages/LuckyPlate.jsx'));
@@ -627,15 +629,15 @@ export default function App() {
 
           {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} patch={patch} notify={notify} />}
 
+          {/* detail/post/provinceLanding/plateTypeLanding tự render breadcrumb riêng bên trong (cần dữ
+              liệu tỉnh/category đã fetch — không có sẵn ở tầng App) — bỏ qua ở đây tránh render 2 lần. */}
           {isPublic && (function () {
             let trail = [];
             if (s === 'list') trail = [{ label: 'Biển số' }];
-            else if (s === 'detail') trail = [{ label: 'Biển số', onClick: go('list') }];
             else if (s === 'fav') trail = [{ label: 'Yêu thích' }];
             else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'lucky') trail = [{ label: 'Tư vấn biển hợp mệnh' }];
-            else if (s === 'post') trail = [{ label: 'Tin phong thủy', onClick: go('blog') }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
             else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];
             else if (s === 'saved') trail = [{ label: 'Thông báo biển mới' }];
@@ -647,7 +649,7 @@ export default function App() {
             else if (s === 'transfer') trail = [{ label: 'Hướng dẫn sang tên' }];
             else if (s === 'faq') trail = [{ label: 'Câu hỏi thường gặp' }];
             if (!trail.length) return null;
-            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), onClick: go('home') }, ...trail]} keepOnMobile={s === 'detail' || s === 'post'} />;
+            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), onClick: go('home') }, ...trail]} />;
           })()}
 
           <Suspense fallback={<PageSkeleton screen={s} />}>
@@ -660,6 +662,9 @@ export default function App() {
             {(s === 'register' || s === 'login' || s === 'forgot') && (
               <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
             )}
+
+            {s === 'adminForgot' && <AdminForgotPassword go={go} />}
+            {s === 'adminReset' && <AdminResetPassword go={go} />}
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
 
@@ -691,9 +696,9 @@ export default function App() {
 
             {s === 'blog' && <Blog patch={patch} />}
 
-            {s === 'provinceLanding' && <ProvinceLandingPage provinceCode={st.provinceCode || '43'} openPlate={openPlate} onBuy={openBuy} contact={contact} />}
+            {s === 'provinceLanding' && <ProvinceLandingPage provinceCode={st.provinceCode || '43'} openPlate={openPlate} onBuy={openBuy} contact={contact} go={go} />}
 
-            {s === 'plateTypeLanding' && <PlateTypeLandingPage typeSlug={st.typeSlug || 'tu-quy'} openPlate={openPlate} onBuy={openBuy} contact={contact} />}
+            {s === 'plateTypeLanding' && <PlateTypeLandingPage typeSlug={st.typeSlug || 'tu-quy'} openPlate={openPlate} onBuy={openBuy} contact={contact} go={go} />}
 
             {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} />}
 

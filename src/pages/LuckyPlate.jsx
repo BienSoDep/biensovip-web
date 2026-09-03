@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
+import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
-import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN } from '../components/index.jsx';
+import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox } from '../components/index.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { updateProfile } from '../services/authService.js';
+import { useCategories } from '../services/categories.js';
 import { ELEMENTS, PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget, scoreColor, elementAsciiLabel } from '../lib/fengshui.js';
 import { loadAuth } from '../lib/authStore.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { validBirthDate } from '../lib/date.js';
+
+const PRICE_PRESETS = [
+  { label: 'Dưới 200tr', min: '', max: '200000000' },
+  { label: '200tr–500tr', min: '200000000', max: '500000000' },
+  { label: '500tr–1 tỷ', min: '500000000', max: '1000000000' },
+  { label: 'Trên 1 tỷ', min: '1000000000', max: '' },
+];
+const AVOID_NUMBER_PRESETS = ['4', '7', '49', '53', '13'];
 
 function VehiclePicker({ value, onChange }) {
   return <BulletPicker label="Loại xe" value={value} onChange={onChange} options={VEHICLES} />;
@@ -93,6 +103,14 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
   });
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [] });
+  const { data: plateTypes } = useCategories('plate_type');
+  const { data: provinces } = useCategories('province');
+  const { data: vehicleTypes } = useCategories('vehicle_type');
+  const toggleFilterArray = (key, id) => setFilters((f) => ({ ...f, [key]: f[key].includes(id) ? f[key].filter((x) => x !== id) : [...f[key], id] }));
+  const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch }));
+  const activeFilterCount = filters.catIds.length + filters.cityIds.length + filters.avoidNumbers.length + (filters.vehicleTypeId ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0);
   const shareCardRef = useRef(null);
   const lookup = useFengShuiLookup();
   const saveHistory = useSaveFengShuiHistory();
@@ -112,6 +130,13 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
       budget: BUDGET_STEPS[form.budgetStep] ?? null,
       vehicle: form.vehicle,
       industry: purposeKey === 'kinh_doanh' ? (INDUSTRIES.find((i) => i.label === form.industry)?.key || null) : null,
+      catIds: filters.catIds.length ? filters.catIds : undefined,
+      cityIds: filters.cityIds.length ? filters.cityIds : undefined,
+      vehicleTypeId: filters.vehicleTypeId || undefined,
+      priceMin: filters.priceMin || undefined,
+      priceMax: filters.priceMax || undefined,
+      q: filters.q || undefined,
+      avoidNumbers: filters.avoidNumbers.length ? filters.avoidNumbers : undefined,
     }, { onError: () => notify('Không tra cứu được, thử lại sau.') });
   };
 
@@ -209,6 +234,70 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
               style={{ width: '100%', accentColor: 'var(--action-primary)' }}
             />
           </label>
+
+          <div style={{ borderTop: '1px solid var(--border-hairline)', paddingTop: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <button type="button" onClick={() => setFiltersOpen((v) => !v)} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-label)', color: 'var(--text-strong)' }}>
+              <ChevronDown size={16} style={{ transform: filtersOpen ? 'rotate(180deg)' : 'none', transition: 'transform 150ms var(--ease-out)' }} />
+              Lọc thêm biển số{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            </button>
+            {filtersOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+                    {(plateTypes?.items || []).map((c) => (
+                      <Checkbox key={c.id} label={c.name} checked={filters.catIds.includes(c.id)} onChange={() => toggleFilterArray('catIds', c.id)} />
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tỉnh / thành</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+                    {(provinces?.items || []).map((c) => (
+                      <Checkbox key={c.id} label={c.name} checked={filters.cityIds.includes(c.id)} onChange={() => toggleFilterArray('cityIds', c.id)} />
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe (theo danh mục)</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+                    {(vehicleTypes?.items || []).map((v) => (
+                      <Checkbox key={v.id} label={v.name} checked={filters.vehicleTypeId === v.id} onChange={() => setFilter({ vehicleTypeId: filters.vehicleTypeId === v.id ? '' : v.id })} />
+                    ))}
+                  </div>
+                </div>
+                <Input label="Từ khóa" placeholder="VD: 51A" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {PRICE_PRESETS.map((p) => {
+                      const active = filters.priceMin === p.min && filters.priceMax === p.max;
+                      return (
+                        <button key={p.label} type="button" onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
+                          style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                    <Input placeholder="Từ" type="number" min="0" step="1000000" value={filters.priceMin} onChange={(e) => setFilter({ priceMin: e.target.value })} />
+                    <span style={{ color: 'var(--text-faint)' }}>—</span>
+                    <Input placeholder="Đến" type="number" min="0" step="1000000" value={filters.priceMax} onChange={(e) => setFilter({ priceMax: e.target.value })} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tránh số</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+                    {AVOID_NUMBER_PRESETS.map((n) => (
+                      <Checkbox key={n} label={`Tránh ${n}`} checked={filters.avoidNumbers.includes(n)} onChange={() => toggleFilterArray('avoidNumbers', n)} />
+                    ))}
+                  </div>
+                </div>
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => setFilters({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [] })}>Xóa bộ lọc</Button>
+                )}
+              </div>
+            )}
+          </div>
 
           <Button variant="primary" size="lg" fullWidth onClick={submit} disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
         </form>

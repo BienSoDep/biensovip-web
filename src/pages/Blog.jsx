@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { Search } from 'lucide-react';
 import LazyImage from '../components/LazyImage.jsx';
@@ -24,15 +24,27 @@ export default function Blog({ patch }) {
   const stagger = useStaggeredReveal();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
+  const [tag, setTag] = useState('');
   const [page, setPage] = useState(1);
-  const isFiltering = !!(query || category);
-  // Backend /blog/posts chỉ hỗ trợ page+limit (không q/category) → khi đang lọc, load cap 100 rồi
+  const isFiltering = !!(query || category || tag);
+  // Backend /blog/posts chỉ hỗ trợ page+limit (không q/category/tag) → khi đang lọc, load cap 100 rồi
   // lọc client-side; khi không lọc, phân trang thật (limit nhỏ) để tránh tải dữ liệu lớn mỗi lần vào trang.
   const { data, isLoading, isError, refetch, isFetching } = useBlogPosts(isFiltering ? 1 : page, isFiltering ? 100 : PAGE_SIZE);
+
+  // Deep-link `/tin?tag=xxx` (hashtag bài viết) hoặc `?category=xxx` (breadcrumb bài viết) → tự lọc
+  // khi mở trang, tránh người dùng phải lọc lại từ đầu.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('tag');
+    const c = params.get('category');
+    if (t) setTag(t);
+    if (c) setCategory(c);
+  }, []);
 
   const all = data?.items || [];
   const items = isFiltering ? all.filter((p) => {
     if (category && p.category !== category) return false;
+    if (tag && !(p.tags || []).includes(tag)) return false;
     if (query) {
       const q = query.trim().toLowerCase();
       if (!(p.title || '').toLowerCase().includes(q) && !(p.excerpt || '').toLowerCase().includes(q)) return false;
@@ -69,7 +81,17 @@ export default function Blog({ patch }) {
           </div>
         </div>
 
-        {isLoading ? (
+        {tag && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang lọc theo:</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)' }}>
+              #{tag}
+              <button type="button" onClick={() => { setTag(''); history.replaceState(null, '', location.pathname); }} aria-label="Bỏ lọc" style={{ border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', padding: 0, lineHeight: 1 }}>×</button>
+            </span>
+          </div>
+        )}
+
+  {isLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {Array.from({ length: 6 }, (_, i) => <PostCardSkeleton key={i} />)}
           </div>

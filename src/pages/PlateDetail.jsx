@@ -10,7 +10,8 @@ import { useSubmitContact } from '../services/contactService.js';
 import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
 import { logZaloClick } from '../services/zaloClicks.js';
 import { useCompareIds } from '../services/compareService.js';
-import { routeFor } from '../config/routes.js';
+import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
+import Breadcrumb from '../components/Breadcrumb.jsx';
 import { usePlateReviews } from '../services/reviewService.js';
 import { formatDate } from '../lib/date.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
@@ -186,8 +187,22 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   };
   const setCF = (k) => (e) => setCForm((f) => ({ ...f, [k]: e.target?.value ?? e }));
 
+  // Tỉnh hiển thị chỉ có tên (không có mã) từ API — khớp tên với PROVINCE_LANDINGS để link được
+  // sang trang landing tỉnh thật; không khớp được thì bỏ qua cấp này (không suy đoán sai).
+  const plateProvinceLanding = plate?.province
+    ? PROVINCE_LANDINGS.find((p) => p.name.toLowerCase() === plate.province.toLowerCase())
+    : null;
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
+      <Breadcrumb keepOnMobile items={[
+        { label: 'Trang chủ', onClick: go('home') },
+        { label: 'Biển số', onClick: go('list') },
+        // Landing tỉnh chỉ vào được qua URL trực tiếp (không có state provinceCode ở tầng App
+        // để điều hướng SPA từ đây) — dùng full navigation, chấp nhận reload trang.
+        ...(plateProvinceLanding ? [{ label: plateProvinceLanding.name, onClick: () => { window.location.href = routeFor('provinceLanding', plateProvinceLanding.code); } }] : []),
+        { label: plate?.plateNumber || 'Chi tiết biển số' },
+      ]} />
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-4) var(--pad-page) var(--space-8)', display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 500px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,4vw,52px)', display: 'flex', justifyContent: 'center' }}>

@@ -8,7 +8,8 @@ import PlateVisual from '../components/PlateVisual.jsx';
 import { contentGet } from '../lib/content/index.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { useBlogPost, useRelatedPosts, useRelatedPlates } from '../services/blog.js';
-import { routeFor } from '../config/routes.js';
+import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
+import Breadcrumb from '../components/Breadcrumb.jsx';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -211,9 +212,23 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
     window.scrollTo(0, 0);
   };
 
+  // Bài "Tỉnh thành" không có field tỉnh riêng — khớp tag/title với PROVINCE_LANDINGS để biết đúng
+  // tỉnh và link sang trang landing tỉnh thật. Không khớp được thì chỉ dừng ở cấp Category.
+  const postProvinceLanding = (post.tags || [])
+    .map((t) => PROVINCE_LANDINGS.find((p) => p.name.toLowerCase() === t.toLowerCase()))
+    .find(Boolean)
+    || PROVINCE_LANDINGS.find((p) => post.title.includes(p.name));
+
   return (
     <>
       <div aria-hidden="true" style={{ position: 'fixed', top: 0, left: 0, width: `${progress}%`, height: 3, background: 'var(--action-primary)', zIndex: 'var(--z-header)', transition: 'width 80ms linear' }} />
+      <Breadcrumb keepOnMobile items={[
+        { label: 'Trang chủ', onClick: go('home') },
+        { label: 'Tin phong thủy', onClick: go('blog') },
+        { label: CATEGORY_LABEL[post.category] || post.category, onClick: () => { history.replaceState(null, '', `${routeFor('blog')}?category=${encodeURIComponent(post.category)}`); go('blog')(); } },
+        ...(postProvinceLanding ? [{ label: postProvinceLanding.name, onClick: () => { window.location.href = routeFor('provinceLanding', postProvinceLanding.code); } }] : []),
+        { label: post.title },
+      ]} />
       <article style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
       <header style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -295,7 +310,10 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
 
       {post.tags?.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {post.tags.map((t) => <span key={t} style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</span>)}
+          {post.tags.map((t) => (
+            <button key={t} type="button" onClick={() => { history.replaceState(null, '', `${routeFor('blog')}?tag=${encodeURIComponent(t)}`); go('blog')(); }}
+              style={{ border: 'none', cursor: 'pointer', padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</button>
+          ))}
         </div>
       )}
 

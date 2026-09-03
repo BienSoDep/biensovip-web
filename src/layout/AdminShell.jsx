@@ -31,6 +31,7 @@ import AdminRiskLog from '../pages/admin/AdminRiskLog.jsx';
 import AdminGuide from '../pages/admin/AdminGuide.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
+import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
 import { useNotificationCounts } from '../services/systemHealth.js';
 
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
@@ -147,6 +148,7 @@ export default function AdminShell({
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [twoFaOpen, setTwoFaOpen] = useState(false);
+  const [recoveryEmailOpen, setRecoveryEmailOpen] = useState(false);
   const logout = async () => {
     setLoggingOut(true);
     try {
@@ -175,18 +177,20 @@ export default function AdminShell({
       {drawerOpen && (
         <div className="admin-drawer-overlay" style={{ position: 'fixed', inset: 0, zIndex: 85 }}>
           <div aria-hidden="true" onClick={() => setDrawerOpen(false)} style={{ position: 'absolute', inset: 0, background: 'var(--overlay-scrim)', animation: 'fadeIn 140ms var(--ease-out)' }} />
-          <div ref={drawerRef} id="admin-drawer" role="dialog" aria-modal="true" aria-label="Menu quản trị" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(280px, 85vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-5) 0', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--space-5)' }}>
+          <div ref={drawerRef} id="admin-drawer" role="dialog" aria-modal="true" aria-label="Menu quản trị" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(280px, 85vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-5) 0', animation: 'modalIn 180ms var(--ease-out)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--space-5)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 32, height: 32, objectFit: 'contain' }} />
                 <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span>
               </div>
               <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Đóng menu" style={{ width: 44, height: 44, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={22} /></button>
             </div>
-            <AdminSidebarNav s={s} st={st} go={go} onNavigate={() => setDrawerOpen(false)} />
-            <div style={{ flex: 1 }} />
-            <div style={{ padding: '0 var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <div style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
+              <AdminSidebarNav s={s} st={st} go={go} onNavigate={() => setDrawerOpen(false)} />
+            </div>
+            <div style={{ flexShrink: 0, padding: '0 var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="sm" fullWidth onClick={() => { setDrawerOpen(false); setTwoFaOpen(true); }}>Bảo mật</Button>
+              <Button variant="ghost" size="sm" fullWidth onClick={() => { setDrawerOpen(false); setRecoveryEmailOpen(true); }}>Email dự phòng</Button>
               <Button variant="ghost" size="sm" fullWidth onClick={() => { setDrawerOpen(false); setLogoutConfirm(true); }}>Đăng xuất</Button>
             </div>
           </div>
@@ -208,6 +212,7 @@ export default function AdminShell({
           <div style={{ flex: 1 }} />
           <div style={{ padding: '0 var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="sm" fullWidth onClick={() => setTwoFaOpen(true)}>Bảo mật</Button>
+            <Button variant="ghost" size="sm" fullWidth onClick={() => setRecoveryEmailOpen(true)}>Email dự phòng</Button>
             <Button variant="ghost" size="sm" fullWidth onClick={() => setLogoutConfirm(true)}>Đăng xuất</Button>
           </div>
         </aside>
@@ -271,6 +276,20 @@ export default function AdminShell({
         open={twoFaOpen}
         onClose={() => setTwoFaOpen(false)}
         twoFactorEnabled={!!st.user?.twoFactorEnabled}
+        notify={notify}
+        onChanged={async () => {
+          try {
+            const admin = await apiClient.get('/api/admin/auth/me');
+            if (admin) patch({ user: admin });
+          } catch { /* ignore — modal already shows toast result */ }
+        }}
+      />
+
+      <RecoveryEmailModal
+        open={recoveryEmailOpen}
+        onClose={() => setRecoveryEmailOpen(false)}
+        recoveryEmail={st.user?.recoveryEmail}
+        recoveryEmailVerified={!!st.user?.recoveryEmailVerified}
         notify={notify}
         onChanged={async () => {
           try {
