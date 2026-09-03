@@ -42,8 +42,8 @@ export function useCollaboratorCommissions(collaboratorId, filter = {}) {
 export function usePayCommissions(collaboratorId) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ commissionIds, paidAmount, paidNote }) =>
-      apiClient.post(`/api/admin/collaborators/${collaboratorId}/commissions/pay`, { commissionIds, paidAmount, paidNote }),
+    mutationFn: ({ commissionIds, paidAmount, paidNote, proofUrl }) =>
+      apiClient.post(`/api/admin/collaborators/${collaboratorId}/commissions/pay`, { commissionIds, paidAmount, paidNote, proofUrl }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['collaborator-commissions', collaboratorId] });
       qc.invalidateQueries({ queryKey: ['admin-collaborators'] });

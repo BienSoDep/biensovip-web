@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal.jsx';
 import Button from './Button.jsx';
-import { Select } from './index.jsx';
+import { Select, ImageUrlInput } from './index.jsx';
 import { useCollaboratorCommissions, usePayCommissions, useCancelCommission } from '../services/adminCollaborators.js';
 import { formatDate, formatDateTime } from '../lib/date.js';
 import { SkeletonTable } from './Skeleton.jsx';
@@ -41,13 +41,13 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
 
   const selectedSum = items.filter((c) => selected.includes(c.id)).reduce((a, c) => a + Number(c.amount), 0);
 
-  const openPayForm = () => setPayForm({ amount: String(selectedSum), note: '' });
+  const openPayForm = () => setPayForm({ amount: String(selectedSum), note: '', proofUrl: '' });
 
   const submitPay = async () => {
     const amount = Number(payForm.amount);
     if (!(amount > 0)) { notify('Số tiền phải lớn hơn 0'); return; }
     try {
-      await payCommissions.mutateAsync({ commissionIds: selected, paidAmount: amount, paidNote: payForm.note || undefined });
+      await payCommissions.mutateAsync({ commissionIds: selected, paidAmount: amount, paidNote: payForm.note || undefined, proofUrl: payForm.proofUrl || undefined });
       notify('Đã xác nhận chi trả');
       setSelected([]);
       setPayForm(null);
@@ -185,6 +185,7 @@ export default function CollaboratorCommissionsModal({ collaborator, onClose, no
               <input value={payForm.note} onChange={(e) => setPayForm((f) => ({ ...f, note: e.target.value }))}
                 style={{ height: 36, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-field)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
             </label>
+            <ImageUrlInput label="Ảnh chuyển khoản (không bắt buộc)" value={payForm.proofUrl} onChange={(url) => setPayForm((f) => ({ ...f, proofUrl: url }))} />
             <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
               <Button variant="ghost" size="sm" onClick={() => setPayForm(null)}>Hủy</Button>
               <Button variant="primary" size="sm" disabled={payCommissions.isPending} onClick={submitPay}>Xác nhận</Button>

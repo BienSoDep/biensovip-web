@@ -585,6 +585,7 @@ export default function App() {
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
     acontacts: ['Yêu cầu liên hệ', 'Quản lý yêu cầu liên hệ từ khách'],
+    atransactions: ['Giao dịch', 'Quản lý giao dịch mua/đặt cọc biển số và xác nhận thanh toán'],
     astaff: ['Nhân viên', 'Quản lý tài khoản nhân viên và phân quyền'],
     aposts: ['Bài viết', 'Quản lý bài viết blog'],
     compose: ['Viết bài mới', 'Bài sẽ có slug và meta riêng để tối ưu SEO'],

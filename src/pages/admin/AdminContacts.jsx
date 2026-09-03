@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact } from '../../services/adminContacts.js';
 import { useCreatePaymentLink } from '../../services/paymentLinks.js';
+import { CreateTransactionForm } from './AdminTransactions.jsx';
 import { useAdminStaff } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { Select, Badge } from '../../components/index.jsx';
@@ -38,7 +39,7 @@ function parsePlateNumber(raw) {
   return { prov: m[1], seri: m[2], num };
 }
 
-export default function AdminContacts({ notify }) {
+export default function AdminContacts({ notify, go }) {
   const [status, setStatus] = useState('all');
   const [intent, setIntent] = useState('all');
   const [search, setSearch] = useState('');
@@ -59,6 +60,7 @@ export default function AdminContacts({ notify }) {
   const assignContact = useAssignContact();
   const createPaymentLink = useCreatePaymentLink();
   const [creatingLinkFor, setCreatingLinkFor] = useState(null);
+  const [upgrading, setUpgrading] = useState(null); // ContactRequest đang mở form "Tạo giao dịch từ liên hệ này"
 
   // UC11 — 1 query stats cho các tab (thay 4 query perPage=1).
   const { data: stats } = useContactStats({ intent, q });
@@ -297,6 +299,15 @@ export default function AdminContacts({ notify }) {
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Giao dịch</span>
+                {selected.transactionId ? (
+                  <Button variant="outline" size="sm" onClick={() => go?.('atransactions')()}>Xem giao dịch →</Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setUpgrading(selected)}>Tạo giao dịch từ liên hệ này</Button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Ghi chú yêu cầu</span>
                 <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap', maxHeight: 160, overflowY: 'auto' }}>
                   {selected.note || <span style={{ color: 'var(--text-faint)' }}>Không có ghi chú</span>}
@@ -330,6 +341,22 @@ export default function AdminContacts({ notify }) {
             </>
           )}
         </div>
+      </Modal>
+
+      <Modal open={!!upgrading} onClose={() => setUpgrading(null)} title="Tạo giao dịch từ liên hệ này" maxWidth="480px">
+        {upgrading && (
+          <CreateTransactionForm
+            notify={notify}
+            onDone={() => { setUpgrading(null); refetch(); }}
+            prefill={{
+              contactRequestId: upgrading.id,
+              fullName: upgrading.fullName,
+              phone: upgrading.phone,
+              amount: upgrading.depositAmount,
+              plate: upgrading.plateId ? { id: upgrading.plateId, plateNumber: upgrading.plateNumber } : null,
+            }}
+          />
+        )}
       </Modal>
     </div>
   );
