@@ -19,27 +19,52 @@ function formatDate(iso) {
 }
 
 const PAGE_SIZE = 12;
+const STATE_KEY = 'bsd_blog_list_state';
+
+// Đọc state đã lưu 1 lần lúc mount (không dùng useState lazy-init trong component vì còn phải
+// so với query string — query string mới (từ hashtag/breadcrumb) phải thắng state cũ đã lưu).
+function readSavedState() {
+  try { return JSON.parse(sessionStorage.getItem(STATE_KEY) || 'null'); } catch { return null; }
+}
 
 export default function Blog({ patch }) {
   const stagger = useStaggeredReveal();
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('');
-  const [tag, setTag] = useState('');
-  const [page, setPage] = useState(1);
+  const hasQueryParams = typeof window !== 'undefined' && !!window.location.search;
+  const saved = !hasQueryParams ? readSavedState() : null;
+  const [query, setQuery] = useState(saved?.query || '');
+  const [category, setCategory] = useState(saved?.category || '');
+  const [tag, setTag] = useState(saved?.tag || '');
+  const [page, setPage] = useState(saved?.page || 1);
   const isFiltering = !!(query || category || tag);
   // Backend /blog/posts chỉ hỗ trợ page+limit (không q/category/tag) → khi đang lọc, load cap 100 rồi
   // lọc client-side; khi không lọc, phân trang thật (limit nhỏ) để tránh tải dữ liệu lớn mỗi lần vào trang.
   const { data, isLoading, isError, refetch, isFetching } = useBlogPosts(isFiltering ? 1 : page, isFiltering ? 100 : PAGE_SIZE);
 
   // Deep-link `/tin?tag=xxx` (hashtag bài viết) hoặc `?category=xxx` (breadcrumb bài viết) → tự lọc
-  // khi mở trang, tránh người dùng phải lọc lại từ đầu.
+  // khi mở trang, tránh người dùng phải lọc lại từ đầu. Query string mới → không phục hồi state cũ
+  // (đã xử lý ở saved phía trên), chỉ set filter theo query.
   useEffect(() => {
+    if (!hasQueryParams) return;
     const params = new URLSearchParams(window.location.search);
     const t = params.get('tag');
     const c = params.get('category');
     if (t) setTag(t);
     if (c) setCategory(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Khôi phục vị trí cuộn đã lưu (nếu quay lại từ bài viết) — chạy sau khi data đã load xong.
+  useEffect(() => {
+    if (hasQueryParams || !saved?.scrollY || isLoading) return;
+    window.scrollTo(0, saved.scrollY);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
+
+  // Lưu state (filter/trang/vị trí cuộn) trước khi rời trang — dùng để phục hồi khi back từ bài viết,
+  // tránh người dùng phải lướt tìm lại từ đầu ở trang tổng.
+  const saveStateBeforeLeave = () => {
+    try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ query, category, tag, page, scrollY: window.scrollY })); } catch { /* storage blocked */ }
+  };
 
   const all = data?.items || [];
   const items = isFiltering ? all.filter((p) => {
@@ -108,7 +133,7 @@ export default function Blog({ patch }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
               {items.map((p, i) => (
                 <article key={p.id} itemScope itemType="https://schema.org/Article" className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'var(--transition-card)', ...stagger(i) }}>
-                  <a href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); patch({ screen: 'post', postId: p.slug }); }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
+                  <a href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); saveStateBeforeLeave(); patch({ screen: 'post', postId: p.slug }); }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
                     <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 170, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={170} />
                     <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
