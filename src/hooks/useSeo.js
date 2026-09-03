@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import { contentGet, contentItems } from '../lib/content/index.js';
 
-const SITE = 'https://biensodep.vercel.app';
+// Origin thật của chính trang đang chạy (biensovip.com production, localhost khi dev) — không
+// hardcode domain cũ (bug 03/09/2026: GSC Live Test cho thấy canonical/og:url trỏ nhầm sang
+// biensodep.vercel.app, domain Vercel preview đã bỏ khi chuyển sang VPS Hostinger).
+const SITE = typeof window !== 'undefined' ? window.location.origin : 'https://biensovip.com';
 const BRAND = 'Biển số đẹp Đà Nẵng — Duy Đinh';
 const DEFAULT_DESC = 'Mua bán biển số đẹp Đà Nẵng: ngũ quý, tứ quý, lộc phát, thần tài. Hồ sơ rõ ràng, sang tên nhanh, tư vấn phong thủy theo mệnh chủ xe.';
 
