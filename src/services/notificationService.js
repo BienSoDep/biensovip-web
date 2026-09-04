@@ -30,6 +30,16 @@ export function useMarkNotificationClicked() {
   });
 }
 
+// Chuông cho guest — broadcast công khai, không cần login. Không có unreadCount server-side,
+// FE tự so sánh id mới nhất với localStorage (xem Header.jsx NotificationBell).
+export function usePublicBroadcasts(limit = 5) {
+  return useQuery({
+    queryKey: ['public', 'broadcasts', limit],
+    queryFn: () => apiClient.get('/api/notifications/public', { params: { limit } }),
+    refetchInterval: 60000,
+  });
+}
+
 const SETTINGS_KEY = ['me', 'notification-settings'];
 
 // T4/T5/T8 — cài đặt thông báo theo user.

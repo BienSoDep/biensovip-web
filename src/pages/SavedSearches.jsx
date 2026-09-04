@@ -39,10 +39,10 @@ export default function SavedSearches({ go, notify, user }) {
 
   const { data: settings } = useNotificationSettings();
   const updateSettings = useUpdateNotificationSettings();
-  const setSetting = (body) => updateSettings.mutate(body, { onError: () => notify('Không cập nhật được, thử lại sau.') });
+  const setSetting = (body) => updateSettings.mutate(body, { onError: (err) => notify(err.message || 'Không cập nhật được, thử lại sau.') });
 
   const toggleNotify = (s) => {
-    updateSearch.mutate({ id: s.id, notifyEnabled: !s.notifyEnabled }, { onError: () => notify('Không cập nhật được, thử lại sau.') });
+    updateSearch.mutate({ id: s.id, notifyEnabled: !s.notifyEnabled }, { onError: (err) => notify(err.message || 'Không cập nhật được, thử lại sau.') });
   };
 
   const startEdit = (s) => { setEditingId(s.id); setEditName(s.name); };
@@ -50,13 +50,13 @@ export default function SavedSearches({ go, notify, user }) {
   const saveEdit = (s) => {
     const name = editName.trim();
     if (!name || name === s.name) { setEditingId(null); return; }
-    updateSearch.mutate({ id: s.id, name }, { onError: () => notify('Không đổi tên được, thử lại sau.'), onSuccess: () => notify('Đã đổi tên tiêu chí') });
+    updateSearch.mutate({ id: s.id, name }, { onError: (err) => notify(err.message || 'Không đổi tên được, thử lại sau.'), onSuccess: () => notify('Đã đổi tên tiêu chí') });
     setEditingId(null);
   };
 
   const remove = (s) => {
     if (!window.confirm(`Xóa tiêu chí "${s.name}"?`)) return;
-    deleteSearch.mutate(s.id, { onError: () => notify('Không xóa được, thử lại sau.'), onSuccess: () => notify('Đã xóa tiêu chí') });
+    deleteSearch.mutate(s.id, { onError: (err) => notify(err.message || 'Không xóa được, thử lại sau.'), onSuccess: () => notify('Đã xóa tiêu chí') });
   };
 
   const tabBtn = (key, label, count) => (

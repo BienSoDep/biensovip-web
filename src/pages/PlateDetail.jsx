@@ -182,7 +182,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       honeypot: cForm.honeypot || null,
     }, {
       onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setCSent(true); handleContact('contact'); },
-      onError: () => setCErr({ field: null, message: 'Gửi thất bại, vui lòng thử lại.' }),
+      onError: (err) => setCErr({ field: null, message: err.message || 'Gửi thất bại, vui lòng thử lại.' }),
     });
   };
   const setCF = (k) => (e) => setCForm((f) => ({ ...f, [k]: e.target?.value ?? e }));

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { Share2, Link2, HandCoins, Wallet, UserPlus } from 'lucide-react';
 import Button from '../components/Button.jsx';
@@ -57,7 +58,12 @@ function GmailLinkSection() {
     );
   }
 
-  const startLink = () => { oauthUrl.mutate(undefined, { onSuccess: (data) => { window.location.href = data.url; } }); };
+  const startLink = () => {
+    oauthUrl.mutate(undefined, {
+      onSuccess: (data) => { window.location.href = data.url; },
+      onError: (err) => toast.error(err.message || 'Không lấy được link liên kết Google, thử lại.'),
+    });
+  };
 
   return (
     <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -78,7 +84,7 @@ function GmailLinkSection() {
           </span>
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             {status.needsRelink && <Button variant="primary" size="sm" onClick={startLink} loading={oauthUrl.isPending}>Liên kết lại</Button>}
-            <Button variant="ghost" size="sm" onClick={() => unlink.mutate()} loading={unlink.isPending}>Hủy liên kết</Button>
+            <Button variant="ghost" size="sm" onClick={() => unlink.mutate(undefined, { onError: (err) => toast.error(err.message || 'Hủy liên kết thất bại, thử lại.') })} loading={unlink.isPending}>Hủy liên kết</Button>
           </div>
         </>
       ) : (

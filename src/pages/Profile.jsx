@@ -80,8 +80,8 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
       onUserUpdate?.(updated);
       notify('Đã lưu thông tin');
       if (onboarding) go('home')();
-    } catch {
-      notify('Không lưu được, thử lại sau.');
+    } catch (err) {
+      notify(err.message || 'Không lưu được, thử lại sau.');
     } finally {
       setSaving(false);
     }

@@ -42,7 +42,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
     setUpdatingId(id);
     updateStatus.mutate({ id, status: v, suspendReason: v === 'locked' ? (reasonDraft.trim() || undefined) : undefined, sendEmail: v === 'locked' && sendLockEmail }, {
       onSuccess: () => notify('Đã cập nhật trạng thái CTV'),
-      onError: () => notify('Cập nhật trạng thái thất bại'),
+      onError: (err) => notify(err.message || 'Cập nhật trạng thái thất bại'),
       onSettled: () => { setUpdatingId(null); setConfirm(null); setReasonDraft(''); setSendLockEmail(false); },
     });
   };
@@ -57,7 +57,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
     setUpdatingId(c.id);
     updateStatus.mutate({ id: c.id, status: c.status, commissionRate: pct / 100 }, {
       onSuccess: () => notify('Đã cập nhật hệ số hoa hồng'),
-      onError: () => notify('Cập nhật hệ số thất bại'),
+      onError: (err) => notify(err.message || 'Cập nhật hệ số thất bại'),
       onSettled: () => setUpdatingId(null),
     });
   };

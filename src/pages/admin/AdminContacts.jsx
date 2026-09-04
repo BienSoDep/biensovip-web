@@ -74,7 +74,7 @@ export default function AdminContacts({ notify, go }) {
     setCreatingLinkFor(contact.id);
     createPaymentLink.mutate({ contactRequestId: contact.id, amount: contact.depositAmount }, {
       onSuccess: (link) => { toast.success('Đã tạo link ZaloPay — gửi cho khách qua Zalo OA'); setSelected((s) => ({ ...s, paymentLink: link })); },
-      onError: (e) => toast.error(e.message === 'zalopay_not_configured' ? 'Chưa cấu hình ZaloPay Merchant' : 'Tạo link thất bại'),
+      onError: (e) => toast.error(e.message || 'Tạo link thất bại'),
       onSettled: () => setCreatingLinkFor(null),
     });
   };
@@ -84,7 +84,7 @@ export default function AdminContacts({ notify, go }) {
     setUpdatingId(id);
     updateStatus.mutate({ id, status: STATUS_VAL[label] }, {
       onSuccess: () => { toast.success('Đã cập nhật trạng thái'); setUpdatingId(null); },
-      onError: () => { toast.error('Lỗi cập nhật trạng thái'); setUpdatingId(null); },
+      onError: (err) => { toast.error(err.message || 'Lỗi cập nhật trạng thái'); setUpdatingId(null); },
     });
   };
 
