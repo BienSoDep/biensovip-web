@@ -47,7 +47,24 @@ export function useSeo(screen, data) {
     if (screen === 'list') {
       title = 'Danh sách biển số đẹp | ' + BRAND;
       canonical = SITE + '/danh-sach';
-      ld = { '@context': 'https://schema.org', '@type': 'ItemList', name: 'Danh sách biển số đẹp', url: canonical };
+      const items = data?.items || [];
+      const itemListLd = {
+        '@type': 'ItemList', name: 'Danh sách biển số đẹp', url: canonical,
+        ...(items.length ? {
+          itemListElement: items.map((p, i) => ({
+            '@type': 'ListItem', position: i + 1,
+            url: SITE + '/bien/' + (p.slug || p.id),
+          })),
+        } : {}),
+      };
+      const breadcrumbLd = {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE },
+          { '@type': 'ListItem', position: 2, name: 'Danh sách biển số', item: canonical },
+        ],
+      };
+      ld = { '@context': 'https://schema.org', '@graph': [itemListLd, breadcrumbLd] };
     } else if (screen === 'detail' && data?.plate) {
       const p = data.plate;
       const priceText = p.priceOnRequest ? 'Giá liên hệ' : `${Number(p.price).toLocaleString('vi-VN')}đ`;

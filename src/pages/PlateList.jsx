@@ -14,6 +14,7 @@ import { loadAuth } from '../lib/authStore.js';
 import { routeFor } from '../config/routes.js';
 import { readFiltersFromUrl, writeFiltersToUrl } from '../lib/plateListFilters.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
+import { useSeo } from '../hooks/useSeo.js';
 
 const PER_PAGE_OPTIONS = [
   { value: '9', label: '9 / trang' },
@@ -148,6 +149,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   }, [loading]);
   const showSkeleton = useInfinite ? inf.isLoading : (isLoading || isFetching);
   const showError = useInfinite ? inf.isError : isError;
+
+  useSeo('list', { items });
 
   const toggleArrayFilter = (key, id) => setFilter({
     [key]: filters[key].includes(id) ? filters[key].filter((x) => x !== id) : [...filters[key], id],
