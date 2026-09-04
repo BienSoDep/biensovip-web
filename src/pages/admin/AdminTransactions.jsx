@@ -127,7 +127,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
       ) : (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
-            <div style={{ minWidth: 760 }}>
+            <div style={{ minWidth: 680 }}>
               <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                 <span style={{ flex: '1 1 100px' }}>Khách</span>
                 <span style={{ flex: '1 1 100px' }}>Biển số</span>

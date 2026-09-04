@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { SlidersHorizontal, X, LayoutGrid, List as ListIcon } from 'lucide-react';
 import Button from '../components/Button.jsx';
@@ -76,6 +76,34 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [saveName, setSaveName] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [infinite, setInfinite] = useState(false);
+  const filterPanelRef = useRef(null);
+
+  // Focus trap cho drawer bộ lọc mobile — cùng contract a11y với Modal.jsx/Drawer.jsx (focus vào
+  // phần tử đầu tiên khi mở, Tab/Shift+Tab quẩn trong panel, trả focus về nút trigger khi đóng).
+  useEffect(() => {
+    if (!filterOpen) return;
+    const panel = filterPanelRef.current;
+    if (!panel) return;
+    const trigger = document.activeElement;
+    const focusables = () =>
+      Array.from(panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+        .filter((el) => !el.disabled && el.offsetParent !== null);
+    (focusables()[0] || panel).focus();
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); setFilterOpen(false); return; }
+      if (e.key !== 'Tab') return;
+      const els = focusables();
+      if (!els.length) return;
+      const f = els[0], l = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === f) { e.preventDefault(); l.focus(); }
+      else if (!e.shiftKey && document.activeElement === l) { e.preventDefault(); f.focus(); }
+    };
+    panel.addEventListener('keydown', onKeyDown);
+    return () => {
+      panel.removeEventListener('keydown', onKeyDown);
+      if (trigger && typeof trigger.focus === 'function') trigger.focus();
+    };
+  }, [filterOpen]);
 
   const activeFilterCount = filters.cat.length + filters.city.length + filters.avoidNumbers.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.status ? 1 : 0);
 
@@ -201,14 +229,14 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        <button type="button" onClick={() => setFilter({ cat: [] })}
+        <button type="button" aria-pressed={filters.cat.length === 0} onClick={() => setFilter({ cat: [] })}
           style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: filters.cat.length === 0 ? 'var(--fw-bold)' : 'var(--fw-medium)', background: filters.cat.length === 0 ? 'var(--action-primary)' : 'var(--surface-sunken)', color: filters.cat.length === 0 ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: filters.cat.length === 0 ? 'none' : 'var(--shadow-inset-hairline)' }}>
           Tất cả
         </button>
         {(plateTypes?.items || []).map((c) => {
           const active = filters.cat.length === 1 && filters.cat[0] === c.id;
           return (
-            <button key={c.id} type="button" onClick={() => setFilter({ cat: active ? [] : [c.id] })}
+            <button key={c.id} type="button" aria-pressed={active} onClick={() => setFilter({ cat: active ? [] : [c.id] })}
               style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--surface-sunken)', color: active ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)' }}>
               {c.name}
             </button>
@@ -225,7 +253,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
         {filterOpen && (
           <div className="list-filter-overlay" style={{ position: 'fixed', inset: 0, zIndex: 85 }}>
             <div aria-hidden="true" onClick={() => setFilterOpen(false)} style={{ position: 'absolute', inset: 0, background: 'var(--overlay-scrim)', animation: 'fadeIn 140ms var(--ease-out)' }} />
-            <div role="dialog" aria-modal="true" aria-label="Bộ lọc biển số" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(320px, 88vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', animation: 'modalIn 180ms var(--ease-out)' }}>
+            <div ref={filterPanelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Bộ lọc biển số" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(320px, 88vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', animation: 'modalIn 180ms var(--ease-out)', outline: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Bộ lọc</span>
                 <button type="button" onClick={() => setFilterOpen(false)} aria-label="Đóng bộ lọc" style={{ width: 44, height: 44, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
@@ -276,7 +304,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                     {PRICE_PRESETS.map((p) => {
                       const active = filters.priceMin === p.min && filters.priceMax === p.max;
                       return (
-                        <button key={p.label} type="button" onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
+                        <button key={p.label} type="button" aria-pressed={active} onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
                           style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
                       );
                     })}
@@ -355,7 +383,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               {PRICE_PRESETS.map((p) => {
                 const active = filters.priceMin === p.min && filters.priceMax === p.max;
                 return (
-                  <button key={p.label} type="button" onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
+                  <button key={p.label} type="button" aria-pressed={active} onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
                     style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
                 );
               })}

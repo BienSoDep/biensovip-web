@@ -16,6 +16,7 @@ import { usePlateReviews } from '../services/reviewService.js';
 import { formatDate } from '../lib/date.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { content } from '../lib/content/index.js';
+import LazyImage from '../components/LazyImage.jsx';
 import { maskName } from '../lib/textMask.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
@@ -228,8 +229,8 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           {plate.images?.length > 1 && (
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {plate.images.slice(1).map((url, i) => (
-                <div key={i} className={i >= 4 ? 'plate-thumb-extra' : undefined} style={{ position: 'relative' }}>
-                  <img src={optimizeImageUrl(url)} alt={`Ảnh ${i + 2} biển số ${plate.plateNumber}`} onClick={() => setLightbox(i + 1)} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
+                <div key={i} className={i >= 4 ? 'plate-thumb-extra' : undefined} style={{ position: 'relative' }} onClick={() => setLightbox(i + 1)}>
+                  <LazyImage src={url} alt={`Ảnh ${i + 2} biển số ${plate.plateNumber}`} style={{ width: 64, height: 64, borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
                   {i === 3 && plate.images.length - 1 > 4 && (
                     <div className="plate-thumb-more" onClick={() => setLightbox(i + 1)} style={{ position: 'absolute', inset: 0, borderRadius: 'var(--radius-md)', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'none', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'zoom-in' }}>+{plate.images.length - 1 - 4}</div>
                   )}
@@ -465,9 +466,9 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             </div>
             <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
               <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Muốn giữ chỗ nhanh? Chuyển khoản cọc:</span>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Ngân hàng</span><span style={{ color: 'var(--text-strong)' }}>Vietcombank — Đà Nẵng</span></div>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Số tài khoản</span><span style={{ color: 'var(--text-strong)' }}>0041 0000 998877</span></div>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Chủ tài khoản</span><span style={{ color: 'var(--text-strong)' }}>DINH VAN DUY</span></div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Ngân hàng</span><span style={{ color: 'var(--text-strong)' }}>{content.info.bank_name}</span></div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Số tài khoản</span><span style={{ color: 'var(--text-strong)' }}>{content.info.bank_account_number}</span></div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Chủ tài khoản</span><span style={{ color: 'var(--text-strong)' }}>{content.info.bank_account_holder}</span></div>
               <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Nội dung CK</span><span style={{ color: 'var(--text-strong)' }}>COC {plate.plateNumber}</span></div>
             </div>
             <Button variant="outline" size="md" fullWidth onClick={() => { setContactOpen(false); setCSent(false); }}>Đóng</Button>

@@ -241,7 +241,12 @@ export function useSeo(screen, data) {
     setMeta('name', 'twitter:title', title);
     setMeta('name', 'twitter:description', desc);
     const noIndexScreens = ['fav', 'saved', 'notifications', 'register', 'login', 'forgot', 'notfound'];
-    setMeta('name', 'robots', noIndexScreens.includes(screen) ? 'noindex, follow' : 'index, follow');
+    // Landing tỉnh/loại xe thin content (chưa có intro lẫn biển gợi ý) → noindex tránh bị Google
+    // coi là trang rỗng/trùng lặp, dù URL vẫn truy cập được bình thường.
+    const isThinLanding = (screen === 'provinceLanding' || screen === 'plateTypeLanding')
+      && data?.landing && !data.landing.intro && !(data.landing.plates?.length > 0);
+    const noIndex = noIndexScreens.includes(screen) || isThinLanding;
+    setMeta('name', 'robots', noIndex ? 'noindex, follow' : 'index, follow');
     setLink('canonical', canonical);
     setJsonLd(ld);
   }, [screen, data]);
