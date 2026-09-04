@@ -26,7 +26,9 @@ import { useNotificationRealtime } from './services/notificationRealtime.js';
 import { usePathRouter } from './hooks/usePathRouter.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
+import { usePublicMaintenance } from './services/maintenanceService.js';
 
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage.jsx'));
 const Home = lazy(() => import('./pages/Home.jsx'));
 const PlateList = lazy(() => import('./pages/PlateList.jsx'));
 const PlateDetail = lazy(() => import('./pages/PlateDetail.jsx'));
@@ -210,14 +212,21 @@ export default function App() {
       if (favs[id]) delete favs[id]; else favs[id] = true;
       return { ...s, favs };
     });
-    // Persist: guest → localStorage, user → API (fire-and-forget, optimistic)
+    // Persist: guest → localStorage, user → API (optimistic — lỗi thì rollback UI + báo)
+    const rollback = () => setSt((s) => {
+      const favs = { ...s.favs };
+      if (favs[id]) delete favs[id]; else favs[id] = true;
+      return { ...s, favs };
+    });
     if (st.user) {
       const isFav = st.favs[id];
       if (isFav) {
-        favApi.removeFavorite(id).catch(() => {});
-        setFavItems((items) => items.filter((p) => p.id !== id));
+        favApi.removeFavorite(id)
+          .then(() => setFavItems((items) => items.filter((p) => p.id !== id)))
+          .catch((err) => { rollback(); notify(err.message || 'Bỏ yêu thích thất bại, thử lại.'); });
       } else {
-        favApi.addFavorite(id).then(() => favApi.listFavorites()).then((items) => items && setFavItems(items)).catch(() => {});
+        favApi.addFavorite(id).then(() => favApi.listFavorites()).then((items) => items && setFavItems(items))
+          .catch((err) => { rollback(); notify(err.message || 'Lưu yêu thích thất bại, thử lại.'); });
       }
     } else {
       const isFav = st.favs[id];
@@ -236,7 +245,10 @@ export default function App() {
   };
   const clearAllFavs = async () => {
     if (st.user) {
-      try { await favApi.clearFavorites(); } catch { /* ignore */ }
+      try { await favApi.clearFavorites(); } catch (err) {
+        notify(err.message || 'Bỏ lưu tất cả thất bại, thử lại.');
+        return;
+      }
       setFavItems([]);
     } else {
       clearLocalFavorites();
@@ -265,6 +277,10 @@ export default function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Bảo trì từng trang — admin đang đăng nhập bypass để test trang thật (xem MaintenancePage.jsx).
+  const { data: maintenanceList } = usePublicMaintenance();
+  const maintenanceActive = !st.isAdmin ? maintenanceList?.find((m) => m.screen === st.screen) : null;
+
   // Liên hệ shop cho card biển số: ưu tiên settings từ backend, fallback số mặc định (info.json).
   const contact = {
     phone: (st.settings?.phone || '0815792699').replace(/[^0-9]/g, ''),
@@ -603,6 +619,7 @@ export default function App() {
     achatbot: ['Trợ lý AI', 'Lịch sử hội thoại và cấu hình trợ lý chatbot'],
     aauditlog: ['Nhật ký hệ thống', 'Lịch sử thay đổi dữ liệu trong hệ thống'],
     arisklog: ['Rủi ro CTV', 'Phát hiện bất thường và rà soát cộng tác viên'],
+    amaintenance: ['Bảo trì hệ thống', 'Bật/tắt bảo trì hoặc coming-soon cho từng trang public'],
   }[s] || ['', ''];
 
   const authMeta = {
@@ -651,6 +668,11 @@ export default function App() {
             return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), onClick: go('home') }, ...trail]} />;
           })()}
 
+          {maintenanceActive ? (
+            <Suspense fallback={<PageSkeleton screen={s} />}>
+              <MaintenancePage info={maintenanceActive} go={go} contact={contact} />
+            </Suspense>
+          ) : (
           <Suspense fallback={<PageSkeleton screen={s} />}>
             {s === 'home' && <Home settings={st.settings} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} contact={contact} />}
 
@@ -712,6 +734,7 @@ export default function App() {
               </RequireAuth>
             )}
           </Suspense>
+          )}
 
           {isPublic && <Footer settings={st.settings} patch={patch} />}
 
