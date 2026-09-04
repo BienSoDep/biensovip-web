@@ -105,9 +105,9 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
           </div>
           <div style={{ flex: '1 1 340px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
             <div style={{ position: 'relative', width: '100%', maxWidth: 520, aspectRatio: '1.42/1' }} className="hero-plate-container">
-              <img src="/assets/hero-plate-left.png" alt="Biển số 43A 888.88" style={{ position: 'absolute', left: '-1%', top: '-1%', width: '71%', zIndex: 1, transform: 'rotate(-13deg)', animation: heroAnim('fanLeft', 100) }} />
-              <img src="/assets/hero-plate-right.png" alt="Biển số 43K 556.68" style={{ position: 'absolute', left: '25%', top: '47%', width: '71%', zIndex: 2, transform: 'rotate(7deg)', animation: heroAnim('fanRight', 180) }} />
-              <img src="/assets/hero-plate-main.png" alt="Biển số 43A1 999.99" style={{ position: 'absolute', left: '8%', top: '15%', width: '84%', zIndex: 3, transform: 'rotate(-5deg)', animation: heroAnim('fanMain', 0) }} />
+              <picture><source srcSet="/assets/hero-plate-left.webp" type="image/webp" /><img src="/assets/hero-plate-left.png" alt="Biển số 43A 888.88" loading="eager" style={{ position: 'absolute', left: '-1%', top: '-1%', width: '71%', zIndex: 1, transform: 'rotate(-13deg)', animation: heroAnim('fanLeft', 100) }} /></picture>
+              <picture><source srcSet="/assets/hero-plate-right.webp" type="image/webp" /><img src="/assets/hero-plate-right.png" alt="Biển số 43K 556.68" loading="eager" style={{ position: 'absolute', left: '25%', top: '47%', width: '71%', zIndex: 2, transform: 'rotate(7deg)', animation: heroAnim('fanRight', 180) }} /></picture>
+              <picture><source srcSet="/assets/hero-plate-main.webp" type="image/webp" /><img src="/assets/hero-plate-main.png" alt="Biển số 43A1 999.99" fetchpriority="high" loading="eager" style={{ position: 'absolute', left: '8%', top: '15%', width: '84%', zIndex: 3, transform: 'rotate(-5deg)', animation: heroAnim('fanMain', 0) }} /></picture>
             </div>
             <div className="hero-plate-badge-row" style={{ width: '100%', maxWidth: 520, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', padding: '0 4px' }}>
               <Badge tone="rose">{T('home.hero.plate_badge')}</Badge>
