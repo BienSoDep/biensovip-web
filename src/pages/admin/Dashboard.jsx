@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useDebouncedValue } from '@mantine/hooks';
 import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
 import {
   AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -16,6 +17,7 @@ import {
   useCollaboratorPerf, useDemand, useCustomerDemographics, useSearchInsights, useCompareInsights, useTrafficHeatmap,
 } from '../../services/adminDashboard.js';
 import { useSystemHealth } from '../../services/systemHealth.js';
+import GoogleAnalyticsPanel from './GoogleAnalyticsPanel.jsx';
 import { useExportReport } from '../../hooks/useExportCsv.js';
 
 const HEALTH_LABEL = { ok: 'Ổn định', degraded: 'Cần chú ý', down: 'Sự cố' };
@@ -76,13 +78,17 @@ export default function Dashboard({ go, st }) {
     []
   );
 
+  // Debounce custom date range 400ms — đổi 1 ô ngày không gọi lại ~17 API ngay lập tức.
+  const [debouncedFrom] = useDebouncedValue(customFrom, 400);
+  const [debouncedTo] = useDebouncedValue(customTo, 400);
+
   const range = useMemo(() => {
-    if (rangeIdx === null && customFrom && customTo) {
-      return { from: startOfDay(parseISO(customFrom)), to: new Date(customTo) };
+    if (rangeIdx === null && debouncedFrom && debouncedTo) {
+      return { from: startOfDay(parseISO(debouncedFrom)), to: new Date(debouncedTo) };
     }
     const p = PRESETS[rangeIdx ?? 1];
     return { from: p.from(), to: new Date() };
-  }, [rangeIdx, customFrom, customTo]);
+  }, [rangeIdx, debouncedFrom, debouncedTo]);
 
   // Granularity tự suy ra theo độ dài khoảng thời gian: ≤14 ngày → ngày, ≤90 ngày → tuần, còn lại → tháng
   const granularity = useMemo(() => {
@@ -139,6 +145,7 @@ export default function Dashboard({ go, st }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
 
       {isSuperAdmin && <SystemHealthWidget />}
+      <GoogleAnalyticsPanel />
 
       {/* Date range + granularity */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import { ChevronDown, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
@@ -75,31 +75,77 @@ const ADMIN_INFO = {
 const BADGE_NAV = { acontacts: 'newContacts', areviews: 'newReviews', acollabs: 'newCollaborators' };
 const LAST_SEEN_KEY = 'bsd_admin_last_seen';
 
+const NAV_COLLAPSED_KEY = 'bsd_admin_nav_collapsed_groups';
+
+function NavItemButton({ navKey, label, on, badgeCount, onClick }) {
+  return (
+    <button type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>
+      <span style={{ flex: 1 }}>{label}</span>
+      {badgeCount > 0 && (
+        <span aria-label={`${badgeCount} mới`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: on ? 'rgba(255,255,255,.28)' : 'var(--status-danger)', color: on ? 'var(--text-inverse)' : '#fff', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{badgeCount > 99 ? '99+' : badgeCount}</span>
+      )}
+    </button>
+  );
+}
+
+// Sidebar nav nhóm theo luồng nghiệp vụ (xem ADMIN_NAV ở common/constants.js) — mỗi nhóm là 1 khối
+// toggle mở/thu để admin đến thẳng mục cần, không phải lướt qua 21 mục phẳng. Nhóm chứa trang đang
+// active luôn tự mở; trạng thái đóng/mở nhóm khác nhớ qua localStorage (per-viewer, không cần đồng bộ server).
 function AdminSidebarNav({ s, st, go, onNavigate }) {
   const lastSeenAt = (() => { try { return localStorage.getItem(LAST_SEEN_KEY) || new Date(Date.now() - 86400000).toISOString(); } catch { return new Date(Date.now() - 86400000).toISOString(); } })();
   const { data: counts } = useNotificationCounts(lastSeenAt);
+
+  const [collapsedGroups, setCollapsedGroups] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(NAV_COLLAPSED_KEY) || '{}'); } catch { return {}; }
+  });
+  const toggleGroup = (group) => setCollapsedGroups((prev) => {
+    const next = { ...prev, [group]: !prev[group] };
+    try { localStorage.setItem(NAV_COLLAPSED_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    return next;
+  });
 
   const markSeen = (navKey) => {
     if (BADGE_NAV[navKey]) { try { localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString()); } catch { /* ignore */ } }
   };
 
+  const canSee = (navKey) => {
+    if (navKey === 'astaff' || navKey === 'aauditlog' || navKey === 'arisklog') return st.user?.role === 'super-admin';
+    const perm = NAV_PERM[navKey];
+    return !perm || canPerm(st, perm);
+  };
+
+  const renderItem = ([key, label]) => {
+    const on = s === key || (key === 'aposts' && s === 'compose');
+    const badgeKey = BADGE_NAV[key];
+    const badgeCount = badgeKey && counts ? counts[badgeKey] : 0;
+    return (
+      <NavItemButton key={key} navKey={key} label={label} on={on} badgeCount={badgeCount}
+        onClick={() => { markSeen(key); go(key)(); onNavigate?.(); }} />
+    );
+  };
+
   return (
-    <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 var(--space-3)' }}>
-      {ADMIN_NAV.filter((n) => {
-        if (n[0] === 'astaff' || n[0] === 'aauditlog' || n[0] === 'arisklog') return st.user?.role === 'super-admin';
-        const perm = NAV_PERM[n[0]];
-        return !perm || canPerm(st, perm);
-      }).map((n) => {
-        const on = s === n[0] || (n[0] === 'aposts' && s === 'compose');
-        const badgeKey = BADGE_NAV[n[0]];
-        const badgeCount = badgeKey && counts ? counts[badgeKey] : 0;
+    <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', padding: '0 var(--space-3)' }}>
+      {ADMIN_NAV.map(({ group, items }) => {
+        const visibleItems = items.filter(([key]) => canSee(key));
+        if (!visibleItems.length) return null;
+
+        if (group === null) {
+          return <div key="ungrouped" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{visibleItems.map(renderItem)}</div>;
+        }
+
+        const hasActive = visibleItems.some(([key]) => s === key || (key === 'aposts' && s === 'compose'));
+        const collapsed = !hasActive && !!collapsedGroups[group];
+
         return (
-          <button key={n[0]} type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={() => { markSeen(n[0]); go(n[0])(); onNavigate?.(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>
-            <span style={{ flex: 1 }}>{n[1]}</span>
-            {badgeCount > 0 && (
-              <span aria-label={`${badgeCount} mới`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: on ? 'rgba(255,255,255,.28)' : 'var(--status-danger)', color: on ? 'var(--text-inverse)' : '#fff', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{badgeCount > 99 ? '99+' : badgeCount}</span>
-            )}
-          </button>
+          <div key={group} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button type="button" onClick={() => toggleGroup(group)} aria-expanded={!collapsed}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', padding: '6px 14px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+              <ChevronDown size={13} style={{ transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 140ms var(--ease-out)', flexShrink: 0 }} />
+              <span style={{ flex: 1, textAlign: 'left' }}>{group}</span>
+            </button>
+            {!collapsed && <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{visibleItems.map(renderItem)}</div>}
+          </div>
         );
       })}
     </nav>
