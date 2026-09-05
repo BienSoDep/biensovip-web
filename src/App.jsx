@@ -6,6 +6,7 @@ import * as authApi from './services/authService.js';
 import * as favApi from './services/favoriteService.js';
 import { getLocalFavorites, addLocalFavorite, removeLocalFavorite, clearLocalFavorites } from './services/favoriteStore.js';
 import { useComparePlates } from './services/compareService.js';
+import { trackAddToWishlist, trackRemoveFromWishlist, trackSignUp, trackSignUpFailed, trackLogin } from './services/tracking/events.js';
 import { contentGet } from './lib/content/index.js';
 import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
@@ -221,17 +222,20 @@ export default function App() {
     if (st.user) {
       const isFav = st.favs[id];
       if (isFav) {
+        trackRemoveFromWishlist(id);
         favApi.removeFavorite(id)
           .then(() => setFavItems((items) => items.filter((p) => p.id !== id)))
           .catch((err) => { rollback(); notify(err.message || 'Bỏ yêu thích thất bại, thử lại.'); });
       } else {
+        trackAddToWishlist(id);
         favApi.addFavorite(id).then(() => favApi.listFavorites()).then((items) => items && setFavItems(items))
           .catch((err) => { rollback(); notify(err.message || 'Lưu yêu thích thất bại, thử lại.'); });
       }
     } else {
       const isFav = st.favs[id];
-      if (isFav) removeLocalFavorite(id);
+      if (isFav) { trackRemoveFromWishlist(id); removeLocalFavorite(id); }
       else {
+        trackAddToWishlist(id);
         addLocalFavorite(id);
         // Gợi ý 1 lần/phiên — guest không biết dữ liệu chỉ lưu tạm trên trình duyệt này cho tới khi rời trang Fav.
         try {
@@ -427,6 +431,7 @@ export default function App() {
       try {
         const identifier = (isPhone ? ast.aPhone : ast.aEmail).trim();
         await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier, password: ast.aPw, fullName: ast.aName.trim(), referralCode: ast.aReferral?.trim() || undefined });
+        trackSignUp(isPhone ? 'phone' : 'email', { has_referral: !!ast.aReferral?.trim() });
         if (!isPhone) rememberEmail(identifier);
         // Đăng ký xong tự đăng nhập luôn → chuyển thẳng vào Profile để mời điền ngày sinh
         // (cần cho tính năng hợp mệnh) — Profile có nút bỏ qua nếu login tự động lỡ thất bại.
@@ -442,6 +447,7 @@ export default function App() {
           notify(isPhone ? 'Đăng ký thành công! Vui lòng đăng nhập.' : 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
         }
       } catch (e) {
+        trackSignUpFailed(isPhone ? 'phone' : 'email', e.status === 409 ? 'duplicate' : 'other');
         if (e.status === 409) patchAuth({ aErr: { [isPhone ? 'phone' : 'email']: isPhone ? 'Số điện thoại đã được sử dụng.' : 'Email đã được sử dụng.' } });
         else patchAuth({ aErr: { [isPhone ? 'phone' : 'email']: e.message || 'Đăng ký thất bại.' } });
       }
@@ -453,6 +459,7 @@ export default function App() {
       if (Object.keys(err).length) { patchAuth({ aErr: err }); return; }
       try {
         const data = await authApi.login({ identifier: ast.aEmail.trim(), password: ast.aPw, remember });
+        trackLogin('password');
         rememberEmail(ast.aEmail.trim());
         // Hồ sơ chưa đủ (họ tên/ngày sinh/giới tính) → mời điền luôn thay vì vào thẳng trang cũ,
         // để tính năng hợp mệnh + phân khúc khách hàng có dữ liệu ngay từ lần đăng nhập đầu.

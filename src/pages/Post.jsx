@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import DOMPurify from 'dompurify';
 import { Share2, Link2, MessageCircle, Minus, Plus } from 'lucide-react';
@@ -10,6 +10,7 @@ import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { useBlogPost, useRelatedPosts, useRelatedPlates } from '../services/blog.js';
 import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
+import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } from '../services/tracking/events.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -137,6 +138,7 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
 
   useEffect(() => {
     if (!post) return;
+    trackViewBlogPost(post);
     document.title = post.metaTitle || post.title;
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
@@ -163,16 +165,28 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
     });
   }, [post]);
 
+  const scrollMilestonesFired = useRef(new Set());
+  useEffect(() => {
+    scrollMilestonesFired.current = new Set();
+  }, [post?.id]);
   useEffect(() => {
     const onScroll = () => {
       const el = document.documentElement;
       const total = el.scrollHeight - el.clientHeight;
-      setProgress(total > 0 ? Math.min(100, Math.round((el.scrollTop / total) * 100)) : 0);
+      const pct = total > 0 ? Math.min(100, Math.round((el.scrollTop / total) * 100)) : 0;
+      setProgress(pct);
+      if (!post) return;
+      for (const milestone of [25, 50, 75, 90]) {
+        if (pct >= milestone && !scrollMilestonesFired.current.has(milestone)) {
+          scrollMilestonesFired.current.add(milestone);
+          trackScrollDepth(milestone, post.id);
+        }
+      }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [post]);
 
   if (isLoading) {
     return (
@@ -197,16 +211,18 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
     try {
       navigator.clipboard.writeText(shareUrl);
       setCopied(true);
+      trackShare('copy_link', 'blog_post', post.id);
       notify(contentGet('posts.ui.copied'));
       setTimeout(() => setCopied(false), 2000);
     } catch {
       notify(contentGet('posts.ui.copy_failed'));
     }
   };
-  const shareFacebook = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener,width=600,height=500');
-  const shareZalo = () => window.open(`https://zalo.me/share?url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener,width=600,height=500');
+  const shareFacebook = () => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener,width=600,height=500'); trackShare('facebook', 'blog_post', post.id); };
+  const shareZalo = () => { window.open(`https://zalo.me/share?url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener,width=600,height=500'); trackShare('zalo', 'blog_post', post.id); };
 
   const openRelated = (slug) => {
+    trackSelectContent('related_post', slug, post.id);
     if (patch) patch({ screen: 'post', postId: slug });
     else go('post')?.();
     window.scrollTo(0, 0);
@@ -290,7 +306,7 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
           )}
 
           {midPlate && (
-            <div onClick={() => openPlate?.(midPlate.slug || midPlate.id)} className="pressable" style={{ cursor: 'pointer', margin: 'var(--space-6) 0', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div onClick={() => { trackSelectContent('related_plate_mid_article', midPlate.id, post.id, post.meaningKey); openPlate?.(midPlate.slug || midPlate.id); }} className="pressable" style={{ cursor: 'pointer', margin: 'var(--space-6) 0', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ width: 180, flexShrink: 0 }}>
                 <PlateVisual size="md" prov={splitPlateNumber(midPlate.plateNumber).prov} seri={splitPlateNumber(midPlate.plateNumber).seri} num={splitPlateNumber(midPlate.plateNumber).num} />
               </div>
@@ -342,7 +358,7 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
             {relatedPlates.map((p) => {
               const sp = splitPlateNumber(p.plateNumber);
               return (
-                <div key={p.id} onClick={() => openPlate?.(p.slug || p.id)} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+                <div key={p.id} onClick={() => { trackSelectContent('related_plate_end_article', p.id, post.id, post.meaningKey); openPlate?.(p.slug || p.id); }} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
                   <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{p.plateNumber} · {p.province}</span>

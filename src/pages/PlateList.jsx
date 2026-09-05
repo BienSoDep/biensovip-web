@@ -15,6 +15,10 @@ import { routeFor } from '../config/routes.js';
 import { readFiltersFromUrl, writeFiltersToUrl } from '../lib/plateListFilters.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { useSeo } from '../hooks/useSeo.js';
+import {
+  trackViewItemList, trackSelectItem, trackSearch, trackFilterApply,
+  trackSearchNoResults, trackSelectPricePreset, trackAvoidNumberToggle, trackSaveSearch,
+} from '../services/tracking/events.js';
 
 const PER_PAGE_OPTIONS = [
   { value: '9', label: '9 / trang' },
@@ -49,7 +53,10 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [provinceExpanded, setProvinceExpanded] = useState(false);
   useEffect(() => { writeFiltersToUrl(filters); }, [filters]);
 
-  const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch, page: patch.page ?? 1 }));
+  const setFilter = (patch, isPreset = false) => {
+    if (patch.q === undefined) trackFilterApply(patch, isPreset);
+    setFilters((f) => ({ ...f, ...patch, page: patch.page ?? 1 }));
+  };
 
   const { data: plateTypes } = useCategories('plate_type');
   const { data: provinces } = useCategories('province');
@@ -118,10 +125,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const submitSave = async () => {
     if (!saveName.trim()) { notify?.('Nhập tên cho tiêu chí tìm kiếm.'); return; }
     try {
-      await createSavedSearch.mutateAsync({
-        name: saveName.trim(),
-        filters: JSON.stringify({ cat: filters.cat, city: filters.city, vehicle: filters.vehicle, q: filters.q, priceMin: filters.priceMin, priceMax: filters.priceMax, status: filters.status }),
-      });
+      const savedFilters = { cat: filters.cat, city: filters.city, vehicle: filters.vehicle, q: filters.q, priceMin: filters.priceMin, priceMax: filters.priceMax, status: filters.status };
+      await createSavedSearch.mutateAsync({ name: saveName.trim(), filters: JSON.stringify(savedFilters) });
+      trackSaveSearch(savedFilters);
       setSaveOpen(false);
       notify?.('Đã lưu tiêu chí tìm kiếm. Bạn sẽ nhận thông báo khi có biển mới phù hợp.');
     } catch (e) {
@@ -166,6 +172,21 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const totalPages = useInfinite ? (inf.data?.pages?.[0]?.totalPages || 1) : (data?.totalPages || 1);
   const page = useInfinite ? 0 : (data?.page || filters.page);
 
+  useEffect(() => {
+    if (qDebounced) trackSearch(qDebounced);
+  }, [qDebounced]);
+
+  const listReady = useInfinite ? !inf.isLoading : !isLoading;
+  useEffect(() => {
+    if (!listReady) return;
+    if (items.length > 0) {
+      trackViewItemList(filters.q ? 'search_results' : 'danh-sach', items);
+    } else if (filters.q) {
+      trackSearchNoResults(filters.q, { cat: filters.cat, city: filters.city, vehicle: filters.vehicle, priceMin: filters.priceMin, priceMax: filters.priceMax });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listReady, items.length, filters.q]);
+
   // Khôi phục vị trí cuộn đã lưu (quay lại từ trang chi tiết biển) — chỉ chạy 1 lần sau khi có dữ liệu,
   // tránh cuộn hụt trong lúc trang còn đang load skeleton.
   const loading = useInfinite ? inf.isLoading : isLoading;
@@ -180,9 +201,11 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
 
   useSeo('list', { items });
 
-  const toggleArrayFilter = (key, id) => setFilter({
-    [key]: filters[key].includes(id) ? filters[key].filter((x) => x !== id) : [...filters[key], id],
-  });
+  const toggleArrayFilter = (key, id) => {
+    const isRemoving = filters[key].includes(id);
+    if (key === 'avoidNumbers') trackAvoidNumberToggle(id, isRemoving ? 'remove' : 'add');
+    setFilter({ [key]: isRemoving ? filters[key].filter((x) => x !== id) : [...filters[key], id] });
+  };
 
   const clearFilters = () => setFilters((f) => ({ cat: [], city: [], avoidNumbers: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
 
@@ -203,7 +226,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     onFav: onFav ? () => onFav(p.id) : undefined,
     onCompare: () => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id),
     inCompare: isInList(p.id),
-    onOpen: () => { saveScrollBeforeOpen(); openPlate(p.id); },
+    onOpen: () => { trackSelectItem(p, 'danh-sach'); saveScrollBeforeOpen(); openPlate(p.id); },
     href: routeFor('detail', p.slug || p.id),
     onBuy: () => openBuy?.(p.id),
     contact,
@@ -304,7 +327,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                     {PRICE_PRESETS.map((p) => {
                       const active = filters.priceMin === p.min && filters.priceMax === p.max;
                       return (
-                        <button key={p.label} type="button" aria-pressed={active} onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
+                        <button key={p.label} type="button" aria-pressed={active} onClick={() => { if (!active) trackSelectPricePreset(p.label); setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max }, true); }}
                           style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
                       );
                     })}
@@ -383,7 +406,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               {PRICE_PRESETS.map((p) => {
                 const active = filters.priceMin === p.min && filters.priceMax === p.max;
                 return (
-                  <button key={p.label} type="button" aria-pressed={active} onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
+                  <button key={p.label} type="button" aria-pressed={active} onClick={() => { if (!active) trackSelectPricePreset(p.label); setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max }, true); }}
                     style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
                 );
               })}

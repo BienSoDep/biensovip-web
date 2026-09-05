@@ -9,6 +9,7 @@ import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
 import { logZaloClick } from '../services/zaloClicks.js';
+import { trackViewItem, trackGenerateLead, trackShare } from '../services/tracking/events.js';
 import { useCompareIds } from '../services/compareService.js';
 import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
@@ -97,6 +98,10 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plateId]);
 
+  useEffect(() => {
+    if (plate) trackViewItem(plate);
+  }, [plate]);
+
   // Hooks phải chạy vô điều kiện trước mọi early-return (rules-of-hooks)
   const [tab, setTab] = useState('info');
   const [reviewPage, setReviewPage] = useState(1);
@@ -159,8 +164,8 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const reviewTotalPages = Math.max(1, Math.ceil((reviewData?.total || 0) / REVIEWS_PER_PAGE));
 
   const shareUrl = `${location.origin}${location.pathname}#/bien/${plate.slug || plate.id}`;
-  const shareFb = () => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); handleContact('share'); };
-  const shareZalo = () => { window.open(`https://zalo.me/share?url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); handleContact('share'); };
+  const shareFb = () => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); trackShare('facebook', 'plate', plate.id); handleContact('share'); };
+  const shareZalo = () => { window.open(`https://zalo.me/share?url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); trackShare('zalo', 'plate', plate.id); handleContact('share'); };
   const copyLink = async () => {
     try { await navigator.clipboard.writeText(shareUrl); } catch { /* clipboard blocked */ }
     setCopied(true);
@@ -269,7 +274,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <LinkButton href={`tel:${plate.seller.phone}`} variant="outline" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 120px' }}>Gọi ngay</LinkButton>
             )}
             {plate.seller?.zalo && (
-              <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { logZaloClick(plate.id, 'plate_detail'); handleContact('contact'); }} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
+              <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
             )}
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
             <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
@@ -402,7 +407,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 0' }}>Gọi ngay</LinkButton>
         )}
         {plate.seller?.zalo && (
-          <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { logZaloClick(plate.id, 'plate_detail'); handleContact('contact'); }} style={{ flex: '1 1 0' }}>Zalo</LinkButton>
+          <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 0' }}>Zalo</LinkButton>
         )}
         {!sold && (
           <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 0' }}>Chốt biển này</Button>
