@@ -10,6 +10,22 @@ export function splitPlateNumber(plateNumber) {
   return { prov, seri, num };
 }
 
+// Parse lenient cho form admin (gõ tay, có thể chưa đúng chuẩn) — khác splitPlateNumber (strict, dùng
+// hiển thị biển đã có trong DB). Trước đây định nghĩa trùng lặp ở AdminContacts.jsx và AdminPlates.jsx
+// với edge-case xử lý khác nhau (1 bên trả null khi parse fail, bên kia trả object rỗng) — gộp về 1
+// nguồn, giữ hành vi robust hơn (object rỗng, không null) để không phải sửa call site kiểm tra null.
+export function parsePlateNumber(raw) {
+  if (!raw) return { prov: '', seri: '', num: '' };
+  const s = raw.trim();
+  const idx = Math.max(s.lastIndexOf('-'), s.lastIndexOf(' '));
+  if (idx < 0) return { prov: '', seri: '', num: s };
+  const left = s.slice(0, idx).replace(/[\s-]/g, '');
+  const num = s.slice(idx + 1).trim();
+  const prov = left.match(/^\d{1,2}/)?.[0] || '';
+  const seri = left.slice(prov.length);
+  return { prov, seri, num };
+}
+
 export function formatPrice(price, priceOnRequest) {
   if (priceOnRequest) return 'Giá liên hệ';
   return new Intl.NumberFormat('vi-VN').format(price) + ' đ';

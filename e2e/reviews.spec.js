@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Reviews', () => {
   test('page renders with plate selector, no plate selected initially', async ({ page }) => {
-    await page.goto('/#/danh-gia');
+    await page.goto('/danh-gia');
     await expect(page.getByRole('heading', { name: 'Đánh giá từ khách hàng' })).toBeVisible();
     await expect(page.getByText('Biển số đã mua', { exact: true })).toBeVisible();
     // rating UI only appears once a sold plate is selected
@@ -10,7 +10,7 @@ test.describe('Reviews', () => {
   });
 
   test('selecting a sold plate reveals rating summary and submit form', async ({ page }) => {
-    await page.goto('/#/danh-gia');
+    await page.goto('/danh-gia');
     const select = page.locator('select');
     const optionCount = await select.locator('option').count();
     test.skip(optionCount < 2, 'No sold plates seeded — cannot exercise review form.');
@@ -21,7 +21,7 @@ test.describe('Reviews', () => {
   });
 
   test('submitting without rating shows validation notify, without login shows auth error', async ({ page }) => {
-    await page.goto('/#/danh-gia');
+    await page.goto('/danh-gia');
     const select = page.locator('select');
     const optionCount = await select.locator('option').count();
     test.skip(optionCount < 2, 'No sold plates seeded — cannot exercise review form.');
@@ -33,7 +33,7 @@ test.describe('Reviews', () => {
   });
 
   test('selecting stars then submitting as guest shows login-required error', async ({ page }) => {
-    await page.goto('/#/danh-gia');
+    await page.goto('/danh-gia');
     const select = page.locator('select');
     const optionCount = await select.locator('option').count();
     test.skip(optionCount < 2, 'No sold plates seeded — cannot exercise review form.');

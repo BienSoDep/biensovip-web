@@ -9,6 +9,7 @@ import { useComparePlates } from './services/compareService.js';
 import { trackAddToWishlist, trackRemoveFromWishlist, trackSignUp, trackSignUpFailed, trackLogin } from './services/tracking/events.js';
 import { contentGet } from './lib/content/index.js';
 import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
+import { DEFAULT_CONTACT } from './common/constants.js';
 import Breadcrumb from './components/Breadcrumb.jsx';
 import CompareBar from './components/CompareBar.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
@@ -287,8 +288,8 @@ export default function App() {
 
   // Liên hệ shop cho card biển số: ưu tiên settings từ backend, fallback số mặc định (info.json).
   const contact = {
-    phone: (st.settings?.phone || '0815792699').replace(/[^0-9]/g, ''),
-    zalo: (st.settings?.zalo || '0815792699').replace(/[^0-9]/g, ''),
+    phone: (st.settings?.phone || DEFAULT_CONTACT.phone).replace(/[^0-9]/g, ''),
+    zalo: (st.settings?.zalo || DEFAULT_CONTACT.zalo).replace(/[^0-9]/g, ''),
   };
 
   const [mSending, setMSending] = useState(false);

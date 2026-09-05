@@ -20,3 +20,7 @@ export const ADMIN_NAV = [
 export const TONES = { 'Mới': 'blue', 'Đang tư vấn': 'amber', 'Đã chốt': 'mint', 'Còn hàng': 'mint', 'Đã bán': 'rose', 'Ẩn': 'neutral', 'Đã xuất bản': 'mint', 'Bản nháp': 'neutral' };
 export const STATUS_FG = { 'Mới': 'var(--blue-700)', 'Đang tư vấn': 'var(--status-warning-ink)', 'Đã chốt': 'var(--status-success-ink)' };
 export const PER_PAGE = 6;
+
+// Fallback hotline/Zalo khi API /settings chưa load hoặc lỗi — 1 nguồn duy nhất, đổi số thật
+// chỉ cần sửa ở đây (trước đây lặp lại rải rác ở App.jsx/Footer.jsx/LuckyPlate.jsx).
+export const DEFAULT_CONTACT = { phone: '0815792699', zalo: '0815792699' };

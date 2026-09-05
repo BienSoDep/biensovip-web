@@ -12,7 +12,7 @@ test.describe('Home', () => {
   });
 
   test('search/filter pills switch category', async ({ page }) => {
-    const pill = page.getByRole('button', { name: 'Ngu quy', exact: true }).first();
+    const pill = page.getByRole('button', { name: 'Ngũ quý', exact: true }).first();
     await pill.click();
     await expect(pill).toHaveAttribute('data-on', 'true');
   });

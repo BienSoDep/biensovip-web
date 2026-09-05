@@ -1,14 +1,11 @@
 import { test, expect } from '@playwright/test';
-
-async function loginAdmin(page) {
-  await page.goto('/#/admin');
-  await page.getByRole('button', { name: 'Dùng tài khoản mẫu (demo)' }).click();
-  await page.getByRole('button', { name: 'Đăng nhập quản trị' }).click();
-  await expect(page.getByRole('heading', { name: 'Tổng quan' })).toBeVisible();
-}
+import { loginAdmin } from './helpers.js';
 
 test.describe('AdminStaff', () => {
-  test('add, edit role, lock/unlock and delete a staff member', async ({ page }) => {
+  // Không còn nút "Xóa" cứng — chỉ "Vô hiệu hóa" (soft-disable qua modal xác nhận,
+  // không có toggle switch riêng để khóa/mở nhanh trong hàng). "Vai trò" là combobox
+  // (base-ui), không phải <select> gốc.
+  test('add a staff member, edit role, then disable', async ({ page }) => {
     await loginAdmin(page);
     await page.getByRole('button', { name: 'Nhân viên', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Nhân viên' })).toBeVisible();
@@ -18,30 +15,25 @@ test.describe('AdminStaff', () => {
     await expect(page.getByRole('heading', { name: 'Thêm nhân viên' })).toBeVisible();
     await page.getByLabel('Họ và tên').fill('Nhan Vien Test');
     await page.getByLabel('Email', { exact: true }).fill(email);
-    await page.getByLabel('Mật khẩu').fill('matkhau123');
+    await page.getByLabel('Mật khẩu', { exact: true }).fill('matkhau123');
     await page.getByRole('button', { name: 'Thêm nhân viên' }).last().click();
-    await expect(page.getByText('Đã thêm nhân viên')).toBeVisible();
-    await expect(page.getByText(email)).toBeVisible();
+    await expect(page.getByText(email)).toBeVisible({ timeout: 10000 });
 
-    // find the row and toggle active (lock)
+    // find the row (search narrows to just this one) and edit role
+    await page.getByPlaceholder('Tìm theo tên hoặc email…').fill(email);
     const row = page.locator('div', { hasText: email }).last();
-    await row.getByRole('switch').click();
-    await expect(page.getByText('Đã khóa tài khoản')).toBeVisible();
-    await row.getByRole('switch').click();
-    await expect(page.getByText('Đã kích hoạt tài khoản')).toBeVisible();
-
-    // edit role via pencil icon
-    await row.getByLabel('Sửa').click();
+    await row.getByRole('button', { name: 'Sửa' }).click();
     await expect(page.getByRole('heading', { name: 'Sửa nhân viên' })).toBeVisible();
-    await page.getByLabel('Vai trò').selectOption('super-admin');
+    await page.getByRole('combobox').filter({ hasText: 'Nhân viên' }).click();
+    await page.getByRole('option', { name: 'Quản trị viên' }).click();
     await page.getByRole('button', { name: 'Lưu thay đổi' }).click();
     await expect(page.getByText('Đã cập nhật nhân viên')).toBeVisible();
 
-    // delete
-    await row.getByLabel('Xóa').click();
-    await expect(page.getByRole('heading', { name: 'Xác nhận xóa' })).toBeVisible();
-    await page.getByRole('button', { name: 'Xóa', exact: true }).and(page.locator('.btn-danger')).click();
-    await expect(page.getByText('Đã xóa nhân viên')).toBeVisible();
+    // disable (soft) via confirm modal
+    await row.getByRole('button', { name: 'Vô hiệu hóa' }).click();
+    await expect(page.getByRole('heading', { name: 'Xác nhận vô hiệu hóa' })).toBeVisible();
+    await page.getByRole('button', { name: 'Vô hiệu hóa', exact: true }).last().click();
+    await expect(page.getByText(/Đã vô hiệu hóa|Đã khóa/)).toBeVisible();
   });
 
   test('search filters staff list', async ({ page }) => {
@@ -65,9 +57,10 @@ test.describe('AdminVideos', () => {
     await page.getByLabel('Tiêu đề').fill(title);
     await page.getByRole('button', { name: 'Thêm video', exact: true }).last().click();
     // New card renders once the mutation resolves — wait on that rather than
-    // the toast, which can auto-dismiss before the assertion runs.
-    await expect(page.getByText(title)).toBeVisible({ timeout: 10000 });
-    const titleEl = page.getByText(title, { exact: true });
+    // the toast, which can auto-dismiss before the assertion runs. Title text
+    // appears twice (link + div) — use .first().
+    await expect(page.getByText(title).first()).toBeVisible({ timeout: 10000 });
+    const titleEl = page.getByText(title, { exact: true }).first();
     // Platform badge and delete button are siblings a couple levels up from
     // the title <div> — walk to the shared card row, then find them there.
     const cardRow = titleEl.locator('xpath=ancestor::div[.//button[@aria-label="Xóa video"]][1]');

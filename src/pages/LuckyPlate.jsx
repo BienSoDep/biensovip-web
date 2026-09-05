@@ -8,6 +8,7 @@ import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '.
 import { useSubmitContact } from '../services/contactService.js';
 import { updateProfile } from '../services/authService.js';
 import { useCategories } from '../services/categories.js';
+import { DEFAULT_CONTACT } from '../common/constants.js';
 import { ELEMENTS, PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget, scoreColor, elementAsciiLabel } from '../lib/fengshui.js';
 import { loadAuth } from '../lib/authStore.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
@@ -368,7 +369,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                   </div>
                   <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2, flexWrap: 'wrap' }}>
                     <Button variant="dark" size="sm" onClick={() => openPlate(r.plateId)}>Xem biển</Button>
-                    <a href={`tel:${contact?.phone || '0815792699'}`} style={{ textDecoration: 'none' }}>
+                    <a href={`tel:${contact?.phone || DEFAULT_CONTACT.phone}`} style={{ textDecoration: 'none' }}>
                       <Button variant="primary" size="sm">Gọi ngay</Button>
                     </a>
                     {contact?.zalo && (

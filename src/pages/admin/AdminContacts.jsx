@@ -7,6 +7,7 @@ import { useCreatePaymentLink } from '../../services/paymentLinks.js';
 import { CreateTransactionForm } from './AdminTransactions.jsx';
 import { useAdminStaff } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
+import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { Select, Badge } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -27,17 +28,6 @@ const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đ�
 const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#7B2D8B' };
 const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ': 'hunting' };
-
-function parsePlateNumber(raw) {
-  if (!raw) return null;
-  const idx = Math.max(raw.lastIndexOf('-'), raw.lastIndexOf(' '));
-  if (idx < 0) return null;
-  const front = raw.substring(0, idx);
-  const num = raw.substring(idx + 1);
-  const m = front.match(/^(\d{1,2})(\D.*)$/);
-  if (!m) return null;
-  return { prov: m[1], seri: m[2], num };
-}
 
 export default function AdminContacts({ notify, go }) {
   const [status, setStatus] = useState('all');
@@ -181,7 +171,7 @@ export default function AdminContacts({ notify, go }) {
                 <a href={`https://zalo.me/${c.phone}`} target="_blank" rel="noreferrer" aria-label="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
               </span>
               <span style={{ flex: '1 1 100px' }}>
-                {parsed ? <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} /> : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
+                {parsed.num ? <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} /> : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
               </span>
               <span style={{ flex: '1 1 72px' }}>
                 <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: `color-mix(in srgb, ${INTENT_COLOR[c.intent] || 'var(--text-muted)'} 16%, transparent)`, color: INTENT_COLOR[c.intent] || 'var(--text-muted)' }}>

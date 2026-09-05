@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('AiChatbot widget', () => {
   test('opens and closes, shows welcome message', async ({ page }) => {
-    await page.goto('/#/');
+    await page.goto('/');
     const fab = page.locator('.chatbot-fab');
     await expect(fab).toBeVisible();
     await fab.click();
@@ -11,7 +11,7 @@ test.describe('AiChatbot widget', () => {
   });
 
   test('close button hides the panel and shows the FAB again', async ({ page }) => {
-    await page.goto('/#/');
+    await page.goto('/');
     await page.locator('.chatbot-fab').click();
     await expect(page.getByText('Trợ lý Biensovip', { exact: true })).toBeVisible();
     // close (X) button: no aria-label, but it's the only <button> in the
@@ -22,7 +22,7 @@ test.describe('AiChatbot widget', () => {
   });
 
   test('typing and sending a message shows a user bubble, then bot reply or fallback', async ({ page }) => {
-    await page.goto('/#/');
+    await page.goto('/');
     await page.locator('.chatbot-fab').click();
     const input = page.getByPlaceholder('Nhập câu hỏi...');
     await input.fill('Ý nghĩa biển này là gì?');
@@ -35,10 +35,13 @@ test.describe('AiChatbot widget', () => {
     await expect(page.getByText('Đang trả lời…')).not.toBeVisible({ timeout: 15000 });
   });
 
-  test('quick-reply chip fills the input', async ({ page }) => {
-    await page.goto('/#/');
+  test('quick-reply chip sends the message immediately', async ({ page }) => {
+    await page.goto('/');
     await page.locator('.chatbot-fab').click();
-    await page.getByText('Còn hàng không?').click();
-    await expect(page.getByPlaceholder('Nhập câu hỏi...')).toHaveValue('Còn hàng không?');
+    // Quick-reply chips call send(qr) directly (not fill-then-wait-for-submit) —
+    // clicking one posts the message right away as a user bubble.
+    await page.getByRole('button', { name: 'Còn hàng không?' }).click();
+    await expect(page.getByText('Còn hàng không?')).toBeVisible();
+    await expect(page.getByPlaceholder('Nhập câu hỏi...')).toHaveValue('');
   });
 });

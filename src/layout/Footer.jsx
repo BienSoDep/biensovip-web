@@ -1,6 +1,7 @@
 import { contentGet } from '../lib/content/index.js';
 import { routeFor, parseRoute, PROVINCE_LANDINGS, PLATE_TYPE_LANDINGS } from '../config/routes.js';
 import EmailCapture from '../components/EmailCapture.jsx';
+import { DEFAULT_CONTACT } from '../common/constants.js';
 
 // UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: thông tin doanh nghiệp thật.
 // Footer link href sinh từ routeFor() để không lệch slug (vd lucky: alias cũ tu-van → hop-menh).
@@ -14,9 +15,9 @@ export default function Footer({ settings, patch }) {
     const r = parseRoute(new URL(e.currentTarget.href).pathname);
     patch((x) => ({ ...x, screen: r.screen, curId: r.detailId || x.curId, postId: r.postId || x.postId, provinceCode: r.provinceCode || x.provinceCode, typeSlug: r.typeSlug || x.typeSlug }));
   };
-  const phone = (settings?.phone || '0815792699').replace(/[^0-9]/g, '');
-  const phoneDisplay = (settings?.phone || '0815792699').replace(/[^0-9]/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
-  const zalo = settings?.zalo || '0815792699';
+  const phone = (settings?.phone || DEFAULT_CONTACT.phone).replace(/[^0-9]/g, '');
+  const phoneDisplay = (settings?.phone || DEFAULT_CONTACT.phone).replace(/[^0-9]/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+  const zalo = settings?.zalo || DEFAULT_CONTACT.zalo;
   const email = settings?.email || 'duymc64@gmail.com';
   const exploreLinks = [
     [routeFor('list'), T('common.footer.list')],

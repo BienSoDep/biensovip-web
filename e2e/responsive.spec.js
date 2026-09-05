@@ -18,7 +18,7 @@ test.describe('Responsive viewports', () => {
 
   test('PlateList: mobile viewport renders', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/#/danh-sach');
+    await page.goto('/danh-sach');
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).toBeVisible();
     await expect(page.locator('.mobile-menu-btn')).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('Responsive viewports', () => {
 
   test('PlateDetail: mobile viewport renders', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/#/bien/p1');
+    await page.goto('/bien/p1');
     await page.waitForLoadState('networkidle');
     await expect(page.locator('body')).toBeVisible();
   });

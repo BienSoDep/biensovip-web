@@ -1,20 +1,12 @@
 import { test, expect } from '@playwright/test';
-
-// Seeded demo admin per BACKEND-IMPLEMENTATION-PLAN.md C5: admin@biensovip.com / Admin@123.
-// The demo button only pre-fills the login form; a real submit against the backend is required.
-async function loginAdmin(page) {
-  await page.goto('/#/admin');
-  await page.getByRole('button', { name: 'Dùng tài khoản mẫu (demo)' }).click();
-  await page.getByRole('button', { name: 'Đăng nhập quản trị' }).click();
-  await expect(page.getByRole('heading', { name: 'Tổng quan' })).toBeVisible();
-}
+import { loginAdmin } from './helpers.js';
 
 test.describe('Admin', () => {
   test('login via demo button reaches dashboard with stats', async ({ page }) => {
     await loginAdmin(page);
     await expect(page.getByText('Tổng lượt xem')).toBeVisible();
     await expect(page.getByText('Yêu cầu liên hệ').first()).toBeVisible();
-    await expect(page.getByText('Biển số xem nhiều nhất')).toBeVisible();
+    await expect(page.getByText('Biển số được quan tâm nhất')).toBeVisible();
   });
 
   test('AdminPlates: add and delete a plate, search/filter', async ({ page }) => {

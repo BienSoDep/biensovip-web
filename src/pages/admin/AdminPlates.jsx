@@ -20,19 +20,7 @@ import Skeleton from '../../components/Skeleton.jsx';
 import { formatDate } from '../../lib/date.js';
 import { analyzePlateNumber } from '../../lib/compareInsights.js';
 import { NUT_MEANING } from '../../lib/fengshui.js';
-
-// Parse "43A1-999.99" → { prov, seri, num }
-function parsePlateNumber(raw) {
-  if (!raw) return { prov: '', seri: '', num: '' };
-  const s = raw.trim();
-  const idx = Math.max(s.lastIndexOf('-'), s.lastIndexOf(' '));
-  if (idx < 0) return { prov: '', seri: '', num: s };
-  const left = s.slice(0, idx).replace(/[\s-]/g, '');
-  const num = s.slice(idx + 1).trim();
-  const prov = left.match(/^\d{1,2}/)?.[0] || '';
-  const seri = left.slice(prov.length);
-  return { prov, seri, num };
-}
+import { parsePlateNumber } from '../../lib/plateFormat.js';
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).

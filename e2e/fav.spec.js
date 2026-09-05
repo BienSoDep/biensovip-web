@@ -15,7 +15,7 @@ import { test, expect } from '@playwright/test';
 // would be asserting behavior the app cannot currently produce.
 test.describe('Fav', () => {
   test('favoriting a plate persists to localStorage', async ({ page }) => {
-    await page.goto('/#/danh-sach');
+    await page.goto('/danh-sach');
     const favBtn = page.getByLabel(/Lưu yêu thích/).first();
     await expect(favBtn).toBeVisible();
     await favBtn.click();
@@ -25,7 +25,7 @@ test.describe('Fav', () => {
   });
 
   test('empty state has CTA to explore list', async ({ page }) => {
-    await page.goto('/#/yeu-thich');
+    await page.goto('/yeu-thich');
     await expect(page.getByText('Chưa có biển số nào được lưu')).toBeVisible();
     await page.getByRole('button', { name: 'Khám phá kho biển số' }).click();
     await expect(page.getByRole('heading', { name: 'Kho biển số đẹp' })).toBeVisible();
