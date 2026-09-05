@@ -109,3 +109,27 @@ export function trackCompleteProfile(filledBirthdate) {
 export function trackSkipProfileOnboarding() {
   track('skip_profile_onboarding', {});
 }
+
+// become_collaborator KHÔNG dùng chung trackSignUp — đây là user có sẵn tự nâng cấp, không phải
+// tài khoản mới (xem docs/features/analytics/04-auth-va-tai-khoan.md mục "Sửa lại giả định sai").
+export function trackBecomeCollaborator() {
+  track('become_collaborator', {});
+}
+
+// ===== 05 — Hợp mệnh phong thủy & tính năng khác (docs/features/analytics/05-fengshui-va-cac-tinh-nang-khac.md) =====
+
+export function trackFengshuiLookup(purpose, vehicle, hasBudget) {
+  track('fengshui_lookup', { purpose, vehicle, has_budget: hasBudget });
+}
+
+export function trackAddToCompare(plateId) {
+  track('add_to_compare', { item_id: plateId });
+}
+
+export function trackRemoveFromCompare(plateId) {
+  track('remove_from_compare', { item_id: plateId });
+}
+
+export function trackSubmitReview(plateId, rating) {
+  track('submit_review', { item_id: plateId, rating });
+}

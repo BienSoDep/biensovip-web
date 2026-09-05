@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
+import { trackAddToCompare, trackRemoveFromCompare } from './tracking/events.js';
 
 const STORAGE_KEY = 'compare_ids';
 const MAX = 3;
@@ -32,6 +33,7 @@ export function useCompareIds() {
       if (prev.length >= MAX || prev.includes(id)) return prev;
       const next = [...prev, id];
       saveIds(next);
+      trackAddToCompare(id);
       return next;
     });
   }, []);
@@ -40,6 +42,7 @@ export function useCompareIds() {
     setIds((prev) => {
       const next = prev.filter((x) => x !== id);
       saveIds(next);
+      if (next.length !== prev.length) trackRemoveFromCompare(id);
       return next;
     });
   }, []);

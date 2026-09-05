@@ -1,11 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 import { saveAuth } from '../lib/authStore.js';
+import { trackLogin } from './tracking/events.js';
 
 export function useGoogleLogin() {
   return useMutation({
     mutationFn: (idToken) => apiClient.post('/api/auth/google', { idToken }),
-    onSuccess: (data) => saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user }, true),
+    onSuccess: (data) => { trackLogin('google'); saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user }, true); },
   });
 }
 

@@ -7,6 +7,7 @@ import { usePlateReviews, useCreateReview } from '../services/reviewService.js';
 import { loadAuth } from '../lib/authStore.js';
 import { formatDate } from '../lib/date.js';
 import { maskName } from '../lib/textMask.js';
+import { trackSubmitReview } from '../services/tracking/events.js';
 
 export default function Reviews({ notify, go }) {
   const { data: soldData } = usePlates({ status: 'Sold', perPage: 100 });
@@ -37,6 +38,7 @@ export default function Reviews({ notify, go }) {
     if (!rating) { notify('Vui lòng chọn số sao.'); return; }
     try {
       await createReview.mutateAsync({ plateId, rating, comment: comment.trim() || null });
+      trackSubmitReview(plateId, rating);
       setRating(0); setComment('');
       notify('Cảm ơn bạn! Đánh giá đang chờ duyệt.');
     } catch (e) {

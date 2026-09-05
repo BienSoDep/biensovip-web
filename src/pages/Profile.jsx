@@ -8,6 +8,7 @@ import { useBecomeCollaborator, useUpdateBankInfo } from '../services/collaborat
 import { PURPOSES, VEHICLES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
 import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
+import { trackCompleteProfile, trackSkipProfileOnboarding, trackBecomeCollaborator } from '../services/tracking/events.js';
 
 const GENDER_OPTS = [{ value: 'male', label: 'Nam' }, { value: 'female', label: 'Nữ' }, { value: 'other', label: 'Khác' }];
 
@@ -78,6 +79,7 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
         preferredPurpose: PURPOSES.find((p) => p.label === form.preferredPurpose)?.key || undefined,
       });
       onUserUpdate?.(updated);
+      if (onboarding) trackCompleteProfile(!!form.birthDate);
       notify('Đã lưu thông tin');
       if (onboarding) go('home')();
     } catch (err) {
@@ -87,7 +89,7 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
     }
   };
 
-  const skip = () => go('home')();
+  const skip = () => { trackSkipProfileOnboarding(); go('home')(); };
 
   const identifierLabel = user?.identifierType === 'phone' ? 'Số điện thoại' : 'Email';
 
@@ -285,6 +287,7 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
     setBusy(true);
     try {
       await become.mutateAsync({ bankAccount: bankAccount.trim(), bankCode, bankAccountHolder: bankAccountHolder.trim() || undefined });
+      trackBecomeCollaborator();
       const data = await refreshToken();
       if (data?.user) onUserUpdate?.(data.user);
       notify('Bạn đã trở thành Cộng tác viên');

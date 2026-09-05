@@ -528,6 +528,7 @@ export default function App() {
     if (!/^\d{6}$/.test(ast.aOtp)) { patchAuth({ aErr: { otp: 'Mã gồm 6 chữ số.' } }); return; }
     try {
       const data = await authApi.verifyLoginOtp(ast.aEmail.trim(), ast.aOtp, remember);
+      trackLogin('otp');
       rememberEmail(ast.aEmail.trim());
       patchAuth({ aErr: {}, step: 1, aOtp: '' });
       if (isProfileIncomplete(data.user)) {

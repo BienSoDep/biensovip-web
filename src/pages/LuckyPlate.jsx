@@ -12,6 +12,7 @@ import { ELEMENTS, PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget, s
 import { loadAuth } from '../lib/authStore.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { validBirthDate } from '../lib/date.js';
+import { trackFengshuiLookup, trackGenerateLead } from '../services/tracking/events.js';
 
 const PRICE_PRESETS = [
   { label: 'Dưới 200tr', min: '', max: '200000000' },
@@ -50,7 +51,7 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
       note: '', source: 'lucky_plate', intent: 'inquiry',
       depositAmount: null, subscribeToNotifications: false, honeypot: null,
     }, {
-      onSuccess: () => { notify('Đã gửi yêu cầu tư vấn — admin sẽ liên hệ sớm.'); setSent(true); setOpen(false); },
+      onSuccess: () => { trackGenerateLead(plate.plateId, 'lucky_plate'); notify('Đã gửi yêu cầu tư vấn — admin sẽ liên hệ sớm.'); setSent(true); setOpen(false); },
       onError: () => notify('Gửi thất bại, vui lòng thử lại.'),
     });
   };
@@ -124,6 +125,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
     if (!validBirthDate(form.birthDate)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
     setErr('');
     const purposeKey = PURPOSES.find((p) => p.label === form.purpose)?.key || 'ca_nhan';
+    trackFengshuiLookup(purposeKey, form.vehicle, BUDGET_STEPS[form.budgetStep] != null);
     lookup.mutate({
       birthDate: form.birthDate,
       purpose: purposeKey,
