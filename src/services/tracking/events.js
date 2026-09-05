@@ -133,3 +133,11 @@ export function trackRemoveFromCompare(plateId) {
 export function trackSubmitReview(plateId, rating) {
   track('submit_review', { item_id: plateId, rating });
 }
+
+export function trackRemoveSavedSearch(savedSearchId) {
+  track('remove_saved_search', { saved_search_id: savedSearchId });
+}
+
+export function trackToggleSavedSearchNotify(savedSearchId, enabled) {
+  track('toggle_saved_search_notify', { saved_search_id: savedSearchId, enabled });
+}

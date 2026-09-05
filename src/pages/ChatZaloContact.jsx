@@ -5,6 +5,7 @@ import Button from '../components/Button.jsx';
 import { Input, Select, Checkbox } from '../components/index.jsx';
 import { useSubmitContact } from '../services/contactService.js';
 import { logZaloClick } from '../services/zaloClicks.js';
+import { trackGenerateLead } from '../services/tracking/events.js';
 import { content } from '../lib/content/index.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 
@@ -83,6 +84,7 @@ export default function ChatZaloContact({ notify, user }) {
       honeypot: form.honeypot || null,
     }, {
       onSuccess: () => {
+        trackGenerateLead(form.plateNumber.trim() || undefined, 'contact-page');
         toast.success('Đã gửi yêu cầu, chúng tôi sẽ liên hệ trong thời gian sớm nhất!');
         setForm({ fullName: '', phone: '', email: '', plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' });
       },

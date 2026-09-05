@@ -5,6 +5,7 @@ import { Switch } from '../components/index.jsx';
 import { useSavedSearches, useUpdateSavedSearch, useDeleteSavedSearch } from '../services/savedSearchService.js';
 import { useNotificationSettings, useUpdateNotificationSettings, useNotifications, useMarkNotificationRead } from '../services/notificationService.js';
 import { timeAgo } from '../lib/date.js';
+import { trackRemoveSavedSearch, trackToggleSavedSearchNotify } from '../services/tracking/events.js';
 
 function stripHtml(html) {
   if (!html) return '';
@@ -42,6 +43,7 @@ export default function SavedSearches({ go, notify, user }) {
   const setSetting = (body) => updateSettings.mutate(body, { onError: (err) => notify(err.message || 'Không cập nhật được, thử lại sau.') });
 
   const toggleNotify = (s) => {
+    trackToggleSavedSearchNotify(s.id, !s.notifyEnabled);
     updateSearch.mutate({ id: s.id, notifyEnabled: !s.notifyEnabled }, { onError: (err) => notify(err.message || 'Không cập nhật được, thử lại sau.') });
   };
 
@@ -56,7 +58,7 @@ export default function SavedSearches({ go, notify, user }) {
 
   const remove = (s) => {
     if (!window.confirm(`Xóa tiêu chí "${s.name}"?`)) return;
-    deleteSearch.mutate(s.id, { onError: (err) => notify(err.message || 'Không xóa được, thử lại sau.'), onSuccess: () => notify('Đã xóa tiêu chí') });
+    deleteSearch.mutate(s.id, { onError: (err) => notify(err.message || 'Không xóa được, thử lại sau.'), onSuccess: () => { trackRemoveSavedSearch(s.id); notify('Đã xóa tiêu chí'); } });
   };
 
   const tabBtn = (key, label, count) => (
