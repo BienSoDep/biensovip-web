@@ -13,12 +13,12 @@ const TRACKED_EVENTS = [
   { group: 'Hợp mệnh & tính năng khác', items: ['fengshui_lookup', 'add_to_compare', 'remove_from_compare', 'submit_review', 'remove_saved_search', 'toggle_saved_search_notify'] },
 ];
 
-// Property ID số của GA4 (khác Measurement ID G-XXXXXXX trong index.html) — thay bằng ID thật để link
-// "Mở Google Analytics" trỏ đúng property, xem docs/features/analytics/00-README-kien-truc-tracking.md.
-// Dùng URL gốc property (không cố định sâu vào 1 path report cụ thể — Google hay đổi URL scheme nội
-// bộ GA4, path càng sâu càng dễ lỗi thời) để admin tự điều hướng tới report cần xem sau khi vào.
-const GA4_PROPERTY_ID = 'XXXXXXXXX';
-const GA4_CONFIGURED = GA4_PROPERTY_ID !== 'XXXXXXXXX';
+// Property ID số của GA4 (khác Measurement ID VITE_GA4_MEASUREMENT_ID dùng trong index.html) — đọc
+// từ VITE_GA4_PROPERTY_ID, xem docs/ops/DEPLOYMENT-GUIDE.md. Dùng URL gốc property (không cố định
+// sâu vào 1 path report cụ thể — Google hay đổi URL scheme nội bộ GA4, path càng sâu càng dễ lỗi thời)
+// để admin tự điều hướng tới report cần xem sau khi vào.
+const GA4_PROPERTY_ID = import.meta.env.VITE_GA4_PROPERTY_ID || '';
+const GA4_CONFIGURED = !!GA4_PROPERTY_ID;
 const GA4_REPORT_URL = `https://analytics.google.com/analytics/web/#/p${GA4_PROPERTY_ID}`;
 
 export default function GoogleAnalyticsPanel() {
@@ -36,7 +36,7 @@ export default function GoogleAnalyticsPanel() {
             Mở Google Analytics <ExternalLink size={14} />
           </a>
         ) : (
-          <span title="Chưa cấu hình GA4_PROPERTY_ID trong GoogleAnalyticsPanel.jsx" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', color: 'var(--text-faint)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'not-allowed' }}>
+          <span title="Chưa cấu hình VITE_GA4_PROPERTY_ID — xem docs/ops/DEPLOYMENT-GUIDE.md" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', color: 'var(--text-faint)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'not-allowed' }}>
             Chưa cấu hình GA4 <ExternalLink size={14} />
           </span>
         )}

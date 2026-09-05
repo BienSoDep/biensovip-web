@@ -7,9 +7,13 @@ RUN npm ci
 
 COPY . .
 
-# VITE_API_URL is baked into the build at build time (Vite reads env at build, not runtime)
+# VITE_* env is baked into the build at build time (Vite reads env at build, not runtime)
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_GA4_MEASUREMENT_ID
+ENV VITE_GA4_MEASUREMENT_ID=$VITE_GA4_MEASUREMENT_ID
+ARG VITE_GA4_PROPERTY_ID
+ENV VITE_GA4_PROPERTY_ID=$VITE_GA4_PROPERTY_ID
 
 RUN npm run build
 
