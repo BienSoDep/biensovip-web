@@ -20,7 +20,7 @@ export default function PlateTypeLandingPage({ typeSlug, openPlate, onBuy, conta
       <LandingBody
         title={data?.title} intro={data?.intro} plates={data?.plates} faqs={data?.faqs}
         isLoading={isLoading} isError={isError} openPlate={openPlate} onBuy={onBuy} contact={contact}
-        blogPost={blogPost}
+        blogPost={blogPost} listName="plate_type_landing"
       />
     </>
   );

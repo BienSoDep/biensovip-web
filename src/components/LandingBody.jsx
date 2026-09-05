@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
 import Button from './Button.jsx';
 import PlateCard from './PlateCard.jsx';
 import PlateCardSkeleton from './skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { routeFor } from '../config/routes.js';
+import { trackViewItemList, trackSelectItem } from '../services/tracking/events.js';
 
 function FaqAccordion({ faqs }) {
   const [openIdx, setOpenIdx] = useState(0);
@@ -30,8 +31,13 @@ function FaqAccordion({ faqs }) {
   );
 }
 
-export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact, blogPost }) {
+export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact, blogPost, listName = 'landing' }) {
   const stagger = useStaggeredReveal();
+
+  useEffect(() => {
+    if (!isLoading && plates?.length > 0) trackViewItemList(listName, plates);
+  }, [isLoading, plates, listName]);
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
@@ -71,7 +77,7 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
               <PlateCard key={p.id}
                 plateNumber={p.plateNumber} type={p.type} province={p.province} vehicleType={p.vehicleType}
                 price={p.price} priceOnRequest={p.priceOnRequest} isHot={p.isHot} thumbnailUrl={p.thumbnailUrl}
-                status={p.status} onOpen={() => openPlate?.(p.slug || p.id)}
+                status={p.status} onOpen={() => { trackSelectItem(p, listName); openPlate?.(p.slug || p.id); }}
                 href={routeFor('detail', p.slug || p.id)}
                 onBuy={() => onBuy?.(p.id)} contact={contact} style={stagger(i)} />
             ))}

@@ -20,7 +20,7 @@ export default function ProvinceLandingPage({ provinceCode = '43', openPlate, on
       <LandingBody
         title={data?.title} intro={data?.intro} plates={data?.plates} faqs={data?.faqs}
         isLoading={isLoading} isError={isError} openPlate={openPlate} onBuy={onBuy} contact={contact}
-        blogPost={blogPost}
+        blogPost={blogPost} listName="province_landing"
       />
     </>
   );

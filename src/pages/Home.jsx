@@ -13,6 +13,7 @@ import { useCompareIds } from '../services/compareService.js';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import EmailCapture from '../components/EmailCapture.jsx';
+import { trackViewItemList, trackSelectItem } from '../services/tracking/events.js';
 import { routeFor } from '../config/routes.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
@@ -52,6 +53,10 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
 
   const displayItems = isSearching ? searchItems : featuredItems;
   const displayLoading = isSearching ? searchLoading : featuredLoading;
+
+  useEffect(() => {
+    if (!displayLoading && displayItems.length > 0) trackViewItemList('home_featured', displayItems);
+  }, [displayLoading, displayItems]);
 
   const submitContact = useSubmitContact();
   const [cForm, setCForm] = useState({ fullName: '', phone: '', note: '' });
@@ -172,7 +177,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
                   onFav={onFav ? () => onFav(p.id) : undefined}
                   onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
                   inCompare={isInList(p.id)}
-                  onOpen={() => openPlate(p.id)}
+                  onOpen={() => { trackSelectItem(p, 'home_featured'); openPlate(p.id); }}
                   href={routeFor('detail', p.slug || p.id)}
                   onBuy={() => openBuy?.(p.id)}
                   contact={contact}
@@ -192,7 +197,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
                 onFav={onFav ? () => onFav(p.id) : undefined}
                 onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
                 inCompare={isInList(p.id)}
-                onOpen={() => openPlate(p.id)}
+                onOpen={() => { trackSelectItem(p, 'home_featured'); openPlate(p.id); }}
                 href={routeFor('detail', p.slug || p.id)}
                 onBuy={() => openBuy?.(p.id)}
                 style={stagger(i)} />
