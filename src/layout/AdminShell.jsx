@@ -139,8 +139,11 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
 
         return (
           <div key={group} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <button type="button" onClick={() => toggleGroup(group)} aria-expanded={!collapsed}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', padding: '6px 14px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+            {/* Khi nhóm chứa trang active, nhóm luôn hiện mở (collapsed=false ở trên) bất kể state đã
+                lưu — nếu vẫn cho bấm toggle lúc này, click sẽ lưu true vào localStorage nhưng UI không
+                đổi gì (silently ignored), rồi bất ngờ đóng lại khi rời trang. Disable hẳn lúc active. */}
+            <button type="button" onClick={() => !hasActive && toggleGroup(group)} disabled={hasActive} aria-expanded={!collapsed}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: hasActive ? 'default' : 'pointer', padding: '6px 14px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
               <ChevronDown size={13} style={{ transform: collapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 140ms var(--ease-out)', flexShrink: 0 }} />
               <span style={{ flex: 1, textAlign: 'left' }}>{group}</span>
             </button>
