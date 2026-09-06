@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Copy } from 'lucide-react';
+import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Copy, Star } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import toast from 'react-hot-toast';
 import {
@@ -95,6 +95,12 @@ const PER_PAGE_OPTIONS = [
   { value: 100, label: '100/trang' },
 ];
 
+const HOT_OPTIONS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'true', label: 'Nổi bật' },
+  { value: 'false', label: 'Không nổi bật' },
+];
+
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tất cả' },
   { value: 'available', label: 'Còn hàng' },
@@ -139,6 +145,10 @@ export default function AdminPlates({ go, notify, st }) {
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
+  const [plateTypeFilter, setPlateTypeFilter] = useState('');
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('');
+  const [provinceFilter, setProvinceFilter] = useState('');
+  const [hotFilter, setHotFilter] = useState('');
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/plates');
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [debouncedKeyword] = useDebouncedValue(keyword, 250);
@@ -204,7 +214,15 @@ export default function AdminPlates({ go, notify, st }) {
   // Bulk selection: Set of plate ids on current page
   const [selected, setSelected] = useState(new Set());
 
-  const filters = { status, keyword: debouncedKeyword, page, perPage, ...(fromDate && { fromDate }), ...(toDate && { toDate }), ...(sort && { sortBy: sort.key, sortDir: sort.dir }) };
+  const filters = {
+    status, keyword: debouncedKeyword, page, perPage,
+    ...(fromDate && { fromDate }), ...(toDate && { toDate }),
+    ...(sort && { sortBy: sort.key, sortDir: sort.dir }),
+    ...(plateTypeFilter && { plateTypeId: plateTypeFilter }),
+    ...(vehicleTypeFilter && { vehicleTypeId: vehicleTypeFilter }),
+    ...(provinceFilter && { provinceId: provinceFilter }),
+    ...(hotFilter && { isHot: hotFilter }),
+  };
   const { data, isLoading } = useAdminPlates(filters);
   const plates = data?.items || [];
   const total = data?.total || 0;
@@ -616,6 +634,14 @@ export default function AdminPlates({ go, notify, st }) {
         <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
       </div>
 
+      {/* Category filters — loại biển/loại xe/tỉnh/nổi bật, ngoài lọc trạng thái */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
+        <Select label="Loại biển" value={plateTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...catOpts(plateTypes)]} onChange={(v) => { setPlateTypeFilter(v); setPage(1); }} />
+        <Select label="Loại xe" value={vehicleTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...catOpts(vehicleTypes)]} onChange={(v) => { setVehicleTypeFilter(v); setPage(1); }} />
+        <Select label="Tỉnh/thành" value={provinceFilter} options={[{ value: '', label: 'Tất cả' }, ...catOpts(provinces)]} onChange={(v) => { setProvinceFilter(v); setPage(1); }} />
+        <Select label="Nổi bật" value={hotFilter} options={HOT_OPTIONS} onChange={(v) => { setHotFilter(v); setPage(1); }} />
+      </div>
+
       {/* Quick-add bar */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -764,7 +790,13 @@ export default function AdminPlates({ go, notify, st }) {
                   <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
                 )}
               </span>
-              <span style={{ flex: '1 1 120px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+              <span style={{ flex: '1 1 120px', display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <button type="button" onClick={() => toggleHot(p)} title={p.isHot ? 'Bỏ đánh dấu nổi bật' : 'Đánh dấu nổi bật'}
+                  style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}>
+                  <Star size={14} fill={p.isHot ? 'var(--amber-500)' : 'none'} color={p.isHot ? 'var(--amber-500)' : 'var(--grey-300)'} />
+                </button>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.plateNumber}</span>
+              </span>
               <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>
               <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.vehicleTypeName}</span>
               <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>

@@ -1,12 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
-function buildQuery({ status, keyword, page, perPage }) {
+function buildQuery({ status, keyword, page, perPage, fromDate, toDate, sortBy, sortDir, plateTypeId, vehicleTypeId, provinceId, isHot }) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.set('status', status);
   if (keyword) params.set('keyword', keyword);
   params.set('page', String(page || 1));
   params.set('perPage', String(perPage || 20));
+  if (fromDate) params.set('fromDate', fromDate);
+  if (toDate) params.set('toDate', toDate);
+  if (sortBy) params.set('sortBy', sortBy);
+  if (sortDir) params.set('sortDir', sortDir);
+  if (plateTypeId) params.set('plateTypeId', plateTypeId);
+  if (vehicleTypeId) params.set('vehicleTypeId', vehicleTypeId);
+  if (provinceId) params.set('provinceId', provinceId);
+  if (isHot !== undefined && isHot !== '') params.set('isHot', String(isHot));
   return params.toString();
 }
 
