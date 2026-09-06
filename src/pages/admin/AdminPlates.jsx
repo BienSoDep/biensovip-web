@@ -374,8 +374,9 @@ export default function AdminPlates({ go, notify, st }) {
   const quickCreate = async (number, price) => {
     const n = (number || '').trim();
     if (!n || !/-\d/.test(n)) { notify('Nhập biển số hợp lệ (VD: 43A1-999.99)'); return false; }
+    const priceOnRequest = !String(price ?? '').trim();
     try {
-      const res = await bulkMut.mutateAsync([{ plateNumber: n, price: num(price), isHot: false, priceOnRequest: false }]);
+      const res = await bulkMut.mutateAsync([{ plateNumber: n, price: priceOnRequest ? 0 : num(price), isHot: false, priceOnRequest }]);
       if (res[0]?.success) { notify(`Đã thêm ${n}`); return true; }
       notify(ERR_MSG[res[0]?.error] || 'Không thêm được biển');
       return false;
@@ -390,14 +391,18 @@ export default function AdminPlates({ go, notify, st }) {
     if (ok) { setQuickNum(''); setQuickPrice(''); }
   };
 
-  // ── Paste / CSV: parse từng dòng "số biển,giá" → preview xanh/đỏ
+  // ── Paste / CSV: parse từng dòng "số biển,giá" → preview xanh/đỏ. Giá bỏ trống (không có phần thứ 2,
+  // hoặc có dấu phân tách nhưng rỗng — VD "43A1-999.99," từ ô Excel trống) → priceOnRequest = true.
   const parseLine = (line) => {
-    const parts = line.split(/[,;\t ]+/).filter(Boolean);
-    if (parts.length === 0) return null;
-    const number = parts[0].trim();
-    const price = num(parts[1]);
+    const parts = line.split(/[,;\t]+/).map((p) => p.trim());
+    const numberPart = (parts[0] || '').trim();
+    const number = numberPart.split(/\s+/)[0] || '';
+    if (!number) return null;
+    const priceRaw = parts.length > 1 ? parts.slice(1).join(' ').trim() : numberPart.split(/\s+/).slice(1).join(' ').trim();
+    const priceOnRequest = !priceRaw;
+    const price = priceOnRequest ? 0 : num(priceRaw);
     const prov = parsePlateNumber(number).prov;
-    return { number, price, provName: prov ? provNameOf(prov) : '', ok: /-\d/.test(number), reason: /-\d/.test(number) ? '' : 'Sai định dạng' };
+    return { number, price, priceOnRequest, provName: prov ? provNameOf(prov) : '', ok: /-\d/.test(number), reason: /-\d/.test(number) ? '' : 'Sai định dạng' };
   };
 
   const onBulkTextChange = (v) => {
@@ -409,7 +414,7 @@ export default function AdminPlates({ go, notify, st }) {
     const valid = bulkRows.filter((r) => r.ok && !r.done);
     if (valid.length === 0) { notify('Không có dòng hợp lệ để thêm'); return; }
     try {
-      const results = await bulkMut.mutateAsync(valid.map((r) => ({ plateNumber: r.number, price: r.price, isHot: false, priceOnRequest: false })));
+      const results = await bulkMut.mutateAsync(valid.map((r) => ({ plateNumber: r.number, price: r.price, isHot: false, priceOnRequest: r.priceOnRequest })));
       setBulkRows((rows) => rows.map((r) => {
         const res = results.find((x) => x.plateNumber === r.number);
         return res ? { ...r, done: true, ok: res.success, reason: res.success ? '' : (ERR_MSG[res.error] || 'Lỗi') } : r;
@@ -511,7 +516,7 @@ export default function AdminPlates({ go, notify, st }) {
         {bulkOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <textarea value={bulkText} onChange={(e) => onBulkTextChange(e.target.value)} rows={5}
-              placeholder={'Mỗi dòng 1 biển, cách nhau bằng dấu phẩy / tab:\n43A1-999.99, 350000000\n43A1-666.66, 500000000'}
+              placeholder={'Mỗi dòng 1 biển, cách nhau bằng dấu phẩy / tab:\n43A1-999.99, 350000000\n43A1-666.66, 500000000\n43A1-777.77 (bỏ trống giá = Giá liên hệ)'}
               style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none', fontFamily: 'monospace' }} />
             {bulkRows.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflow: 'auto' }}>
@@ -519,7 +524,7 @@ export default function AdminPlates({ go, notify, st }) {
                   <div key={r.key} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: r.done ? (r.ok ? 'var(--mint-100)' : 'var(--rose-100)') : 'transparent', font: 'var(--type-body-sm)' }}>
                     <span style={{ color: 'var(--text-strong)', flex: '1 1 160px' }}>{r.number || '—'}</span>
                     <span style={{ color: 'var(--text-muted)', flex: '1 1 120px' }}>{r.provName || '…'}</span>
-                    <span style={{ color: 'var(--text-muted)', flex: '1 1 100px' }}>{r.price ? fmt(r.price) : '0'}</span>
+                    <span style={{ color: 'var(--text-muted)', flex: '1 1 100px' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
                     <span style={{ color: r.ok ? 'var(--mint-700)' : 'var(--status-danger)', flex: '0 0 130px', textAlign: 'right' }}>
                       {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
                     </span>
