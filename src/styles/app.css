@@ -616,6 +616,16 @@ textarea,
     order: -1;
   }
 }
+@media (min-width: 1025px) and (max-width: 1300px) {
+  /* Desktop hẹp: 6 nav-pill + logo 2 dòng + actions vượt quá --width-content (1216px), buộc nav-pills
+     cuộn ngang. Giảm gap/padding để đỡ phải cuộn — cùng hướng xử lý đã áp cho tablet ở trên. */
+  .header-nav-pills {
+    gap: 4px !important;
+  }
+  .header-nav-pills .pill-btn {
+    padding: 0 10px !important;
+  }
+}
 /* Detail: mobile sticky bottom action bar */
 .plate-actions-mobile {
   display: none;
@@ -645,7 +655,7 @@ textarea,
     height: 44px !important;
   }
   .chatbot-fab { bottom: 16px !important; right: 16px !important; }
-  .zalo-fab { bottom: 68px !important; right: 16px !important; }
+  .zalo-fab { bottom: 72px !important; right: 16px !important; }
   .back-to-top { bottom: 68px !important; left: 16px !important; }
   /* Detail: hàng chia sẻ không đóng góp quyết định mua — ẩn trên mobile, đã có sticky Gọi/Zalo/Chốt biển */
   .plate-share-row {
@@ -805,6 +815,14 @@ textarea,
 }
 .promo-rail__item--tiktok {
   aspect-ratio: 9/14;
+}
+.promo-rail__item--plate {
+  aspect-ratio: auto;
+  transition: var(--transition-control);
+}
+.promo-rail__item--plate:hover {
+  box-shadow: var(--shadow-3);
+  transform: translateY(-2px);
 }
 .promo-rail__item iframe {
   width: 100%;

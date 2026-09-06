@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { pill } from '../components/NavBtn.jsx';
 
-export default function MobileDrawer({ open, onClose, s, go, user, patch, notify }) {
+export default function MobileDrawer({ open, onClose, s, go, user, onLogout }) {
   const panelRef = useRef(null);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function MobileDrawer({ open, onClose, s, go, user, patch, notify
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <button onClick={() => { go('profile')(); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')}</button>
-              <button onClick={() => { patch({ user: null, isAdmin: false }); notify('Đã đăng xuất'); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
+              <button onClick={() => { onLogout(); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>

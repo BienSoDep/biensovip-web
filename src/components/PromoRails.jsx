@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { usePromoVideos } from '../services/promoVideoService.js';
+import { useFeaturedPlates } from '../services/plates.js';
+import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { optimizeImageUrl } from '../lib/cloudinary.js';
 import TikTokEmbed from './TikTokEmbed.jsx';
 
-export default function PromoRails() {
+function useIsWide() {
   // Rail chỉ hiện ở màn ≥1600px (CSS) — chặn fetch/render (kể cả TikTok oEmbed bên trong)
   // trên các màn phổ biến hơn thay vì chỉ ẩn bằng CSS sau khi đã tải.
   const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1600px)').matches);
@@ -12,7 +15,36 @@ export default function PromoRails() {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
+  return wide;
+}
 
+function PlateRailItem({ plate, openPlate }) {
+  const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
+  return (
+    <a href="#" onClick={(e) => { e.preventDefault(); openPlate(plate.id); }} className="promo-rail__item promo-rail__item--plate" style={{ textDecoration: 'none', display: 'block' }}>
+      {plate.thumbnailUrl ? (
+        <img src={optimizeImageUrl(plate.thumbnailUrl)} alt={`Biển số ${plate.plateNumber}`} loading="lazy" style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }} />
+      ) : (
+        <div style={{ width: '100%', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-muted)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{prov}{seri}·{num}</div>
+      )}
+      <div style={{ padding: '8px 10px' }}>
+        <div style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</div>
+        <div style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</div>
+      </div>
+    </a>
+  );
+}
+
+function PlateRail({ openPlate }) {
+  const wide = useIsWide();
+  const { data } = useFeaturedPlates(6);
+  const items = data?.items || [];
+  if (!wide || !items.length || !openPlate) return null;
+  return <aside className="promo-rail promo-rail--left">{items.map((p) => <PlateRailItem key={p.id} plate={p} openPlate={openPlate} />)}</aside>;
+}
+
+function TikTokRail() {
+  const wide = useIsWide();
   const { data } = usePromoVideos({ enabled: wide });
   const items = data?.items || [];
   if (!wide || !items.length) return null;
@@ -32,10 +64,16 @@ export default function PromoRails() {
     </div>
   );
 
+  return <aside className="promo-rail promo-rail--right">{items.map(renderItem)}</aside>;
+}
+
+// Rail trái: biển nổi bật thật (liên quan trực tiếp mục đích mua hàng) — trước đây trùng TikTok với
+// rail phải, gây lặp nội dung 2 bên và phân tâm khỏi tác vụ chính (audit UI/UX 06/09/2026).
+export default function PromoRails({ openPlate }) {
   return (
     <>
-      <aside className="promo-rail promo-rail--left">{items.map(renderItem)}</aside>
-      <aside className="promo-rail promo-rail--right">{items.map(renderItem)}</aside>
+      <PlateRail openPlate={openPlate} />
+      <TikTokRail />
     </>
   );
 }

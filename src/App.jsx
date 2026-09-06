@@ -658,7 +658,7 @@ export default function App() {
 
           {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} />}
 
-          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} patch={patch} notify={notify} />}
+          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
           {/* detail/post/provinceLanding/plateTypeLanding tự render breadcrumb riêng bên trong (cần dữ
               liệu tỉnh/category đã fetch — không có sẵn ở tầng App) — bỏ qua ở đây tránh render 2 lần. */}
@@ -752,7 +752,7 @@ export default function App() {
 
           {isPublic && <Footer settings={st.settings} patch={patch} />}
 
-          {isPublic && <PromoRails />}
+          {isPublic && <PromoRails openPlate={openPlate} />}
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} />
