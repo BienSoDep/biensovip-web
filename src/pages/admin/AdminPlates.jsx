@@ -65,6 +65,12 @@ const CAND_FIELDS = [
   { key: 'fengShuiMeaning', label: 'Ý nghĩa phong thủy' },
 ];
 
+const PER_PAGE_OPTIONS = [
+  { value: 20, label: '20/trang' },
+  { value: 50, label: '50/trang' },
+  { value: 100, label: '100/trang' },
+];
+
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Tất cả' },
   { value: 'available', label: 'Còn hàng' },
@@ -108,6 +114,7 @@ export default function AdminPlates({ go, notify, st }) {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/plates');
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [debouncedKeyword] = useDebouncedValue(keyword, 250);
@@ -146,7 +153,7 @@ export default function AdminPlates({ go, notify, st }) {
   // Bulk selection: Set of plate ids on current page
   const [selected, setSelected] = useState(new Set());
 
-  const filters = { status, keyword: debouncedKeyword, page, perPage: 20, ...(fromDate && { fromDate }), ...(toDate && { toDate }), ...(sort && { sortBy: sort.key, sortDir: sort.dir }) };
+  const filters = { status, keyword: debouncedKeyword, page, perPage, ...(fromDate && { fromDate }), ...(toDate && { toDate }), ...(sort && { sortBy: sort.key, sortDir: sort.dir }) };
   const { data, isLoading } = useAdminPlates(filters);
   const plates = data?.items || [];
   const total = data?.total || 0;
@@ -462,10 +469,11 @@ export default function AdminPlates({ go, notify, st }) {
     const valid = bulkRows.filter((r) => r.ok && !r.done);
     if (valid.length === 0) { notify('Không có dòng hợp lệ để thêm'); return; }
     try {
-      const results = await bulkMut.mutateAsync(valid.map((r) => ({
+      const res = await bulkMut.mutateAsync(valid.map((r) => ({
         plateNumber: r.number, price: r.price, isHot: false, priceOnRequest: r.priceOnRequest, sold: r.sold,
         plateTypeId: r.plateTypeId || undefined, vehicleTypeId: r.vehicleTypeId || undefined, provinceId: r.provinceId || undefined,
       })));
+      const results = res.results || [];
       setBulkRows((rows) => rows.map((r) => {
         const res = results.find((x) => x.plateNumber === r.number);
         return res ? { ...r, done: true, ok: res.success, reason: res.success ? '' : (ERR_MSG[res.error] || 'Lỗi') } : r;
@@ -515,7 +523,7 @@ export default function AdminPlates({ go, notify, st }) {
     return null;
   };
 
-  const totalPages = Math.max(1, Math.ceil(total / 20));
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   const SortHeader = ({ label, sortKey, style, className }) => (
     <button type="button" className={className} onClick={() => toggleSort(sortKey)}
@@ -546,6 +554,7 @@ export default function AdminPlates({ go, notify, st }) {
           Đến ngày
           <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
         </label>
+        <Select label="Hiển thị" value={perPage} options={PER_PAGE_OPTIONS} onChange={(v) => { setPerPage(Number(v)); setPage(1); }} />
         <div style={{ flex: 1 }} />
         <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword: debouncedKeyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
           {exporting ? 'Đang xuất…' : 'Xuất CSV'}
