@@ -577,29 +577,46 @@ export default function AdminPlates({ go, notify, st }) {
                   <Button variant={bulkView === 'card' ? 'dark' : 'ghost'} size="sm" onClick={() => setBulkView('card')}>Xem biển (UI đầy đủ)</Button>
                 </div>
                 {bulkView === 'list' ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 320, overflow: 'auto' }}>
-                    {bulkRows.map((r) => (
-                      <div key={r.key} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: r.done ? (r.ok ? 'var(--mint-100)' : 'var(--rose-100)') : 'transparent', font: 'var(--type-body-sm)' }}>
-                        <span style={{ color: 'var(--text-strong)', flex: '1 1 150px' }}>{r.number || '—'}</span>
-                        <select value={r.provinceId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'provinceId', e.target.value)} style={{ flex: '1 1 130px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.provinceId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
-                          <option value="">— Tỉnh? —</option>
-                          {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                        <select value={r.plateTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'plateTypeId', e.target.value)} style={{ flex: '1 1 130px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.plateTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
-                          <option value="">— Loại biển? —</option>
-                          {plateTypes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                        <select value={r.vehicleTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'vehicleTypeId', e.target.value)} style={{ flex: '0 0 100px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.vehicleTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
-                          <option value="">— Xe? —</option>
-                          {vehicleTypes.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                        </select>
-                        <span style={{ color: 'var(--text-muted)', flex: '0 0 100px', textAlign: 'right' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
-                        {r.sold && <span style={{ color: 'var(--status-danger)', flex: '0 0 auto', font: 'var(--type-caption)' }}>Đã bán</span>}
-                        <span style={{ color: r.ok ? 'var(--mint-700)' : 'var(--status-danger)', flex: '0 0 110px', textAlign: 'right', font: 'var(--type-caption)' }}>
-                          {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
-                        </span>
+                  <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                      <div style={{ minWidth: 900 }}>
+                        {/* Cột khớp đúng width header bảng quản lý bên dưới (checkbox 34 → bỏ vì preview chưa
+                            chọn hàng loạt được, Ảnh 56 → bỏ vì preview chưa có ảnh) để 2 bảng thẳng hàng mắt. */}
+                        <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-2) var(--gutter-card)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                          <span style={{ flex: '1 1 120px' }}>Biển số</span>
+                          <span style={{ flex: '1 1 88px' }}>Loại biển</span>
+                          <span style={{ flex: '1 1 88px' }}>Loại xe</span>
+                          <span style={{ flex: '1 1 88px' }}>Tỉnh</span>
+                          <span style={{ flex: '1 1 110px' }}>Giá</span>
+                          <span style={{ flex: '1 1 100px' }}>Trạng thái</span>
+                          <span style={{ flex: '0 0 96px' }}>Kết quả</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 320, overflow: 'auto' }}>
+                          {bulkRows.map((r) => (
+                            <div key={r.key} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: '4px var(--gutter-card)', borderRadius: 'var(--radius-sm)', background: r.done ? (r.ok ? 'var(--mint-100)' : 'var(--rose-100)') : 'transparent', font: 'var(--type-body-sm)' }}>
+                              <span style={{ color: 'var(--text-strong)', flex: '1 1 120px' }}>{r.number || '—'}</span>
+                              <select value={r.plateTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'plateTypeId', e.target.value)} style={{ flex: '1 1 88px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.plateTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                                <option value="">— Loại? —</option>
+                                {plateTypes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                              </select>
+                              <select value={r.vehicleTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'vehicleTypeId', e.target.value)} style={{ flex: '1 1 88px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.vehicleTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                                <option value="">— Xe? —</option>
+                                {vehicleTypes.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                              </select>
+                              <select value={r.provinceId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'provinceId', e.target.value)} style={{ flex: '1 1 88px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.provinceId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                                <option value="">— Tỉnh? —</option>
+                                {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                              </select>
+                              <span style={{ color: 'var(--text-muted)', flex: '1 1 110px' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
+                              <span style={{ flex: '1 1 100px', color: r.sold ? 'var(--status-danger)' : 'var(--text-muted)' }}>{r.sold ? 'Đã bán' : 'Còn hàng'}</span>
+                              <span style={{ color: r.ok ? 'var(--mint-700)' : 'var(--status-danger)', flex: '0 0 96px', textAlign: 'right', font: 'var(--type-caption)' }}>
+                                {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -608,12 +625,12 @@ export default function AdminPlates({ go, notify, st }) {
                         {bulkRows.filter((r) => !r.ok).length} dòng lỗi định dạng không hiện ở đây — xem "Danh sách" để sửa.
                       </span>
                     )}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--space-3)', maxHeight: 480, overflow: 'auto', padding: 4 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 'var(--space-4)', maxHeight: 560, overflow: 'auto', padding: 8 }}>
                     {bulkRows.filter((r) => r.ok).map((r) => {
                       const { prov, seri, num: plateNum } = parsePlateNumber(r.number);
                       return (
-                        <div key={r.key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <PlateVisual size="sm" prov={prov} seri={seri} num={plateNum} shape="short" />
+                        <div key={r.key} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 12 }}>
+                          <div style={{ maxWidth: 180, margin: '0 auto' }}><PlateVisual size="md" prov={prov} seri={seri} num={plateNum} shape="short" /></div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 4px' }}>
                             <select value={r.plateTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'plateTypeId', e.target.value)} style={{ height: 26, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.plateTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
                               <option value="">— Loại biển? —</option>
