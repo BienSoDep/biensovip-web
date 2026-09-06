@@ -463,7 +463,7 @@ export default function AdminPlates({ go, notify, st }) {
     return null;
   };
   const parseLine = (line) => {
-    const parts = line.split(/[,;\t]+/).map((p) => p.trim());
+    const parts = line.split(/[,;\t]/).map((p) => p.trim());
     const numberPart = (parts[0] || '').trim();
     const number = numberPart.split(/\s+/)[0] || '';
     if (!number) return null;
