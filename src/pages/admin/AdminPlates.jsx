@@ -27,19 +27,42 @@ import { fetchMissingMeaningPlates, useBulkSeedMeanings } from '../../services/m
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
 const OTO_LETTERS = 'ABCDFHMNPTV';
-function allSame(series, k) { return !!series && series.length >= k && new Set(series.slice(-k)).size === 1; }
+// Quét N số giống liền nhau ở BẤT KỲ vị trí nào trong chuỗi (không chỉ hậu tố) —
+// khớp cách backend MeaningAnalyzer.HasRepeated làm, để tam hoa/tứ quý/ngũ quý nằm
+// đầu/giữa serial (VD 999.11 → "99911" có "999" ở đầu) không bị bỏ sót.
+function hasRepeatedAnywhere(series, n) {
+  for (let i = 0; i + n <= series.length; i++) {
+    if (new Set(series.slice(i, i + n)).size === 1) return true;
+  }
+  return false;
+}
+function longestAscendingRun(series) {
+  let max = 1, cur = 1;
+  for (let i = 1; i < series.length; i++) {
+    cur = +series[i] === +series[i - 1] + 1 ? cur + 1 : 1;
+    if (cur > max) max = cur;
+  }
+  return max;
+}
 function detectPlateTypeId(serial, plateTypes) {
   const byName = (n) => (plateTypes.find((o) => (o.label || '').toLowerCase().includes(n)) || {}).value || '';
   if (!serial) return '';
-  if (allSame(serial, 5)) return byName('ngũ quý');
-  if (allSame(serial, 4)) return byName('tứ quý');
-  if (allSame(serial, 3)) return byName('tam hoa');
+  if (hasRepeatedAnywhere(serial, 5)) return byName('ngũ quý');
+  if (hasRepeatedAnywhere(serial, 4)) return byName('tứ quý');
+  if (hasRepeatedAnywhere(serial, 3)) return byName('tam hoa');
+  if (longestAscendingRun(serial) >= 3) return byName('sảnh tiến');
   const last2 = serial.slice(-2);
   if (last2 === '68' || last2 === '86') return byName('lộc phát');
   if (last2 === '39' || last2 === '79') return byName('thần tài');
-  for (let i = 0; i + 2 < serial.length; i++) {
-    const a = +serial[i], b = +serial[i + 1], c = +serial[i + 2];
-    if (a && a + 1 === b && b + 1 === c) return byName('sảnh tiến');
+  if (last2 === '38' || last2 === '78') return byName('ông địa');
+  if (serial.length >= 4) {
+    const q = serial.slice(-4);
+    if (q[0] === q[3] && q[1] === q[2] && q[0] !== q[1]) return byName('số gánh');
+  }
+  if (last2.length === 2 && last2[0] === last2[1]) return byName('lặp đôi');
+  // Số kép: có cặp số lặp bất kỳ vị trí (không rơi vào luật trên) — nới lỏng nhất, đặt cuối cùng.
+  for (let i = 0; i + 1 < serial.length; i++) {
+    if (serial[i] === serial[i + 1]) return byName('số kép');
   }
   return '';
 }
