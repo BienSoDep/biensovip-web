@@ -89,3 +89,17 @@ export function useReseedPlateMeanings(plateId) {
     onSuccess: () => invalidatePlateMeanings(qc, plateId),
   });
 }
+
+// --- Sinh ý nghĩa hàng loạt cho biển đang thiếu ---
+
+export async function fetchMissingMeaningPlates() {
+  return apiClient.get('/api/admin/plates/meanings/missing');
+}
+
+export function useBulkSeedMeanings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiClient.post('/api/admin/plates/meanings/bulk-seed'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-plates'] }),
+  });
+}

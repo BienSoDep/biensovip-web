@@ -22,6 +22,7 @@ import { analyzePlateNumber } from '../../lib/compareInsights.js';
 import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
+import { fetchMissingMeaningPlates, useBulkSeedMeanings } from '../../services/meanings.js';
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
@@ -118,6 +119,33 @@ export default function AdminPlates({ go, notify, st }) {
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/plates');
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [debouncedKeyword] = useDebouncedValue(keyword, 250);
+
+  // Sinh ý nghĩa phong thủy hàng loạt cho biển đang thiếu
+  const [missingMeaningPlates, setMissingMeaningPlates] = useState(null); // null=chưa mở, []=đã check hết
+  const [checkingMissing, setCheckingMissing] = useState(false);
+  const bulkSeedMut = useBulkSeedMeanings();
+
+  const openMissingMeaningModal = async () => {
+    setCheckingMissing(true);
+    try {
+      const res = await fetchMissingMeaningPlates();
+      setMissingMeaningPlates(res.items || []);
+    } catch (err) {
+      notify(err.message || 'Lỗi kiểm tra biển thiếu ý nghĩa');
+    } finally {
+      setCheckingMissing(false);
+    }
+  };
+
+  const confirmBulkSeedMeanings = async () => {
+    try {
+      const res = await bulkSeedMut.mutateAsync();
+      notify(`Đã sinh ý nghĩa cho ${res.seeded} biển${res.skipped ? `, ${res.skipped} biển không khớp mẫu nào` : ''}`);
+      setMissingMeaningPlates(null);
+    } catch (err) {
+      notify(err.message || 'Lỗi sinh ý nghĩa hàng loạt');
+    }
+  };
 
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -559,6 +587,9 @@ export default function AdminPlates({ go, notify, st }) {
         <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword: debouncedKeyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
           {exporting ? 'Đang xuất…' : 'Xuất CSV'}
         </Button>
+        <Button variant="ghost" size="md" disabled={checkingMissing} onClick={openMissingMeaningModal}>
+          {checkingMissing ? 'Đang kiểm tra…' : 'Sinh ý nghĩa hàng loạt'}
+        </Button>
         <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
       </div>
 
@@ -833,6 +864,32 @@ export default function AdminPlates({ go, notify, st }) {
               <Button variant="ghost" size="md" onClick={hideInsteadOfDelete}>Ẩn thay vì xóa</Button>
             ) : (
               <Button variant="danger" size="md" onClick={handleDelete} loading={deleteMut.isPending}>Xóa</Button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Sinh ý nghĩa phong thủy hàng loạt — liệt kê biển thiếu trước khi sinh */}
+      <Modal open={missingMeaningPlates !== null} onClose={() => setMissingMeaningPlates(null)} title="Sinh ý nghĩa hàng loạt" maxWidth="480px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {missingMeaningPlates?.length ? (
+            <>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                <b>{missingMeaningPlates.length}</b> biển chưa có ý nghĩa phong thủy. Biển không khớp mẫu nào (số thường) sẽ bị bỏ qua.
+              </p>
+              <div style={{ maxHeight: 220, overflow: 'auto', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+                {missingMeaningPlates.map((p) => (
+                  <span key={p.id} style={{ font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--white)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mọi biển đã có ý nghĩa phong thủy.</p>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <Button variant="ghost" size="md" onClick={() => setMissingMeaningPlates(null)}>Hủy</Button>
+            {!!missingMeaningPlates?.length && (
+              <Button variant="primary" size="md" onClick={confirmBulkSeedMeanings} loading={bulkSeedMut.isPending}>Sinh ý nghĩa cho {missingMeaningPlates.length} biển</Button>
             )}
           </div>
         </div>
