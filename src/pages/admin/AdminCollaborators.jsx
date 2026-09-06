@@ -4,7 +4,7 @@ import { Select } from '../../components/index.jsx';
 import Modal from '../../components/Modal.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
 import CollaboratorCommissionsModal from '../../components/CollaboratorCommissionsModal.jsx';
-import { useAdminCollaborators, useUpdateCollaboratorStatus } from '../../services/adminCollaborators.js';
+import { useAdminCollaborators, useUpdateCollaboratorStatus, useDealReports, useApproveDealReport, useRejectDealReport } from '../../services/adminCollaborators.js';
 import { useZaloClickStats } from '../../services/zaloClicks.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
@@ -18,6 +18,72 @@ const spinnerStyle = {
   width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--grey-300)',
   borderTopColor: 'var(--text-strong)', display: 'inline-block', animation: 'bs-spin .8s linear infinite', flexShrink: 0,
 };
+
+// CTV tự báo giao dịch chốt ngoài platform (Zalo cá nhân) — chờ admin duyệt trước khi tạo Transaction/Commission thật.
+function DealReportsQueue({ notify }) {
+  const { data, isLoading } = useDealReports('pending');
+  const approve = useApproveDealReport();
+  const reject = useRejectDealReport();
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [reason, setReason] = useState('');
+  const items = data?.items || [];
+
+  if (isLoading) return null;
+  if (items.length === 0) return null;
+
+  const doApprove = (id) => {
+    approve.mutate(id, {
+      onSuccess: () => notify('Đã duyệt báo cáo, tạo giao dịch + hoa hồng'),
+      onError: (err) => notify(err.message || 'Duyệt thất bại'),
+    });
+  };
+  const doReject = () => {
+    reject.mutate({ id: rejectTarget.id, reason: reason.trim() || undefined }, {
+      onSuccess: () => { notify('Đã từ chối báo cáo'); setRejectTarget(null); setReason(''); },
+      onError: (err) => notify(err.message || 'Từ chối thất bại'),
+    });
+  };
+
+  return (
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+      <div style={{ padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-tint-cream)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
+        Báo cáo giao dịch chờ duyệt ({items.length})
+      </div>
+      {items.map((r) => (
+        <div key={r.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)' }}>
+          <span style={{ flex: '1 1 140px' }}>{r.collaboratorName}</span>
+          <span style={{ flex: '1 1 100px' }}>{r.plateNumber || '—'}</span>
+          <span style={{ flex: '1 1 120px' }}>{r.buyerFullName} — {r.buyerPhone}</span>
+          <span style={{ flex: '1 1 100px', fontWeight: 'var(--fw-semibold)' }}>{money(r.dealAmount)}</span>
+          <span style={{ flex: '1 1 160px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{r.note || '—'}</span>
+          <span style={{ flex: '0 0 auto', display: 'flex', gap: 6 }}>
+            <Button variant="primary" size="sm" disabled={approve.isPending} onClick={() => doApprove(r.id)}>Duyệt</Button>
+            <Button variant="ghost" size="sm" onClick={() => setRejectTarget(r)}>Từ chối</Button>
+          </span>
+        </div>
+      ))}
+
+      <Modal open={!!rejectTarget} onClose={() => setRejectTarget(null)} title="Từ chối báo cáo" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Từ chối báo cáo của {rejectTarget?.collaboratorName} — {money(rejectTarget?.dealAmount)}
+          </span>
+          <input
+            type="text" maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)}
+            placeholder="Lý do từ chối (không bắt buộc)"
+            style={{ width: '100%', padding: '8px 10px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
+          />
+          <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+            <Button variant="ghost" size="sm" onClick={() => setRejectTarget(null)}>Hủy</Button>
+            <Button variant="primary" size="sm" disabled={reject.isPending} onClick={doReject}>
+              {reject.isPending ? 'Đang xử lý...' : 'Từ chối'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
 
 export default function AdminCollaborators({ st, patch, notify }) {
   const adminQ = (st.adminQ || '').trim();
@@ -86,6 +152,8 @@ export default function AdminCollaborators({ st, patch, notify }) {
           </div>
         ))}
       </div>
+
+      <DealReportsQueue notify={notify} />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
         <Select label="Trạng thái" value={f} options={[{ value: 'Tất cả', label: 'Tất cả' }, ...opts(STATUSES)]} onChange={(v) => patch({ admCtv: v })} />

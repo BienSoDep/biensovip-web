@@ -77,7 +77,7 @@ test.describe('AdminVideos', () => {
     await page.getByRole('button', { name: 'Thêm video' }).first().click();
     await page.getByLabel('URL video').fill('not-a-valid-url');
     await page.getByRole('button', { name: 'Thêm video', exact: true }).last().click();
-    await expect(page.getByText('Link không hợp lệ hoặc không nhận diện được nền tảng.')).toBeVisible();
+    await expect(page.getByText('Chỉ nhận link TikTok hoặc Facebook.')).toBeVisible();
   });
 });
 
@@ -93,8 +93,8 @@ test.describe('AdminNotifications', () => {
 
     const title = 'Bao tri he thong ' + Date.now();
     await page.getByLabel('Tiêu đề').fill(title);
-    await page.getByLabel('Nội dung').fill('Noi dung thong bao test tu dong.');
-    await page.getByRole('button', { name: 'Gửi thông báo' }).click();
+    await page.getByPlaceholder('Nhập nội dung thông báo…').fill('Noi dung thong bao test tu dong.');
+    await page.getByRole('button', { name: 'Gửi thông báo' }).last().click();
     await expect(page.getByText(/Đã (gửi thông báo tới|tạo thông báo)/)).toBeVisible({ timeout: 10000 });
     // Form clears on success — confirms the send succeeded even though the
     // adjacent "sent" list can't load (backend bug, see note above).
@@ -104,7 +104,7 @@ test.describe('AdminNotifications', () => {
   test('empty submit shows validation error', async ({ page }) => {
     await loginAdmin(page);
     await page.getByRole('button', { name: 'Thông báo', exact: true }).click();
-    await page.getByRole('button', { name: 'Gửi thông báo' }).click();
+    await page.getByRole('button', { name: 'Gửi thông báo' }).last().click();
     await expect(page.getByText('Nhập đủ tiêu đề và nội dung.')).toBeVisible();
   });
 });

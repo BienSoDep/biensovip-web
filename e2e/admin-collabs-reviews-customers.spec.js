@@ -7,7 +7,7 @@ test.describe('AdminCollaborators', () => {
   // seeded + test-run-accumulated CTV rows, so assert structure, not emptiness.
   test('renders commission report and CTV table with real data', async ({ page }) => {
     await loginAdmin(page);
-    await page.getByRole('button', { name: 'Cộng tác viên', exact: true }).click();
+    await page.getByRole('button', { name: 'Cộng tác viên', exact: true }).last().click();
     await expect(page.getByRole('heading', { name: 'Cộng tác viên' })).toBeVisible();
     await expect(page.getByText('Tổng hoa hồng')).toBeVisible();
     await expect(page.getByText('Hoa hồng chờ chi trả')).toBeVisible();
@@ -60,13 +60,13 @@ test.describe('AdminCustomers', () => {
   test('lock/unlock a customer requires confirmation', async ({ page }) => {
     await loginAdmin(page);
     await page.getByRole('button', { name: 'Khách hàng', exact: true }).click();
-    const lockBtn = page.getByRole('button', { name: 'Khóa' }).first();
+    const lockBtn = page.getByRole('button', { name: 'Khóa', exact: true }).first();
     const count = await lockBtn.count();
     test.skip(count === 0, 'No customers seeded to exercise lock flow.');
 
     await lockBtn.click();
     await expect(page.getByRole('heading', { name: /Xác nhận khóa tài khoản|Xác nhận mở khóa tài khoản/ })).toBeVisible();
-    await page.getByRole('button', { name: 'Hủy' }).click();
+    await page.getByRole('button', { name: 'Hủy', exact: true }).click();
     await expect(page.getByRole('heading', { name: /Xác nhận/ })).not.toBeVisible();
   });
 });

@@ -14,19 +14,22 @@ test.describe('Admin', () => {
     await page.getByRole('button', { name: 'Biển số', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Biển số' })).toBeVisible();
 
-    // add — real form requires plate number text + category/province/vehicle dropdowns + at least 1 image.
-    // Image upload isn't exercisable without a real file/backend upload flow, so verify validation instead.
-    await page.getByRole('button', { name: 'Thêm biển số' }).click();
-    await expect(page.getByRole('heading', { name: 'Thêm biển số' })).toBeVisible();
-    await page.getByPlaceholder('43A1-999.99').fill('99Z9-999.99');
-    await page.getByRole('button', { name: 'Lưu biển số' }).click();
-    await expect(page.getByText('Chọn loại biển')).toBeVisible();
-    await page.getByRole('button', { name: 'Đóng' }).click();
+    // Quick-add row: plate number + price, system auto-detects province/vehicle type.
+    const plateNo = '99Z9-' + (Date.now() % 1000) + '.99';
+    await page.getByPlaceholder('43A1-999.99').fill(plateNo);
+    await page.getByPlaceholder('Giá (VNĐ)').fill('100000000');
+    await page.getByRole('button', { name: 'Thêm', exact: true }).click();
+    await expect(page.getByText(plateNo)).toBeVisible({ timeout: 10000 });
 
     // search/filter
-    await page.getByPlaceholder('Tìm biển số…').fill('99999');
+    await page.getByPlaceholder('Tìm biển số…').fill(plateNo);
     await page.waitForTimeout(300);
-    await expect(page.getByRole('heading', { name: 'Biển số' })).toBeVisible();
+    await expect(page.getByText(plateNo)).toBeVisible();
+
+    // delete
+    const row = page.locator('div', { hasText: plateNo }).last();
+    page.once('dialog', (d) => d.accept());
+    await row.getByRole('button', { name: 'Xóa' }).click();
   });
 
   test('AdminCats: add and delete a category', async ({ page }) => {
@@ -41,6 +44,8 @@ test.describe('Admin', () => {
     await expect(page.getByText(name)).toBeVisible();
 
     await page.getByText(name).locator('..').getByRole('button', { name: 'Xóa danh mục' }).click();
+    await expect(page.getByRole('heading', { name: 'Xác nhận xóa' })).toBeVisible();
+    await page.getByRole('button', { name: 'Xóa', exact: true }).click();
     await expect(page.getByText('Đã xóa danh mục')).toBeVisible();
   });
 
@@ -49,9 +54,10 @@ test.describe('Admin', () => {
     await page.getByRole('button', { name: 'Yêu cầu liên hệ' }).click();
     await expect(page.getByRole('heading', { name: 'Yêu cầu liên hệ' })).toBeVisible();
 
-    // row-level status Select is the last <select> on the page (filter Selects come first)
-    const firstStatus = page.locator('select').last();
-    await firstStatus.selectOption('Đang tư vấn');
+    // row-level status is a base-ui combobox (last combobox in the first data row —
+    // "Phụ trách" assignee combobox comes first in DOM order within the row).
+    await page.getByRole('combobox').last().click();
+    await page.getByRole('option', { name: 'Đang tư vấn' }).click();
     await expect(page.getByText('Đã cập nhật trạng thái')).toBeVisible();
   });
 
@@ -60,8 +66,9 @@ test.describe('Admin', () => {
     await page.getByRole('button', { name: 'Bài viết', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Bài viết' })).toBeVisible();
 
-    page.once('dialog', (d) => d.accept());
     await page.getByRole('button', { name: 'Xóa' }).first().click();
+    await expect(page.getByRole('heading', { name: 'Xóa bài viết' })).toBeVisible();
+    await page.getByRole('button', { name: 'Xóa', exact: true }).last().click();
     await expect(page.getByText('Đã xóa bài viết')).toBeVisible();
   });
 

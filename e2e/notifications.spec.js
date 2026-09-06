@@ -13,10 +13,9 @@ test.describe('Notifications page', () => {
 });
 
 test.describe('Header notification bell', () => {
-  test('bell hidden for guest, visible after login', async ({ page }) => {
+  test('bell visible for both guest and logged-in user', async ({ page }) => {
     await page.goto('/');
-    // Bell button stays in the DOM for guest (CSS-hidden), not removed — check visibility not count.
-    await expect(page.getByLabel('Thông báo', { exact: true })).not.toBeVisible();
+    await expect(page.getByLabel('Thông báo', { exact: true })).toBeVisible();
 
     await registerAndLogin(page, 'bell');
     await page.goto('/');

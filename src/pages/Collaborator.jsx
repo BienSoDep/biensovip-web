@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import { useDebouncedValue } from '@mantine/hooks';
 import { Share2, Link2, HandCoins, Wallet, UserPlus } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Badge } from '../components/index.jsx';
-import { useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent } from '../services/collaborators.js';
+import { Badge, Input } from '../components/index.jsx';
+import { useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent, useSubmitDealReport } from '../services/collaborators.js';
+import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
@@ -97,6 +99,87 @@ function GmailLinkSection() {
   );
 }
 
+// CTV tự chốt đơn hoàn toàn qua Zalo cá nhân (khách không click link giới thiệu) — báo cho admin
+// duyệt để vẫn được tính hoa hồng. Tái dùng đúng pattern plate-search picker của CreateTransactionForm
+// (AdminTransactions.jsx) nhưng không import chéo trang admin sang trang public.
+function DealReportForm() {
+  const [open, setOpen] = useState(false);
+  const [plateQuery, setPlateQuery] = useState('');
+  const [debouncedQuery] = useDebouncedValue(plateQuery, 300);
+  const [plate, setPlate] = useState(null);
+  const [buyerFullName, setBuyerFullName] = useState('');
+  const [buyerPhone, setBuyerPhone] = useState('');
+  const [dealAmount, setDealAmount] = useState('');
+  const [note, setNote] = useState('');
+  const submitDeal = useSubmitDealReport();
+  const { data: plateResults } = usePlates({ q: debouncedQuery, perPage: 8 }, { enabled: debouncedQuery.length >= 2 && !plate });
+
+  const reset = () => { setPlate(null); setPlateQuery(''); setBuyerFullName(''); setBuyerPhone(''); setDealAmount(''); setNote(''); };
+
+  const submit = async () => {
+    if (!plate?.id) { toast.error('Chọn biển số'); return; }
+    if (!buyerFullName.trim() || !buyerPhone.trim()) { toast.error('Nhập đầy đủ tên và SĐT khách'); return; }
+    const amountNum = Number(dealAmount);
+    if (!(amountNum > 0)) { toast.error('Số tiền phải lớn hơn 0'); return; }
+    try {
+      await submitDeal.mutateAsync({
+        plateId: plate.id, buyerFullName: buyerFullName.trim(), buyerPhone: buyerPhone.trim(),
+        dealAmount: amountNum, note: note.trim() || undefined,
+      });
+      toast.success('Đã gửi báo cáo, chờ admin duyệt');
+      reset();
+      setOpen(false);
+    } catch (e) {
+      toast.error(e.message || 'Gửi báo cáo thất bại');
+    }
+  };
+
+  return (
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Báo cáo giao dịch ngoài nền tảng</span>
+      <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+        Đã tự chốt đơn với khách qua Zalo cá nhân (khách không bấm link giới thiệu)? Báo cáo lại đây để admin duyệt và vẫn được tính hoa hồng.
+      </span>
+      {!open ? (
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)} style={{ alignSelf: 'flex-start' }}>Báo cáo giao dịch</Button>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {plate ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)' }}>
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}>{plate.plateNumber}</span>
+              <button type="button" onClick={() => setPlate(null)} style={{ border: 'none', background: 'none', color: 'var(--action-primary)', cursor: 'pointer', font: 'var(--type-caption)' }}>Đổi</button>
+            </div>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <Input label="Tìm biển số" placeholder="VD: 30A-123.45" value={plateQuery} onChange={(e) => setPlateQuery(e.target.value)} />
+              {plateResults?.items?.length > 0 && (
+                <div style={{ position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0, background: 'var(--white)', boxShadow: 'var(--shadow-elevated)', borderRadius: 'var(--radius-field)', maxHeight: 220, overflowY: 'auto' }}>
+                  {plateResults.items.map((p) => (
+                    <button key={p.id} type="button" onClick={() => { setPlate(p); setPlateQuery(''); }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)' }}>
+                      {p.plateNumber}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <Input label="Tên khách" value={buyerFullName} onChange={(e) => setBuyerFullName(e.target.value)} />
+          <Input label="Số điện thoại khách" value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} />
+          <Input label="Số tiền đã chốt" type="number" value={dealAmount} onChange={(e) => setDealAmount(e.target.value)} />
+          <Input label="Ghi chú (không bắt buộc)" value={note} onChange={(e) => setNote(e.target.value)} />
+          <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+            <Button variant="ghost" size="sm" onClick={() => { setOpen(false); reset(); }}>Hủy</Button>
+            <Button variant="primary" size="sm" disabled={submitDeal.isPending} onClick={submit}>
+              {submitDeal.isPending ? 'Đang gửi...' : 'Gửi báo cáo'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DashboardBody({ data, onReset, go }) {
   const [copied, setCopied] = useState(false);
   const customers = useCollaboratorCustomers(data.status === 'active');
@@ -156,6 +239,8 @@ function DashboardBody({ data, onReset, go }) {
         <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
         <Button variant="outline" size="md" onClick={() => { window.location.hash = 'become-ctv'; go('profile')(); }}>Sửa thông tin ngân hàng</Button>
       </div>
+
+      <DealReportForm />
 
       {data.recent?.length > 0 && (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

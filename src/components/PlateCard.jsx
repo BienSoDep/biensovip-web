@@ -3,6 +3,7 @@ import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
+import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 
@@ -67,7 +68,7 @@ export default function PlateCard({
                 <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Gọi ngay</Button>
               ) : null}
               {contact?.zalo ? (
-                <a href={`https://zalo.me/${contact.zalo}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}><Button variant="outline" size="sm" className="plate-card-cta-secondary" style={{ width: '100%' }}>Nhắn Zalo</Button></a>
+                <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} className="plate-card-cta-secondary" style={{ flex: 1 }}>Nhắn Zalo</Button>
               ) : onBuy ? (
                 <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" style={{ flex: 1 }}>Nhắn Zalo</Button>
               ) : null}

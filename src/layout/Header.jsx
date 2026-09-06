@@ -147,6 +147,13 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             </div>
           )}
         </div>
+        {/* Mobile-only: đăng nhập/đăng ký luôn hiện cạnh hamburger, không cần mở drawer mới thấy — .desktop-nav bị ẩn hoàn toàn ở mobile (app.css) */}
+        {!user && (
+          <div className="mobile-auth-nav" style={{ display: 'none', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 'auto' }}>
+            <button type="button" onClick={go('login')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '6px 8px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-body)' }}>{T('common.auth.login')}</button>
+            <button type="button" onClick={go('register')} style={{ border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', padding: '6px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>{T('common.auth.register')}</button>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -407,6 +407,9 @@ textarea,
   .desktop-nav {
     display: none !important;
   }
+  .mobile-auth-nav {
+    display: flex !important;
+  }
   .header-nav-pills {
     display: none !important;
   }

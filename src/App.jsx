@@ -63,6 +63,11 @@ const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
 export default function App() {
   const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.pathname) : { screen: 'home' };
+  // Mobile lần đầu vào domain gốc "/" — chuyển thẳng vào kho biển số thay vì Home,
+  // giúp khách xem biển ngay thay vì lướt qua landing page trên màn hình nhỏ.
+  if (typeof window !== 'undefined' && window.location.pathname === '/' && window.innerWidth < 768 && initRoute.screen === 'home') {
+    initRoute.screen = 'list';
+  }
   const [favItems, setFavItems] = useState([]);
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home',

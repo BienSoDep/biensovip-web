@@ -12,6 +12,7 @@ import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { compareInsights, patternScore, buildFengShuiRows, priceScores } from '../lib/compareInsights.js';
 import { PURPOSES, INDUSTRIES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
+import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
 
 const ROW_LABELS = [
   { key: 'type', label: 'Loại biển' },
@@ -250,7 +251,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
               const { prov, seri, num } = splitPlateNumber(p.plateNumber);
               return (
                 <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
-                  <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 2, right: 2, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Bỏ khỏi so sánh"><X size={16} /></button>
+                  <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 2, right: 2, zIndex: 1, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Bỏ khỏi so sánh"><X size={16} /></button>
                   {p.thumbnailUrl ? (
                     <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                   ) : (
@@ -317,7 +318,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
                   ) : (
                     <>
                       {phone && <a href={`tel:${phone}`} style={{ textDecoration: 'none' }}><Button variant="primary" size="sm">Gọi ngay</Button></a>}
-                      {zalo && <a href={`https://zalo.me/${zalo}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}><Button variant="outline" size="sm">Nhắn Zalo</Button></a>}
+                      {zalo && <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(zalo, buildConsultMessage(p.plateNumber))}>Nhắn Zalo</Button>}
                       {!phone && !zalo && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>—</span>}
                     </>
                   )}

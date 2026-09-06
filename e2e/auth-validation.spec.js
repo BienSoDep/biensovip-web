@@ -38,7 +38,7 @@ test.describe('Auth validation edge cases', () => {
   });
 
   test('register: duplicate email shows "already used" error', async ({ page }) => {
-    const email = `dup${Date.now()}@example.com`;
+    const email = `trungletri.work+e2edup${Date.now()}@gmail.com`;
     await page.goto('/dang-ky');
     await page.getByLabel('Họ và tên').fill('First User');
     await page.getByLabel('Email').fill(email);

@@ -14,6 +14,7 @@ import { loadAuth } from '../lib/authStore.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { validBirthDate } from '../lib/date.js';
 import { trackFengshuiLookup, trackGenerateLead } from '../services/tracking/events.js';
+import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
 
 const PRICE_PRESETS = [
   { label: 'Dưới 200tr', min: '', max: '200000000' },
@@ -373,9 +374,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                       <Button variant="primary" size="sm">Gọi ngay</Button>
                     </a>
                     {contact?.zalo && (
-                      <a href={`https://zalo.me/${contact.zalo}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                        <Button variant="outline" size="sm">Nhắn Zalo</Button>
-                      </a>
+                      <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(r.plateNumber))}>Nhắn Zalo</Button>
                     )}
                     <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />
                   </div>

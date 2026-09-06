@@ -63,6 +63,34 @@ export function useCancelCommission(collaboratorId) {
   });
 }
 
+// Báo cáo giao dịch CTV tự khai ngoài platform — chờ duyệt/từ chối trước khi tính hoa hồng.
+export function useDealReports(status) {
+  const qs = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+  return useQuery({
+    queryKey: ['deal-reports', status ?? ''],
+    queryFn: () => apiClient.get(`/api/admin/deal-reports${qs}`),
+  });
+}
+
+export function useApproveDealReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/deal-reports/${id}/approve`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['deal-reports'] });
+      qc.invalidateQueries({ queryKey: ['admin-collaborators'] });
+    },
+  });
+}
+
+export function useRejectDealReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }) => apiClient.post(`/api/admin/deal-reports/${id}/reject`, { reason }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['deal-reports'] }),
+  });
+}
+
 // Nội dung trang ưu đãi CTV — admin đọc/sửa.
 export function useAdminCollaboratorBenefitContent() {
   const qc = useQueryClient();

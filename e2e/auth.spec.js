@@ -11,7 +11,7 @@ test.describe('Auth', () => {
 
   test('register succeeds with valid data', async ({ page }) => {
     await page.goto('/dang-ky');
-    const email = `test${Date.now()}@example.com`;
+    const email = `trungletri.work+e2etest${Date.now()}@gmail.com`;
     await page.getByLabel('Họ và tên').fill('Nguyễn Văn Test');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mật khẩu', { exact: true }).fill('matkhau123');

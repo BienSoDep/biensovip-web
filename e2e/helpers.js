@@ -18,7 +18,9 @@ export async function loginAdmin(page) {
 // Register tự động đăng nhập luôn (không cần bước /dang-nhap riêng) và điều hướng sang
 // /tai-khoan (trang "Hoàn thiện hồ sơ" onboarding cho user mới) — không hiện toast xác nhận đăng ký.
 export async function registerAndLogin(page, label = '') {
-  const email = `e2e${label}${Date.now()}@example.com`;
+  // Dùng email thật của user (Gmail + alias) — domain giả @example.com khiến
+  // backend gửi mail bounce thật (không tìm được miền) tràn ngập hộp thư.
+  const email = `trungletri.work+e2e${label}${Date.now()}@gmail.com`;
   const password = 'matkhau123';
   await page.goto('/dang-ky');
   await page.getByLabel('Họ và tên').fill('E2E Test User');

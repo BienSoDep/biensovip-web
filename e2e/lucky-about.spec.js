@@ -10,24 +10,24 @@ async function fillBirthDate(page, day, month, year) {
 
 test.describe('LuckyPlate', () => {
   test('form submit produces fengshui result', async ({ page }) => {
-    await page.goto('/tu-van');
+    await page.goto('/hop-menh');
     await expect(page.getByRole('heading', { name: 'Tìm biển số hợp mệnh của bạn' })).toBeVisible();
     await fillBirthDate(page, '15', '05', '1990');
     await page.getByRole('button', { name: 'Tra cứu mệnh của bạn' }).click();
-    await expect(page.getByText(/Mệnh .+ —/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Top biển hợp mệnh bạn' })).toBeVisible();
   });
 
   test('tra cứu lại resets the form', async ({ page }) => {
-    await page.goto('/tu-van');
+    await page.goto('/hop-menh');
     await fillBirthDate(page, '15', '05', '1990');
     await page.getByRole('button', { name: 'Tra cứu mệnh của bạn' }).click();
-    await expect(page.getByText(/Mệnh .+ —/)).toBeVisible();
-    await page.getByRole('button', { name: /Tra cứu lại/ }).click();
+    await expect(page.getByRole('heading', { name: 'Top biển hợp mệnh bạn' })).toBeVisible();
+    await page.getByRole('button', { name: /Sửa thông tin/ }).click();
     await expect(page.getByRole('button', { name: 'Tra cứu mệnh của bạn' })).toBeVisible();
   });
 
   test('invalid date shows error', async ({ page }) => {
-    await page.goto('/tu-van');
+    await page.goto('/hop-menh');
     await page.getByRole('button', { name: 'Tra cứu mệnh của bạn' }).click();
     await expect(page.getByText(/Vui lòng nhập ngày sinh|Ngày sinh không hợp lệ/)).toBeVisible();
   });
@@ -41,7 +41,7 @@ test.describe('About', () => {
     await expect(page.getByText('Giá trị tôi giữ vững')).toBeVisible();
     await expect(page.getByText('Quy trình mua — 4 bước')).toBeVisible();
     await expect(page.getByText('Khách hàng nói về tôi')).toBeVisible();
-    await expect(page.getByText('Câu hỏi thường gặp')).toBeVisible();
+    await expect(page.getByText('Câu hỏi thường gặp').first()).toBeVisible();
     await page.getByRole('button', { name: 'Xem kho biển số' }).click();
     await expect(page.getByRole('heading', { name: 'Kho biển số đẹp' })).toBeVisible();
   });

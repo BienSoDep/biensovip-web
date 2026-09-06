@@ -54,6 +54,14 @@ export function useCollaboratorDashboard(enabled) {
   });
 }
 
+// CTV tự báo giao dịch chốt ngoài platform (Zalo cá nhân) — chờ admin duyệt trước khi tính hoa hồng.
+export function useSubmitDealReport() {
+  return useMutation({
+    mutationFn: ({ plateId, buyerFullName, buyerPhone, dealAmount, note }) =>
+      apiClient.post('/api/collaborators/deal-reports', { plateId, buyerFullName, buyerPhone, dealAmount, note }),
+  });
+}
+
 // UC25 — danh sách khách đã đăng ký dưới mã giới thiệu của CTV (JWT CTV, pattern như dashboard).
 export function useCollaboratorCustomers(enabled) {
   return useQuery({
