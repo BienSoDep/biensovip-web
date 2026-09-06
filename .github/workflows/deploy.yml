@@ -15,7 +15,10 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
+            set -e
             cd ~/app/biensovip-web
-            git pull
+            git fetch origin
+            git reset --hard origin/main
+            echo "Deployed commit: $(git rev-parse --short HEAD)"
             cd ~/app/biensovip-backend
             docker compose up -d --build web
