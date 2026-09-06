@@ -630,7 +630,7 @@ export default function AdminPlates({ go, notify, st }) {
                       const { prov, seri, num: plateNum } = parsePlateNumber(r.number);
                       return (
                         <div key={r.key} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 12 }}>
-                          <div style={{ maxWidth: 180, margin: '0 auto' }}><PlateVisual size="md" prov={prov} seri={seri} num={plateNum} shape="short" /></div>
+                          <PlateVisual size="md" prov={prov} seri={seri} num={plateNum} shape="short" />
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 4px' }}>
                             <select value={r.plateTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'plateTypeId', e.target.value)} style={{ height: 26, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.plateTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
                               <option value="">— Loại biển? —</option>
