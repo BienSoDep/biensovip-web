@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert } from 'lucide-react';
+import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Copy } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import toast from 'react-hot-toast';
 import {
@@ -21,6 +21,7 @@ import { formatDate } from '../../lib/date.js';
 import { analyzePlateNumber } from '../../lib/compareInsights.js';
 import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
+import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
@@ -391,6 +392,18 @@ export default function AdminPlates({ go, notify, st }) {
     if (ok) { setQuickNum(''); setQuickPrice(''); }
   };
 
+  // Copy prompt để dán vào ChatGPT/Claude/Gemini — nhờ AI chuyển Excel/PDF danh sách biển số sang
+  // đúng format dán ở đây, tránh admin phải gõ tay tài liệu dài. Nguồn: lib/importPlatePrompt.js
+  // (đồng bộ nội dung với biensodep-infrastructure/docs/ops/PROMPT-IMPORT-BIEN-SO-TU-EXCEL-PDF.md).
+  const copyImportPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(IMPORT_PLATE_PROMPT);
+      notify('Đã copy prompt — dán vào ChatGPT/Claude kèm file Excel/PDF');
+    } catch {
+      notify('Không copy được — trình duyệt chặn clipboard');
+    }
+  };
+
   // ── Paste / CSV: parse từng dòng "số biển,giá[,trạng thái]" → preview xanh/đỏ. Giá bỏ trống (không
   // có phần thứ 2, hoặc có dấu phân tách nhưng rỗng — VD "43A1-999.99," từ ô Excel trống) →
   // priceOnRequest = true. Cột thứ 3 (tùy chọn) đánh dấu biển đã bán trước đây (nhập lại dữ liệu lịch
@@ -517,8 +530,9 @@ export default function AdminPlates({ go, notify, st }) {
           {inputCell(quickPrice, setQuickPrice, 'Giá (VNĐ)')}
           <Button variant="primary" size="md" onClick={quickAdd} disabled={bulkMut.isPending}>{bulkMut.isPending ? 'Đang thêm…' : 'Thêm'}</Button>
           <Button variant="ghost" size="md" onClick={() => setBulkOpen(!bulkOpen)}>{bulkOpen ? 'Đóng dán nhiều' : 'Dán nhiều / CSV'}</Button>
+          <Button variant="ghost" size="md" onClick={copyImportPrompt} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Copy size={14} /> Copy prompt import từ Excel/PDF</Button>
         </div>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển. Dán nhiều hỗ trợ thêm cột thứ 3 "đã bán" để nhập lại biển đã bán trước đây.</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển. Dán nhiều hỗ trợ thêm cột thứ 3 "đã bán" để nhập lại biển đã bán trước đây. Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
 
         {bulkOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
