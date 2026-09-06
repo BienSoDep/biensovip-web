@@ -140,6 +140,7 @@ export default function AdminPlates({ go, notify, st }) {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [bulkRows, setBulkRows] = useState([]);
+  const [bulkView, setBulkView] = useState('list'); // 'list' | 'card' — xem README trong hàm parseLine
   // Inline edit cell: { id, field, value }
   const [cell, setCell] = useState(null);
   // Bulk selection: Set of plate ids on current page
@@ -412,6 +413,20 @@ export default function AdminPlates({ go, notify, st }) {
   // nhầm biển còn bán thành đã bán.
   const SOLD_MARKERS = ['đã bán', 'da ban', 'sold', '1'];
   const isSoldMarker = (s) => SOLD_MARKERS.includes(s.trim().toLowerCase());
+  // Detect category (tỉnh/loại xe/loại biển) ngay lúc parse để admin thấy và sửa TRƯỚC khi bấm Thêm —
+  // dùng lại đúng logic detect của form "Thêm biển số (đầy đủ)" (detectPlateTypeId/detectVehicleTypeId)
+  // để 2 nơi không lệch kết quả. provinceId ở đây chỉ để hiển thị/cho phép sửa tay; nếu admin không sửa
+  // (giữ nguyên giá trị detect), submitBulk vẫn không gửi override — để server tự resolve như cũ.
+  const OTO_MARKERS = ['oto', 'o to', 'ô tô', 'car', 'xe hoi', 'xe hơi'];
+  const XEMAY_MARKERS = ['xe may', 'xe máy', 'moto', 'motorbike'];
+  // Cột thứ 4 (tùy chọn) ghi rõ loại xe — override kết quả detect tự động từ seri (detectVehicleTypeId)
+  // khi seri mơ hồ hoặc admin biết chắc hơn máy. Không khớp marker nào → giữ nguyên giá trị detect.
+  const detectVehicleTypeOverride = (raw, vehicleTypesRaw) => {
+    const s = raw.trim().toLowerCase();
+    if (OTO_MARKERS.includes(s)) return (vehicleTypesRaw.find((o) => (o.name || '').toLowerCase().includes('ô tô')) || {}).id || '';
+    if (XEMAY_MARKERS.includes(s)) return (vehicleTypesRaw.find((o) => (o.name || '').toLowerCase().includes('xe máy')) || {}).id || '';
+    return null;
+  };
   const parseLine = (line) => {
     const parts = line.split(/[,;\t]+/).map((p) => p.trim());
     const numberPart = (parts[0] || '').trim();
@@ -421,8 +436,16 @@ export default function AdminPlates({ go, notify, st }) {
     const priceOnRequest = !priceRaw;
     const price = priceOnRequest ? 0 : num(priceRaw);
     const sold = parts.length > 2 && isSoldMarker(parts[2]);
-    const prov = parsePlateNumber(number).prov;
-    return { number, price, priceOnRequest, sold, provName: prov ? provNameOf(prov) : '', ok: /-\d/.test(number), reason: /-\d/.test(number) ? '' : 'Sai định dạng' };
+    const ok = /-\d/.test(number);
+    const { prov, seri, num: serial } = parsePlateNumber(number);
+    const provinceId = ok ? provinceByCode(prov) : '';
+    const plateTypeId = ok ? detectPlateTypeId(serial.replace(/\D/g, ''), catOpts(plateTypes)) : '';
+    const vehicleOverride = parts.length > 3 ? detectVehicleTypeOverride(parts[3], vehicleTypes) : null;
+    const vehicleTypeId = ok ? (vehicleOverride ?? detectVehicleTypeId(seri, catOpts(vehicleTypes))) : '';
+    return {
+      number, price, priceOnRequest, sold, provinceId, plateTypeId, vehicleTypeId,
+      provName: prov ? provNameOf(prov) : '', ok, reason: ok ? '' : 'Sai định dạng',
+    };
   };
 
   const onBulkTextChange = (v) => {
@@ -430,11 +453,19 @@ export default function AdminPlates({ go, notify, st }) {
     setBulkRows(v.split('\n').map(parseLine).filter(Boolean).map((r, i) => ({ key: i, done: false, ...r })));
   };
 
+  // Admin sửa tay Loại biển/Loại xe/Tỉnh detect sai — chỉ sửa dòng chưa submit (done=false).
+  const editBulkRow = (key, field, value) => {
+    setBulkRows((rows) => rows.map((r) => (r.key === key && !r.done ? { ...r, [field]: value } : r)));
+  };
+
   const submitBulk = async () => {
     const valid = bulkRows.filter((r) => r.ok && !r.done);
     if (valid.length === 0) { notify('Không có dòng hợp lệ để thêm'); return; }
     try {
-      const results = await bulkMut.mutateAsync(valid.map((r) => ({ plateNumber: r.number, price: r.price, isHot: false, priceOnRequest: r.priceOnRequest, sold: r.sold })));
+      const results = await bulkMut.mutateAsync(valid.map((r) => ({
+        plateNumber: r.number, price: r.price, isHot: false, priceOnRequest: r.priceOnRequest, sold: r.sold,
+        plateTypeId: r.plateTypeId || undefined, vehicleTypeId: r.vehicleTypeId || undefined, provinceId: r.provinceId || undefined,
+      })));
       setBulkRows((rows) => rows.map((r) => {
         const res = results.find((x) => x.plateNumber === r.number);
         return res ? { ...r, done: true, ok: res.success, reason: res.success ? '' : (ERR_MSG[res.error] || 'Lỗi') } : r;
@@ -532,27 +563,78 @@ export default function AdminPlates({ go, notify, st }) {
           <Button variant="ghost" size="md" onClick={() => setBulkOpen(!bulkOpen)}>{bulkOpen ? 'Đóng dán nhiều' : 'Dán nhiều / CSV'}</Button>
           <Button variant="ghost" size="md" onClick={copyImportPrompt} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Copy size={14} /> Copy prompt import từ Excel/PDF</Button>
         </div>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển. Dán nhiều hỗ trợ thêm cột thứ 3 "đã bán" để nhập lại biển đã bán trước đây. Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển. Dán nhiều hỗ trợ thêm cột 3 "đã bán" và cột 4 "ô tô"/"xe máy" (ghi đè khi hệ thống đoán sai). Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
 
         {bulkOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <textarea value={bulkText} onChange={(e) => onBulkTextChange(e.target.value)} rows={5}
-              placeholder={'Mỗi dòng 1 biển, cách nhau bằng dấu phẩy / tab:\n43A1-999.99, 350000000\n43A1-666.66, 500000000\n43A1-777.77 (bỏ trống giá = Giá liên hệ)\n43A1-555.55, 45000000, đã bán (nhập lại biển đã bán trước đây)'}
+              placeholder={'Mỗi dòng 1 biển, cách nhau bằng dấu phẩy / tab:\n43A1-999.99, 350000000\n43A1-666.66, 500000000\n43A1-777.77 (bỏ trống giá = Giá liên hệ)\n43A1-555.55, 45000000, đã bán (nhập lại biển đã bán trước đây)\n43AB-668.88, 39000000, , xe máy (cột 4 ghi rõ loại xe nếu hệ thống đoán sai từ seri)'}
               style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none', fontFamily: 'monospace' }} />
             {bulkRows.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflow: 'auto' }}>
-                {bulkRows.map((r) => (
-                  <div key={r.key} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: r.done ? (r.ok ? 'var(--mint-100)' : 'var(--rose-100)') : 'transparent', font: 'var(--type-body-sm)' }}>
-                    <span style={{ color: 'var(--text-strong)', flex: '1 1 160px' }}>{r.number || '—'}</span>
-                    <span style={{ color: 'var(--text-muted)', flex: '1 1 120px' }}>{r.provName || '…'}</span>
-                    <span style={{ color: 'var(--text-muted)', flex: '1 1 100px' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
-                    {r.sold && <span style={{ color: 'var(--status-danger)', flex: '0 0 auto', font: 'var(--type-caption)' }}>Đã bán</span>}
-                    <span style={{ color: r.ok ? 'var(--mint-700)' : 'var(--status-danger)', flex: '0 0 130px', textAlign: 'right' }}>
-                      {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
-                    </span>
+              <>
+                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <Button variant={bulkView === 'list' ? 'dark' : 'ghost'} size="sm" onClick={() => setBulkView('list')}>Danh sách</Button>
+                  <Button variant={bulkView === 'card' ? 'dark' : 'ghost'} size="sm" onClick={() => setBulkView('card')}>Xem biển (UI đầy đủ)</Button>
+                </div>
+                {bulkView === 'list' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 320, overflow: 'auto' }}>
+                    {bulkRows.map((r) => (
+                      <div key={r.key} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: '4px 8px', borderRadius: 'var(--radius-sm)', background: r.done ? (r.ok ? 'var(--mint-100)' : 'var(--rose-100)') : 'transparent', font: 'var(--type-body-sm)' }}>
+                        <span style={{ color: 'var(--text-strong)', flex: '1 1 150px' }}>{r.number || '—'}</span>
+                        <select value={r.provinceId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'provinceId', e.target.value)} style={{ flex: '1 1 130px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.provinceId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                          <option value="">— Tỉnh? —</option>
+                          {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                        <select value={r.plateTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'plateTypeId', e.target.value)} style={{ flex: '1 1 130px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.plateTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                          <option value="">— Loại biển? —</option>
+                          {plateTypes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                        <select value={r.vehicleTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'vehicleTypeId', e.target.value)} style={{ flex: '0 0 100px', height: 28, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.vehicleTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                          <option value="">— Xe? —</option>
+                          {vehicleTypes.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        </select>
+                        <span style={{ color: 'var(--text-muted)', flex: '0 0 100px', textAlign: 'right' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
+                        {r.sold && <span style={{ color: 'var(--status-danger)', flex: '0 0 auto', font: 'var(--type-caption)' }}>Đã bán</span>}
+                        <span style={{ color: r.ok ? 'var(--mint-700)' : 'var(--status-danger)', flex: '0 0 110px', textAlign: 'right', font: 'var(--type-caption)' }}>
+                          {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <>
+                    {bulkRows.some((r) => !r.ok) && (
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>
+                        {bulkRows.filter((r) => !r.ok).length} dòng lỗi định dạng không hiện ở đây — xem "Danh sách" để sửa.
+                      </span>
+                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--space-3)', maxHeight: 480, overflow: 'auto', padding: 4 }}>
+                    {bulkRows.filter((r) => r.ok).map((r) => {
+                      const { prov, seri, num: plateNum } = parsePlateNumber(r.number);
+                      return (
+                        <div key={r.key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <PlateVisual size="sm" prov={prov} seri={seri} num={plateNum} shape="short" />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 4px' }}>
+                            <select value={r.plateTypeId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'plateTypeId', e.target.value)} style={{ height: 26, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.plateTypeId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                              <option value="">— Loại biển? —</option>
+                              {plateTypes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                            <select value={r.provinceId || ''} disabled={r.done} onChange={(e) => editBulkRow(r.key, 'provinceId', e.target.value)} style={{ height: 26, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: r.provinceId ? 'var(--text-strong)' : 'var(--status-danger)' }}>
+                              <option value="">— Tỉnh? —</option>
+                              {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                            <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
+                            <span style={{ font: 'var(--type-caption)', color: r.done ? (r.ok ? 'var(--mint-700)' : 'var(--status-danger)') : 'var(--text-muted)' }}>
+                              {r.sold ? 'Đã bán · ' : ''}{r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : 'Sẵn sàng'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </>
+                )}
+              </>
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
               <Button variant="primary" size="md" onClick={submitBulk} disabled={bulkMut.isPending || bulkRows.filter((r) => r.ok && !r.done).length === 0}>

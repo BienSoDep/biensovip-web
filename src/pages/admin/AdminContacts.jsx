@@ -5,7 +5,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact } from '../../services/adminContacts.js';
 import { useCreatePaymentLink } from '../../services/paymentLinks.js';
 import { CreateTransactionForm } from './AdminTransactions.jsx';
-import { useAdminStaff } from '../../services/adminStaff.js';
+import { useStaffLite } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { Select, Badge } from '../../components/index.jsx';
@@ -41,7 +41,7 @@ export default function AdminContacts({ notify, go }) {
   const [toDate, setToDate] = useState('');
   const [assignedTo, setAssignedTo] = useState('all');
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/contact-requests');
-  const { data: staffData } = useAdminStaff();
+  const { data: staffData } = useStaffLite();
   const staffList = staffData?.items || [];
   const currentUserId = loadAuth()?.user?.id;
 

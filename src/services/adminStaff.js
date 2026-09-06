@@ -8,6 +8,15 @@ export function useAdminStaff() {
   });
 }
 
+// Rút gọn (chỉ id+fullName) — mọi admin (kể cả role "staff") gọi được, dùng cho dropdown "Phụ trách"
+// khi gán liên hệ/lead. useAdminStaff() ở trên chỉ super-admin gọi được (trả cả email/quyền/trạng thái).
+export function useStaffLite() {
+  return useQuery({
+    queryKey: ['admin-staff-lite'],
+    queryFn: () => apiClient.get('/api/admin/staff/lite'),
+  });
+}
+
 export function useCreateStaff() {
   const qc = useQueryClient();
   return useMutation({
