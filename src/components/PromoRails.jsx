@@ -38,7 +38,7 @@ function PlateRailItem({ plate, openPlate }) {
 function PlateRail({ openPlate }) {
   const wide = useIsWide();
   const { data } = useFeaturedPlates(6);
-  const items = data?.items || [];
+  const items = data || [];
   if (!wide || !items.length || !openPlate) return null;
   return <aside className="promo-rail promo-rail--left">{items.map((p) => <PlateRailItem key={p.id} plate={p} openPlate={openPlate} />)}</aside>;
 }
