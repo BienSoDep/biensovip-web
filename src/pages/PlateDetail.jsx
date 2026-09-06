@@ -116,7 +116,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     fullName: user?.fullName || '',
     phone: user?.identifierType === 'phone' ? (user?.identifier || '') : '',
     email: user?.identifierType === 'email' ? (user?.identifier || '') : '',
-    note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '',
+    note: '', intent: 'deposit_request', depositAmount: '', subscribe: false, honeypot: '',
   });
   const [cErr, setCErr] = useState(null);
   const [copied, setCopied] = useState(false);

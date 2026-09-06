@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { usePromoVideos } from '../services/promoVideoService.js';
 import { useFeaturedPlates } from '../services/plates.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
-import { optimizeImageUrl } from '../lib/cloudinary.js';
+import PlateVisual from './PlateVisual.jsx';
 import TikTokEmbed from './TikTokEmbed.jsx';
 
 function useIsWide() {
@@ -20,15 +20,15 @@ function useIsWide() {
 
 function PlateRailItem({ plate, openPlate }) {
   const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
+  const meta = [plate.type, plate.vehicleType, plate.province].filter(Boolean).join(' · ');
   return (
     <a href="#" onClick={(e) => { e.preventDefault(); openPlate(plate.id); }} className="promo-rail__item promo-rail__item--plate" style={{ textDecoration: 'none', display: 'block' }}>
-      {plate.thumbnailUrl ? (
-        <img src={optimizeImageUrl(plate.thumbnailUrl)} alt={`Biển số ${plate.plateNumber}`} loading="lazy" style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', display: 'block' }} />
-      ) : (
-        <div style={{ width: '100%', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-muted)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{prov}{seri}·{num}</div>
-      )}
-      <div style={{ padding: '8px 10px' }}>
+      <div style={{ padding: 8 }}>
+        <PlateVisual size="sm" prov={prov} seri={seri} num={num} shape="short" />
+      </div>
+      <div style={{ padding: '0 10px 10px' }}>
         <div style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</div>
+        {meta && <div style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta}</div>}
         <div style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</div>
       </div>
     </a>
