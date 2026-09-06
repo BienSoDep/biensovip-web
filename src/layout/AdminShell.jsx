@@ -92,7 +92,11 @@ function NavItemButton({ navKey, label, on, badgeCount, onClick }) {
 // toggle mở/thu để admin đến thẳng mục cần, không phải lướt qua 21 mục phẳng. Nhóm chứa trang đang
 // active luôn tự mở; trạng thái đóng/mở nhóm khác nhớ qua localStorage (per-viewer, không cần đồng bộ server).
 function AdminSidebarNav({ s, st, go, onNavigate }) {
-  const lastSeenAt = (() => { try { return localStorage.getItem(LAST_SEEN_KEY) || new Date(Date.now() - 86400000).toISOString(); } catch { return new Date(Date.now() - 86400000).toISOString(); } })();
+  // useState lazy init (không phải tính trực tiếp trong thân hàm) — khi chưa có LAST_SEEN_KEY,
+  // new Date().toISOString() tạo giá trị khác nhau mỗi millisecond; tính lại mỗi render (VD khi
+  // component cha re-render dồn dập lúc bulk-add nhiều biển) đổi luôn queryKey của
+  // useNotificationCounts, khiến nó refetch liên tục thay vì chỉ theo refetchInterval (30s).
+  const [lastSeenAt] = useState(() => { try { return localStorage.getItem(LAST_SEEN_KEY) || new Date(Date.now() - 86400000).toISOString(); } catch { return new Date(Date.now() - 86400000).toISOString(); } });
   const { data: counts } = useNotificationCounts(lastSeenAt);
 
   const [collapsedGroups, setCollapsedGroups] = useState(() => {
