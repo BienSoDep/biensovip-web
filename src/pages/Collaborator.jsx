@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Share2, Link2, HandCoins, Wallet, UserPlus } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Badge, Input } from '../components/index.jsx';
-import { useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent, useSubmitDealReport } from '../services/collaborators.js';
+import { Badge, Input, Select } from '../components/index.jsx';
+import { useBecomeCollaborator, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent, useSubmitDealReport } from '../services/collaborators.js';
 import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
+import { refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
+import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import { useGmailStatus, useGmailOAuthUrl, useUnlinkGmail } from '../services/gmailLink.js';
 import { SkeletonCard } from '../components/Skeleton.jsx';
@@ -341,7 +343,114 @@ function ProcessSteps() {
 }
 
 // Trang ưu đãi — user đã đăng nhập chưa là CTV, hoặc chưa đăng nhập. Nội dung admin chỉnh.
-function BenefitLanding({ go }) {
+// Form kích hoạt CTV ngay tại trang giới thiệu — không đá qua Profile. Liệt kê đúng thông tin
+// còn thiếu theo điều kiện backend (POST /api/collaborators/become): email phải verified nếu
+// tài khoản đăng ký bằng email, và bắt buộc ngân hàng nhận hoa hồng.
+function ActivateCtvForm({ onActivated }) {
+  const user = loadAuth()?.user;
+  const become = useBecomeCollaborator();
+  const [bankAccount, setBankAccount] = useState('');
+  const [bankCode, setBankCode] = useState('');
+  const [bankAccountHolder, setBankAccountHolder] = useState('');
+  const [banks, setBanks] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(Boolean(user?.verified));
+  const needsEmailVerify = user?.identifierType === 'email' && !emailVerified;
+
+  useEffect(() => { fetchVietQrBanks().then(setBanks); }, []);
+
+  const sendOtp = async () => {
+    setOtpBusy(true);
+    try {
+      await requestEmailVerifyOtp();
+      setOtpSent(true);
+      toast.success('Đã gửi mã xác thực tới email của bạn.');
+    } catch (e) {
+      toast.error(e?.message || 'Gửi mã thất bại, thử lại sau.');
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
+  const confirmOtp = async () => {
+    if (otpCode.trim().length !== 6) { toast.error('Nhập đủ 6 số của mã xác thực.'); return; }
+    setOtpBusy(true);
+    try {
+      await confirmEmailVerifyOtp(otpCode.trim());
+      await refreshToken();
+      setEmailVerified(true);
+      toast.success('Xác thực email thành công.');
+      setOtpSent(false);
+      setOtpCode('');
+    } catch (e) {
+      toast.error(e?.message || 'Mã xác thực không đúng hoặc đã hết hạn.');
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
+  const activate = async () => {
+    if (!bankAccount.trim()) { toast.error('Nhập số tài khoản nhận hoa hồng trước khi kích hoạt.'); return; }
+    if (!bankCode) { toast.error('Chọn ngân hàng trước khi kích hoạt.'); return; }
+    setBusy(true);
+    try {
+      await become.mutateAsync({ bankAccount: bankAccount.trim(), bankCode, bankAccountHolder: bankAccountHolder.trim() || undefined });
+      await refreshToken();
+      toast.success('Bạn đã trở thành Cộng tác viên');
+      onActivated();
+    } catch (e) {
+      const code = e?.code;
+      if (code === 'EMAIL_NOT_VERIFIED') toast.error('Xác thực email trước khi trở thành CTV.');
+      else toast.error(e?.message || 'Kích hoạt thất bại, thử lại sau.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const qrPreviewUrl = vietQrImageUrl(bankCode, bankAccount.trim());
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
+      <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+        {needsEmailVerify
+          ? 'Còn thiếu: xác thực email. Điền mã gửi tới email của bạn để kích hoạt.'
+          : 'Còn thiếu: thông tin ngân hàng nhận hoa hồng. Điền nhanh bên dưới để kích hoạt ngay.'}
+      </p>
+
+      {needsEmailVerify && (
+        !otpSent ? (
+          <Button variant="outline" size="md" style={{ alignSelf: 'flex-start' }} onClick={sendOtp} disabled={otpBusy}>
+            {otpBusy ? 'Đang gửi...' : 'Gửi mã xác thực email'}
+          </Button>
+        ) : (
+          <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+            <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
+            <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
+          </div>
+        )
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', opacity: needsEmailVerify ? 0.5 : 1, pointerEvents: needsEmailVerify ? 'none' : 'auto' }}>
+        <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
+        <Input label="Số tài khoản nhận hoa hồng" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+        <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
+        {qrPreviewUrl && (
+          <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 140, height: 140, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
+        )}
+        <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start' }}>
+          {busy ? 'Đang kích hoạt...' : 'Kích hoạt CTV'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function BenefitLanding({ go, onActivated }) {
   const { data, isLoading } = useCollaboratorBenefitContent();
   const isLoggedIn = Boolean(loadAuth()?.accessToken);
   const title = data?.titleHtml || 'Cộng tác viên';
@@ -387,16 +496,14 @@ function BenefitLanding({ go }) {
       <ProcessSteps />
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-8) var(--gutter-card)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          {isLoggedIn ? (
-            <Button variant="primary" size="lg" onClick={() => { window.location.hash = 'become-ctv'; go('profile')(); }}>Trở thành CTV</Button>
-          ) : (
-            <>
-              <Button variant="primary" size="lg" onClick={() => go('login')()}>Đăng nhập để trở thành CTV</Button>
-              <Button variant="ghost" size="md" onClick={() => go('register')()}>Chưa có tài khoản? Đăng ký ngay</Button>
-            </>
-          )}
-        </div>
+        {isLoggedIn ? (
+          <ActivateCtvForm onActivated={onActivated} />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Button variant="primary" size="lg" onClick={() => go('login')()}>Đăng nhập để trở thành CTV</Button>
+            <Button variant="ghost" size="md" onClick={() => go('register')()}>Chưa có tài khoản? Đăng ký ngay</Button>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -412,6 +519,6 @@ export default function Collaborator({ go }) {
 
   if (loggedIn) return <Dashboard onReset={logout} go={go} />;
 
-  // Chưa là CTV (đăng nhập hay không) → trang ưu đãi + nút đưa qua profile/login.
-  return <BenefitLanding go={go} />;
+  // Chưa là CTV (đăng nhập hay không) → trang ưu đãi + form kích hoạt CTV ngay tại chỗ.
+  return <BenefitLanding go={go} onActivated={() => setLoggedIn(true)} />;
 }
