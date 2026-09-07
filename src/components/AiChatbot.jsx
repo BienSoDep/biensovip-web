@@ -16,6 +16,20 @@ function clearStoredSessionId() {
   try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
 }
 
+const GREETING_QUICK_REPLIES = ['Xem biển giá dưới 100 triệu', 'Tìm biển hợp mệnh của tôi', 'Cách đặt cọc?'];
+const PLATE_FOUND_QUICK_REPLIES = ['Ý nghĩa biển số này là gì?', 'Còn hàng không?', 'Cách đặt cọc?'];
+const NO_RESULT_QUICK_REPLIES = ['Xem biển giá dưới 100 triệu', 'Chat với nhân viên tư vấn'];
+
+// Gợi ý câu hỏi tiếp theo — rule-based theo nội dung tin bot vừa trả lời, không cần đổi prompt AI.
+// Có plate card kèm theo → gợi ý xoay quanh biển đó. Không tìm thấy gì → gợi ý lối thoát khác (xem
+// theo giá, hoặc nhờ nhân viên) thay vì lặp lại câu hỏi cũ không ra kết quả.
+function nextQuickReplies(lastMsg) {
+  if (!lastMsg || lastMsg.from !== 'bot') return [];
+  if (lastMsg.plates?.length > 0) return PLATE_FOUND_QUICK_REPLIES;
+  if (/không tìm thấy|không có thông tin/i.test(lastMsg.text || '')) return NO_RESULT_QUICK_REPLIES;
+  return GREETING_QUICK_REPLIES;
+}
+
 export default function AiChatbot({ go }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState([GREETING]);
@@ -31,6 +45,8 @@ export default function AiChatbot({ go }) {
   const history = useChatbotHistory(storedId);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, sendMessage.isPending]);
+
+  const quickReplies = sendMessage.isPending ? [] : nextQuickReplies(msgs[msgs.length - 1]);
 
   // Khôi phục hội thoại cũ từ localStorage — chỉ chạy 1 lần khi có kết quả history.
   useEffect(() => {
@@ -143,9 +159,9 @@ export default function AiChatbot({ go }) {
             )}
             <div ref={bottomRef} />
           </div>
-          {msgs.length === 1 && (
+          {!rateLimited && quickReplies.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 var(--space-3) var(--space-2)' }}>
-              {['Ý nghĩa biển số này là gì?', 'Còn hàng không?', 'Cách đặt cọc?'].map((qr) => (
+              {quickReplies.map((qr) => (
                 <button key={qr} onClick={() => send(qr)} disabled={sendMessage.isPending} style={{ border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '5px 12px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: sendMessage.isPending ? 'default' : 'pointer', opacity: sendMessage.isPending ? 0.6 : 1 }}>{qr}</button>
               ))}
             </div>
