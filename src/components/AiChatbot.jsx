@@ -112,7 +112,7 @@ export default function AiChatbot({ go }) {
         </button>
       )}
       {open && (
-        <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Trợ lý Biensovip" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 'var(--z-chatbot)', width: 360, maxWidth: 'calc(100vw - 32px)', height: 480, maxHeight: 'calc(100vh - 80px)', background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'modalIn 200ms var(--ease-out)' }}>
+        <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Trợ lý Biensovip" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 'var(--z-filter-overlay)', width: 360, maxWidth: 'calc(100vw - 32px)', height: 480, maxHeight: 'calc(100vh - 80px)', background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'modalIn 200ms var(--ease-out)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-4)', background: 'var(--action-primary)', color: 'var(--white)' }}>
             <Sparkles size={20} />
             <div style={{ flex: 1 }}><span style={{ font: 'var(--type-title-3)', color: 'var(--white)' }}>Trợ lý Biensovip</span></div>
