@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2, ChevronDown,
-  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History, Info, KeyRound, Eye, EyeOff } from 'lucide-react';
+  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History, Info, KeyRound, Eye, EyeOff, Search } from 'lucide-react';
 import { Select as BaseSelect } from '@base-ui/react/select';
 import Button from './Button.jsx';
 import { apiClient } from '../services/apiClient.js';
@@ -202,18 +202,21 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
 
 export function SearchField({ placeholder, value, onChange, width, ariaLabel }) {
   return (
-    <input
-      type="search"
-      placeholder={placeholder}
-      aria-label={ariaLabel || placeholder}
-      value={value ?? ''}
-      onChange={onChange}
-      style={{
-        height: 40, width, border: 'none', borderRadius: 'var(--radius-pill)',
-        background: 'var(--surface-sunken)', padding: '0 16px', font: 'var(--type-body-sm)',
-        color: 'var(--text-strong)', outline: 'none', minWidth: 0,
-      }}
-    />
+    <span style={{ position: 'relative', display: 'inline-flex', width, minWidth: 0 }}>
+      <Search size={16} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', color: 'var(--text-faint)', pointerEvents: 'none' }} />
+      <input
+        type="search"
+        placeholder={placeholder}
+        aria-label={ariaLabel || placeholder}
+        value={value ?? ''}
+        onChange={onChange}
+        style={{
+          height: 44, width: '100%', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)',
+          background: 'var(--white)', padding: '0 16px 0 40px', font: 'var(--type-body-sm)',
+          color: 'var(--text-strong)', outline: 'none', minWidth: 0,
+        }}
+      />
+    </span>
   );
 }
 
