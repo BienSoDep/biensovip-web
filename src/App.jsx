@@ -668,7 +668,6 @@ export default function App() {
             if (s === 'fav') trail = [{ label: 'Yêu thích' }];
             else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
-            else if (s === 'lucky') trail = [{ label: 'Tư vấn biển hợp mệnh' }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
             else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];
             else if (s === 'saved') trail = [{ label: 'Thông báo biển mới' }];
