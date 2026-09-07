@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame } from 'lucide-react';
+import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame, Check } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { Input, Checkbox, Eyebrow } from '../components/index.jsx';
@@ -8,6 +8,8 @@ import PlateVisual from '../components/PlateVisual.jsx';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import { useGoogleLogin, useGoogleConfirmLink } from '../services/googleAuth.js';
 import { routeFor } from '../config/routes.js';
+import { useFeaturedPlates } from '../services/plates.js';
+import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 
 const SWAP_TRANSITION = { type: 'spring', stiffness: 90, damping: 20, mass: 1 };
 const CONTENT_FADE = { duration: 0.3, ease: [0.22, 1, 0.36, 1] };
@@ -21,14 +23,46 @@ const REGISTER_BENEFITS = [
   { icon: Star, text: 'Đánh giá và chia sẻ trải nghiệm sau khi mua' },
 ];
 
-// Vài biển "đẹp" tiêu biểu — xoay vòng làm điểm nhấn hình ảnh cho panel, không phụ thuộc API.
-// Kèm ý nghĩa + giá + trạng thái để không chỉ là hình biển trơ trọi.
-const SHOWCASE_PLATES = [
-  { prov: '43', seri: 'A1', num: '888.88', shape: 'short', name: 'Tứ Quý Phát', price: '1.850.000.000đ', hot: true },
-  { prov: '43', seri: 'B2', num: '999.99', shape: 'short', name: 'Tứ Quý Cửu', price: '2.100.000.000đ', hot: true },
-  { prov: '43', seri: 'C1', num: '686.86', shape: 'short', name: 'Lộc Phát Kép', price: '420.000.000đ', hot: false },
-  { prov: '43', seri: 'A2', num: '567.89', shape: 'short', name: 'Sảnh Tiến', price: '365.000.000đ', hot: false },
+
+const PW_RULES = [
+  { label: 'Tối thiểu 8 ký tự', test: (v) => v.length >= 8 },
+  { label: 'Có chữ hoa', test: (v) => /[A-Z]/.test(v) },
+  { label: 'Có chữ thường', test: (v) => /[a-z]/.test(v) },
+  { label: 'Có số', test: (v) => /\d/.test(v) },
+  { label: 'Có ký tự đặc biệt', test: (v) => /[^A-Za-z0-9]/.test(v) },
 ];
+
+// Real-time độ mạnh mật khẩu — không chặn submit nếu thiếu tiêu chí, chỉ hiện để tham khảo.
+function PasswordStrength({ value }) {
+  if (!value) return null;
+  const passed = PW_RULES.filter((r) => r.test(value)).length;
+  const level = passed <= 2 ? 0 : passed <= 4 ? 1 : 2;
+  const meta = [
+    { text: 'Yếu', color: 'var(--status-danger)' },
+    { text: 'Trung bình', color: 'var(--status-warning, #D97706)' },
+    { text: 'Mạnh', color: 'var(--status-success, #16A34A)' },
+  ][level];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: -8 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} style={{ flex: 1, height: 4, borderRadius: 'var(--radius-pill)', background: i <= level ? meta.color : 'var(--border-hairline)', transition: 'background 150ms var(--ease-out)' }} />
+        ))}
+        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: meta.color, marginLeft: 4 }}>{meta.text}</span>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
+        {PW_RULES.map((r) => {
+          const ok = r.test(value);
+          return (
+            <span key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 3, font: 'var(--type-caption)', color: ok ? 'var(--status-success, #16A34A)' : 'var(--text-faint)' }}>
+              {ok ? <Check size={11} /> : <span style={{ width: 11, textAlign: 'center' }}>·</span>} {r.label}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function OtpBoxes({ value, onChange, error, disabled }) {
   const refs = useRef([]);
@@ -63,7 +97,7 @@ function OtpBoxes({ value, onChange, error, disabled }) {
   );
 }
 
-export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp, submitAdmin2fa, blurValidateRegisterField, zalo }) {
+export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField, authMeta, authSubmit, otpLoginRequest, otpLoginVerify, resendOtp, submitAdmin2fa, blurValidateRegisterField, zalo }) {
   const [otpMode, setOtpMode] = useState(false);
   const [remember, setRemember] = useState(true);
   const [lastEmail, setLastEmail] = useState('');
@@ -145,13 +179,18 @@ export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta,
     authSubmit(remember);
   };
 
-  // Xoay biển mẫu mỗi 3.2s — điểm nhấn hình ảnh chính của panel, thay cho khối chữ tĩnh.
+  // Xoay biển thật (nổi bật) mỗi 3.2s — điểm nhấn hình ảnh chính của panel, bấm vào chuyển thẳng
+  // sang trang chi tiết biển đó thay vì chỉ trình diễn hình ảnh trơ trọi.
+  const { data: featuredPlates } = useFeaturedPlates(6);
+  const plates = featuredPlates?.length ? featuredPlates : [];
   const [plateIdx, setPlateIdx] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setPlateIdx((i) => (i + 1) % SHOWCASE_PLATES.length), 3200);
+    if (plates.length < 2) return;
+    const t = setInterval(() => setPlateIdx((i) => (i + 1) % plates.length), 3200);
     return () => clearInterval(t);
-  }, []);
-  const plate = SHOWCASE_PLATES[plateIdx];
+  }, [plates.length]);
+  const plate = plates[plateIdx % (plates.length || 1)];
+  const goPlateDetail = plate ? (e) => { e.preventDefault(); openPlate?.(plate.id); go('detail')(); } : undefined;
 
   // Register swaps the two blocks (info panel goes right, form goes left) — order is animated by
   // framer-motion's layout prop so the swap reads as a slide rather than an instant jump.
@@ -174,35 +213,38 @@ export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta,
             </a>
           </div>
 
+          {!!plate && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, gap: 'var(--space-4)' }}>
             <AnimatePresence mode="wait">
-              <motion.div key={plateIdx}
+              <motion.a href={routeFor('detail', plate.slug || plate.id)} onClick={goPlateDetail} key={plate.id}
                 initial={{ opacity: 0, rotateY: -18, scale: 0.94 }}
                 animate={{ opacity: 1, rotateY: 0, scale: 1 }}
                 exit={{ opacity: 0, rotateY: 18, scale: 0.94 }}
                 transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textDecoration: 'none', cursor: 'pointer' }}
               >
                 <div style={{ width: 'clamp(200px, 22vw, 260px)', filter: 'drop-shadow(0 18px 32px rgba(0,0,0,.18))' }}>
-                  <PlateVisual size="lg" prov={plate.prov} seri={plate.seri} num={plate.num} shape={plate.shape} />
+                  <PlateVisual size="lg" {...splitPlateNumber(plate.plateNumber)} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{plate.name}</span>
-                    {plate.hot && (
+                    <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')}</span>
+                    {plate.isHot && (
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '1px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)' }}><Flame size={11} fill="currentColor" /> HOT</span>
                     )}
                   </div>
-                  <span style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{plate.price}</span>
+                  <span style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'underline' }}>Xem chi tiết biển này →</span>
                 </div>
                 <div style={{ display: 'flex', gap: 5 }}>
-                  {SHOWCASE_PLATES.map((_, i) => (
+                  {plates.map((_, i) => (
                     <span key={i} style={{ width: i === plateIdx ? 16 : 5, height: 5, borderRadius: 'var(--radius-pill)', background: i === plateIdx ? 'var(--action-primary)' : 'var(--border-strong)', transition: 'all 250ms var(--ease-out)' }} />
                   ))}
                 </div>
-              </motion.div>
+              </motion.a>
             </AnimatePresence>
           </div>
+          )}
 
           <AnimatePresence mode="wait">
             <motion.p key={s === 'register' ? 'register-headline' : 'login-headline'}
@@ -268,6 +310,7 @@ export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta,
                   <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} onBlur={blurValidateRegisterField('email')} />
                 )}
                 <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự, có chữ và số" value={st.aPw} error={st.aErr.pw} onChange={(e) => patch({ aPw: e.target.value, aErr: { ...st.aErr, pw: '', pw2: '' } })} onBlur={blurValidateRegisterField('pw')} />
+                <PasswordStrength value={st.aPw} />
                 <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={st.aPw2} error={st.aErr.pw2} onChange={(e) => patch({ aPw2: e.target.value, aErr: { ...st.aErr, pw2: '' } })} onBlur={blurValidateRegisterField('pw2')} />
                 <Checkbox label="Tôi đồng ý với điều khoản sử dụng" checked={st.aAgree} onChange={(v) => patch({ aAgree: v })} />
                 {st.aErr.agree && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn cần đồng ý với điều khoản để tiếp tục.</span>}
@@ -340,6 +383,7 @@ export default function Auth({ st, s, patch, onNavigate, go, setField, authMeta,
             {s === 'forgot' && st.step === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự" value={st.aPw} error={st.aErr.pw} onChange={setField('aPw')} />
+                <PasswordStrength value={st.aPw} />
                 <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={st.aPw2} error={st.aErr.pw2} onChange={setField('aPw2')} />
               </div>
             )}

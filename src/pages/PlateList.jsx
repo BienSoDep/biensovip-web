@@ -251,6 +251,22 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
       </section>
+      {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển. */}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-2)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <button type="button" aria-pressed={!filters.vehicle} onClick={() => setFilter({ vehicle: '' })}
+          style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: !filters.vehicle ? 'var(--fw-bold)' : 'var(--fw-medium)', background: !filters.vehicle ? 'var(--action-primary)' : 'var(--surface-sunken)', color: !filters.vehicle ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: !filters.vehicle ? 'none' : 'var(--shadow-inset-hairline)' }}>
+          Tất cả loại xe
+        </button>
+        {(vehicleTypes?.items || []).map((v) => {
+          const active = filters.vehicle === v.id;
+          return (
+            <button key={v.id} type="button" aria-pressed={active} onClick={() => setFilter({ vehicle: active ? '' : v.id })}
+              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--surface-sunken)', color: active ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)' }}>
+              {v.name}
+            </button>
+          );
+        })}
+      </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
         <button type="button" aria-pressed={filters.cat.length === 0} onClick={() => setFilter({ cat: [] })}
           style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: filters.cat.length === 0 ? 'var(--fw-bold)' : 'var(--fw-medium)', background: filters.cat.length === 0 ? 'var(--action-primary)' : 'var(--surface-sunken)', color: filters.cat.length === 0 ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: filters.cat.length === 0 ? 'none' : 'var(--shadow-inset-hairline)' }}>
@@ -283,6 +299,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
+                  {(vehicleTypes?.items || []).map((v) => (
+                    <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
+                  ))}
+                </div>
+                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
                   {(plateTypes?.items || []).map((c) => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -306,13 +329,6 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                       {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinces.items.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
                     </button>
                   )}
-                </div>
-                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
-                  {(vehicleTypes?.items || []).map((v) => (
-                    <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
-                  ))}
                 </div>
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -362,6 +378,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
         )}
         <aside className="list-filter-aside" style={{ flex: '0 0 272px', minWidth: 250, position: 'sticky', top: 78, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
+            {(vehicleTypes?.items || []).map((v) => (
+              <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
+            ))}
+          </div>
+          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
             {(plateTypes?.items || []).map((c) => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -385,13 +408,6 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                 {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinces.items.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
               </button>
             )}
-          </div>
-          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
-            {(vehicleTypes?.items || []).map((v) => (
-              <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
-            ))}
           </div>
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
