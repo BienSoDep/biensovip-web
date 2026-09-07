@@ -5,7 +5,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { Share2, Link2, HandCoins, Wallet, UserPlus } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, Input, Select } from '../components/index.jsx';
-import { useBecomeCollaborator, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent, useSubmitDealReport } from '../services/collaborators.js';
+import { useBecomeCollaborator, useUpdateBankInfo, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent, useSubmitDealReport } from '../services/collaborators.js';
 import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -182,8 +182,51 @@ function DealReportForm() {
   );
 }
 
-function DashboardBody({ data, onReset, go }) {
+// Sửa ngân hàng ngay tại dashboard — không đá qua Profile. Tách riêng khỏi ActivateCtvForm
+// vì ngữ cảnh khác (đã là CTV, chỉ đổi bank, không cần bước OTP email).
+function BankInfoEditor({ onDone }) {
+  const updateBank = useUpdateBankInfo();
+  const [bankAccount, setBankAccount] = useState('');
+  const [bankCode, setBankCode] = useState('');
+  const [bankAccountHolder, setBankAccountHolder] = useState('');
+  const [banks, setBanks] = useState([]);
+
+  useEffect(() => { fetchVietQrBanks().then(setBanks); }, []);
+
+  const save = async () => {
+    if (!bankAccount.trim()) { toast.error('Nhập số tài khoản.'); return; }
+    if (!bankCode) { toast.error('Chọn ngân hàng.'); return; }
+    try {
+      await updateBank.mutateAsync({ bankAccount: bankAccount.trim(), bankCode, bankAccountHolder: bankAccountHolder.trim() || undefined });
+      await refreshToken();
+      toast.success('Đã cập nhật thông tin ngân hàng.');
+      onDone();
+    } catch (e) {
+      toast.error(e?.message || 'Cập nhật thất bại, thử lại sau.');
+    }
+  };
+
+  const qrPreviewUrl = vietQrImageUrl(bankCode, bankAccount.trim());
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
+      <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+      <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
+      {qrPreviewUrl && (
+        <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 140, height: 140, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
+      )}
+      <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <Button variant="primary" size="md" onClick={save} disabled={updateBank.isPending}>{updateBank.isPending ? 'Đang lưu...' : 'Lưu'}</Button>
+        <Button variant="ghost" size="md" onClick={onDone} disabled={updateBank.isPending}>Hủy</Button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardBody({ data, onReset }) {
   const [copied, setCopied] = useState(false);
+  const [editingBank, setEditingBank] = useState(false);
   const customers = useCollaboratorCustomers(data.status === 'active');
   const copyLink = () => {
     const onOk = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
@@ -212,8 +255,16 @@ function DashboardBody({ data, onReset, go }) {
         <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
           <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>Xin chào, {data.fullName}</span>
           <span style={{ font: 'var(--type-body-sm)', color: 'rgba(255,255,255,.66)' }}>Mã giới thiệu của bạn</span>
+          {data.joinedAt && (
+            <span style={{ font: 'var(--type-caption)', color: 'rgba(255,255,255,.5)' }}>Tham gia từ {new Date(data.joinedAt).toLocaleDateString('vi-VN')}</span>
+          )}
         </div>
-        <Badge tone="mint">{data.referralCode}</Badge>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <Badge tone="mint">{data.referralCode}</Badge>
+          {data.commissionRate != null && (
+            <span style={{ font: 'var(--type-caption)', color: 'rgba(255,255,255,.7)' }}>Hệ số hoa hồng: {(data.commissionRate * 100).toFixed(1)}%</span>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
@@ -233,25 +284,33 @@ function DashboardBody({ data, onReset, go }) {
 
       <ProcessSteps />
 
-      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
-        <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
-          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{data.referralUrl}</span>
+      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
+          <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{data.referralUrl}</span>
+          </div>
+          <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
+          {!editingBank && <Button variant="outline" size="md" onClick={() => setEditingBank(true)}>Sửa thông tin ngân hàng</Button>}
         </div>
-        <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
-        <Button variant="outline" size="md" onClick={() => { window.location.hash = 'become-ctv'; go('profile')(); }}>Sửa thông tin ngân hàng</Button>
+        {editingBank && <BankInfoEditor onDone={() => setEditingBank(false)} />}
       </div>
 
       <DealReportForm />
 
       {data.recent?.length > 0 && (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Giao dịch gần đây</span>
+          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử hoa hồng ({data.recent.length} gần nhất)</span>
           {data.recent.map((r) => (
-            <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
-              <span style={{ font: 'var(--type-body-sm)' }}>{r.plateNumber || '—'}</span>
+            <div key={r.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ font: 'var(--type-body-sm)' }}>{r.plateNumber || '—'}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+              </div>
               <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{money(r.amount)}</span>
-              <Badge tone={r.status === 'paid' ? 'mint' : r.status === 'approved' ? 'blue' : 'amber'}>{r.status}</Badge>
+              <Badge tone={r.status === 'paid' ? 'mint' : r.status === 'approved' ? 'blue' : r.status === 'cancelled' ? 'rose' : 'amber'}>
+                {{ paid: 'Đã trả', approved: 'Đã duyệt', pending: 'Chờ duyệt', cancelled: 'Đã hủy' }[r.status] || r.status}
+              </Badge>
             </div>
           ))}
         </div>
@@ -279,7 +338,7 @@ function DashboardBody({ data, onReset, go }) {
   );
 }
 
-function Dashboard({ onReset, go }) {
+function Dashboard({ onReset }) {
   const { data, isLoading, isError } = useCollaboratorDashboard(true);
 
   if (isLoading) {
@@ -297,7 +356,7 @@ function Dashboard({ onReset, go }) {
       </section>
     );
   }
-  return <DashboardBody data={data} onReset={onReset} go={go} />;
+  return <DashboardBody data={data} onReset={onReset} />;
 }
 
 // Quy trình 4 bước — cố định, không qua admin chỉnh (khác nội dung ưu đãi bodyHtml).
@@ -517,7 +576,7 @@ export default function Collaborator({ go }) {
 
   const logout = () => { collaboratorLogout.mutate(undefined, { onSettled: () => setLoggedIn(false) }); };
 
-  if (loggedIn) return <Dashboard onReset={logout} go={go} />;
+  if (loggedIn) return <Dashboard onReset={logout} />;
 
   // Chưa là CTV (đăng nhập hay không) → trang ưu đãi + form kích hoạt CTV ngay tại chỗ.
   return <BenefitLanding go={go} onActivated={() => setLoggedIn(true)} />;
