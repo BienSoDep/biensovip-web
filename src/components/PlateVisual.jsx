@@ -59,7 +59,11 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   const s = (SIZES[size] || SIZES.md)[kind];
   const r = RATIO[kind];
   const numLen = String(num || '').replace(/[.\s]/g, '').length;
-  const numScale = Math.min(1, BASELINE_NUM_LEN[kind] / Math.max(numLen, 1));
+  // Shape "long": seri dùng chung numFs (cùng cỡ chữ) — phải tính scale theo TỔNG độ dài
+  // prov+seri+num, không chỉ num, nếu không seri to sẽ đẩy tràn khung khi seri dài 2 ký tự.
+  const totalLen = isMoto ? numLen : numLen + String(prov || '').length + String(seri || '').length;
+  const baseline = isMoto ? BASELINE_NUM_LEN[kind] : BASELINE_NUM_LEN[kind] + 2;
+  const numScale = Math.min(1, baseline / Math.max(totalLen, 1));
   const numFs = scaleFontSize(r.numFs, numScale);
   const ariaLabel = ['Biển số', prov, seri, num].filter(Boolean).join(' ');
   // Hiệu ứng chữ dập nổi (embossed) — đậm hơn: bóng tối đổ dày xuống dưới-phải (thành lõm khuất sáng)
