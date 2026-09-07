@@ -22,10 +22,18 @@ const PERM_RESOURCES = [
   ['reviews', 'Đánh giá'], ['meanings', 'Ý nghĩa phong thủy'], ['chatbot', 'Trợ lý AI'],
   ['email_templates', 'Mẫu email'], ['subscribers', 'Người đăng ký nhận tin'],
   ['transactions', 'Giao dịch'], ['maintenance', 'Bảo trì hệ thống'], ['vanity_metrics', 'Số liệu hiển thị'],
+  ['audit_logs', 'Nhật ký audit'], ['error_logs', 'Nhật ký lỗi hệ thống'],
+  ['db_console', 'DB console (chỉ xem)'], ['feature_flags', 'Feature flags'],
 ];
 const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
 // Preset mặc định cho nhân viên: xem + thêm + sửa mọi mục, không quyền xóa.
 const RECOMMENDED = PERM_RESOURCES.flatMap(([r]) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+// Preset "Dev" — view toàn bộ mục nghiệp vụ + 4 mục kỹ thuật mới, feature_flags thêm quyền sửa
+// (bật/tắt flag) vì đó là thao tác kỹ thuật, không phải sửa dữ liệu nghiệp vụ.
+const DEV_PRESET = [
+  ...PERM_RESOURCES.filter(([r]) => r !== 'feature_flags').map(([r]) => `${r}:view`),
+  'feature_flags:view', 'feature_flags:update',
+];
 
 const slugify = (s) => (s || '').toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 
@@ -257,7 +265,10 @@ export default function AdminStaff({ notify }) {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '0 0 var(--space-2)' }}>
                 <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Quyền truy cập</span>
-                <button type="button" onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Đặt mặc định</button>
+                <span style={{ display: 'flex', gap: 12 }}>
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Đặt mặc định</button>
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, permissions: DEV_PRESET }))} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Preset Dev</button>
+                </span>
               </div>
               <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                 <div className="perm-matrix-row" style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', background: 'var(--surface-sunken)', padding: '8px 12px', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>

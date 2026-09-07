@@ -15,3 +15,12 @@ export function useChatbotHistory(sessionId) {
     retry: false,
   });
 }
+
+// Kill-switch dev — ẩn hẳn widget/FAB khi feature_flags["ai_chatbot_enabled"] tắt.
+export function useChatbotWidgetEnabled() {
+  return useQuery({
+    queryKey: ['chatbot', 'widget-enabled'],
+    queryFn: () => apiClient.get('/api/chatbot/widget-enabled'),
+    staleTime: 60_000,
+  });
+}

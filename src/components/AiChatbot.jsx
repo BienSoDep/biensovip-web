@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles } from 'lucide-react';
-import { useSendChatbotMessage, useChatbotHistory } from '../services/chatbotService.js';
+import { useSendChatbotMessage, useChatbotHistory, useChatbotWidgetEnabled } from '../services/chatbotService.js';
 
 const ACTION_LABEL = { chat_with_staff: 'Chat với nhân viên', contact_form: 'Để lại thông tin liên hệ' };
 const SESSION_KEY = 'bsv.chatSessionId';
@@ -31,6 +31,7 @@ function nextQuickReplies(lastMsg) {
 }
 
 export default function AiChatbot({ go }) {
+  const { data: widgetFlag } = useChatbotWidgetEnabled();
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState([GREETING]);
   const [input, setInput] = useState('');
@@ -119,6 +120,8 @@ export default function AiChatbot({ go }) {
     setOpen(false);
     go?.('detail', slugOrId)();
   };
+
+  if (widgetFlag && widgetFlag.enabled === false) return null;
 
   return (
     <>

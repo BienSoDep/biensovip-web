@@ -31,6 +31,9 @@ import AdminRiskLog from '../pages/admin/AdminRiskLog.jsx';
 import AdminGuide from '../pages/admin/AdminGuide.jsx';
 import AdminMaintenance from '../pages/admin/AdminMaintenance.jsx';
 import AdminVanityMetrics from '../pages/admin/AdminVanityMetrics.jsx';
+import AdminErrorLogs from '../pages/admin/AdminErrorLogs.jsx';
+import AdminFeatureFlags from '../pages/admin/AdminFeatureFlags.jsx';
+import AdminDbConsole from '../pages/admin/AdminDbConsole.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -44,6 +47,7 @@ const NAV_PERM = {
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
   achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view',
+  aauditlog: 'audit_logs:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
@@ -66,11 +70,14 @@ const ADMIN_INFO = {
   areviews: 'Duyệt đánh giá khách gửi trước khi hiển thị công khai trên trang chi tiết biển; có thể trả lời đánh giá.',
   ameanings: 'Mẫu ý nghĩa phong thủy chung theo loại biển/con số, và ý nghĩa riêng gắn cho từng biển cụ thể.',
   achatbot: 'Lịch sử hội thoại chatbot AI với khách — bật/tắt và chỉnh cấu hình trả lời tự động.',
-  aauditlog: 'Chỉ Quản trị viên thấy trang này. Lịch sử mọi thay đổi dữ liệu (ai sửa gì, khi nào) — dùng để truy vết khi có sai sót.',
+  aauditlog: 'Lịch sử mọi thay đổi dữ liệu (ai sửa gì, khi nào) — dùng để truy vết khi có sai sót. Nhân viên "Dev" hoặc được cấp quyền riêng mới xem được.',
   arisklog: 'Chỉ Quản trị viên thấy trang này. Cảnh báo tự động khi phát hiện dấu hiệu bất thường ở cộng tác viên — rà soát và xử lý.',
   compose: 'Soạn bài viết mới — điền tiêu đề, nội dung, ảnh bìa rồi đăng hoặc lưu nháp.',
   amaintenance: 'Bật/tắt bảo trì từng trang public. Khách sẽ thấy trang thông báo thay vì nội dung thật khi trang đang bảo trì; admin/nhân viên đăng nhập vẫn xem được trang thật.',
   ashowroom: 'Số liệu hiển thị công khai (bán biển). Đây là lớp hiển thị riêng — chỉnh khuếch đại/tạo thêm các con số đưa ra ngoài website cho thêm sức thuyết phục, không làm thay đổi dữ liệu giao dịch, hoa hồng hay thống kê nội bộ. Tắt hết thì website về số thật.',
+  aerrorlogs: 'Nhật ký lỗi hệ thống (Warning trở lên) ghi từ Serilog — tra cứu lỗi 500/exception gần đây mà không cần SSH đọc log VPS. Tự xóa log cũ hơn 30 ngày.',
+  afeatureflags: 'Bật/tắt nhanh 3 tính năng: Trợ lý AI, Số liệu hiển thị, CTV tự báo giao dịch — không cần deploy lại code khi cần tắt gấp.',
+  adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -115,7 +122,7 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
   };
 
   const canSee = (navKey) => {
-    if (navKey === 'astaff' || navKey === 'aauditlog' || navKey === 'arisklog') return st.user?.role === 'super-admin';
+    if (navKey === 'astaff' || navKey === 'arisklog') return st.user?.role === 'super-admin';
     const perm = NAV_PERM[navKey];
     return !perm || canPerm(st, perm);
   };
@@ -321,6 +328,9 @@ export default function AdminShell({
         {s === 'arisklog' && <AdminRiskLog />}
         {s === 'amaintenance' && <AdminMaintenance notify={notify} />}
         {s === 'ashowroom' && <AdminVanityMetrics notify={notify} />}
+        {s === 'aerrorlogs' && <AdminErrorLogs />}
+        {s === 'afeatureflags' && <AdminFeatureFlags notify={notify} />}
+        {s === 'adbconsole' && <AdminDbConsole notify={notify} />}
         {s === 'ameanings' && <AdminMeanings notify={notify} />}
         {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
