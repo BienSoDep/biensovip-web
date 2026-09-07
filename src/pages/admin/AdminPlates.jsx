@@ -573,10 +573,13 @@ export default function AdminPlates({ go, notify, st }) {
       const results = res.results || [];
       setBulkRows((rows) => rows.map((r) => {
         const res = results.find((x) => x.plateNumber === r.number);
-        return res ? { ...r, done: true, ok: res.success, reason: res.success ? '' : (ERR_MSG[res.error] || 'Lỗi') } : r;
+        if (!res) return r;
+        const reason = res.success ? (res.statusUpdated ? 'Đã cập nhật trạng thái' : '') : (ERR_MSG[res.error] || 'Lỗi');
+        return { ...r, done: true, ok: res.success, reason };
       }));
-      const okCount = results.filter((r) => r.success).length;
-      notify(`Đã thêm ${okCount}/${valid.length} biển`);
+      const createdCount = results.filter((r) => r.success && !r.statusUpdated).length;
+      const updatedCount = results.filter((r) => r.success && r.statusUpdated).length;
+      notify(`Đã thêm ${createdCount} biển mới${updatedCount ? `, cập nhật trạng thái ${updatedCount} biển trùng` : ''}`);
     } catch (err) {
       notify(err.message || 'Lỗi thêm hàng loạt');
     }
