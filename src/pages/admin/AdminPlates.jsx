@@ -23,6 +23,7 @@ import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
 import { fetchMissingMeaningPlates, useBulkSeedMeanings } from '../../services/meanings.js';
+import { fetchMissingImagePlates, useBulkGenerateImages } from '../../services/plateImages.js';
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
@@ -177,6 +178,33 @@ export default function AdminPlates({ go, notify, st }) {
       setMissingMeaningPlates(null);
     } catch (err) {
       notify(err.message || 'Lỗi sinh ý nghĩa hàng loạt');
+    }
+  };
+
+  // Sinh ảnh đại diện hàng loạt cho biển đang thiếu ảnh
+  const [missingImagePlates, setMissingImagePlates] = useState(null); // null=chưa mở, []=đã check hết
+  const [checkingMissingImage, setCheckingMissingImage] = useState(false);
+  const bulkGenImagesMut = useBulkGenerateImages();
+
+  const openMissingImageModal = async () => {
+    setCheckingMissingImage(true);
+    try {
+      const res = await fetchMissingImagePlates();
+      setMissingImagePlates(res.items || []);
+    } catch (err) {
+      notify(err.message || 'Lỗi kiểm tra biển thiếu ảnh');
+    } finally {
+      setCheckingMissingImage(false);
+    }
+  };
+
+  const confirmBulkGenerateImages = async () => {
+    try {
+      const res = await bulkGenImagesMut.mutateAsync();
+      notify(`Đã sinh ảnh cho ${res.generated} biển${res.skipped ? `, ${res.skipped} biển lỗi` : ''}`);
+      setMissingImagePlates(null);
+    } catch (err) {
+      notify(err.message || 'Lỗi sinh ảnh hàng loạt');
     }
   };
 
@@ -631,6 +659,9 @@ export default function AdminPlates({ go, notify, st }) {
         <Button variant="ghost" size="md" disabled={checkingMissing} onClick={openMissingMeaningModal}>
           {checkingMissing ? 'Đang kiểm tra…' : 'Sinh ý nghĩa hàng loạt'}
         </Button>
+        <Button variant="ghost" size="md" disabled={checkingMissingImage} onClick={openMissingImageModal}>
+          {checkingMissingImage ? 'Đang kiểm tra…' : 'Sinh ảnh hàng loạt'}
+        </Button>
         <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
       </div>
 
@@ -945,6 +976,31 @@ export default function AdminPlates({ go, notify, st }) {
             <Button variant="ghost" size="md" onClick={() => setMissingMeaningPlates(null)}>Hủy</Button>
             {!!missingMeaningPlates?.length && (
               <Button variant="primary" size="md" onClick={confirmBulkSeedMeanings} loading={bulkSeedMut.isPending}>Sinh ý nghĩa cho {missingMeaningPlates.length} biển</Button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={missingImagePlates !== null} onClose={() => setMissingImagePlates(null)} title="Sinh ảnh hàng loạt" maxWidth="480px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {missingImagePlates?.length ? (
+            <>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                <b>{missingImagePlates.length}</b> biển chưa có ảnh. Hệ thống sẽ tự vẽ ảnh biển số làm ảnh đại diện tạm, có thể thay bằng ảnh thật sau.
+              </p>
+              <div style={{ maxHeight: 220, overflow: 'auto', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+                {missingImagePlates.map((p) => (
+                  <span key={p.id} style={{ font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--white)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mọi biển đã có ảnh.</p>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <Button variant="ghost" size="md" onClick={() => setMissingImagePlates(null)}>Hủy</Button>
+            {!!missingImagePlates?.length && (
+              <Button variant="primary" size="md" onClick={confirmBulkGenerateImages} loading={bulkGenImagesMut.isPending}>Sinh ảnh cho {missingImagePlates.length} biển</Button>
             )}
           </div>
         </div>
