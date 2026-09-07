@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { useDebouncedValue } from '@mantine/hooks';
-import { Share2, Link2, HandCoins, Wallet, UserPlus } from 'lucide-react';
+import { Share2, Link2, HandCoins, Wallet, UserPlus, ChevronDown } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Button from '../components/Button.jsx';
 import { Badge, Input, Select, InfoTip } from '../components/index.jsx';
 import { useBecomeCollaborator, useUpdateBankInfo, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof } from '../services/collaborators.js';
@@ -337,7 +338,9 @@ function DashboardBody({ data, onReset }) {
         ))}
       </div>
 
-      <ProcessSteps />
+      <ProcessStepsCollapsed />
+
+      <CommissionChart recent={data.recent} />
 
       <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
@@ -412,6 +415,68 @@ function Dashboard({ onReset }) {
     );
   }
   return <DashboardBody data={data} onReset={onReset} />;
+}
+
+// Bản thu gọn của quy trình 4 bước — dùng trong dashboard khi đã là CTV (đã biết quy trình rồi,
+// giữ lại dạng gấp gọn để tra cứu nhanh khi cần, không chiếm chỗ như bản đầy đủ ở trang ưu đãi).
+function ProcessStepsCollapsed() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-3) var(--gutter-card)', border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+        Quy trình nhận hoa hồng
+        <ChevronDown size={16} style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms var(--ease-out)' }} />
+      </button>
+      {open && (
+        <div style={{ padding: '0 var(--gutter-card) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          {PROCESS_STEPS.map((s) => (
+            <div key={s.n} style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+              <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', flexShrink: 0 }}>{s.n}.</span>
+              <span>{s.title} — {s.desc}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Biểu đồ hoa hồng theo tháng — gộp data.recent (tối đa 20 dòng gần nhất) theo tháng, tách theo trạng thái.
+function CommissionChart({ recent }) {
+  const chartData = useMemo(() => {
+    if (!recent?.length) return [];
+    const byMonth = {};
+    for (const r of recent) {
+      const d = new Date(r.createdAt);
+      const key = `${d.getMonth() + 1}/${d.getFullYear()}`;
+      if (!byMonth[key]) byMonth[key] = { month: key, paid: 0, approved: 0, pending: 0, sortKey: d.getFullYear() * 12 + d.getMonth() };
+      if (r.status === 'paid') byMonth[key].paid += r.amount;
+      else if (r.status === 'approved') byMonth[key].approved += r.amount;
+      else if (r.status === 'pending') byMonth[key].pending += r.amount;
+    }
+    return Object.values(byMonth).sort((a, b) => a.sortKey - b.sortKey);
+  }, [recent]);
+
+  if (chartData.length === 0) return null;
+
+  return (
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Hoa hồng theo tháng</span>
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
+          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+          <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => (v >= 1e6 ? `${v / 1e6}tr` : v)} />
+          <Tooltip formatter={(v) => money(v)} />
+          <Legend />
+          <Bar dataKey="paid" name="Đã trả" stackId="a" fill="#16a34a" radius={[0, 0, 0, 0]} />
+          <Bar dataKey="approved" name="Đã duyệt" stackId="a" fill="#2563eb" />
+          <Bar dataKey="pending" name="Chờ duyệt" stackId="a" fill="#ca8a04" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
 // Quy trình 4 bước — cố định, không qua admin chỉnh (khác nội dung ưu đãi bodyHtml).

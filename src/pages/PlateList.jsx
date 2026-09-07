@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { SlidersHorizontal, X, LayoutGrid, List as ListIcon } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Select, Checkbox, Radio, Input, Icon } from '../components/index.jsx';
+import { Select, Checkbox, Radio, Input, Icon, SearchField } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
@@ -249,7 +249,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       )}
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
+        <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
+        <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
       </section>
       {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển. */}
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-2)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
