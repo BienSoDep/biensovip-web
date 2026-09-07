@@ -302,6 +302,7 @@ export function Switch({ checked, onChange, label, disabled }) {
 const BADGE_TONES = {
   dark: { background: 'var(--action-dark)', color: 'var(--white)' },
   rose: { background: 'var(--rose-100)', color: 'var(--rose-500)' },
+  hot: { background: 'var(--amber-500)', color: 'var(--white)' },
   amber: { background: 'var(--amber-100)', color: 'var(--status-warning-ink)' },
   mint: { background: 'var(--mint-100)', color: 'var(--status-success-ink)' },
   blue: { background: 'var(--blue-100)', color: 'var(--blue-700)' },

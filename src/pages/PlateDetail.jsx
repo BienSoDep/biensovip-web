@@ -247,6 +247,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         </div>
         <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            {plate.isHot && !sold && <Badge tone="hot">🔥 HOT</Badge>}
             {plate.type && <Badge tone="dark">{plate.type}</Badge>}
             <Badge tone={sold ? 'rose' : 'mint'}>{sold ? 'Đã bán' : 'Còn hàng'}</Badge>
             {plate.badge && <Badge tone={BADGE_TONE[plate.badge] || 'neutral'}>{plate.badge}</Badge>}

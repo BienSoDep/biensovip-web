@@ -17,13 +17,21 @@ export default function PlateCard({
   const meta = [vehicleType, province].filter(Boolean).join(' · ');
 
   return (
-    <Card tone="sunken" pad="10px" style={{ height: '100%', ...style }}>
+    <Card
+      tone="sunken"
+      pad="10px"
+      style={{
+        height: '100%',
+        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : null),
+        ...style,
+      }}
+    >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
         <div style={{ minHeight: 60, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 6 }}>
+              {isHot && <Badge tone="hot">🔥 HOT</Badge>}
               {type && <Badge tone="dark">{type}</Badge>}
-              {isHot && <Badge tone="rose">VIP</Badge>}
               {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
