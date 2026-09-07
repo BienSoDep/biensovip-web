@@ -146,10 +146,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
               <Avatar name={typeof user === 'string' ? user : (user.identifier || user.email || 'U')} size="sm" />
             </button>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <Button variant="ghost" size="sm" onClick={go('login')}>{T('common.auth.login')}</Button>
-              <Button variant="dark" size="sm" onClick={go('register')}>{T('common.auth.register')}</Button>
-            </div>
+            <Button variant="dark" size="sm" onClick={go('register')}>Tham gia</Button>
           )}
         </div>
         {/* Mobile-only: đăng nhập/đăng ký luôn hiện cạnh hamburger, không cần mở drawer mới thấy — .desktop-nav bị ẩn hoàn toàn ở mobile (app.css) */}
