@@ -57,8 +57,19 @@ export function useCollaboratorDashboard(enabled) {
 // CTV tự báo giao dịch chốt ngoài platform (Zalo cá nhân) — chờ admin duyệt trước khi tính hoa hồng.
 export function useSubmitDealReport() {
   return useMutation({
-    mutationFn: ({ plateId, buyerFullName, buyerPhone, dealAmount, note }) =>
-      apiClient.post('/api/collaborators/deal-reports', { plateId, buyerFullName, buyerPhone, dealAmount, note }),
+    mutationFn: ({ plateId, buyerFullName, buyerPhone, dealAmount, note, proofImageUrl }) =>
+      apiClient.post('/api/collaborators/deal-reports', { plateId, buyerFullName, buyerPhone, dealAmount, note, proofImageUrl }),
+  });
+}
+
+// Upload ảnh minh chứng (chuyển khoản/tin nhắn Zalo) đính kèm báo cáo giao dịch.
+export function useUploadDealReportProof() {
+  return useMutation({
+    mutationFn: (file) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      return apiClient.upload('/api/collaborators/deal-reports/upload', fd);
+    },
   });
 }
 

@@ -56,6 +56,13 @@ function DealReportsQueue({ notify }) {
           <span style={{ flex: '1 1 120px' }}>{r.buyerFullName} — {r.buyerPhone}</span>
           <span style={{ flex: '1 1 100px', fontWeight: 'var(--fw-semibold)' }}>{money(r.dealAmount)}</span>
           <span style={{ flex: '1 1 160px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{r.note || '—'}</span>
+          {r.proofImageUrl ? (
+            <a href={r.proofImageUrl} target="_blank" rel="noreferrer" style={{ flex: '0 0 auto' }}>
+              <img src={r.proofImageUrl} alt="Ảnh minh chứng" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+            </a>
+          ) : (
+            <span style={{ flex: '0 0 auto', width: 40, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'center' }}>—</span>
+          )}
           <span style={{ flex: '0 0 auto', display: 'flex', gap: 6 }}>
             <Button variant="primary" size="sm" disabled={approve.isPending} onClick={() => doApprove(r.id)}>Duyệt</Button>
             <Button variant="ghost" size="sm" onClick={() => setRejectTarget(r)}>Từ chối</Button>
