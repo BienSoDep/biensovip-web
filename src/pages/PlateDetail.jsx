@@ -327,14 +327,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       )}
 
       {similar?.sameProvince?.length > 0 && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: `${plate.description ? '0' : 'var(--space-6)'} var(--pad-page) var(--pad-section-y)`, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số cùng tỉnh/thành</span>
           <AutoCarousel items={similar.sameProvince} openPlate={openPlate} />
         </section>
       )}
 
       {similar?.sameType?.length > 0 && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: `${plate.description || similar?.sameProvince?.length > 0 ? '0' : 'var(--space-6)'} var(--pad-page) var(--pad-section-y)`, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số tương tự kiểu</span>
           <AutoCarousel items={similar.sameType} openPlate={openPlate} />
         </section>
