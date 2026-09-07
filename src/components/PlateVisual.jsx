@@ -119,7 +119,7 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
 
   return (
     <div style={plateStyle} role="img" aria-label={ariaLabel}>
-      <div aria-hidden style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: s.gap, fontFamily, fontWeight: 700, color: textColor, textShadow, whiteSpace: 'nowrap' }}>
+      <div aria-hidden style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: s.gap, fontFamily, fontWeight: 700, color: textColor, textShadow, whiteSpace: 'nowrap', lineHeight: 1 }}>
         <span style={{ fontSize: r.seriFs }}>{prov}{seri}-</span>
         <span style={{ fontSize: numFs, letterSpacing: s.ls }}>{num}</span>
       </div>
