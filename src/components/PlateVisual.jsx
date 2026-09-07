@@ -105,10 +105,11 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   if (isMoto) {
     return (
       <div style={plateStyle} role="img" aria-label={ariaLabel}>
-        <div aria-hidden style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, fontFamily, fontWeight: 700, color: textColor, textShadow, lineHeight: 1 }}>
+        <div aria-hidden style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, fontFamily, fontWeight: 700, color: textColor, textShadow, lineHeight: 1 }}>
           <span style={{ fontSize: r.topFs }}>{prov}</span>
-          <span style={{ fontSize: r.topFs, opacity: 0.92 }}>{seri}</span>
+          <span style={{ fontSize: r.topFs, opacity: 0.92 }}>-{seri}</span>
         </div>
+        <span aria-hidden style={{ width: '60%', height: 1.5, background: textColor, opacity: 0.35, margin: '2px auto' }} />
         <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, lineHeight: 1, whiteSpace: 'nowrap' }}>
           {num}
         </div>
