@@ -107,7 +107,7 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
       <div style={plateStyle} role="img" aria-label={ariaLabel}>
         <div aria-hidden style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, fontFamily, fontWeight: 700, color: textColor, textShadow, lineHeight: 1, whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: r.topFs }}>{prov}</span>
-          <span style={{ fontSize: r.topFs, opacity: 0.92 }}>-{seri}</span>
+          <span style={{ fontSize: r.topFs, opacity: 0.92 }}>{seri && seri.length > 1 ? '-' : ''}{seri}</span>
         </div>
         <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontWeight: 700, fontSize: numFs, letterSpacing: s.ls, color: textColor, textShadow, lineHeight: 1, whiteSpace: 'nowrap' }}>
           {num}
@@ -120,7 +120,7 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   return (
     <div style={plateStyle} role="img" aria-label={ariaLabel}>
       <div aria-hidden style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: s.gap, fontFamily, fontWeight: 700, color: textColor, textShadow, whiteSpace: 'nowrap', lineHeight: 1 }}>
-        <span style={{ fontSize: r.seriFs }}>{prov}{seri}-</span>
+        <span style={{ fontSize: r.seriFs }}>{prov}{seri && seri.length > 1 ? '-' : ''}{seri}-</span>
         <span style={{ fontSize: numFs, letterSpacing: s.ls }}>{num}</span>
       </div>
       {screws}
