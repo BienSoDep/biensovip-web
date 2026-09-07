@@ -17,6 +17,8 @@ import { trackViewItemList, trackSelectItem } from '../services/tracking/events.
 import { routeFor } from '../config/routes.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
+import { useSiteRating } from '../services/siteRating.js';
+import { useActivityFeed } from '../services/activityFeed.js';
 
 // Debounce a value — waits `delay`ms of silence before committing, so typing doesn't fire
 // a request per keystroke. Pure client-side; React Query then caches each committed value.
@@ -37,6 +39,9 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
   const { data: plateTypes } = useCategories('plate_type');
   const { data: featured, isLoading: featuredLoading } = useFeaturedPlates(6);
   const featuredItems = featured || [];
+  const { data: siteRating } = useSiteRating();
+  const { data: activityFeed } = useActivityFeed(6);
+  const feedItems = activityFeed?.items || [];
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const { data: featuredVideos } = useFeaturedPromoVideos(3);
   const featuredVideoItems = featuredVideos?.items || [];
@@ -102,9 +107,15 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
               <Button variant="primary" size="lg" uppercase onClick={go('list')}>{T('home.hero.cta_list')}</Button>
               <Button variant="outline" size="lg" onClick={() => { window.open(`https://zalo.me/${zalo}`, '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
             </div>
+            {feedItems.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                <span className="live-dot" aria-hidden="true" />
+                <span>{feedItems[0].fakeName} {feedItems[0].action} <strong style={{ color: 'var(--text-strong)' }}>{feedItems[0].plateNumber}</strong> · {feedItems[0].minutesAgo} phút trước</span>
+              </div>
+            )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', paddingTop: 'var(--space-6)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_1_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span></div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_2_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_2_l')}</span></div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{siteRating ? `${siteRating.avgRating.toFixed(1)}/5` : T('home.hero.stat_2_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_2_l')}</span></div>
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_3_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_3_l')}</span></div>
             </div>
           </div>

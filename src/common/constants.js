@@ -15,7 +15,7 @@ export const ADMIN_NAV = [
   { group: 'Nội dung', items: [['aposts', 'Bài viết'], ['ameanings', 'Ý nghĩa phong thủy'], ['avideos', 'Video']] },
   { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['aemailtpl', 'Mẫu email'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
   { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['arisklog', 'Rủi ro CTV']] },
-  { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký hệ thống'], ['amaintenance', 'Bảo trì hệ thống']] },
+  { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký hệ thống'], ['amaintenance', 'Bảo trì hệ thống'], ['ashowroom', 'Số liệu hiển thị']] },
 ];
 export const TONES = { 'Mới': 'blue', 'Đang tư vấn': 'amber', 'Đã chốt': 'mint', 'Còn hàng': 'mint', 'Đã bán': 'rose', 'Ẩn': 'neutral', 'Đã xuất bản': 'mint', 'Bản nháp': 'neutral' };
 export const STATUS_FG = { 'Mới': 'var(--blue-700)', 'Đang tư vấn': 'var(--status-warning-ink)', 'Đã chốt': 'var(--status-success-ink)' };

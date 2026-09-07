@@ -634,6 +634,7 @@ export default function App() {
     aauditlog: ['Nhật ký hệ thống', 'Lịch sử thay đổi dữ liệu trong hệ thống'],
     arisklog: ['Rủi ro CTV', 'Phát hiện bất thường và rà soát cộng tác viên'],
     amaintenance: ['Bảo trì hệ thống', 'Bật/tắt bảo trì hoặc coming-soon cho từng trang public'],
+    ashowroom: ['Số liệu hiển thị', 'Bật/tắt và chỉnh hệ số khuếch đại số liệu hiển thị công khai'],
   }[s] || ['', ''];
 
   const authMeta = {
@@ -695,7 +696,7 @@ export default function App() {
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
+              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} openPlate={openPlate} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
             )}
 
             {s === 'adminForgot' && <AdminForgotPassword go={go} />}

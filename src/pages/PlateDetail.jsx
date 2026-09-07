@@ -253,7 +253,11 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           </div>
           <div>
             <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{prov}{seri} · {num}</h1>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')} · {plate.viewCount} lượt xem</p>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')} · <span style={{ fontVariantNumeric: 'tabular-nums' }}>{plate.displayViewCount ?? plate.viewCount}</span> lượt xem{plate.liveViewerCount != null && (
+              <>
+                {' · '}<span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--status-success-ink)', fontWeight: 'var(--fw-medium)' }}><span className="live-dot" aria-hidden="true" />{plate.liveViewerCount} người đang xem</span>
+              </>
+            )}</p>
             {reviewData?.totalReviews > 0 ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
                 <div style={{ display: 'flex', gap: 1 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= Math.round(reviewData.averageRating) ? 'var(--action-primary)' : 'none'} style={{ color: n <= Math.round(reviewData.averageRating) ? 'var(--action-primary)' : 'var(--grey-300)' }} />)}</div>

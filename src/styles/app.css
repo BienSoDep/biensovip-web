@@ -1105,3 +1105,22 @@ textarea,
   }
 }
 
+/* UC38 — chấm xanh nhấp nháy bên badge "đang xem" trên trang chi tiết biển */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-success);
+  display: inline-block;
+  flex: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot {
+    animation: livePulse 1.6s ease-in-out infinite;
+  }
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--status-success); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 4px transparent; }
+}
+
