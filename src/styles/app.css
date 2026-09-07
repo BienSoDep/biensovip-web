@@ -1128,3 +1128,32 @@ textarea,
   50% { opacity: 0.55; box-shadow: 0 0 0 4px transparent; }
 }
 
+
+/* Carousel biển liên quan cuối bài viết — chạy tự động vô hạn, pause khi hover/focus */
+.plate-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.plate-marquee__track {
+  display: flex;
+  width: max-content;
+  gap: var(--gutter-section);
+  animation: plateMarquee 40s linear infinite;
+}
+.plate-marquee:hover .plate-marquee__track,
+.plate-marquee:focus-within .plate-marquee__track {
+  animation-play-state: paused;
+}
+.plate-marquee__item {
+  flex: 0 0 auto;
+  width: 200px;
+}
+@keyframes plateMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plate-marquee__track { animation: none; }
+  .plate-marquee { overflow-x: auto; }
+}

@@ -10,7 +10,7 @@ import { routeFor } from '../config/routes.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
-  'cau-chuyen': 'Câu chuyện khách hàng', 'tinh-thanh': 'Tỉnh thành', general: 'Tin tức',
+  'cau-chuyen': 'Câu chuyện khách hàng', 'tinh-thanh': 'Tỉnh thành', 'loai-bien': 'Loại biển', general: 'Tin tức',
 };
 
 function formatDate(iso) {
@@ -48,8 +48,10 @@ export default function Blog({ patch }) {
     const params = new URLSearchParams(window.location.search);
     const t = params.get('tag');
     const c = params.get('category');
+    const q = params.get('q');
     if (t) setTag(t);
     if (c) setCategory(c);
+    if (q) setQuery(q);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

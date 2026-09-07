@@ -20,6 +20,18 @@ const GREETING_QUICK_REPLIES = ['Xem biển giá dưới 100 triệu', 'Tìm bi�
 const PLATE_FOUND_QUICK_REPLIES = ['Ý nghĩa biển số này là gì?', 'Còn hàng không?', 'Cách đặt cọc?'];
 const NO_RESULT_QUICK_REPLIES = ['Xem biển giá dưới 100 triệu', 'Chat với nhân viên tư vấn'];
 
+// Định dạng markdown tối giản cho tin nhắn bot — chỉ **in đậm** + xuống dòng, KHÔNG dùng thư viện
+// markdown full (marked) để tránh render HTML tùy ý từ AI (dù đã giới hạn chủ đề, vẫn escape trước
+// khi chèn — an toàn tuyệt đối trước injection dù model có bị chọc cho xuất HTML/script).
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function renderMarkdownLite(text) {
+  const escaped = escapeHtml(text || '');
+  const bolded = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return bolded.replace(/\n/g, '<br/>');
+}
+
 // Gợi ý câu hỏi tiếp theo — rule-based theo nội dung tin bot vừa trả lời, không cần đổi prompt AI.
 // Có plate card kèm theo → gợi ý xoay quanh biển đó. Không tìm thấy gì → gợi ý lối thoát khác (xem
 // theo giá, hoặc nhờ nhân viên) thay vì lặp lại câu hỏi cũ không ra kết quả.
@@ -140,7 +152,9 @@ export default function AiChatbot({ go }) {
           <div aria-live="polite" style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {msgs.map((m, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: m.from === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
-                <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: m.from === 'user' ? 'var(--radius-pill)' : 'var(--radius-md)', background: m.from === 'user' ? 'var(--action-primary)' : 'var(--surface-sunken)', color: m.from === 'user' ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)', whiteSpace: 'pre-wrap' }}>{m.text}</div>
+                <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: m.from === 'user' ? 'var(--radius-pill)' : 'var(--radius-md)', background: m.from === 'user' ? 'var(--action-primary)' : 'var(--surface-sunken)', color: m.from === 'user' ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)', whiteSpace: 'pre-wrap' }}>
+                  {m.from === 'bot' ? <span dangerouslySetInnerHTML={{ __html: renderMarkdownLite(m.text) }} /> : m.text}
+                </div>
                 {m.plates?.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: '90%', width: '100%' }}>
                     {m.plates.map((p) => <PlateMiniCard key={p.slugOrId} plate={p} onOpen={() => openPlate(p.slugOrId)} />)}

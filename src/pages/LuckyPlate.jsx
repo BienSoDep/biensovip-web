@@ -15,6 +15,22 @@ import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { validBirthDate } from '../lib/date.js';
 import { trackFengshuiLookup, trackGenerateLead } from '../services/tracking/events.js';
 import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
+import Breadcrumb from '../components/Breadcrumb.jsx';
+import { optimizeImageUrl } from '../lib/cloudinary.js';
+
+const STORAGE_KEY = 'bsv.luckyPlateResult';
+function loadStoredResult() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function storeResult(form, result) {
+  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ form, result })); } catch { /* ignore */ }
+}
+function clearStoredResult() {
+  try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+}
 
 const PRICE_PRESETS = [
   { label: 'Dưới 200tr', min: '', max: '200000000' },
@@ -96,7 +112,8 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
 }
 
 export default function LuckyPlate({ go, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
-  const [form, setForm] = useState({
+  const stored = useRef(loadStoredResult()).current;
+  const [form, setForm] = useState(() => stored?.form || {
     name: user?.fullName || '',
     birthDate: user?.birthDate || '',
     purpose: PURPOSES.find((p) => p.key === user?.preferredPurpose)?.label || 'Kinh doanh',
@@ -104,6 +121,9 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
     vehicle: user?.preferredVehicle || 'Ô tô',
     budgetStep: BUDGET_STEPS.length - 1,
   });
+  // Kết quả tra cứu mất khi remount (React Query mutation state không persist qua điều hướng trang) —
+  // giữ 1 bản trong sessionStorage để quay lại vẫn thấy, không phải tra lại từ đầu.
+  const [restoredResult, setRestoredResult] = useState(stored?.result || null);
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -141,12 +161,15 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
       priceMax: filters.priceMax || undefined,
       q: filters.q || undefined,
       avoidNumbers: filters.avoidNumbers.length ? filters.avoidNumbers : undefined,
-    }, { onError: () => notify('Không tra cứu được, thử lại sau.') });
+    }, {
+      onSuccess: (data) => { setRestoredResult(null); storeResult(form, data); },
+      onError: () => notify('Không tra cứu được, thử lại sau.'),
+    });
   };
 
-  const reset = () => { lookup.reset(); setForm((f) => ({ ...f, birthDate: '' })); };
+  const reset = () => { lookup.reset(); setRestoredResult(null); clearStoredResult(); setForm((f) => ({ ...f, birthDate: '' })); };
 
-  const result = lookup.data;
+  const result = lookup.data || restoredResult;
 
   // Deep-link `/hop-menh?y={year}&t={name}` → tự điền + tra cứu khi mở link chia sẻ.
   useEffect(() => {
@@ -203,6 +226,11 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
   };
 
   return (
+    <>
+      <Breadcrumb keepOnMobile items={[
+        { label: 'Trang chủ', onClick: go('home') },
+        ...(result ? [{ label: 'Tư vấn biển hợp mệnh', onClick: () => { lookup.reset(); } }, { label: 'Kết quả' }] : [{ label: 'Tư vấn biển hợp mệnh' }]),
+      ]} />
     <section style={{ maxWidth: 860, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <Eyebrow tone="blue">Tư vấn theo ngũ hành</Eyebrow>
@@ -355,6 +383,9 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
               {result.ranked.map((r, i) => (
                 <div key={r.plateId} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    {r.thumbnailUrl && (
+                      <img src={optimizeImageUrl(r.thumbnailUrl)} alt={`Biển số ${r.plateNumber}`} style={{ width: 72, height: 45, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
+                    )}
                     <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
                     <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}</span>
                     <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{Number(r.price).toLocaleString('vi-VN')}đ</span>
@@ -369,7 +400,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                     {r.explain.map((x, j) => <Badge key={j} tone="neutral">{x}</Badge>)}
                   </div>
                   <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2, flexWrap: 'wrap' }}>
-                    <Button variant="dark" size="sm" onClick={() => openPlate(r.plateId)}>Xem biển</Button>
+                    <Button variant="dark" size="sm" onClick={() => openPlate(r.plateId, 'lucky')}>Xem biển</Button>
                     <a href={`tel:${contact?.phone || DEFAULT_CONTACT.phone}`} style={{ textDecoration: 'none' }}>
                       <Button variant="primary" size="sm">Gọi ngay</Button>
                     </a>
@@ -415,5 +446,6 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
         </div>
       )}
     </section>
+    </>
   );
 }

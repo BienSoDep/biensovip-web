@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
 import Modal from '../components/Modal.jsx';
@@ -52,43 +52,35 @@ function LinkButton({ href, target, rel, variant, disabled, onClick, children, s
 }
 
 function AutoCarousel({ items, openPlate }) {
-  const trackRef = useRef(null);
-  const pausedRef = useRef(false);
-
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el || items.length <= 1) return;
-    const id = setInterval(() => {
-      if (pausedRef.current) return;
-      const cardWidth = 188 + 12; // width + gap (var(--space-3))
-      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
-      el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + cardWidth, behavior: 'smooth' });
-    }, 2800);
-    return () => clearInterval(id);
-  }, [items.length]);
-
+  // Track lặp gấp đôi + CSS animation translateX(-50%) chạy mượt liên tục (GPU), thay setInterval+scrollTo
+  // hay giật khi tới cuối phải nhảy về đầu. Track đủ dài (>=6 item) mới lặp mượt không lộ chỗ nối.
+  const doubled = items.length > 1 ? [...items, ...items] : items;
   return (
-    <div
-      ref={trackRef}
-      onMouseEnter={() => { pausedRef.current = true; }}
-      onMouseLeave={() => { pausedRef.current = false; }}
-      className="similar-carousel"
-      style={{ display: 'flex', gap: 'var(--space-3)', overflowX: 'auto', scrollSnapType: 'x mandatory', paddingBottom: 4 }}
-    >
-      {items.map((p) => {
-        const sp = splitPlateNumber(p.plateNumber);
-        return (
-          <a key={p.id} href={routeFor('detail', p.slug || p.id)} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable" aria-label={`Xem biển ${p.plateNumber}`} style={{ scrollSnapAlign: 'start', flex: '0 0 auto', width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
-            <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
-          </a>
-        );
-      })}
+    <div className="plate-marquee">
+      <div className="plate-marquee__track">
+        {doubled.map((p, i) => {
+          const sp = splitPlateNumber(p.plateNumber);
+          return (
+            <a key={`${p.id}-${i}`} href={routeFor('detail', p.slug || p.id)} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable plate-marquee__item" aria-label={`Xem biển ${p.plateNumber}`} style={{ width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+              <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify, user }) {
+// Nhãn/đích quay lại cho breadcrumb bước giữa — khớp đúng màn đã đưa khách tới đây, thay vì luôn
+// cứng "Biển số" dù khách đến từ Hợp mệnh/So sánh/Trang chủ.
+const FROM_SCREEN_CRUMB = {
+  lucky: { label: 'Hợp mệnh', screen: 'lucky' },
+  compare: { label: 'So sánh', screen: 'compare' },
+  home: { label: 'Trang chủ', screen: 'home' },
+};
+
+export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify, user, fromScreen }) {
   const { data: plate, isLoading, isError } = usePlateDetail(plateId);
   const { data: similar } = useSimilarPlates(plateId, 8);
   const logView = useLogPlateView();
@@ -200,11 +192,17 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     ? PROVINCE_LANDINGS.find((p) => p.name.toLowerCase() === plate.province.toLowerCase())
     : null;
 
+  // Bước giữa breadcrumb khớp đúng nơi khách bấm vào biển (Hợp mệnh/So sánh) — mặc định "Biển số"
+  // nếu đến từ danh sách hoặc không rõ nguồn (fromScreen null/không nằm trong map).
+  const midCrumb = fromScreen && FROM_SCREEN_CRUMB[fromScreen]
+    ? FROM_SCREEN_CRUMB[fromScreen]
+    : { label: 'Biển số', screen: 'list' };
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <Breadcrumb keepOnMobile items={[
         { label: 'Trang chủ', onClick: go('home') },
-        { label: 'Biển số', onClick: go('list') },
+        { label: midCrumb.label, onClick: go(midCrumb.screen) },
         // Landing tỉnh chỉ vào được qua URL trực tiếp (không có state provinceCode ở tầng App
         // để điều hướng SPA từ đây) — dùng full navigation, chấp nhận reload trang.
         ...(plateProvinceLanding ? [{ label: plateProvinceLanding.name, onClick: () => { window.location.href = routeFor('provinceLanding', plateProvinceLanding.code); } }] : []),
@@ -291,11 +289,21 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <button type="button" aria-label="Chia sẻ Zalo" onClick={shareZalo} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer' }}><MessageCircle size={24} /></button>
             <IconButton name={copied ? 'check' : 'copy'} label="Sao chép liên kết" size="lg" onClick={copyLink} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 'var(--space-3)' }}>
-            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Loại xe</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.vehicleType}</div></div>
-            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tỉnh / thành</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.province}</div></div>
-            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hồ sơ</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Sang tên ngay</div></div>
-            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14 }}><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bảo đảm</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Hồ sơ gốc</div></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 'var(--space-3)' }}>
+            <div style={{ background: isCar ? 'var(--brand-50)' : 'var(--status-success-bg)', boxShadow: `inset 0 0 0 1.5px ${isCar ? 'var(--brand-200)' : 'var(--status-success)'}`, borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', background: isCar ? 'var(--brand-500)' : 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--white)', flexShrink: 0 }}>
+                {isCar ? <Car size={20} /> : <Bike size={20} />}
+              </div>
+              <div><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Loại xe</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.vehicleType}</div></div>
+            </div>
+            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flexShrink: 0 }}><MapPin size={20} /></div>
+              <div><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tỉnh / thành</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.province}</div></div>
+            </div>
+            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--white)', flexShrink: 0 }}><FileCheck size={20} /></div>
+              <div><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hồ sơ</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Sang tên ngay · gốc</div></div>
+            </div>
           </div>
         </div>
       </section>
@@ -310,6 +318,13 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
 
       {tab === 'info' && (
       <>
+
+      {plate.description && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mô tả</span>
+          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', whiteSpace: 'pre-line' }}>{plate.description}</p>
+        </section>
+      )}
 
       {similar?.sameProvince?.length > 0 && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -342,8 +357,12 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
                 <div style={{ flex: '2 1 320px', padding: 'clamp(16px,2.5vw,24px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                   {m.title && <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{m.title}</h3>}
                   <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', whiteSpace: 'pre-line' }}>{m.content}</p>
-                  {m.blogSlug && (
+                  {m.blogSlug ? (
                     <a href={routeFor('post', m.blogSlug)} onClick={(e) => { e.preventDefault(); openPost?.(m.blogSlug); }} style={{ alignSelf: 'flex-start', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem chi tiết →</a>
+                  ) : m.title && (
+                    // Chưa có bài viết gắn trực tiếp (blogSlug null) — dẫn sang trang Blog lọc theo tiêu đề ý nghĩa,
+                    // vẫn đưa khách tới nội dung liên quan gần nhất thay vì ẩn link hoàn toàn.
+                    <a href={`${routeFor('blog')}?q=${encodeURIComponent(m.title)}`} onClick={(e) => { e.preventDefault(); history.replaceState(null, '', `${routeFor('blog')}?q=${encodeURIComponent(m.title)}`); go('blog')(); }} style={{ alignSelf: 'flex-start', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem chi tiết →</a>
                   )}
                 </div>
               </div>

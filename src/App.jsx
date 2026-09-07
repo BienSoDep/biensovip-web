@@ -266,7 +266,7 @@ export default function App() {
     patch({ favs: {} });
     notify('Đã bỏ lưu tất cả');
   };
-  const openPlate = (id) => patch({ screen: 'detail', curId: id, modal: false });
+  const openPlate = (id, from) => patch({ screen: 'detail', curId: id, modal: false, detailFrom: from || null });
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
   const openBuy = (id) => patch({
     curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {},
@@ -693,7 +693,7 @@ export default function App() {
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
-            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} />}
+            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} fromScreen={st.detailFrom} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
               <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} openPlate={openPlate} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />

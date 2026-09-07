@@ -14,7 +14,7 @@ import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } f
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
-  'cau-chuyen': 'Câu chuyện khách hàng', 'tinh-thanh': 'Tỉnh thành', general: 'Tin tức',
+  'cau-chuyen': 'Câu chuyện khách hàng', 'tinh-thanh': 'Tỉnh thành', 'loai-bien': 'Loại biển', general: 'Tin tức',
 };
 
 // Cùng pool ảnh Unsplash dùng làm cover ở backend seed — chọn ảnh khác cover để minh họa giữa bài, tránh lặp.
@@ -123,7 +123,7 @@ function useTableOfContents(html) {
 export default function Post({ postId, go, patch, notify, openPlate }) {
   const { data: post, isLoading, isError } = useBlogPost(postId);
   const { data: relatedData } = useRelatedPosts(postId, 3);
-  const { data: relatedPlatesData } = useRelatedPlates(postId, 4);
+  const { data: relatedPlatesData } = useRelatedPlates(postId, 12);
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -246,6 +246,12 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
         { label: post.title },
       ]} />
       <article style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
+      <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)', justifyContent: 'space-between' }}>
+        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 560 }}>
+          <strong style={{ color: 'var(--text-strong)' }}>Biensovip.com</strong> — sàn giao dịch biển số xe đẹp uy tín, chuyên {(CATEGORY_LABEL[post.category] || 'biển số').toLowerCase()} và các dòng biển hợp mệnh. Bài viết dưới đây giúp bạn hiểu rõ hơn trước khi chọn biển phù hợp.
+        </p>
+        <Button variant="primary" size="sm" onClick={go('list')}>Xem biển đẹp ngay</Button>
+      </div>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[post.category] || post.category}</span>
@@ -354,22 +360,33 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Biển số liên quan đến bài viết</h2>
           <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Những biển số cùng dãy ý nghĩa phong thủy với bài viết này, còn hàng trong hệ thống:</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(200px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-            {relatedPlates.map((p) => {
-              const sp = splitPlateNumber(p.plateNumber);
-              return (
-                <div key={p.id} onClick={() => { trackSelectContent('related_plate_end_article', p.id, post.id, post.meaningKey); openPlate?.(p.slug || p.id); }} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
-                  <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{p.plateNumber} · {p.province}</span>
-                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(p.price, p.priceOnRequest)}</span>
+          <div className="plate-marquee">
+            <div className="plate-marquee__track">
+              {[...relatedPlates, ...relatedPlates].map((p, i) => {
+                const sp = splitPlateNumber(p.plateNumber);
+                return (
+                  <div key={`${p.id}-${i}`} className="plate-marquee__item">
+                    <div onClick={() => { trackSelectContent('related_plate_end_article', p.id, post.id, post.meaningKey); openPlate?.(p.slug || p.id); }} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+                      <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{p.plateNumber} · {p.province}</span>
+                        <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(p.price, p.priceOnRequest)}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
+
+      <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)', justifyContent: 'space-between' }}>
+        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 560 }}>
+          Bạn đang tìm biển số hợp mệnh, hợp tuổi? <strong style={{ color: 'var(--text-strong)' }}>Biensovip.com</strong> có đội ngũ tư vấn phong thủy giúp chọn đúng biển cho nhu cầu của bạn.
+        </p>
+        <Button variant="primary" size="sm" onClick={go('lucky')}>Tư vấn hợp mệnh</Button>
+      </div>
 
       {related.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
