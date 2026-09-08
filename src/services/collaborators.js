@@ -29,6 +29,59 @@ export function useUpdateBankInfo() {
   });
 }
 
+// UC40 §3.7 — biển đang được quan tâm THẬT (PendingContactCount thật, không phải số vanity/ảo UC38).
+export function useHotPlates(limit = 5, enabled = true) {
+  return useQuery({
+    queryKey: ['collaborator-hot-plates', limit],
+    queryFn: () => apiClient.get(`/api/collaborators/hot-plates?limit=${limit}`),
+    enabled,
+  });
+}
+
+// Toàn bộ hoa hồng (khác data.recent trong dashboard chỉ 20 dòng) — dùng cho biểu đồ filter khoảng thời gian.
+export function useAllCommissions() {
+  return useQuery({
+    queryKey: ['collaborator-commissions-all'],
+    queryFn: () => apiClient.get('/api/collaborators/commissions'),
+  });
+}
+
+// UC40 §3.2 — Leaderboard tháng, mặc định tháng hiện tại.
+export function useLeaderboard(month) {
+  return useQuery({
+    queryKey: ['collaborator-leaderboard', month || 'current'],
+    queryFn: () => apiClient.get(`/api/collaborators/leaderboard${month ? `?month=${month}` : ''}`),
+  });
+}
+
+export function useSetLeaderboardVisibility() {
+  return useMutation({
+    mutationFn: (visible) => apiClient.patch('/api/collaborators/leaderboard-visibility', { visible }),
+  });
+}
+
+// UC40 §3.5 — lịch sử click theo ngày/nguồn.
+export function useClickStats(days = 30) {
+  return useQuery({
+    queryKey: ['collaborator-click-stats', days],
+    queryFn: () => apiClient.get(`/api/collaborators/click-stats?days=${days}`),
+  });
+}
+
+// UC40 §3.3 — biển CTV hay giới thiệu nhất + sinh link theo 1 biển cụ thể.
+export function useTopPlates(limit = 5) {
+  return useQuery({
+    queryKey: ['collaborator-top-plates', limit],
+    queryFn: () => apiClient.get(`/api/collaborators/top-plates?limit=${limit}`),
+  });
+}
+
+export function useCreatePlateLink() {
+  return useMutation({
+    mutationFn: (plateId) => apiClient.post('/api/collaborators/plate-links', { plateId }),
+  });
+}
+
 // Dashboard bắt buộc JWT của chính CTV (trước đây public theo path /dashboard/{code} — rò rỉ tên/số
 // tiền hoa hồng cho bất kỳ ai đoán được mã, đã bỏ). Gọi thẳng fetch với Bearer token CTV, không qua
 // apiClient (dùng slot token admin/user khác — xem gmailLink.js cho pattern tương tự).

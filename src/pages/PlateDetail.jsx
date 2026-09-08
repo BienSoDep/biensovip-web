@@ -20,13 +20,44 @@ import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { content } from '../lib/content/index.js';
 import LazyImage from '../components/LazyImage.jsx';
 import { maskName } from '../lib/textMask.js';
-import { buildConsultMessage } from '../lib/zaloMessage.js';
+import { buildConsultMessage, buildCtvPlateInviteMessage } from '../lib/zaloMessage.js';
+import { useCreatePlateLink } from '../services/collaborators.js';
+import toast from 'react-hot-toast';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 const REVIEWS_PER_PAGE = 5;
 
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Săn hộ / tư vấn theo nhu cầu'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting' };
+
+// UC40 §3.3 — CTV lấy link giới thiệu riêng cho biển đang xem, kèm copy sẵn tin nhắn mời khách.
+function CtvPlateLinkButton({ plateId, plateNumber }) {
+  const createLink = useCreatePlateLink();
+  const [copied, setCopied] = useState(false);
+
+  const getAndCopy = () => {
+    createLink.mutate(plateId, {
+      onSuccess: async (res) => {
+        const message = buildCtvPlateInviteMessage({ plateNumber, referralUrl: res.url });
+        try {
+          await navigator.clipboard.writeText(message);
+          setCopied(true);
+          toast.success('Đã sao chép tin nhắn kèm link giới thiệu biển này');
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          toast.error('Không sao chép được — thử lại');
+        }
+      },
+      onError: (err) => toast.error(err.message || 'Lấy link thất bại, thử lại'),
+    });
+  };
+
+  return (
+    <Button variant="outline" size="sm" onClick={getAndCopy} disabled={createLink.isPending} style={{ alignSelf: 'flex-start' }}>
+      {createLink.isPending ? 'Đang lấy link…' : copied ? 'Đã sao chép' : 'Lấy link giới thiệu biển này'}
+    </Button>
+  );
+}
 
 function LinkButton({ href, target, rel, variant, disabled, onClick, children, style }) {
   const bg = variant === 'outline' ? 'transparent' : 'var(--action-primary)';
@@ -326,6 +357,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <button type="button" aria-label="Chia sẻ Zalo" onClick={shareZalo} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer' }}><MessageCircle size={24} /></button>
             <IconButton name={copied ? 'check' : 'copy'} label="Sao chép liên kết" size="lg" onClick={copyLink} />
           </div>
+          {user?.isCollaborator && <CtvPlateLinkButton plateId={plate.id} plateNumber={plate.plateNumber} />}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 'var(--space-3)' }}>
             <div style={{ background: isCar ? 'var(--brand-50)' : 'var(--status-success-bg)', boxShadow: `inset 0 0 0 1.5px ${isCar ? 'var(--brand-200)' : 'var(--status-success)'}`, borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', background: isCar ? 'var(--brand-500)' : 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--white)', flexShrink: 0 }}>

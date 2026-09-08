@@ -89,7 +89,7 @@ export const ROUTE_MAP = {
   'fav': 'yeu-thich', 'profile': 'tai-khoan', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'hop-menh',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acats': 'admin/danh-muc',
   'acontacts': 'admin/lien-he', 'atransactions': 'admin/giao-dich', 'aposts': 'admin/bai-viet', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'aemailtpl': 'admin/mau-email', 'acollabs': 'admin/cong-tac-vien', 'acollabcontent': 'admin/noi-dung-ctv', 'ainterestleads': 'admin/khach-quan-tam', 'areviews': 'admin/danh-gia', 'ameanings': 'admin/y-nghia', 'achatbot': 'admin/tro-ly-ai', 'compose': 'admin/them-bai', 'aauditlog': 'admin/nhat-ky-he-thong', 'arisklog': 'admin/rui-ro-ctv', 'aguide': 'admin/huong-dan', 'amaintenance': 'admin/bao-tri', 'ashowroom': 'admin/so-lieu-hien-thi', 'aerrorlogs': 'admin/nhat-ky-loi', 'afeatureflags': 'admin/feature-flags', 'adbconsole': 'admin/db-console',
-  'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien', 'terms': 'dieu-khoan', 'privacy': 'bao-mat', 'transfer': 'sang-ten', 'faq': 'hoi-dap', 'gmailCallback': 'gmail-callback',
+  'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien', 'collabProcess': 'cong-tac-vien/quy-trinh', 'collabLeaderboard': 'cong-tac-vien/bang-xep-hang', 'terms': 'dieu-khoan', 'privacy': 'bao-mat', 'transfer': 'sang-ten', 'faq': 'hoi-dap', 'gmailCallback': 'gmail-callback',
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) => [v, k]));
@@ -115,4 +115,4 @@ export function parseRoute(pathname) {
 }
 
 export const ADMIN_SCREENS = ['dash', 'aplates', 'acats', 'acontacts', 'atransactions', 'aposts', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'aguide', 'amaintenance', 'ashowroom', 'aerrorlogs', 'afeatureflags', 'adbconsole'];
-export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'notfound', 'adminForgot', 'adminReset'];
+export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'collabProcess', 'collabLeaderboard', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'notfound', 'adminForgot', 'adminReset'];

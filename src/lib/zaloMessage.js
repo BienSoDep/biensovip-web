@@ -7,6 +7,15 @@ export function buildConsultMessage(plateNumber) {
   return `Tôi muốn được tư vấn biển số ${plateNumber}`;
 }
 
+// UC40 §3.4 — tin nhắn mẫu CTV mời khách, copy sẵn để gửi Zalo/Facebook nhanh không phải tự soạn.
+export function buildCtvInviteMessage({ referralUrl }) {
+  return `Chào bạn! Mình đang có mã giới thiệu mua biển số đẹp tại Biensovip.com — bạn xem thử nhé: ${referralUrl}. Có gì cần tư vấn thêm cứ nhắn mình!`;
+}
+
+export function buildCtvPlateInviteMessage({ plateNumber, referralUrl }) {
+  return `Chào bạn! Mình đang có biển ${plateNumber} khá đẹp, giới thiệu qua bạn xem thử: ${referralUrl}`;
+}
+
 export async function openZaloWithMessage(zaloPhone, message) {
   try {
     await navigator.clipboard.writeText(message);
