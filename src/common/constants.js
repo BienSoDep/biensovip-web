@@ -12,7 +12,7 @@ export const NAV = [
 export const ADMIN_NAV = [
   { group: null, items: [['dash', 'Tổng quan'], ['aguide', 'Hướng dẫn sử dụng']] },
   { group: 'Bán hàng', items: [['aplates', 'Biển số'], ['acoupons', 'Mã giảm giá'], ['atransactions', 'Giao dịch'], ['acontacts', 'Yêu cầu liên hệ'], ['acustomers', 'Khách hàng'], ['ainterestleads', 'Khách quan tâm'], ['acats', 'Danh mục']] },
-  { group: 'Nội dung', items: [['aposts', 'Bài viết'], ['ameanings', 'Ý nghĩa phong thủy'], ['avideos', 'Video']] },
+  { group: 'Nội dung', items: [['aposts', 'Bài viết'], ['ameanings', 'Ý nghĩa phong thủy'], ['avideos', 'Video'], ['apolicypages', 'Trang chính sách']] },
   { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['aemailtpl', 'Mẫu email'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
   { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['arisklog', 'Rủi ro CTV']] },
   { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký hệ thống'], ['amaintenance', 'Bảo trì hệ thống'], ['ashowroom', 'Số liệu hiển thị'], ['aerrorlogs', 'Nhật ký lỗi'], ['afeatureflags', 'Feature flags'], ['adbconsole', 'DB console']] },

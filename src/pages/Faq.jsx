@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
+import { usePolicyPage } from '../services/policyPages.js';
 
 export default function Faq({ go, zalo }) {
   const [open, setOpen] = useState(null);
-  const QA = contentItems('faq.items');
+  const { data: db } = usePolicyPage('faq');
+  const dbContent = db ? (() => { try { return JSON.parse(db.contentJson); } catch { return null; } })() : null;
+  const QA = dbContent?.items || contentItems('faq.items');
+  const title = db?.title || contentGet('faq.title');
+  const subtitle = db?.subtitle || contentGet('faq.subtitle');
 
   useEffect(() => {
     const old = document.head.querySelector('script[data-faq-ld]');
@@ -28,8 +33,8 @@ export default function Faq({ go, zalo }) {
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{contentGet('faq.title')}</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('faq.subtitle')}</p>
+        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title}</h1>
+        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{subtitle}</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

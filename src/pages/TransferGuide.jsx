@@ -1,22 +1,27 @@
 import { PhoneCall } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
+import { usePolicyPage } from '../services/policyPages.js';
 
 export default function TransferGuide({ go, zalo }) {
-  const steps = contentItems('transfer.steps');
-  const notes = contentItems('transfer.notes');
-  const updated = contentGet('transfer.updated');
+  const { data: db } = usePolicyPage('transfer');
+  const dbContent = db ? (() => { try { return JSON.parse(db.contentJson); } catch { return null; } })() : null;
+  const steps = dbContent?.steps || contentItems('transfer.steps');
+  const notes = dbContent?.notes || contentItems('transfer.notes');
+  const title = db?.title || contentGet('transfer.title');
+  const subtitle = db?.subtitle || contentGet('transfer.subtitle');
+  const updated = db?.updatedLabel || contentGet('transfer.updated');
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{contentGet('transfer.title')}</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{contentGet('transfer.subtitle')}</p>
+        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title}</h1>
+        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{subtitle}</p>
         {updated && <p style={{ margin: 'var(--space-2) 0 0', font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{updated}</p>}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {steps.map((s, i) => (
-          <div key={s.key} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
+          <div key={s.key || s.title} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
             <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, font: 'var(--type-title-3)' }}>{i + 1}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{s.title}</h3>

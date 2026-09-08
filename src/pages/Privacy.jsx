@@ -1,5 +1,6 @@
 import { Printer } from 'lucide-react';
 import { contentGet, contentItems } from '../lib/content/index.js';
+import { usePolicyPage } from '../services/policyPages.js';
 
 function Rich({ html }) {
   const parts = String(html).split(/(<strong>.*?<\/strong>)/g);
@@ -27,13 +28,17 @@ function Body({ s }) {
 }
 
 export default function Privacy() {
-  const sections = contentItems('privacy.sections');
+  const { data: db } = usePolicyPage('privacy');
+  const dbContent = db ? (() => { try { return JSON.parse(db.contentJson); } catch { return null; } })() : null;
+  const sections = dbContent?.sections || contentItems('privacy.sections');
+  const title = db?.title || contentGet('privacy.title');
+  const updated = db?.updatedLabel || contentGet('privacy.updated');
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-4)' }}>
         <div>
-          <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{contentGet('privacy.title')}</h1>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('privacy.updated')}</p>
+          <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title}</h1>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{updated}</p>
         </div>
         <button type="button" onClick={() => window.print()} className="no-print" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, border: 'none', background: 'var(--surface-sunken)', color: 'var(--text-strong)', padding: '9px 14px', borderRadius: 'var(--radius-field)', cursor: 'pointer', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)' }}><Printer size={16} /> In trang</button>
       </div>
@@ -42,7 +47,7 @@ export default function Privacy() {
         <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mục lục</span>
         <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {sections.map((s) => (
-            <li key={s.key}>
+            <li key={s.key || s.title}>
               <button type="button" onClick={() => document.getElementById(`sec-${slugify(s.title)}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })} style={{ border: 'none', background: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>{s.title}</button>
             </li>
           ))}
@@ -51,7 +56,7 @@ export default function Privacy() {
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-7) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
         {sections.map((s) => (
-          <div key={s.key} id={`sec-${slugify(s.title)}`} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <div key={s.key || s.title} id={`sec-${slugify(s.title)}`} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{s.title}</h2>
             <Body s={s} />
           </div>
