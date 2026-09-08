@@ -295,20 +295,11 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.aName} error={st.aErr.name} onChange={setField('aName')} onBlur={blurValidateRegisterField('name')} />
                 <Input label="Mã giới thiệu (không bắt buộc)" placeholder="Mã CTV giới thiệu bạn" value={st.aReferral} error={st.aErr.referral} onChange={setField('aReferral')} />
-                <div style={{ display: 'flex', gap: 8, background: 'var(--surface-sunken)', padding: 4, borderRadius: 'var(--radius-pill)' }}>
-                  {['email', 'phone'].map((t) => (
-                    <button key={t} type="button" onClick={() => patch({ aIdType: t, aErr: { ...st.aErr, email: '', phone: '' } })}
-                      style={{ flex: 1, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
-                        background: st.aIdType === t ? 'var(--action-primary)' : 'transparent', color: st.aIdType === t ? 'var(--white)' : 'var(--text-muted)' }}>
-                      {t === 'email' ? 'Email' : 'Số điện thoại'}
-                    </button>
-                  ))}
+                <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} onBlur={blurValidateRegisterField('email')} />
+                <div>
+                  <Input label="Số điện thoại (không bắt buộc)" placeholder="09xx xxx xxx" value={st.aPhone} error={st.aErr.phone} onChange={setField('aPhone')} onBlur={blurValidateRegisterField('phone')} />
+                  <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Khuyến khích thêm để chúng tôi liên hệ Zalo nhanh hơn khi có biển phù hợp.</span>
                 </div>
-                {st.aIdType === 'phone' ? (
-                  <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={st.aPhone} error={st.aErr.phone} onChange={setField('aPhone')} onBlur={blurValidateRegisterField('phone')} />
-                ) : (
-                  <Input label="Email" placeholder="email@example.com" value={st.aEmail} error={st.aErr.email} onChange={setField('aEmail')} onBlur={blurValidateRegisterField('email')} />
-                )}
                 <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 8 ký tự, có chữ và số" value={st.aPw} error={st.aErr.pw} onChange={(e) => patch({ aPw: e.target.value, aErr: { ...st.aErr, pw: '', pw2: '' } })} onBlur={blurValidateRegisterField('pw')} />
                 <PasswordStrength value={st.aPw} />
                 <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={st.aPw2} error={st.aErr.pw2} onChange={(e) => patch({ aPw2: e.target.value, aErr: { ...st.aErr, pw2: '' } })} onBlur={blurValidateRegisterField('pw2')} />

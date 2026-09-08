@@ -407,9 +407,10 @@ export default function App() {
     const err = { ...ast.aErr };
     if (field === 'name') {
       if (!ast.aName.trim()) err.name = 'Vui lòng nhập họ tên.'; else delete err.name;
-    } else if (field === 'email' && ast.aIdType === 'email') {
-      if (ast.aEmail.trim() && !ast.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.'; else delete err.email;
-    } else if (field === 'phone' && ast.aIdType === 'phone') {
+    } else if (field === 'email') {
+      if (!ast.aEmail.trim() || !ast.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.'; else delete err.email;
+    } else if (field === 'phone') {
+      // Phone optional — chỉ validate format khi khách có nhập, bỏ trống không báo lỗi.
       if (ast.aPhone.trim() && !validatePhone(ast.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).'; else delete err.phone;
     } else if (field === 'pw') {
       if (ast.aPw && ast.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.'; else delete err.pw;
@@ -423,26 +424,23 @@ export default function App() {
     const s = st.screen;
     const err = {};
     if (s === 'register') {
-      const isPhone = ast.aIdType === 'phone';
+      // Email luôn bắt buộc (kênh gửi thông báo chính) — phone optional, chỉ khuyến khích để liên hệ Zalo.
       if (!ast.aName.trim()) err.name = 'Vui lòng nhập họ tên.';
-      if (isPhone) {
-        if (!ast.aPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
-        else if (!validatePhone(ast.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
-      } else if (!ast.aEmail.trim() || !ast.aEmail.includes('@')) {
-        err.email = 'Email chưa đúng định dạng.';
-      }
+      if (!ast.aEmail.trim() || !ast.aEmail.includes('@')) err.email = 'Email chưa đúng định dạng.';
+      if (ast.aPhone.trim() && !validatePhone(ast.aPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
       if (ast.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
       if (!ast.aAgree) err.agree = true;
       if (Object.keys(err).length) { patchAuth({ aErr: err }); return; }
       try {
-        const identifier = (isPhone ? ast.aPhone : ast.aEmail).trim();
-        await authApi.register({ identifierType: isPhone ? 'phone' : 'email', identifier, password: ast.aPw, fullName: ast.aName.trim(), referralCode: ast.aReferral?.trim() || undefined });
-        trackSignUp(isPhone ? 'phone' : 'email', { has_referral: !!ast.aReferral?.trim() });
-        if (!isPhone) rememberEmail(identifier);
+        const email = ast.aEmail.trim();
+        const phone = ast.aPhone.trim() || undefined;
+        await authApi.register({ email, phone, password: ast.aPw, fullName: ast.aName.trim(), referralCode: ast.aReferral?.trim() || undefined });
+        trackSignUp('email', { has_referral: !!ast.aReferral?.trim(), has_phone: !!phone });
+        rememberEmail(email);
         // Đăng ký xong tự đăng nhập luôn → chuyển thẳng vào Profile để mời điền ngày sinh
         // (cần cho tính năng hợp mệnh) — Profile có nút bỏ qua nếu login tự động lỡ thất bại.
         try {
-          const data = await authApi.login({ identifier, password: ast.aPw, remember });
+          const data = await authApi.login({ identifier: email, password: ast.aPw, remember });
           patchAuth({ aErr: {}, aPw: '' });
           patch({ user: data.user, screen: 'profile', profileOnboarding: true });
           notify('Đăng ký thành công!');
@@ -450,12 +448,13 @@ export default function App() {
         } catch {
           patchAuth({ aErr: {}, aPw: '', step: 1 });
           patch({ screen: 'login' });
-          notify(isPhone ? 'Đăng ký thành công! Vui lòng đăng nhập.' : 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
+          notify('Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
         }
       } catch (e) {
-        trackSignUpFailed(isPhone ? 'phone' : 'email', e.status === 409 ? 'duplicate' : 'other');
-        if (e.status === 409) patchAuth({ aErr: { [isPhone ? 'phone' : 'email']: isPhone ? 'Số điện thoại đã được sử dụng.' : 'Email đã được sử dụng.' } });
-        else patchAuth({ aErr: { [isPhone ? 'phone' : 'email']: e.message || 'Đăng ký thất bại.' } });
+        trackSignUpFailed('email', e.status === 409 ? 'duplicate' : 'other');
+        if (e.code === 'PHONE_EXISTS') patchAuth({ aErr: { phone: 'Số điện thoại đã được sử dụng.' } });
+        else if (e.code === 'EMAIL_EXISTS') patchAuth({ aErr: { email: 'Email đã được sử dụng.' } });
+        else patchAuth({ aErr: { email: e.message || 'Đăng ký thất bại.' } });
       }
       return;
     }

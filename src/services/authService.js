@@ -1,9 +1,9 @@
 import { apiClient } from './apiClient.js';
 import { loadAuth, saveAuth } from '../lib/authStore.js';
 
-// ── Register ──
-export async function register({ identifierType, identifier, password, fullName, referralCode }) {
-  return apiClient.post('/api/auth/register', { identifierType, identifier, password, fullName, referralCode });
+// ── Register ── Email bắt buộc (kênh gửi thông báo chính), Phone optional (khuyến khích để liên hệ Zalo).
+export async function register({ email, phone, password, fullName, referralCode }) {
+  return apiClient.post('/api/auth/register', { email, phone: phone || null, password, fullName, referralCode });
 }
 
 // ── Login ──
