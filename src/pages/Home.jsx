@@ -45,7 +45,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const { data: featuredVideos } = useFeaturedPromoVideos(3);
   const featuredVideoItems = featuredVideos?.items || [];
-  const { data: soldData } = usePlates({ status: 'sold', perPage: 8 });
+  const { data: soldData } = usePlates({ status: 'sold', perPage: 14 });
   const soldItems = soldData?.items || [];
 
   // Home search: catId/qDebounced empty = show featured plates as before.
@@ -220,19 +220,22 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
       </section>
 
       {soldItems.length > 0 && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <section className="sold-marquee-section" style={{ padding: '0 0 var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+          <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Eyebrow tone="blue" className="section-eyebrow">Đã giao dịch thành công</Eyebrow>
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Những biển số đã về chủ mới</h2>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Giao dịch thật, khách hàng thật — minh bạch giá bán.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-            {soldItems.map((p, i) => (
-              <PlateCard key={p.id} {...p}
-                onOpen={() => { trackSelectItem(p, 'home_sold'); openPlate(p.id); }}
-                href={routeFor('detail', p.slug || p.id)}
-                style={stagger(i)} />
-            ))}
+          <div className="plate-marquee sold-marquee">
+            <div className="plate-marquee__track sold-marquee__track">
+              {[...soldItems, ...soldItems].map((p, i) => (
+                <div key={`${p.id}-${i}`} className="sold-marquee__item">
+                  <PlateCard {...p}
+                    onOpen={() => { trackSelectItem(p, 'home_sold'); openPlate(p.id); }}
+                    href={routeFor('detail', p.slug || p.id)} />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}

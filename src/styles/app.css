@@ -1157,3 +1157,24 @@ textarea,
   .plate-marquee__track { animation: none; }
   .plate-marquee { overflow-x: auto; }
 }
+
+/* Dãy "biển đã bán" trang chủ — carousel full-bleed, nền sáng đồng bộ site (không đổi tone), chạy
+   chậm hơn plate-marquee mặc định (nhiều item hơn, cần đọc kịp giá/biển trước khi trôi qua). */
+.sold-marquee-section {
+  background: var(--surface-tint-cream);
+  padding-top: var(--space-6);
+}
+.sold-marquee {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.sold-marquee__track {
+  animation-duration: 55s;
+}
+.sold-marquee__item {
+  flex: 0 0 auto;
+  width: 300px;
+}
+@media (max-width: 640px) {
+  .sold-marquee__item { width: 260px; }
+}
