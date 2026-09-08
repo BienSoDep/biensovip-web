@@ -5,7 +5,7 @@ import { loadAuth, saveAuth } from './lib/authStore.js';
 import * as authApi from './services/authService.js';
 import * as favApi from './services/favoriteService.js';
 import { getLocalFavorites, addLocalFavorite, removeLocalFavorite, clearLocalFavorites } from './services/favoriteStore.js';
-import { useComparePlates } from './services/compareService.js';
+import { useComparePlates, useCompareIds } from './services/compareService.js';
 import { trackAddToWishlist, trackRemoveFromWishlist, trackSignUp, trackSignUpFailed, trackLogin } from './services/tracking/events.js';
 import { contentGet } from './lib/content/index.js';
 import { splitPlateNumber, formatPrice } from './lib/plateFormat.js';
@@ -591,6 +591,7 @@ export default function App() {
   // Logged-in: use favItems returned by the favorites API.
   const guestFavs = !st.user ? getLocalFavorites() : [];
   const { data: guestFavData } = useComparePlates(guestFavs);
+  const { ids: compareIds } = useCompareIds();
   const guestFavItems = guestFavData?.items || [];
   const favCards = st.user
     ? favItems.map((p) => ({
@@ -660,7 +661,7 @@ export default function App() {
 
           {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} />}
 
-          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
+          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={favCards.length} compareCount={compareIds.length} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
           {/* detail/post/provinceLanding/plateTypeLanding tự render breadcrumb riêng bên trong (cần dữ
               liệu tỉnh/category đã fetch — không có sẵn ở tầng App) — bỏ qua ở đây tránh render 2 lần. */}

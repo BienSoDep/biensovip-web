@@ -680,8 +680,12 @@ textarea,
   }
 }
 @media (max-width: 480px) {
-  .plate-grid {
+  .plate-grid.view-list {
     grid-template-columns: 1fr !important;
+  }
+  .plate-grid.view-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-3) !important;
   }
   /* Danh sách: ẩn hành động phụ (lưu tìm kiếm, toggle cuộn) để giữ trọng tâm view/sắp xếp */
   .list-toolbar-secondary {

@@ -1,9 +1,18 @@
 import { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, Car, Compass, Scale, BookOpen, MessageCircle, Handshake, Heart, Bell } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { pill } from '../components/NavBtn.jsx';
 
-export default function MobileDrawer({ open, onClose, s, go, user, onLogout }) {
+const MAIN_NAV = [
+  ['list', 'Biển số', Car],
+  ['lucky', 'Hợp mệnh', Compass],
+  ['compare', 'So sánh', Scale],
+  ['blog', 'Tin phong thủy', BookOpen],
+  ['chat', 'Liên hệ', MessageCircle],
+  ['collab', 'Cộng tác viên', Handshake],
+];
+
+export default function MobileDrawer({ open, onClose, s, go, user, onLogout, favCount = 0, compareCount = 0 }) {
   const panelRef = useRef(null);
 
   useEffect(() => {
@@ -41,10 +50,30 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout }) {
           <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Menu</span>
           <button type="button" aria-label="Đóng menu" onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }}><X size={22} /></button>
         </div>
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: 'var(--space-3)' }}>
-          {[['list', 'Biển số'], ['lucky', 'Hợp mệnh'], ['fav', 'Yêu thích'], ['blog', 'Tin phong thủy']].map((n) => (
-            <button key={n[0]} onClick={() => { go(n[0])(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === n[0]) }}>{n[1]}</button>
+        <nav style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4, padding: 'var(--space-3)' }}>
+          {MAIN_NAV.map(([key, label, Icon]) => (
+            <button key={key} onClick={() => { go(key)(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === key) }}>
+              <Icon size={18} style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1 }}>{label}</span>
+              {key === 'compare' && compareCount > 0 && (
+                <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--action-primary)', color: s === key ? 'var(--action-primary)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
+              )}
+            </button>
           ))}
+          <div style={{ height: 1, background: 'var(--border-hairline)', margin: '8px 4px' }} />
+          <button onClick={() => { go('fav')(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === 'fav') }}>
+            <Heart size={18} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1 }}>Yêu thích</span>
+            {favCount > 0 && (
+              <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === 'fav' ? 'var(--white)' : 'var(--action-primary)', color: s === 'fav' ? 'var(--action-primary)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{favCount}</span>
+            )}
+          </button>
+          {user && (
+            <button onClick={() => { go('notifications')(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === 'notifications') }}>
+              <Bell size={18} style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1 }}>Thông báo</span>
+            </button>
+          )}
         </nav>
         <div style={{ padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           {user ? (
