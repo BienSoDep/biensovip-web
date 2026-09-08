@@ -10,6 +10,7 @@ import * as authApi from '../services/authService.js';
 import { apiClient } from '../services/apiClient.js';
 import Dashboard from '../pages/admin/Dashboard.jsx';
 import AdminPlates from '../pages/admin/AdminPlates.jsx';
+import AdminCoupons from '../pages/admin/AdminCoupons.jsx';
 import AdminCats from '../pages/admin/AdminCats.jsx';
 import AdminContacts from '../pages/admin/AdminContacts.jsx';
 import AdminTransactions from '../pages/admin/AdminTransactions.jsx';
@@ -42,7 +43,7 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
 const NAV_PERM = {
-  aplates: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view', atransactions: 'transactions:view',
+  aplates: 'plates:view', acoupons: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view', atransactions: 'transactions:view',
   aposts: 'posts:view', compose: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
@@ -55,6 +56,7 @@ export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?
 const ADMIN_INFO = {
   dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
   aplates: 'Quản lý toàn bộ biển số rao bán. Đổi trạng thái Còn hàng/Đã bán khi có giao dịch, cập nhật giá đúng lúc để khách không thấy giá cũ.',
+  acoupons: 'Tạo và quản lý mã giảm giá — khách nhập mã khi gửi liên hệ/đặt cọc. Tắt mã khi không muốn dùng nữa, không cần xóa.',
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
   atransactions: 'Giao dịch mua/đặt cọc biển số. Tự tạo khi khách gửi liên hệ đặt cọc/mua, hoặc admin tự tạo tay từ 1 liên hệ tư vấn. Bấm "Xác nhận đã nhận tiền" khi khách đã chuyển khoản (ảnh minh chứng không bắt buộc) — hoa hồng CTV liên quan tự chuyển sang "Chờ duyệt" → "Đã duyệt".',
@@ -311,6 +313,7 @@ export default function AdminShell({
         {s === 'dash' && <Dashboard st={st} go={go} />}
         {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} go={go} />}
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
+        {s === 'acoupons' && <AdminCoupons notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}

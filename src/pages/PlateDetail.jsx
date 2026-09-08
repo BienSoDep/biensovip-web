@@ -7,6 +7,7 @@ import PlateVisual from '../components/PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { useSubmitContact } from '../services/contactService.js';
+import { validateCoupon } from '../services/couponService.js';
 import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
 import { logZaloClick } from '../services/zaloClicks.js';
 import { trackViewItem, trackGenerateLead, trackShare } from '../services/tracking/events.js';
@@ -108,10 +109,12 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     fullName: user?.fullName || '',
     phone: user?.identifierType === 'phone' ? (user?.identifier || '') : '',
     email: user?.identifierType === 'email' ? (user?.identifier || '') : '',
-    note: '', intent: 'deposit_request', depositAmount: '', subscribe: false, honeypot: '',
+    note: '', intent: 'deposit_request', depositAmount: '', subscribe: false, honeypot: '', couponCode: '',
   });
   const [cErr, setCErr] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [couponStatus, setCouponStatus] = useState(null); // null=chưa check, {valid, discountPercent, error}
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
 
   const [lightbox, setLightbox] = useState(-1);
   const images = plate?.images || [];
@@ -151,6 +154,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
 
   const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
   const sold = plate.status === 'sold';
+  const onSale = !plate.priceOnRequest && plate.salePrice != null && plate.salePrice < plate.price;
   const isFav = !!favs?.[plate.id];
   const inCompare = isInList(plate.id);
   const isCar = plate.vehicleType === 'Ô tô';
@@ -165,6 +169,20 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     notify('Đã sao chép liên kết');
     setTimeout(() => setCopied(false), 2000);
   };
+  const checkCoupon = async () => {
+    const code = cForm.couponCode.trim();
+    if (!code) { setCouponStatus(null); return; }
+    setCheckingCoupon(true);
+    try {
+      const res = await validateCoupon(code);
+      setCouponStatus(res);
+    } catch {
+      setCouponStatus({ valid: false, error: 'CHECK_FAILED' });
+    } finally {
+      setCheckingCoupon(false);
+    }
+  };
+
   const handleContactSubmit = (e) => {
     e.preventDefault();
     if (cForm.honeypot) { setContactOpen(false); return; } // bot trap
@@ -179,6 +197,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       depositAmount: cForm.intent === 'deposit_request' && cForm.depositAmount ? Number(cForm.depositAmount) : null,
       subscribeToNotifications: !!cForm.subscribe,
       honeypot: cForm.honeypot || null,
+      couponCode: couponStatus?.valid ? cForm.couponCode.trim() : null,
     }, {
       onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setCSent(true); handleContact('contact'); },
       onError: (err) => setCErr({ field: null, message: err.message || 'Gửi thất bại, vui lòng thử lại.' }),
@@ -279,7 +298,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           </div>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
-            <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+            {onSale ? (
+              <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--status-danger)' }}>{formatPrice(plate.salePrice, false)}</span>
+                <span style={{ font: 'var(--type-body)', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(plate.price, false)}</span>
+              </span>
+            ) : (
+              <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+            )}
           </div>
           <div className="plate-actions-desktop" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {!sold && (
@@ -437,7 +463,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       <div className="plate-actions-mobile">
         <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
-          <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+          {onSale ? (
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+              <span style={{ font: 'var(--type-title-2)', color: 'var(--status-danger)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatPrice(plate.salePrice, false)}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(plate.price, false)}</span>
+            </span>
+          ) : (
+            <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+          )}
         </div>
         {plate.seller?.phone && (
           <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 0' }}>Gọi ngay</LinkButton>
@@ -481,6 +514,16 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             )}
             <div>
               <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
+            </div>
+            <div>
+              <Input label="Mã giảm giá (tùy chọn)" value={cForm.couponCode} onChange={setCF('couponCode')} onBlur={checkCoupon} placeholder="Nhập mã nếu có" />
+              {checkingCoupon && <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang kiểm tra…</span>}
+              {!checkingCoupon && couponStatus?.valid && (
+                <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--status-success-ink)' }}>Áp dụng thành công — giảm {couponStatus.discountPercent}%</span>
+              )}
+              {!checkingCoupon && couponStatus && !couponStatus.valid && (
+                <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Mã không hợp lệ hoặc đã hết hạn</span>
+              )}
             </div>
             <div>
               <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />

@@ -112,6 +112,7 @@ const INITIAL_FORM = {
   plateNumber: '', plateTypeId: '', provinceId: '', vehicleTypeId: '',
   price: '', costPrice: '', priceOnRequest: false, isHot: false,
   description: '', fengShuiMeaning: '', images: [], giftedPlateNumber: '',
+  salePrice: '', saleDiscountPercent: '',
 };
 
 const fmt = (n) => (n == null ? '—' : n.toLocaleString('vi-VN') + 'đ');
@@ -332,6 +333,9 @@ export default function AdminPlates({ go, notify, st }) {
         fengShuiMeaning: editDetail.fengShuiMeaning || '',
         images: (editDetail.images || []).map((img) => img.url),
         giftedPlateNumber: editDetail.giftedPlateNumber || '',
+        salePrice: editDetail.salePrice != null ? String(editDetail.salePrice) : '',
+        saleDiscountPercent: editDetail.salePrice != null && editDetail.price > 0
+          ? String(Math.round((1 - editDetail.salePrice / editDetail.price) * 100)) : '',
       });
       setLoadedUpdatedAt(editDetail.updatedAt || null);
     }
@@ -385,6 +389,7 @@ export default function AdminPlates({ go, notify, st }) {
     if (!form.provinceId) errs.provinceId = 'Chọn tỉnh/thành';
     if (!form.vehicleTypeId) errs.vehicleTypeId = 'Chọn loại xe';
     if (!form.priceOnRequest && num(form.price) < 0) errs.price = 'Giá không được âm';
+    if (!form.priceOnRequest && form.salePrice && num(form.salePrice) >= num(form.price)) errs.salePrice = 'Giá sau giảm phải nhỏ hơn giá gốc';
     setFormErr(errs);
     if (Object.keys(errs).length) return;
 
@@ -401,6 +406,8 @@ export default function AdminPlates({ go, notify, st }) {
       fengShuiMeaning: form.fengShuiMeaning || null,
       images: form.images,
       giftedPlateNumber: form.giftedPlateNumber?.trim() || null,
+      salePrice: form.priceOnRequest || !form.salePrice ? null : num(form.salePrice),
+      clearSalePrice: form.priceOnRequest || !form.salePrice,
     };
 
     setSaving(true);
@@ -1176,6 +1183,44 @@ function PlateFormModal({
                 />
               </label>
             </div>
+          )}
+          {!form.priceOnRequest && (
+            <>
+              <div style={{ flex: '1 1 140px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>% giảm</span>
+                  <input
+                    type="text" placeholder="10" value={form.saleDiscountPercent ?? ''}
+                    onChange={(e) => {
+                      const pct = e.target.value.replace(/[^\d]/g, '');
+                      setForm((f) => ({
+                        ...f, saleDiscountPercent: pct,
+                        salePrice: pct && num(f.price) > 0 ? String(Math.round(num(f.price) * (1 - Number(pct) / 100))) : '',
+                      }));
+                    }}
+                    style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
+                      boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
+                  />
+                </label>
+              </div>
+              <div style={{ flex: '1 1 180px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Giá sau giảm</span>
+                  <input
+                    type="text" placeholder="Để trống nếu không giảm" value={form.salePrice ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[^\d]/g, '');
+                      setForm((f) => ({
+                        ...f, salePrice: v,
+                        saleDiscountPercent: v && num(f.price) > 0 ? String(Math.round((1 - Number(v) / num(f.price)) * 100)) : '',
+                      }));
+                    }}
+                    style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
+                      boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
+                  />
+                </label>
+              </div>
+            </>
           )}
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={form.priceOnRequest} onChange={(e) => setF('priceOnRequest')(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />

@@ -10,11 +10,13 @@ const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose'
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
   status, badge, fav, onFav, onCompare, inCompare, onOpen, href, onBuy, style, plateSize = 'md',
-  contact,
+  contact, salePrice,
 }) {
   const { prov, seri, num } = splitPlateNumber(plateNumber);
   const sold = status === 'sold';
   const meta = [vehicleType, province].filter(Boolean).join(' · ');
+  const onSale = !priceOnRequest && salePrice != null && salePrice < price;
+  const discountPct = onSale ? Math.round((1 - salePrice / price) * 100) : 0;
 
   return (
     <Card
@@ -31,6 +33,7 @@ export default function PlateCard({
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 6 }}>
               {isHot && <Badge tone="hot">🔥 HOT</Badge>}
+              {onSale && !sold && <Badge tone="rose">-{discountPct}%</Badge>}
               {type && <Badge tone="dark">{type}</Badge>}
               {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
             </div>
@@ -67,7 +70,14 @@ export default function PlateCard({
             <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} style={{ textDecoration: 'none', padding: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</a>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta}</span>
           </div>
-          <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
+          {onSale ? (
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ font: 'var(--type-price)', color: 'var(--status-danger)', whiteSpace: 'nowrap' }}>{formatPrice(salePrice, false)}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{formatPrice(price, false)}</span>
+            </span>
+          ) : (
+            <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
+          )}
           {!sold ? (
             <div style={{ display: 'flex', gap: 8 }}>
               {contact?.phone ? (
