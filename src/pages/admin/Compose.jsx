@@ -40,6 +40,13 @@ export default function Compose({ st, patch, notify }) {
   const [metaDescription, setMetaDescription] = useState('');
   const [category, setCategory] = useState('kien-thuc');
   const [scheduledPublishAt, setScheduledPublishAt] = useState('');
+  // UC39 — bài "hành trình giao biển": gắn 1 biển đã bán cụ thể + địa điểm/ngày giao.
+  const [plateId, setPlateId] = useState('');
+  const [platePlateNumber, setPlatePlateNumber] = useState('');
+  const [plateQuery, setPlateQuery] = useState('');
+  const [plateOptions, setPlateOptions] = useState([]);
+  const [deliveryLocation, setDeliveryLocation] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
   const [loadedUpdatedAt, setLoadedUpdatedAt] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tags, setTags] = useState([]);
@@ -90,6 +97,10 @@ export default function Compose({ st, patch, notify }) {
       setScheduledPublishAt(full.scheduledPublishAt ? full.scheduledPublishAt.slice(0, 16) : '');
       setLoadedUpdatedAt(full.updatedAt || null);
       setTags(full.tags || []);
+      setPlateId(full.plateId || '');
+      setPlatePlateNumber(full.plateNumber || '');
+      setDeliveryLocation(full.deliveryLocation || '');
+      setDeliveryDate(full.deliveryDate || '');
       if (full.contentHtml) editor.commands.setContent(full.contentHtml);
       setAttachedVideos(full.videos || []);
       savedRef.current = {
@@ -103,6 +114,17 @@ export default function Compose({ st, patch, notify }) {
   useEffect(() => {
     loadPost();
   }, [editPostId, editor]);
+
+  // UC39 — search biển đã bán khi gõ vào ô chọn biển gắn bài (debounce 300ms).
+  useEffect(() => {
+    const q = plateQuery.trim();
+    const timer = setTimeout(() => {
+      apiClient.get(`/api/admin/blog/sold-plates${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+        .then((res) => setPlateOptions(res?.items || []))
+        .catch(() => setPlateOptions([]));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [plateQuery]);
 
   // Unsaved-changes guard: cảnh báo trước khi đóng/refresh trình duyệt khi có thay đổi chưa lưu.
   const isDirty = () => {
@@ -315,6 +337,10 @@ export default function Compose({ st, patch, notify }) {
       tags,
       status,
       scheduledPublishAt: status === 'draft' && scheduledPublishAt ? new Date(scheduledPublishAt).toISOString() : null,
+      plateId: plateId || null,
+      ...(editPostId && !plateId ? { clearPlateId: true } : {}),
+      deliveryLocation: deliveryLocation.trim() || null,
+      deliveryDate: deliveryDate || null,
     };
 
     const onSuccess = async (data) => {
@@ -447,6 +473,42 @@ export default function Compose({ st, patch, notify }) {
           <span style={{ font: 'var(--type-caption)', color: metaDescription.length > 155 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
             {metaDescription.length}/155 ký tự{metaDescription.length > 155 ? ' — Google sẽ cắt bớt phần dư' : ''}
           </span>
+        </div>
+
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Hành trình giao biển (tùy chọn)<InfoTip size={12} text="Gắn bài viết này với 1 biển đã bán cụ thể — bài sẽ hiện thành 'Câu chuyện giao biển' trong trang chi tiết biển đó. Chỉ chọn được biển đã có trạng thái Đã bán." /></span>
+
+          {plateId ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
+              <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{platePlateNumber}</span>
+              <button type="button" onClick={() => { setPlateId(''); setPlatePlateNumber(''); }} aria-label="Bỏ gắn biển" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}><X size={14} /></button>
+            </div>
+          ) : (
+            <>
+              <Input placeholder="Gõ số biển đã bán…" value={plateQuery} onChange={(e) => setPlateQuery(e.target.value)} />
+              {plateOptions.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 140, overflowY: 'auto' }}>
+                  {plateOptions.map((p) => (
+                    <button key={p.id} type="button" onClick={() => { setPlateId(p.id); setPlatePlateNumber(p.plateNumber); setPlateQuery(''); setPlateOptions([]); }}
+                      style={{ textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', padding: '6px 8px', borderRadius: 'var(--radius-sm)', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
+                      {p.plateNumber}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {plateId && (
+            <>
+              <Input label="Địa điểm giao biển" placeholder="VD: Đà Nẵng" value={deliveryLocation} onChange={(e) => setDeliveryLocation(e.target.value)} />
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ngày giao biển</span>
+                <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)}
+                  style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }} />
+              </label>
+            </>
+          )}
         </div>
 
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

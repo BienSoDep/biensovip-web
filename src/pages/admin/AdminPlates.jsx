@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Copy, Star } from 'lucide-react';
+import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Copy, Star, Gift } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import toast from 'react-hot-toast';
 import {
@@ -8,7 +8,7 @@ import {
   useBulkCreatePlate, useUploadImage, useAdminPlate, checkPlateVersion, useRestorePlate,
 } from '../../services/adminPlates.js';
 import { useAdminCategories } from '../../services/categories.js';
-import { Select, IconButton, SearchField, InfoTip } from '../../components/index.jsx';
+import { Select, IconButton, SearchField, InfoTip, Input } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 import Button from '../../components/Button.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
@@ -116,6 +116,32 @@ const INITIAL_FORM = {
 };
 
 const fmt = (n) => (n == null ? '—' : n.toLocaleString('vi-VN') + 'đ');
+
+// Cột có thể ẩn/hiện — key phải khớp field render bên dưới. plateType/vehicleType/province/price bật mặc định
+// (thông tin cốt lõi để quản lý); cột phụ (liên hệ chờ/ảnh/ngày tạo/giá KM) tắt mặc định tránh rối bảng lần đầu.
+const TOGGLEABLE_COLUMNS = [
+  { key: 'plateType', label: 'Loại biển', default: true },
+  { key: 'vehicleType', label: 'Loại xe', default: true },
+  { key: 'province', label: 'Tỉnh/thành', default: true },
+  { key: 'price', label: 'Giá', default: true },
+  { key: 'gifted', label: 'Biển tặng', default: true },
+  { key: 'isNew', label: 'Mới', default: true },
+  { key: 'status', label: 'Trạng thái', default: true },
+  { key: 'updatedAt', label: 'Cập nhật', default: true },
+  { key: 'pendingContact', label: 'Liên hệ chờ', default: false },
+  { key: 'imageCount', label: 'Số ảnh', default: false },
+  { key: 'createdAt', label: 'Ngày tạo', default: false },
+  { key: 'salePrice', label: 'Giá KM', default: false },
+];
+const COLUMN_PREFS_KEY = 'bsv.admin.plateColumns';
+
+function loadColumnPrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(COLUMN_PREFS_KEY) || 'null');
+    if (saved && typeof saved === 'object') return { ...Object.fromEntries(TOGGLEABLE_COLUMNS.map((c) => [c.key, c.default])), ...saved };
+  } catch { /* ignore malformed prefs */ }
+  return Object.fromEntries(TOGGLEABLE_COLUMNS.map((c) => [c.key, c.default]));
+}
 const num = (v) => Number(String(v ?? '').replace(/[^\d]/g, '') || 0);
 // Biển "Mới" = tạo trong 7 ngày gần nhất.
 const isNewPlate = (p) => !!p.createdAt && (Date.now() - new Date(p.createdAt).getTime()) < 7 * 24 * 3600 * 1000;
@@ -154,6 +180,14 @@ export default function AdminPlates({ go, notify, st }) {
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/plates');
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [debouncedKeyword] = useDebouncedValue(keyword, 250);
+
+  const [colPrefs, setColPrefs] = useState(loadColumnPrefs);
+  const [colMenuOpen, setColMenuOpen] = useState(false);
+  const toggleCol = (key) => setColPrefs((prev) => {
+    const next = { ...prev, [key]: !prev[key] };
+    try { localStorage.setItem(COLUMN_PREFS_KEY, JSON.stringify(next)); } catch { /* storage blocked */ }
+    return next;
+  });
 
   // Sinh ý nghĩa phong thủy hàng loạt cho biển đang thiếu
   const [missingMeaningPlates, setMissingMeaningPlates] = useState(null); // null=chưa mở, []=đã check hết
@@ -666,6 +700,22 @@ export default function AdminPlates({ go, notify, st }) {
           <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
         </label>
         <Select label="Hiển thị" value={perPage} options={PER_PAGE_OPTIONS} onChange={(v) => { setPerPage(Number(v)); setPage(1); }} />
+        <div style={{ position: 'relative' }}>
+          <Button variant="ghost" size="md" onClick={() => setColMenuOpen((o) => !o)}>Cột hiển thị</Button>
+          {colMenuOpen && (
+            <>
+              <div onClick={() => setColMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 10, background: 'var(--white)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-2)', minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {TOGGLEABLE_COLUMNS.map((c) => (
+                  <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
+                    <input type="checkbox" checked={!!colPrefs[c.key]} onChange={() => toggleCol(c.key)} style={{ width: 14, height: 14, accentColor: 'var(--action-primary)', cursor: 'pointer' }} />
+                    {c.label}
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <div style={{ flex: 1 }} />
         <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword: debouncedKeyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
           {exporting ? 'Đang xuất…' : 'Xuất CSV'}
@@ -799,7 +849,7 @@ export default function AdminPlates({ go, notify, st }) {
       {/* Table — grid notion, edit inline */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
       <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ minWidth: 900 }}>
+        <div style={{ minWidth: 1180 }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           <span style={{ flex: '0 0 34px' }}>
             <input type="checkbox" aria-label="Chọn tất cả" checked={allSelected} onChange={toggleAll}
@@ -808,16 +858,23 @@ export default function AdminPlates({ go, notify, st }) {
           </span>
           <span style={{ flex: '0 0 56px' }}>Ảnh</span>
           <SortHeader label="Biển số" sortKey="plateNumber" style={{ flex: '1 1 120px' }} />
-          <SortHeader label="Loại biển" sortKey="plateTypeName" style={{ flex: '1 1 88px' }} />
-          <SortHeader label="Loại xe" sortKey="vehicleTypeName" style={{ flex: '1 1 88px' }} />
-          <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />
-          <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />
-          <span className="plate-col-new" style={{ flex: '0 0 48px' }}>Mới</span>
-          <span style={{ flex: '1 1 100px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <SortHeader label="Trạng thái" sortKey="status" />
-            <InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." />
-          </span>
-          <SortHeader label="Cập nhật" sortKey="updatedAt" className="plate-col-updated" style={{ flex: '1 1 96px' }} />
+          {colPrefs.plateType && <SortHeader label="Loại biển" sortKey="plateTypeName" style={{ flex: '1 1 88px' }} />}
+          {colPrefs.vehicleType && <SortHeader label="Loại xe" sortKey="vehicleTypeName" style={{ flex: '1 1 88px' }} />}
+          {colPrefs.province && <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />}
+          {colPrefs.price && <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />}
+          {colPrefs.salePrice && <SortHeader label="Giá KM" sortKey="salePrice" style={{ flex: '1 1 96px' }} />}
+          {colPrefs.gifted && <span style={{ flex: '1 1 96px' }}>Biển tặng</span>}
+          {colPrefs.isNew && <span className="plate-col-new" style={{ flex: '0 0 48px' }}>Mới</span>}
+          {colPrefs.status && (
+            <span style={{ flex: '1 1 100px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <SortHeader label="Trạng thái" sortKey="status" />
+              <InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." />
+            </span>
+          )}
+          {colPrefs.pendingContact && <SortHeader label="Liên hệ chờ" sortKey="pendingContactCount" style={{ flex: '0 0 96px' }} />}
+          {colPrefs.imageCount && <SortHeader label="Số ảnh" sortKey="imageCount" style={{ flex: '0 0 76px' }} />}
+          {colPrefs.createdAt && <SortHeader label="Ngày tạo" sortKey="createdAt" style={{ flex: '1 1 96px' }} />}
+          {colPrefs.updatedAt && <SortHeader label="Cập nhật" sortKey="updatedAt" className="plate-col-updated" style={{ flex: '1 1 96px' }} />}
           <span style={{ flex: '0 0 80px' }}>Thao tác</span>
         </div>
 
@@ -845,28 +902,51 @@ export default function AdminPlates({ go, notify, st }) {
                 </button>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.plateNumber}</span>
               </span>
-              <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>
-              <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.vehicleTypeName}</span>
-              <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>
-              <span style={{ flex: '1 1 110px' }}>{renderCell(p, 'price')}</span>
-              <span className="plate-col-new" style={{ flex: '0 0 48px' }}>
-                {isNewPlate(p) ? (
-                  <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--mint-100)', color: 'var(--mint-700)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>Mới</span>
-                ) : (
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
-                )}
-              </span>
-              <span style={{ flex: '1 1 100px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <select value={p.status} onChange={(e) => statusMut.mutate({ id: p.id, status: e.target.value }, {
-                  onSuccess: () => notify(e.target.value === 'sold' ? 'Đã đánh dấu Đã bán' : 'Đã đổi sang Còn hàng'),
-                  onError: (err) => notify(err.message || 'Lỗi cập nhật trạng thái'),
-                })}
-                  style={{ border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-caption)', color: 'var(--text-body)', outline: 'none', cursor: 'pointer' }}>
-                  <option value="available">Còn hàng</option>
-                  <option value="sold">Đã bán</option>
-                </select>
-              </span>
-              <span className="plate-col-updated" style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>
+              {colPrefs.plateType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>}
+              {colPrefs.vehicleType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.vehicleTypeName}</span>}
+              {colPrefs.province && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>}
+              {colPrefs.price && <span style={{ flex: '1 1 110px' }}>{renderCell(p, 'price')}</span>}
+              {colPrefs.salePrice && <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)', color: p.salePrice ? 'var(--status-danger)' : 'var(--text-faint)' }}>{p.salePrice ? fmt(p.salePrice) : '—'}</span>}
+              {colPrefs.gifted && (
+                <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)' }}>
+                  {p.giftedPlateNumber ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>
+                      <Gift size={13} />{p.giftedPlateNumber}
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--text-faint)' }}>—</span>
+                  )}
+                </span>
+              )}
+              {colPrefs.isNew && (
+                <span className="plate-col-new" style={{ flex: '0 0 48px' }}>
+                  {isNewPlate(p) ? (
+                    <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--mint-100)', color: 'var(--mint-700)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>Mới</span>
+                  ) : (
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
+                  )}
+                </span>
+              )}
+              {colPrefs.status && (
+                <span style={{ flex: '1 1 100px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <select value={p.status} onChange={(e) => statusMut.mutate({ id: p.id, status: e.target.value }, {
+                    onSuccess: () => notify(e.target.value === 'sold' ? 'Đã đánh dấu Đã bán' : 'Đã đổi sang Còn hàng'),
+                    onError: (err) => notify(err.message || 'Lỗi cập nhật trạng thái'),
+                  })}
+                    style={{ border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-caption)', color: 'var(--text-body)', outline: 'none', cursor: 'pointer' }}>
+                    <option value="available">Còn hàng</option>
+                    <option value="sold">Đã bán</option>
+                  </select>
+                </span>
+              )}
+              {colPrefs.pendingContact && (
+                <span style={{ flex: '0 0 96px', font: 'var(--type-body-sm)', color: p.pendingContactCount > 0 ? 'var(--action-primary)' : 'var(--text-faint)', fontWeight: p.pendingContactCount > 0 ? 'var(--fw-semibold)' : 'var(--fw-regular)' }}>
+                  {p.pendingContactCount > 0 ? p.pendingContactCount : '—'}
+                </span>
+              )}
+              {colPrefs.imageCount && <span style={{ flex: '0 0 76px', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{p.imageCount ?? 0}</span>}
+              {colPrefs.createdAt && <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.createdAt)}</span>}
+              {colPrefs.updatedAt && <span className="plate-col-updated" style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>}
               <span style={{ flex: '0 0 104px', display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
                 <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(p)} />
                 <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => setConfirmDelete(p.id)} />

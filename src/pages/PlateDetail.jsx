@@ -377,6 +377,28 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         </section>
       )}
 
+      {plate.journeyPost && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-6)' }}>
+          <a href={routeFor('post', plate.journeyPost.slug)} onClick={(e) => { e.preventDefault(); openPost?.(plate.journeyPost.slug); }} className="pressable"
+            style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'center', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', overflow: 'hidden', textDecoration: 'none' }}>
+            {plate.journeyPost.coverImageUrl && (
+              <div style={{ flex: '0 0 160px', height: 110 }}>
+                <img src={plate.journeyPost.coverImageUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              </div>
+            )}
+            <div style={{ flex: '1 1 240px', padding: plate.journeyPost.coverImageUrl ? '12px 16px 12px 0' : 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ font: 'var(--type-label)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Câu chuyện giao biển</span>
+              <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{plate.journeyPost.title}</span>
+              {(plate.journeyPost.deliveryLocation || plate.journeyPost.deliveryDate) && (
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                  {[plate.journeyPost.deliveryLocation, plate.journeyPost.deliveryDate].filter(Boolean).join(' · ')}
+                </span>
+              )}
+            </div>
+          </a>
+        </section>
+      )}
+
       {plate.meanings?.length > 0 && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div>
