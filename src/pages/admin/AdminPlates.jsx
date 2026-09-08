@@ -809,11 +809,14 @@ export default function AdminPlates({ go, notify, st }) {
           <span style={{ flex: '0 0 56px' }}>Ảnh</span>
           <SortHeader label="Biển số" sortKey="plateNumber" style={{ flex: '1 1 120px' }} />
           <SortHeader label="Loại biển" sortKey="plateTypeName" style={{ flex: '1 1 88px' }} />
-          <span style={{ flex: '1 1 88px' }}>Loại xe</span>
+          <SortHeader label="Loại xe" sortKey="vehicleTypeName" style={{ flex: '1 1 88px' }} />
           <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />
           <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />
           <span className="plate-col-new" style={{ flex: '0 0 48px' }}>Mới</span>
-          <span style={{ flex: '1 1 100px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Trạng thái<InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." /></span>
+          <span style={{ flex: '1 1 100px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <SortHeader label="Trạng thái" sortKey="status" />
+            <InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." />
+          </span>
           <SortHeader label="Cập nhật" sortKey="updatedAt" className="plate-col-updated" style={{ flex: '1 1 96px' }} />
           <span style={{ flex: '0 0 80px' }}>Thao tác</span>
         </div>
