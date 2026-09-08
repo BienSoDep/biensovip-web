@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck } from 'lucide-react';
+import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck, Gift } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
 import Modal from '../components/Modal.jsx';
@@ -250,6 +250,17 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <Badge tone={sold ? 'rose' : 'mint'}>{sold ? 'Đã bán' : 'Còn hàng'}</Badge>
             {plate.badge && <Badge tone={BADGE_TONE[plate.badge] || 'neutral'}>{plate.badge}</Badge>}
           </div>
+          {plate.giftedPlate && (
+            plate.giftedPlate.id ? (
+              <a href={routeFor('detail', plate.giftedPlate.slug || plate.giftedPlate.id)} onClick={(e) => { e.preventDefault(); openPlate(plate.giftedPlate.slug || plate.giftedPlate.id); }} className="pressable" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--amber-800)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', textDecoration: 'none' }}>
+                <Gift size={14} aria-hidden /> Tặng kèm biển {plate.giftedPlate.plateNumber}
+              </a>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--amber-800)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
+                <Gift size={14} aria-hidden /> Tặng kèm biển {plate.giftedPlate.plateNumber}
+              </span>
+            )
+          )}
           <div>
             <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{prov}{seri} · {num}</h1>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')} · <span style={{ fontVariantNumeric: 'tabular-nums' }}>{plate.displayViewCount ?? plate.viewCount}</span> lượt xem{plate.liveViewerCount != null && (

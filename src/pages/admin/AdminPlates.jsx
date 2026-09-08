@@ -111,7 +111,7 @@ const STATUS_OPTIONS = [
 const INITIAL_FORM = {
   plateNumber: '', plateTypeId: '', provinceId: '', vehicleTypeId: '',
   price: '', costPrice: '', priceOnRequest: false, isHot: false,
-  description: '', fengShuiMeaning: '', images: [],
+  description: '', fengShuiMeaning: '', images: [], giftedPlateNumber: '',
 };
 
 const fmt = (n) => (n == null ? '—' : n.toLocaleString('vi-VN') + 'đ');
@@ -331,6 +331,7 @@ export default function AdminPlates({ go, notify, st }) {
         description: editDetail.description || '',
         fengShuiMeaning: editDetail.fengShuiMeaning || '',
         images: (editDetail.images || []).map((img) => img.url),
+        giftedPlateNumber: editDetail.giftedPlateNumber || '',
       });
       setLoadedUpdatedAt(editDetail.updatedAt || null);
     }
@@ -399,6 +400,7 @@ export default function AdminPlates({ go, notify, st }) {
       description: form.description || null,
       fengShuiMeaning: form.fengShuiMeaning || null,
       images: form.images,
+      giftedPlateNumber: form.giftedPlateNumber?.trim() || null,
     };
 
     setSaving(true);
@@ -546,8 +548,9 @@ export default function AdminPlates({ go, notify, st }) {
     const plateTypeId = ok ? detectPlateTypeId(serial.replace(/\D/g, ''), catOpts(plateTypes)) : '';
     const vehicleOverride = parts.length > 3 ? detectVehicleTypeOverride(parts[3], vehicleTypes) : null;
     const vehicleTypeId = ok ? (vehicleOverride ?? detectVehicleTypeId(seri, catOpts(vehicleTypes))) : '';
+    const giftedPlateNumber = parts.length > 4 ? (parts[4] || '').trim() : '';
     return {
-      number, price, priceOnRequest, sold, provinceId, plateTypeId, vehicleTypeId,
+      number, price, priceOnRequest, sold, provinceId, plateTypeId, vehicleTypeId, giftedPlateNumber,
       provName: prov ? provNameOf(prov) : '', ok, reason: ok ? '' : 'Sai định dạng',
     };
   };
@@ -569,6 +572,7 @@ export default function AdminPlates({ go, notify, st }) {
       const res = await bulkMut.mutateAsync(valid.map((r) => ({
         plateNumber: r.number, price: r.price, isHot: false, priceOnRequest: r.priceOnRequest, sold: r.sold,
         plateTypeId: r.plateTypeId || undefined, vehicleTypeId: r.vehicleTypeId || undefined, provinceId: r.provinceId || undefined,
+        giftedPlateNumber: r.giftedPlateNumber || undefined,
       })));
       const results = res.results || [];
       setBulkRows((rows) => rows.map((r) => {
@@ -686,7 +690,7 @@ export default function AdminPlates({ go, notify, st }) {
           <Button variant="ghost" size="md" onClick={() => setBulkOpen(!bulkOpen)}>{bulkOpen ? 'Đóng dán nhiều' : 'Dán nhiều / CSV'}</Button>
           <Button variant="ghost" size="md" onClick={copyImportPrompt} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Copy size={14} /> Copy prompt import từ Excel/PDF</Button>
         </div>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển. Dán nhiều hỗ trợ thêm cột 3 "đã bán" và cột 4 "ô tô"/"xe máy" (ghi đè khi hệ thống đoán sai). Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển. Dán nhiều hỗ trợ thêm cột 3 "đã bán", cột 4 "ô tô"/"xe máy" (ghi đè khi hệ thống đoán sai), cột 5 biển số tặng kèm (VD ô tô tặng biển xe máy). Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
 
         {bulkOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
@@ -1195,6 +1199,11 @@ function PlateFormModal({
               style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '10px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
           </label>
         </div>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tặng kèm biển số (VD ô tô tặng biển xe máy)</span>
+          <Input placeholder="43AB-668.88 (để trống nếu không tặng)" value={form.giftedPlateNumber} onChange={setF('giftedPlateNumber')} />
+        </label>
 
         {/* Images — optional (biển không ảnh vẫn lưu, hiển thị bằng PlateVisual) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
