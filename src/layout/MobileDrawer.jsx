@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { X, Car, Compass, Scale, BookOpen, MessageCircle, Handshake, Heart, Bell } from 'lucide-react';
+import { X, Car, Compass, Scale, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { pill } from '../components/NavBtn.jsx';
 
@@ -77,9 +77,17 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout, fav
         </nav>
         <div style={{ padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <button onClick={() => { go('profile')(); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')}</button>
-              <button onClick={() => { onLogout(); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <button onClick={() => { go('profile')(); onClose(); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tài khoản</span>
+                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')}</span>
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button onClick={() => { go('profile')(); onClose(); setTimeout(() => document.getElementById('security-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }} style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                  <Settings size={15} /> Bảo mật &amp; cài đặt
+                </button>
+                <button onClick={() => { onLogout(); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>

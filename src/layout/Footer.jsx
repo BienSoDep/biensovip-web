@@ -46,34 +46,42 @@ export default function Footer({ settings, patch }) {
           </div>
         </div>
 
-        <nav aria-label={T('common.footer.explore_title')} style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={navStyle}>{T('common.footer.explore_title')}</span>
-          {exploreLinks.map(([href, label]) => (
-            <a key={href} href={href} onClick={navClick} style={linkStyle}>{label}</a>
-          ))}
-        </nav>
+        <details className="footer-section" open aria-label={T('common.footer.explore_title')} style={{ flex: '1 1 150px' }}>
+          <summary className="footer-section-title" style={navStyle}>{T('common.footer.explore_title')}</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            {exploreLinks.map(([href, label]) => (
+              <a key={href} href={href} onClick={navClick} style={linkStyle}>{label}</a>
+            ))}
+          </div>
+        </details>
 
-        <nav aria-label="Kho biển theo loại" style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={navStyle}>Kho biển theo loại</span>
-          {PLATE_TYPE_LANDINGS.map((p) => (
-            <a key={p.slug} href={routeFor('post', p.slug)} onClick={navClick} style={linkStyle}>Biển {p.name}</a>
-          ))}
-        </nav>
+        <details className="footer-section" aria-label="Kho biển theo loại" style={{ flex: '1 1 150px' }}>
+          <summary className="footer-section-title" style={navStyle}>Kho biển theo loại</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            {PLATE_TYPE_LANDINGS.map((p) => (
+              <a key={p.slug} href={routeFor('post', p.slug)} onClick={navClick} style={linkStyle}>Biển {p.name}</a>
+            ))}
+          </div>
+        </details>
 
-        <nav aria-label="Kho biển theo tỉnh" style={{ flex: '1 1 170px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={navStyle}>Kho biển theo tỉnh</span>
-          {PROVINCE_LANDINGS.slice(0, 10).map((p) => (
-            <a key={p.slug} href={routeFor('post', p.slug)} onClick={navClick} style={linkStyle}>Biển {p.name || p.code}</a>
-          ))}
-          <a href={routeFor('list')} onClick={navClick} style={{ ...linkStyle, fontWeight: 'var(--fw-semibold)' }}>Xem tất cả tỉnh →</a>
-        </nav>
+        <details className="footer-section" aria-label="Kho biển theo tỉnh" style={{ flex: '1 1 170px' }}>
+          <summary className="footer-section-title" style={navStyle}>Kho biển theo tỉnh</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            {PROVINCE_LANDINGS.slice(0, 10).map((p) => (
+              <a key={p.slug} href={routeFor('post', p.slug)} onClick={navClick} style={linkStyle}>Biển {p.name || p.code}</a>
+            ))}
+            <a href={routeFor('list')} onClick={navClick} style={{ ...linkStyle, fontWeight: 'var(--fw-semibold)' }}>Xem tất cả tỉnh →</a>
+          </div>
+        </details>
 
-        <nav aria-label={T('common.footer.policy_title')} style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={navStyle}>{T('common.footer.policy_title')}</span>
-          {policyLinks.map(([href, label]) => (
-            <a key={href} href={href} onClick={navClick} style={linkStyle}>{label}</a>
-          ))}
-        </nav>
+        <details className="footer-section" aria-label={T('common.footer.policy_title')} style={{ flex: '1 1 150px' }}>
+          <summary className="footer-section-title" style={navStyle}>{T('common.footer.policy_title')}</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            {policyLinks.map(([href, label]) => (
+              <a key={href} href={href} onClick={navClick} style={linkStyle}>{label}</a>
+            ))}
+          </div>
+        </details>
 
         <div style={{ flex: '1 1 240px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 'var(--space-5)', alignContent: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={navStyle}>{T('common.footer.hotline')}</span><a href={`tel:${phone}`} style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{phoneDisplay}</a></div>

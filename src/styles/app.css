@@ -488,7 +488,49 @@ textarea,
   }
   .footer-inner {
     padding: clamp(20px, 4vw, 36px) !important;
+    gap: 0 !important;
   }
+  /* Footer link groups collapse into accordions — cùng nội dung nhưng gọn theo chiều dọc thay vì luôn xổ hết */
+  .footer-section {
+    flex-basis: 100% !important;
+    border-top: 1px solid var(--border-hairline);
+    padding: 14px 0;
+  }
+  .footer-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+  }
+  .footer-section-title::-webkit-details-marker { display: none; }
+  .footer-section-title::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-right: 1.5px solid var(--text-faint);
+    border-bottom: 1.5px solid var(--text-faint);
+    transform: rotate(45deg);
+    transition: transform 160ms var(--ease-out);
+  }
+  .footer-section[open] > .footer-section-title::after {
+    transform: rotate(-135deg);
+  }
+  .footer-section > div {
+    padding-top: var(--space-3);
+  }
+}
+@media (min-width: 481px) {
+  /* Desktop: luôn xổ hết, summary chỉ đóng vai trò tiêu đề tĩnh (không toggle) */
+  .footer-section > div {
+    display: block !important;
+  }
+  .footer-section-title {
+    pointer-events: none;
+    margin-bottom: var(--space-3);
+  }
+  .footer-section-title::-webkit-details-marker { display: none; }
   /* About: contact grid duplicates Footer contact info; FAQ answers collapse behind toggle */
   .about-contact {
     display: none !important;

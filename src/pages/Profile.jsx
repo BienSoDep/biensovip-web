@@ -176,7 +176,7 @@ function ChangePasswordSection({ notify }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+    <div id="security-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <Eyebrow tone="blue">Bảo mật</Eyebrow>
       <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Đổi mật khẩu</h3>
