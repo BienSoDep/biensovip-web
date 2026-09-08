@@ -59,8 +59,8 @@ export default function PlateCard({
             </div>
           )}
           {sold && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,15,18,.22)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ font: 'var(--type-title-2)', letterSpacing: '.2em', color: 'var(--white)', textShadow: '0 1px 3px rgba(0,0,0,.8), 0 0 12px rgba(0,0,0,.6)' }}>ĐÃ BÁN</span>
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,15,18,.14)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 10, paddingBottom: 10 }}>
+              <span style={{ font: 'var(--type-title-3)', letterSpacing: '.15em', color: 'var(--white)', background: 'rgba(14,15,18,.72)', padding: '4px 14px', borderRadius: 'var(--radius-pill)' }}>ĐÃ BÁN</span>
             </div>
           )}
         </a>
