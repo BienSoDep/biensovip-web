@@ -98,7 +98,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
           <span style={{ flex: '1 1 72px' }}>Yêu thích</span>
           <span style={{ flex: '1 1 80px' }}>Ngày đăng ký</span>
           <span style={{ flex: '1 1 100px' }}>Trạng thái</span>
-          <span style={{ flex: '0 0 128px' }}>Hành động</span>
+          <span style={{ flex: '0 0 220px' }}>Hành động</span>
         </div>
 
         {isLoading && <div style={{ padding: 'var(--gutter-card)' }}><SkeletonTable rows={6} cols={5} /></div>}
@@ -131,7 +131,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
                 {STATUS_LABEL[c.status] || c.status}
               </span>
             </span>
-            <span style={{ flex: '0 0 128px', display: 'flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
+            <span style={{ flex: '0 0 220px', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
               {updatingId === c.id ? (
                 <Loader2 size={20} className="bsd-spin" style={{ color: 'var(--text-muted)', margin: '8px 0' }} />
               ) : (
@@ -139,7 +139,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
                   {c.status === 'locked' ? 'Mở khóa' : 'Khóa'}
                 </Button>
               )}
-              <IconButton name="key" label="Đổi mật khẩu hộ" onClick={() => openResetPassword(c)} />
+              <Button variant="ghost" size="sm" onClick={() => openResetPassword(c)}>Đổi mật khẩu</Button>
             </span>
           </div>
         ))}
