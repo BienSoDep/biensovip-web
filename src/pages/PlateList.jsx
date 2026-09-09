@@ -526,7 +526,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Lưu tìm kiếm này</h2>
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Nhận thông báo khi có biển mới phù hợp bộ lọc hiện tại.</p>
             </div>
-            <Input label="Tên tiêu chí" placeholder="VD: Biển ngũ quý Đà Nẵng" value={saveName} onChange={(e) => setSaveName(e.target.value)} />
+            <Input label="Tên tiêu chí" placeholder="VD: Biển ngũ quý Đà Nẵng" value={saveName} onChange={(e) => setSaveName(e.target.value)} required />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="md" onClick={() => setSaveOpen(false)}>Hủy</Button>
               <Button variant="primary" size="md" onClick={submitSave} disabled={createSavedSearch.isPending}>{createSavedSearch.isPending ? 'Đang lưu…' : 'Lưu'}</Button>

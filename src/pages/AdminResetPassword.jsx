@@ -48,8 +48,8 @@ export default function AdminResetPassword({ go }) {
         </>
       ) : (
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pw} onChange={(e) => { setPw(e.target.value); setErr(''); }} />
-          <Input label="Nhập lại mật khẩu mới" type="password" value={pw2} error={err} onChange={(e) => { setPw2(e.target.value); setErr(''); }} />
+          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pw} onChange={(e) => { setPw(e.target.value); setErr(''); }} required />
+          <Input label="Nhập lại mật khẩu mới" type="password" value={pw2} error={err} onChange={(e) => { setPw2(e.target.value); setErr(''); }} required />
           <Button type="submit" variant="primary" size="md" disabled={saving}>{saving ? 'Đang lưu…' : 'Đặt lại mật khẩu'}</Button>
         </form>
       )}

@@ -61,7 +61,7 @@ export default function TwoFactorSettingsModal({ open, onClose, twoFactorEnabled
         {twoFactorEnabled && step === 'idle' && (
           <>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xác thực 2 lớp đang <b>bật</b>. Nhập mật khẩu để tắt.</p>
-            <Input label="Mật khẩu" type="password" value={password} onChange={(e) => setPassword(e.target.value)} error={err} />
+            <Input label="Mật khẩu" type="password" value={password} onChange={(e) => setPassword(e.target.value)} error={err} required />
             <Button variant="danger" size="md" onClick={confirmDisable} disabled={busy}>{busy ? 'Đang xử lý…' : 'Tắt xác thực 2 lớp'}</Button>
           </>
         )}
@@ -79,7 +79,7 @@ export default function TwoFactorSettingsModal({ open, onClose, twoFactorEnabled
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mở app xác thực, chọn "Nhập mã thủ công" và dán mã bên dưới:</p>
             <code style={{ display: 'block', padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', font: 'var(--type-body-sm)', wordBreak: 'break-all', userSelect: 'all' }}>{secret}</code>
             <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Loại: Time-based (TOTP), 6 số, chu kỳ 30 giây. URI: <span style={{ wordBreak: 'break-all' }}>{otpAuthUri}</span></p>
-            <Input label="Nhập mã 6 số app vừa hiện" value={code} onChange={(e) => setCode(e.target.value)} error={err} />
+            <Input label="Nhập mã 6 số app vừa hiện" value={code} onChange={(e) => setCode(e.target.value)} error={err} required />
             <Button variant="primary" size="md" onClick={confirmEnable} disabled={busy}>{busy ? 'Đang xác nhận…' : 'Xác nhận & bật 2FA'}</Button>
           </>
         )}

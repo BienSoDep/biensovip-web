@@ -109,7 +109,7 @@ export default function AdminVanityMetrics({ notify }) {
               <div style={{ width: 110 }}>
                 <Input label="Hệ số" type="number" min={1} max={20} step={0.5}
                   value={d.multiplier ?? `${item.multiplier}`}
-                  onChange={(e) => patchDraft(item.type, 'multiplier', e.target.value)} disabled={!item.enabled} />
+                  onChange={(e) => patchDraft(item.type, 'multiplier', e.target.value)} disabled={!item.enabled} required />
               </div>
               {meta.hasCap && (
                 <div style={{ width: 130 }}>

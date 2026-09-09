@@ -80,8 +80,8 @@ export default function AdminCoupons({ notify }) {
 
       <Modal open={open} onClose={() => setOpen(false)} title="Tạo mã giảm giá" maxWidth="440px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <Input label="Mã" value={form.code} onChange={setF('code')} placeholder="SALE10" />
-          <Input label="% giảm" type="number" min="1" max="100" value={form.discountPercent} onChange={setF('discountPercent')} placeholder="10" />
+          <Input label="Mã" value={form.code} onChange={setF('code')} placeholder="SALE10" required />
+          <Input label="% giảm" type="number" min="1" max="100" value={form.discountPercent} onChange={setF('discountPercent')} placeholder="10" required />
           <Input label="Số lần dùng tối đa (để trống = không giới hạn)" type="number" min="1" value={form.maxUses} onChange={setF('maxUses')} placeholder="100" />
           <Input label="Ngày hết hạn (để trống = không hết hạn)" type="date" value={form.expiresAt} onChange={setF('expiresAt')} />
           {err && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}

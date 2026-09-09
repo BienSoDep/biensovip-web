@@ -28,7 +28,7 @@ function TemplateForm({ initial, onSave, onCancel, saving }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <Input label="Tiêu đề" placeholder="VD: Mời khách quan tâm biển" value={form.title} onChange={set('title')} />
+      <Input label="Tiêu đề" placeholder="VD: Mời khách quan tâm biển" value={form.title} onChange={set('title')} required />
       <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 180px' }}><Input label="Danh mục (tùy chọn)" placeholder="VD: Mời khách, Nhắc cọc, Chốt đơn" value={form.category} onChange={set('category')} /></div>
         <div style={{ flex: '1 1 180px' }}>

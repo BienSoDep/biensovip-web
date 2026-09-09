@@ -101,7 +101,7 @@ function PropsPanel({ block, onChange }) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Input label="Nội dung tiêu đề" value={props.text || ''} onChange={(e) => setProp('text', e.target.value)}
-            error={!props.text?.trim() ? 'Bắt buộc' : props.text.length > 200 ? 'Tối đa 200 ký tự' : ''} />
+            error={!props.text?.trim() ? 'Bắt buộc' : props.text.length > 200 ? 'Tối đa 200 ký tự' : ''} required />
           <Select label="Căn lề" value={props.align || 'left'} onChange={(v) => setProp('align', v)}
             options={[{ value: 'left', label: 'Trái' }, { value: 'center', label: 'Giữa' }]} />
         </div>
@@ -124,7 +124,7 @@ function PropsPanel({ block, onChange }) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Input label="Nhãn nút" value={props.label || ''} onChange={(e) => setProp('label', e.target.value)}
-            error={!props.label?.trim() ? 'Bắt buộc' : ''} />
+            error={!props.label?.trim() ? 'Bắt buộc' : ''} required />
           <Select label="Đích đến" value={props.url_type || 'site'} onChange={(v) => setProp('url_type', v)}
             options={[
               { value: 'site', label: 'Trang chủ' }, { value: 'profile', label: 'Trang tài khoản' },
@@ -132,7 +132,7 @@ function PropsPanel({ block, onChange }) {
             ]} />
           {props.url_type === 'custom' && (
             <Input label="URL tùy chỉnh" value={props.custom_url || ''} onChange={(e) => setProp('custom_url', e.target.value)}
-              error={!props.custom_url?.trim() ? 'Bắt buộc khi chọn URL tùy chỉnh' : ''} />
+              error={!props.custom_url?.trim() ? 'Bắt buộc khi chọn URL tùy chỉnh' : ''} required />
           )}
         </div>
       );
@@ -315,7 +315,7 @@ export default function EmailBuilder({ notify }) {
         <div className="email-builder-canvas" style={{ flex: '1 1 320px', minWidth: 280, display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <Input label="Tên template" placeholder="VD: Digest mặc định 2026" value={name} error={nameErr}
-              onChange={(e) => setName(e.target.value)} />
+              onChange={(e) => setName(e.target.value)} required />
             <div>
               <label style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Áp dụng cho loại thông báo</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

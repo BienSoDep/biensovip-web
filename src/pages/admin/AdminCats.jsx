@@ -215,11 +215,11 @@ export default function AdminCats({ notify }) {
         <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{editId ? 'Sửa danh mục' : 'Thêm danh mục mới'}</span>
           <Input label="Tên danh mục" placeholder="VD: Biển tiến" value={form.name} error={formErr}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
           {isBlogCategory && (
             <Input label="Mã danh mục (khớp Category của bài viết, VD: phong-thuy)" placeholder="phong-thuy" value={form.code}
               disabled={Boolean(editId)}
-              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} />
+              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} required={!editId} />
           )}
           {!editId && (
             <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Danh mục mới thêm vào cuối danh sách — kéo tay cầm ☰ để đổi thứ tự hiển thị trên website.</p>

@@ -34,7 +34,7 @@ export default function AdminForgotPassword({ go }) {
         </p>
       ) : (
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input label="Email tài khoản quản trị" type="email" placeholder="admin@biensovip.com" value={email} error={err} onChange={(e) => { setEmail(e.target.value); setErr(''); }} />
+          <Input label="Email tài khoản quản trị" type="email" placeholder="admin@biensovip.com" value={email} error={err} onChange={(e) => { setEmail(e.target.value); setErr(''); }} required />
           <Button type="submit" variant="primary" size="md" disabled={sending}>{sending ? 'Đang gửi…' : 'Gửi link đặt lại mật khẩu'}</Button>
         </form>
       )}

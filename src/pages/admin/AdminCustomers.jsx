@@ -198,7 +198,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             Đặt mật khẩu mới cho <b>{pwTarget?.label}</b>. Khách hàng sẽ bị đăng xuất khỏi mọi phiên hiện tại. Gửi mật khẩu mới cho khách qua kênh an toàn.
           </p>
-          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pwValue} error={pwErr} onChange={(e) => { setPwValue(e.target.value); setPwErr(''); }} />
+          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pwValue} error={pwErr} onChange={(e) => { setPwValue(e.target.value); setPwErr(''); }} required />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="md" onClick={() => setPwTarget(null)}>Hủy</Button>
             <Button variant="primary" size="md" onClick={confirmResetPassword} disabled={resetPassword.isPending}>{resetPassword.isPending ? 'Đang lưu…' : 'Đổi mật khẩu'}</Button>

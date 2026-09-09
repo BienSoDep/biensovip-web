@@ -49,7 +49,7 @@ export default function RecoveryEmailModal({ open, onClose, recoveryEmail, recov
         )}
         {step === 'idle' && (
           <>
-            <Input label="Email dự phòng" type="email" placeholder="you@example.com" value={email} error={err} onChange={(e) => { setEmail(e.target.value); setErr(''); }} />
+            <Input label="Email dự phòng" type="email" placeholder="you@example.com" value={email} error={err} onChange={(e) => { setEmail(e.target.value); setErr(''); }} required />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="md" onClick={close}>Hủy</Button>
               <Button variant="primary" size="md" onClick={sendOtp} loading={busy}>Gửi mã xác thực</Button>
@@ -59,7 +59,7 @@ export default function RecoveryEmailModal({ open, onClose, recoveryEmail, recov
         {step === 'otp' && (
           <>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Nhập mã 6 số vừa gửi tới <b>{email}</b>.</p>
-            <Input label="Mã xác thực" placeholder="000000" value={code} error={err} onChange={(e) => { setCode(e.target.value); setErr(''); }} />
+            <Input label="Mã xác thực" placeholder="000000" value={code} error={err} onChange={(e) => { setCode(e.target.value); setErr(''); }} required />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="md" onClick={() => setStep('idle')}>Quay lại</Button>
               <Button variant="primary" size="md" onClick={confirmVerify} loading={busy}>Xác nhận</Button>

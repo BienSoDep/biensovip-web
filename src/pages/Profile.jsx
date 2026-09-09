@@ -180,8 +180,8 @@ function ChangePasswordSection({ notify }) {
       <Eyebrow tone="blue">Bảo mật</Eyebrow>
       <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Đổi mật khẩu</h3>
-        <Input label="Mật khẩu hiện tại" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-        <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự, có cả chữ và số" value={next} onChange={(e) => setNext(e.target.value)} />
+        <Input label="Mật khẩu hiện tại" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+        <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự, có cả chữ và số" value={next} onChange={(e) => setNext(e.target.value)} required />
         {err && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
         <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ alignSelf: 'flex-start' }}>{saving ? 'Đang lưu...' : 'Đổi mật khẩu'}</Button>
       </div>
@@ -282,11 +282,13 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
   const isCtv = Boolean(user?.isCollaborator);
 
   const activate = async () => {
-    if (!bankAccount.trim()) { notify('Nhập số tài khoản nhận hoa hồng trước khi kích hoạt.'); return; }
-    if (!bankCode) { notify('Chọn ngân hàng trước khi kích hoạt.'); return; }
     setBusy(true);
     try {
-      await become.mutateAsync({ bankAccount: bankAccount.trim(), bankCode, bankAccountHolder: bankAccountHolder.trim() || undefined });
+      await become.mutateAsync({
+        bankAccount: bankAccount.trim() || undefined,
+        bankCode: bankCode || undefined,
+        bankAccountHolder: bankAccountHolder.trim() || undefined,
+      });
       trackBecomeCollaborator();
       const data = await refreshToken();
       if (data?.user) onUserUpdate?.(data.user);
@@ -354,8 +356,8 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
-                <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+                <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} required />
+                <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} required />
                 <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
                 {qrPreviewUrl && (
                   <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 160, height: 160, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
@@ -391,9 +393,9 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
               Giới thiệu khách mua biển số đẹp, nhận hoa hồng trên mỗi giao dịch thành công. Kích hoạt ngay từ tài khoản này — không cần đăng ký riêng.
             </p>
-            <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
+            <Select label="Ngân hàng (không bắt buộc)" value={bankCode} options={banks} onChange={setBankCode} />
             <Input
-              label="Số tài khoản nhận hoa hồng"
+              label="Số tài khoản nhận hoa hồng (không bắt buộc)"
               placeholder="Số tài khoản ngân hàng"
               value={bankAccount}
               onChange={(e) => setBankAccount(e.target.value)}

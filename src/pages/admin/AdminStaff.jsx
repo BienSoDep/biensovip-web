@@ -279,9 +279,9 @@ export default function AdminStaff({ notify }) {
       <Drawer open={open} onClose={() => setOpen(false)} title={editId ? 'Sửa nhân viên' : 'Thêm nhân viên'} width="min(52%, 720px)">
         <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{editId ? 'Cập nhật thông tin và quyền truy cập.' : 'Nhân viên sẽ có quyền đăng nhập trang quản trị.'}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} error={err.fullName} onChange={onNameChange} />
-          <Input label="Email" type="email" placeholder="a@biensovip.com" value={form.email} error={err.email} onChange={onEmailChange} disabled={!!editId} hint={editId ? 'Không thể đổi email sau khi tạo tài khoản' : undefined} />
-          {!editId && <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 6 ký tự" value={form.password} error={err.password} onChange={field('password')} />}
+          <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} error={err.fullName} onChange={onNameChange} required />
+          <Input label="Email" type="email" placeholder="a@biensovip.com" value={form.email} error={err.email} onChange={onEmailChange} disabled={!!editId} hint={editId ? 'Không thể đổi email sau khi tạo tài khoản' : undefined} required />
+          {!editId && <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 6 ký tự" value={form.password} error={err.password} onChange={field('password')} required />}
           <Select label="Vai trò" value={form.role} options={ROLE_OPTS} onChange={field('role')} />
           <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
             Quản trị viên có toàn quyền truy cập mọi mục. Nhân viên chỉ vào được các mục được cấp quyền bên dưới.
@@ -382,7 +382,7 @@ export default function AdminStaff({ notify }) {
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             Đặt mật khẩu mới cho <b>{pwTarget ? (pwTarget.fullName || pwTarget.email) : ''}</b>. Nhân viên sẽ bị đăng xuất khỏi mọi phiên hiện tại. Gửi mật khẩu mới cho nhân viên qua kênh an toàn (không qua email/tin nhắn công khai).
           </p>
-          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pwValue} error={pwErr} onChange={(e) => { setPwValue(e.target.value); setPwErr(''); }} />
+          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pwValue} error={pwErr} onChange={(e) => { setPwValue(e.target.value); setPwErr(''); }} required />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="md" onClick={() => setPwId(null)}>Hủy</Button>
             <Button variant="primary" size="md" onClick={confirmResetPassword} disabled={pwSaving}>{pwSaving ? 'Đang lưu…' : 'Đổi mật khẩu'}</Button>

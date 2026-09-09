@@ -1282,9 +1282,9 @@ function PlateFormModal({
         )}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-          <Select label="Loại biển" value={form.plateTypeId} options={plateTypes} onChange={(v) => { setF('plateTypeId')(v); blurValidateField('plateTypeId', v)(); }} style={{ flex: '1 1 140px' }} />
-          <Select label="Tỉnh/thành" value={form.provinceId} options={provinces} onChange={(v) => { setF('provinceId')(v); blurValidateField('provinceId', v)(); }} style={{ flex: '1 1 140px' }} />
-          <Select label="Loại xe" value={form.vehicleTypeId} options={vehicleTypes} onChange={(v) => { setF('vehicleTypeId')(v); blurValidateField('vehicleTypeId', v)(); }} style={{ flex: '1 1 140px' }} />
+          <Select label="Loại biển" value={form.plateTypeId} options={plateTypes} onChange={(v) => { setF('plateTypeId')(v); blurValidateField('plateTypeId', v)(); }} style={{ flex: '1 1 140px' }} required />
+          <Select label="Tỉnh/thành" value={form.provinceId} options={provinces} onChange={(v) => { setF('provinceId')(v); blurValidateField('provinceId', v)(); }} style={{ flex: '1 1 140px' }} required />
+          <Select label="Loại xe" value={form.vehicleTypeId} options={vehicleTypes} onChange={(v) => { setF('vehicleTypeId')(v); blurValidateField('vehicleTypeId', v)(); }} style={{ flex: '1 1 140px' }} required />
         </div>
         {(formErr.plateTypeId || formErr.provinceId || formErr.vehicleTypeId) && (
           <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>

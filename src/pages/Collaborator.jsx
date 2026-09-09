@@ -432,17 +432,17 @@ function DealReportForm() {
               )}
             </div>
           )}
-          <Input label="Tên khách" value={buyerFullName} onChange={(e) => setBuyerFullName(e.target.value)} />
+          <Input label="Tên khách" value={buyerFullName} onChange={(e) => setBuyerFullName(e.target.value)} required />
           <div>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-label)', color: 'var(--text-strong)', marginBottom: 6 }}>
-              Số điện thoại khách
+              Số điện thoại khách <span style={{ color: 'var(--status-danger)' }}>*</span>
               <InfoTip text="Admin có thể gọi xác minh lại với khách trước khi duyệt hoa hồng." />
             </span>
             <Input value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} />
           </div>
           <div>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-label)', color: 'var(--text-strong)', marginBottom: 6 }}>
-              Số tiền đã chốt
+              Số tiền đã chốt <span style={{ color: 'var(--status-danger)' }}>*</span>
               <InfoTip text="Nhập đúng số tiền khách đã trả — hoa hồng của bạn được tính theo % trên số này." />
             </span>
             <Input type="number" value={dealAmount} onChange={(e) => setDealAmount(e.target.value)} />
