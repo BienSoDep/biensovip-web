@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, Badge, IconButton } from './index.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
@@ -12,6 +13,8 @@ export default function PlateCard({
   status, badge, fav, onFav, onCompare, inCompare, onOpen, href, onBuy, style, plateSize = 'md',
   contact, salePrice, layout = 'grid',
 }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const showThumbnail = thumbnailUrl && !imgFailed;
   const { prov, seri, num } = splitPlateNumber(plateNumber);
   const sold = status === 'sold';
   const meta = [vehicleType, province].filter(Boolean).join(' · ');
@@ -23,8 +26,8 @@ export default function PlateCard({
       <Card tone="sunken" pad="10px" style={{ ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : null), ...style }}>
         <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer' }}>
           <div style={{ position: 'relative', flexShrink: 0, width: 108, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--white)' }}>
-            {thumbnailUrl ? (
-              <img src={optimizeImageUrl(thumbnailUrl)} alt={`Biển số ${plateNumber}${meta ? ' — ' + meta : ''}`} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', display: 'block' }} />
+            {showThumbnail ? (
+              <img src={optimizeImageUrl(thumbnailUrl)} alt={`Biển số ${plateNumber}${meta ? ' — ' + meta : ''}`} onError={() => setImgFailed(true)} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', display: 'block' }} />
             ) : (
               <PlateVisual size="sm" prov={prov} seri={seri} num={num} shape="short" />
             )}
@@ -99,8 +102,8 @@ export default function PlateCard({
         </div>
 
         <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} className="pressable plate-card-stage" style={{ cursor: 'pointer', position: 'relative', borderRadius: 'var(--radius-md)', padding: 16, display: 'block', textDecoration: 'none' }}>
-          {thumbnailUrl ? (
-            <img src={optimizeImageUrl(thumbnailUrl)} alt={`Biển số ${plateNumber}${meta ? ' — ' + meta : ''}`} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+          {showThumbnail ? (
+            <img src={optimizeImageUrl(thumbnailUrl)} alt={`Biển số ${plateNumber}${meta ? ' — ' + meta : ''}`} onError={() => setImgFailed(true)} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
           ) : (
             <div style={{ maxWidth: plateSize === 'listLg' ? 420 : undefined, margin: plateSize === 'listLg' ? '0 auto' : undefined }}>
               <PlateVisual size={plateSize} prov={prov} seri={seri} num={num} shape="short" />
