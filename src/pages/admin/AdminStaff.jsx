@@ -25,6 +25,7 @@ const PERM_RESOURCES = [
   ['audit_logs', 'Nhật ký audit'], ['error_logs', 'Nhật ký lỗi hệ thống'],
   ['db_console', 'DB console (chỉ xem)'], ['feature_flags', 'Feature flags'],
   ['policy_pages', 'Trang chính sách (điều khoản/bảo mật/sang tên/FAQ)'],
+  ['ctv_message_templates', 'Mẫu tin nhắn CTV'],
 ];
 const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
 // Preset mặc định cho nhân viên: xem + thêm + sửa mọi mục, không quyền xóa.

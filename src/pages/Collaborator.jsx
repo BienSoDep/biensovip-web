@@ -6,7 +6,7 @@ import { Share2, Link2, HandCoins, Wallet, UserPlus, BarChart3 as BarChartIcon, 
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Button from '../components/Button.jsx';
 import { Badge, Input, Select, InfoTip } from '../components/index.jsx';
-import { useBecomeCollaborator, useUpdateBankInfo, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorContacts, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
+import { useBecomeCollaborator, useUpdateBankInfo, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorContacts, useCollaboratorMessageTemplates, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
 import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -564,7 +564,66 @@ function ContactPipelineSection({ contacts }) {
   );
 }
 
+const CTV_TABS = [
+  { key: 'overview', label: 'Tổng quan' },
+  { key: 'commission', label: 'Hoa hồng' },
+  { key: 'referral', label: 'Mã giới thiệu' },
+  { key: 'messages', label: 'Tin nhắn' },
+];
+
+// Mẫu tin nhắn admin soạn sẵn — CTV bung placeholder {plateNumber}/{referralUrl} rồi copy nguyên văn.
+function MessageTemplatesSection({ referralUrl }) {
+  const { data, isLoading, isError } = useCollaboratorMessageTemplates(true);
+  const [copiedId, setCopiedId] = useState(null);
+  const [plateNumber, setPlateNumber] = useState('');
+  const items = data || [];
+  const categories = [...new Set(items.map((t) => t.category).filter(Boolean))];
+  const [filterCategory, setFilterCategory] = useState('');
+  const filtered = filterCategory ? items.filter((t) => t.category === filterCategory) : items;
+
+  const copyTemplate = (t) => {
+    const filled = t.bodyTemplate
+      .replaceAll('{referralUrl}', referralUrl || '')
+      .replaceAll('{plateNumber}', plateNumber || '(chưa nhập số biển)');
+    const done = () => { setCopiedId(t.id); toast.success('Đã sao chép tin nhắn'); setTimeout(() => setCopiedId(null), 2000); };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(filled).then(done).catch(() => fallbackCopy(filled, done));
+    else fallbackCopy(filled, done);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
+        <div style={{ flex: '1 1 220px' }}>
+          <Input label="Số biển đang muốn giới thiệu (tùy chọn)" placeholder="VD: 43A1-999.99" value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)} />
+        </div>
+        {categories.length > 0 && (
+          <Select label="Lọc danh mục" value={filterCategory} options={[{ value: '', label: 'Tất cả' }, ...categories.map((c) => ({ value: c, label: c }))]} onChange={setFilterCategory} />
+        )}
+      </div>
+
+      {isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
+      {!isLoading && isError && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được mẫu tin nhắn.</span>}
+      {!isLoading && !isError && filtered.length === 0 && (
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có mẫu tin nhắn nào — admin sẽ soạn sẵn để bạn dùng.</span>
+      )}
+      {filtered.map((t) => (
+        <div key={t.id} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', flex: 1 }}>{t.title}</span>
+            {t.category && <Badge tone="blue">{t.category}</Badge>}
+            {t.channel && <Badge tone="amber">{t.channel}</Badge>}
+          </div>
+          {t.description && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.description}</span>}
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>{t.bodyTemplate}</p>
+          <Button variant="outline" size="sm" onClick={() => copyTemplate(t)} style={{ alignSelf: 'flex-start' }}>{copiedId === t.id ? 'Đã sao chép' : 'Copy tin nhắn'}</Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function DashboardBody({ data, onReset, go }) {
+  const [tab, setTab] = useState('overview');
   const [copied, setCopied] = useState(false);
   const [messageCopied, setMessageCopied] = useState(false);
   const [editingBank, setEditingBank] = useState(false);
@@ -611,87 +670,122 @@ function DashboardBody({ data, onReset, go }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
-        {[
-          ['Lượt click', String(data.clicks), 'var(--text-strong)'],
-          ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)'],
-          ['Giao dịch thành công', String(data.successfulDeals), 'var(--status-success)'],
-          ['Chờ duyệt', money(data.pending), 'var(--status-warning)'],
-          ['Đã duyệt / đã chi trả', money(data.approved + data.paid), 'var(--status-success)'],
-        ].map(([label, value, color]) => (
-          <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
-            <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color }}>{value}</span>
-          </div>
+      <div role="tablist" aria-label="Mục quản lý CTV" style={{ display: 'flex', gap: 4, background: 'var(--surface-sunken)', padding: 4, borderRadius: 'var(--radius-pill)', overflowX: 'auto' }}>
+        {CTV_TABS.map((t) => (
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
+            style={{ flex: '1 1 0', minWidth: 'max-content', height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
+              background: tab === t.key ? 'var(--action-primary)' : 'transparent', color: tab === t.key ? 'var(--white)' : 'var(--text-muted)', transition: 'var(--transition-control)' }}>
+            {t.label}
+          </button>
         ))}
       </div>
 
-      <CommissionChart recent={data.recent} />
-
-      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
-          <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{data.referralUrl}</span>
-          </div>
-          <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
-          <Button variant="outline" size="md" onClick={copyInviteMessage}>{messageCopied ? 'Đã sao chép' : 'Copy tin nhắn mời khách'}</Button>
-          {!editingBank && <Button variant="outline" size="md" onClick={() => setEditingBank(true)}>Sửa thông tin ngân hàng</Button>}
-        </div>
-        {editingBank && <BankInfoEditor onDone={() => setEditingBank(false)} />}
-        <LeaderboardVisibilityToggle go={go} />
-      </div>
-
-      <ClickStatsSection />
-
-      <HotPlatesWidget referralUrl={data.referralUrl} />
-
-      <TopReferredPlates />
-
-      <DealReportForm />
-
-      {data.recent?.length > 0 && (
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử hoa hồng ({data.recent.length} gần nhất)</span>
-            <Button variant="ghost" size="sm" disabled={exportingCommissions} onClick={() => exportCommissions().catch((e) => toast.error(e.message))}>
-              {exportingCommissions ? 'Đang xuất…' : 'Xuất CSV'}
-            </Button>
-          </div>
-          {data.recent.map((r) => (
-            <div key={r.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ font: 'var(--type-body-sm)' }}>{r.plateNumber || '—'}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+      {tab === 'overview' && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
+            {[
+              ['Lượt click', String(data.clicks), 'var(--text-strong)'],
+              ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)'],
+              ['Giao dịch thành công', String(data.successfulDeals), 'var(--status-success)'],
+              ['Chờ duyệt', money(data.pending), 'var(--status-warning)'],
+              ['Đã duyệt / đã chi trả', money(data.approved + data.paid), 'var(--status-success)'],
+            ].map(([label, value, color]) => (
+              <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
+                <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color }}>{value}</span>
               </div>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{money(r.amount)}</span>
-              <Badge tone={r.status === 'paid' ? 'mint' : r.status === 'approved' ? 'blue' : r.status === 'cancelled' ? 'rose' : 'amber'}>
-                {{ paid: 'Đã trả', approved: 'Đã duyệt', pending: 'Chờ duyệt', cancelled: 'Đã hủy' }[r.status] || r.status}
-              </Badge>
+            ))}
+          </div>
+
+          <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{data.referralUrl}</span>
+              </div>
+              <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
+              {!editingBank && <Button variant="outline" size="md" onClick={() => setEditingBank(true)}>Sửa thông tin ngân hàng</Button>}
             </div>
-          ))}
-        </div>
+            {editingBank && <BankInfoEditor onDone={() => setEditingBank(false)} />}
+            <LeaderboardVisibilityToggle go={go} />
+          </div>
+
+          <DealReportForm />
+
+          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng đã giới thiệu</span>
+            {customers.isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
+            {!customers.isLoading && customers.isError && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được danh sách khách.</span>}
+            {!customers.isLoading && !customers.isError && customers.data?.users?.length === 0 && (
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có khách nào đăng ký bằng mã giới thiệu của bạn.</span>
+            )}
+            {customers.data?.users?.map((u) => (
+              <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
+                <span style={{ font: 'var(--type-body-sm)' }}>{u.fullName || '—'}</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{u.phone || '—'}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</span>
+              </div>
+            ))}
+          </div>
+
+          <GmailLinkSection />
+        </>
       )}
 
-      <ContactPipelineSection contacts={contacts} />
+      {tab === 'commission' && (
+        <>
+          <CommissionChart recent={data.recent} />
 
-      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng đã giới thiệu</span>
-        {customers.isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
-        {!customers.isLoading && customers.isError && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được danh sách khách.</span>}
-        {!customers.isLoading && !customers.isError && customers.data?.users?.length === 0 && (
-          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có khách nào đăng ký bằng mã giới thiệu của bạn.</span>
-        )}
-        {customers.data?.users?.map((u) => (
-          <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
-            <span style={{ font: 'var(--type-body-sm)' }}>{u.fullName || '—'}</span>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{u.phone || '—'}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</span>
+          {data.recent?.length > 0 && (
+            <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử hoa hồng ({data.recent.length} gần nhất)</span>
+                <Button variant="ghost" size="sm" disabled={exportingCommissions} onClick={() => exportCommissions().catch((e) => toast.error(e.message))}>
+                  {exportingCommissions ? 'Đang xuất…' : 'Xuất CSV'}
+                </Button>
+              </div>
+              {data.recent.map((r) => (
+                <div key={r.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ font: 'var(--type-body-sm)' }}>{r.plateNumber || '—'}</span>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+                  </div>
+                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{money(r.amount)}</span>
+                  <Badge tone={r.status === 'paid' ? 'mint' : r.status === 'approved' ? 'blue' : r.status === 'cancelled' ? 'rose' : 'amber'}>
+                    {{ paid: 'Đã trả', approved: 'Đã duyệt', pending: 'Chờ duyệt', cancelled: 'Đã hủy' }[r.status] || r.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <ContactPipelineSection contacts={contacts} />
+        </>
+      )}
+
+      {tab === 'referral' && (
+        <>
+          <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
+              <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{data.referralUrl}</span>
+              </div>
+              <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
+              <Button variant="outline" size="md" onClick={copyInviteMessage}>{messageCopied ? 'Đã sao chép' : 'Copy tin nhắn mời khách'}</Button>
+            </div>
           </div>
-        ))}
-      </div>
 
-      <GmailLinkSection />
+          <ClickStatsSection />
+
+          <HotPlatesWidget referralUrl={data.referralUrl} />
+
+          <TopReferredPlates />
+        </>
+      )}
+
+      {tab === 'messages' && <MessageTemplatesSection referralUrl={data.referralUrl} />}
+
       <a href={routeFor('collabProcess')} onClick={(e) => { e.preventDefault(); go('collabProcess')(); }} style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem quy trình nhận hoa hồng →</a>
       <Button variant="ghost" size="sm" onClick={onReset}>Đăng xuất</Button>
     </section>

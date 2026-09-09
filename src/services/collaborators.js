@@ -172,3 +172,26 @@ export function useCollaboratorContacts(enabled) {
     retry: false,
   });
 }
+
+// Mẫu tin nhắn CTV — admin/staff soạn sẵn, CTV copy gửi khách qua Zalo/Facebook/SMS riêng.
+export function useCollaboratorMessageTemplates(enabled) {
+  return useQuery({
+    queryKey: ['collaborator-message-templates'],
+    queryFn: async () => {
+      const auth = loadAuth();
+      const res = await fetch(`${BASE_URL}/api/collaborators/message-templates`, {
+        headers: { Authorization: `Bearer ${auth?.accessToken || ''}` },
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.success) {
+        const err = new Error(body?.error?.message || 'Có lỗi xảy ra.');
+        err.code = body?.error?.code;
+        err.status = res.status;
+        throw err;
+      }
+      return body.data;
+    },
+    enabled: !!enabled,
+    retry: false,
+  });
+}

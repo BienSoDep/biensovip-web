@@ -36,6 +36,7 @@ import AdminErrorLogs from '../pages/admin/AdminErrorLogs.jsx';
 import AdminFeatureFlags from '../pages/admin/AdminFeatureFlags.jsx';
 import AdminDbConsole from '../pages/admin/AdminDbConsole.jsx';
 import AdminPolicyPages from '../pages/admin/AdminPolicyPages.jsx';
+import AdminCtvMessageTemplates from '../pages/admin/AdminCtvMessageTemplates.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -51,6 +52,7 @@ const NAV_PERM = {
   achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view',
   aauditlog: 'audit_logs:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
   apolicypages: 'policy_pages:view',
+  actvtemplates: 'ctv_message_templates:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
@@ -83,6 +85,7 @@ const ADMIN_INFO = {
   afeatureflags: 'Bật/tắt nhanh 3 tính năng: Trợ lý AI, Số liệu hiển thị, CTV tự báo giao dịch — không cần deploy lại code khi cần tắt gấp.',
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
+  actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -340,6 +343,7 @@ export default function AdminShell({
         {s === 'afeatureflags' && <AdminFeatureFlags notify={notify} />}
         {s === 'adbconsole' && <AdminDbConsole notify={notify} />}
         {s === 'apolicypages' && <AdminPolicyPages notify={notify} />}
+        {s === 'actvtemplates' && <AdminCtvMessageTemplates notify={notify} />}
         {s === 'ameanings' && <AdminMeanings notify={notify} />}
         {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
