@@ -16,6 +16,7 @@ import AdminContacts from '../pages/admin/AdminContacts.jsx';
 import AdminTransactions from '../pages/admin/AdminTransactions.jsx';
 import AdminStaff from '../pages/admin/AdminStaff.jsx';
 import AdminPosts from '../pages/admin/AdminPosts.jsx';
+import AdminBlogComments from '../pages/admin/AdminBlogComments.jsx';
 import AdminCustomers from '../pages/admin/AdminCustomers.jsx';
 import AdminVideos from '../pages/admin/AdminVideos.jsx';
 import AdminNotifications from '../pages/admin/AdminNotifications.jsx';
@@ -46,7 +47,7 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
 const NAV_PERM = {
   aplates: 'plates:view', acoupons: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view', atransactions: 'transactions:view',
-  aposts: 'posts:view', compose: 'posts:view', ameanings: 'meanings:view',
+  aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
   achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view',
@@ -65,6 +66,7 @@ const ADMIN_INFO = {
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
   atransactions: 'Giao dịch mua/đặt cọc biển số. Tự tạo khi khách gửi liên hệ đặt cọc/mua, hoặc admin tự tạo tay từ 1 liên hệ tư vấn. Bấm "Xác nhận đã nhận tiền" khi khách đã chuyển khoản (ảnh minh chứng không bắt buộc) — hoa hồng CTV liên quan tự chuyển sang "Chờ duyệt" → "Đã duyệt".',
   aposts: 'Bài viết blog — nội dung SEO cho landing tỉnh/loại biển và tin phong thủy. Bấm "Đăng bài mới" để soạn bài.',
+  ablogcomments: 'Bình luận độc giả gửi vào bài blog — duyệt hoặc từ chối trước khi hiện công khai.',
   astaff: 'Chỉ Quản trị viên thấy trang này. Tạo tài khoản nhân viên, phân quyền theo từng resource, khóa/mở tài khoản hoặc đổi mật khẩu hộ khi nhân viên quên.',
   acustomers: 'Danh sách tài khoản khách đã đăng ký — xem lịch sử mua và biển yêu thích của từng khách.',
   avideos: 'Video TikTok/Facebook giới thiệu biển. Dán link để hệ thống tự nhận diện nền tảng và tạo ảnh xem trước.',
@@ -322,6 +324,7 @@ export default function AdminShell({
         {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} go={go} />}
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
+        {s === 'ablogcomments' && <AdminBlogComments notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}

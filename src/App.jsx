@@ -744,7 +744,7 @@ export default function App() {
 
             {s === 'plateTypeLanding' && <PlateTypeLandingPage typeSlug={st.typeSlug || 'tu-quy'} openPlate={openPlate} onBuy={openBuy} contact={contact} go={go} />}
 
-            {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} />}
+            {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} user={st.user} />}
 
             {s === 'notfound' && <NotFound go={go} />}
 

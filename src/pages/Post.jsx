@@ -8,8 +8,10 @@ import PlateVisual from '../components/PlateVisual.jsx';
 import { contentGet } from '../lib/content/index.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { useBlogPost, useRelatedPosts, useRelatedPlates } from '../services/blog.js';
+import { useBlogComments, useSubmitBlogComment } from '../services/blogComments.js';
 import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
+import { Input } from '../components/index.jsx';
 import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } from '../services/tracking/events.js';
 
 const CATEGORY_LABEL = {
@@ -120,10 +122,14 @@ function useTableOfContents(html) {
   }, [html]);
 }
 
-export default function Post({ postId, go, patch, notify, openPlate }) {
+export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const { data: post, isLoading, isError } = useBlogPost(postId);
   const { data: relatedData } = useRelatedPosts(postId, 3);
   const { data: relatedPlatesData } = useRelatedPlates(postId, 12);
+  const { data: commentsData } = useBlogComments(post?.id);
+  const submitComment = useSubmitBlogComment(post?.id);
+  const [commentText, setCommentText] = useState('');
+  const [openFaqIdx, setOpenFaqIdx] = useState(null);
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -164,6 +170,25 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
       m.setAttribute('content', content);
     });
   }, [post]);
+
+  // UC40 — JSON-LD FAQPage khi bài có FAQ, cho cơ hội rich snippet Google (pattern giống Faq.jsx).
+  useEffect(() => {
+    const old = document.head.querySelector('script[data-post-faq-ld]');
+    if (old) old.remove();
+    if (!post?.faq?.length) return;
+    const sc = document.createElement('script');
+    sc.type = 'application/ld+json';
+    sc.dataset.postFaqLd = '1';
+    sc.textContent = JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: post.faq.map((item) => ({
+        '@type': 'Question', name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    });
+    document.head.appendChild(sc);
+    return () => { sc.remove(); };
+  }, [post?.faq]);
 
   const scrollMilestonesFired = useRef(new Set());
   useEffect(() => {
@@ -256,13 +281,27 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[post.category] || post.category}</span>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-            <time dateTime={post.publishedAt} itemProp="datePublished">{formatDate(post.publishedAt)}</time>
+            <time dateTime={post.publishedAt} itemProp="datePublished">Đăng ngày {formatDate(post.publishedAt)}</time>
           </span>
+          {post.updatedAt && post.publishedAt && Math.abs(new Date(post.updatedAt) - new Date(post.publishedAt)) > 86400000 && (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
+              · <time dateTime={post.updatedAt} itemProp="dateModified">Cập nhật lần cuối {formatDate(post.updatedAt)}</time>
+            </span>
+          )}
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>· ~{post.readingTimeMinutes} phút đọc</span>
           {post.authorName && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>· <span itemProp="author">{post.authorName}</span></span>}
         </div>
         <h1 itemProp="headline" style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{post.title}</h1>
       </header>
+
+      {(post.summaryFengShui || post.summaryTaboo || post.summaryMeaning) && (
+        <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Tóm tắt nhanh</span>
+          {post.summaryFengShui && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Hợp mệnh:</strong> {post.summaryFengShui}</p>}
+          {post.summaryTaboo && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Kỵ mệnh:</strong> {post.summaryTaboo}</p>}
+          {post.summaryMeaning && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Ý nghĩa chính:</strong> {post.summaryMeaning}</p>}
+        </div>
+      )}
 
       {post.coverImageUrl && (
         <figure style={{ margin: 0, borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
@@ -330,6 +369,27 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
         <div className="article-body" itemProp="articleBody" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentWithIds }} />
       )}
 
+      {post.faq?.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+          <h2 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
+          {post.faq.map((item, i) => (
+            <div key={i} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <button type="button" onClick={() => setOpenFaqIdx((cur) => (cur === i ? null : i))}
+                style={{ width: '100%', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+                {item.question}
+              </button>
+              {openFaqIdx === i && (
+                <p style={{ margin: 0, padding: '0 var(--space-4) var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{item.answer}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {post.sourceNote && (
+        <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Nguồn: {post.sourceNote}</p>
+      )}
+
       {post.tags?.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {post.tags.map((t) => (
@@ -354,6 +414,39 @@ export default function Post({ postId, go, patch, notify, openPlate }) {
         <Button variant="outline" size="md" onClick={shareFacebook}><Share2 size={16} style={{ marginRight: 6 }} />Facebook</Button>
         <Button variant="outline" size="md" onClick={shareZalo}><MessageCircle size={16} style={{ marginRight: 6 }} />Zalo</Button>
         <Button variant="outline" size="md" onClick={copyLink}><Link2 size={16} style={{ marginRight: 6 }} />{copied ? contentGet('posts.ui.copied') : contentGet('posts.ui.cta_share')}</Button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+        <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bình luận</h2>
+        {user ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Input placeholder="Viết bình luận của bạn…" value={commentText} onChange={(e) => setCommentText(e.target.value)} />
+            <Button variant="primary" size="sm" disabled={!commentText.trim() || submitComment.isPending} style={{ alignSelf: 'flex-start' }}
+              onClick={() => {
+                submitComment.mutate(commentText.trim(), {
+                  onSuccess: () => { setCommentText(''); notify?.('Bình luận đang chờ duyệt'); },
+                  onError: (e) => notify?.(e.message || 'Gửi bình luận thất bại'),
+                });
+              }}>
+              {submitComment.isPending ? 'Đang gửi…' : 'Gửi bình luận'}
+            </Button>
+          </div>
+        ) : (
+          <Button variant="outline" size="sm" onClick={go('login')} style={{ alignSelf: 'flex-start' }}>Đăng nhập để bình luận</Button>
+        )}
+        {(commentsData?.items || []).length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            {commentsData.items.map((c) => (
+              <div key={c.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{c.userName || 'Người dùng'}</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{formatDate(c.createdAt)}</span>
+                </div>
+                <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{c.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {relatedPlates.length > 0 && (

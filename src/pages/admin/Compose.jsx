@@ -47,6 +47,12 @@ export default function Compose({ st, patch, notify }) {
   const [plateOptions, setPlateOptions] = useState([]);
   const [deliveryLocation, setDeliveryLocation] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
+  // UC40 — tóm tắt nhanh + FAQ (rich snippet) + nguồn tham khảo.
+  const [summaryFengShui, setSummaryFengShui] = useState('');
+  const [summaryTaboo, setSummaryTaboo] = useState('');
+  const [summaryMeaning, setSummaryMeaning] = useState('');
+  const [sourceNote, setSourceNote] = useState('');
+  const [faq, setFaq] = useState([]);
   const [loadedUpdatedAt, setLoadedUpdatedAt] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tags, setTags] = useState([]);
@@ -101,6 +107,11 @@ export default function Compose({ st, patch, notify }) {
       setPlatePlateNumber(full.plateNumber || '');
       setDeliveryLocation(full.deliveryLocation || '');
       setDeliveryDate(full.deliveryDate || '');
+      setSummaryFengShui(full.summaryFengShui || '');
+      setSummaryTaboo(full.summaryTaboo || '');
+      setSummaryMeaning(full.summaryMeaning || '');
+      setSourceNote(full.sourceNote || '');
+      setFaq(full.faq || []);
       if (full.contentHtml) editor.commands.setContent(full.contentHtml);
       setAttachedVideos(full.videos || []);
       savedRef.current = {
@@ -341,6 +352,11 @@ export default function Compose({ st, patch, notify }) {
       ...(editPostId && !plateId ? { clearPlateId: true } : {}),
       deliveryLocation: deliveryLocation.trim() || null,
       deliveryDate: deliveryDate || null,
+      faq: faq.filter((f) => f.question.trim() && f.answer.trim()),
+      summaryFengShui: summaryFengShui.trim() || null,
+      summaryTaboo: summaryTaboo.trim() || null,
+      summaryMeaning: summaryMeaning.trim() || null,
+      sourceNote: sourceNote.trim() || null,
     };
 
     const onSuccess = async (data) => {
@@ -509,6 +525,30 @@ export default function Compose({ st, patch, notify }) {
               </label>
             </>
           )}
+        </div>
+
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Tóm tắt nhanh (tùy chọn)<InfoTip size={12} text="Hiện ngay đầu bài dưới dạng box tóm tắt — giúp người đọc lướt nhanh, tăng dwell time cho SEO." /></span>
+          <Input label="Hợp mệnh" placeholder="VD: Kim, Thủy" value={summaryFengShui} onChange={(e) => setSummaryFengShui(e.target.value)} />
+          <Input label="Kỵ mệnh" placeholder="VD: Hỏa" value={summaryTaboo} onChange={(e) => setSummaryTaboo(e.target.value)} />
+          <Input label="Ý nghĩa chính" placeholder="VD: Số mang lại tài lộc, thăng tiến" value={summaryMeaning} onChange={(e) => setSummaryMeaning(e.target.value)} />
+          <Input label="Nguồn tham khảo" placeholder="VD: Theo kinh nghiệm tư vấn thực tế của Biensovip" value={sourceNote} onChange={(e) => setSourceNote(e.target.value)} />
+        </div>
+
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Câu hỏi thường gặp — FAQ (tùy chọn)<InfoTip size={12} text="Hiện thành accordion cuối bài, kèm schema FAQPage — có cơ hội lên rich snippet trên Google." /></span>
+          {faq.map((item, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <Input placeholder="Câu hỏi" value={item.question} onChange={(e) => setFaq((cur) => cur.map((f, fi) => (fi === i ? { ...f, question: e.target.value } : f)))} />
+                </div>
+                <button type="button" onClick={() => setFaq((cur) => cur.filter((_, fi) => fi !== i))} aria-label="Xóa câu hỏi" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--status-danger)', display: 'flex', padding: 6 }}><X size={16} /></button>
+              </div>
+              <Input placeholder="Câu trả lời" value={item.answer} onChange={(e) => setFaq((cur) => cur.map((f, fi) => (fi === i ? { ...f, answer: e.target.value } : f)))} />
+            </div>
+          ))}
+          <Button variant="outline" size="sm" disabled={faq.length >= 8} onClick={() => setFaq((cur) => [...cur, { question: '', answer: '' }])}>Thêm câu hỏi</Button>
         </div>
 
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
