@@ -13,15 +13,27 @@ const ENTITY_OPTS = [
   { value: 'staff', label: 'Nhân viên' },
   { value: 'category', label: 'Danh mục' },
   { value: 'collaborator', label: 'CTV' },
+  { value: 'blog_post', label: 'Bài viết blog' },
+  { value: 'blog_comment', label: 'Bình luận blog' },
+  { value: 'coupon', label: 'Mã giảm giá' },
+  { value: 'maintenance_page', label: 'Bảo trì hệ thống' },
+  { value: 'notification_broadcast', label: 'Thông báo hàng loạt' },
 ];
 
 const ACTION_LABEL = { create: 'Tạo mới', update: 'Cập nhật', delete: 'Xóa', status_change: 'Đổi trạng thái' };
 
 export default function AdminAuditLog() {
   const [entityType, setEntityType] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
   const [detailId, setDetailId] = useState(null);
-  const { data, isLoading, isError, refetch } = useAdminAuditLogs({ entityType: entityType || undefined, page });
+  const { data, isLoading, isError, refetch } = useAdminAuditLogs({
+    entityType: entityType || undefined,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
+    page,
+  });
   const { data: detail } = useAuditLogDetail(detailId);
 
   const items = data?.items || [];
@@ -34,8 +46,25 @@ export default function AdminAuditLog() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
         <Select value={entityType} options={ENTITY_OPTS} onChange={(v) => { setEntityType(v); setPage(1); }} />
+        <input
+          type="date"
+          value={fromDate}
+          onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
+          style={{ height: 40, borderRadius: 'var(--radius-field)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 var(--space-3)', font: 'var(--type-body-sm)' }}
+        />
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>đến</span>
+        <input
+          type="date"
+          value={toDate}
+          onChange={(e) => { setToDate(e.target.value); setPage(1); }}
+          style={{ height: 40, borderRadius: 'var(--radius-field)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 var(--space-3)', font: 'var(--type-body-sm)' }}
+        />
+        {(fromDate || toDate) && (
+          <button type="button" onClick={() => { setFromDate(''); setToDate(''); setPage(1); }}
+            style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Xóa lọc ngày</button>
+        )}
       </div>
 
       {isLoading ? (
