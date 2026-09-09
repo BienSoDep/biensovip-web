@@ -583,11 +583,6 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             <div>
               <Select label="Mục đích" value={cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={INTENT_OPTS.map((o) => ({ value: INTENT_VAL[o], label: o }))} />
             </div>
-            {cForm.intent === 'deposit_request' && (
-              <div>
-                <Input label="Số tiền muốn đặt cọc (đ, tùy chọn)" type="number" min="0" value={cForm.depositAmount} onChange={setCF('depositAmount')} placeholder="Ví dụ: 5000000" />
-              </div>
-            )}
             <div>
               <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
             </div>
