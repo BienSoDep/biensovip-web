@@ -7,6 +7,7 @@ import { loadAuth, clearAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
+import { formatDate } from '../../lib/date.js';
 
 const ROLE_OPTS = [
   { value: 'staff', label: 'Nhân viên' },
@@ -243,9 +244,9 @@ export default function AdminStaff({ notify }) {
       ) : (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div style={{ minWidth: 520 }}>
+          <div style={{ minWidth: 820 }}>
           <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-            <span style={{ flex: '1 1 180px' }}>Nhân viên</span><span style={{ flex: '1 1 110px' }}>Vai trò</span><span style={{ flex: '1 1 80px' }}>Trạng thái</span><span style={{ flex: '0 0 72px' }}>Thao tác</span>
+            <span style={{ flex: '1 1 180px' }}>Nhân viên</span><span style={{ flex: '1 1 110px' }}>SĐT</span><span style={{ flex: '1 1 110px' }}>Vai trò</span><span style={{ flex: '1 1 80px' }}>Quyền</span><span style={{ flex: '1 1 130px' }}>Đăng nhập cuối</span><span style={{ flex: '1 1 80px' }}>Trạng thái</span><span style={{ flex: '0 0 72px' }}>Thao tác</span>
           </div>
           {rows.map((x) => (
             <div key={x.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
@@ -256,7 +257,10 @@ export default function AdminStaff({ notify }) {
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{x.email}</span>
                 </span>
               </span>
+              <span style={{ flex: '1 1 110px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{x.phone || '—'}</span>
               <span style={{ flex: '1 1 110px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: ROLE_FG[x.role] || 'var(--text-strong)' }}>{ROLE_LABEL[x.role] || x.role}</span>
+              <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{x.role === 'super-admin' ? 'Toàn quyền' : `${x.permissions?.length || 0} quyền`}</span>
+              <span style={{ flex: '1 1 130px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{x.lastLoginAt ? formatDate(x.lastLoginAt) : 'Chưa đăng nhập'}</span>
               <span style={{ flex: '1 1 80px' }}><Switch checked={x.active} disabled={busy} onChange={() => handleToggleActive(x)} /></span>
               <span style={{ flex: '0 0 144px', display: 'flex', gap: 'var(--space-2)' }}>
                 <IconButton name="pencil" label="Sửa" onClick={() => openEdit(x)} />
