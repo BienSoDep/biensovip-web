@@ -87,7 +87,16 @@ test.describe('AdminNotifications', () => {
   // even though POST /api/admin/notifications/broadcast succeeds (201).
   // The "Đã gửi (0)" list panel therefore always shows "Lỗi tải dữ liệu"
   // instead of the just-sent broadcast. See final summary for details.
+  //
+  // The real POST used to hit whatever backend VITE_API_URL points at (prod
+  // included, if .env.local is missing) and send a real broadcast email to
+  // every user with notify_by_email=true — including stale test accounts,
+  // which bounced back into the SMTP FromEmail's own inbox on every run.
+  // Mocked here so the test only verifies the UI flow, never a real send.
   test('compose and send a broadcast', async ({ page }) => {
+    await page.route('**/api/admin/notifications/broadcast', (route) =>
+      route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ success: true, data: { queued: true, recipientCount: 0 }, error: null }) }));
+
     await loginAdmin(page);
     await page.getByRole('button', { name: 'Thông báo', exact: true }).click();
 
