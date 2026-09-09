@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Select } from '../../components/index.jsx';
 import Modal from '../../components/Modal.jsx';
 import { useAdminAuditLogs, useAuditLogDetail } from '../../services/adminAuditLog.js';
+import { useStaffLite } from '../../services/adminStaff.js';
+import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { formatDate } from '../../lib/date.js';
 
 const ENTITY_OPTS = [
@@ -24,17 +26,26 @@ const ACTION_LABEL = { create: 'Tạo mới', update: 'Cập nhật', delete: 'X
 
 export default function AdminAuditLog() {
   const [entityType, setEntityType] = useState('');
+  const [actorId, setActorId] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
   const [detailId, setDetailId] = useState(null);
-  const { data, isLoading, isError, refetch } = useAdminAuditLogs({
+  const filterParams = {
     entityType: entityType || undefined,
+    actorId: actorId || undefined,
     fromDate: fromDate || undefined,
     toDate: toDate || undefined,
-    page,
-  });
+  };
+  const { data, isLoading, isError, refetch } = useAdminAuditLogs({ ...filterParams, page });
   const { data: detail } = useAuditLogDetail(detailId);
+  const { data: staffData } = useStaffLite();
+  const { exportCsv, loading: exporting } = useExportCsv('/api/admin/audit-logs');
+
+  const staffOpts = [
+    { value: '', label: 'Tất cả người thực hiện' },
+    ...(staffData?.items || []).map((s) => ({ value: s.id, label: s.fullName || s.email || s.id })),
+  ];
 
   const items = data?.items || [];
   const totalPages = data?.totalPages || 1;
@@ -48,6 +59,7 @@ export default function AdminAuditLog() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap' }}>
         <Select value={entityType} options={ENTITY_OPTS} onChange={(v) => { setEntityType(v); setPage(1); }} />
+        <Select value={actorId} options={staffOpts} onChange={(v) => { setActorId(v); setPage(1); }} />
         <input
           type="date"
           value={fromDate}
@@ -65,6 +77,18 @@ export default function AdminAuditLog() {
           <button type="button" onClick={() => { setFromDate(''); setToDate(''); setPage(1); }}
             style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Xóa lọc ngày</button>
         )}
+        <button
+          type="button"
+          disabled={exporting}
+          onClick={() => exportCsv(filterParams)}
+          style={{
+            marginLeft: 'auto', height: 40, padding: '0 var(--space-4)', borderRadius: 'var(--radius-field)', border: 'none',
+            background: 'var(--action-primary)', color: 'var(--text-inverse)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
+            cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.6 : 1,
+          }}
+        >
+          {exporting ? 'Đang xuất…' : 'Xuất CSV'}
+        </button>
       </div>
 
       {isLoading ? (
