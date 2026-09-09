@@ -29,6 +29,14 @@ export function useUpdateBankInfo() {
   });
 }
 
+// P2 — CTV tự khai chức danh/link Zalo riêng, dùng làm placeholder {ctvTitle}/{ctvZaloLink} khi copy tin nhắn mẫu.
+export function useUpdateMessagingProfile() {
+  return useMutation({
+    mutationFn: ({ ctvTitle, ctvZaloLink }) =>
+      apiClient.patch('/api/collaborators/messaging-profile', { ctvTitle, ctvZaloLink }),
+  });
+}
+
 // UC40 §3.7 — biển đang được quan tâm THẬT (PendingContactCount thật, không phải số vanity/ảo UC38).
 export function useHotPlates(limit = 5, enabled = true) {
   return useQuery({

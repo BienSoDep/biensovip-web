@@ -6,7 +6,7 @@ import { Share2, Link2, HandCoins, Wallet, UserPlus, BarChart3 as BarChartIcon, 
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Button from '../components/Button.jsx';
 import { Badge, Input, Select, InfoTip } from '../components/index.jsx';
-import { useBecomeCollaborator, useUpdateBankInfo, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorContacts, useCollaboratorMessageTemplates, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
+import { useBecomeCollaborator, useUpdateBankInfo, useUpdateMessagingProfile, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorContacts, useCollaboratorMessageTemplates, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
 import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -521,6 +521,35 @@ function BankInfoEditor({ onDone }) {
   );
 }
 
+// P2 — CTV tự khai chức danh + link Zalo riêng, dùng làm placeholder {ctvTitle}/{ctvZaloLink} khi
+// copy tin nhắn mẫu gửi khách (tách khỏi BankInfoEditor — không liên quan tiền, cùng khu vực "Sửa hồ sơ").
+function MessagingProfileEditor({ initialTitle, initialZaloLink, onDone }) {
+  const updateProfile = useUpdateMessagingProfile();
+  const [ctvTitle, setCtvTitle] = useState(initialTitle || '');
+  const [ctvZaloLink, setCtvZaloLink] = useState(initialZaloLink || '');
+
+  const save = async () => {
+    try {
+      await updateProfile.mutateAsync({ ctvTitle: ctvTitle.trim() || undefined, ctvZaloLink: ctvZaloLink.trim() || undefined });
+      toast.success('Đã cập nhật hồ sơ nhắn tin.');
+      onDone();
+    } catch (e) {
+      toast.error(e?.message || 'Cập nhật thất bại, thử lại sau.');
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <Input label="Chức danh tự đặt (không bắt buộc)" placeholder="VD: Tư vấn viên biển số phong thủy" value={ctvTitle} onChange={(e) => setCtvTitle(e.target.value)} />
+      <Input label="Link Zalo cá nhân (không bắt buộc)" placeholder="VD: zalo.me/0912xxxxxx" value={ctvZaloLink} onChange={(e) => setCtvZaloLink(e.target.value)} />
+      <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <Button variant="primary" size="md" onClick={save} disabled={updateProfile.isPending}>{updateProfile.isPending ? 'Đang lưu...' : 'Lưu'}</Button>
+        <Button variant="ghost" size="md" onClick={onDone} disabled={updateProfile.isPending}>Hủy</Button>
+      </div>
+    </div>
+  );
+}
+
 // Nhãn tiến độ hiển thị cho CTV — ưu tiên tín hiệu Transaction/Plate thật hơn ContactRequest.Status
 // (Status chỉ có New/Consulting/Closed, không có "Đã cọc"/"Đã bán" — 2 mốc này suy ra từ
 // depositStatus + plateSold do ContactRequestMappers/AdminPlateService quyết định, không tự động nối).
@@ -572,7 +601,7 @@ const CTV_TABS = [
 ];
 
 // Mẫu tin nhắn admin soạn sẵn — CTV bung placeholder {plateNumber}/{referralUrl} rồi copy nguyên văn.
-function MessageTemplatesSection({ referralUrl }) {
+function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone, ctvTitle, ctvZaloLink }) {
   const { data, isLoading, isError } = useCollaboratorMessageTemplates(true);
   const [copiedId, setCopiedId] = useState(null);
   const [plateNumber, setPlateNumber] = useState('');
@@ -584,7 +613,11 @@ function MessageTemplatesSection({ referralUrl }) {
   const copyTemplate = (t) => {
     const filled = t.bodyTemplate
       .replaceAll('{referralUrl}', referralUrl || '')
-      .replaceAll('{plateNumber}', plateNumber || '(chưa nhập số biển)');
+      .replaceAll('{plateNumber}', plateNumber || '(chưa nhập số biển)')
+      .replaceAll('{ctvName}', ctvName || '')
+      .replaceAll('{ctvPhone}', ctvPhone || '')
+      .replaceAll('{ctvTitle}', ctvTitle || '')
+      .replaceAll('{ctvZaloLink}', ctvZaloLink || '');
     const done = () => { setCopiedId(t.id); toast.success('Đã sao chép tin nhắn'); setTimeout(() => setCopiedId(null), 2000); };
     if (navigator.clipboard?.writeText) navigator.clipboard.writeText(filled).then(done).catch(() => fallbackCopy(filled, done));
     else fallbackCopy(filled, done);
@@ -627,6 +660,7 @@ function DashboardBody({ data, onReset, go }) {
   const [copied, setCopied] = useState(false);
   const [messageCopied, setMessageCopied] = useState(false);
   const [editingBank, setEditingBank] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const customers = useCollaboratorCustomers(data.status === 'active');
   const contacts = useCollaboratorContacts(data.status === 'active');
   const { exportCsv: exportCommissions, loading: exportingCommissions } = useExportCsv('/api/collaborators/commissions/export');
@@ -705,8 +739,12 @@ function DashboardBody({ data, onReset, go }) {
               </div>
               <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
               {!editingBank && <Button variant="outline" size="md" onClick={() => setEditingBank(true)}>Sửa thông tin ngân hàng</Button>}
+              {!editingProfile && <Button variant="outline" size="md" onClick={() => setEditingProfile(true)}>Sửa hồ sơ nhắn tin</Button>}
             </div>
             {editingBank && <BankInfoEditor onDone={() => setEditingBank(false)} />}
+            {editingProfile && (
+              <MessagingProfileEditor initialTitle={data.ctvTitle} initialZaloLink={data.ctvZaloLink} onDone={() => setEditingProfile(false)} />
+            )}
             <LeaderboardVisibilityToggle go={go} />
           </div>
 
@@ -784,7 +822,9 @@ function DashboardBody({ data, onReset, go }) {
         </>
       )}
 
-      {tab === 'messages' && <MessageTemplatesSection referralUrl={data.referralUrl} />}
+      {tab === 'messages' && (
+        <MessageTemplatesSection referralUrl={data.referralUrl} ctvName={data.fullName} ctvPhone={data.ctvPhone} ctvTitle={data.ctvTitle} ctvZaloLink={data.ctvZaloLink} />
+      )}
 
       <a href={routeFor('collabProcess')} onClick={(e) => { e.preventDefault(); go('collabProcess')(); }} style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem quy trình nhận hoa hồng →</a>
       <Button variant="ghost" size="sm" onClick={onReset}>Đăng xuất</Button>
