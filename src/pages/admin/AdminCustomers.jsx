@@ -32,6 +32,22 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const updateStatus = useUpdateCustomerStatus();
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/customers');
 
+  // Đổi mật khẩu hộ ngay từ bảng list — không cần mở drawer chi tiết trước, tiện cho trường hợp
+  // khách quên mật khẩu và không tự khôi phục được (email lỗi/OTP lỗi).
+  const resetPassword = useResetCustomerPassword();
+  const [pwTarget, setPwTarget] = useState(null); // { id, label }
+  const [pwValue, setPwValue] = useState('');
+  const [pwErr, setPwErr] = useState('');
+
+  const openResetPassword = (c) => { setPwValue(''); setPwErr(''); setPwTarget({ id: c.id, label: c.fullName || c.email }); };
+  const confirmResetPassword = () => {
+    if (!pwValue || pwValue.length < 6) { setPwErr('Mật khẩu tối thiểu 6 ký tự.'); return; }
+    resetPassword.mutate({ id: pwTarget.id, newPassword: pwValue }, {
+      onSuccess: () => { notify?.('Đã đổi mật khẩu. Gửi mật khẩu mới cho khách hàng qua kênh an toàn.'); setPwTarget(null); },
+      onError: (e) => setPwErr(e.message || 'Lỗi khi đổi mật khẩu.'),
+    });
+  };
+
   const result = data ?? { items: [], total: 0, page: 1, perPage: 20 };
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
 
@@ -82,7 +98,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
           <span style={{ flex: '1 1 72px' }}>Yêu thích</span>
           <span style={{ flex: '1 1 80px' }}>Ngày đăng ký</span>
           <span style={{ flex: '1 1 100px' }}>Trạng thái</span>
-          <span style={{ flex: '0 0 88px' }}>Hành động</span>
+          <span style={{ flex: '0 0 128px' }}>Hành động</span>
         </div>
 
         {isLoading && <div style={{ padding: 'var(--gutter-card)' }}><SkeletonTable rows={6} cols={5} /></div>}
@@ -115,7 +131,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
                 {STATUS_LABEL[c.status] || c.status}
               </span>
             </span>
-            <span style={{ flex: '0 0 88px' }} onClick={(e) => e.stopPropagation()}>
+            <span style={{ flex: '0 0 128px', display: 'flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
               {updatingId === c.id ? (
                 <Loader2 size={20} className="bsd-spin" style={{ color: 'var(--text-muted)', margin: '8px 0' }} />
               ) : (
@@ -123,6 +139,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
                   {c.status === 'locked' ? 'Mở khóa' : 'Khóa'}
                 </Button>
               )}
+              <IconButton name="key" label="Đổi mật khẩu hộ" onClick={() => openResetPassword(c)} />
             </span>
           </div>
         ))}
@@ -175,6 +192,19 @@ export default function AdminCustomers({ st, setSt, notify }) {
       </Modal>
 
       {!!detailId && <CustomerDetailDrawer id={detailId} onClose={() => setDetailId(null)} notify={notify} />}
+
+      <Modal open={!!pwTarget} onClose={() => setPwTarget(null)} title="Đổi mật khẩu khách hàng" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Đặt mật khẩu mới cho <b>{pwTarget?.label}</b>. Khách hàng sẽ bị đăng xuất khỏi mọi phiên hiện tại. Gửi mật khẩu mới cho khách qua kênh an toàn.
+          </p>
+          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pwValue} error={pwErr} onChange={(e) => { setPwValue(e.target.value); setPwErr(''); }} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setPwTarget(null)}>Hủy</Button>
+            <Button variant="primary" size="md" onClick={confirmResetPassword} disabled={resetPassword.isPending}>{resetPassword.isPending ? 'Đang lưu…' : 'Đổi mật khẩu'}</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -204,20 +234,7 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
   const revokeSession = useRevokeCustomerSession();
   const [confirmRevoke, setConfirmRevoke] = useState(null); // { sessionId, deviceLabel, ipAddress }
 
-  const resetPassword = useResetCustomerPassword();
   const verifyEmail = useVerifyCustomerEmail();
-  const [pwOpen, setPwOpen] = useState(false);
-  const [pwValue, setPwValue] = useState('');
-  const [pwErr, setPwErr] = useState('');
-
-  const openResetPassword = () => { setPwValue(''); setPwErr(''); setPwOpen(true); };
-  const confirmResetPassword = () => {
-    if (!pwValue || pwValue.length < 6) { setPwErr('Mật khẩu tối thiểu 6 ký tự.'); return; }
-    resetPassword.mutate({ id, newPassword: pwValue }, {
-      onSuccess: () => { notify?.('Đã đổi mật khẩu. Gửi mật khẩu mới cho khách hàng qua kênh an toàn.'); setPwOpen(false); },
-      onError: (e) => setPwErr(e.message || 'Lỗi khi đổi mật khẩu.'),
-    });
-  };
 
   const handleVerifyEmail = () => {
     verifyEmail.mutate(id, {
@@ -276,7 +293,6 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
                   {data.fengShuiElement && <Badge tone="amber">Mệnh {ELEMENT_LABEL[data.fengShuiElement] || data.fengShuiElement}</Badge>}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
-                  <Button variant="outline" size="sm" onClick={openResetPassword}>Đổi mật khẩu hộ</Button>
                   {!data.emailVerified && data.email && (
                     <Button variant="outline" size="sm" disabled={verifyEmail.isPending} onClick={handleVerifyEmail}>
                       {verifyEmail.isPending ? 'Đang xác thực...' : 'Xác thực email hộ'}
@@ -390,20 +406,6 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
               onClick={() => revokeSession.mutate({ id, sessionId: confirmRevoke.sessionId }, { onSuccess: () => { notify?.('Đã đăng xuất phiên này'); setConfirmRevoke(null); } })}>
               Đăng xuất
             </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Admin đổi mật khẩu hộ khách hàng — dùng khi quên mật khẩu, không truy cập được email, hoặc OTP lỗi */}
-      <Modal open={pwOpen} onClose={() => setPwOpen(false)} title="Đổi mật khẩu khách hàng" maxWidth="420px">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Đặt mật khẩu mới cho <b>{data?.fullName || data?.email}</b>. Khách hàng sẽ bị đăng xuất khỏi mọi phiên hiện tại. Gửi mật khẩu mới cho khách qua kênh an toàn.
-          </p>
-          <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 6 ký tự" value={pwValue} error={pwErr} onChange={(e) => { setPwValue(e.target.value); setPwErr(''); }} />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-            <Button variant="ghost" size="md" onClick={() => setPwOpen(false)}>Hủy</Button>
-            <Button variant="primary" size="md" onClick={confirmResetPassword} disabled={resetPassword.isPending}>{resetPassword.isPending ? 'Đang lưu…' : 'Đổi mật khẩu'}</Button>
           </div>
         </div>
       </Modal>
