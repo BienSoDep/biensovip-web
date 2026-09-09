@@ -239,9 +239,11 @@ export default function AdminShell({
 
   return (
     <div className="admin-shell" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
-      <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" aria-controls="admin-drawer" aria-expanded={drawerOpen} style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-        <Menu size={20} />
-      </button>
+      {!drawerOpen && (
+        <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" aria-controls="admin-drawer" aria-expanded={drawerOpen} style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <Menu size={20} />
+        </button>
+      )}
 
       {drawerOpen && (
         <div className="admin-drawer-overlay" style={{ position: 'fixed', inset: 0, zIndex: 85 }}>
