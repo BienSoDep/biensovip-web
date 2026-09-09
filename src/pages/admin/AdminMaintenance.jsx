@@ -10,7 +10,8 @@ const SCREEN_LABEL = {
   home: 'Trang chủ', list: 'Danh sách biển số', detail: 'Chi tiết biển số', fav: 'Yêu thích',
   profile: 'Tài khoản', about: 'Giới thiệu', blog: 'Blog', post: 'Bài viết', lucky: 'Hợp mệnh',
   chat: 'Liên hệ tư vấn', compare: 'So sánh', saved: 'Thông báo biển mới', reviews: 'Đánh giá',
-  notifications: 'Thông báo mới', collab: 'Cộng tác viên', terms: 'Điều khoản', privacy: 'Bảo mật',
+  notifications: 'Thông báo mới', collab: 'Cộng tác viên', collabProcess: 'CTV — Quy trình nhận hoa hồng',
+  collabLeaderboard: 'CTV — Bảng xếp hạng', terms: 'Điều khoản', privacy: 'Bảo mật',
   transfer: 'Hướng dẫn sang tên', faq: 'Hỏi đáp', provinceLanding: 'Landing tỉnh/thành',
   plateTypeLanding: 'Landing loại biển',
 };
