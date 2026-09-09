@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Copy, Star, Gift } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import {
   useAdminPlates, useDeletePlate, useUpdatePlateStatus,
@@ -23,7 +24,7 @@ import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
 import { fetchMissingMeaningPlates, useBulkSeedMeanings } from '../../services/meanings.js';
-import { fetchMissingImagePlates, useBulkGenerateImages } from '../../services/plateImages.js';
+import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage } from '../../services/plateImages.js';
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
@@ -167,6 +168,7 @@ const ERR_MSG = {
 const canViewCost = (st) => st?.user?.role === 'super-admin' || st?.user?.permissions?.includes('*') || st?.user?.permissions?.includes('plates_cost:view');
 
 export default function AdminPlates({ go, notify, st }) {
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState('all');
   const [keyword, setKeyword] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -216,13 +218,17 @@ export default function AdminPlates({ go, notify, st }) {
     }
   };
 
-  // Sinh ảnh đại diện hàng loạt cho biển đang thiếu ảnh
+  // Sinh ảnh đại diện hàng loạt cho biển đang thiếu ảnh — UC42: tuần tự từng biển, lưu DB ngay
+  // sau mỗi biển (không phải 1 request lớn) để đóng modal giữa chừng không mất phần đã sinh.
   const [missingImagePlates, setMissingImagePlates] = useState(null); // null=chưa mở, []=đã check hết
   const [checkingMissingImage, setCheckingMissingImage] = useState(false);
-  const bulkGenImagesMut = useBulkGenerateImages();
+  const [genProgress, setGenProgress] = useState(null); // { done, total, errors: [] } | null khi chưa chạy
+  const genCancelledRef = useRef(false);
+  const bulkGenImagesMut = useBulkGenerateImages(); // giữ lại cho endpoint cũ (không còn gọi từ UI này)
 
   const openMissingImageModal = async () => {
     setCheckingMissingImage(true);
+    setGenProgress(null);
     try {
       const res = await fetchMissingImagePlates();
       setMissingImagePlates(res.items || []);
@@ -233,13 +239,28 @@ export default function AdminPlates({ go, notify, st }) {
     }
   };
 
+  const closeMissingImageModal = () => {
+    genCancelledRef.current = true;
+    setMissingImagePlates(null);
+  };
+
   const confirmBulkGenerateImages = async () => {
-    try {
-      const res = await bulkGenImagesMut.mutateAsync();
-      notify(`Đã sinh ảnh cho ${res.generated} biển${res.skipped ? `, ${res.skipped} biển lỗi` : ''}`);
-      setMissingImagePlates(null);
-    } catch (err) {
-      notify(err.message || 'Lỗi sinh ảnh hàng loạt');
+    const plates = missingImagePlates || [];
+    genCancelledRef.current = false;
+    const errors = [];
+    setGenProgress({ done: 0, total: plates.length, errors });
+    for (let i = 0; i < plates.length; i++) {
+      if (genCancelledRef.current) break;
+      try {
+        await generateOneImage(plates[i].id);
+      } catch (err) {
+        errors.push(plates[i].plateNumber);
+      }
+      setGenProgress({ done: i + 1, total: plates.length, errors: [...errors] });
+    }
+    if (!genCancelledRef.current) {
+      queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      notify(`Đã sinh ảnh cho ${plates.length - errors.length} biển${errors.length ? `, ${errors.length} biển lỗi` : ''}`);
     }
   };
 
@@ -1090,26 +1111,44 @@ export default function AdminPlates({ go, notify, st }) {
         </div>
       </Modal>
 
-      <Modal open={missingImagePlates !== null} onClose={() => setMissingImagePlates(null)} title="Sinh ảnh hàng loạt" maxWidth="480px">
+      <Modal open={missingImagePlates !== null} onClose={closeMissingImageModal} title="Sinh ảnh hàng loạt" maxWidth="480px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {missingImagePlates?.length ? (
             <>
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 <b>{missingImagePlates.length}</b> biển chưa có ảnh. Hệ thống sẽ tự vẽ ảnh biển số làm ảnh đại diện tạm, có thể thay bằng ảnh thật sau.
               </p>
+              {genProgress && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${(genProgress.done / genProgress.total) * 100}%`, background: 'var(--action-primary)', transition: 'width 150ms var(--ease-out)' }} />
+                  </div>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                    Đã sinh {genProgress.done}/{genProgress.total}{genProgress.errors.length ? ` — ${genProgress.errors.length} lỗi` : ''}
+                  </span>
+                </div>
+              )}
               <div style={{ maxHeight: 220, overflow: 'auto', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-                {missingImagePlates.map((p) => (
-                  <span key={p.id} style={{ font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--white)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
-                ))}
+                {missingImagePlates.map((p, i) => {
+                  const done = genProgress && i < genProgress.done;
+                  const failed = genProgress?.errors.includes(p.plateNumber);
+                  return (
+                    <span key={p.id} style={{
+                      font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                      background: failed ? 'var(--status-danger-bg)' : done ? 'var(--status-success-bg)' : 'var(--white)',
+                      color: failed ? 'var(--status-danger)' : done ? 'var(--status-success)' : 'var(--text-strong)',
+                    }}>{p.plateNumber}</span>
+                  );
+                })}
               </div>
             </>
           ) : (
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mọi biển đã có ảnh.</p>
           )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-            <Button variant="ghost" size="md" onClick={() => setMissingImagePlates(null)}>Hủy</Button>
-            {!!missingImagePlates?.length && (
-              <Button variant="primary" size="md" onClick={confirmBulkGenerateImages} loading={bulkGenImagesMut.isPending}>Sinh ảnh cho {missingImagePlates.length} biển</Button>
+            <Button variant="ghost" size="md" onClick={closeMissingImageModal}>{genProgress ? 'Đóng' : 'Hủy'}</Button>
+            {!!missingImagePlates?.length && !genProgress && (
+              <Button variant="primary" size="md" onClick={confirmBulkGenerateImages}>Sinh ảnh cho {missingImagePlates.length} biển</Button>
             )}
           </div>
         </div>

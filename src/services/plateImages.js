@@ -14,3 +14,10 @@ export function useBulkGenerateImages() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-plates'] }),
   });
 }
+
+// UC42 — sinh ảnh cho đúng 1 biển, gọi tuần tự từ vòng lặp FE (progress bar, lưu ngay từng biển
+// nên dừng giữa chừng không mất phần đã xong). Không dùng useMutation (không cần loading state
+// riêng lẻ per-call, modal tự quản lý progress qua state của nó).
+export async function generateOneImage(plateId) {
+  return apiClient.post(`/api/admin/plates/images/generate-one/${plateId}`);
+}
