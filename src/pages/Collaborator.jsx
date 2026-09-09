@@ -1059,9 +1059,10 @@ function CtvTools() {
 }
 
 // Trang ưu đãi — user đã đăng nhập chưa là CTV, hoặc chưa đăng nhập. Nội dung admin chỉnh.
-// Form kích hoạt CTV ngay tại trang giới thiệu — không đá qua Profile. Điều kiện backend duy nhất
-// (POST /api/collaborators/become): email phải verified nếu tài khoản đăng ký bằng email — ngân
-// hàng không bắt buộc, CTV có toàn quyền dùng mục CTV ngay sau xác thực, bổ sung bank khi cần rút tiền.
+// Tài khoản đăng ký bằng email: backend tự kích hoạt CTV ngay khi verify email xong (không cần bấm
+// nút riêng) — xem confirmOtp() bên dưới. Tài khoản đăng ký bằng phone (không có bước verify email)
+// vẫn dùng nút "Kích hoạt CTV" thủ công (POST /api/collaborators/become). Ngân hàng không bắt buộc ở
+// cả 2 luồng — CTV bổ sung sau khi cần rút hoa hồng.
 function ActivateCtvForm({ onActivated }) {
   const user = loadAuth()?.user;
   const become = useBecomeCollaborator();
@@ -1096,11 +1097,17 @@ function ActivateCtvForm({ onActivated }) {
     setOtpBusy(true);
     try {
       await confirmEmailVerifyOtp(otpCode.trim());
-      await refreshToken();
+      const data = await refreshToken();
       setEmailVerified(true);
-      toast.success('Xác thực email thành công.');
       setOtpSent(false);
       setOtpCode('');
+      // Backend tự kích hoạt CTV ngay khi email verified — bỏ qua bước bấm "Kích hoạt CTV" thủ công.
+      if (data?.user?.isCollaborator) {
+        toast.success('Xác thực email thành công. Bạn đã trở thành Cộng tác viên!');
+        onActivated();
+      } else {
+        toast.success('Xác thực email thành công.');
+      }
     } catch (e) {
       toast.error(e?.message || 'Mã xác thực không đúng hoặc đã hết hạn.');
     } finally {
