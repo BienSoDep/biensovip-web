@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, Fragment } from 'react';
-import { ArrowLeftRight, X, Sparkles } from 'lucide-react';
+import { ArrowLeftRight, X, Sparkles, Search, Heart } from 'lucide-react';
+import { useDebouncedValue } from '@mantine/hooks';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
 import { InfoTip, DateInputVN } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { useCompareIds, useComparePlates } from '../services/compareService.js';
+import { usePlates } from '../services/plates.js';
 import { useScorePlates } from '../services/fengshuiService.js';
 import { routeFor } from '../config/routes.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
@@ -13,6 +15,72 @@ import { compareInsights, patternScore, buildFengShuiRows, priceScores } from '.
 import { PURPOSES, INDUSTRIES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
 import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
+
+// Slot tìm nhanh — thay vì bắt user rời trang quay lại danh sách (pattern Thế Giới Di Động/FPT Shop):
+// mỗi slot trống là 1 ô tìm kiếm riêng, gõ số biển ra gợi ý ngay dưới, chọn là add() thẳng vào so sánh.
+function PlateSlotSearch({ onAdd, excludeIds }) {
+  const [query, setQuery] = useState('');
+  const [debouncedQuery] = useDebouncedValue(query, 300);
+  const { data } = usePlates({ q: debouncedQuery, perPage: 8 }, { enabled: debouncedQuery.trim().length >= 2 });
+  const results = (data?.items || []).filter((p) => !excludeIds.includes(p.id));
+
+  return (
+    <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
+      <div style={{ position: 'relative' }}>
+        <Search size={16} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', color: 'var(--text-faint)', pointerEvents: 'none' }} />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Tìm biển số để thêm..."
+          aria-label="Tìm biển số để thêm vào so sánh"
+          style={{ height: 44, width: '100%', border: '1.5px dashed var(--border-hairline)', borderRadius: 'var(--radius-field)', background: 'var(--white)', padding: '0 14px 0 40px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }}
+        />
+      </div>
+      {debouncedQuery.trim().length >= 2 && (
+        <div style={{ position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0, marginTop: 4, background: 'var(--white)', boxShadow: 'var(--shadow-elevated, var(--shadow-4))', borderRadius: 'var(--radius-field)', maxHeight: 260, overflowY: 'auto' }}>
+          {results.length === 0 ? (
+            <div style={{ padding: '12px 14px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Không tìm thấy biển phù hợp</div>
+          ) : results.map((p) => (
+            <button key={p.id} type="button" onClick={() => { onAdd(p.id); setQuery(''); }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
+              <span>{p.plateNumber}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Gợi ý biển đã thích ngay dưới slot — đỡ phải gõ tìm khi biển muốn so sánh đã có sẵn trong Yêu thích.
+function FavSuggestions({ favCards, excludeIds, onAdd }) {
+  const items = (favCards || []).filter((p) => !excludeIds.includes(p.id) && p.status !== 'sold').slice(0, 6);
+  if (items.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-label)', color: 'var(--text-strong)' }}><Heart size={14} style={{ color: 'var(--status-danger)' }} /> Từ biển đã thích của bạn</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+        {items.map((p) => {
+          const { prov, seri, num } = splitPlateNumber(p.plateNumber);
+          return (
+            <button key={p.id} type="button" onClick={() => onAdd(p.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)', background: 'var(--white)', cursor: 'pointer' }}>
+              {p.thumbnailUrl ? (
+                <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 40, height: 22, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+              ) : (
+                <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+              )}
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 const ROW_LABELS = [
   { key: 'type', label: 'Loại biển' },
@@ -44,8 +112,8 @@ function BirthDatePrompt({ onSubmit }) {
   );
 }
 
-export default function Compare({ go, notify, allPlates, user, openPlate }) {
-  const { ids, remove, clear } = useCompareIds();
+export default function Compare({ go, notify, allPlates, user, openPlate, favCards }) {
+  const { ids, add, remove, clear } = useCompareIds();
   const { data, isLoading, isFetching, isPlaceholderData, isError, refetch } = useComparePlates(ids);
   // Fall back to the in-app plate list when the API is unavailable (mock/dev).
   const apiPlates = data?.items || [];
@@ -90,42 +158,45 @@ export default function Compare({ go, notify, allPlates, user, openPlate }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [birthDate, purpose, industry, plates.map((p) => p.id).join(',')]);
 
-  // Empty: no IDs at all
-  if (ids.length === 0) {
+  // Empty hoặc thiếu (0-1 biển): show slot search ngay tại chỗ thay vì chỉ 1 nút "Xem danh sách" —
+  // đỡ user phải rời trang quay lại rồi bấm "So sánh" từng biển một (pattern TGDĐ/FPT Shop).
+  if (ids.length < 2) {
+    const filledPlate = plates[0];
+    const slotsNeeded = filledPlate ? 2 : 3;
     return (
       <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
           <div style={{ flex: '1 1 300px' }}>
             <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>So sánh biển số</h1>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chọn tối đa 3 biển để so sánh cạnh nhau.</p>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{filledPlate ? 'Cần ít nhất 2 biển để so sánh — tìm thêm 1 biển nữa.' : 'Tìm và thêm tối đa 3 biển để so sánh cạnh nhau.'}</p>
           </div>
+          {filledPlate && <Button variant="ghost" size="md" onClick={clear}>Bỏ chọn</Button>}
         </div>
-        <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 'var(--radius-pill)', background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeftRight size={28} style={{ color: 'var(--text-muted)' }} /></div>
-          <div><h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Chưa có biển để so sánh</h2><p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Duyệt kho biển số và nhấn "So sánh" để thêm vào đây.</p></div>
-          <Button variant="primary" size="md" onClick={go('list')}>Xem danh sách biển</Button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'stretch' }}>
+          {filledPlate && (() => {
+            const { prov, seri, num } = splitPlateNumber(filledPlate.plateNumber);
+            return (
+              <div style={{ flex: '1 1 220px', maxWidth: 320, background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
+                <button onClick={() => remove(filledPlate.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 4, right: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+                {filledPlate.thumbnailUrl ? (
+                  <img src={filledPlate.thumbnailUrl} alt={filledPlate.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                ) : (
+                  <PlateVisual size="md" prov={prov} seri={seri} num={num} />
+                )}
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{filledPlate.plateNumber}</span>
+              </div>
+            );
+          })()}
+          {Array.from({ length: slotsNeeded }, (_, i) => (
+            <div key={i} style={{ flex: '1 1 220px', maxWidth: 320, border: '1.5px dashed var(--border-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', minHeight: 180 }}>
+              <ArrowLeftRight size={22} style={{ color: 'var(--text-faint)' }} />
+              <PlateSlotSearch onAdd={add} excludeIds={ids} />
+            </div>
+          ))}
         </div>
-      </div>
-    );
-  }
-
-  // Insufficient: only 1 plate
-  if (ids.length === 1) {
-    return (
-      <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
-          <div style={{ flex: '1 1 300px' }}>
-            <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>So sánh biển số</h1>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Cần ít nhất 2 biển để so sánh.</p>
-          </div>
-        </div>
-        <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 'var(--radius-pill)', background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeftRight size={28} style={{ color: 'var(--text-muted)' }} /></div>
-          <div><h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Cần thêm 1 biển nữa</h2><p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chọn thêm ít nhất 1 biển số từ danh sách để bắt đầu so sánh.</p></div>
-          <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-            <Button variant="primary" size="md" onClick={go('list')}>Xem danh sách biển</Button>
-            <Button variant="ghost" size="md" onClick={clear}>Bỏ chọn</Button>
-          </div>
+        <FavSuggestions favCards={favCards} excludeIds={ids} onAdd={add} />
+        <div style={{ textAlign: 'center' }}>
+          <Button variant="ghost" size="md" onClick={go('list')}>Hoặc duyệt toàn bộ kho biển số</Button>
         </div>
       </div>
     );

@@ -292,6 +292,21 @@ textarea,
   }
 }
 
+/* Nút liên hệ nổi gộp — nảy nhẹ định kỳ để thu hút chú ý, dừng khi mở ra 3 icon con */
+@keyframes contactFabBounce {
+  0%, 78%, 100% { transform: translateY(0); }
+  85% { transform: translateY(-6px); }
+  92% { transform: translateY(0); }
+  96% { transform: translateY(-3px); }
+}
+.contact-fab-bounce {
+  animation: contactFabBounce 3.2s ease-in-out infinite;
+}
+@keyframes contactFabIn {
+  from { opacity: 0; transform: translateY(8px) scale(.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pill-btn,
   [data-pressable],
@@ -316,6 +331,9 @@ textarea,
     to {
       opacity: 1;
     }
+  }
+  .contact-fab-bounce {
+    animation: none !important;
   }
   @keyframes modalIn {
     from {
@@ -692,13 +710,13 @@ textarea,
     display: none;
   }
   .chatbot-fab,
-  .zalo-fab,
+  .contact-fab,
   .back-to-top {
     width: 44px !important;
     height: 44px !important;
   }
   .chatbot-fab { bottom: 16px !important; right: 16px !important; }
-  .zalo-fab { bottom: 72px !important; right: 16px !important; }
+  .contact-fab-wrap { bottom: 72px !important; right: 16px !important; }
   .back-to-top { bottom: 68px !important; left: 16px !important; }
   /* Detail: hàng chia sẻ không đóng góp quyết định mua — ẩn trên mobile, đã có sticky Gọi/Zalo/Chốt biển */
   .plate-share-row {
@@ -1148,7 +1166,8 @@ textarea,
   footer,
   .no-print,
   .back-to-top,
-  .chatbot-fab {
+  .chatbot-fab,
+  .contact-fab-wrap {
     display: none !important;
   }
 }

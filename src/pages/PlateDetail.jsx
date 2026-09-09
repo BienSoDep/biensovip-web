@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck, Gift } from 'lucide-react';
+import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck, Gift, Scale, CheckCircle2 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
 import Modal from '../components/Modal.jsx';
@@ -83,7 +83,7 @@ function LinkButton({ href, target, rel, variant, disabled, onClick, children, s
   );
 }
 
-function AutoCarousel({ items, openPlate }) {
+function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, removeCompare, notify }) {
   // Track lặp gấp đôi + CSS animation translateX(-50%) chạy mượt liên tục (GPU), thay setInterval+scrollTo
   // hay giật khi tới cuối phải nhảy về đầu. Track đủ dài (>=6 item) mới lặp mượt không lộ chỗ nối.
   const doubled = items.length > 1 ? [...items, ...items] : items;
@@ -92,8 +92,24 @@ function AutoCarousel({ items, openPlate }) {
       <div className="plate-marquee__track">
         {doubled.map((p, i) => {
           const sp = splitPlateNumber(p.plateNumber);
+          const inCompare = isInList(p.id);
           return (
-            <a key={`${p.id}-${i}`} href={routeFor('detail', p.slug || p.id)} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable plate-marquee__item" aria-label={`Xem biển ${p.plateNumber}`} style={{ width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+            <a key={`${p.id}-${i}`} href={routeFor('detail', p.slug || p.id)} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable plate-marquee__item" aria-label={`Xem biển ${p.plateNumber}`} style={{ position: 'relative', width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+              <button
+                type="button"
+                aria-label={inCompare ? `Bỏ ${p.plateNumber} khỏi so sánh` : `So sánh ${p.plateNumber} với biển đang xem`}
+                title={inCompare ? 'Bỏ khỏi so sánh' : 'So sánh với biển đang xem'}
+                onClick={(e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  if (inCompare) { removeCompare(p.id); notify?.('Đã bỏ khỏi so sánh'); return; }
+                  if (currentPlateId && !isInList(currentPlateId)) addCompare(currentPlateId);
+                  addCompare(p.id);
+                  notify?.('Đã thêm vào so sánh');
+                }}
+                style={{ position: 'absolute', top: 6, right: 6, zIndex: 1, width: 28, height: 28, borderRadius: '50%', border: 'none', background: inCompare ? 'var(--action-primary)' : 'var(--white)', color: inCompare ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-1, 0 1px 2px rgba(0,0,0,.12))', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                {inCompare ? <CheckCircle2 size={15} /> : <Scale size={15} />}
+              </button>
               <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
             </a>
@@ -349,7 +365,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { navigator.clipboard?.writeText(buildConsultMessage(plate.plateNumber)).then(() => notify('Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra')).catch(() => {}); logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
             )}
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
-            <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+            <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
           </div>
           <div className="plate-share-row" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginRight: 4 }}>Chia sẻ:</span>
@@ -398,14 +414,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       {similar?.sameProvince?.length > 0 && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: `${plate.description ? '0' : 'var(--space-6)'} var(--pad-page) var(--pad-section-y)`, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số cùng tỉnh/thành</span>
-          <AutoCarousel items={similar.sameProvince} openPlate={openPlate} />
+          <AutoCarousel items={similar.sameProvince} openPlate={openPlate} currentPlateId={plateId} isInList={isInList} addCompare={addCompare} removeCompare={removeCompare} notify={notify} />
         </section>
       )}
 
       {similar?.sameType?.length > 0 && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: `${plate.description || similar?.sameProvince?.length > 0 ? '0' : 'var(--space-6)'} var(--pad-page) var(--pad-section-y)`, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số tương tự kiểu</span>
-          <AutoCarousel items={similar.sameType} openPlate={openPlate} />
+          <AutoCarousel items={similar.sameType} openPlate={openPlate} currentPlateId={plateId} isInList={isInList} addCompare={addCompare} removeCompare={removeCompare} notify={notify} />
         </section>
       )}
 

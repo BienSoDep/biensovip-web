@@ -18,6 +18,7 @@ import Header from './layout/Header.jsx';
 import Footer from './layout/Footer.jsx';
 import MobileDrawer from './layout/MobileDrawer.jsx';
 import PromoRails from './components/PromoRails.jsx';
+import ContactFab from './components/ContactFab.jsx';
 import PageSkeleton from './components/skeletons/PageSkeleton.jsx';
 import { parseRoute, routeFor, ADMIN_SCREENS, PUBLIC_SCREENS } from './config/routes.js';
 import { useSeo } from './hooks/useSeo.js';
@@ -714,7 +715,7 @@ export default function App() {
 
             {s === 'chat' && <ChatZaloContact notify={notify} user={st.user} />}
 
-            {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} />}
+            {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} favCards={favCards} />}
 
             {s === 'saved' && <SavedSearches go={go} notify={notify} user={st.user} />}
 
@@ -764,11 +765,7 @@ export default function App() {
             <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} />
           </Suspense>
 
-          {isPublic && st.settings?.zalo && !import.meta.env.VITE_FB_PAGE_ID && (
-            <a href={`https://zalo.me/${st.settings.zalo.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" aria-label="Chat Zalo" title="Chat qua Zalo" className="zalo-fab" style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 80, width: 48, height: 48, borderRadius: '50%', background: '#0068FF', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', transition: 'var(--transition-control)', cursor: 'pointer' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.02 2 10.98c0 2.94 1.69 5.52 4.23 6.94l-1.06 3.18a.5.5 0 0 0 .66.63l3.55-1.38c.82.23 1.68.35 2.62.35 5.52 0 10-4.02 10-8.98S17.52 2 12 2Z" fill="#fff" fillOpacity=".12" stroke="#fff" strokeWidth="1.5"/><path d="M8.5 9.5h.01M12 9.5h.01M15.5 9.5h.01" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><path d="M8.5 13.5s1.5 2 3.5 2 3.5-2 3.5-2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            </a>
-          )}
+          {isPublic && <ContactFab zalo={st.settings?.zalo} phone={st.settings?.phone} />}
 
           {isPublic && (
             <Suspense fallback={null}>

@@ -58,7 +58,7 @@ export default function PlateCard({
               </span>
             )}
             {onCompare && (
-              <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+              <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
             )}
           </div>
         </a>
@@ -92,7 +92,7 @@ export default function PlateCard({
                 </span>
               )}
               {onCompare && (
-                <IconButton name={inCompare ? 'check-circle' : 'plus-circle'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={onCompare} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+                <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={onCompare} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
               )}
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { MessageCircle, Phone, Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound } from 'lucide-react';
+import { Phone, Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Input, Select, Checkbox } from '../components/index.jsx';
 import { useSubmitContact } from '../services/contactService.js';
@@ -8,8 +8,17 @@ import { logZaloClick } from '../services/zaloClicks.js';
 import { trackGenerateLead } from '../services/tracking/events.js';
 import { content } from '../lib/content/index.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
+import { usePolicyPage } from '../services/policyPages.js';
 
 const PROCESS_ICONS = [MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound];
+
+function ZaloIcon(props) {
+  return (
+    <svg viewBox="0 0 48 48" width={26} height={26} {...props}>
+      <text x="24" y="30" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="currentColor">Zalo</text>
+    </svg>
+  );
+}
 
 function FacebookIcon(props) {
   return (
@@ -39,6 +48,10 @@ export default function ChatZaloContact({ notify, user }) {
     plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '',
   });
   const submit = useSubmitContact();
+  const { data: processDb } = usePolicyPage('process');
+  const processContent = processDb ? (() => { try { return JSON.parse(processDb.contentJson); } catch { return null; } })() : null;
+  const processDetail = processContent?.detail || content.process.detail;
+  const processSteps = processContent?.steps || content.process.steps;
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const rateLimited = () => {
@@ -105,7 +118,7 @@ export default function ChatZaloContact({ notify, user }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', height: '100%' }}>
           <div style={{ position: 'relative', flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: '0 0 0 2px var(--action-primary) inset', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
             <span style={{ position: 'absolute', top: -10, left: 20, background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', padding: '2px 10px', borderRadius: 'var(--radius-pill)' }}>Nhanh nhất</span>
-            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: '#E8F4FD', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageCircle size={22} style={{ color: '#0180C7' }} /></div>
+            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: '#0068FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ZaloIcon style={{ color: '#fff' }} /></div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhắn Zalo</h3>
               <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{content.info.phone_display} · phản hồi {content.info.reply_time}</p>
@@ -172,13 +185,13 @@ export default function ChatZaloContact({ notify, user }) {
 
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <div>
-          <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{content.process.detail.title}</h2>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{content.process.detail.desc}</p>
+          <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{processDetail.title}</h2>
+          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{processDetail.desc}</p>
         </div>
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
-          {content.process.steps.map((s, i) => {
+          {processSteps.map((s, i) => {
             const Icon = PROCESS_ICONS[i] || MessageSquare;
-            const isLast = i === content.process.steps.length - 1;
+            const isLast = i === processSteps.length - 1;
             return (
               <div key={s.title} style={{ position: 'relative', display: 'flex', gap: 'var(--space-4)', paddingBottom: isLast ? 0 : 'var(--space-6)' }}>
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
@@ -191,6 +204,9 @@ export default function ChatZaloContact({ notify, user }) {
                   <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Bước {i + 1}</span>
                   <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{s.title}</span>
                   <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{s.detail}</span>
+                  {s.imageUrl && (
+                    <img src={s.imageUrl} alt={s.title} style={{ marginTop: 8, maxWidth: 420, width: '100%', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-inset-hairline)' }} />
+                  )}
                 </div>
               </div>
             );
