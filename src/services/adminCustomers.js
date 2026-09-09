@@ -65,3 +65,22 @@ export function useRevokeCustomerSession() {
     onSuccess: (_, { id }) => qc.invalidateQueries({ queryKey: ['admin-customer-sessions', id] }),
   });
 }
+
+// Admin đổi mật khẩu hộ khách hàng — dùng khi quên mật khẩu, không truy cập được email, hoặc OTP lỗi.
+export function useResetCustomerPassword() {
+  return useMutation({
+    mutationFn: ({ id, newPassword }) => apiClient.patch(`/api/admin/customers/${id}/password`, { newPassword }),
+  });
+}
+
+// Admin xác thực email hộ khách hàng — dùng khi OTP gửi lỗi nhưng đã xác minh danh tính qua kênh khác.
+export function useVerifyCustomerEmail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/customers/${id}/verify-email`),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ['admin-customers'] });
+      qc.invalidateQueries({ queryKey: ['admin-customer-detail', id] });
+    },
+  });
+}
