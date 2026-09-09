@@ -26,3 +26,11 @@ export function useUpdateMaintenancePage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ADMIN_KEY }); qc.invalidateQueries({ queryKey: PUBLIC_KEY }); },
   });
 }
+
+export function useBulkUpdateMaintenance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => apiClient.post('/api/admin/maintenance/bulk', body),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ADMIN_KEY }); qc.invalidateQueries({ queryKey: PUBLIC_KEY }); },
+  });
+}

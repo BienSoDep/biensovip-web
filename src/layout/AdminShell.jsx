@@ -340,7 +340,7 @@ export default function AdminShell({
         {s === 'achatbot' && <AdminChatbot notify={notify} />}
         {s === 'aauditlog' && <AdminAuditLog />}
         {s === 'arisklog' && <AdminRiskLog />}
-        {s === 'amaintenance' && <AdminMaintenance notify={notify} />}
+        {s === 'amaintenance' && <AdminMaintenance notify={notify} patch={patch} />}
         {s === 'ashowroom' && <AdminVanityMetrics notify={notify} />}
         {s === 'aerrorlogs' && <AdminErrorLogs />}
         {s === 'afeatureflags' && <AdminFeatureFlags notify={notify} />}
