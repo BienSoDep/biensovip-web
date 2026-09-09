@@ -123,8 +123,8 @@ export default function AdminCollaborators({ st, patch, notify }) {
   const applyRate = (c) => {
     const raw = rateDraft[c.id];
     const pct = Number(raw);
-    if (raw === undefined || raw === '' || Number.isNaN(pct) || pct < 0 || pct > 100) {
-      notify('Hệ số hoa hồng phải là số từ 0-100');
+    if (raw === undefined || raw === '' || Number.isNaN(pct) || pct < 10 || pct > 100) {
+      notify('Hệ số hoa hồng tối thiểu 10%, tối đa 100%');
       return;
     }
     setUpdatingId(c.id);
@@ -183,14 +183,14 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{money(c.commissionEarned)}</span>
             <span style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', gap: 6 }}>
               <input
-                type="number" min="0" max="100" step="0.5"
-                title={c.commissionRate == null ? 'Chưa set riêng — đang dùng mặc định 5%' : undefined}
-                placeholder={c.commissionRate != null ? String(c.commissionRate * 100) : '5'}
+                type="number" min="10" max="100" step="0.5"
+                title={c.commissionRate == null ? 'Chưa set riêng — đang dùng mặc định 10%' : undefined}
+                placeholder={c.commissionRate != null ? String(c.commissionRate * 100) : '10'}
                 value={rateDraft[c.id] ?? (c.commissionRate != null ? String(c.commissionRate * 100) : '')}
                 onChange={(e) => setRateDraft((d) => ({ ...d, [c.id]: e.target.value }))}
                 style={{
                   width: 52, minHeight: 36, padding: '8px 6px', borderRadius: 'var(--radius-input)',
-                  border: (() => { const v = rateDraft[c.id]; if (v === undefined || v === '') return '1px solid var(--border-hairline)'; const n = Number(v); return Number.isNaN(n) || n < 0 || n > 100 ? '1.5px solid var(--status-danger)' : '1px solid var(--border-hairline)'; })(),
+                  border: (() => { const v = rateDraft[c.id]; if (v === undefined || v === '') return '1px solid var(--border-hairline)'; const n = Number(v); return Number.isNaN(n) || n < 10 || n > 100 ? '1.5px solid var(--status-danger)' : '1px solid var(--border-hairline)'; })(),
                   font: 'var(--type-caption)',
                 }}
               />

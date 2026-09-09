@@ -28,14 +28,14 @@ import { useExportCsv } from '../hooks/useExportCsv.js';
 const STATS = [
   { icon: UserPlus, value: 50, suffix: '+', label: 'CTV đang hoạt động' },
   { icon: Wallet, value: 100, suffix: 'tr+', label: 'Đã chi trả hoa hồng' },
-  { icon: HandCoins, value: 5, suffix: '%', label: 'Hoa hồng mặc định' },
+  { icon: HandCoins, value: 10, suffix: '%', label: 'Hoa hồng mặc định' },
 ];
 
 const STEP_ICONS = [UserPlus, Share2, Link2, HandCoins];
 
 // Mốc trượt tiêu biểu — từ cọc nhỏ tới biển tiền tỷ, người xem thấy ngay hoa hồng tăng theo giá trị thật.
 const CALC_STEPS = [3_000_000, 5_000_000, 10_000_000, 20_000_000, 50_000_000, 100_000_000, 300_000_000];
-const CALC_RATE = 0.05;
+const CALC_RATE = 0.10;
 
 // Máy tính hoa hồng — biến "nhận % hoa hồng" trừu tượng thành con số cụ thể ngay trong hero,
 // kéo trượt số tiền khách đặt cọc để thấy hoa hồng đổi theo thời gian thực (không gọi API, tính tại chỗ).
@@ -62,7 +62,7 @@ function CommissionCalculator() {
         </div>
         <ArrowRight size={20} style={{ color: 'var(--text-faint)', flexShrink: 0 }} />
         <div>
-          <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bạn nhận (5%)</span>
+          <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bạn nhận (10%)</span>
           <motion.span
             key={commission}
             initial={{ opacity: 0, y: 6 }}
@@ -982,7 +982,7 @@ function ProcessSteps() {
       </div>
       <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Cách tính hoa hồng</span>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.6 }}>Mặc định 5% trên số tiền đặt cọc của khách (admin có thể set mức % riêng cao hơn cho từng CTV). Ví dụ: khách đặt cọc 10.000.000đ → bạn nhận 500.000đ.</span>
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.6 }}>Tối thiểu 10% trên số tiền đặt cọc của khách (admin có thể set mức % riêng cao hơn cho từng CTV). Ví dụ: khách đặt cọc 10.000.000đ → bạn nhận 1.000.000đ.</span>
       </div>
     </div>
   );
