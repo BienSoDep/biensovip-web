@@ -315,13 +315,17 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
           <Button variant="outline" size="sm" onClick={() => refetch()}>Thử lại</Button>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: `200px repeat(${plates.length},minmax(220px,1fr))`, minWidth: plates.length * 240 + 210 }}>
-            <div style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-caption)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', position: 'sticky', left: 0, zIndex: 2, background: 'var(--white)' }}>Thuộc tính</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          {plates.length > 1 && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-faint)' }}><ArrowLeftRight size={12} /> Vuốt ngang để xem hết các biển</span>
+          )}
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `clamp(120px,32vw,200px) repeat(${plates.length},minmax(180px,1fr))`, minWidth: plates.length * 200 + 130 }}>
+            <div style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-caption)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', position: 'sticky', left: 0, zIndex: 2, background: 'var(--white)' }}>Thuộc tính</div>
             {plates.map((p) => {
               const { prov, seri, num } = splitPlateNumber(p.plateNumber);
               return (
-                <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
+                <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
                   <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 2, right: 2, zIndex: 1, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Bỏ khỏi so sánh"><X size={16} /></button>
                   {p.thumbnailUrl ? (
                     <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
@@ -338,9 +342,9 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               const allSame = values.length >= 2 && values.every((v) => v && v === values[0]);
               return (
               <Fragment key={row.key}>
-                <div style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>{row.label}</div>
+                <div style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>{row.label}</div>
                 {plates.map((p) => (
-                  <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', background: allSame ? 'var(--green-50)' : undefined }}>
+                  <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', background: allSame ? 'var(--green-50)' : undefined }}>
                     {row.key === 'price' ? (
                       <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)' }}>{formatPrice(p.price, false)}</span>
                     ) : (
@@ -356,9 +360,9 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                 sánh ngang; biển nào không có đoạn tương ứng hiện dấu "–". */}
             {fengShuiRows.length === 0 ? (
               <>
-                <div key="h-fengshui-empty" style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>Ý nghĩa phong thủy</div>
+                <div key="h-fengshui-empty" style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>Ý nghĩa phong thủy</div>
                 {plates.map((p) => (
-                  <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center' }}>
+                  <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center' }}>
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontStyle: 'italic' }}>Chưa có</span>
                   </div>
                 ))}
@@ -367,9 +371,9 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               const allSame = row.values.length >= 2 && row.values.every((v) => v.text && v.text === row.values[0].text);
               return (
                 <Fragment key={row.label}>
-                  <div style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>{ri === 0 && <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 4 }}>Ý nghĩa phong thủy</span>}{row.label}</div>
+                  <div style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>{ri === 0 && <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 4 }}>Ý nghĩa phong thủy</span>}{row.label}</div>
                   {row.values.map((v) => (
-                    <div key={v.id} style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left', background: allSame ? 'var(--green-50)' : undefined }}>
+                    <div key={v.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left', background: allSame ? 'var(--green-50)' : undefined }}>
                       {v.text || <span style={{ color: 'var(--text-muted)', textAlign: 'center', display: 'block' }}>–</span>}
                     </div>
                   ))}
@@ -378,12 +382,12 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
             })}
 
             {/* Footer liên hệ theo cột */}
-            <div key="h-contact" style={{ padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>Liên hệ</div>
+            <div key="h-contact" style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>Liên hệ</div>
             {plates.map((p) => {
               const sold = p.status === 'sold';
               const phone = p.seller?.phone, zalo = p.seller?.zalo;
               return (
-                <div key={p.id} style={{ padding: 'var(--space-3) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+                <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
                   {sold ? (
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã bán</span>
                   ) : (
@@ -396,6 +400,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       )}

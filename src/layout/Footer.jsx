@@ -84,10 +84,10 @@ export default function Footer({ settings, patch }) {
         </details>
 
         <div style={{ flex: '1 1 240px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 'var(--space-5)', alignContent: 'start' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={navStyle}>{T('common.footer.hotline')}</span><a href={`tel:${phone}`} style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{phoneDisplay}</a></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={navStyle}>{T('common.footer.zalo_oa')}</span><a href={`https://zalo.me/${zalo}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>zalo.me/{zalo}</a></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={navStyle}>{T('common.footer.address')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.address_value')}</span></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={navStyle}>{T('common.footer.hours')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.hours_value')}</span></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.hotline')}</span><a href={`tel:${phone}`} style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{phoneDisplay}</a></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.zalo_oa')}</span><a href={`https://zalo.me/${zalo}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', wordBreak: 'break-all' }}>zalo.me/{zalo}</a></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.address')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.address_value')}</span></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.hours')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.hours_value')}</span></div>
         </div>
 
         <div style={{ flex: '1 1 100%', paddingTop: 'var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-4)' }}>
