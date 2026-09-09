@@ -6,7 +6,7 @@ import { Share2, Link2, HandCoins, Wallet, UserPlus, BarChart3 as BarChartIcon, 
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Button from '../components/Button.jsx';
 import { Badge, Input, Select, InfoTip } from '../components/index.jsx';
-import { useBecomeCollaborator, useUpdateBankInfo, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
+import { useBecomeCollaborator, useUpdateBankInfo, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorContacts, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
 import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -521,11 +521,55 @@ function BankInfoEditor({ onDone }) {
   );
 }
 
+// Nhãn tiến độ hiển thị cho CTV — ưu tiên tín hiệu Transaction/Plate thật hơn ContactRequest.Status
+// (Status chỉ có New/Consulting/Closed, không có "Đã cọc"/"Đã bán" — 2 mốc này suy ra từ
+// depositStatus + plateSold do ContactRequestMappers/AdminPlateService quyết định, không tự động nối).
+function contactStageInfo(c) {
+  if (c.plateSold) return { label: 'Đã bán', tone: 'mint' };
+  if (c.depositStatus === 'payment_confirmed') return { label: 'Đã cọc', tone: 'blue' };
+  if (c.depositStatus === 'pending') return { label: 'Đã cọc (chờ xác nhận)', tone: 'amber' };
+  if (c.status === 'closed') return { label: 'Đã chốt', tone: 'mint' };
+  if (c.status === 'consulting') return { label: 'Đang tư vấn', tone: 'amber' };
+  return { label: 'Mới liên hệ', tone: 'neutral' };
+}
+
+function ContactPipelineSection({ contacts }) {
+  const items = contacts.data?.contacts || [];
+  return (
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Tiến độ khách đã liên hệ</span>
+      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Mới liên hệ → Đang tư vấn → Đã cọc → Đã bán. "Đã bán" đối chiếu đúng trạng thái thật của biển số.</span>
+      {contacts.isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
+      {!contacts.isLoading && contacts.isError && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được tiến độ khách.</span>}
+      {!contacts.isLoading && !contacts.isError && items.length === 0 && (
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có khách nào liên hệ qua link/mã giới thiệu của bạn.</span>
+      )}
+      {items.map((c) => {
+        const stage = contactStageInfo(c);
+        return (
+          <div key={c.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '10px 0', borderTop: '1px solid var(--grey-100)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}>{c.fullName || '—'}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.phone || '—'}{c.plateNumber ? ` · ${c.plateNumber}` : ''}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              {c.depositAmount != null && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{money(c.depositAmount)}</span>}
+              <Badge tone={stage.tone}>{stage.label}</Badge>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{new Date(c.createdAt).toLocaleDateString('vi-VN')}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function DashboardBody({ data, onReset, go }) {
   const [copied, setCopied] = useState(false);
   const [messageCopied, setMessageCopied] = useState(false);
   const [editingBank, setEditingBank] = useState(false);
   const customers = useCollaboratorCustomers(data.status === 'active');
+  const contacts = useCollaboratorContacts(data.status === 'active');
   const { exportCsv: exportCommissions, loading: exportingCommissions } = useExportCsv('/api/collaborators/commissions/export');
   const copyText = (text, onDone) => {
     if (navigator.clipboard?.writeText) {
@@ -628,6 +672,8 @@ function DashboardBody({ data, onReset, go }) {
           ))}
         </div>
       )}
+
+      <ContactPipelineSection contacts={contacts} />
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng đã giới thiệu</span>

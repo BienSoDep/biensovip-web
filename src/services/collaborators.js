@@ -148,3 +148,27 @@ export function useCollaboratorCustomers(enabled) {
     retry: false,
   });
 }
+
+// Tiến độ khách đã liên hệ dưới mã giới thiệu của CTV: Mới → Đang tư vấn → Đã cọc → Đã bán
+// (khác useCollaboratorCustomers ở trên — đó là user đã đăng ký tài khoản, đây là ContactRequest thật).
+export function useCollaboratorContacts(enabled) {
+  return useQuery({
+    queryKey: ['collaborator-contacts'],
+    queryFn: async () => {
+      const auth = loadAuth();
+      const res = await fetch(`${BASE_URL}/api/collaborators/contacts`, {
+        headers: { Authorization: `Bearer ${auth?.accessToken || ''}` },
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.success) {
+        const err = new Error(body?.error?.message || 'Có lỗi xảy ra.');
+        err.code = body?.error?.code;
+        err.status = res.status;
+        throw err;
+      }
+      return body.data;
+    },
+    enabled: !!enabled,
+    retry: false,
+  });
+}
