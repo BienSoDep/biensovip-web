@@ -1059,9 +1059,9 @@ function CtvTools() {
 }
 
 // Trang ưu đãi — user đã đăng nhập chưa là CTV, hoặc chưa đăng nhập. Nội dung admin chỉnh.
-// Form kích hoạt CTV ngay tại trang giới thiệu — không đá qua Profile. Liệt kê đúng thông tin
-// còn thiếu theo điều kiện backend (POST /api/collaborators/become): email phải verified nếu
-// tài khoản đăng ký bằng email, và bắt buộc ngân hàng nhận hoa hồng.
+// Form kích hoạt CTV ngay tại trang giới thiệu — không đá qua Profile. Điều kiện backend duy nhất
+// (POST /api/collaborators/become): email phải verified nếu tài khoản đăng ký bằng email — ngân
+// hàng không bắt buộc, CTV có toàn quyền dùng mục CTV ngay sau xác thực, bổ sung bank khi cần rút tiền.
 function ActivateCtvForm({ onActivated }) {
   const user = loadAuth()?.user;
   const become = useBecomeCollaborator();
@@ -1109,11 +1109,13 @@ function ActivateCtvForm({ onActivated }) {
   };
 
   const activate = async () => {
-    if (!bankAccount.trim()) { toast.error('Nhập số tài khoản nhận hoa hồng trước khi kích hoạt.'); return; }
-    if (!bankCode) { toast.error('Chọn ngân hàng trước khi kích hoạt.'); return; }
     setBusy(true);
     try {
-      await become.mutateAsync({ bankAccount: bankAccount.trim(), bankCode, bankAccountHolder: bankAccountHolder.trim() || undefined });
+      await become.mutateAsync({
+        bankAccount: bankAccount.trim() || undefined,
+        bankCode: bankCode || undefined,
+        bankAccountHolder: bankAccountHolder.trim() || undefined,
+      });
       await refreshToken();
       toast.success('Bạn đã trở thành Cộng tác viên');
       onActivated();
@@ -1134,7 +1136,7 @@ function ActivateCtvForm({ onActivated }) {
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
         {needsEmailVerify
           ? 'Còn thiếu: xác thực email. Điền mã gửi tới email của bạn để kích hoạt.'
-          : 'Còn thiếu: thông tin ngân hàng nhận hoa hồng. Điền nhanh bên dưới để kích hoạt ngay.'}
+          : 'Xác thực email đã đủ để kích hoạt ngay. Thông tin ngân hàng bên dưới không bắt buộc — chỉ cần khi nhận hoa hồng, có thể bổ sung sau.'}
       </p>
 
       {needsEmailVerify && (
@@ -1152,8 +1154,8 @@ function ActivateCtvForm({ onActivated }) {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', opacity: needsEmailVerify ? 0.5 : 1, pointerEvents: needsEmailVerify ? 'none' : 'auto' }}>
-        <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
-        <Input label="Số tài khoản nhận hoa hồng" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+        <Select label="Ngân hàng (không bắt buộc)" value={bankCode} options={banks} onChange={setBankCode} />
+        <Input label="Số tài khoản nhận hoa hồng (không bắt buộc)" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
         <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
         {qrPreviewUrl && (
           <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 140, height: 140, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
