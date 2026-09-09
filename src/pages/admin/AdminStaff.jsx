@@ -15,18 +15,25 @@ const ROLE_OPTS = [
 const ROLE_LABEL = { 'super-admin': 'Quản trị viên', staff: 'Nhân viên' };
 const ROLE_FG = { 'super-admin': 'var(--action-primary)', staff: 'var(--blue-600)' };
 
-const PERM_RESOURCES = [
-  ['plates', 'Biển số'], ['categories', 'Danh mục'], ['contacts', 'Yêu cầu liên hệ'],
-  ['posts', 'Bài viết'], ['customers', 'Khách hàng'], ['videos', 'Video'],
-  ['notifications', 'Thông báo'], ['collaborators', 'Cộng tác viên'],
-  ['reviews', 'Đánh giá'], ['meanings', 'Ý nghĩa phong thủy'], ['chatbot', 'Trợ lý AI'],
-  ['email_templates', 'Mẫu email'], ['subscribers', 'Người đăng ký nhận tin'],
-  ['transactions', 'Giao dịch'], ['maintenance', 'Bảo trì hệ thống'], ['vanity_metrics', 'Số liệu hiển thị'],
-  ['audit_logs', 'Nhật ký audit'], ['error_logs', 'Nhật ký lỗi hệ thống'],
-  ['db_console', 'DB console (chỉ xem)'], ['feature_flags', 'Feature flags'],
-  ['policy_pages', 'Trang chính sách (điều khoản/bảo mật/sang tên/FAQ)'],
-  ['ctv_message_templates', 'Mẫu tin nhắn CTV'],
+// Nhóm theo loại nghiệp vụ — cho phép chọn nhanh cả nhóm thay vì tick từng dòng.
+const PERM_GROUPS = [
+  ['Kinh doanh', [
+    ['plates', 'Biển số'], ['categories', 'Danh mục'], ['transactions', 'Giao dịch'],
+    ['contacts', 'Yêu cầu liên hệ'], ['customers', 'Khách hàng'], ['collaborators', 'Cộng tác viên'],
+    ['ctv_message_templates', 'Mẫu tin nhắn CTV'], ['reviews', 'Đánh giá'],
+  ]],
+  ['Nội dung & marketing', [
+    ['posts', 'Bài viết'], ['videos', 'Video'], ['meanings', 'Ý nghĩa phong thủy'],
+    ['notifications', 'Thông báo'], ['email_templates', 'Mẫu email'], ['subscribers', 'Người đăng ký nhận tin'],
+    ['policy_pages', 'Trang chính sách (điều khoản/bảo mật/sang tên/FAQ)'], ['chatbot', 'Trợ lý AI'],
+  ]],
+  ['Kỹ thuật & hệ thống', [
+    ['maintenance', 'Bảo trì hệ thống'], ['vanity_metrics', 'Số liệu hiển thị'],
+    ['audit_logs', 'Nhật ký audit'], ['error_logs', 'Nhật ký lỗi hệ thống'],
+    ['db_console', 'DB console (chỉ xem)'], ['feature_flags', 'Feature flags'],
+  ]],
 ];
+const PERM_RESOURCES = PERM_GROUPS.flatMap(([, items]) => items);
 const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
 // Preset mặc định cho nhân viên: xem + thêm + sửa mọi mục, không quyền xóa.
 const RECOMMENDED = PERM_RESOURCES.flatMap(([r]) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
@@ -81,6 +88,18 @@ export default function AdminStaff({ notify }) {
     if (v) next.add(perm); else next.delete(perm);
     return { ...f, permissions: [...next] };
   });
+  // Chọn nhanh cả nhóm — bật/tắt cùng lúc quyền "view+create+update" cho mọi resource trong nhóm.
+  const toggleGroup = (resources) => (v) => setForm((f) => {
+    const next = new Set(f.permissions);
+    for (const [r] of resources) {
+      for (const a of ['view', 'create', 'update']) {
+        const perm = `${r}:${a}`;
+        if (v) next.add(perm); else next.delete(perm);
+      }
+    }
+    return { ...f, permissions: [...next] };
+  });
+  const isGroupChecked = (resources) => resources.every(([r]) => ['view', 'create', 'update'].every((a) => form.permissions.includes(`${r}:${a}`)));
 
   const resetForm = () => {
     setForm({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
@@ -277,17 +296,28 @@ export default function AdminStaff({ notify }) {
                   <span>Chức năng</span>
                   {PERM_ACTIONS.map(([, l]) => <span key={l} style={{ textAlign: 'center' }}>{l}</span>)}
                 </div>
-                {PERM_RESOURCES.map(([r, label]) => (
-                  <div key={r} className="perm-matrix-row" style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', alignItems: 'center', padding: '6px 12px', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-                    <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{label}</span>
-                    {PERM_ACTIONS.map(([a]) => {
-                      const perm = `${r}:${a}`;
-                      return (
-                        <label key={a} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={form.permissions.includes(perm)} onChange={(e) => togglePerm(perm)(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} aria-label={`${label} ${a}`} />
-                        </label>
-                      );
-                    })}
+                {PERM_GROUPS.map(([groupLabel, resources]) => (
+                  <div key={groupLabel}>
+                    <div className="perm-matrix-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: 'var(--surface-sunken)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>{groupLabel}</span>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>
+                        <input type="checkbox" checked={isGroupChecked(resources)} onChange={(e) => toggleGroup(resources)(e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--action-primary)' }} />
+                        Chọn cả nhóm
+                      </label>
+                    </div>
+                    {resources.map(([r, label]) => (
+                      <div key={r} className="perm-matrix-row" style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 48px)', alignItems: 'center', padding: '6px 12px', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+                        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{label}</span>
+                        {PERM_ACTIONS.map(([a]) => {
+                          const perm = `${r}:${a}`;
+                          return (
+                            <label key={a} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={form.permissions.includes(perm)} onChange={(e) => togglePerm(perm)(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} aria-label={`${label} ${a}`} />
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
