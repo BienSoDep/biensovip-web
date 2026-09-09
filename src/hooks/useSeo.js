@@ -14,6 +14,16 @@ function setMeta(attr, key, val) {
   el.setAttribute('content', val);
 }
 
+// Cắt tại khoảng trắng gần nhất trước giới hạn — tránh đứt giữa từ trong snippet Google/social
+// share. Đồng bộ 160 ký tự với SeoEndpoints.cs TruncateAtWordBoundary (SEO audit finding #2) —
+// server /render/* là bản Google/bot thấy thật, nên đây chỉ cần khớp cùng độ dài, không phải nguồn.
+function truncateAtWordBoundary(text, maxLength) {
+  if (text.length <= maxLength) return text;
+  const cut = text.slice(0, maxLength);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd();
+}
+
 function setLink(rel, href) {
   let el = document.head.querySelector(`link[rel="${rel}"]`);
   if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
@@ -190,7 +200,7 @@ export function useSeo(screen, data) {
     } else if ((screen === 'provinceLanding' || screen === 'plateTypeLanding') && data?.landing) {
       const l = data.landing;
       title = l.title + ' | ' + BRAND;
-      desc = (l.intro || '').replace(/<[^>]+>/g, '').slice(0, 300) || DEFAULT_DESC;
+      desc = truncateAtWordBoundary((l.intro || '').replace(/<[^>]+>/g, ''), 160) || DEFAULT_DESC;
       canonical = SITE + window.location.pathname;
       const breadcrumbLd = {
         '@type': 'BreadcrumbList',

@@ -280,7 +280,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,4vw,52px)', display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: '100%', maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-xl)', padding: 24 }}>
               {plate.images?.length > 0 ? (
-                <img src={optimizeImageUrl(plate.images[0])} alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(' tại ')}`} onClick={() => setLightbox(0)} style={{ width: '100%', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
+                <img src={optimizeImageUrl(plate.images[0])} alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(' tại ')}`} onClick={() => setLightbox(0)} loading="eager" fetchPriority="high" style={{ width: '100%', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
               ) : isCar ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
