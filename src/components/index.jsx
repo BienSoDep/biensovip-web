@@ -108,7 +108,7 @@ export function Input({ id, label, placeholder, value, error, onChange, onBlur, 
   const [reveal, setReveal] = useState(false);
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
+      {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}{required && <span style={{ color: 'var(--status-danger)' }}> *</span>}</span>}
       <span style={{ position: 'relative', display: 'flex' }}>
         <input
           id={inputId}
@@ -220,11 +220,11 @@ export function SearchField({ placeholder, value, onChange, width, ariaLabel }) 
   );
 }
 
-export function Select({ label, value, options = [], onChange, variant, style }) {
+export function Select({ label, value, options = [], onChange, variant, style, required }) {
   const selected = options.find((o) => o.value === value);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
-      {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
+      {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}{required && <span style={{ color: 'var(--status-danger)' }}> *</span>}</span>}
       <BaseSelect.Root value={value ?? ''} onValueChange={(v) => onChange(v)} items={options}>
         <BaseSelect.Trigger
           style={{

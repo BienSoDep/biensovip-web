@@ -587,7 +587,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
             </div>
             <div>
-              <Input label="Mã giảm giá (tùy chọn)" value={cForm.couponCode} onChange={setCF('couponCode')} onBlur={checkCoupon} placeholder="Nhập mã nếu có" />
+              <Input label="Mã giảm giá" value={cForm.couponCode} onChange={setCF('couponCode')} onBlur={checkCoupon} placeholder="Nhập mã nếu có" />
               {checkingCoupon && <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang kiểm tra…</span>}
               {!checkingCoupon && couponStatus?.valid && (
                 <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--status-success-ink)' }}>Áp dụng thành công — giảm {couponStatus.discountPercent}%</span>
@@ -600,7 +600,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />
             </div>
             <div>
-              <Input label="Email (tùy chọn)" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" error={cErr?.field === 'email' ? cErr.message : undefined} />
+              <Input label="Email" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" error={cErr?.field === 'email' ? cErr.message : undefined} />
             </div>
             <div>
               <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={cForm.subscribe} onChange={(v) => setCForm((f) => ({ ...f, subscribe: !!v }))} />
