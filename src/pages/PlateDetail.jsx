@@ -27,8 +27,8 @@ import toast from 'react-hot-toast';
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 const REVIEWS_PER_PAGE = 5;
 
-const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Săn hộ / tư vấn theo nhu cầu'];
-const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ / tư vấn theo nhu cầu': 'hunting' };
+const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt'];
+const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy' };
 
 // UC40 §3.3 — CTV lấy link giới thiệu riêng cho biển đang xem, kèm copy sẵn tin nhắn mời khách.
 function CtvPlateLinkButton({ plateId, plateNumber }) {

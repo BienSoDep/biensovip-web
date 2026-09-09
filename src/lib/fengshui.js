@@ -10,11 +10,10 @@ export const ELEMENTS = {
 };
 
 // Mục đích (nhãn UI → key backend). Key trùng enum FengShuiPurpose.
+// Rút gọn 5→3 (2026-09): "Xe gia đình"/"Xe dịch vụ" bỏ vì trùng lặp với Kinh doanh/Cá nhân.
 export const PURPOSES = [
   { label: 'Kinh doanh', key: 'kinh_doanh' },
   { label: 'Đi lại cá nhân', key: 'ca_nhan' },
-  { label: 'Xe gia đình', key: 'xe_gia_dinh' },
-  { label: 'Xe dịch vụ (taxi/công nghệ)', key: 'xe_dich_vu' },
   { label: 'Sang tên / sưu tầm', key: 'sua_tam' },
 ];
 

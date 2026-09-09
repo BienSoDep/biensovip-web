@@ -522,10 +522,7 @@ textarea,
   }
 }
 @media (min-width: 481px) {
-  /* Desktop: luôn xổ hết, summary chỉ đóng vai trò tiêu đề tĩnh (không toggle) */
-  .footer-section > div {
-    display: block !important;
-  }
+  /* Desktop: luôn xổ hết (details có open trong JSX), summary chỉ đóng vai trò tiêu đề tĩnh (không toggle) */
   .footer-section-title {
     pointer-events: none;
     margin-bottom: var(--space-3);

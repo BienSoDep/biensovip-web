@@ -268,6 +268,8 @@ export default function AdminPlates({ go, notify, st }) {
   // Quick-add + paste/CSV
   const [quickNum, setQuickNum] = useState('');
   const [quickPrice, setQuickPrice] = useState('');
+  const [quickStatus, setQuickStatus] = useState('available');
+  const [quickVehicleTypeId, setQuickVehicleTypeId] = useState('');
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [bulkRows, setBulkRows] = useState([]);
@@ -309,6 +311,8 @@ export default function AdminPlates({ go, notify, st }) {
   const plateTypes = plateTypesData?.items || [];
   const provinces = provincesData?.items || [];
   const vehicleTypes = vehicleTypesData?.items || [];
+  // Thêm nhanh: loại xe mặc định "Xe máy" (đa số biển admin nhập tay là xe máy) — admin đổi tay khi cần.
+  const defaultQuickVehicleTypeId = (vehicleTypes.find((v) => (v.name || '').toLowerCase().includes('xe máy')) || {}).id || '';
 
   const [editPlateId, setEditPlateId] = useState(null);
   const { data: editDetail } = useAdminPlate(editPlateId);
@@ -519,13 +523,19 @@ export default function AdminPlates({ go, notify, st }) {
     }
   };
 
-  // ── Quick-add & batch-in-grid: tạo 1 biển qua bulk(1) → server tự detect tỉnh/xe/loại biển
-  const quickCreate = async (number, price) => {
+  // ── Quick-add & batch-in-grid: tạo 1 biển qua bulk(1) → server tự detect tỉnh/loại biển.
+  // Loại xe gửi kèm luôn (mặc định "Xe máy" nếu admin không đổi) — đúng field "Dán nhiều" đã dùng.
+  const quickCreate = async (number, price, status, vehicleTypeId) => {
     const n = (number || '').trim();
     if (!n || !/-\d/.test(n)) { notify('Nhập biển số hợp lệ (VD: 43A1-999.99)'); return false; }
-    const priceOnRequest = !String(price ?? '').trim();
+    if (!String(price ?? '').trim()) { notify('Nhập giá biển số'); return false; }
+    if (!status) { notify('Chọn trạng thái'); return false; }
+    const priceOnRequest = false;
     try {
-      const res = await bulkMut.mutateAsync([{ plateNumber: n, price: priceOnRequest ? 0 : num(price), isHot: false, priceOnRequest }]);
+      const res = await bulkMut.mutateAsync([{
+        plateNumber: n, price: num(price), isHot: false, priceOnRequest,
+        sold: status === 'sold', vehicleTypeId: vehicleTypeId || undefined,
+      }]);
       if (res[0]?.success) { notify(`Đã thêm ${n}`); return true; }
       notify(ERR_MSG[res[0]?.error] || 'Không thêm được biển');
       return false;
@@ -536,8 +546,8 @@ export default function AdminPlates({ go, notify, st }) {
   };
 
   const quickAdd = async () => {
-    const ok = await quickCreate(quickNum, quickPrice);
-    if (ok) { setQuickNum(''); setQuickPrice(''); }
+    const ok = await quickCreate(quickNum, quickPrice, quickStatus, quickVehicleTypeId || defaultQuickVehicleTypeId);
+    if (ok) { setQuickNum(''); setQuickPrice(''); setQuickStatus('available'); setQuickVehicleTypeId(''); }
   };
 
   // Copy prompt để dán vào ChatGPT/Claude/Gemini — nhờ AI chuyển Excel/PDF danh sách biển số sang
@@ -743,11 +753,13 @@ export default function AdminPlates({ go, notify, st }) {
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', flex: '0 0 auto' }}>Thêm nhanh</span>
           {inputCell(quickNum, setQuickNum, '43A1-999.99')}
           {inputCell(quickPrice, setQuickPrice, 'Giá (VNĐ)')}
+          <Select value={quickStatus} options={[{ value: 'available', label: 'Còn hàng' }, { value: 'sold', label: 'Đã bán' }]} onChange={setQuickStatus} />
+          <Select value={quickVehicleTypeId || defaultQuickVehicleTypeId} options={catOpts(vehicleTypes)} onChange={setQuickVehicleTypeId} />
           <Button variant="primary" size="md" onClick={quickAdd} disabled={bulkMut.isPending}>{bulkMut.isPending ? 'Đang thêm…' : 'Thêm'}</Button>
           <Button variant="ghost" size="md" onClick={() => setBulkOpen(!bulkOpen)}>{bulkOpen ? 'Đóng dán nhiều' : 'Dán nhiều / CSV'}</Button>
           <Button variant="ghost" size="md" onClick={copyImportPrompt} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Copy size={14} /> Copy prompt import từ Excel/PDF</Button>
         </div>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gõ biển số + giá rồi bấm Thêm. Hệ thống tự nhận tỉnh & loại xe từ số biển. Dán nhiều hỗ trợ thêm cột 3 "đã bán", cột 4 "ô tô"/"xe máy" (ghi đè khi hệ thống đoán sai), cột 5 biển số tặng kèm (VD ô tô tặng biển xe máy). Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nhập biển số, giá, trạng thái (bắt buộc) rồi bấm Thêm. Loại xe mặc định Xe máy — đổi tay nếu cần. Hệ thống tự nhận tỉnh từ số biển. Dán nhiều hỗ trợ thêm cột 3 "đã bán", cột 4 "ô tô"/"xe máy" (ghi đè khi hệ thống đoán sai), cột 5 biển số tặng kèm (VD ô tô tặng biển xe máy). Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
 
         {bulkOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

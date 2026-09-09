@@ -55,7 +55,7 @@ export default function Footer({ settings, patch }) {
           </div>
         </details>
 
-        <details className="footer-section" aria-label="Kho biển theo loại" style={{ flex: '1 1 150px' }}>
+        <details className="footer-section" open aria-label="Kho biển theo loại" style={{ flex: '1 1 150px' }}>
           <summary className="footer-section-title" style={navStyle}>Kho biển theo loại</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {PLATE_TYPE_LANDINGS.map((p) => (
@@ -64,7 +64,7 @@ export default function Footer({ settings, patch }) {
           </div>
         </details>
 
-        <details className="footer-section" aria-label="Kho biển theo tỉnh" style={{ flex: '1 1 170px' }}>
+        <details className="footer-section" open aria-label="Kho biển theo tỉnh" style={{ flex: '1 1 170px' }}>
           <summary className="footer-section-title" style={navStyle}>Kho biển theo tỉnh</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {PROVINCE_LANDINGS.slice(0, 10).map((p) => (
@@ -74,7 +74,7 @@ export default function Footer({ settings, patch }) {
           </div>
         </details>
 
-        <details className="footer-section" aria-label={T('common.footer.policy_title')} style={{ flex: '1 1 150px' }}>
+        <details className="footer-section" open aria-label={T('common.footer.policy_title')} style={{ flex: '1 1 150px' }}>
           <summary className="footer-section-title" style={navStyle}>{T('common.footer.policy_title')}</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {policyLinks.map(([href, label]) => (
