@@ -1065,20 +1065,11 @@ function CtvTools() {
 // vẫn dùng nút "Kích hoạt CTV" thủ công (POST /api/collaborators/become). Ngân hàng không bắt buộc ở
 // cả 2 luồng — CTV bổ sung sau khi cần rút hoa hồng.
 function ActivateCtvForm({ onActivated }) {
-  const user = loadAuth()?.user;
   const become = useBecomeCollaborator();
-  const [bankAccount, setBankAccount] = useState('');
-  const [bankCode, setBankCode] = useState('');
-  const [bankAccountHolder, setBankAccountHolder] = useState('');
-  const [banks, setBanks] = useState([]);
   const [busy, setBusy] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpBusy, setOtpBusy] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(Boolean(user?.verified));
-  const needsEmailVerify = user?.identifierType === 'email' && !emailVerified;
-
-  useEffect(() => { fetchVietQrBanks().then(setBanks); }, []);
 
   const sendOtp = async () => {
     setOtpBusy(true);
@@ -1099,16 +1090,15 @@ function ActivateCtvForm({ onActivated }) {
     try {
       await confirmEmailVerifyOtp(otpCode.trim());
       const data = await refreshToken();
-      setEmailVerified(true);
       setOtpSent(false);
       setOtpCode('');
       // Backend tự kích hoạt CTV ngay khi email verified — bỏ qua bước bấm "Kích hoạt CTV" thủ công.
       if (data?.user?.isCollaborator) {
         toast.success('Xác thực email thành công. Bạn đã trở thành Cộng tác viên!');
-        onActivated();
       } else {
         toast.success('Xác thực email thành công.');
       }
+      onActivated();
     } catch (e) {
       toast.error(e?.message || 'Mã xác thực không đúng hoặc đã hết hạn.');
     } finally {
@@ -1119,11 +1109,7 @@ function ActivateCtvForm({ onActivated }) {
   const activate = async () => {
     setBusy(true);
     try {
-      await become.mutateAsync({
-        bankAccount: bankAccount.trim() || undefined,
-        bankCode: bankCode || undefined,
-        bankAccountHolder: bankAccountHolder.trim() || undefined,
-      });
+      await become.mutateAsync({});
       await refreshToken();
       toast.success('Bạn đã trở thành Cộng tác viên');
       onActivated();
@@ -1147,36 +1133,24 @@ function ActivateCtvForm({ onActivated }) {
     }
   };
 
-  const qrPreviewUrl = vietQrImageUrl(bankCode, bankAccount.trim());
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-        {needsEmailVerify
-          ? 'Điền thông tin ngân hàng rồi bấm Kích hoạt — hệ thống gửi mã xác thực tới email của bạn để hoàn tất. Ngân hàng không bắt buộc, có thể bổ sung sau.'
-          : 'Xác thực email đã đủ để kích hoạt ngay. Thông tin ngân hàng bên dưới không bắt buộc — chỉ cần khi nhận hoa hồng, có thể bổ sung sau.'}
+        Bấm Kích hoạt CTV để bắt đầu. Thông tin ngân hàng nhận hoa hồng điền sau tại trang CTV.
       </p>
 
-      {otpSent && (
+      {otpSent ? (
         <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
           <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
           <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
         </div>
-      )}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <Select label="Ngân hàng (không bắt buộc)" value={bankCode} options={banks} onChange={setBankCode} />
-        <Input label="Số tài khoản nhận hoa hồng (không bắt buộc)" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
-        <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
-        {qrPreviewUrl && (
-          <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 140, height: 140, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
-        )}
-        <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start' }}>
+      ) : (
+        <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start', minWidth: 220, font: 'var(--type-title-3)', padding: '16px 32px' }}>
           {busy ? 'Đang kích hoạt...' : 'Kích hoạt CTV'}
         </Button>
-      </div>
+      )}
     </div>
   );
 }

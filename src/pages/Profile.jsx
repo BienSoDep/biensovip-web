@@ -233,7 +233,7 @@ function NotificationSettingsSection({ notify }) {
 
 // CTV gộp vào User — user đăng nhập tự-activate từ profile. Sau kích hoạt refresh token để
 // JWT có claim `collaborator` (policy CollaboratorOnly đọc claim, không đọc DB), rồi đẩy user mới lên App.
-function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
+function BecomeCollaboratorSection({ notify, user, onUserUpdate }) {
   const become = useBecomeCollaborator();
   const updateBank = useUpdateBankInfo();
   const [bankAccount, setBankAccount] = useState('');
@@ -245,7 +245,6 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
   const [otpCode, setOtpCode] = useState('');
   const [otpBusy, setOtpBusy] = useState(false);
   const [editingBank, setEditingBank] = useState(false);
-  const needsEmailVerify = user?.identifierType === 'email' && !user?.verified;
 
   useEffect(() => { fetchVietQrBanks().then(setBanks); }, []);
 
@@ -269,9 +268,10 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
       await confirmEmailVerifyOtp(otpCode.trim());
       const data = await refreshToken();
       if (data?.user) onUserUpdate?.(data.user);
-      notify('Xác thực email thành công.');
+      notify(data?.user?.isCollaborator ? 'Xác thực email thành công. Bạn đã trở thành Cộng tác viên!' : 'Xác thực email thành công.');
       setOtpSent(false);
       setOtpCode('');
+      if (data?.user?.isCollaborator) setEditingBank(true);
     } catch (e) {
       notify(e?.message || 'Mã xác thực không đúng hoặc đã hết hạn.');
     } finally {
@@ -284,16 +284,12 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
   const activate = async () => {
     setBusy(true);
     try {
-      await become.mutateAsync({
-        bankAccount: bankAccount.trim() || undefined,
-        bankCode: bankCode || undefined,
-        bankAccountHolder: bankAccountHolder.trim() || undefined,
-      });
+      await become.mutateAsync({});
       trackBecomeCollaborator();
       const data = await refreshToken();
       if (data?.user) onUserUpdate?.(data.user);
       notify('Bạn đã trở thành Cộng tác viên');
-      go('collab')();
+      setEditingBank(true);
     } catch (e) {
       const code = e?.code;
       // Chưa verify email → backend chặn. Tự gửi mã rồi mở ô nhập mã ngay tại đây,
@@ -367,6 +363,9 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                  Cần thông tin ngân hàng để chuyển hoa hồng khi có giao dịch — có thể bổ sung sau, không ảnh hưởng tư cách CTV.
+                </p>
                 <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} required />
                 <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} required />
                 <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
@@ -384,36 +383,19 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
           <>
             <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-              {needsEmailVerify
-                ? 'Điền thông tin ngân hàng rồi bấm Kích hoạt CTV — hệ thống gửi mã xác thực tới email của bạn để hoàn tất. Ngân hàng không bắt buộc, có thể bổ sung sau.'
-                : 'Giới thiệu khách mua biển số đẹp, nhận hoa hồng trên mỗi giao dịch thành công. Kích hoạt ngay từ tài khoản này — không cần đăng ký riêng.'}
+              Bấm Kích hoạt CTV để bắt đầu. Thông tin ngân hàng nhận hoa hồng điền sau khi kích hoạt xong.
             </p>
-            {otpSent && (
+            {otpSent ? (
               <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
                 <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
                 <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
               </div>
+            ) : (
+              <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start', minWidth: 220, font: 'var(--type-title-3)', padding: '16px 32px' }}>
+                {busy ? 'Đang kích hoạt...' : 'Kích hoạt CTV'}
+              </Button>
             )}
-            <Select label="Ngân hàng (không bắt buộc)" value={bankCode} options={banks} onChange={setBankCode} />
-            <Input
-              label="Số tài khoản nhận hoa hồng (không bắt buộc)"
-              placeholder="Số tài khoản ngân hàng"
-              value={bankAccount}
-              onChange={(e) => setBankAccount(e.target.value)}
-            />
-            <Input
-              label="Tên chủ tài khoản (không bắt buộc)"
-              placeholder="NGUYEN VAN A"
-              value={bankAccountHolder}
-              onChange={(e) => setBankAccountHolder(e.target.value)}
-            />
-            {qrPreviewUrl && (
-              <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 160, height: 160, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
-            )}
-            <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start' }}>
-              {busy ? 'Đang kích hoạt...' : 'Kích hoạt CTV'}
-            </Button>
           </>
         )}
       </div>
