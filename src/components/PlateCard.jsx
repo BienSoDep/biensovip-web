@@ -1,3 +1,4 @@
+import { Phone } from 'lucide-react';
 import { Card, Badge, IconButton } from './index.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
@@ -136,12 +137,12 @@ export default function PlateCard({
           {!sold ? (
             <div style={{ display: 'flex', gap: 8 }}>
               {contact?.phone ? (
-                <a href={`tel:${contact.phone}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}><Button variant="outline" size="sm" className="plate-card-cta-secondary" style={{ width: '100%' }}>Gọi ngay</Button></a>
+                <a href={`tel:${contact.phone}`} style={{ textDecoration: 'none', flexShrink: 0 }}><Button variant="outline" size="sm" className="plate-card-cta-secondary" aria-label="Gọi ngay" title="Gọi ngay" style={{ width: 40, padding: 0 }}><Phone size={18} /></Button></a>
               ) : onBuy ? (
-                <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" style={{ flex: 1 }}>Gọi ngay</Button>
+                <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 40, padding: 0 }}><Phone size={18} /></Button>
               ) : null}
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Chốt biển này</Button>
+                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1, minWidth: 0 }}>Chốt biển này</Button>
               )}
               {contact?.zalo && (
                 <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} className="plate-card-cta-secondary" aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flexShrink: 0, width: 40, padding: 0 }}>
