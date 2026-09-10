@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { useDebouncedValue } from '@mantine/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import { Share2, Link2, HandCoins, Wallet, UserPlus, BarChart3 as BarChartIcon, Mail, FileWarning, Users, QrCode, Bell, Trophy, MessageSquareText, TrendingUp, Download, Flame, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Button from '../components/Button.jsx';
@@ -11,7 +12,7 @@ import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
 import { sanitizeHtml } from '../lib/sanitizeHtml.js';
-import { refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
+import { updateProfile, refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
 import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import { useGmailStatus, useGmailOAuthUrl, useUnlinkGmail } from '../services/gmailLink.js';
@@ -665,22 +666,47 @@ const CTV_TABS = [
 ];
 
 // Mẫu tin nhắn admin soạn sẵn — CTV bung placeholder {plateNumber}/{referralUrl} rồi copy nguyên văn.
+// ctvName/ctvPhone lưu vào User.FullName/User.Phone (PATCH /api/auth/me, cùng đường Profile.jsx dùng);
+// ctvTitle/ctvZaloLink lưu vào Collaborator.CtvTitle/CtvZaloLink (PATCH /api/collaborators/messaging-profile).
 function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone, ctvTitle, ctvZaloLink }) {
   const { data, isLoading, isError } = useCollaboratorMessageTemplates(true);
+  const updateMessagingProfile = useUpdateMessagingProfile();
+  const queryClient = useQueryClient();
   const [copiedId, setCopiedId] = useState(null);
   const [plateNumber, setPlateNumber] = useState('');
+  const [name, setName] = useState(ctvName || '');
+  const [phone, setPhone] = useState(ctvPhone || '');
+  const [title, setTitle] = useState(ctvTitle || '');
+  const [zaloLink, setZaloLink] = useState(ctvZaloLink || '');
+  const [savingProfile, setSavingProfile] = useState(false);
   const items = data || [];
   const categories = [...new Set(items.map((t) => t.category).filter(Boolean))];
   const [filterCategory, setFilterCategory] = useState('');
   const filtered = filterCategory ? items.filter((t) => t.category === filterCategory) : items;
 
+  const saveProfileFields = async () => {
+    setSavingProfile(true);
+    try {
+      await Promise.all([
+        updateProfile({ fullName: name.trim() || undefined, phone: phone.trim() || undefined }),
+        updateMessagingProfile.mutateAsync({ ctvTitle: title.trim() || undefined, ctvZaloLink: zaloLink.trim() || undefined }),
+      ]);
+      queryClient.invalidateQueries({ queryKey: ['collaborator-dashboard'] });
+      toast.success('Đã lưu thông tin.');
+    } catch (e) {
+      toast.error(e?.message || 'Lưu thất bại, thử lại sau.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const fillTemplate = (body) => body
     .replaceAll('{referralUrl}', referralUrl || '')
     .replaceAll('{plateNumber}', plateNumber || '(chưa nhập số biển)')
-    .replaceAll('{ctvName}', ctvName || '(chưa đặt tên hiển thị)')
-    .replaceAll('{ctvPhone}', ctvPhone || '(chưa có SĐT)')
-    .replaceAll('{ctvTitle}', ctvTitle || '(chưa đặt chức danh)')
-    .replaceAll('{ctvZaloLink}', ctvZaloLink || '(chưa có link Zalo)');
+    .replaceAll('{ctvName}', name || '(chưa đặt tên hiển thị)')
+    .replaceAll('{ctvPhone}', phone || '(chưa có SĐT)')
+    .replaceAll('{ctvTitle}', title || '(chưa đặt chức danh)')
+    .replaceAll('{ctvZaloLink}', zaloLink || '(chưa có link Zalo)');
 
   const copyTemplate = (t) => {
     const filled = fillTemplate(t.bodyTemplate);
@@ -698,6 +724,19 @@ function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone, ctvTitle, ctv
         {categories.length > 0 && (
           <Select label="Lọc danh mục" value={filterCategory} options={[{ value: '', label: 'Tất cả' }, ...categories.map((c) => ({ value: c, label: c }))]} onChange={setFilterCategory} />
         )}
+      </div>
+
+      {/* Điền các biến {ctvName}/{ctvPhone}/{ctvTitle}/{ctvZaloLink} tại chỗ — thấy ngay kết quả trong
+          tin nhắn preview bên dưới, không cần rời tab mở "Sửa hồ sơ nhắn tin" rồi quay lại. */}
+      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Thông tin điền vào tin nhắn mẫu</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 'var(--space-3)' }}>
+          <Input label="Tên hiển thị" placeholder="VD: Nguyễn Văn A" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input label="Số điện thoại" type="tel" placeholder="09xx xxx xxx" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input label="Chức danh (tùy chọn)" placeholder="VD: Tư vấn viên" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input label="Link Zalo (tùy chọn)" placeholder="https://zalo.me/..." value={zaloLink} onChange={(e) => setZaloLink(e.target.value)} />
+        </div>
+        <Button variant="primary" size="sm" onClick={saveProfileFields} disabled={savingProfile} style={{ alignSelf: 'flex-start' }}>{savingProfile ? 'Đang lưu...' : 'Lưu thông tin'}</Button>
       </div>
 
       {isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
