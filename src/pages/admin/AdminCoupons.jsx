@@ -8,7 +8,7 @@ import { Input } from '../../components/index.jsx';
 const EMPTY = { code: '', discountPercent: '', maxUses: '', expiresAt: '' };
 
 export default function AdminCoupons({ notify }) {
-  const { data, isLoading } = useAdminCoupons();
+  const { data, isLoading, isError, refetch } = useAdminCoupons();
   const createMut = useCreateCoupon();
   const updateMut = useUpdateCoupon();
   const [open, setOpen] = useState(false);
@@ -63,6 +63,11 @@ export default function AdminCoupons({ notify }) {
         </div>
         {isLoading ? (
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>Đang tải…</div>
+        ) : isError ? (
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--status-danger)' }}>
+            Lỗi tải danh sách mã giảm giá.{' '}
+            <button type="button" onClick={() => refetch()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+          </div>
         ) : items.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có mã giảm giá nào.</div>
         ) : items.map((c) => (

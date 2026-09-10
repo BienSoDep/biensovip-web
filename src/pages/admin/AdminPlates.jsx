@@ -406,7 +406,7 @@ export default function AdminPlates({ go, notify, st }) {
     ...(provinceFilter && { provinceId: provinceFilter }),
     ...(hotFilter && { isHot: hotFilter }),
   };
-  const { data, isLoading } = useAdminPlates(filters);
+  const { data, isLoading, isError, refetch } = useAdminPlates(filters);
   const plates = data?.items || [];
   const total = data?.total || 0;
 
@@ -511,7 +511,7 @@ export default function AdminPlates({ go, notify, st }) {
       setForm((f) => ({ ...f, images: [...f.images, ...results.map((r) => r.url)] }));
       notify(`Đã tải ${results.length} ảnh lên`);
     } catch (err) {
-      notify(err.message || 'Lỗi tải ảnh');
+      notify(err?.message || 'Lỗi tải ảnh');
     } finally {
       setUploading(false);
     }
@@ -611,8 +611,14 @@ export default function AdminPlates({ go, notify, st }) {
     if (!window.confirm(`Đổi trạng thái ${ids.length} biển thành "${STATUS_LABEL[status] || status}"?`)) return;
     const results = await Promise.allSettled(ids.map((id) => statusMut.mutateAsync({ id, status })));
     const ok = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.length - ok;
     setSelected(new Set());
-    notify(`Đã cập nhật trạng thái ${ok} biển`);
+    if (failed === 0) {
+      notify(`Đã cập nhật trạng thái ${ok} biển`);
+    } else {
+      const firstReason = results.find((r) => r.status === 'rejected')?.reason?.message;
+      notify(`Cập nhật ${ok}/${results.length} biển thành công — ${failed} biển lỗi${firstReason ? ` (${firstReason})` : ''}`);
+    }
   };
 
   const bulkDelete = async () => {
@@ -621,9 +627,14 @@ export default function AdminPlates({ go, notify, st }) {
     const results = await Promise.allSettled(ids.map((id) => deleteMut.mutateAsync(id)));
     const ok = results.filter((r) => r.status === 'fulfilled').length;
     const okIds = ids.filter((_, i) => results[i].status === 'fulfilled');
+    const failed = results.length - ok;
     setSelected(new Set());
     setConfirmBulkDelete(false);
     undoToast(ok, okIds);
+    if (failed > 0) {
+      const firstReason = results.find((r) => r.status === 'rejected')?.reason?.message;
+      notify(`${failed} biển không xóa được${firstReason ? ` (${firstReason})` : ''}`);
+    }
   };
 
   // Delete dialog — plate pending contacts: block hard delete, offer hide instead
@@ -1094,10 +1105,16 @@ export default function AdminPlates({ go, notify, st }) {
         </div>
         </div>
 
-        {!isLoading && plates.length === 0 && (status !== 'all' || keyword) && (
+        {!isLoading && isError && (
+          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--status-danger)' }}>
+            Lỗi tải danh sách biển số.{' '}
+            <button type="button" onClick={() => refetch()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+          </div>
+        )}
+        {!isLoading && !isError && plates.length === 0 && (status !== 'all' || keyword) && (
           <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>Không có biển số nào khớp bộ lọc.</div>
         )}
-        {!isLoading && plates.length === 0 && status === 'all' && !keyword && (
+        {!isLoading && !isError && plates.length === 0 && status === 'all' && !keyword && (
           <div style={{ padding: '56px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
             <CarFront size={40} style={{ color: 'var(--text-faint)' }} />
             <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có biển số nào trong hệ thống</span>

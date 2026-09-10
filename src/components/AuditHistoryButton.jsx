@@ -11,7 +11,7 @@ const ACTION_LABEL = { create: 'Tạo mới', update: 'Cập nhật', delete: 'X
 // Chỉ super-admin thấy được — backend đã chặn 403 cho role khác, nhưng ẩn UI luôn để tránh gây tò mò.
 export default function AuditHistoryButton({ entityType, entityId }) {
   const [open, setOpen] = useState(false);
-  const { data, isLoading } = useAuditLogByEntity(open ? entityType : null, open ? entityId : null);
+  const { data, isLoading, isError, refetch } = useAuditLogByEntity(open ? entityType : null, open ? entityId : null);
 
   if (loadAuth()?.user?.role !== 'super-admin') return null;
 
@@ -28,6 +28,11 @@ export default function AuditHistoryButton({ entityType, entityId }) {
       <Modal open={open} onClose={() => setOpen(false)} title="Lịch sử thay đổi" maxWidth="480px">
         {isLoading ? (
           <p style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</p>
+        ) : isError ? (
+          <p style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
+            Lỗi tải lịch sử.{' '}
+            <button type="button" onClick={() => refetch()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+          </p>
         ) : !data?.length ? (
           <p style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có lịch sử nào.</p>
         ) : (

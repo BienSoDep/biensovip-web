@@ -19,7 +19,7 @@ export default function Reviews({ notify, go }) {
   const [page, setPage] = useState(1);
 
   const perPage = 12;
-  const { data, isLoading } = usePlateReviews(plateId, { page, perPage });
+  const { data, isLoading, isError, refetch } = usePlateReviews(plateId, { page, perPage });
   const createReview = useCreateReview();
 
   const reviews = data?.items || [];
@@ -107,6 +107,13 @@ export default function Reviews({ notify, go }) {
 
           {isLoading ? (
             <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
+          ) : isError ? (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
+                Lỗi tải đánh giá.{' '}
+                <button type="button" onClick={() => refetch()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+              </p>
+            </div>
           ) : !reviews.length ? (
             <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
               <ThumbsUp size={32} style={{ color: 'var(--text-muted)', marginBottom: 12 }} />

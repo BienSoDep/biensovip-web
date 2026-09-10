@@ -280,7 +280,7 @@ function SubscriberSection({ notify }) {
   const [page, setPage] = useState(1);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const PER = 15;
-  const { data, isLoading } = useAdminSubscribers({ q, page, perPage: PER });
+  const { data, isLoading, isError, refetch } = useAdminSubscribers({ q, page, perPage: PER });
   const count = useSubscriberActiveCount();
   const remove = useRemoveSubscriber();
   const blasts = useAdminBlasts({ page: 1, perPage: 10 });
@@ -304,6 +304,11 @@ function SubscriberSection({ notify }) {
         </div>
         {isLoading ? (
           <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
+        ) : isError ? (
+          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
+            Lỗi tải danh sách email.{' '}
+            <button type="button" onClick={() => refetch()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+          </div>
         ) : items.length === 0 ? (
           <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có email nào đăng ký.</div>
         ) : (
@@ -549,7 +554,9 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
   const toggle = (field) => {
     update.mutate({ type: setting.type, webEnabled: setting.webEnabled, emailEnabled: setting.emailEnabled,
       titleTemplate: setting.titleTemplate, contentTemplate: setting.contentTemplate, triggerHour: setting.triggerHour,
-      [field]: !setting[field] });
+      [field]: !setting[field] }, {
+      onError: (err) => notify?.(err?.message || 'Đổi cài đặt thất bại, thử lại.'),
+    });
   };
 
   const saveEdit = async () => {

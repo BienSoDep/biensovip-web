@@ -91,7 +91,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const [creating, setCreating] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [proofUrl, setProofUrl] = useState('');
-  const { data, isLoading } = useAdminTransactions({ status, page, limit: 20 });
+  const { data, isLoading, isError, refetch } = useAdminTransactions({ status, page, limit: 20 });
   const confirmPayment = useConfirmTransactionPayment();
 
   const items = (data?.items || []).filter((t) => !filterContactRequestId || t.contactRequestId === filterContactRequestId);
@@ -122,6 +122,11 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
 
       {isLoading ? (
         <SkeletonTable rows={5} cols={6} />
+      ) : isError ? (
+        <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
+          Lỗi tải danh sách giao dịch.{' '}
+          <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+        </div>
       ) : items.length === 0 ? (
         <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có giao dịch nào.</div>
       ) : (

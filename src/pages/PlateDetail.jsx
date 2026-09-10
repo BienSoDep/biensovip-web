@@ -150,7 +150,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   // Hooks phải chạy vô điều kiện trước mọi early-return (rules-of-hooks)
   const [tab, setTab] = useState('info');
   const [reviewPage, setReviewPage] = useState(1);
-  const { data: reviewData } = usePlateReviews(plateId, { page: reviewPage, perPage: REVIEWS_PER_PAGE });
+  const { data: reviewData, isError: reviewError, refetch: refetchReviews } = usePlateReviews(plateId, { page: reviewPage, perPage: REVIEWS_PER_PAGE });
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
 
   const submitContact = useSubmitContact();
@@ -503,7 +503,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
 
       {tab === 'reviews' && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          {!reviewData || reviewData.totalReviews === 0 ? (
+          {reviewError ? (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
+                Lỗi tải đánh giá.{' '}
+                <button type="button" onClick={() => refetchReviews()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+              </p>
+            </div>
+          ) : !reviewData || reviewData.totalReviews === 0 ? (
             <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có đánh giá nào cho biển số này.</p>
             </div>

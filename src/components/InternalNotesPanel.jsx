@@ -5,17 +5,20 @@ import { formatDateTime } from '../lib/date.js';
 import { loadAuth } from '../lib/authStore.js';
 
 // UC33 — panel ghi chú nội bộ dùng chung cho Contact và Customer (timeline, mới nhất trên đầu).
-export default function InternalNotesPanel({ entityType, entityId }) {
+export default function InternalNotesPanel({ entityType, entityId, notify }) {
   const auth = loadAuth();
   const [draft, setDraft] = useState('');
-  const { data: notes, isLoading } = useInternalNotes(entityType, entityId);
+  const { data: notes, isLoading, isError, refetch } = useInternalNotes(entityType, entityId);
   const addNote = useAddInternalNote();
   const deleteNote = useDeleteInternalNote();
 
   const submit = () => {
     const content = draft.trim();
     if (!content) return;
-    addNote.mutate({ entityType, entityId, content }, { onSuccess: () => setDraft('') });
+    addNote.mutate({ entityType, entityId, content }, {
+      onSuccess: () => setDraft(''),
+      onError: (err) => notify?.(err?.message || 'Thêm ghi chú thất bại, thử lại.'),
+    });
   };
 
   return (
@@ -39,7 +42,13 @@ export default function InternalNotesPanel({ entityType, entityId }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto' }}>
         {isLoading && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Đang tải…</span>}
-        {!isLoading && !notes?.length && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có ghi chú nào.</span>}
+        {!isLoading && isError && (
+          <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>
+            Lỗi tải ghi chú.{' '}
+            <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+          </span>
+        )}
+        {!isLoading && !isError && !notes?.length && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có ghi chú nào.</span>}
         {notes?.map((n) => {
           const canDelete = auth?.user?.role === 'super-admin' || auth?.user?.id === n.createdBy;
           return (
@@ -49,7 +58,9 @@ export default function InternalNotesPanel({ entityType, entityId }) {
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{formatDateTime(n.createdAt)}</span>
                   {canDelete && (
-                    <button type="button" onClick={() => deleteNote.mutate({ id: n.id, entityType, entityId })} title="Xóa ghi chú"
+                    <button type="button" onClick={() => deleteNote.mutate({ id: n.id, entityType, entityId }, {
+                      onError: (err) => notify?.(err?.message || 'Xóa ghi chú thất bại, thử lại.'),
+                    })} title="Xóa ghi chú"
                       style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-faint)', display: 'inline-flex' }}>
                       <Trash2 size={14} />
                     </button>

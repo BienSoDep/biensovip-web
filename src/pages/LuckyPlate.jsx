@@ -74,7 +74,7 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
       subscribeToNotifications: false, honeypot: null,
     }, {
       onSuccess: () => { trackGenerateLead(plate.plateId, 'lucky_plate'); notify('Đã gửi yêu cầu tư vấn — admin sẽ liên hệ sớm.'); setSent(true); setOpen(false); },
-      onError: () => notify('Gửi thất bại, vui lòng thử lại.'),
+      onError: (err) => notify(err?.message || 'Gửi thất bại, vui lòng thử lại.'),
     });
   };
 
@@ -184,7 +184,9 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
     const y = params.get('y');
     if (!y) return;
     setForm((f) => ({ ...f, birthDate: `${y}-01-01`, name: params.get('t') ? decodeURIComponent(params.get('t')) : f.name }));
-    lookup.mutate({ birthDate: `${y}-01-01`, purpose: 'ca_nhan', budget: null, vehicle: 'Ô tô' });
+    lookup.mutate({ birthDate: `${y}-01-01`, purpose: 'ca_nhan', budget: null, vehicle: 'Ô tô' }, {
+      onError: () => notify('Không tra cứu được, thử lại sau.'),
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

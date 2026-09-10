@@ -158,6 +158,8 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
       plateIds: plates.map((p) => p.id),
       purpose: purposeKey,
       industry: purposeKey === 'kinh_doanh' ? (INDUSTRIES.find((i) => i.label === industry)?.key || null) : null,
+    }, {
+      onError: (err) => notify?.(err?.message || 'Chấm điểm hợp mệnh thất bại, thử lại.'),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [birthDate, purpose, industry, plates.map((p) => p.id).join(',')]);

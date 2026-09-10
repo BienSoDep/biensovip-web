@@ -12,7 +12,7 @@ const STATUS_OPTS = [
 
 export default function AdminBlogComments({ notify }) {
   const [status, setStatus] = useState('pending');
-  const { data, isLoading } = useAdminBlogComments(status);
+  const { data, isLoading, isError, refetch } = useAdminBlogComments(status);
   const moderate = useModerateBlogComment();
 
   const items = data?.items || [];
@@ -33,6 +33,11 @@ export default function AdminBlogComments({ notify }) {
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
         {isLoading ? (
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>Đang tải…</div>
+        ) : isError ? (
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--status-danger)' }}>
+            Lỗi tải bình luận.{' '}
+            <button type="button" onClick={() => refetch()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+          </div>
         ) : items.length === 0 ? (
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>Không có bình luận nào.</div>
         ) : items.map((c) => (

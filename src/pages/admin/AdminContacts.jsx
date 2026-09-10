@@ -124,7 +124,7 @@ export default function AdminContacts({ notify, go }) {
             options={[{ value: 'Tất cả', label: 'Tất cả' }, { value: 'Của tôi', label: 'Của tôi' }, { value: 'Chưa gán', label: 'Chưa gán' }]}
             onChange={(v) => { setAssignedTo(v === 'Tất cả' ? 'all' : v === 'Của tôi' ? 'me' : 'unassigned'); setPage(1); }} variant="pill" />
         </div>
-        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, intent, q, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
+        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, intent, q, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e?.message || 'Xuất CSV thất bại, thử lại.'))}>
           {exporting ? 'Đang xuất…' : 'Xuất CSV'}
         </Button>
         <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} yêu cầu</span>
@@ -201,9 +201,10 @@ export default function AdminContacts({ notify, go }) {
                   value={c.assignedStaffId ? (c.assignedStaffName || '—') : 'Chưa gán'}
                   options={[{ value: 'Chưa gán', label: 'Chưa gán' }, ...staffList.map((s) => ({ value: s.fullName, label: s.fullName, _id: s.id }))]}
                   onChange={(v) => {
-                    if (v === 'Chưa gán') { assignContact.mutate({ id: c.id, staffId: null }); return; }
+                    const onError = (err) => notify?.(err?.message || 'Gán nhân viên thất bại, thử lại.');
+                    if (v === 'Chưa gán') { assignContact.mutate({ id: c.id, staffId: null }, { onError }); return; }
                     const staff = staffList.find((s) => s.fullName === v);
-                    if (staff) assignContact.mutate({ id: c.id, staffId: staff.id });
+                    if (staff) assignContact.mutate({ id: c.id, staffId: staff.id }, { onError });
                   }}
                   variant="pill"
                   style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)', boxShadow: 'inset 0 0 0 1px var(--grey-200)' }}
@@ -335,7 +336,7 @@ export default function AdminContacts({ notify, go }) {
                 )}
               </div>
 
-              <InternalNotesPanel entityType="contact_request" entityId={selected.id} />
+              <InternalNotesPanel entityType="contact_request" entityId={selected.id} notify={notify} />
             </>
           )}
         </div>

@@ -16,7 +16,7 @@ const STATUS_OPTS = [
   { value: 'Dismissed', label: 'Bỏ qua' },
 ];
 
-export default function AdminRiskLog() {
+export default function AdminRiskLog({ notify }) {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   // Track theo id đang xử lý — mutation.isPending là state chung, dùng thẳng sẽ làm
@@ -26,7 +26,7 @@ export default function AdminRiskLog() {
   const resolveEvent = useResolveRiskEvent();
   const resolveFlags = useResolveCollaboratorFlags();
 
-  const { data: flagged, isLoading: flaggedLoading } = useFlaggedCollaborators();
+  const { data: flagged, isLoading: flaggedLoading, isError: flaggedError, refetch: refetchFlagged } = useFlaggedCollaborators();
   const { data: events, isLoading, isError, refetch } = useRiskEvents({ status: status || undefined, page: page || undefined });
 
   const items = events?.items || [];
@@ -42,6 +42,11 @@ export default function AdminRiskLog() {
         </div>
         {flaggedLoading ? (
           <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>
+        ) : flaggedError ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
+            <span>Lỗi tải danh sách CTV flagged (có thể thiếu quyền risk_events:read)</span>
+            <button type="button" onClick={() => refetchFlagged()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0, textAlign: 'left' }}>Thử lại</button>
+          </div>
         ) : flagged?.flagged?.length === 0 ? (
           <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có CTV nào đang flagged hoặc risk_score vượt ngưỡng.</span>
         ) : (
@@ -56,7 +61,14 @@ export default function AdminRiskLog() {
                   {(c.flags || []).map((f) => `${f.rule} (+${f.points})`).join(' · ')}
                 </span>
                 <Button variant="ghost" size="sm" loading={pendingFlagId === c.id} disabled={pendingFlagId != null && pendingFlagId !== c.id}
-                  onClick={() => { setPendingFlagId(c.id); resolveFlags.mutate(c.id, { onSettled: () => setPendingFlagId(null) }); }}>Cho qua</Button>
+                  onClick={() => {
+                    setPendingFlagId(c.id);
+                    resolveFlags.mutate(c.id, {
+                      onSuccess: () => notify?.('Đã xử lý cờ rủi ro của CTV'),
+                      onError: (err) => notify?.(err?.message || 'Xử lý cờ thất bại, thử lại.'),
+                      onSettled: () => setPendingFlagId(null),
+                    });
+                  }}>Cho qua</Button>
               </div>
             ))}
           </div>
@@ -90,9 +102,23 @@ export default function AdminRiskLog() {
               {e.status === 'Open' ? (
                 <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
                   <Button variant="ghost" size="sm" loading={pendingEvent?.id === e.id && pendingEvent.action === 'resolve'} disabled={pendingEvent != null && pendingEvent.id !== e.id}
-                    onClick={() => { setPendingEvent({ id: e.id, action: 'resolve' }); resolveEvent.mutate({ id: e.id, action: 'resolve' }, { onSettled: () => setPendingEvent(null) }); }}>Xử lý</Button>
+                    onClick={() => {
+                      setPendingEvent({ id: e.id, action: 'resolve' });
+                      resolveEvent.mutate({ id: e.id, action: 'resolve' }, {
+                        onSuccess: () => notify?.('Đã xử lý sự kiện rủi ro'),
+                        onError: (err) => notify?.(err?.message || 'Xử lý sự kiện thất bại, thử lại.'),
+                        onSettled: () => setPendingEvent(null),
+                      });
+                    }}>Xử lý</Button>
                   <Button variant="ghost" size="sm" loading={pendingEvent?.id === e.id && pendingEvent.action === 'dismiss'} disabled={pendingEvent != null && pendingEvent.id !== e.id}
-                    onClick={() => { setPendingEvent({ id: e.id, action: 'dismiss' }); resolveEvent.mutate({ id: e.id, action: 'dismiss' }, { onSettled: () => setPendingEvent(null) }); }}>Bỏ qua</Button>
+                    onClick={() => {
+                      setPendingEvent({ id: e.id, action: 'dismiss' });
+                      resolveEvent.mutate({ id: e.id, action: 'dismiss' }, {
+                        onSuccess: () => notify?.('Đã bỏ qua sự kiện rủi ro'),
+                        onError: (err) => notify?.(err?.message || 'Bỏ qua sự kiện thất bại, thử lại.'),
+                        onSettled: () => setPendingEvent(null),
+                      });
+                    }}>Bỏ qua</Button>
                 </div>
               ) : (
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{STATUS_LABEL[e.status]}</span>

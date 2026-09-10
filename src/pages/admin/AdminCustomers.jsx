@@ -390,7 +390,7 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
                 ))}
               </DrawerSection>
 
-              <InternalNotesPanel entityType="customer" entityId={id} />
+              <InternalNotesPanel entityType="customer" entityId={id} notify={notify} />
             </>
           )}
         </div>

@@ -12,7 +12,7 @@ export default function GlobalSearch({ go, patch }) {
   const [keyword, setKeyword] = useState('');
   const [q] = useDebouncedValue(keyword, 300);
   const inputRef = useRef(null);
-  const { data, isLoading } = useGlobalSearch(q);
+  const { data, isLoading, isError } = useGlobalSearch(q);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -54,7 +54,8 @@ export default function GlobalSearch({ go, patch }) {
         </div>
 
         {isLoading && q && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Đang tìm…</span>}
-        {!isLoading && q && groups.length === 0 && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Không tìm thấy kết quả.</span>}
+        {!isLoading && q && isError && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Lỗi tìm kiếm (có thể thiếu quyền), thử lại.</span>}
+        {!isLoading && q && !isError && groups.length === 0 && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Không tìm thấy kết quả.</span>}
 
         {groups.map((g) => (
           <div key={g.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
