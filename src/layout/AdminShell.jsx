@@ -84,7 +84,7 @@ const ADMIN_INFO = {
   amaintenance: 'Bật/tắt bảo trì từng trang public. Khách sẽ thấy trang thông báo thay vì nội dung thật khi trang đang bảo trì; admin/nhân viên đăng nhập vẫn xem được trang thật.',
   ashowroom: 'Số liệu hiển thị công khai (bán biển). Đây là lớp hiển thị riêng — chỉnh khuếch đại/tạo thêm các con số đưa ra ngoài website cho thêm sức thuyết phục, không làm thay đổi dữ liệu giao dịch, hoa hồng hay thống kê nội bộ. Tắt hết thì website về số thật.',
   aerrorlogs: 'Nhật ký lỗi hệ thống (Warning trở lên) ghi từ Serilog — tra cứu lỗi 500/exception gần đây mà không cần SSH đọc log VPS. Tự xóa log cũ hơn 30 ngày.',
-  afeatureflags: 'Bật/tắt nhanh 3 tính năng: Trợ lý AI, Số liệu hiển thị, CTV tự báo giao dịch — không cần deploy lại code khi cần tắt gấp.',
+  afeatureflags: 'Bật/tắt nhanh: hiển thị ảnh biển số sinh tự động, Trợ lý AI, Số liệu hiển thị, CTV tự báo giao dịch — không cần deploy lại code khi cần tắt gấp.',
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',

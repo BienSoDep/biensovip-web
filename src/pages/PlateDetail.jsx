@@ -17,6 +17,8 @@ import Breadcrumb from '../components/Breadcrumb.jsx';
 import { usePlateReviews } from '../services/reviewService.js';
 import { formatDate } from '../lib/date.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
+import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
+import { useSiteSettings } from '../services/siteSettings.js';
 import { content } from '../lib/content/index.js';
 import LazyImage from '../components/LazyImage.jsx';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
@@ -132,6 +134,7 @@ const FROM_SCREEN_CRUMB = {
 export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify, user, fromScreen }) {
   const { data: plate, isLoading, isError } = usePlateDetail(plateId);
   const { data: similar } = useSimilarPlates(plateId, 8);
+  const { data: settings } = useSiteSettings();
   const logView = useLogPlateView();
   const logContact = useLogPlateContact();
 
@@ -279,7 +282,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         <div style={{ flex: '1 1 500px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,4vw,52px)', display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: '100%', maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-xl)', padding: 24 }}>
-              {plate.images?.length > 0 ? (
+              {shouldShowGeneratedImage(settings, plate.images) ? (
                 <img src={optimizeImageUrl(plate.images[0])} alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(' tại ')}`} onClick={() => setLightbox(0)} loading="eager" fetchPriority="high" style={{ width: '100%', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
               ) : isCar ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -297,7 +300,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               )}
             </div>
           </div>
-          {plate.images?.length > 1 && (
+          {shouldShowGeneratedImage(settings, plate.images) && plate.images.length > 1 && (
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {plate.images.slice(1).map((url, i) => (
                 <div key={i} className={i >= 4 ? 'plate-thumb-extra' : undefined} style={{ position: 'relative' }} onClick={() => setLightbox(i + 1)}>

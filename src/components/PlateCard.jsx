@@ -4,6 +4,8 @@ import PlateVisual from './PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
+import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
+import { useSiteSettings } from '../services/siteSettings.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 
@@ -12,9 +14,10 @@ export default function PlateCard({
   status, badge, fav, onFav, onCompare, inCompare, onOpen, href, onBuy, style, plateSize = 'md',
   contact, salePrice, layout = 'grid',
 }) {
-  // Ảnh biển số sinh tự động tạm tắt mặc định — ưu tiên hiển thị PlateVisual (biển chữ)
-  // cho tới khi khâu sinh ảnh được rà soát lại.
-  const showThumbnail = false;
+  // Ảnh biển số sinh tự động chỉ hiện khi admin đã bật cờ toàn hệ thống (mặc định tắt — ưu tiên
+  // PlateVisual). Xem AdminMaintenance > "Hiển thị biển số" hoặc trang cài đặt tương ứng.
+  const { data: settings } = useSiteSettings();
+  const showThumbnail = shouldShowGeneratedImage(settings, thumbnailUrl ? [thumbnailUrl] : []);
   const { prov, seri, num } = splitPlateNumber(plateNumber);
   const sold = status === 'sold';
   const meta = [vehicleType, province].filter(Boolean).join(' · ');

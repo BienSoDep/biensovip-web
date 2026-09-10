@@ -17,6 +17,10 @@ import { trackFengshuiLookup, trackGenerateLead } from '../services/tracking/eve
 import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
+import { splitPlateNumber } from '../lib/plateFormat.js';
+import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
+import { useSiteSettings } from '../services/siteSettings.js';
+import PlateVisual from '../components/PlateVisual.jsx';
 
 const STORAGE_KEY = 'bsv.luckyPlateResult';
 function loadStoredResult() {
@@ -112,6 +116,7 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
 }
 
 export default function LuckyPlate({ go, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
+  const { data: settings } = useSiteSettings();
   const stored = useRef(loadStoredResult()).current;
   const [form, setForm] = useState(() => stored?.form || {
     name: user?.fullName || '',
@@ -383,8 +388,12 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
               {result.ranked.map((r, i) => (
                 <div key={r.plateId} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-                    {r.thumbnailUrl && (
+                    {shouldShowGeneratedImage(settings, r.thumbnailUrl ? [r.thumbnailUrl] : []) ? (
                       <img src={optimizeImageUrl(r.thumbnailUrl)} alt={`Biển số ${r.plateNumber}`} style={{ width: 72, height: 45, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 72, flexShrink: 0 }}>
+                        <PlateVisual size="sm" {...splitPlateNumber(r.plateNumber)} shape="short" />
+                      </div>
                     )}
                     <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
                     <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}</span>

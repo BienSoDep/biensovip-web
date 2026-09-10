@@ -6,6 +6,8 @@ import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
 import { InfoTip, DateInputVN } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
+import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
+import { useSiteSettings } from '../services/siteSettings.js';
 import { useCompareIds, useComparePlates } from '../services/compareService.js';
 import { usePlates } from '../services/plates.js';
 import { useScorePlates } from '../services/fengshuiService.js';
@@ -56,6 +58,7 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
 
 // Gợi ý biển đã thích ngay dưới slot — đỡ phải gõ tìm khi biển muốn so sánh đã có sẵn trong Yêu thích.
 function FavSuggestions({ favCards, excludeIds, onAdd }) {
+  const { data: settings } = useSiteSettings();
   const items = (favCards || []).filter((p) => !excludeIds.includes(p.id) && p.status !== 'sold').slice(0, 6);
   if (items.length === 0) return null;
 
@@ -68,7 +71,7 @@ function FavSuggestions({ favCards, excludeIds, onAdd }) {
           return (
             <button key={p.id} type="button" onClick={() => onAdd(p.id)}
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)', background: 'var(--white)', cursor: 'pointer' }}>
-              {p.thumbnailUrl ? (
+              {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
                 <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 40, height: 22, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
               ) : (
                 <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
@@ -115,6 +118,7 @@ function BirthDatePrompt({ onSubmit }) {
 export default function Compare({ go, notify, allPlates, user, openPlate, favCards }) {
   const { ids, add, remove, clear } = useCompareIds();
   const { data, isLoading, isFetching, isPlaceholderData, isError, refetch } = useComparePlates(ids);
+  const { data: settings } = useSiteSettings();
   // Fall back to the in-app plate list when the API is unavailable (mock/dev).
   const apiPlates = data?.items || [];
   const plates = (apiPlates.length > 0)
@@ -178,7 +182,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
             return (
               <div style={{ flex: '1 1 220px', maxWidth: 320, background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
                 <button onClick={() => remove(filledPlate.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 4, right: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
-                {filledPlate.thumbnailUrl ? (
+                {shouldShowGeneratedImage(settings, filledPlate.thumbnailUrl ? [filledPlate.thumbnailUrl] : []) ? (
                   <img src={filledPlate.thumbnailUrl} alt={filledPlate.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                 ) : (
                   <PlateVisual size="md" prov={prov} seri={seri} num={num} />
@@ -327,7 +331,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               return (
                 <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
                   <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 2, right: 2, zIndex: 1, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Bỏ khỏi so sánh"><X size={16} /></button>
-                  {p.thumbnailUrl ? (
+                  {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
                     <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                   ) : (
                     <PlateVisual size="md" prov={prov} seri={seri} num={num} />
