@@ -33,7 +33,9 @@ const EMPTY_MEANING = { category: 'plate_type', title: '', content: '', sortOrde
 const fieldWrap = { display: 'flex', flexDirection: 'column', gap: 6 };
 const fieldLbl = { font: 'var(--type-label)', color: 'var(--text-strong)' };
 const fieldInput = { minHeight: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '10px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none', resize: 'vertical' };
-export default function AdminMeanings({ notify }) {
+// prefillKeyword: đến từ Danh mục (bấm "Xem/sửa ý nghĩa" ở 1 Loại biển) — tự lọc sẵn theo tên loại
+// đó ở tab Mẫu chung thay vì admin phải tự gõ lại tìm kiếm.
+export default function AdminMeanings({ notify, prefillKeyword }) {
   const [tab, setTab] = useState('templates');
 
   return (
@@ -46,16 +48,16 @@ export default function AdminMeanings({ notify }) {
               color: tab === v ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)' }}>{l}</button>
         ))}
       </div>
-      {tab === 'templates' ? <TemplatesTab notify={notify} /> : <PlatesTab notify={notify} />}
+      {tab === 'templates' ? <TemplatesTab notify={notify} prefillKeyword={prefillKeyword} /> : <PlatesTab notify={notify} />}
     </div>
   );
 }
 
 /* ============ Tab 1: Mẫu chung (MeaningTemplate CRUD) ============ */
 
-function TemplatesTab({ notify }) {
-  const [category, setCategory] = useState('');
-  const [keyword, setKeyword] = useState('');
+function TemplatesTab({ notify, prefillKeyword }) {
+  const [category, setCategory] = useState(prefillKeyword ? 'plate_type' : '');
+  const [keyword, setKeyword] = useState(prefillKeyword || '');
   const [editing, setEditing] = useState(null); // null | 'new' | template object
   const [form, setForm] = useState(EMPTY_TEMPLATE);
   const [formErr, setFormErr] = useState({});

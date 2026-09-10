@@ -325,7 +325,7 @@ export default function AdminShell({
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
         {s === 'ablogcomments' && <AdminBlogComments notify={notify} />}
-        {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} />}
+        {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
         {s === 'acustomers' && <AdminCustomers st={st} setSt={setSt} notify={notify} />}
@@ -347,7 +347,7 @@ export default function AdminShell({
         {s === 'adbconsole' && <AdminDbConsole notify={notify} />}
         {s === 'apolicypages' && <AdminPolicyPages notify={notify} />}
         {s === 'actvtemplates' && <AdminCtvMessageTemplates notify={notify} />}
-        {s === 'ameanings' && <AdminMeanings notify={notify} />}
+        {s === 'ameanings' && <AdminMeanings notify={notify} prefillKeyword={st.meaningsPrefillKeyword} />}
         {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
       </main>

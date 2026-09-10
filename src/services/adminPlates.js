@@ -18,11 +18,12 @@ function buildQuery({ status, keyword, page, perPage, fromDate, toDate, sortBy, 
   return params.toString();
 }
 
-export function useAdminPlates(filters) {
+export function useAdminPlates(filters, enabled = true) {
   const qs = buildQuery(filters);
   return useQuery({
     queryKey: ['admin-plates', qs],
     queryFn: () => apiClient.get(`/api/admin/plates?${qs}`),
+    enabled,
   });
 }
 

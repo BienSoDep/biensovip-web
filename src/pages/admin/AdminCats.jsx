@@ -8,6 +8,7 @@ import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
 import { Input, IconButton, InfoTip, Badge, Switch } from '../../components/index.jsx';
 import { CATEGORY_GROUPS, REGIONS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories, useRestoreCategory, useSetCategoryActive, useSetRegionActive } from '../../services/categories.js';
+import { useAdminPlates } from '../../services/adminPlates.js';
 
 // 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
 // xung đột với click nút Sửa/Xóa trên cùng hàng).
@@ -52,7 +53,7 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, isToggleabl
   );
 }
 
-export default function AdminCats({ notify }) {
+export default function AdminCats({ notify, goToMeanings }) {
   const [group, setGroup] = useState('plate_type');
   const [form, setForm] = useState({ name: '', displayOrder: 0, minPrice: '', maxPrice: '', code: '' });
   const [formErr, setFormErr] = useState('');
@@ -70,7 +71,14 @@ export default function AdminCats({ notify }) {
   const setRegionActive = useSetRegionActive();
 
   const items = data?.items || [];
+  const editingItem = editId ? items.find((c) => c.id === editId) : null;
   const isPriceRange = group === 'price_range';
+  // Xem nhanh biển thuộc "Loại biển" đang sửa — chỉ query khi có id thật, không query lúc thêm mới.
+  const showCatPlates = group === 'plate_type' && !!editId;
+  const { data: catPlatesData, isLoading: catPlatesLoading } = useAdminPlates(
+    { plateTypeId: editId, status: 'all', page: 1, perPage: 8 }, showCatPlates
+  );
+  const catPlates = showCatPlates ? (catPlatesData?.items || []) : [];
   const isBlogCategory = group === 'blog_category';
   const isToggleable = group === 'province' || group === 'vehicle_type';
 
@@ -239,6 +247,28 @@ export default function AdminCats({ notify }) {
             </Button>
           </div>
         </div>
+
+        {showCatPlates && (
+          <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Biển "{editingItem?.name}"</span>
+              <div style={{ flex: 1 }} />
+              <Button variant="outline" size="sm" onClick={() => goToMeanings?.(editingItem?.name || '')}>Xem/sửa ý nghĩa</Button>
+            </div>
+            {catPlatesLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
+            {!catPlatesLoading && catPlates.length === 0 && (
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có biển nào thuộc loại này.</span>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {catPlates.map((p) => (
+                <span key={p.id} style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)', padding: '6px 0', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>{p.plateNumber}</span>
+              ))}
+            </div>
+            {editingItem?.plateCount > catPlates.length && (
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang hiện {catPlates.length}/{editingItem.plateCount} biển — vào "Biển số" và lọc theo Loại biển để xem hết.</span>
+            )}
+          </div>
+        )}
       </div>
 
       <Modal open={!!confirmDel} onClose={closeDelete} title={deleteErr ? 'Không thể xóa' : 'Xác nhận xóa'} maxWidth="420px">
