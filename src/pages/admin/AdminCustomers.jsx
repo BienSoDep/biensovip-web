@@ -368,7 +368,7 @@ function CustomerDetailDrawer({ id, onClose, notify }) {
                   <RowCard key={c.id}
                     left={c.plateNumber || 'Liên hệ chung'}
                     right={<Badge tone={c.status === 'closed' ? 'mint' : c.status === 'consulting' ? 'blue' : 'neutral'}>{CONTACT_STATUS_LABEL[c.status] || c.status}</Badge>}
-                    sub={`${c.intent === 'deposit' ? 'Đặt cọc' : 'Hỏi mua'}${c.depositAmount ? ' · ' + fmtVnd(c.depositAmount) : ''} · ${fmtDate(c.createdAt)}`} />
+                    sub={`${c.intent === 'deposit' ? 'Đặt cọc' : 'Hỏi mua'} · ${fmtDate(c.createdAt)}`} />
                 ))}
               </DrawerSection>
 

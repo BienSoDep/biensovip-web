@@ -86,7 +86,6 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
       note: cForm.note.trim() || null,
       source: 'home-page',
       intent: 'inquiry',
-      depositAmount: null,
       honeypot: null,
     }, {
       onSuccess: () => {

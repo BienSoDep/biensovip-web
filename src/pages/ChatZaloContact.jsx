@@ -45,7 +45,7 @@ export default function ChatZaloContact({ notify, user }) {
     fullName: user?.fullName || '',
     phone: user?.identifierType === 'phone' ? (user?.identifier || '') : '',
     email: user?.identifierType === 'email' ? (user?.identifier || '') : '',
-    plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '',
+    plateNumber: '', note: '', intent: 'inquiry', subscribe: false, honeypot: '',
   });
   const submit = useSubmitContact();
   const { data: processDb } = usePolicyPage('process');
@@ -92,14 +92,13 @@ export default function ChatZaloContact({ notify, user }) {
       note: form.note.trim() || null,
       source: 'contact-page',
       intent: form.intent,
-      depositAmount: form.intent === 'deposit_request' ? (Number(form.depositAmount.replace(/[^\d]/g, '')) || null) : null,
       subscribeToNotifications: !!form.subscribe,
       honeypot: form.honeypot || null,
     }, {
       onSuccess: () => {
         trackGenerateLead(form.plateNumber.trim() || undefined, 'contact-page');
         toast.success('Đã gửi yêu cầu, chúng tôi sẽ liên hệ trong thời gian sớm nhất!');
-        setForm({ fullName: '', phone: '', email: '', plateNumber: '', note: '', intent: 'inquiry', depositAmount: '', subscribe: false, honeypot: '' });
+        setForm({ fullName: '', phone: '', email: '', plateNumber: '', note: '', intent: 'inquiry', subscribe: false, honeypot: '' });
       },
       onError: (err) => {
         toast.error(err?.message || 'Gửi thất bại, vui lòng thử lại.');
@@ -168,9 +167,6 @@ export default function ChatZaloContact({ notify, user }) {
           </label>
           {(form.intent === 'deposit_request' || form.intent === 'buy') && (
             <Input label="Biển số quan tâm" placeholder="VD: 43A1-999.99" value={form.plateNumber} onChange={set('plateNumber')} />
-          )}
-          {form.intent === 'deposit_request' && (
-            <Input label="Số tiền cọc (VNĐ)" placeholder="VD: 50000000" value={form.depositAmount} onChange={set('depositAmount')} />
           )}
           <Input label="Email (tùy chọn)" type="email" placeholder="email@example.com" value={form.email} onChange={set('email')} />
           <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={form.subscribe} onChange={(v) => setForm((f) => ({ ...f, subscribe: !!v }))} />

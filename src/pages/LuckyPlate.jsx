@@ -71,7 +71,7 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
       fullName: fullName || 'Khách hàng', phone: normalizePhone(phoneToUse),
       plateId: plate.plateId, plateNumber: plate.plateNumber,
       note: '', source: 'lucky_plate', intent: 'inquiry',
-      depositAmount: null, subscribeToNotifications: false, honeypot: null,
+      subscribeToNotifications: false, honeypot: null,
     }, {
       onSuccess: () => { trackGenerateLead(plate.plateId, 'lucky_plate'); notify('Đã gửi yêu cầu tư vấn — admin sẽ liên hệ sớm.'); setSent(true); setOpen(false); },
       onError: () => notify('Gửi thất bại, vui lòng thử lại.'),

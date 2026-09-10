@@ -75,7 +75,7 @@ export default function App() {
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home',
     favs: {}, curId: initRoute.detailId || 'p1', typeSlug: initRoute.typeSlug || 'tu-quy', provinceCode: initRoute.provinceCode || '43',
-    modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mDeposit: '', mErr: {},
+    modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mErr: {},
     redirectTo: null, user: loadAuth()?.user || null,
     adminQ: '',
     postId: initRoute.postId || 'a1',
@@ -272,7 +272,7 @@ export default function App() {
   const openPlate = (id, from) => patch({ screen: 'detail', curId: id, modal: false, detailFrom: from || null });
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
   const openBuy = (id) => patch({
-    curId: id, modal: true, sent: false, mIntent: 'inquiry', mDeposit: '', mErr: {},
+    curId: id, modal: true, sent: false, mIntent: 'inquiry', mErr: {},
     mName: st.user?.fullName || '',
     mPhone: st.user?.identifierType === 'phone' ? (st.user?.identifier || '') : '',
   });
@@ -312,7 +312,6 @@ export default function App() {
     // UC07 — gửi thật lên API (backend resolve plateNumber → plateId, chống spam qua honeypot).
     const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.curId || '');
     const intent = st.mIntent === 'deposit_request' ? 'deposit_request' : 'inquiry';
-    const depositAmount = intent === 'deposit_request' ? (Number(String(st.mDeposit || '').replace(/[^\d]/g, '')) || null) : null;
     setMSending(true);
     try {
       const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/contact-requests`, {
@@ -325,7 +324,6 @@ export default function App() {
           note: st.mNote.trim() || null,
           source: 'plate-detail',
           intent,
-          depositAmount,
           honeypot: '',
         }),
       });

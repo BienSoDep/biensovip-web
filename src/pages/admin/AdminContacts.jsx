@@ -8,7 +8,7 @@ import { CreateTransactionForm } from './AdminTransactions.jsx';
 import { useStaffLite } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
-import { Select, Badge } from '../../components/index.jsx';
+import { Select, Badge, Input } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Modal from '../../components/Modal.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
@@ -50,6 +50,8 @@ export default function AdminContacts({ notify, go }) {
   const assignContact = useAssignContact();
   const createPaymentLink = useCreatePaymentLink();
   const [creatingLinkFor, setCreatingLinkFor] = useState(null);
+  const [linkAmountFor, setLinkAmountFor] = useState(null); // contact đang mở popup nhập số tiền tạo link ZaloPay
+  const [linkAmountInput, setLinkAmountInput] = useState('');
   const [upgrading, setUpgrading] = useState(null); // ContactRequest đang mở form "Tạo giao dịch từ liên hệ này"
 
   // UC11 — 1 query stats cho các tab (thay 4 query perPage=1).
@@ -59,11 +61,23 @@ export default function AdminContacts({ notify, go }) {
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
   const statusCounts = { all: result.total, new: stats?.new ?? 0, consulting: stats?.consulting ?? 0, closed: stats?.closed ?? 0, found: stats?.found ?? 0 };
 
-  const handleCreatePaymentLink = (contact) => {
-    if (!contact.plateId || !contact.depositAmount) return;
+  const openLinkAmountPopup = (contact) => {
+    if (!contact.plateId) return;
+    setLinkAmountInput('');
+    setLinkAmountFor(contact);
+  };
+
+  const handleCreatePaymentLink = () => {
+    const contact = linkAmountFor;
+    const amount = Number(String(linkAmountInput).replace(/[^\d]/g, ''));
+    if (!contact || !amount || amount <= 0) return;
     setCreatingLinkFor(contact.id);
-    createPaymentLink.mutate({ contactRequestId: contact.id, amount: contact.depositAmount }, {
-      onSuccess: (link) => { toast.success('Đã tạo link ZaloPay — gửi cho khách qua Zalo OA'); setSelected((s) => ({ ...s, paymentLink: link })); },
+    createPaymentLink.mutate({ contactRequestId: contact.id, amount }, {
+      onSuccess: (link) => {
+        toast.success('Đã tạo link ZaloPay — gửi cho khách qua Zalo OA');
+        setSelected((s) => (s && s.id === contact.id ? { ...s, paymentLink: link } : s));
+        setLinkAmountFor(null);
+      },
       onError: (e) => toast.error(e.message || 'Tạo link thất bại'),
       onSettled: () => setCreatingLinkFor(null),
     });
@@ -179,7 +193,6 @@ export default function AdminContacts({ notify, go }) {
                 </span>
               </span>
               <span className="contact-col-note" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
-              <span style={{ flex: '1 1 80px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{c.depositAmount != null ? new Intl.NumberFormat('vi-VN').format(c.depositAmount) + ' đ' : '—'}</span>
               <span className="contact-col-time" style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 {formatDate(c.createdAt)}
               </span>
@@ -268,12 +281,7 @@ export default function AdminContacts({ notify, go }) {
                 )}
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Đặt cọc</span>
-                <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.depositAmount != null ? new Intl.NumberFormat('vi-VN').format(selected.depositAmount) + ' đ' : '—'}</span>
-              </div>
-
-              {selected.plateId && selected.depositAmount != null && (
+              {selected.plateId && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thanh toán ZaloPay</span>
                   {selected.paymentLink?.paymentUrl ? (
@@ -281,7 +289,7 @@ export default function AdminContacts({ notify, go }) {
                       Mở link đã tạo — gửi cho khách qua Zalo OA →
                     </a>
                   ) : (
-                    <Button variant="outline" size="sm" disabled={creatingLinkFor === selected.id} onClick={() => handleCreatePaymentLink(selected)}>
+                    <Button variant="outline" size="sm" disabled={creatingLinkFor === selected.id} onClick={() => openLinkAmountPopup(selected)}>
                       {creatingLinkFor === selected.id ? 'Đang tạo…' : 'Tạo link ZaloPay'}
                     </Button>
                   )}
@@ -333,6 +341,27 @@ export default function AdminContacts({ notify, go }) {
         </div>
       </Modal>
 
+      <Modal open={!!linkAmountFor} onClose={() => setLinkAmountFor(null)} title="Tạo link thanh toán ZaloPay" maxWidth="420px">
+        {linkAmountFor && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <Input
+              label="Số tiền cần thu (VNĐ)"
+              placeholder="VD: 50000000"
+              value={linkAmountInput}
+              onChange={(e) => setLinkAmountInput(e.target.value.replace(/[^\d]/g, ''))}
+              required
+            />
+            <Button
+              variant="primary"
+              disabled={creatingLinkFor === linkAmountFor.id || !linkAmountInput}
+              onClick={handleCreatePaymentLink}
+            >
+              {creatingLinkFor === linkAmountFor.id ? 'Đang tạo…' : 'Tạo link'}
+            </Button>
+          </div>
+        )}
+      </Modal>
+
       <Modal open={!!upgrading} onClose={() => setUpgrading(null)} title="Tạo giao dịch từ liên hệ này" maxWidth="480px">
         {upgrading && (
           <CreateTransactionForm
@@ -342,7 +371,6 @@ export default function AdminContacts({ notify, go }) {
               contactRequestId: upgrading.id,
               fullName: upgrading.fullName,
               phone: upgrading.phone,
-              amount: upgrading.depositAmount,
               plate: upgrading.plateId ? { id: upgrading.plateId, plateNumber: upgrading.plateNumber } : null,
             }}
           />

@@ -586,7 +586,6 @@ function ContactPipelineSection({ contacts }) {
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.phone || '—'}{c.plateNumber ? ` · ${c.plateNumber}` : ''}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              {c.depositAmount != null && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{money(c.depositAmount)}</span>}
               <Badge tone={stage.tone}>{stage.label}</Badge>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{new Date(c.createdAt).toLocaleDateString('vi-VN')}</span>
             </div>
@@ -614,14 +613,16 @@ function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone, ctvTitle, ctv
   const [filterCategory, setFilterCategory] = useState('');
   const filtered = filterCategory ? items.filter((t) => t.category === filterCategory) : items;
 
+  const fillTemplate = (body) => body
+    .replaceAll('{referralUrl}', referralUrl || '')
+    .replaceAll('{plateNumber}', plateNumber || '(chưa nhập số biển)')
+    .replaceAll('{ctvName}', ctvName || '(chưa đặt tên hiển thị)')
+    .replaceAll('{ctvPhone}', ctvPhone || '(chưa có SĐT)')
+    .replaceAll('{ctvTitle}', ctvTitle || '(chưa đặt chức danh)')
+    .replaceAll('{ctvZaloLink}', ctvZaloLink || '(chưa có link Zalo)');
+
   const copyTemplate = (t) => {
-    const filled = t.bodyTemplate
-      .replaceAll('{referralUrl}', referralUrl || '')
-      .replaceAll('{plateNumber}', plateNumber || '(chưa nhập số biển)')
-      .replaceAll('{ctvName}', ctvName || '')
-      .replaceAll('{ctvPhone}', ctvPhone || '')
-      .replaceAll('{ctvTitle}', ctvTitle || '')
-      .replaceAll('{ctvZaloLink}', ctvZaloLink || '');
+    const filled = fillTemplate(t.bodyTemplate);
     const done = () => { setCopiedId(t.id); toast.success('Đã sao chép tin nhắn'); setTimeout(() => setCopiedId(null), 2000); };
     if (navigator.clipboard?.writeText) navigator.clipboard.writeText(filled).then(done).catch(() => fallbackCopy(filled, done));
     else fallbackCopy(filled, done);
@@ -651,7 +652,7 @@ function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone, ctvTitle, ctv
             {t.channel && <Badge tone="amber">{t.channel}</Badge>}
           </div>
           {t.description && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.description}</span>}
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>{t.bodyTemplate}</p>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>{fillTemplate(t.bodyTemplate)}</p>
           <Button variant="outline" size="sm" onClick={() => copyTemplate(t)} style={{ alignSelf: 'flex-start' }}>{copiedId === t.id ? 'Đã sao chép' : 'Copy tin nhắn'}</Button>
         </div>
       ))}
@@ -719,7 +720,8 @@ function DashboardBody({ data, onReset, go }) {
         {CTV_TABS.map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
             style={{ flex: '1 1 0', minWidth: 'max-content', height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
-              background: tab === t.key ? 'var(--action-primary)' : 'transparent', color: tab === t.key ? 'var(--white)' : 'var(--text-muted)', transition: 'var(--transition-control)' }}>
+              background: tab === t.key ? 'var(--white)' : 'transparent', color: tab === t.key ? 'var(--action-primary)' : 'var(--text-muted)',
+              boxShadow: tab === t.key ? 'var(--shadow-elevated)' : 'none', transition: 'var(--transition-control)' }}>
             {t.label}
           </button>
         ))}
@@ -732,8 +734,11 @@ function DashboardBody({ data, onReset, go }) {
               ['Lượt click', String(data.clicks), 'var(--text-strong)', 'Số lần khách bấm vào link/mã giới thiệu của bạn, tính cả khách chưa để lại thông tin gì.'],
               ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)', 'Số khách đã đăng ký tài khoản hoặc để lại liên hệ qua link của bạn — chưa chắc đã mua.'],
               ['Giao dịch thành công', String(data.successfulDeals), 'var(--status-success)', 'Số đơn khách đã đặt cọc/mua thành công qua link của bạn, admin đã xác nhận thanh toán.'],
+              ['Tỷ lệ chuyển đổi', data.clicks > 0 ? `${((data.successfulDeals / data.clicks) * 100).toFixed(1)}%` : '—', 'var(--text-strong)', 'Giao dịch thành công chia cho lượt click — % khách bấm link rồi thực sự mua.'],
               ['Chờ duyệt', money(data.pending), 'var(--status-warning)', 'Tổng hoa hồng của các giao dịch đang chờ admin xác nhận đã nhận tiền — chưa được chuyển khoản.'],
               ['Đã duyệt / đã chi trả', money(data.approved + data.paid), 'var(--status-success)', 'Tổng hoa hồng admin đã duyệt (sắp chuyển) cộng với phần đã chuyển khoản vào tài khoản ngân hàng của bạn.'],
+              ['Tổng hoa hồng tích lũy', money(data.pending + data.approved + data.paid), 'var(--text-strong)', 'Toàn bộ hoa hồng bạn từng được tính — cộng cả 3 trạng thái Chờ duyệt, Đã duyệt và Đã chi trả.'],
+              ['Hoa hồng TB/giao dịch', data.successfulDeals > 0 ? money((data.pending + data.approved + data.paid) / data.successfulDeals) : '—', 'var(--text-strong)', 'Tổng hoa hồng tích lũy chia cho số giao dịch thành công — mức trung bình bạn nhận mỗi đơn.'],
             ].map(([label, value, color, tip]) => (
               <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -781,6 +786,8 @@ function DashboardBody({ data, onReset, go }) {
           </div>
 
           <GmailLinkSection />
+
+          <ProcessSteps />
         </>
       )}
 
@@ -843,7 +850,6 @@ function DashboardBody({ data, onReset, go }) {
         <MessageTemplatesSection referralUrl={data.referralUrl} ctvName={data.fullName} ctvPhone={data.ctvPhone} ctvTitle={data.ctvTitle} ctvZaloLink={data.ctvZaloLink} />
       )}
 
-      <a href={routeFor('collabProcess')} onClick={(e) => { e.preventDefault(); go('collabProcess')(); }} style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem quy trình nhận hoa hồng →</a>
       <Button variant="ghost" size="sm" onClick={onReset}>Đăng xuất</Button>
     </section>
   );

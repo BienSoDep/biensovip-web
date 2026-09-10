@@ -160,7 +160,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     fullName: user?.fullName || '',
     phone: user?.identifierType === 'phone' ? (user?.identifier || '') : '',
     email: user?.identifierType === 'email' ? (user?.identifier || '') : '',
-    note: '', intent: 'deposit_request', depositAmount: '', subscribe: false, honeypot: '', couponCode: '',
+    note: '', intent: 'deposit_request', subscribe: false, honeypot: '', couponCode: '',
   });
   const [cErr, setCErr] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -245,7 +245,6 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
       email: cForm.email?.trim() || null, plateId: plate.id, plateNumber: plate.plateNumber,
       note: cForm.note?.trim() || '', source: 'plate-detail', intent: cForm.intent,
-      depositAmount: cForm.intent === 'deposit_request' && cForm.depositAmount ? Number(cForm.depositAmount) : null,
       subscribeToNotifications: !!cForm.subscribe,
       honeypot: cForm.honeypot || null,
       couponCode: couponStatus?.valid ? cForm.couponCode.trim() : null,
