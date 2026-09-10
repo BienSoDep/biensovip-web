@@ -85,10 +85,11 @@ function FavSuggestions({ favCards, excludeIds, onAdd }) {
   );
 }
 
+// Hàng phụ (Loại biển / Loại xe) ẩn trên mobile hẹp — giá trị quyết định mua nằm ở Tỉnh/thành + Giá.
 const ROW_LABELS = [
-  { key: 'type', label: 'Loại biển' },
+  { key: 'type', label: 'Loại biển', extra: true },
   { key: 'province', label: 'Tỉnh / thành' },
-  { key: 'vehicleType', label: 'Loại xe' },
+  { key: 'vehicleType', label: 'Loại xe', extra: true },
   { key: 'price', label: 'Giá' },
 ];
 
@@ -348,9 +349,9 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               const allSame = values.length >= 2 && values.every((v) => v && v === values[0]);
               return (
               <Fragment key={row.key}>
-                <div style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>{row.label}</div>
+                <div className={row.extra ? 'compare-row-extra' : undefined} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>{row.label}</div>
                 {plates.map((p) => (
-                  <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', background: allSame ? 'var(--green-50)' : undefined }}>
+                  <div key={p.id} className={row.extra ? 'compare-row-extra' : undefined} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'center', background: allSame ? 'var(--green-50)' : undefined }}>
                     {row.key === 'price' ? (
                       <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)' }}>{formatPrice(p.price, false)}</span>
                     ) : (

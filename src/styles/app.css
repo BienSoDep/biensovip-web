@@ -794,6 +794,10 @@ textarea,
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
+  /* Compare: hàng phụ (Loại biển/Loại xe) ẩn mobile hẹp — giữ Tỉnh/thành + Giá là hàng quyết định */
+  .compare-row-extra {
+    display: none !important;
+  }
   .blog-category-row::-webkit-scrollbar {
     display: none;
   }
