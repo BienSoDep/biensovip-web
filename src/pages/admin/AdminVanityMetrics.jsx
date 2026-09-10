@@ -11,9 +11,11 @@ const META = {
   PlateView: { label: 'Lượt xem biển', desc: 'Tổng lượt xem trên trang chi tiết biển.', hasCap: true },
   PlateFavorite: { label: 'Lượt yêu thích', desc: 'Số người đã lưu/thả tim biển.', hasCap: true },
   PlateLiveViewer: { label: 'Đang xem trực tiếp', desc: 'Badge “X người đang xem” trên trang chi tiết biển.', hasCap: false },
-  SiteStats: { label: 'Thống kê tổng quan site', desc: 'Số giao dịch/khách hàng hiển thị ở vùng thống kê.', hasCap: true },
+  // overrideLabels — chỉ 2 loại site-wide này cho nhập số cố định thay công thức: mỗi biển cần số
+  // riêng (PlateContact/View/Favorite) nên "1 số cố định" chung không có nghĩa cho chúng.
+  SiteStats: { label: 'Thống kê tổng quan site', desc: 'Số giao dịch/khách hàng hiển thị ở vùng thống kê.', hasCap: true, overrideLabels: ['Số giao dịch cố định', 'Số khách hàng cố định'] },
   ActivityFeed: { label: 'Feed hoạt động gần đây', desc: 'Dòng “Khách vừa liên hệ biển…” hiển thị công khai.', hasCap: false },
-  SiteRating: { label: 'Điểm đánh giá trung bình', desc: 'Sao + số đánh giá; nếu chưa thực thì fake quanh mức nền.', hasCap: true },
+  SiteRating: { label: 'Điểm đánh giá trung bình', desc: 'Sao + số đánh giá; nếu chưa thực thì fake quanh mức nền.', hasCap: true, overrideLabels: ['Điểm TB cố định (0-5)', 'Số đánh giá cố định'] },
   VideoStats: { label: 'Thống kê video', desc: 'Lượt xem/thích tăng dần cho video TikTok/Facebook.', hasCap: true },
 };
 
@@ -30,7 +32,11 @@ export default function AdminVanityMetrics({ notify }) {
     const d = {};
     for (const it of data) {
       if (!drafts[it.type]) {
-        d[it.type] = { multiplier: `${it.multiplier}`, cap: it.cap == null ? '' : `${it.cap}` };
+        d[it.type] = {
+          multiplier: `${it.multiplier}`, cap: it.cap == null ? '' : `${it.cap}`,
+          overrideValue1: it.overrideValue1 == null ? '' : `${it.overrideValue1}`,
+          overrideValue2: it.overrideValue2 == null ? '' : `${it.overrideValue2}`,
+        };
       }
     }
     if (Object.keys(d).length) setDrafts((p) => ({ ...p, ...d }));
@@ -70,6 +76,19 @@ export default function AdminVanityMetrics({ notify }) {
       if (cap !== null && (!Number.isInteger(cap) || cap < 0)) { notify('Trần phải là số ≥ 0 (để trống = không giới hạn)'); return; }
       payload.cap = cap;
     }
+    if (META[item.type]?.overrideLabels) {
+      const parseOverride = (raw, max) => {
+        if (raw === '' || raw == null) return { ok: true, val: null };
+        const n = parseFloat(raw);
+        if (Number.isNaN(n) || n < 0 || (max != null && n > max)) return { ok: false };
+        return { ok: true, val: n };
+      };
+      const ov1 = parseOverride(d.overrideValue1, item.type === 'SiteRating' ? 5 : null);
+      const ov2 = parseOverride(d.overrideValue2, null);
+      if (!ov1.ok || !ov2.ok) { notify('Số cố định không hợp lệ (để trống = dùng công thức).'); return; }
+      payload.overrideValue1 = ov1.val;
+      payload.overrideValue2 = ov2.val;
+    }
     update.mutate({ type: item.type, ...payload }, {
       onSuccess: () => notify(`Đã cập nhật “${META[item.type].label}”.`),
       onError: (err) => notify(err.message || 'Cập nhật thất bại, thử lại.'),
@@ -89,40 +108,56 @@ export default function AdminVanityMetrics({ notify }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-        Các con số này chỉ <strong>hiển thị công khai</strong> — khuếch đại/tạo thêm nhằm tăng độ tin cậy, không làm thay đổi dữ liệu giao dịch, hoa hồng hay thống kê nội bộ. Tắt hết (mặc định) thì mọi nơi hiển thị số liệu thật. Bật từng ô và chỉnh “hệ số” để khuếch đại; “trần” là con số tối đa hiển thị (để trống = không giới hạn).
+        Các con số này chỉ <strong>hiển thị công khai</strong> — khuếch đại/tạo thêm nhằm tăng độ tin cậy, không làm thay đổi dữ liệu giao dịch, hoa hồng hay thống kê nội bộ. Tắt hết (mặc định) thì mọi nơi hiển thị số liệu thật. Bật từng ô và chỉnh “hệ số” để khuếch đại; “trần” là con số tối đa hiển thị (để trống = không giới hạn). Riêng 2 loại tổng quan/đánh giá có thể nhập thẳng số cố định — bỏ qua công thức khi đã điền.
       </p>
-      {items.map((item) => {
-        const meta = META[item.type];
-        if (!meta) return null;
-        const d = drafts[item.type] || {};
-        const busy = update.isPending && update.variables?.type === item.type;
-        return (
-          <div key={item.type} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-              <Switch checked={!!item.enabled} onChange={() => toggle(item)} disabled={update.isPending} label={meta.label} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{meta.label}</div>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{meta.desc}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(360px,1fr))', gap: 'var(--space-4)' }}>
+        {items.map((item) => {
+          const meta = META[item.type];
+          if (!meta) return null;
+          const d = drafts[item.type] || {};
+          const busy = update.isPending && update.variables?.type === item.type;
+          return (
+            <div key={item.type} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                <Switch checked={!!item.enabled} onChange={() => toggle(item)} disabled={update.isPending} label={meta.label} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{meta.label}</div>
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{meta.desc}</div>
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-              <div style={{ width: 110 }}>
-                <Input label="Hệ số" type="number" min={1} max={20} step={0.5}
-                  value={d.multiplier ?? `${item.multiplier}`}
-                  onChange={(e) => patchDraft(item.type, 'multiplier', e.target.value)} disabled={!item.enabled} required />
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                <div style={{ width: 110 }}>
+                  <Input label="Hệ số" type="number" min={1} max={20} step={0.5}
+                    value={d.multiplier ?? `${item.multiplier}`}
+                    onChange={(e) => patchDraft(item.type, 'multiplier', e.target.value)} disabled={!item.enabled} required />
+                </div>
+                {meta.hasCap && (
+                  <div style={{ width: 130 }}>
+                    <Input label="Trần (tối đa)" type="number" min={0} step={1} placeholder="Không giới hạn"
+                      value={d.cap ?? (item.cap == null ? '' : `${item.cap}`)}
+                      onChange={(e) => patchDraft(item.type, 'cap', e.target.value)} disabled={!item.enabled} />
+                  </div>
+                )}
               </div>
-              {meta.hasCap && (
-                <div style={{ width: 130 }}>
-                  <Input label="Trần (tối đa)" type="number" min={0} step={1} placeholder="Không giới hạn"
-                    value={d.cap ?? (item.cap == null ? '' : `${item.cap}`)}
-                    onChange={(e) => patchDraft(item.type, 'cap', e.target.value)} disabled={!item.enabled} />
+              {meta.overrideLabels && (
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-3)', flexWrap: 'wrap', paddingTop: 'var(--space-2)', borderTop: '1px dashed var(--grey-100)' }}>
+                  <div style={{ width: 150 }}>
+                    <Input label={meta.overrideLabels[0]} type="number" min={0} step={meta.overrideLabels[0].includes('Điểm') ? 0.1 : 1} placeholder="Dùng công thức"
+                      value={d.overrideValue1 ?? ''}
+                      onChange={(e) => patchDraft(item.type, 'overrideValue1', e.target.value)} disabled={!item.enabled} />
+                  </div>
+                  <div style={{ width: 150 }}>
+                    <Input label={meta.overrideLabels[1]} type="number" min={0} step={1} placeholder="Dùng công thức"
+                      value={d.overrideValue2 ?? ''}
+                      onChange={(e) => patchDraft(item.type, 'overrideValue2', e.target.value)} disabled={!item.enabled} />
+                  </div>
                 </div>
               )}
-              <Button variant="outline" size="sm" disabled={!item.enabled} onClick={() => saveWithDraft(item)} loading={busy}>Lưu</Button>
+              <Button variant="outline" size="sm" disabled={!item.enabled} onClick={() => saveWithDraft(item)} loading={busy} style={{ alignSelf: 'flex-start' }}>Lưu</Button>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
       {!items.some((x) => x.enabled) && (
         <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Mọi loại đang tắt — website hiển thị số liệu thật.</div>
       )}
