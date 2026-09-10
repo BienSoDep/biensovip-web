@@ -167,6 +167,43 @@ const ERR_MSG = {
 
 const canViewCost = (st) => st?.user?.role === 'super-admin' || st?.user?.permissions?.includes('*') || st?.user?.permissions?.includes('plates_cost:view');
 
+// Gõ biển tặng kèm → sổ xuống gợi ý biển có sẵn trong hệ thống để chọn thay vì gõ tay dễ sai chính
+// tả (biển không khớp thì tính năng tặng kèm ở trang chi tiết không tìm ra biển tương ứng).
+function GiftedPlateField({ value, onChange, excludeId }) {
+  const [open, setOpen] = useState(false);
+  const [debouncedValue] = useDebouncedValue(value, 300);
+  const keyword = (debouncedValue || '').trim();
+  const { data } = useAdminPlates({ keyword, page: 1, perPage: 8 });
+  const suggestions = (data?.items || []).filter((p) => p.id !== excludeId);
+
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tặng kèm biển số (VD ô tô tặng biển xe máy)</span>
+      <input
+        value={value || ''}
+        placeholder="43AB-668.88 (để trống nếu không tặng)"
+        onChange={(e) => { onChange(e); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }}
+      />
+      {open && keyword.length >= 2 && suggestions.length > 0 && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, marginTop: 4, background: 'var(--white)', borderRadius: 'var(--radius-field)', boxShadow: 'var(--shadow-4)', maxHeight: 220, overflow: 'auto' }}>
+          {suggestions.map((p) => (
+            <button key={p.id} type="button"
+              onMouseDown={(e) => { e.preventDefault(); onChange({ target: { value: p.plateNumber } }); setOpen(false); }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
+              {p.plateNumber}
+            </button>
+          ))}
+        </div>
+      )}
+    </label>
+  );
+}
+
 export default function AdminPlates({ go, notify, st }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState('all');
@@ -261,6 +298,21 @@ export default function AdminPlates({ go, notify, st }) {
     if (!genCancelledRef.current) {
       queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
       notify(`Đã sinh ảnh cho ${plates.length - errors.length} biển${errors.length ? `, ${errors.length} biển lỗi` : ''}`);
+    }
+  };
+
+  // Sinh ảnh cho đúng 1 biển ngay từ dòng trong bảng — trước đây chỉ có modal hàng loạt.
+  const [generatingRowId, setGeneratingRowId] = useState(null);
+  const generateRowImage = async (p) => {
+    setGeneratingRowId(p.id);
+    try {
+      await generateOneImage(p.id);
+      queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      notify('Đã sinh ảnh');
+    } catch (err) {
+      notify(err.message || 'Sinh ảnh thất bại');
+    } finally {
+      setGeneratingRowId(null);
     }
   };
 
@@ -1029,6 +1081,9 @@ export default function AdminPlates({ go, notify, st }) {
               {colPrefs.createdAt && <span style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.createdAt)}</span>}
               {colPrefs.updatedAt && <span className="plate-col-updated" style={{ flex: '1 1 96px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>}
               <span style={{ flex: '0 0 104px', display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                {!p.imageCount && (
+                  <IconButton name="image" label="Sinh ảnh" size="sm" disabled={generatingRowId === p.id} onClick={() => generateRowImage(p)} />
+                )}
                 <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(p)} />
                 <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => setConfirmDelete(p.id)} />
                 <AuditHistoryButton entityType="plate" entityId={p.id} />
@@ -1470,10 +1525,7 @@ function PlateFormModal({
           </label>
         </div>
 
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tặng kèm biển số (VD ô tô tặng biển xe máy)</span>
-          <Input placeholder="43AB-668.88 (để trống nếu không tặng)" value={form.giftedPlateNumber} onChange={setF('giftedPlateNumber')} />
-        </label>
+        <GiftedPlateField value={form.giftedPlateNumber} onChange={setF('giftedPlateNumber')} excludeId={editId} />
 
         {/* Images — optional (biển không ảnh vẫn lưu, hiển thị bằng PlateVisual) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>

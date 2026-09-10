@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Heart, X, Pencil, Trash2, Check, PlusCircle, CheckCircle2, ChevronDown, Scale,
-  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History, Info, KeyRound, Eye, EyeOff, Search } from 'lucide-react';
+  Flame, Droplets, Mountain, Wind, Zap, Sparkles, Copy, Download, Share2, History, Info, KeyRound, Eye, EyeOff, Search, Image } from 'lucide-react';
 import { Select as BaseSelect } from '@base-ui/react/select';
 import Button from './Button.jsx';
 import { apiClient } from '../services/apiClient.js';
@@ -332,7 +332,7 @@ export function Eyebrow({ tone = 'blue', children, className }) {
 
 const ICONS = { heart: Heart, x: X, pencil: Pencil, 'trash-2': Trash2, check: Check, 'plus-circle': PlusCircle, 'check-circle': CheckCircle2, scale: Scale,
   flame: Flame, droplets: Droplets, mountain: Mountain, wind: Wind, zap: Zap,
-  sparkles: Sparkles, copy: Copy, download: Download, share: Share2, history: History, key: KeyRound };
+  sparkles: Sparkles, copy: Copy, download: Download, share: Share2, history: History, key: KeyRound, image: Image };
 
 export function Icon({ name, size = 18 }) {
   const I = ICONS[name];
