@@ -79,7 +79,9 @@ export function useSeo(screen, data) {
       const p = data.plate;
       const priceText = p.priceOnRequest ? 'Giá liên hệ' : `${Number(p.price).toLocaleString('vi-VN')}đ`;
       title = `Biển ${p.plateNumber} — ${priceText} | ${BRAND}`;
-      desc = `Biển số đẹp ${p.vehicleType || ''} tại ${p.province || ''}. ${p.fengShuiMeaning || ''} Liên hệ Duy Đinh để giữ chỗ.`.trim();
+      // truncateAtWordBoundary — fengShuiMeaning có thể dài hàng nghìn ký tự, nhồi nguyên vào meta
+      // description làm Google/mạng xã hội tự cắt xấu khi share link.
+      desc = truncateAtWordBoundary(`Biển số đẹp ${p.vehicleType || ''} tại ${p.province || ''}. ${p.fengShuiMeaning || ''} Liên hệ Duy Đinh để giữ chỗ.`.trim(), 160);
       canonical = SITE + '/bien/' + (p.slug || p.id);
       image = p.images?.[0] || null;
       const productLd = {
@@ -131,7 +133,7 @@ export function useSeo(screen, data) {
     } else if (screen === 'post' && data?.post) {
       const post = data.post;
       title = post.title + ' | ' + BRAND;
-      desc = post.metaDescription || post.excerpt || DEFAULT_DESC;
+      desc = truncateAtWordBoundary(post.metaDescription || post.excerpt || DEFAULT_DESC, 160);
       canonical = SITE + '/bai-viet/' + post.slug;
       type = 'article';
       image = post.coverImageUrl || null;
