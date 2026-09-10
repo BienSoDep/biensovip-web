@@ -198,6 +198,7 @@ function PlatesTab({ notify }) {
   const [confirmReseed, setConfirmReseed] = useState(false);
   const [reseedPreview, setReseedPreview] = useState(null); // null = đang tải | [] | list
   const [reseedPreviewErr, setReseedPreviewErr] = useState('');
+  const [reseedDoneErr, setReseedDoneErr] = useState('');
 
   const { data: plateData, isLoading: plateLoading } = useAdminPlates({ keyword: plateKeyword, status: 'all', page: 1, perPage: 20 });
   const plates = (plateData?.items || []).filter((p) => p.id);
@@ -241,6 +242,7 @@ function PlatesTab({ notify }) {
     setConfirmReseed(true);
     setReseedPreview(null);
     setReseedPreviewErr('');
+    setReseedDoneErr('');
     try {
       const items = await previewSeedPlateMeanings(plate.id, plate.plateNumber);
       setReseedPreview(items);
@@ -251,10 +253,13 @@ function PlatesTab({ notify }) {
 
   const doReseed = () => {
     if (!plate) return;
-    setConfirmReseed(false);
+    setReseedDoneErr('');
     reseedMut.mutate({ plateNumber: plate.plateNumber }, {
-      onSuccess: () => notify('Đã sinh lại ý nghĩa từ mẫu đang kích hoạt'),
-      onError: (e) => notify(e.message || 'Sinh lại thất bại.'),
+      onSuccess: () => {
+        setConfirmReseed(false);
+        notify('Đã sinh lại ý nghĩa từ mẫu đang kích hoạt');
+      },
+      onError: (e) => setReseedDoneErr(e.message || 'Sinh lại thất bại, thử lại.'),
     });
   };
 
@@ -358,9 +363,14 @@ function PlatesTab({ notify }) {
                 ))}
               </div>
             )}
+            {reseedDoneErr && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+                <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{reseedDoneErr}</span>
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
               <Button variant="ghost" size="md" onClick={() => setConfirmReseed(false)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={doReseed} disabled={reseedPreview === null || reseedMut.isPending}>{reseedMut.isPending ? 'Đang sinh…' : 'Sinh lại'}</Button>
+              <Button variant="primary" size="md" onClick={doReseed} disabled={reseedPreview === null || reseedMut.isPending}>{reseedMut.isPending ? 'Đang sinh…' : reseedDoneErr ? 'Thử lại' : 'Sinh lại'}</Button>
             </div>
           </div>
         </Modal>

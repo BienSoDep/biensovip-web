@@ -538,6 +538,31 @@ textarea,
   .footer-section > div {
     padding-top: var(--space-3);
   }
+  /* Dashboard khối phụ — mobile gập lại thành accordion, desktop luôn xổ (pattern .footer-section) */
+  .dash-fold > summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 2px;
+    border-top: 1px solid var(--border-hairline);
+    font: var(--type-title-3);
+    color: var(--text-strong);
+  }
+  .dash-fold > summary::-webkit-details-marker { display: none; }
+  .dash-fold > summary::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+    border-right: 1.5px solid var(--text-faint);
+    border-bottom: 1.5px solid var(--text-faint);
+    transform: rotate(45deg);
+    transition: transform 160ms var(--ease-out);
+  }
+  .dash-fold[open] > summary::after { transform: rotate(-135deg); }
 }
 @media (min-width: 481px) {
   /* Desktop: luôn xổ hết (details có open trong JSX), summary chỉ đóng vai trò tiêu đề tĩnh (không toggle) */
@@ -546,6 +571,13 @@ textarea,
     margin-bottom: var(--space-3);
   }
   .footer-section-title::-webkit-details-marker { display: none; }
+  /* Dashboard khối phụ: desktop luôn xổ — summary chỉ là tiêu đề tĩnh, bỏ mũi tên/mũi toggle */
+  .dash-fold > summary {
+    pointer-events: none;
+    border-top: none;
+    padding: var(--space-2) 0 var(--space-3);
+  }
+  .dash-fold > summary::after { display: none; }
   /* About: contact grid duplicates Footer contact info; FAQ answers collapse behind toggle */
   .about-contact {
     display: none !important;

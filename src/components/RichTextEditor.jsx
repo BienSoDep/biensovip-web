@@ -18,7 +18,7 @@ function ToolbarButton({ onClick, active, disabled, label, children }) {
       disabled={disabled}
       onClick={onClick}
       style={{
-        width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
         border: 'none', borderRadius: 'var(--radius-sm)', cursor: disabled ? 'not-allowed' : 'pointer',
         background: active ? 'var(--action-primary)' : 'transparent',
         color: active ? 'var(--text-inverse)' : 'var(--text-body)',
@@ -39,6 +39,7 @@ export function EditorToolbar({ editor }) {
   const [imgOpen, setImgOpen] = useState(false);
   const [imgUrl, setImgUrl] = useState('');
   const [error, setError] = useState('');
+  const [uploadErr, setUploadErr] = useState('');
   if (!editor) return null;
 
   const submitLink = (e) => {
@@ -57,12 +58,12 @@ export function EditorToolbar({ editor }) {
     if (!file) return;
     const fd = new FormData();
     fd.append('file', file);
+    setUploadErr('');
     try {
       const res = await apiClient.upload('/api/admin/plates/upload', fd);
       editor.chain().focus().setImage({ src: res.url }).run();
-      setError('');
     } catch (e) {
-      setError(e.message || 'Lỗi tải ảnh lên');
+      setUploadErr(e.message || 'Lỗi tải ảnh lên');
     } finally {
       imgFileRef.current.value = '';
     }
@@ -87,7 +88,7 @@ export function EditorToolbar({ editor }) {
       <div style={{ width: 1, background: 'var(--border-hairline)', margin: '4px 4px' }} />
       <ToolbarButton label="Chèn liên kết" active={editor.isActive('link')} onClick={() => { setImgOpen(false); setLinkOpen((v) => !v); setError(''); }}><Link2 size={16} /></ToolbarButton>
       <ToolbarButton label="Chèn ảnh (dán link)" onClick={() => { setLinkOpen(false); setImgOpen((v) => !v); setError(''); }}><ImageIcon size={16} /></ToolbarButton>
-      <ToolbarButton label="Tải ảnh lên" onClick={() => imgFileRef.current?.click()}><Upload size={16} /></ToolbarButton>
+      <ToolbarButton label="Tải ảnh lên" onClick={() => { setUploadErr(''); imgFileRef.current?.click(); }}><Upload size={16} /></ToolbarButton>
       <input ref={imgFileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => uploadImage(e.target.files[0])} style={{ display: 'none' }} />
       {linkOpen && (
         <form onSubmit={submitLink} style={rowStyle} aria-label="Chèn liên kết">
@@ -104,6 +105,7 @@ export function EditorToolbar({ editor }) {
         </form>
       )}
       {error && <div role="alert" style={{ width: '100%', padding: '2px 8px 4px', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{error}</div>}
+      {uploadErr && <div role="alert" style={{ width: '100%', padding: '2px 8px 4px', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{uploadErr}</div>}
       <div style={{ flex: 1 }} />
       <ToolbarButton label="Hoàn tác" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}><Undo2 size={16} /></ToolbarButton>
       <ToolbarButton label="Làm lại" disabled={!editor.can().redo()} onClick={() => editor.chain().focus().redo().run()}><Redo2 size={16} /></ToolbarButton>

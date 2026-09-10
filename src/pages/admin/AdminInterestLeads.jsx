@@ -111,6 +111,7 @@ export default function AdminInterestLeads({ notify }) {
                     ) : mine ? (
                       <>
                         <Button variant="primary" size="sm" loading={markContacted.isPending} onClick={() => handleContacted(lead.id)}>Đã liên hệ</Button>
+                        <span style={{ flex: 1, minWidth: 0 }} />
                         <Button variant="ghost" size="sm" loading={unclaim.isPending} onClick={() => handleUnclaim(lead.id)}>Bỏ nhận</Button>
                       </>
                     ) : (

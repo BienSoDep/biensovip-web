@@ -420,6 +420,8 @@ export default function Dashboard({ go, st }) {
       </div>
 
       {/* Distribution */}
+      <details className="dash-fold" open>
+      <summary>Phân bổ kho biển &amp; đánh giá</summary>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <DistributionCard title="Kho biển theo tỉnh" data={distProvince} />
         <DistributionCard title="Kho biển theo loại xe" data={distVehicle} />
@@ -448,8 +450,11 @@ export default function Dashboard({ go, st }) {
           )}
         </div>
       </div>
+      </details>
 
       {/* Collaborator performance (SuperAdmin only) + demand */}
+      <details className="dash-fold" open>
+      <summary>Hiệu suất cộng tác viên &amp; nhu cầu</summary>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         {isSuperAdmin && <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
           <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Top cộng tác viên (hoa hồng)</h3>
@@ -490,8 +495,11 @@ export default function Dashboard({ go, st }) {
           )}
         </div>
       </div>
+      </details>
 
       {/* Nhân khẩu học khách hàng */}
+      <details className="dash-fold" open>
+      <summary>Nhân khẩu học khách hàng</summary>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
           <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Khách hàng theo mệnh phong thủy<InfoTip size={12} text="Phân loại khách theo ngũ hành (Kim/Mộc/Thủy/Hỏa/Thổ) suy từ ngày sinh họ khai khi đăng ký — để hiểu khách thích biển hợp mệnh nào." /></h3>
@@ -553,8 +561,11 @@ export default function Dashboard({ go, st }) {
           )}
         </div>
       </div>
+      </details>
 
       {/* Search insights + Compare insights */}
+      <details className="dash-fold" open>
+      <summary>Tìm kiếm &amp; so sánh</summary>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 400px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
@@ -597,8 +608,11 @@ export default function Dashboard({ go, st }) {
           )}
         </div>
       </div>
+      </details>
 
       {/* Traffic heatmap */}
+      <details className="dash-fold" open>
+      <summary>Lưu lượng theo thời gian</summary>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 400px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
           <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Traffic theo giờ trong ngày</h3>
@@ -638,6 +652,7 @@ export default function Dashboard({ go, st }) {
           )}
         </div>
       </div>
+      </details>
 
       {/* Bulk retry — khi nhiều block lỗi cùng lúc (vd mất mạng), tránh phải cuộn click "Thử lại" từng cái */}
       {(() => {

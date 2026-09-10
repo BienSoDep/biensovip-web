@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Car, Compass, Scale, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import Modal from '../components/Modal.jsx';
 import { pill } from '../components/NavBtn.jsx';
 
 const MAIN_NAV = [
@@ -14,6 +15,7 @@ const MAIN_NAV = [
 
 export default function MobileDrawer({ open, onClose, s, go, user, onLogout, favCount = 0, compareCount = 0 }) {
   const panelRef = useRef(null);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -86,7 +88,7 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout, fav
                 <button onClick={() => { go('profile')(); onClose(); setTimeout(() => document.getElementById('security-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }} style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                   <Settings size={15} /> Bảo mật &amp; cài đặt
                 </button>
-                <button onClick={() => { onLogout(); onClose(); }} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
+                <button onClick={() => setLogoutConfirm(true)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thoát</button>
               </div>
             </div>
           ) : (
@@ -97,6 +99,13 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout, fav
           )}
         </div>
       </div>
+      <Modal open={logoutConfirm} onClose={() => setLogoutConfirm(false)} title="Đăng xuất" maxWidth="360px">
+        <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Bạn có chắc muốn đăng xuất?</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+          <Button variant="ghost" size="md" onClick={() => setLogoutConfirm(false)}>Hủy</Button>
+          <Button variant="primary" size="md" onClick={() => { onLogout(); setLogoutConfirm(false); onClose(); }}>Đăng xuất</Button>
+        </div>
+      </Modal>
     </div>
   );
 }
