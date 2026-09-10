@@ -6,7 +6,7 @@ import { Share2, Link2, HandCoins, Wallet, UserPlus, BarChart3 as BarChartIcon, 
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Button from '../components/Button.jsx';
 import { Badge, Input, Select, InfoTip } from '../components/index.jsx';
-import { useBecomeCollaborator, useUpdateBankInfo, useUpdateMessagingProfile, useCollaboratorDashboard, useCollaboratorCustomers, useCollaboratorContacts, useCollaboratorMessageTemplates, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
+import { useBecomeCollaborator, useUpdateBankInfo, useUpdateMessagingProfile, useCollaboratorDashboard, useCollaboratorContacts, useCollaboratorMessageTemplates, useCollaboratorBenefitContent, useSubmitDealReport, useUploadDealReportProof, useHotPlates, useLeaderboard, useSetLeaderboardVisibility, useClickStats, useTopPlates, useAllCommissions } from '../services/collaborators.js';
 import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -566,33 +566,94 @@ function contactStageInfo(c) {
   return { label: 'Mới liên hệ', tone: 'neutral' };
 }
 
-function ContactPipelineSection({ contacts }) {
+function ContactPipelineSection({ contacts, go }) {
   const items = contacts.data?.contacts || [];
   return (
     <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Tiến độ khách đã liên hệ</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Tiến độ khách đã liên hệ</span>
+        {go && <Button variant="ghost" size="sm" onClick={go('collabCustomers')}>Xem chi tiết →</Button>}
+      </div>
       <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Mới liên hệ → Đang tư vấn → Đã cọc → Đã bán. "Đã bán" đối chiếu đúng trạng thái thật của biển số.</span>
       {contacts.isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
       {!contacts.isLoading && contacts.isError && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được tiến độ khách.</span>}
       {!contacts.isLoading && !contacts.isError && items.length === 0 && (
         <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có khách nào liên hệ qua link/mã giới thiệu của bạn.</span>
       )}
-      {items.map((c) => {
+      {items.slice(0, 5).map((c) => {
         const stage = contactStageInfo(c);
         return (
           <div key={c.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '10px 0', borderTop: '1px solid var(--grey-100)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
               <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}>{c.fullName || '—'}</span>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.phone || '—'}{c.plateNumber ? ` · ${c.plateNumber}` : ''}</span>
+              {c.email && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.email}</span>}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              {c.transactionAmount != null && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(c.transactionAmount)}</span>}
               <Badge tone={stage.tone}>{stage.label}</Badge>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{new Date(c.createdAt).toLocaleDateString('vi-VN')}</span>
             </div>
           </div>
         );
       })}
+      {items.length > 5 && go && (
+        <Button variant="ghost" size="sm" onClick={go('collabCustomers')} fullWidth>Xem tất cả {items.length} khách →</Button>
+      )}
     </div>
+  );
+}
+
+// Trang riêng — chi tiết đầy đủ mọi khách CTV đã giới thiệu, kèm trạng thái đặt cọc + số tiền giao
+// dịch, để CTV đối chiếu minh bạch thay vì chỉ xem 5 dòng tóm tắt ở tab Tổng quan.
+export function CollaboratorCustomers({ go }) {
+  const contacts = useCollaboratorContacts(true);
+  const items = contacts.data?.contacts || [];
+
+  return (
+    <section style={{ maxWidth: 720, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <div>
+        <span style={{ display: 'block', font: 'var(--type-display-3)', color: 'var(--text-strong)' }}>Khách hàng của tôi</span>
+        <span style={{ display: 'block', marginTop: 4, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Toàn bộ khách đã liên hệ qua link/mã giới thiệu của bạn, kèm tiến độ và số tiền giao dịch.</span>
+      </div>
+
+      {contacts.isLoading && <SkeletonCard height={200} />}
+      {!contacts.isLoading && contacts.isError && (
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được danh sách khách.</span>
+      )}
+      {!contacts.isLoading && !contacts.isError && items.length === 0 && (
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có khách nào liên hệ qua link/mã giới thiệu của bạn.</span>
+      )}
+
+      {items.length > 0 && (
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+          {items.map((c, i) => {
+            const stage = contactStageInfo(c);
+            return (
+              <div key={c.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: 'var(--gutter-card)', borderTop: i > 0 ? '1px solid var(--grey-100)' : 'none' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{c.fullName || '—'}</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.phone || '—'}</span>
+                  {c.email && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.email}</span>}
+                  {c.plateNumber && (
+                    c.plateId
+                      ? <a href={routeFor('detail', c.plateId)} style={{ font: 'var(--type-caption)', color: 'var(--action-primary)' }}>{c.plateNumber}</a>
+                      : <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.plateNumber}</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                  {c.transactionAmount != null && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(c.transactionAmount)}</span>}
+                  <Badge tone={stage.tone}>{stage.label}</Badge>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{new Date(c.createdAt).toLocaleDateString('vi-VN')}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <Button variant="ghost" size="sm" onClick={() => go('collab')()}>← Quay lại trang Cộng tác viên</Button>
+    </section>
   );
 }
 
@@ -667,7 +728,6 @@ function DashboardBody({ data, onReset, go }) {
   const [messageCopied, setMessageCopied] = useState(false);
   const [editingBank, setEditingBank] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
-  const customers = useCollaboratorCustomers(data.status === 'active');
   const contacts = useCollaboratorContacts(data.status === 'active');
   const { exportCsv: exportCommissions, loading: exportingCommissions } = useExportCsv('/api/collaborators/commissions/export');
   const copyText = (text, onDone) => {
@@ -740,12 +800,13 @@ function DashboardBody({ data, onReset, go }) {
               ['Tổng hoa hồng tích lũy', money(data.pending + data.approved + data.paid), 'var(--text-strong)', 'Toàn bộ hoa hồng bạn từng được tính — cộng cả 3 trạng thái Chờ duyệt, Đã duyệt và Đã chi trả.'],
               ['Hoa hồng TB/giao dịch', data.successfulDeals > 0 ? money((data.pending + data.approved + data.paid) / data.successfulDeals) : '—', 'var(--text-strong)', 'Tổng hoa hồng tích lũy chia cho số giao dịch thành công — mức trung bình bạn nhận mỗi đơn.'],
             ].map(([label, value, color, tip]) => (
-              <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', minWidth: 0, containerType: 'inline-size' }}>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   {label}
                   <InfoTip text={tip} />
                 </span>
-                <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color }}>{value}</span>
+                {/* clamp theo bề rộng ô (cqi) thay type-display-3 cố định — giá trị tiền dài (VD "2.550.000đ") không tràn khung */}
+                <span style={{ font: 'var(--fw-semibold) clamp(18px,9cqi,28px)/var(--lh-title) var(--font-display)', letterSpacing: 'var(--ls-title)', color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
               </div>
             ))}
           </div>
@@ -769,21 +830,7 @@ function DashboardBody({ data, onReset, go }) {
 
           <DealReportForm />
 
-          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng đã giới thiệu</span>
-            {customers.isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
-            {!customers.isLoading && customers.isError && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tải được danh sách khách.</span>}
-            {!customers.isLoading && !customers.isError && customers.data?.users?.length === 0 && (
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có khách nào đăng ký bằng mã giới thiệu của bạn.</span>
-            )}
-            {customers.data?.users?.map((u) => (
-              <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
-                <span style={{ font: 'var(--type-body-sm)' }}>{u.fullName || '—'}</span>
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{u.phone || '—'}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</span>
-              </div>
-            ))}
-          </div>
+          <ContactPipelineSection contacts={contacts} go={go} />
 
           <GmailLinkSection />
 
@@ -820,8 +867,6 @@ function DashboardBody({ data, onReset, go }) {
               ))}
             </div>
           )}
-
-          <ContactPipelineSection contacts={contacts} />
         </>
       )}
 

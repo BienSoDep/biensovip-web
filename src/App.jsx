@@ -57,6 +57,7 @@ const Notifications = lazy(() => import('./pages/Notifications.jsx'));
 const Collaborator = lazy(() => import('./pages/Collaborator.jsx'));
 const CollaboratorProcess = lazy(() => import('./pages/Collaborator.jsx').then((m) => ({ default: m.CollaboratorProcess })));
 const CollaboratorLeaderboard = lazy(() => import('./pages/Collaborator.jsx').then((m) => ({ default: m.CollaboratorLeaderboard })));
+const CollaboratorCustomers = lazy(() => import('./pages/Collaborator.jsx').then((m) => ({ default: m.CollaboratorCustomers })));
 const Terms = lazy(() => import('./pages/Terms.jsx'));
 const Privacy = lazy(() => import('./pages/Privacy.jsx'));
 const TransferGuide = lazy(() => import('./pages/TransferGuide.jsx'));
@@ -682,6 +683,7 @@ export default function App() {
             else if (s === 'collab') trail = [{ label: 'Cộng tác viên' }];
             else if (s === 'collabProcess') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Quy trình nhận hoa hồng' }];
             else if (s === 'collabLeaderboard') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Bảng xếp hạng' }];
+            else if (s === 'collabCustomers') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Khách hàng của tôi' }];
             else if (s === 'terms') trail = [{ label: 'Điều khoản sử dụng' }];
             else if (s === 'privacy') trail = [{ label: 'Chính sách bảo mật' }];
             else if (s === 'transfer') trail = [{ label: 'Hướng dẫn sang tên' }];
@@ -729,6 +731,7 @@ export default function App() {
             {s === 'collab' && <Collaborator go={go} notify={notify} />}
             {s === 'collabProcess' && <CollaboratorProcess go={go} />}
             {s === 'collabLeaderboard' && <CollaboratorLeaderboard go={go} />}
+            {s === 'collabCustomers' && <CollaboratorCustomers go={go} />}
 
             {s === 'terms' && <Terms />}
 

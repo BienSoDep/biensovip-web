@@ -4,6 +4,7 @@ import Button from '../components/Button.jsx';
 import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
 import Modal from '../components/Modal.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
+import PlateCard from '../components/PlateCard.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { prefillFromUser, maybeSavePhoneToProfile } from '../lib/contactPrefill.js';
@@ -633,13 +634,27 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Cảm ơn bạn</span>
               <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Yêu cầu đã được ghi nhận. Chúng tôi gọi lại trong 15 phút.</span>
             </div>
-            <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Muốn giữ chỗ nhanh? Chuyển khoản cọc:</span>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Ngân hàng</span><span style={{ color: 'var(--text-strong)' }}>{content.info.bank_name}</span></div>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Số tài khoản</span><span style={{ color: 'var(--text-strong)' }}>{content.info.bank_account_number}</span></div>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Chủ tài khoản</span><span style={{ color: 'var(--text-strong)' }}>{content.info.bank_account_holder}</span></div>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Nội dung CK</span><span style={{ color: 'var(--text-strong)' }}>COC {plate.plateNumber}</span></div>
+            <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển số bạn vừa gửi yêu cầu</span>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.plateNumber}</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{plate.province} · {formatPrice(plate.price, plate.priceOnRequest)}</span>
+              </div>
             </div>
+            {(similar?.sameProvince?.length > 0 || similar?.sameType?.length > 0) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trong lúc chờ, xem thêm biển khác?</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  {(similar?.sameProvince?.length ? similar.sameProvince : similar?.sameType || []).slice(0, 4).map((p) => (
+                    <PlateCard key={p.id} layout="row" plateNumber={p.plateNumber} province={p.province}
+                      price={p.price} thumbnailUrl={p.thumbnailUrl}
+                      href={routeFor('detail', p.slug || p.id)}
+                      onOpen={() => { setContactOpen(false); setCSent(false); openPlate(p.slug || p.id); }} />
+                  ))}
+                </div>
+              </div>
+            )}
             <Button variant="outline" size="md" fullWidth onClick={() => { setContactOpen(false); setCSent(false); }}>Đóng</Button>
           </div>
         )}
