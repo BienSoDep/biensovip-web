@@ -1525,7 +1525,7 @@ function PlateFormModal({
           </label>
         </div>
 
-        <GiftedPlateField value={form.giftedPlateNumber} onChange={setF('giftedPlateNumber')} excludeId={editId} />
+        <GiftedPlateField value={form.giftedPlateNumber} onChange={setF('giftedPlateNumber')} excludeId={editDetail?.id} />
 
         {/* Images — optional (biển không ảnh vẫn lưu, hiển thị bằng PlateVisual) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
