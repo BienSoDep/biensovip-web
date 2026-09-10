@@ -16,7 +16,7 @@ import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { compareInsights, patternScore, buildFengShuiRows, priceScores } from '../lib/compareInsights.js';
 import { PURPOSES, INDUSTRIES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
-import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
+import { buildConsultMessage, openZaloWithMessage, callOrCopyPhone, isMobileDevice } from '../lib/zaloMessage.js';
 
 // Slot tìm nhanh — thay vì bắt user rời trang quay lại danh sách (pattern Thế Giới Di Động/FPT Shop):
 // mỗi slot trống là 1 ô tìm kiếm riêng, gõ số biển ra gợi ý ngay dưới, chọn là add() thẳng vào so sánh.
@@ -425,7 +425,11 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã bán</span>
                   ) : (
                     <>
-                      {phone && <a href={`tel:${phone}`} style={{ textDecoration: 'none' }}><Button variant="primary" size="sm">Gọi ngay</Button></a>}
+                      {phone && (isMobileDevice() ? (
+                        <a href={`tel:${phone}`} style={{ textDecoration: 'none' }}><Button variant="primary" size="sm">Gọi ngay</Button></a>
+                      ) : (
+                        <Button variant="primary" size="sm" onClick={() => callOrCopyPhone(phone)}>Gọi ngay</Button>
+                      ))}
                       {zalo && <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(zalo, buildConsultMessage(p.plateNumber))}>Nhắn Zalo</Button>}
                       {!phone && !zalo && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>—</span>}
                     </>

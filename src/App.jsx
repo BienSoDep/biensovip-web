@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { validatePhone } from './lib/mockData.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
+import { prefillFromUser, maybeSavePhoneToProfile } from './lib/contactPrefill.js';
 import * as authApi from './services/authService.js';
+import { apiClient } from './services/apiClient.js';
 import * as favApi from './services/favoriteService.js';
 import { getLocalFavorites, addLocalFavorite, removeLocalFavorite, clearLocalFavorites } from './services/favoriteStore.js';
 import { useComparePlates, useCompareIds } from './services/compareService.js';
@@ -75,7 +77,7 @@ export default function App() {
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home',
     favs: {}, curId: initRoute.detailId || 'p1', typeSlug: initRoute.typeSlug || 'tu-quy', provinceCode: initRoute.provinceCode || '43',
-    modal: false, sent: false, mName: '', mPhone: '', mNote: '', mIntent: 'inquiry', mErr: {},
+    modal: false, sent: false, mName: '', mPhone: '', mEmail: '', mNote: '', mIntent: 'deposit_request', mCouponCode: '', mSubscribe: false, mErr: {},
     redirectTo: null, user: loadAuth()?.user || null,
     adminQ: '',
     postId: initRoute.postId || 'a1',
@@ -271,10 +273,11 @@ export default function App() {
   };
   const openPlate = (id, from) => patch({ screen: 'detail', curId: id, modal: false, detailFrom: from || null });
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
-  const openBuy = (id) => patch({
-    curId: id, modal: true, sent: false, mIntent: 'inquiry', mErr: {},
-    mName: st.user?.fullName || '',
-    mPhone: st.user?.identifierType === 'phone' ? (st.user?.identifier || '') : '',
+  // intent mặc định 'deposit_request' (Đặt cọc giữ biển) — khớp Modal #2 (PlateDetail.jsx's "Chốt
+  // biển này"). Prefill từ profile nếu đã đăng nhập (ưu tiên user.phone riêng, xem prefillFromUser).
+  const openBuy = (id, intent = 'deposit_request') => patch({
+    curId: id, modal: true, sent: false, mIntent: intent, mErr: {}, mCouponCode: '', mSubscribe: false,
+    ...prefillFromUser(st.user),
   });
   const setField = (k) => (e) => patch({ [k]: e && e.target ? e.target.value : e });
   const setAuthField = (k) => (e) => patchAuth({ [k]: e && e.target ? e.target.value : e });
@@ -301,12 +304,15 @@ export default function App() {
   };
 
   const [mSending, setMSending] = useState(false);
-  const submitContact = async () => {
+  // couponStatus: kết quả live-check từ Modals.jsx (chỉ gửi couponCode khi đã validate hợp lệ, cùng
+  // quy tắc với PlateDetail.jsx's handleContactSubmit).
+  const submitContact = async (couponStatus) => {
     if (mSending) return; // chặn double-submit khi bấm nhanh 2 lần
     const err = {};
     if (!st.mName.trim()) err.name = 'Vui lòng nhập họ tên.';
     if (!st.mPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
     else if (!validatePhone(st.mPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
+    if (st.mEmail?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(st.mEmail.trim())) err.email = 'Email chưa đúng định dạng.';
     if (Object.keys(err).length) { patch({ mErr: err }); return; }
 
     // UC07 — gửi thật lên API (backend resolve plateNumber → plateId, chống spam qua honeypot).
@@ -314,28 +320,25 @@ export default function App() {
     const intent = st.mIntent === 'deposit_request' ? 'deposit_request' : 'inquiry';
     setMSending(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/contact-requests`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: st.mName.trim(),
-          phone: st.mPhone.trim(),
-          plateId: isGuid ? st.curId : null,
-          plateNumber: cur?.plateNumber || cur?.title || null,
-          note: st.mNote.trim() || null,
-          source: 'plate-detail',
-          intent,
-          honeypot: '',
-        }),
+      await apiClient.post('/api/contact-requests', {
+        fullName: st.mName.trim(),
+        phone: st.mPhone.trim(),
+        email: st.mEmail?.trim() || null,
+        plateId: isGuid ? st.curId : null,
+        plateNumber: cur?.plateNumber || cur?.title || null,
+        note: st.mNote.trim() || null,
+        source: 'plate-detail',
+        intent,
+        subscribeToNotifications: !!st.mSubscribe,
+        honeypot: '',
+        couponCode: couponStatus?.valid ? st.mCouponCode?.trim() || null : null,
       });
-      const body = await resp.json().catch(() => null);
-      if (!resp.ok || !body?.success) {
-        patch({ mErr: { name: body?.error?.message || 'Gửi thất bại, vui lòng thử lại.' } });
-        return;
-      }
       patch({ sent: true, mErr: {} });
       notify('Đã gửi yêu cầu tư vấn');
-    } catch {
-      patch({ mErr: { name: 'Không kết nối được server.' } });
+      // Lần đầu gõ SĐT (profile chưa có) → tự lưu, lần sau mở form khác đã có sẵn.
+      maybeSavePhoneToProfile(st.user, st.mPhone, (u) => patch({ user: u }));
+    } catch (e) {
+      patch({ mErr: { name: e?.message || 'Gửi thất bại, vui lòng thử lại.' } });
     } finally {
       setMSending(false);
     }
@@ -697,7 +700,7 @@ export default function App() {
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
-            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} fromScreen={st.detailFrom} />}
+            {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} fromScreen={st.detailFrom} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
               <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} openPlate={openPlate} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />

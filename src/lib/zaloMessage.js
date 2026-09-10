@@ -25,3 +25,19 @@ export async function openZaloWithMessage(zaloPhone, message) {
   }
   window.open(`https://zalo.me/${zaloPhone}`, '_blank', 'noopener,noreferrer');
 }
+
+// Desktop không có handler xử lý tel: (trình duyệt desktop không mở app gọi điện nào) — bấm không
+// phản ứng gì. Mobile thì tel: hoạt động bình thường (mở app gọi). Phát hiện qua UA thay vì onClick
+// preventDefault trên <a href="tel:">, giữ href thật để middle-click/copy-link vẫn đúng trên mobile.
+export function isMobileDevice() {
+  return typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+export async function callOrCopyPhone(phone) {
+  try {
+    await navigator.clipboard.writeText(phone);
+    toast.success(`Đã sao chép số ${phone} — dán để gọi hoặc lưu danh bạ`);
+  } catch {
+    toast(`Số điện thoại: ${phone}`);
+  }
+}

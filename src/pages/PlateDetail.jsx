@@ -6,6 +6,7 @@ import Modal from '../components/Modal.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
+import { prefillFromUser, maybeSavePhoneToProfile } from '../lib/contactPrefill.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { validateCoupon } from '../services/couponService.js';
 import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
@@ -131,7 +132,7 @@ const FROM_SCREEN_CRUMB = {
   home: { label: 'Trang chủ', screen: 'home' },
 };
 
-export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify, user, fromScreen }) {
+export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify, user, onUserUpdate, fromScreen }) {
   const { data: plate, isLoading, isError } = usePlateDetail(plateId);
   const { data: similar } = useSimilarPlates(plateId, 8);
   const { data: settings } = useSiteSettings();
@@ -157,9 +158,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const [contactOpen, setContactOpen] = useState(false);
   const [cSent, setCSent] = useState(false);
   const [cForm, setCForm] = useState({
-    fullName: user?.fullName || '',
-    phone: user?.identifierType === 'phone' ? (user?.identifier || '') : '',
-    email: user?.identifierType === 'email' ? (user?.identifier || '') : '',
+    ...prefillFromUser(user),
     note: '', intent: 'deposit_request', subscribe: false, honeypot: '', couponCode: '',
   });
   const [cErr, setCErr] = useState(null);
@@ -249,7 +248,13 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       honeypot: cForm.honeypot || null,
       couponCode: couponStatus?.valid ? cForm.couponCode.trim() : null,
     }, {
-      onSuccess: () => { notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.'); setCSent(true); handleContact('contact'); },
+      onSuccess: () => {
+        notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.');
+        setCSent(true);
+        handleContact('contact');
+        // Lần đầu gõ SĐT (profile chưa có) → tự lưu, lần sau mở form khác đã có sẵn.
+        maybeSavePhoneToProfile(user, cForm.phone, onUserUpdate);
+      },
       onError: (err) => setCErr({ field: null, message: err.message || 'Gửi thất bại, vui lòng thử lại.' }),
     });
   };

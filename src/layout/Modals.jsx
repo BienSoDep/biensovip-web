@@ -1,15 +1,28 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Button from '../components/Button.jsx';
-import { Input, Select, IconButton } from '../components/index.jsx';
+import { Input, Select, Checkbox, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import { useSimilarPlates } from '../services/plateDetail.js';
+import { validateCoupon } from '../services/couponService.js';
 import { routeFor } from '../config/routes.js';
 
+// Cùng bộ mục đích với PlateDetail.jsx's "Chốt biển này" — 2 form phải đồng nhất field/hành vi.
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request' };
 
 export default function Modals({ st, patch, cur, submitContact, mSending, setField, openPlate }) {
+  // Mã giảm giá live-check khi rời ô — cùng UX với PlateDetail.jsx.
+  const [couponStatus, setCouponStatus] = useState(null);
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
+  const checkCoupon = async () => {
+    const code = (st.mCouponCode || '').trim();
+    if (!code) { setCouponStatus(null); return; }
+    setCheckingCoupon(true);
+    try { setCouponStatus(await validateCoupon(code)); }
+    catch { setCouponStatus({ valid: false, error: 'CHECK_FAILED' }); }
+    finally { setCheckingCoupon(false); }
+  };
   // Gợi ý biển khác sau khi gửi thành công — cùng nguồn dữ liệu với PlateDetail (ưu tiên cùng tỉnh).
   const { data: similar } = useSimilarPlates(st.sent ? cur?.id : null, 4);
   const suggestions = (similar?.sameProvince?.length ? similar.sameProvince : similar?.sameType) || [];
@@ -67,18 +80,25 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
             </div>
             {!st.sent ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                <div><h2 id="modal-contact-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Gửi yêu cầu tư vấn</h2><p id="modal-contact-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Shop gọi lại trong 15 phút, kể cả chủ nhật.</p></div>
+                <div><h2 id="modal-contact-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Chốt biển này</h2><p id="modal-contact-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Shop gọi lại trong 15 phút, kể cả chủ nhật.</p></div>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.mName} error={st.mErr.name} onChange={setField('mName')} />
-                <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
-                <Select label="Mục đích" value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Hỏi chung'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'inquiry' })} />
-                {st.mIntent === 'deposit_request' && (
-                  <Input label="Số tiền cọc (VNĐ)" placeholder="VD: 50000000" value={st.mDeposit} onChange={setField('mDeposit')} />
+                <Input label="Số điện thoại" type="tel" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
+                <Select label="Mục đích" value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Đặt cọc giữ biển'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'deposit_request' })} />
+                <Input label="Mã giảm giá" value={st.mCouponCode || ''} onChange={setField('mCouponCode')} onBlur={checkCoupon} placeholder="Nhập mã nếu có" />
+                {checkingCoupon && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang kiểm tra…</span>}
+                {!checkingCoupon && couponStatus?.valid && (
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--status-success-ink)' }}>Áp dụng thành công — giảm {couponStatus.discountPercent}%</span>
+                )}
+                {!checkingCoupon && couponStatus && !couponStatus.valid && (
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Mã không hợp lệ hoặc đã hết hạn</span>
                 )}
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
-                  <textarea rows={3} placeholder="VD: cần sang tên trong tuần này" value={st.mNote} onChange={setField('mNote')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
+                  <textarea rows={3} placeholder="VD: muốn đặt cọc giữ biển" value={st.mNote} onChange={setField('mNote')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
                 </label>
-                <Button variant="primary" size="lg" fullWidth onClick={submitContact} disabled={mSending} loading={mSending}>Gửi yêu cầu</Button>
+                <Input label="Email" type="email" placeholder="email@example.com" value={st.mEmail || ''} error={st.mErr.email} onChange={setField('mEmail')} />
+                <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={!!st.mSubscribe} onChange={(v) => patch({ mSubscribe: !!v })} />
+                <Button variant="primary" size="lg" fullWidth onClick={() => submitContact(couponStatus)} disabled={mSending} loading={mSending}>Gửi yêu cầu</Button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'fadeIn 140ms var(--ease-out)' }}>

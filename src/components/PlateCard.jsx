@@ -5,7 +5,7 @@ import PlateVisual from './PlateVisual.jsx';
 import ZaloIcon from './ZaloIcon.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
-import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
+import { buildConsultMessage, openZaloWithMessage, callOrCopyPhone, isMobileDevice } from '../lib/zaloMessage.js';
 import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
 import { useSiteSettings } from '../services/siteSettings.js';
 
@@ -137,7 +137,11 @@ export default function PlateCard({
           {!sold ? (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {contact?.phone ? (
-                <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></a>
+                isMobileDevice() ? (
+                  <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></a>
+                ) : (
+                  <button type="button" onClick={() => callOrCopyPhone(contact.phone)} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
+                )
               ) : onBuy ? (
                 <button type="button" onClick={onBuy} aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
               ) : null}

@@ -7,6 +7,7 @@ import { useNotificationSettings, useUpdateNotificationSettings } from '../servi
 import { useBecomeCollaborator, useUpdateBankInfo } from '../services/collaborators.js';
 import { PURPOSES, VEHICLES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
+import { validatePhone } from '../lib/phone.js';
 import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
 import { trackCompleteProfile, trackSkipProfileOnboarding, trackBecomeCollaborator } from '../services/tracking/events.js';
 
@@ -59,20 +60,24 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
 
   const purposeLabelFromKey = (key) => PURPOSES.find((p) => p.key === key)?.label || '';
   const [form, setForm] = useState({
-    fullName: user?.fullName || '', birthDate: user?.birthDate || '', gender: user?.gender || '',
+    fullName: user?.fullName || '', phone: user?.phone || '', birthDate: user?.birthDate || '', gender: user?.gender || '',
     preferredVehicle: user?.preferredVehicle || '', preferredPurpose: purposeLabelFromKey(user?.preferredPurpose),
   });
   const [err, setErr] = useState('');
+  const [phoneErr, setPhoneErr] = useState('');
   const [saving, setSaving] = useState(false);
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async () => {
     if (form.birthDate && !validBirthDate(form.birthDate)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
+    if (form.phone.trim() && !validatePhone(form.phone)) { setPhoneErr('Số điện thoại chưa đúng định dạng (VD: 0905221334).'); return; }
     setErr('');
+    setPhoneErr('');
     setSaving(true);
     try {
       const updated = await updateProfile({
         fullName: form.fullName.trim() || undefined,
+        phone: form.phone.trim() || undefined,
         birthDate: form.birthDate || undefined,
         gender: form.gender || undefined,
         preferredVehicle: form.preferredVehicle || undefined,
@@ -83,7 +88,8 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
       notify('Đã lưu thông tin');
       if (onboarding) go('home')();
     } catch (err) {
-      notify(err.message || 'Không lưu được, thử lại sau.');
+      if (err.code === 'PHONE_EXISTS') setPhoneErr('Số điện thoại đã được sử dụng.');
+      else notify(err.message || 'Không lưu được, thử lại sau.');
     } finally {
       setSaving(false);
     }
@@ -122,6 +128,8 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
           <div style={{ marginTop: 6, height: 40, display: 'flex', alignItems: 'center', padding: '0 14px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', font: 'var(--type-body)', color: 'var(--text-muted)' }}>{user?.identifier || '—'}</div>
         </div>
         <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={(e) => set('fullName')(e.target.value)} />
+
+        <Input label="Số điện thoại" type="tel" placeholder="09xx xxx xxx" value={form.phone} error={phoneErr} onChange={(e) => set('phone')(e.target.value)} />
 
         <DateInputVN label="Ngày sinh (dương lịch)" value={form.birthDate} error={err} onChange={(e) => set('birthDate')(e.target.value)} />
 
