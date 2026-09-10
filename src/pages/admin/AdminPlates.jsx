@@ -24,7 +24,7 @@ import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
 import { fetchMissingMeaningPlates, useBulkSeedMeanings } from '../../services/meanings.js';
-import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage, purgeGeneratedImages } from '../../services/plateImages.js';
+import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage, fetchGeneratedImagePlates, purgeGeneratedImageForPlate } from '../../services/plateImages.js';
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
@@ -264,20 +264,48 @@ export default function AdminPlates({ go, notify, st }) {
     }
   };
 
-  const [confirmPurgeImages, setConfirmPurgeImages] = useState(false);
-  const [purgingImages, setPurgingImages] = useState(false);
+  // Xóa ảnh sinh cũ — cùng pattern UC42 với sinh ảnh: liệt kê trước, xóa tuần tự từng biển, lưu
+  // ngay sau mỗi biển để hủy giữa chừng không mất phần đã xóa.
+  const [generatedImagePlates, setGeneratedImagePlates] = useState(null); // null=chưa mở
+  const [checkingGeneratedImage, setCheckingGeneratedImage] = useState(false);
+  const [purgeProgress, setPurgeProgress] = useState(null); // { done, total, errors: [] } | null
+  const purgeCancelledRef = useRef(false);
+
+  const openPurgeImageModal = async () => {
+    setCheckingGeneratedImage(true);
+    setPurgeProgress(null);
+    try {
+      const res = await fetchGeneratedImagePlates();
+      setGeneratedImagePlates(res.items || []);
+    } catch (err) {
+      notify(err.message || 'Lỗi kiểm tra ảnh sinh tự động');
+    } finally {
+      setCheckingGeneratedImage(false);
+    }
+  };
+
+  const closePurgeImageModal = () => {
+    purgeCancelledRef.current = true;
+    setGeneratedImagePlates(null);
+  };
 
   const confirmPurgeGeneratedImages = async () => {
-    setPurgingImages(true);
-    try {
-      const res = await purgeGeneratedImages();
+    const plates = generatedImagePlates || [];
+    purgeCancelledRef.current = false;
+    const errors = [];
+    setPurgeProgress({ done: 0, total: plates.length, errors });
+    for (let i = 0; i < plates.length; i++) {
+      if (purgeCancelledRef.current) break;
+      try {
+        await purgeGeneratedImageForPlate(plates[i].id);
+      } catch (err) {
+        errors.push(plates[i].plateNumber);
+      }
+      setPurgeProgress({ done: i + 1, total: plates.length, errors: [...errors] });
+    }
+    if (!purgeCancelledRef.current) {
       queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
-      notify(`Đã xóa ${res.deleted} ảnh sinh tự động${res.failed ? `, ${res.failed} ảnh lỗi khi xóa trên Cloudinary` : ''}`);
-    } catch (err) {
-      notify(err.message || 'Xóa ảnh thất bại');
-    } finally {
-      setPurgingImages(false);
-      setConfirmPurgeImages(false);
+      notify(`Đã xóa ảnh cho ${plates.length - errors.length} biển${errors.length ? `, ${errors.length} biển lỗi` : ''}`);
     }
   };
 
@@ -774,8 +802,8 @@ export default function AdminPlates({ go, notify, st }) {
         <Button variant="ghost" size="md" disabled={checkingMissingImage} onClick={openMissingImageModal}>
           {checkingMissingImage ? 'Đang kiểm tra…' : 'Sinh ảnh hàng loạt'}
         </Button>
-        <Button variant="ghost" size="md" onClick={() => setConfirmPurgeImages(true)}>
-          Xóa ảnh sinh cũ
+        <Button variant="ghost" size="md" disabled={checkingGeneratedImage} onClick={openPurgeImageModal}>
+          {checkingGeneratedImage ? 'Đang kiểm tra…' : 'Xóa ảnh sinh cũ'}
         </Button>
         <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
       </div>
@@ -1174,14 +1202,45 @@ export default function AdminPlates({ go, notify, st }) {
         </div>
       </Modal>
 
-      <Modal open={confirmPurgeImages} onClose={() => setConfirmPurgeImages(false)} title="Xóa ảnh sinh cũ" maxWidth="440px">
+      <Modal open={generatedImagePlates !== null} onClose={closePurgeImageModal} title="Xóa ảnh sinh cũ" maxWidth="480px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Xóa toàn bộ ảnh do hệ thống tự vẽ (không đụng ảnh thật admin đã tải lên). Dùng khi cần sinh lại ảnh bằng renderer mới (đã fix font). Sau khi xóa, dùng lại "Sinh ảnh hàng loạt" để tạo ảnh mới.
-          </p>
+          {generatedImagePlates?.length ? (
+            <>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                <b>{generatedImagePlates.length}</b> biển đang dùng ảnh do hệ thống tự vẽ. Xóa xong dùng "Sinh ảnh hàng loạt" để tạo lại bằng renderer mới (đã fix font). Ảnh admin upload tay không bị đụng.
+              </p>
+              {purgeProgress && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${(purgeProgress.done / purgeProgress.total) * 100}%`, background: 'var(--action-primary)', transition: 'width 150ms var(--ease-out)' }} />
+                  </div>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                    Đã xóa {purgeProgress.done}/{purgeProgress.total}{purgeProgress.errors.length ? ` — ${purgeProgress.errors.length} lỗi` : ''}
+                  </span>
+                </div>
+              )}
+              <div style={{ maxHeight: 220, overflow: 'auto', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+                {generatedImagePlates.map((p, i) => {
+                  const done = purgeProgress && i < purgeProgress.done;
+                  const failed = purgeProgress?.errors.includes(p.plateNumber);
+                  return (
+                    <span key={p.id} style={{
+                      font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                      background: failed ? 'var(--status-danger-bg)' : done ? 'var(--status-success-bg)' : 'var(--white)',
+                      color: failed ? 'var(--status-danger)' : done ? 'var(--status-success)' : 'var(--text-strong)',
+                    }}>{p.plateNumber}</span>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có ảnh sinh tự động nào.</p>
+          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-            <Button variant="ghost" size="md" onClick={() => setConfirmPurgeImages(false)} disabled={purgingImages}>Hủy</Button>
-            <Button variant="primary" size="md" onClick={confirmPurgeGeneratedImages} loading={purgingImages}>Xóa ảnh sinh cũ</Button>
+            <Button variant="ghost" size="md" onClick={closePurgeImageModal}>{purgeProgress ? 'Đóng' : 'Hủy'}</Button>
+            {!!generatedImagePlates?.length && !purgeProgress && (
+              <Button variant="danger" size="md" onClick={confirmPurgeGeneratedImages}>Xóa ảnh cho {generatedImagePlates.length} biển</Button>
+            )}
           </div>
         </div>
       </Modal>

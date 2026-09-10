@@ -22,8 +22,12 @@ export async function generateOneImage(plateId) {
   return apiClient.post(`/api/admin/plates/images/generate-one/${plateId}`);
 }
 
-// Xóa toàn bộ ảnh do hệ thống tự sinh (giữ nguyên ảnh admin upload tay) — dùng khi cần generate
-// lại ảnh cũ bằng renderer đã sửa (VD sau khi fix bug thiếu font).
-export async function purgeGeneratedImages() {
-  return apiClient.delete('/api/admin/plates/images/generated');
+// Xóa ảnh do hệ thống tự sinh — dùng khi cần generate lại ảnh cũ bằng renderer đã sửa (VD sau khi
+// fix bug thiếu font). Giữ nguyên ảnh admin upload tay.
+export async function fetchGeneratedImagePlates() {
+  return apiClient.get('/api/admin/plates/images/generated');
+}
+
+export async function purgeGeneratedImageForPlate(plateId) {
+  return apiClient.delete(`/api/admin/plates/images/generated/${plateId}`);
 }
