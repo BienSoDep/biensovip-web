@@ -193,6 +193,13 @@ export default function AdminContacts({ notify, go }) {
                 </span>
               </span>
               <span className="contact-col-note" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
+              <span style={{ flex: '1 1 80px' }}>
+                {c.transactionId ? (
+                  <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: 'color-mix(in srgb, var(--status-success) 16%, transparent)', color: 'var(--status-success)' }}>Đã cọc</span>
+                ) : (
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
+                )}
+              </span>
               <span className="contact-col-time" style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 {formatDate(c.createdAt)}
               </span>
