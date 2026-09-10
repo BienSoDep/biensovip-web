@@ -24,7 +24,7 @@ import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
 import { fetchMissingMeaningPlates, useBulkSeedMeanings } from '../../services/meanings.js';
-import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage } from '../../services/plateImages.js';
+import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage, purgeGeneratedImages } from '../../services/plateImages.js';
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
@@ -261,6 +261,23 @@ export default function AdminPlates({ go, notify, st }) {
     if (!genCancelledRef.current) {
       queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
       notify(`Đã sinh ảnh cho ${plates.length - errors.length} biển${errors.length ? `, ${errors.length} biển lỗi` : ''}`);
+    }
+  };
+
+  const [confirmPurgeImages, setConfirmPurgeImages] = useState(false);
+  const [purgingImages, setPurgingImages] = useState(false);
+
+  const confirmPurgeGeneratedImages = async () => {
+    setPurgingImages(true);
+    try {
+      const res = await purgeGeneratedImages();
+      queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      notify(`Đã xóa ${res.deleted} ảnh sinh tự động${res.failed ? `, ${res.failed} ảnh lỗi khi xóa trên Cloudinary` : ''}`);
+    } catch (err) {
+      notify(err.message || 'Xóa ảnh thất bại');
+    } finally {
+      setPurgingImages(false);
+      setConfirmPurgeImages(false);
     }
   };
 
@@ -757,6 +774,9 @@ export default function AdminPlates({ go, notify, st }) {
         <Button variant="ghost" size="md" disabled={checkingMissingImage} onClick={openMissingImageModal}>
           {checkingMissingImage ? 'Đang kiểm tra…' : 'Sinh ảnh hàng loạt'}
         </Button>
+        <Button variant="ghost" size="md" onClick={() => setConfirmPurgeImages(true)}>
+          Xóa ảnh sinh cũ
+        </Button>
         <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
       </div>
 
@@ -1150,6 +1170,18 @@ export default function AdminPlates({ go, notify, st }) {
             {!!missingImagePlates?.length && !genProgress && (
               <Button variant="primary" size="md" onClick={confirmBulkGenerateImages}>Sinh ảnh cho {missingImagePlates.length} biển</Button>
             )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={confirmPurgeImages} onClose={() => setConfirmPurgeImages(false)} title="Xóa ảnh sinh cũ" maxWidth="440px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Xóa toàn bộ ảnh do hệ thống tự vẽ (không đụng ảnh thật admin đã tải lên). Dùng khi cần sinh lại ảnh bằng renderer mới (đã fix font). Sau khi xóa, dùng lại "Sinh ảnh hàng loạt" để tạo ảnh mới.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <Button variant="ghost" size="md" onClick={() => setConfirmPurgeImages(false)} disabled={purgingImages}>Hủy</Button>
+            <Button variant="primary" size="md" onClick={confirmPurgeGeneratedImages} loading={purgingImages}>Xóa ảnh sinh cũ</Button>
           </div>
         </div>
       </Modal>

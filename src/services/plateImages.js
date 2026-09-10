@@ -21,3 +21,9 @@ export function useBulkGenerateImages() {
 export async function generateOneImage(plateId) {
   return apiClient.post(`/api/admin/plates/images/generate-one/${plateId}`);
 }
+
+// Xóa toàn bộ ảnh do hệ thống tự sinh (giữ nguyên ảnh admin upload tay) — dùng khi cần generate
+// lại ảnh cũ bằng renderer đã sửa (VD sau khi fix bug thiếu font).
+export async function purgeGeneratedImages() {
+  return apiClient.delete('/api/admin/plates/images/generated');
+}
