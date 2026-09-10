@@ -6,6 +6,7 @@ import PlateCardSkeleton from './skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { routeFor } from '../config/routes.js';
 import { trackViewItemList, trackSelectItem } from '../services/tracking/events.js';
+import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 
 function FaqAccordion({ faqs }) {
   const [openIdx, setOpenIdx] = useState(0);
@@ -45,7 +46,7 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
           {title || 'Kho Biển Số Đẹp'}
         </h1>
         {intro && (
-          <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }} dangerouslySetInnerHTML={{ __html: intro }} />
+          <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
         )}
         {blogPost && (
           <div style={{ marginTop: 'var(--space-6)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'center' }}>

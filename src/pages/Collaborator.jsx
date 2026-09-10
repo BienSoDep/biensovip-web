@@ -10,6 +10,7 @@ import { useBecomeCollaborator, useUpdateBankInfo, useUpdateMessagingProfile, us
 import { usePlates } from '../services/plates.js';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { loadAuth } from '../lib/authStore.js';
+import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 import { refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
 import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
@@ -1191,8 +1192,8 @@ function BenefitLanding({ go, onActivated }) {
         style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-8) var(--gutter-card)', overflow: 'hidden' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)' }}>
           <div style={{ flex: '1 1 360px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', minWidth: 0 }}>
-            <h1 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)', textWrap: 'balance' }} dangerouslySetInnerHTML={{ __html: title }} />
-            {body && <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', font: 'var(--type-body)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: body }} />}
+            <h1 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)', textWrap: 'balance' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }} />
+            {body && <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', font: 'var(--type-body)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-5)' }}>
               {STATS.map((s) => {
                 const StatIcon = s.icon;

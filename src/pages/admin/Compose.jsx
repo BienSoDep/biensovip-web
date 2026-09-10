@@ -13,6 +13,7 @@ import Modal from '../../components/Modal.jsx';
 import BlogVersionHistoryModal from '../../components/BlogVersionHistoryModal.jsx';
 import { apiClient } from '../../services/apiClient.js';
 import { useCreateBlogPost, useUpdateBlogPost, useAdminBlogTags, useCreateBlogTag, checkBlogPostVersion } from '../../services/blog.js';
+import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
 import { useAdminPromoVideos, useCreatePromoVideo } from '../../services/promoVideoService.js';
 import { useAdminCategories } from '../../services/categories.js';
 import { setComposeDirty, resetComposeDirty } from '../../lib/unsavedGuard.js';
@@ -626,7 +627,7 @@ export default function Compose({ st, patch, notify }) {
               {coverImageUrl && (
                 <img src={coverImageUrl} alt={title} style={{ width: '100%', maxHeight: 400, objectFit: 'cover', borderRadius: 'var(--radius-card)' }} />
               )}
-              <div style={{ font: 'var(--type-body)', fontSize: 17, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentHtml || '<p style="color:var(--text-faint)">Chưa có nội dung.</p>' }} />
+              <div style={{ font: 'var(--type-body)', fontSize: 17, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentHtml ? sanitizeHtml(contentHtml) : '<p style="color:var(--text-faint)">Chưa có nội dung.</p>' }} />
               {tags.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
                   {tags.map((t) => <span key={t} style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</span>)}

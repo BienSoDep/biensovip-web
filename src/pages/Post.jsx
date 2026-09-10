@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
-import DOMPurify from 'dompurify';
 import { Share2, Link2, MessageCircle, Minus, Plus } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import LazyImage from '../components/LazyImage.jsx';
@@ -13,6 +12,7 @@ import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { Input } from '../components/index.jsx';
 import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } from '../services/tracking/events.js';
+import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -133,7 +133,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const contentHtml = useMemo(() => DOMPurify.sanitize(post?.contentHtml || '', { USE_PROFILES: { html: true } }), [post?.contentHtml]);
+  const contentHtml = useMemo(() => sanitizeHtml(post?.contentHtml), [post?.contentHtml]);
   const { html: contentWithIds, items: tocItems, parts } = useTableOfContents(contentHtml);
   const related = relatedData?.items || [];
   const relatedPlates = relatedPlatesData?.items || [];

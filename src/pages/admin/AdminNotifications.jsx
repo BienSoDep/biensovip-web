@@ -11,6 +11,7 @@ import { SkeletonTable } from '../../components/Skeleton.jsx';
 import { canPerm } from '../../layout/AdminShell.jsx';
 import { useAdminEmailTemplates, useUpdateEmailTemplate } from '../../services/emailTemplates.js';
 import { formatDate } from '../../lib/date.js';
+import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
 
 const TYPE_LABEL = {
   plate_match: 'Biển mới khớp tìm kiếm đã lưu', hot_alert: 'Biển yêu thích đang HOT', re_engage: 'Nhắc quay lại (không hoạt động)',
@@ -59,7 +60,7 @@ function EmailPreview({ title, body }) {
         </div>
         <div style={{ padding: '18px 20px', background: '#ffffff' }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{title || '—'}</div>
-          <div style={{ color: '#374151', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: body || '<p style="color:#9CA3AF">—</p>' }} />
+          <div style={{ color: '#374151', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: body ? sanitizeHtml(body) : '<p style="color:#9CA3AF">—</p>' }} />
         </div>
         <div style={{ padding: '12px 20px', background: '#fff7ed', color: '#9a3412', fontSize: 12, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Phone size={12} /> 081 579 2699</span>

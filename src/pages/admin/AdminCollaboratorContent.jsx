@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Button from '../../components/Button.jsx';
 import { useAdminCollaboratorBenefitContent } from '../../services/adminCollaborators.js';
 import { useCollaboratorBenefitContent } from '../../services/collaborators.js';
+import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
 
 // Chỉnh nội dung trang ưu đãi CTV — text đơn giản (html), pattern ChatbotSettings.
 // Title + Body hiện ở trang public /cong-tac-vien. Preview render đúng như khách thấy.
@@ -53,8 +54,8 @@ export default function AdminCollaboratorContent({ notify }) {
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Xem trước trang khách</h3>
-        <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }} dangerouslySetInnerHTML={{ __html: title }} />
-        <div style={{ font: 'var(--type-body)', color: 'var(--text-body)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }} dangerouslySetInnerHTML={{ __html: body }} />
+        <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }} />
+        <div style={{ font: 'var(--type-body)', color: 'var(--text-body)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />
       </div>
     </div>
   );
