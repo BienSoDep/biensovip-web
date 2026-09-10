@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Eye } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Select, ImageUrlInput } from '../../components/index.jsx';
+import Modal from '../../components/Modal.jsx';
 import { useAdminPolicyPages, useUpdatePolicyPage } from '../../services/policyPages.js';
 
 const SLUG_OPTS = [
@@ -16,6 +17,102 @@ const EMPTY_STEP = { title: '', desc: '', detail: '', imageUrl: '' };
 
 function parseContent(json) {
   try { return JSON.parse(json || '{}'); } catch { return {}; }
+}
+
+// tiny HTML-in-string renderer — khớp Terms.jsx/Privacy.jsx: chỉ hỗ trợ <strong>…</strong>.
+function Rich({ html }) {
+  const parts = String(html || '').split(/(<strong>.*?<\/strong>)/g);
+  return parts.map((p, i) => (p.startsWith('<strong>') ? <strong key={i}>{p.replace(/<\/?strong>/g, '')}</strong> : p));
+}
+
+// Body 1 mục — khớp Privacy.jsx: hỗ trợ thêm type "list"/"mixed" (danh sách <li> trộn với đoạn văn).
+function SectionBody({ s }) {
+  if (s.type === 'list' || s.type === 'mixed') {
+    const items = String(s.body || '').split(/(<li>.*?<\/li>)/g).filter((x) => x.startsWith('<li>'));
+    const lead = String(s.body || '').replace(/(<li>.*?<\/li>)/g, '').trim();
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {lead && <p style={{ margin: 0 }}><Rich html={lead} /></p>}
+        <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {items.map((li, i) => <li key={i}><Rich html={li.replace(/<\/?li>/g, '')} /></li>)}
+        </ul>
+      </div>
+    );
+  }
+  return <p style={{ margin: 0 }}><Rich html={s.body} /></p>;
+}
+
+// Preview khớp gần đúng layout thật của 5 trang public (Terms/Privacy dùng "sections", Faq dùng
+// "items" {q,a}, Transfer dùng "steps"+"notes", Process dùng "steps" có ảnh) — admin xem trước nội
+// dung sẽ hiện ra sao mà không cần lưu rồi mở tab khác kiểm tra.
+function PolicyPreview({ slug, title, subtitle, updatedLabel, contentJson }) {
+  const content = parseContent(contentJson);
+  const textStyle = { font: 'inherit', color: 'inherit', lineHeight: 1.6 };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, font: '15px/1.5 var(--font-body, sans-serif)', color: '#1a1a1a' }}>
+      <div>
+        <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 700 }}>{title || '(chưa có tiêu đề)'}</h1>
+        {subtitle && <p style={{ margin: 0, fontSize: 14, color: '#666' }}>{subtitle}</p>}
+        {updatedLabel && <p style={{ margin: '4px 0 0', fontSize: 13, color: '#999' }}>{updatedLabel}</p>}
+      </div>
+
+      {slug === 'faq' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {(content.items || []).map((item, i) => (
+            <div key={i} style={{ border: '1px solid #e5e5e5', borderRadius: 12, padding: '12px 16px' }}>
+              <div style={{ fontWeight: 600, marginBottom: 6 }}>{item.q}</div>
+              <div style={{ ...textStyle, fontSize: 14 }}>{item.a}</div>
+            </div>
+          ))}
+          {!(content.items || []).length && <p style={{ color: '#999' }}>Chưa có câu hỏi nào.</p>}
+        </div>
+      ) : slug === 'transfer' ? (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {(content.steps || []).map((s, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', border: '1px solid #e5e5e5', borderRadius: 12, padding: 16 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f36b21', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 700 }}>{i + 1}</div>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{s.title}</div>
+                  <div style={{ ...textStyle, fontSize: 14 }}>{s.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {!!(content.notes || []).length && (
+            <ul style={{ margin: 0, paddingLeft: 20 }}>
+              {content.notes.map((n, i) => <li key={i} style={textStyle}>{n}</li>)}
+            </ul>
+          )}
+        </>
+      ) : slug === 'process' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {(content.steps || []).map((s, i) => (
+            <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', border: '1px solid #e5e5e5', borderRadius: 12, padding: 16 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f36b21', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 700 }}>{i + 1}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontWeight: 600 }}>{s.title}</div>
+                <div style={{ ...textStyle, fontSize: 14 }}>{s.desc}</div>
+                {s.imageUrl && <img src={s.imageUrl} alt="" style={{ maxWidth: 240, borderRadius: 8, marginTop: 6 }} />}
+              </div>
+            </div>
+          ))}
+          {!(content.steps || []).length && <p style={{ color: '#999' }}>Chưa có bước nào.</p>}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {(content.sections || []).map((s, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{s.title}</h2>
+              <SectionBody s={s} />
+            </div>
+          ))}
+          {!(content.sections || []).length && <p style={{ color: '#999' }}>Chưa có nội dung nào.</p>}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Quy trình 5 bước dùng editor riêng (từng bước có ảnh minh hoạ) thay vì bắt admin gõ tay JSON —
@@ -69,6 +166,7 @@ export default function AdminPolicyPages({ notify }) {
   const { data: pages, isLoading, isError } = useAdminPolicyPages();
   const update = useUpdatePolicyPage();
   const [form, setForm] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const page = pages?.find((p) => p.slug === slug);
   const current = form || page || {};
@@ -138,9 +236,16 @@ export default function AdminPolicyPages({ notify }) {
 
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <Button variant="primary" size="md" loading={update.isPending} onClick={save}>Lưu nội dung</Button>
+          <Button variant="outline" size="md" onClick={() => setPreviewOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Eye size={16} /> Xem trước</Button>
           {form && <Button variant="ghost" size="md" onClick={() => setForm(null)}>Hủy</Button>}
         </div>
       </div>
+
+      <Modal open={previewOpen} onClose={() => setPreviewOpen(false)} title={`Xem trước — ${SLUG_OPTS.find((o) => o.value === slug)?.label || slug}`} maxWidth="720px">
+        <div style={{ maxHeight: '70vh', overflow: 'auto', background: '#fff', borderRadius: 'var(--radius-field)', padding: 24, border: '1px solid var(--grey-200)' }}>
+          <PolicyPreview slug={slug} title={title} subtitle={subtitle} updatedLabel={updatedLabel} contentJson={contentJson} />
+        </div>
+      </Modal>
     </div>
   );
 }
