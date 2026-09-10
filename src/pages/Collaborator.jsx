@@ -226,7 +226,10 @@ function ClickStatsSection() {
     <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lượt click</span>
+          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            Lượt click
+            <InfoTip text="Biểu đồ số lần khách bấm link/mã giới thiệu của bạn theo ngày. Nguồn (Zalo, Facebook, trực tiếp…) tính theo nơi khách bấm vào." />
+          </span>
           {!isLoading && totalClicks > 0 && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{totalClicks} lượt trong {days} ngày</span>}
         </div>
         <div style={{ display: 'flex', gap: 4, background: 'var(--surface-sunken)', padding: 3, borderRadius: 'var(--radius-pill)' }}>
@@ -659,6 +662,7 @@ function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone, ctvTitle, ctv
 function DashboardBody({ data, onReset, go }) {
   const [tab, setTab] = useState('overview');
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [messageCopied, setMessageCopied] = useState(false);
   const [editingBank, setEditingBank] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -698,9 +702,15 @@ function DashboardBody({ data, onReset, go }) {
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-          <Badge tone="mint">{data.referralCode}</Badge>
+          <button type="button" onClick={() => copyText(data.referralCode, () => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); })}
+            title="Bấm để sao chép mã" style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}>
+            <Badge tone="mint">{codeCopied ? 'Đã sao chép' : data.referralCode}</Badge>
+          </button>
           {data.commissionRate != null && (
-            <span style={{ font: 'var(--type-caption)', color: 'rgba(255,255,255,.7)' }}>Hệ số hoa hồng: {(data.commissionRate * 100).toFixed(1)}%</span>
+            <span style={{ font: 'var(--type-caption)', color: 'rgba(255,255,255,.7)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Hệ số hoa hồng: {(data.commissionRate * 100).toFixed(1)}%
+              <InfoTip text="Phần trăm bạn nhận trên số tiền khách đặt cọc/thanh toán qua link giới thiệu của bạn. Admin có thể set riêng cao hơn mức mặc định cho từng CTV." style={{ color: 'rgba(255,255,255,.7)' }} />
+            </span>
           )}
         </div>
       </div>
@@ -719,14 +729,17 @@ function DashboardBody({ data, onReset, go }) {
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
             {[
-              ['Lượt click', String(data.clicks), 'var(--text-strong)'],
-              ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)'],
-              ['Giao dịch thành công', String(data.successfulDeals), 'var(--status-success)'],
-              ['Chờ duyệt', money(data.pending), 'var(--status-warning)'],
-              ['Đã duyệt / đã chi trả', money(data.approved + data.paid), 'var(--status-success)'],
-            ].map(([label, value, color]) => (
+              ['Lượt click', String(data.clicks), 'var(--text-strong)', 'Số lần khách bấm vào link/mã giới thiệu của bạn, tính cả khách chưa để lại thông tin gì.'],
+              ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)', 'Số khách đã đăng ký tài khoản hoặc để lại liên hệ qua link của bạn — chưa chắc đã mua.'],
+              ['Giao dịch thành công', String(data.successfulDeals), 'var(--status-success)', 'Số đơn khách đã đặt cọc/mua thành công qua link của bạn, admin đã xác nhận thanh toán.'],
+              ['Chờ duyệt', money(data.pending), 'var(--status-warning)', 'Tổng hoa hồng của các giao dịch đang chờ admin xác nhận đã nhận tiền — chưa được chuyển khoản.'],
+              ['Đã duyệt / đã chi trả', money(data.approved + data.paid), 'var(--status-success)', 'Tổng hoa hồng admin đã duyệt (sắp chuyển) cộng với phần đã chuyển khoản vào tài khoản ngân hàng của bạn.'],
+            ].map(([label, value, color, tip]) => (
               <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {label}
+                  <InfoTip text={tip} />
+                </span>
                 <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color }}>{value}</span>
               </div>
             ))}
@@ -778,7 +791,10 @@ function DashboardBody({ data, onReset, go }) {
           {data.recent?.length > 0 && (
             <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử hoa hồng ({data.recent.length} gần nhất)</span>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  Lịch sử hoa hồng ({data.recent.length} gần nhất)
+                  <InfoTip text="Chờ duyệt: giao dịch mới, admin chưa xác nhận đã nhận tiền. Đã duyệt: admin đã xác nhận, chờ chuyển khoản. Đã trả: đã chuyển vào tài khoản ngân hàng bạn đăng ký." />
+                </span>
                 <Button variant="ghost" size="sm" disabled={exportingCommissions} onClick={() => exportCommissions().catch((e) => toast.error(e.message))}>
                   {exportingCommissions ? 'Đang xuất…' : 'Xuất CSV'}
                 </Button>
