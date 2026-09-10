@@ -296,8 +296,19 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
       go('collab')();
     } catch (e) {
       const code = e?.code;
-      if (code === 'EMAIL_NOT_VERIFIED') notify('Xác thực email trước khi trở thành CTV.');
-      else notify(e?.message || 'Kích hoạt thất bại, thử lại sau.');
+      // Chưa verify email → backend chặn. Tự gửi mã rồi mở ô nhập mã ngay tại đây,
+      // giữ nguyên form ngân hàng user vừa điền thay vì bắt bấm nút khác trước.
+      if (code === 'EMAIL_NOT_VERIFIED') {
+        try {
+          await requestEmailVerifyOtp();
+          setOtpSent(true);
+          notify('Đã gửi mã xác thực tới email của bạn. Nhập mã để hoàn tất.');
+        } catch (err) {
+          notify(err?.message || 'Gửi mã thất bại, thử lại sau.');
+        }
+      } else {
+        notify(e?.message || 'Kích hoạt thất bại, thử lại sau.');
+      }
     } finally {
       setBusy(false);
     }
@@ -369,30 +380,21 @@ function BecomeCollaboratorSection({ go, notify, user, onUserUpdate }) {
               </div>
             )}
           </>
-        ) : needsEmailVerify ? (
+        ) : (
           <>
             <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-              Xác thực email trước khi kích hoạt tài khoản Cộng tác viên (để nhận thông báo hoa hồng).
+              {needsEmailVerify
+                ? 'Điền thông tin ngân hàng rồi bấm Kích hoạt CTV — hệ thống gửi mã xác thực tới email của bạn để hoàn tất. Ngân hàng không bắt buộc, có thể bổ sung sau.'
+                : 'Giới thiệu khách mua biển số đẹp, nhận hoa hồng trên mỗi giao dịch thành công. Kích hoạt ngay từ tài khoản này — không cần đăng ký riêng.'}
             </p>
-            {!otpSent ? (
-              <Button variant="primary" size="md" style={{ alignSelf: 'flex-start' }} onClick={sendOtp} disabled={otpBusy}>
-                {otpBusy ? 'Đang gửi...' : 'Gửi mã xác thực'}
-              </Button>
-            ) : (
+            {otpSent && (
               <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
                 <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
                 <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
               </div>
             )}
-          </>
-        ) : (
-          <>
-            <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-              Giới thiệu khách mua biển số đẹp, nhận hoa hồng trên mỗi giao dịch thành công. Kích hoạt ngay từ tài khoản này — không cần đăng ký riêng.
-            </p>
             <Select label="Ngân hàng (không bắt buộc)" value={bankCode} options={banks} onChange={setBankCode} />
             <Input
               label="Số tài khoản nhận hoa hồng (không bắt buộc)"

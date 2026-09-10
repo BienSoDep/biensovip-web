@@ -1129,8 +1129,19 @@ function ActivateCtvForm({ onActivated }) {
       onActivated();
     } catch (e) {
       const code = e?.code;
-      if (code === 'EMAIL_NOT_VERIFIED') toast.error('Xác thực email trước khi trở thành CTV.');
-      else toast.error(e?.message || 'Kích hoạt thất bại, thử lại sau.');
+      // Chưa verify email → backend chặn. Tự gửi mã luôn rồi mở ô nhập mã, để user
+      // không phải đoán bấm nút nào tiếp theo (trước đây form bị khoá cứng ở đây).
+      if (code === 'EMAIL_NOT_VERIFIED') {
+        try {
+          await requestEmailVerifyOtp();
+          setOtpSent(true);
+          toast.success('Đã gửi mã xác thực tới email của bạn. Nhập mã để hoàn tất.');
+        } catch (err) {
+          toast.error(err?.message || 'Gửi mã thất bại, thử lại sau.');
+        }
+      } else {
+        toast.error(e?.message || 'Kích hoạt thất bại, thử lại sau.');
+      }
     } finally {
       setBusy(false);
     }
@@ -1143,25 +1154,19 @@ function ActivateCtvForm({ onActivated }) {
       <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Trở thành Cộng tác viên</h3>
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
         {needsEmailVerify
-          ? 'Còn thiếu: xác thực email. Điền mã gửi tới email của bạn để kích hoạt.'
+          ? 'Điền thông tin ngân hàng rồi bấm Kích hoạt — hệ thống gửi mã xác thực tới email của bạn để hoàn tất. Ngân hàng không bắt buộc, có thể bổ sung sau.'
           : 'Xác thực email đã đủ để kích hoạt ngay. Thông tin ngân hàng bên dưới không bắt buộc — chỉ cần khi nhận hoa hồng, có thể bổ sung sau.'}
       </p>
 
-      {needsEmailVerify && (
-        !otpSent ? (
-          <Button variant="outline" size="md" style={{ alignSelf: 'flex-start' }} onClick={sendOtp} disabled={otpBusy}>
-            {otpBusy ? 'Đang gửi...' : 'Gửi mã xác thực email'}
-          </Button>
-        ) : (
-          <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
-            <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
-            <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
-          </div>
-        )
+      {otpSent && (
+        <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+          <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
+          <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
+        </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', opacity: needsEmailVerify ? 0.5 : 1, pointerEvents: needsEmailVerify ? 'none' : 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <Select label="Ngân hàng (không bắt buộc)" value={bankCode} options={banks} onChange={setBankCode} />
         <Input label="Số tài khoản nhận hoa hồng (không bắt buộc)" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
         <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
