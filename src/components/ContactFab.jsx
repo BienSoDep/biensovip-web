@@ -2,14 +2,7 @@ import { useState } from 'react';
 import { Phone, X, MessageCircle } from 'lucide-react';
 import { content } from '../lib/content/index.js';
 import { logZaloClick } from '../services/zaloClicks.js';
-
-function ZaloIcon(props) {
-  return (
-    <svg viewBox="0 0 48 48" width={22} height={22} {...props}>
-      <text x="24" y="30" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="15" fill="currentColor">Zalo</text>
-    </svg>
-  );
-}
+import ZaloIcon from './ZaloIcon.jsx';
 
 function FacebookIcon(props) {
   return (

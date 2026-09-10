@@ -2,11 +2,17 @@ import { useEffect, useRef } from 'react';
 import Button from '../components/Button.jsx';
 import { Input, Select, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
+import PlateCard from '../components/PlateCard.jsx';
+import { useSimilarPlates } from '../services/plateDetail.js';
+import { routeFor } from '../config/routes.js';
 
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request' };
 
-export default function Modals({ st, patch, cur, submitContact, mSending, setField }) {
+export default function Modals({ st, patch, cur, submitContact, mSending, setField, openPlate }) {
+  // Gợi ý biển khác sau khi gửi thành công — cùng nguồn dữ liệu với PlateDetail (ưu tiên cùng tỉnh).
+  const { data: similar } = useSimilarPlates(st.sent ? cur?.id : null, 4);
+  const suggestions = (similar?.sameProvince?.length ? similar.sameProvince : similar?.sameType) || [];
   const contactRef = useRef(null);
 
   // Escape key closes any open modal
@@ -81,13 +87,27 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
                   <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Cảm ơn bạn</span>
                   <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Yêu cầu đã được ghi nhận. Chúng tôi gọi lại trong 15 phút.</span>
                 </div>
-                <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Muốn giữ chỗ nhanh? Chuyển khoản cọc:</span>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Ngân hàng</span><span style={{ color: 'var(--text-strong)' }}>Vietcombank — Đà Nẵng</span></div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Số tài khoản</span><span style={{ color: 'var(--text-strong)' }}>0041 0000 998877</span></div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Chủ tài khoản</span><span style={{ color: 'var(--text-strong)' }}>DINH VAN DUY</span></div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', font: 'var(--type-body-sm)' }}><span style={{ color: 'var(--text-muted)', minWidth: 100 }}>Nội dung CK</span><span style={{ color: 'var(--text-strong)' }}>COC {cur.ref}</span></div>
+                <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <PlateVisual size="sm" prov={cur.prov} seri={cur.seri} num={cur.num} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển số bạn vừa gửi yêu cầu</span>
+                    <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{cur.title}</span>
+                    <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{cur.cat} · {cur.price}</span>
+                  </div>
                 </div>
+                {suggestions.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                    <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trong lúc chờ, xem thêm biển khác?</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                      {suggestions.map((p) => (
+                        <PlateCard key={p.id} layout="row" plateNumber={p.plateNumber} province={p.province}
+                          price={p.price} thumbnailUrl={p.thumbnailUrl}
+                          href={routeFor('detail', p.slug || p.id)}
+                          onOpen={() => { patch({ modal: false, sent: false }); openPlate?.(p.slug || p.id); }} />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <Button variant="outline" size="md" fullWidth onClick={() => patch({ modal: false, sent: false })}>Đóng</Button>
               </div>
             )}

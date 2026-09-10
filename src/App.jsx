@@ -762,7 +762,7 @@ export default function App() {
           {isPublic && <PromoRails openPlate={openPlate} />}
 
           <Suspense fallback={null}>
-            <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} />
+            <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} openPlate={openPlate} />
           </Suspense>
 
           {isPublic && <ContactFab zalo={st.settings?.zalo} phone={st.settings?.phone} />}

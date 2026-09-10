@@ -1,6 +1,7 @@
 import { Card, Badge, IconButton } from './index.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
+import ZaloIcon from './ZaloIcon.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
@@ -135,15 +136,18 @@ export default function PlateCard({
           {!sold ? (
             <div style={{ display: 'flex', gap: 8 }}>
               {contact?.phone ? (
-                <a href={`tel:${contact.phone}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}><Button variant="primary" size="sm" className="plate-card-cta-primary" style={{ width: '100%' }}>Gọi ngay</Button></a>
+                <a href={`tel:${contact.phone}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}><Button variant="outline" size="sm" className="plate-card-cta-secondary" style={{ width: '100%' }}>Gọi ngay</Button></a>
               ) : onBuy ? (
-                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Gọi ngay</Button>
+                <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" style={{ flex: 1 }}>Gọi ngay</Button>
               ) : null}
-              {contact?.zalo ? (
-                <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} className="plate-card-cta-secondary" style={{ flex: 1 }}>Nhắn Zalo</Button>
-              ) : onBuy ? (
-                <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" style={{ flex: 1 }}>Nhắn Zalo</Button>
-              ) : null}
+              {onBuy && (
+                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1 }}>Chốt biển này</Button>
+              )}
+              {contact?.zalo && (
+                <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} className="plate-card-cta-secondary" aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flexShrink: 0, width: 40, padding: 0 }}>
+                  <ZaloIcon width={18} height={18} />
+                </Button>
+              )}
             </div>
           ) : (
             <Button variant="ghost" size="sm" disabled fullWidth>Đã bán</Button>
