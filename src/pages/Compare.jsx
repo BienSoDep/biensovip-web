@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, Fragment } from 'react';
+import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { ArrowLeftRight, X, Sparkles, Search, Heart } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
@@ -22,34 +22,60 @@ import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js'
 // mỗi slot trống là 1 ô tìm kiếm riêng, gõ số biển ra gợi ý ngay dưới, chọn là add() thẳng vào so sánh.
 function PlateSlotSearch({ onAdd, excludeIds }) {
   const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
   const [debouncedQuery] = useDebouncedValue(query, 300);
-  const { data } = usePlates({ q: debouncedQuery, perPage: 8 }, { enabled: debouncedQuery.trim().length >= 2 });
+  const { data, isFetching } = usePlates({ q: debouncedQuery, perPage: 8 }, { enabled: debouncedQuery.trim().length >= 2 });
   const results = (data?.items || []).filter((p) => !excludeIds.includes(p.id));
+  const showPanel = focused && debouncedQuery.trim().length >= 2;
+  const wrapRef = useRef(null);
+
+  // Click ngoài ô tìm → đóng panel gợi ý (blur riêng sẽ đóng cả khi bấm vào kết quả trước khi onClick kịp chạy).
+  useEffect(() => {
+    if (!showPanel) return;
+    const onClickOutside = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setFocused(false); };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [showPanel]);
 
   return (
-    <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
+    <div ref={wrapRef} style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
       <div style={{ position: 'relative' }}>
         <Search size={16} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', color: 'var(--text-faint)', pointerEvents: 'none' }} />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
           placeholder="Tìm biển số để thêm..."
           aria-label="Tìm biển số để thêm vào so sánh"
-          style={{ height: 44, width: '100%', border: '1.5px dashed var(--border-hairline)', borderRadius: 'var(--radius-field)', background: 'var(--white)', padding: '0 14px 0 40px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }}
+          style={{ height: 44, width: '100%', border: `1.5px solid ${focused ? 'var(--action-primary)' : 'var(--border-hairline)'}`, borderRadius: 'var(--radius-field)', background: 'var(--white)', padding: query ? '0 40px' : '0 14px 0 40px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none', transition: 'border-color 120ms var(--ease-out)' }}
         />
+        {query && (
+          <button type="button" onClick={() => setQuery('')} aria-label="Xóa tìm kiếm"
+            style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', border: 'none', background: 'var(--surface-sunken)', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}>
+            <X size={13} />
+          </button>
+        )}
       </div>
-      {debouncedQuery.trim().length >= 2 && (
-        <div style={{ position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0, marginTop: 4, background: 'var(--white)', boxShadow: 'var(--shadow-elevated, var(--shadow-4))', borderRadius: 'var(--radius-field)', maxHeight: 260, overflowY: 'auto' }}>
-          {results.length === 0 ? (
-            <div style={{ padding: '12px 14px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Không tìm thấy biển phù hợp</div>
-          ) : results.map((p) => (
-            <button key={p.id} type="button" onClick={() => { onAdd(p.id); setQuery(''); }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
-              <span>{p.plateNumber}</span>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
-            </button>
-          ))}
+      {showPanel && (
+        <div style={{ position: 'absolute', zIndex: 30, top: '100%', left: 0, right: 0, marginTop: 6, background: 'var(--white)', border: '1px solid var(--border-hairline)', boxShadow: 'var(--shadow-elevated, var(--shadow-4))', borderRadius: 'var(--radius-field)', maxHeight: 280, overflowY: 'auto' }}>
+          {isFetching ? (
+            <div style={{ padding: '14px', font: 'var(--type-caption)', color: 'var(--text-muted)', textAlign: 'center' }}>Đang tìm…</div>
+          ) : results.length === 0 ? (
+            <div style={{ padding: '14px', font: 'var(--type-caption)', color: 'var(--text-muted)', textAlign: 'center' }}>Không tìm thấy biển phù hợp</div>
+          ) : results.map((p) => {
+            const { prov, seri, num } = splitPlateNumber(p.plateNumber);
+            return (
+              <button key={p.id} type="button" onClick={() => { onAdd(p.id); setQuery(''); setFocused(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', borderBottom: '1px solid var(--surface-sunken)', background: 'none', cursor: 'pointer' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
+                <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -184,7 +210,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
             const { prov, seri, num } = splitPlateNumber(filledPlate.plateNumber);
             return (
               <div style={{ flex: '1 1 220px', maxWidth: 320, background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
-                <button onClick={() => remove(filledPlate.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 4, right: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+                <button onClick={() => remove(filledPlate.id)} aria-label="Bỏ khỏi so sánh" title="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 8, right: 8, border: '1px solid var(--border-hairline)', background: 'var(--white)', boxShadow: 'var(--shadow-1)', borderRadius: '50%', cursor: 'pointer', color: 'var(--text-muted)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                 {shouldShowGeneratedImage(settings, filledPlate.thumbnailUrl ? [filledPlate.thumbnailUrl] : []) ? (
                   <img src={filledPlate.thumbnailUrl} alt={filledPlate.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                 ) : (
@@ -333,7 +359,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               const { prov, seri, num } = splitPlateNumber(p.plateNumber);
               return (
                 <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
-                  <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 2, right: 2, zIndex: 1, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Bỏ khỏi so sánh"><X size={16} /></button>
+                  <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" title="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 6, right: 6, zIndex: 1, border: '1px solid var(--border-hairline)', background: 'var(--white)', boxShadow: 'var(--shadow-1)', borderRadius: '50%', cursor: 'pointer', color: 'var(--text-muted)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                   {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
                     <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                   ) : (

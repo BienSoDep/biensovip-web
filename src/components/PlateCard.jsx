@@ -135,19 +135,19 @@ export default function PlateCard({
             <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
           )}
           {!sold ? (
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {contact?.phone ? (
-                <a href={`tel:${contact.phone}`} style={{ textDecoration: 'none', flexShrink: 0 }}><Button variant="outline" size="sm" className="plate-card-cta-secondary" aria-label="Gọi ngay" title="Gọi ngay" style={{ width: 40, padding: 0 }}><Phone size={18} /></Button></a>
+                <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></a>
               ) : onBuy ? (
-                <Button variant="outline" size="sm" onClick={onBuy} className="plate-card-cta-secondary" aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 40, padding: 0 }}><Phone size={18} /></Button>
+                <button type="button" onClick={onBuy} aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
               ) : null}
               {onBuy && (
                 <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1, minWidth: 0 }}>Chốt biển này</Button>
               )}
               {contact?.zalo && (
-                <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} className="plate-card-cta-secondary" aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flexShrink: 0, width: 40, padding: 0 }}>
-                  <ZaloIcon width={18} height={18} />
-                </Button>
+                <button type="button" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ZaloIcon width={16} height={16} />
+                </button>
               )}
             </div>
           ) : (
