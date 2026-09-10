@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame, Check } from 'lucide-react';
 import Button from '../components/Button.jsx';
@@ -6,6 +6,7 @@ import Modal from '../components/Modal.jsx';
 import { Input, Checkbox, Eyebrow } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
+import OtpBoxes from '../components/OtpBoxes.jsx';
 import { useGoogleLogin, useGoogleConfirmLink } from '../services/googleAuth.js';
 import { routeFor } from '../config/routes.js';
 import { useFeaturedPlates } from '../services/plates.js';
@@ -60,39 +61,6 @@ function PasswordStrength({ value }) {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function OtpBoxes({ value, onChange, error, disabled }) {
-  const refs = useRef([]);
-  const digits = Array.from({ length: 6 }, (_, i) => (value || '')[i] || '');
-  const focus = (i) => refs.current[i]?.focus();
-  const handle = (i, raw) => {
-    const ch = raw.replace(/\D/g, '').slice(-1);
-    const arr = Array.from({ length: 6 }, (_, k) => (value || '')[k] || '');
-    arr[i] = ch;
-    onChange(arr.join(''));
-    if (ch && i < 5) focus(i + 1);
-  };
-  const onKeyDown = (i, e) => {
-    if (e.key === 'Backspace' && !((value || '')[i]) && i > 0) focus(i - 1);
-  };
-  const onPaste = (e) => {
-    const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
-    if (!pasted) return;
-    e.preventDefault();
-    onChange(pasted);
-    focus(Math.min(pasted.length, 5));
-  };
-  return (
-    <div style={{ display: 'flex', gap: 8 }} onPaste={onPaste}>
-      {digits.map((d, i) => (
-        <input key={i} ref={(el) => { refs.current[i] = el; }} value={d} inputMode="numeric" autoComplete="one-time-code" maxLength={1} aria-label={`Chữ số ${i + 1}`} disabled={disabled}
-          aria-invalid={!!error}
-          onChange={(e) => handle(i, e.target.value)} onKeyDown={(e) => onKeyDown(i, e)}
-          style={{ width: '100%', maxWidth: 48, height: 56, textAlign: 'center', fontSize: 22, fontWeight: 'var(--fw-bold)', border: 'none', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', boxShadow: error ? 'inset 0 0 0 2px var(--status-danger)' : 'var(--shadow-inset-hairline)', color: 'var(--text-strong)', outline: 'none', opacity: disabled ? 0.5 : 1 }} />
-      ))}
     </div>
   );
 }

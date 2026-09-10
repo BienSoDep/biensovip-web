@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail, useUpdateCustomer, useCustomerSessions, useRevokeCustomerSession, useResetCustomerPassword, useVerifyCustomerEmail } from '../../services/adminCustomers.js';
+import { useAdminCustomers, useUpdateCustomerStatus, useAdminCustomerDetail, useUpdateCustomer, useCustomerSessions, useRevokeCustomerSession, useResetCustomerPassword, useVerifyCustomerEmail, useRequestDeleteUserOtp, useDeleteUser } from '../../services/adminCustomers.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { SearchField, Select, Badge, IconButton, Input } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
+import OtpBoxes from '../../components/OtpBoxes.jsx';
 import InternalNotesPanel from '../../components/InternalNotesPanel.jsx';
 import { SkeletonTable, SkeletonText } from '../../components/Skeleton.jsx';
 import { validatePhone } from '../../lib/phone.js';
@@ -27,10 +28,17 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const [sendLockEmail, setSendLockEmail] = useState(false);
   const [detailId, setDetailId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, label }
+  const [deletePhase, setDeletePhase] = useState('warn'); // 'warn' → gửi mã; 'otp' → nhập mã
+  const [deleteCode, setDeleteCode] = useState('');
+  const [deleteErr, setDeleteErr] = useState('');
+  const isSuperAdmin = st.user?.role === 'super-admin';
 
   const { data, isLoading, isError, refetch } = useAdminCustomers({ status, q: debouncedQ || undefined, page, perPage: 20 });
   const updateStatus = useUpdateCustomerStatus();
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/customers');
+  const requestDeleteOtp = useRequestDeleteUserOtp();
+  const deleteUser = useDeleteUser();
 
   // Đổi mật khẩu hộ ngay từ bảng list — không cần mở drawer chi tiết trước, tiện cho trường hợp
   // khách quên mật khẩu và không tự khôi phục được (email lỗi/OTP lỗi).
@@ -71,6 +79,32 @@ export default function AdminCustomers({ st, setSt, notify }) {
       onError: (e) => { toast.error(e?.message || `Lỗi ${confirmLock.verb} tài khoản`); setUpdatingId(null); },
     });
     setConfirmLock(null);
+  };
+
+  const openDelete = (c) => {
+    setDeletePhase('warn');
+    setDeleteCode('');
+    setDeleteErr('');
+    setConfirmDelete({ id: c.id, label: c.email || c.fullName || c.id });
+  };
+  const closeDelete = () => setConfirmDelete(null);
+
+  const sendDeleteOtp = () => {
+    if (!confirmDelete) return;
+    setDeleteErr('');
+    requestDeleteOtp.mutate(confirmDelete.id, {
+      onSuccess: () => setDeletePhase('otp'),
+      onError: (e) => setDeleteErr(e.message || 'Không gửi được mã xác nhận.'),
+    });
+  };
+
+  const confirmDeleteUser = () => {
+    if (!confirmDelete || deleteCode.length !== 6) { setDeleteErr('Nhập đủ 6 chữ số.'); return; }
+    setDeleteErr('');
+    deleteUser.mutate({ id: confirmDelete.id, code: deleteCode }, {
+      onSuccess: () => { toast.success('Đã xóa tài khoản'); closeDelete(); },
+      onError: (e) => setDeleteErr(e.message || 'Xóa thất bại.'),
+    });
   };
 
   return (
@@ -140,6 +174,9 @@ export default function AdminCustomers({ st, setSt, notify }) {
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={() => openResetPassword(c)}>Đổi mật khẩu</Button>
+              {isSuperAdmin && (
+                <Button variant="ghost" size="sm" style={{ color: 'var(--status-danger)' }} onClick={() => openDelete(c)}>Xóa</Button>
+              )}
             </span>
           </div>
         ))}
@@ -203,6 +240,35 @@ export default function AdminCustomers({ st, setSt, notify }) {
             <Button variant="ghost" size="md" onClick={() => setPwTarget(null)}>Hủy</Button>
             <Button variant="primary" size="md" onClick={confirmResetPassword} disabled={resetPassword.isPending}>{resetPassword.isPending ? 'Đang lưu…' : 'Đổi mật khẩu'}</Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal open={!!confirmDelete} onClose={closeDelete} title="Xóa vĩnh viễn tài khoản" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {deletePhase === 'warn' ? (
+            <>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                Bạn sắp xóa vĩnh viễn tài khoản <b>{confirmDelete?.label}</b>. Mọi thông tin cá nhân (email, SĐT, họ tên…) sẽ bị xóa và <b style={{ color: 'var(--status-danger)' }}>không thể khôi phục</b>. Để xác nhận, mã OTP sẽ được gửi về email của bạn.
+              </p>
+              {deleteErr && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{deleteErr}</span>}
+              <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+                <Button variant="ghost" size="md" onClick={closeDelete}>Hủy</Button>
+                <Button variant="danger" size="md" onClick={sendDeleteOtp} disabled={requestDeleteOtp.isPending}>{requestDeleteOtp.isPending ? 'Đang gửi…' : 'Gửi mã xác nhận'}</Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                Nhập mã 6 chữ số đã gửi về email của bạn để xác nhận xóa <b>{confirmDelete?.label}</b>.
+              </p>
+              <OtpBoxes value={deleteCode} onChange={(v) => { setDeleteCode(v); setDeleteErr(''); }} error={deleteErr} disabled={deleteUser.isPending} />
+              {deleteErr && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{deleteErr}</span>}
+              <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+                <Button variant="ghost" size="md" onClick={closeDelete}>Hủy</Button>
+                <Button variant="danger" size="md" onClick={confirmDeleteUser} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Đang xóa…' : 'Xóa vĩnh viễn'}</Button>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
     </div>

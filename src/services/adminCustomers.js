@@ -84,3 +84,20 @@ export function useVerifyCustomerEmail() {
     },
   });
 }
+
+// Xóa user vĩnh viễn (super-admin only) — 2 bước: gửi OTP về email admin, rồi confirm bằng mã.
+export function useRequestDeleteUserOtp() {
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/customers/${id}/delete/request-otp`),
+  });
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, code, reason }) => apiClient.post(`/api/admin/customers/${id}/delete/confirm`, { code, reason }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-customers'] });
+    },
+  });
+}
