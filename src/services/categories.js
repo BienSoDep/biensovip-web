@@ -30,6 +30,11 @@ export function useCreateCategory() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['admin-categories'] });
+      // Biển số hiển thị tên loại/tỉnh/loại xe — invalidate kèm để áp dụng ngay, không cần F5.
+      qc.invalidateQueries({ queryKey: ['plates'] });
+      qc.invalidateQueries({ queryKey: ['plates-featured'] });
+      qc.invalidateQueries({ queryKey: ['admin-plates'] });
+      qc.invalidateQueries({ queryKey: ['admin-plate'] });
     },
   });
 }
@@ -41,6 +46,11 @@ export function useUpdateCategory() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['admin-categories'] });
+      // Biển số hiển thị tên loại/tỉnh/loại xe — invalidate kèm để áp dụng ngay, không cần F5.
+      qc.invalidateQueries({ queryKey: ['plates'] });
+      qc.invalidateQueries({ queryKey: ['plates-featured'] });
+      qc.invalidateQueries({ queryKey: ['admin-plates'] });
+      qc.invalidateQueries({ queryKey: ['admin-plate'] });
     },
   });
 }
@@ -52,6 +62,11 @@ export function useReorderCategories() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['admin-categories'] });
+      // Biển số hiển thị tên loại/tỉnh/loại xe — invalidate kèm để áp dụng ngay, không cần F5.
+      qc.invalidateQueries({ queryKey: ['plates'] });
+      qc.invalidateQueries({ queryKey: ['plates-featured'] });
+      qc.invalidateQueries({ queryKey: ['admin-plates'] });
+      qc.invalidateQueries({ queryKey: ['admin-plate'] });
     },
   });
 }
@@ -63,6 +78,11 @@ export function useDeleteCategory() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['admin-categories'] });
+      // Biển số hiển thị tên loại/tỉnh/loại xe — invalidate kèm để áp dụng ngay, không cần F5.
+      qc.invalidateQueries({ queryKey: ['plates'] });
+      qc.invalidateQueries({ queryKey: ['plates-featured'] });
+      qc.invalidateQueries({ queryKey: ['admin-plates'] });
+      qc.invalidateQueries({ queryKey: ['admin-plate'] });
     },
   });
 }
@@ -75,6 +95,11 @@ export function useRestoreCategory() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['admin-categories'] });
+      // Biển số hiển thị tên loại/tỉnh/loại xe — invalidate kèm để áp dụng ngay, không cần F5.
+      qc.invalidateQueries({ queryKey: ['plates'] });
+      qc.invalidateQueries({ queryKey: ['plates-featured'] });
+      qc.invalidateQueries({ queryKey: ['admin-plates'] });
+      qc.invalidateQueries({ queryKey: ['admin-plate'] });
     },
   });
 }
@@ -93,6 +118,11 @@ export function useSetCategoryActive() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['admin-categories'] });
+      // Biển số hiển thị tên loại/tỉnh/loại xe — invalidate kèm để áp dụng ngay, không cần F5.
+      qc.invalidateQueries({ queryKey: ['plates'] });
+      qc.invalidateQueries({ queryKey: ['plates-featured'] });
+      qc.invalidateQueries({ queryKey: ['admin-plates'] });
+      qc.invalidateQueries({ queryKey: ['admin-plate'] });
     },
   });
 }
@@ -105,6 +135,11 @@ export function useSetRegionActive() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['admin-categories'] });
+      // Biển số hiển thị tên loại/tỉnh/loại xe — invalidate kèm để áp dụng ngay, không cần F5.
+      qc.invalidateQueries({ queryKey: ['plates'] });
+      qc.invalidateQueries({ queryKey: ['plates-featured'] });
+      qc.invalidateQueries({ queryKey: ['admin-plates'] });
+      qc.invalidateQueries({ queryKey: ['admin-plate'] });
     },
   });
 }

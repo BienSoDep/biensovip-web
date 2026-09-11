@@ -293,6 +293,8 @@ export default function AdminPlates({ go, notify, st }) {
     }
     if (!infoCancelledRef.current) {
       queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-plate'] });
+      queryClient.invalidateQueries({ queryKey: ['plates'] });
       notify(`Đã sinh: ${meaningSeeded} ý nghĩa, ${imageSeeded} ảnh, ${descriptionSeeded} mô tả${errors.length ? ` — ${errors.length} biển có phần không sinh được` : ''}`);
     }
   };
@@ -348,6 +350,8 @@ export default function AdminPlates({ go, notify, st }) {
     }
     if (!genCancelledRef.current) {
       queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-plate'] });
+      queryClient.invalidateQueries({ queryKey: ['plates'] });
       notify(`Đã sinh ảnh cho ${plates.length - errors.length} biển${errors.length ? `, ${errors.length} biển lỗi` : ''}`);
     }
   };
@@ -359,6 +363,8 @@ export default function AdminPlates({ go, notify, st }) {
     try {
       await generateOneImage(p.id);
       queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-plate'] });
+      queryClient.invalidateQueries({ queryKey: ['plates'] });
       notify('Đã sinh ảnh');
     } catch (err) {
       notify(err.message || 'Sinh ảnh thất bại');
@@ -416,6 +422,8 @@ export default function AdminPlates({ go, notify, st }) {
     }
     if (!purgeCancelledRef.current) {
       queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-plate'] });
+      queryClient.invalidateQueries({ queryKey: ['plates'] });
       notify(`Đã xóa ảnh cho ${plates.length - errors.length} biển${errors.length ? `, ${errors.length} biển lỗi` : ''}`);
     }
   };

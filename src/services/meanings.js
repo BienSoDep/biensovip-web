@@ -50,6 +50,9 @@ export function usePlateMeanings(plateId) {
 function invalidatePlateMeanings(qc, plateId) {
   qc.invalidateQueries({ queryKey: ['plate-meanings', plateId] });
   qc.invalidateQueries({ queryKey: ['admin-plate', plateId] });
+  // Ý nghĩa đổi → cột/badge trong bảng biển + trang public phải cập nhật ngay, không cần F5.
+  qc.invalidateQueries({ queryKey: ['admin-plates'] });
+  qc.invalidateQueries({ queryKey: ['plates'] });
 }
 
 export function useCreatePlateMeaning(plateId) {
