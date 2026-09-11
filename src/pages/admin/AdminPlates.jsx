@@ -421,6 +421,7 @@ export default function AdminPlates({ go, notify, st }) {
   };
 
   const [editId, setEditId] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
   const [formErr, setFormErr] = useState({});
   const [saving, setSaving] = useState(false);
@@ -1275,6 +1276,13 @@ export default function AdminPlates({ go, notify, st }) {
         </div>
       </Modal>
 
+      {/* Preview ảnh phóng to — bấm vào ảnh bất kỳ trong form sửa biển */}
+      <Modal open={!!previewImageUrl} onClose={() => setPreviewImageUrl(null)} title="Xem ảnh" maxWidth="640px">
+        {previewImageUrl && (
+          <img src={previewImageUrl} alt="Xem trước" style={{ width: '100%', height: 'auto', borderRadius: 'var(--radius-md)', display: 'block' }} />
+        )}
+      </Modal>
+
       {/* Sinh thông tin hàng loạt — liệt kê biển thiếu, cho chọn trước khi sinh (progress bar tuần tự) */}
       <Modal open={missingInfoPlates !== null} onClose={closeMissingInfoModal} title="Sinh thông tin hàng loạt" maxWidth="520px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -1724,7 +1732,8 @@ function PlateFormModal({
                 ) : genPreviewUrl ? (
                   <button type="button" onClick={useGenPreviewAsCover} title="Bấm để dùng làm ảnh đại diện"
                     style={{ all: 'unset', display: 'block', width: '100%', height: '100%', cursor: 'pointer', position: 'relative' }}>
-                    <img src={genPreviewUrl} alt="Ảnh sinh sẵn" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={genPreviewUrl} alt="Ảnh sinh sẵn" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onClick={(e) => { e.stopPropagation(); setPreviewImageUrl(genPreviewUrl); }} />
                     <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.55)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 9, textAlign: 'center', padding: '1px 0' }}>Ảnh sinh — bấm dùng</span>
                   </button>
                 ) : (
@@ -1734,7 +1743,8 @@ function PlateFormModal({
             )}
             {(form.images || []).map((url, i) => (
               <div key={url} style={{ position: 'relative', width: 72, height: 72, borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-inset-hairline)' }}>
-                <img src={url} alt={`Ảnh ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={url} alt={`Ảnh ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                  onClick={() => setPreviewImageUrl(url)} />
                 {i === 0 && (
                   <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.55)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 10, textAlign: 'center', padding: '1px 0' }}>Đại diện</span>
                 )}
