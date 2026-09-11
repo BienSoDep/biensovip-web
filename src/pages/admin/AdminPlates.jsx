@@ -9,7 +9,7 @@ import {
   useBulkCreatePlate, useUploadImage, useAdminPlate, checkPlateVersion, useRestorePlate,
 } from '../../services/adminPlates.js';
 import { useAdminCategories } from '../../services/categories.js';
-import { Select, IconButton, SearchField, InfoTip, Input } from '../../components/index.jsx';
+import { Select, IconButton, SearchField, InfoTip, Input, Checkbox } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 import Button from '../../components/Button.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
@@ -22,7 +22,7 @@ import { formatDate } from '../../lib/date.js';
 import { analyzePlateNumber } from '../../lib/compareInsights.js';
 import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
-import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
+import { buildImportPlatePrompt } from '../../lib/importPlatePrompt.js';
 import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage, fetchGeneratedImagePlates, purgeGeneratedImageForPlate, fetchMissingInfoPlates, seedInfoForPlate, usePlateDataIssues } from '../../services/plateImages.js';
 
 // Nhãn tiếng Việt cho issue code trả về từ /admin/plates/data-issues và /plates/info/missing —
@@ -516,8 +516,12 @@ export default function AdminPlates({ go, notify, st }) {
   const uploadMut = useUploadImage();
 
   const catOpts = (list) => (list || []).map((c) => ({ value: c.id, label: c.name, code: c.code }));
-  const provinceByCode = (code) => (provinces.find((c) => (c.code || '').trim() === (code || '').trim()) || {}).id;
-  const provNameOf = (code) => (provinces.find((c) => (c.code || '').trim() === (code || '').trim()) || {}).name || '';
+  // 4/63 tỉnh có nhiều mã đầu biển (TP.HCM, Hà Nội, Hải Phòng, Đồng Nai — trước sáp nhập 2025) —
+  // Category.Code lưu CSV "51,41,50,52,..." (khớp ProvinceCodeHelper.cs phía backend). So khớp exact-
+  // string cũ bỏ sót mọi mã không phải mã đầu tiên (VD "50" của TP.HCM, "29" của Hà Nội).
+  const codeMatches = (csv, code) => (csv || '').split(',').map((c) => c.trim()).includes((code || '').trim());
+  const provinceByCode = (code) => (provinces.find((c) => codeMatches(c.code, code)) || {}).id;
+  const provNameOf = (code) => (provinces.find((c) => codeMatches(c.code, code)) || {}).name || '';
 
   // Nhập biển số → tự chọn tỉnh/thành theo 2 số đầu (VD "43" → Đà Nẵng)
   const handlePlateNumberChange = (v) => {
@@ -754,10 +758,15 @@ export default function AdminPlates({ go, notify, st }) {
   // Copy prompt để dán vào ChatGPT/Claude/Gemini — nhờ AI chuyển Excel/PDF danh sách biển số sang
   // đúng format dán ở đây, tránh admin phải gõ tay tài liệu dài. Nguồn: lib/importPlatePrompt.js
   // (đồng bộ nội dung với biensodep-infrastructure/docs/ops/PROMPT-IMPORT-BIEN-SO-TU-EXCEL-PDF.md).
+  // Admin tick trước field file của họ CÓ (modal riêng) → prompt build động theo đúng tổ hợp, tránh
+  // dặn AI xử lý field không tồn tại (dễ khiến AI tự suy đoán sai).
+  const [promptModalOpen, setPromptModalOpen] = useState(false);
+  const [promptFields, setPromptFields] = useState({ hasPrice: true, hasStatus: true, hasNote: false, hasGifted: false });
   const copyImportPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(IMPORT_PLATE_PROMPT);
+      await navigator.clipboard.writeText(buildImportPlatePrompt(promptFields));
       notify('Đã copy prompt — dán vào ChatGPT/Claude kèm file Excel/PDF');
+      setPromptModalOpen(false);
     } catch {
       notify('Không copy được — trình duyệt chặn clipboard');
     }
@@ -961,9 +970,29 @@ export default function AdminPlates({ go, notify, st }) {
           <Select value={quickVehicleTypeId || defaultQuickVehicleTypeId} options={catOpts(vehicleTypes)} onChange={setQuickVehicleTypeId} />
           <Button variant="primary" size="md" onClick={quickAdd} disabled={bulkMut.isPending}>{bulkMut.isPending ? 'Đang thêm…' : 'Thêm'}</Button>
           <Button variant="ghost" size="md" onClick={() => setBulkOpen(!bulkOpen)}>{bulkOpen ? 'Đóng dán nhiều' : 'Dán nhiều / CSV'}</Button>
-          <Button variant="ghost" size="md" onClick={copyImportPrompt} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Copy size={14} /> Copy prompt import từ Excel/PDF</Button>
+          <Button variant="ghost" size="md" onClick={() => setPromptModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Copy size={14} /> Copy prompt import từ Excel/PDF</Button>
         </div>
         <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nhập biển số, giá, trạng thái (bắt buộc) rồi bấm Thêm. Loại xe mặc định Xe máy — đổi tay nếu cần. Hệ thống tự nhận tỉnh từ số biển. Dán nhiều hỗ trợ thêm cột 3 "đã bán", cột 4 "ô tô"/"xe máy" (ghi đè khi hệ thống đoán sai), cột 5 biển số tặng kèm (VD ô tô tặng biển xe máy). Có file Excel/PDF danh sách biển? Bấm "Copy prompt" rồi dán vào ChatGPT/Claude kèm file — AI tự xuất sẵn format dán vào đây.</span>
+
+        <Modal open={promptModalOpen} onClose={() => setPromptModalOpen(false)} title="Copy prompt import từ Excel/PDF" maxWidth="480px">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+              Tick đúng các cột file Excel/PDF của bạn ĐANG CÓ — prompt sẽ chỉ dặn AI xử lý đúng những cột đó, tránh AI tự suy đoán sai cột không tồn tại.
+            </p>
+            <Checkbox label="Giá bán" checked={promptFields.hasPrice} onChange={(v) => setPromptFields((f) => ({ ...f, hasPrice: !!v }))} />
+            <Checkbox label="Tình trạng (đã bán / còn hàng)" checked={promptFields.hasStatus} onChange={(v) => setPromptFields((f) => ({ ...f, hasStatus: !!v }))} />
+            <Checkbox label="Ghi chú (chỉ đọc tham khảo, không đưa vào output)" checked={promptFields.hasNote} onChange={(v) => setPromptFields((f) => ({ ...f, hasNote: !!v }))} />
+            <Checkbox label="Biển số tặng kèm (VD ô tô tặng biển xe máy)" checked={promptFields.hasGifted} onChange={(v) => setPromptFields((f) => ({ ...f, hasGifted: !!v }))} />
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: 'var(--space-3)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              Cấu trúc cột output: Số biển
+              {promptFields.hasGifted ? ', Giá, Tình trạng, (trống), Biển tặng kèm'
+                : promptFields.hasStatus ? ', Giá, Tình trạng'
+                : promptFields.hasPrice ? ', Giá'
+                : ' (chỉ 1 cột)'}
+            </div>
+            <Button variant="primary" size="md" onClick={copyImportPrompt} style={{ alignSelf: 'flex-start' }}>Copy prompt</Button>
+          </div>
+        </Modal>
 
         {bulkOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
