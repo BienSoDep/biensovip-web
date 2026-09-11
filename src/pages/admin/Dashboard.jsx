@@ -809,7 +809,9 @@ function TopPlatesTable({ items }) {
               background: rank <= 3 ? '#f59e0b' : 'var(--surface-sunken)', color: rank <= 3 ? 'var(--white)' : 'var(--text-muted)' }}>
               {rank}
             </span>
-            <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
+            <div style={{ width: 72, flexShrink: 0 }}>
+              <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
+            </div>
             <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateTypeName || '—'}</span>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 60px', textAlign: 'right' }}>{p.views ?? 0} xem</span>
