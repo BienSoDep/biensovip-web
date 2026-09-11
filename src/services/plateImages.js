@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
 // --- Sinh ảnh đại diện hàng loạt cho biển đang thiếu ảnh ---
@@ -30,4 +30,25 @@ export async function fetchGeneratedImagePlates() {
 
 export async function purgeGeneratedImageForPlate(plateId) {
   return apiClient.delete(`/api/admin/plates/images/generated/${plateId}`);
+}
+
+// --- "Sinh thông tin hàng loạt" — gộp ảnh + ý nghĩa phong thủy + mô tả ngắn, thay 2 nút riêng cũ ---
+
+export async function fetchMissingInfoPlates() {
+  return apiClient.get('/api/admin/plates/info/missing');
+}
+
+// Sinh thông tin cho đúng 1 biển, gọi tuần tự từ vòng lặp FE (progress bar, chỉ chạy trên phần đã
+// chọn) — cùng pattern generateOneImage ở trên, thay vì 1 request lớn chạy toàn bộ biển đang thiếu.
+export async function seedInfoForPlate(plateId) {
+  return apiClient.post(`/api/admin/plates/info/seed-one/${plateId}`);
+}
+
+// Icon cảnh báo đỏ trong bảng — issue codes cho từng biển có dữ liệu thiếu/sai.
+export function usePlateDataIssues() {
+  return useQuery({
+    queryKey: ['admin-plates', 'data-issues'],
+    queryFn: () => apiClient.get('/api/admin/plates/data-issues'),
+    staleTime: 30_000,
+  });
 }

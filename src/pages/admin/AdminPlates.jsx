@@ -23,8 +23,17 @@ import { analyzePlateNumber } from '../../lib/compareInsights.js';
 import { NUT_MEANING } from '../../lib/fengshui.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { IMPORT_PLATE_PROMPT } from '../../lib/importPlatePrompt.js';
-import { fetchMissingMeaningPlates, useBulkSeedMeanings } from '../../services/meanings.js';
-import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage, fetchGeneratedImagePlates, purgeGeneratedImageForPlate } from '../../services/plateImages.js';
+import { fetchMissingImagePlates, useBulkGenerateImages, generateOneImage, fetchGeneratedImagePlates, purgeGeneratedImageForPlate, fetchMissingInfoPlates, seedInfoForPlate, usePlateDataIssues } from '../../services/plateImages.js';
+
+// Nhãn tiếng Việt cho issue code trả về từ /admin/plates/data-issues và /plates/info/missing —
+// dùng chung cho icon cảnh báo đỏ trong bảng + modal "Sinh thông tin hàng loạt".
+const DATA_ISSUE_LABELS = {
+  missing_image: 'Thiếu ảnh',
+  missing_meaning: 'Thiếu ý nghĩa phong thủy',
+  missing_description: 'Thiếu mô tả ngắn',
+  invalid_price: 'Giá không hợp lệ (0đ, chưa bật Giá liên hệ)',
+  gifted_plate_not_found: 'Biển tặng kèm không tồn tại trong hệ thống',
+};
 
 // --- Tự động điền (auto-fill) — suy Tỉnh/Loại biển/Loại xe/Ý nghĩa từ biển số vừa gõ.
 // options là catOpts(list) = {value,label,code}; label = tên category. Không khớp → '' (admin chọn tay).
@@ -228,30 +237,63 @@ export default function AdminPlates({ go, notify, st }) {
     return next;
   });
 
-  // Sinh ý nghĩa phong thủy hàng loạt cho biển đang thiếu
-  const [missingMeaningPlates, setMissingMeaningPlates] = useState(null); // null=chưa mở, []=đã check hết
-  const [checkingMissing, setCheckingMissing] = useState(false);
-  const bulkSeedMut = useBulkSeedMeanings();
+  // "Sinh thông tin hàng loạt" — gộp ý nghĩa phong thủy + ảnh đại diện + mô tả ngắn cho biển đang
+  // thiếu ít nhất 1 trong 3, thay nút "Sinh ý nghĩa hàng loạt" cũ (chỉ sinh mỗi ý nghĩa). Chạy tuần
+  // tự từng biển (như purge-image bên dưới) — không dùng bulk-seed 1-request vì có thể chạy hàng
+  // trăm biển cùng lúc (mỗi biển thiếu ảnh = 1 lần upload Cloudinary), cần progress bar + chọn trước.
+  const [missingInfoPlates, setMissingInfoPlates] = useState(null); // null=chưa mở, []=đã check hết
+  const [checkingMissingInfo, setCheckingMissingInfo] = useState(false);
+  const [infoProgress, setInfoProgress] = useState(null); // { done, total, errors: [] } | null
+  const infoCancelledRef = useRef(false);
+  const [selectedInfoIds, setSelectedInfoIds] = useState(new Set());
+  const toggleInfoSelected = (id) => setSelectedInfoIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
-  const openMissingMeaningModal = async () => {
-    setCheckingMissing(true);
+  const openMissingInfoModal = async () => {
+    setCheckingMissingInfo(true);
+    setInfoProgress(null);
     try {
-      const res = await fetchMissingMeaningPlates();
-      setMissingMeaningPlates(res.items || []);
+      const res = await fetchMissingInfoPlates();
+      const items = res.items || [];
+      setMissingInfoPlates(items);
+      setSelectedInfoIds(new Set(items.map((p) => p.id)));
     } catch (err) {
-      notify(err.message || 'Lỗi kiểm tra biển thiếu ý nghĩa');
+      notify(err.message || 'Lỗi kiểm tra biển thiếu thông tin');
     } finally {
-      setCheckingMissing(false);
+      setCheckingMissingInfo(false);
     }
   };
 
-  const confirmBulkSeedMeanings = async () => {
-    try {
-      const res = await bulkSeedMut.mutateAsync();
-      notify(`Đã sinh ý nghĩa cho ${res.seeded} biển${res.skipped ? `, ${res.skipped} biển không khớp mẫu nào` : ''}`);
-      setMissingMeaningPlates(null);
-    } catch (err) {
-      notify(err.message || 'Lỗi sinh ý nghĩa hàng loạt');
+  const closeMissingInfoModal = () => {
+    infoCancelledRef.current = true;
+    setMissingInfoPlates(null);
+  };
+
+  const confirmBulkSeedInfo = async () => {
+    const plates = (missingInfoPlates || []).filter((p) => selectedInfoIds.has(p.id));
+    infoCancelledRef.current = false;
+    const errors = [];
+    let meaningSeeded = 0, imageSeeded = 0, descriptionSeeded = 0;
+    setInfoProgress({ done: 0, total: plates.length, errors });
+    for (let i = 0; i < plates.length; i++) {
+      if (infoCancelledRef.current) break;
+      try {
+        const res = await seedInfoForPlate(plates[i].id);
+        if (res.meaningSeeded) meaningSeeded++;
+        if (res.imageSeeded) imageSeeded++;
+        if (res.descriptionSeeded) descriptionSeeded++;
+        if (!res.ok) errors.push(plates[i].plateNumber);
+      } catch (err) {
+        errors.push(plates[i].plateNumber);
+      }
+      setInfoProgress({ done: i + 1, total: plates.length, errors: [...errors] });
+    }
+    if (!infoCancelledRef.current) {
+      queryClient.invalidateQueries({ queryKey: ['admin-plates'] });
+      notify(`Đã sinh: ${meaningSeeded} ý nghĩa, ${imageSeeded} ảnh, ${descriptionSeeded} mô tả${errors.length ? ` — ${errors.length} biển có phần không sinh được` : ''}`);
     }
   };
 
@@ -426,6 +468,10 @@ export default function AdminPlates({ go, notify, st }) {
   const { data, isLoading, isError, refetch } = useAdminPlates(filters);
   const plates = data?.items || [];
   const total = data?.total || 0;
+
+  // Icon cảnh báo đỏ cạnh số biển — Map plateId -> issue codes, tra cứu O(1) khi render mỗi dòng.
+  const { data: dataIssuesRes } = usePlateDataIssues();
+  const dataIssuesByPlateId = new Map((dataIssuesRes?.items || []).map((i) => [i.plateId, i.issues]));
 
   const allSelected = plates.length > 0 && plates.every((p) => selected.has(p.id));
   const someSelected = plates.some((p) => selected.has(p.id));
@@ -876,8 +922,8 @@ export default function AdminPlates({ go, notify, st }) {
         <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword: debouncedKeyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
           {exporting ? 'Đang xuất…' : 'Xuất CSV'}
         </Button>
-        <Button variant="ghost" size="md" disabled={checkingMissing} onClick={openMissingMeaningModal}>
-          {checkingMissing ? 'Đang kiểm tra…' : 'Sinh ý nghĩa hàng loạt'}
+        <Button variant="ghost" size="md" disabled={checkingMissingInfo} onClick={openMissingInfoModal}>
+          {checkingMissingInfo ? 'Đang kiểm tra…' : 'Sinh thông tin hàng loạt'}
         </Button>
         <Button variant="ghost" size="md" disabled={checkingMissingImage} onClick={openMissingImageModal}>
           {checkingMissingImage ? 'Đang kiểm tra…' : 'Sinh ảnh hàng loạt'}
@@ -1062,6 +1108,13 @@ export default function AdminPlates({ go, notify, st }) {
                   <Star size={14} fill={p.isHot ? 'var(--amber-500)' : 'none'} color={p.isHot ? 'var(--amber-500)' : 'var(--grey-300)'} />
                 </button>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.plateNumber}</span>
+                {dataIssuesByPlateId.has(p.id) && (
+                  <button type="button" onClick={() => openEdit(p)}
+                    title={`Dữ liệu thiếu/sai: ${dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c).join(', ')} — bấm để sửa`}
+                    style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}>
+                    <TriangleAlert size={14} color="var(--status-danger)" />
+                  </button>
+                )}
               </span>
               {colPrefs.plateType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>}
               {colPrefs.vehicleType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.vehicleTypeName}</span>}
@@ -1222,27 +1275,69 @@ export default function AdminPlates({ go, notify, st }) {
         </div>
       </Modal>
 
-      {/* Sinh ý nghĩa phong thủy hàng loạt — liệt kê biển thiếu trước khi sinh */}
-      <Modal open={missingMeaningPlates !== null} onClose={() => setMissingMeaningPlates(null)} title="Sinh ý nghĩa hàng loạt" maxWidth="480px">
+      {/* Sinh thông tin hàng loạt — liệt kê biển thiếu, cho chọn trước khi sinh (progress bar tuần tự) */}
+      <Modal open={missingInfoPlates !== null} onClose={closeMissingInfoModal} title="Sinh thông tin hàng loạt" maxWidth="520px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          {missingMeaningPlates?.length ? (
+          {missingInfoPlates?.length ? (
             <>
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                <b>{missingMeaningPlates.length}</b> biển chưa có ý nghĩa phong thủy. Biển không khớp mẫu nào (số thường) sẽ bị bỏ qua.
+                <b>{missingInfoPlates.length}</b> biển đang thiếu ít nhất 1 trong 3: ý nghĩa phong thủy, ảnh đại diện, mô tả ngắn. Bấm sinh để hệ thống tự điền phần còn thiếu — biển không khớp mẫu ý nghĩa nào (số thường) chỉ được sinh ảnh + mô tả.
               </p>
-              <div style={{ maxHeight: 220, overflow: 'auto', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-                {missingMeaningPlates.map((p) => (
-                  <span key={p.id} style={{ font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--white)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
-                ))}
+              {!infoProgress && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã chọn {selectedInfoIds.size}/{missingInfoPlates.length}</span>
+                  <button type="button" onClick={() => setSelectedInfoIds(new Set(missingInfoPlates.map((p) => p.id)))} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Chọn tất cả</button>
+                  <button type="button" onClick={() => setSelectedInfoIds(new Set())} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Bỏ chọn hết</button>
+                </div>
+              )}
+              {infoProgress && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${(infoProgress.done / infoProgress.total) * 100}%`, background: 'var(--action-primary)', transition: 'width 150ms var(--ease-out)' }} />
+                  </div>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                    Đã xử lý {infoProgress.done}/{infoProgress.total}{infoProgress.errors.length ? ` — ${infoProgress.errors.length} lỗi` : ''}
+                  </span>
+                </div>
+              )}
+              <div style={{ maxHeight: 260, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
+                {missingInfoPlates.map((p) => {
+                  const runList = infoProgress ? missingInfoPlates.filter((x) => selectedInfoIds.has(x.id)) : null;
+                  const runIdx = runList ? runList.findIndex((x) => x.id === p.id) : -1;
+                  const inRun = runIdx >= 0;
+                  const done = infoProgress && inRun && runIdx < infoProgress.done;
+                  const failed = infoProgress?.errors.includes(p.plateNumber);
+                  const selected = selectedInfoIds.has(p.id);
+                  return (
+                    <div key={p.id} role={infoProgress ? undefined : 'button'} tabIndex={infoProgress ? undefined : 0}
+                      onClick={infoProgress ? undefined : () => toggleInfoSelected(p.id)}
+                      onKeyDown={infoProgress ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleInfoSelected(p.id); } }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', cursor: infoProgress ? 'default' : 'pointer',
+                        borderRadius: 'var(--radius-sm)', padding: '2px 4px',
+                        border: !infoProgress && !selected ? '1px dashed var(--grey-300)' : '1px solid transparent',
+                        opacity: !infoProgress && !selected ? 0.5 : 1,
+                      }}>
+                      <span style={{
+                        font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                        background: failed ? 'var(--status-danger-bg)' : done ? 'var(--status-success-bg)' : 'var(--white)',
+                        color: failed ? 'var(--status-danger)' : done ? 'var(--status-success)' : 'var(--text-strong)',
+                      }}>{p.plateNumber}</span>
+                      {p.missing.map((code) => (
+                        <span key={code} style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{DATA_ISSUE_LABELS[code] || code}</span>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             </>
           ) : (
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mọi biển đã có ý nghĩa phong thủy.</p>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Mọi biển đã đủ ý nghĩa, ảnh và mô tả.</p>
           )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-            <Button variant="ghost" size="md" onClick={() => setMissingMeaningPlates(null)}>Hủy</Button>
-            {!!missingMeaningPlates?.length && (
-              <Button variant="primary" size="md" onClick={confirmBulkSeedMeanings} loading={bulkSeedMut.isPending}>Sinh ý nghĩa cho {missingMeaningPlates.length} biển</Button>
+            <Button variant="ghost" size="md" onClick={closeMissingInfoModal}>{infoProgress ? 'Đóng' : 'Hủy'}</Button>
+            {!!missingInfoPlates?.length && !infoProgress && (
+              <Button variant="primary" size="md" disabled={selectedInfoIds.size === 0} onClick={confirmBulkSeedInfo}>Sinh thông tin cho {selectedInfoIds.size} biển</Button>
             )}
           </div>
         </div>
@@ -1443,6 +1538,28 @@ function PlateFormModal({
     setF('images')(arr);
   };
 
+  // Preview ảnh renderer (SkiaSharp, cùng ảnh dùng cho "Sinh ảnh hàng loạt") — chỉ dùng được khi biển
+  // đã tồn tại (editDetail.id), vì generateOneImage cần plateId thật đã lưu DB. Biển mới đang tạo
+  // (chưa bấm Lưu) không có preview này — mở lại drawer sửa sau khi lưu mới thấy được.
+  const [genPreviewUrl, setGenPreviewUrl] = useState(null);
+  const [genPreviewLoading, setGenPreviewLoading] = useState(false);
+  useEffect(() => {
+    if (!editDetail?.id) { setGenPreviewUrl(null); return; }
+    let cancelled = false;
+    setGenPreviewLoading(true);
+    generateOneImage(editDetail.id)
+      .then((res) => { if (!cancelled) setGenPreviewUrl(res.url); })
+      .catch(() => { if (!cancelled) setGenPreviewUrl(null); })
+      .finally(() => { if (!cancelled) setGenPreviewLoading(false); });
+    return () => { cancelled = true; };
+  }, [editDetail?.id]);
+
+  const useGenPreviewAsCover = () => {
+    if (!genPreviewUrl) return;
+    const rest = (form.images || []).filter((u) => u !== genPreviewUrl);
+    setF('images')([genPreviewUrl, ...rest]);
+  };
+
   const parsed = (() => {
     const s = (form.plateNumber || '').trim();
     const idx = Math.max(s.lastIndexOf('-'), s.lastIndexOf(' '));
@@ -1600,6 +1717,21 @@ function PlateFormModal({
             {formErr.images && <span style={{ color: 'var(--status-danger)', font: 'var(--type-caption)' }}> — {formErr.images}</span>}
           </span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            {editDetail?.id && (
+              <div style={{ position: 'relative', width: 72, height: 72, borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-inset-hairline)', background: 'var(--surface-sunken)' }}>
+                {genPreviewLoading ? (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', color: 'var(--text-faint)' }}>…</div>
+                ) : genPreviewUrl ? (
+                  <button type="button" onClick={useGenPreviewAsCover} title="Bấm để dùng làm ảnh đại diện"
+                    style={{ all: 'unset', display: 'block', width: '100%', height: '100%', cursor: 'pointer', position: 'relative' }}>
+                    <img src={genPreviewUrl} alt="Ảnh sinh sẵn" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.55)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 9, textAlign: 'center', padding: '1px 0' }}>Ảnh sinh — bấm dùng</span>
+                  </button>
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'center', padding: 4 }}>Không sinh được</div>
+                )}
+              </div>
+            )}
             {(form.images || []).map((url, i) => (
               <div key={url} style={{ position: 'relative', width: 72, height: 72, borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-inset-hairline)' }}>
                 <img src={url} alt={`Ảnh ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
