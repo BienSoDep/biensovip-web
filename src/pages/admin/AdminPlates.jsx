@@ -262,13 +262,22 @@ export default function AdminPlates({ go, notify, st }) {
   const [genProgress, setGenProgress] = useState(null); // { done, total, errors: [] } | null khi chưa chạy
   const genCancelledRef = useRef(false);
   const bulkGenImagesMut = useBulkGenerateImages(); // giữ lại cho endpoint cũ (không còn gọi từ UI này)
+  // Mở modal → auto-chọn hết; user bỏ chọn bớt trước khi chạy, không cần bấm "chọn tất cả" trước.
+  const [selectedGenIds, setSelectedGenIds] = useState(new Set());
+  const toggleGenSelected = (id) => setSelectedGenIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const openMissingImageModal = async () => {
     setCheckingMissingImage(true);
     setGenProgress(null);
     try {
       const res = await fetchMissingImagePlates();
-      setMissingImagePlates(res.items || []);
+      const items = res.items || [];
+      setMissingImagePlates(items);
+      setSelectedGenIds(new Set(items.map((p) => p.id)));
     } catch (err) {
       notify(err.message || 'Lỗi kiểm tra biển thiếu ảnh');
     } finally {
@@ -282,7 +291,7 @@ export default function AdminPlates({ go, notify, st }) {
   };
 
   const confirmBulkGenerateImages = async () => {
-    const plates = missingImagePlates || [];
+    const plates = (missingImagePlates || []).filter((p) => selectedGenIds.has(p.id));
     genCancelledRef.current = false;
     const errors = [];
     setGenProgress({ done: 0, total: plates.length, errors });
@@ -322,13 +331,21 @@ export default function AdminPlates({ go, notify, st }) {
   const [checkingGeneratedImage, setCheckingGeneratedImage] = useState(false);
   const [purgeProgress, setPurgeProgress] = useState(null); // { done, total, errors: [] } | null
   const purgeCancelledRef = useRef(false);
+  const [selectedPurgeIds, setSelectedPurgeIds] = useState(new Set());
+  const togglePurgeSelected = (id) => setSelectedPurgeIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const openPurgeImageModal = async () => {
     setCheckingGeneratedImage(true);
     setPurgeProgress(null);
     try {
       const res = await fetchGeneratedImagePlates();
-      setGeneratedImagePlates(res.items || []);
+      const items = res.items || [];
+      setGeneratedImagePlates(items);
+      setSelectedPurgeIds(new Set(items.map((p) => p.id)));
     } catch (err) {
       notify(err.message || 'Lỗi kiểm tra ảnh sinh tự động');
     } finally {
@@ -342,7 +359,7 @@ export default function AdminPlates({ go, notify, st }) {
   };
 
   const confirmPurgeGeneratedImages = async () => {
-    const plates = generatedImagePlates || [];
+    const plates = (generatedImagePlates || []).filter((p) => selectedPurgeIds.has(p.id));
     purgeCancelledRef.current = false;
     const errors = [];
     setPurgeProgress({ done: 0, total: plates.length, errors });
@@ -1238,6 +1255,13 @@ export default function AdminPlates({ go, notify, st }) {
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 <b>{missingImagePlates.length}</b> biển chưa có ảnh. Hệ thống sẽ tự vẽ ảnh biển số làm ảnh đại diện tạm, có thể thay bằng ảnh thật sau.
               </p>
+              {!genProgress && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã chọn {selectedGenIds.size}/{missingImagePlates.length}</span>
+                  <button type="button" onClick={() => setSelectedGenIds(new Set(missingImagePlates.map((p) => p.id)))} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Chọn tất cả</button>
+                  <button type="button" onClick={() => setSelectedGenIds(new Set())} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Bỏ chọn hết</button>
+                </div>
+              )}
               {genProgress && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
@@ -1249,15 +1273,24 @@ export default function AdminPlates({ go, notify, st }) {
                 </div>
               )}
               <div style={{ maxHeight: 220, overflow: 'auto', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-                {missingImagePlates.map((p, i) => {
-                  const done = genProgress && i < genProgress.done;
+                {missingImagePlates.map((p) => {
+                  const runList = genProgress ? missingImagePlates.filter((x) => selectedGenIds.has(x.id)) : null;
+                  const runIdx = runList ? runList.findIndex((x) => x.id === p.id) : -1;
+                  const inRun = runIdx >= 0;
+                  const done = genProgress && inRun && runIdx < genProgress.done;
                   const failed = genProgress?.errors.includes(p.plateNumber);
+                  const selected = selectedGenIds.has(p.id);
                   return (
-                    <span key={p.id} style={{
-                      font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
-                      background: failed ? 'var(--status-danger-bg)' : done ? 'var(--status-success-bg)' : 'var(--white)',
-                      color: failed ? 'var(--status-danger)' : done ? 'var(--status-success)' : 'var(--text-strong)',
-                    }}>{p.plateNumber}</span>
+                    <span key={p.id} role={genProgress ? undefined : 'button'} tabIndex={genProgress ? undefined : 0}
+                      onClick={genProgress ? undefined : () => toggleGenSelected(p.id)}
+                      onKeyDown={genProgress ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGenSelected(p.id); } }}
+                      style={{
+                        font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', cursor: genProgress ? 'default' : 'pointer',
+                        border: !genProgress && !selected ? '1px dashed var(--grey-300)' : '1px solid transparent',
+                        opacity: !genProgress && !selected ? 0.5 : 1,
+                        background: failed ? 'var(--status-danger-bg)' : done ? 'var(--status-success-bg)' : 'var(--white)',
+                        color: failed ? 'var(--status-danger)' : done ? 'var(--status-success)' : 'var(--text-strong)',
+                      }}>{p.plateNumber}</span>
                   );
                 })}
               </div>
@@ -1268,7 +1301,7 @@ export default function AdminPlates({ go, notify, st }) {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
             <Button variant="ghost" size="md" onClick={closeMissingImageModal}>{genProgress ? 'Đóng' : 'Hủy'}</Button>
             {!!missingImagePlates?.length && !genProgress && (
-              <Button variant="primary" size="md" onClick={confirmBulkGenerateImages}>Sinh ảnh cho {missingImagePlates.length} biển</Button>
+              <Button variant="primary" size="md" disabled={selectedGenIds.size === 0} onClick={confirmBulkGenerateImages}>Sinh ảnh cho {selectedGenIds.size} biển</Button>
             )}
           </div>
         </div>
@@ -1281,6 +1314,13 @@ export default function AdminPlates({ go, notify, st }) {
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 <b>{generatedImagePlates.length}</b> biển đang dùng ảnh do hệ thống tự vẽ. Xóa xong dùng "Sinh ảnh hàng loạt" để tạo lại bằng renderer mới (đã fix font). Ảnh admin upload tay không bị đụng.
               </p>
+              {!purgeProgress && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã chọn {selectedPurgeIds.size}/{generatedImagePlates.length}</span>
+                  <button type="button" onClick={() => setSelectedPurgeIds(new Set(generatedImagePlates.map((p) => p.id)))} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Chọn tất cả</button>
+                  <button type="button" onClick={() => setSelectedPurgeIds(new Set())} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Bỏ chọn hết</button>
+                </div>
+              )}
               {purgeProgress && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', overflow: 'hidden' }}>
@@ -1292,15 +1332,24 @@ export default function AdminPlates({ go, notify, st }) {
                 </div>
               )}
               <div style={{ maxHeight: 220, overflow: 'auto', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)' }}>
-                {generatedImagePlates.map((p, i) => {
-                  const done = purgeProgress && i < purgeProgress.done;
+                {generatedImagePlates.map((p) => {
+                  const runList = purgeProgress ? generatedImagePlates.filter((x) => selectedPurgeIds.has(x.id)) : null;
+                  const runIdx = runList ? runList.findIndex((x) => x.id === p.id) : -1;
+                  const inRun = runIdx >= 0;
+                  const done = purgeProgress && inRun && runIdx < purgeProgress.done;
                   const failed = purgeProgress?.errors.includes(p.plateNumber);
+                  const selected = selectedPurgeIds.has(p.id);
                   return (
-                    <span key={p.id} style={{
-                      font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
-                      background: failed ? 'var(--status-danger-bg)' : done ? 'var(--status-success-bg)' : 'var(--white)',
-                      color: failed ? 'var(--status-danger)' : done ? 'var(--status-success)' : 'var(--text-strong)',
-                    }}>{p.plateNumber}</span>
+                    <span key={p.id} role={purgeProgress ? undefined : 'button'} tabIndex={purgeProgress ? undefined : 0}
+                      onClick={purgeProgress ? undefined : () => togglePurgeSelected(p.id)}
+                      onKeyDown={purgeProgress ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePurgeSelected(p.id); } }}
+                      style={{
+                        font: 'var(--type-caption)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', cursor: purgeProgress ? 'default' : 'pointer',
+                        border: !purgeProgress && !selected ? '1px dashed var(--grey-300)' : '1px solid transparent',
+                        opacity: !purgeProgress && !selected ? 0.5 : 1,
+                        background: failed ? 'var(--status-danger-bg)' : done ? 'var(--status-success-bg)' : 'var(--white)',
+                        color: failed ? 'var(--status-danger)' : done ? 'var(--status-success)' : 'var(--text-strong)',
+                      }}>{p.plateNumber}</span>
                   );
                 })}
               </div>
@@ -1311,7 +1360,7 @@ export default function AdminPlates({ go, notify, st }) {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
             <Button variant="ghost" size="md" onClick={closePurgeImageModal}>{purgeProgress ? 'Đóng' : 'Hủy'}</Button>
             {!!generatedImagePlates?.length && !purgeProgress && (
-              <Button variant="danger" size="md" onClick={confirmPurgeGeneratedImages}>Xóa ảnh cho {generatedImagePlates.length} biển</Button>
+              <Button variant="danger" size="md" disabled={selectedPurgeIds.size === 0} onClick={confirmPurgeGeneratedImages}>Xóa ảnh cho {selectedPurgeIds.size} biển</Button>
             )}
           </div>
         </div>
