@@ -98,7 +98,15 @@ const ADMIN_INFO = {
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
-const BADGE_NAV = { acontacts: 'newContacts', areviews: 'newReviews', acollabs: 'newCollaborators' };
+// UC35 mở rộng (2026-09) — badge "mới" cho 11 mục có khái niệm bản ghi mới tạo rõ ràng. "Bình luận blog"
+// và "Rủi ro CTV" đã gộp thành tab con trong trang Blog/Nhật ký (không còn nav item riêng) — badge gán
+// cho slug trang CHA (aposts/aauditlog), đại diện luôn cho việc "có bình luận/rủi ro mới cần xem trong đó".
+const BADGE_NAV = {
+  acontacts: 'newContacts', areviews: 'newReviews', acollabs: 'newCollaborators',
+  atransactions: 'newTransactions', acustomers: 'newCustomers', ainterestleads: 'newInterestLeads',
+  aposts: 'newBlogComments', avideos: 'newVideos', aplates: 'newPlates',
+  achatbot: 'newChatSessions', aauditlog: 'newRiskEvents',
+};
 const LAST_SEEN_KEY = 'bsd_admin_last_seen';
 
 const NAV_COLLAPSED_KEY = 'bsd_admin_nav_collapsed_groups';
