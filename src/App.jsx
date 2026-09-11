@@ -640,6 +640,7 @@ export default function App() {
     arisklog: ['Rủi ro CTV', 'Phát hiện bất thường và rà soát cộng tác viên'],
     amaintenance: ['Bảo trì hệ thống', 'Bật/tắt bảo trì hoặc coming-soon cho từng trang public'],
     ashowroom: ['Số liệu hiển thị', 'Bật/tắt và chỉnh hệ số khuếch đại số liệu hiển thị công khai'],
+    asortsettings: ['Thứ tự hiển thị', 'Kéo-thả sắp xếp tiêu chí ưu tiên cho danh sách biển số công khai'],
     apolicypages: ['Trang chính sách', 'Chỉnh nội dung điều khoản/bảo mật/hướng dẫn sang tên/FAQ'],
     actvtemplates: ['Mẫu tin nhắn CTV', 'Soạn sẵn mẫu tin nhắn để cộng tác viên copy gửi khách'],
   }[s] || ['', ''];

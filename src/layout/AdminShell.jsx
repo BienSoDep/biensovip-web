@@ -33,6 +33,7 @@ import AdminRiskLog from '../pages/admin/AdminRiskLog.jsx';
 import AdminGuide from '../pages/admin/AdminGuide.jsx';
 import AdminMaintenance from '../pages/admin/AdminMaintenance.jsx';
 import AdminVanityMetrics from '../pages/admin/AdminVanityMetrics.jsx';
+import AdminPlateSortSettings from '../pages/admin/AdminPlateSortSettings.jsx';
 import AdminErrorLogs from '../pages/admin/AdminErrorLogs.jsx';
 import AdminFeatureFlags from '../pages/admin/AdminFeatureFlags.jsx';
 import AdminDbConsole from '../pages/admin/AdminDbConsole.jsx';
@@ -50,7 +51,7 @@ const NAV_PERM = {
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
-  achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view',
+  achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view', asortsettings: 'settings:view',
   aauditlog: 'audit_logs:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
   apolicypages: 'policy_pages:view',
   actvtemplates: 'ctv_message_templates:view',
@@ -83,6 +84,7 @@ const ADMIN_INFO = {
   compose: 'Soạn bài viết mới — điền tiêu đề, nội dung, ảnh bìa rồi đăng hoặc lưu nháp.',
   amaintenance: 'Bật/tắt bảo trì từng trang public. Khách sẽ thấy trang thông báo thay vì nội dung thật khi trang đang bảo trì; admin/nhân viên đăng nhập vẫn xem được trang thật.',
   ashowroom: 'Số liệu hiển thị công khai (bán biển). Đây là lớp hiển thị riêng — chỉnh khuếch đại/tạo thêm các con số đưa ra ngoài website cho thêm sức thuyết phục, không làm thay đổi dữ liệu giao dịch, hoa hồng hay thống kê nội bộ. Tắt hết thì website về số thật.',
+  asortsettings: 'Thứ tự ưu tiên sắp xếp mặc định danh sách biển công khai — kéo-thả đổi thứ tự 4 tiêu chí (Tỉnh ưu tiên/Hot/Ngày đăng/Loại biển), chỉ áp dụng khi khách không chủ động chọn sắp xếp khác.',
   aerrorlogs: 'Nhật ký lỗi hệ thống (Warning trở lên) ghi từ Serilog — tra cứu lỗi 500/exception gần đây mà không cần SSH đọc log VPS. Tự xóa log cũ hơn 30 ngày.',
   afeatureflags: 'Bật/tắt nhanh: hiển thị ảnh biển số sinh tự động, Trợ lý AI, Số liệu hiển thị, CTV tự báo giao dịch — không cần deploy lại code khi cần tắt gấp.',
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
@@ -342,6 +344,7 @@ export default function AdminShell({
         {s === 'arisklog' && <AdminRiskLog notify={notify} />}
         {s === 'amaintenance' && <AdminMaintenance notify={notify} patch={patch} />}
         {s === 'ashowroom' && <AdminVanityMetrics notify={notify} />}
+        {s === 'asortsettings' && <AdminPlateSortSettings notify={notify} />}
         {s === 'aerrorlogs' && <AdminErrorLogs />}
         {s === 'afeatureflags' && <AdminFeatureFlags notify={notify} />}
         {s === 'adbconsole' && <AdminDbConsole notify={notify} />}
