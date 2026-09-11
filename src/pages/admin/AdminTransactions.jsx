@@ -15,6 +15,8 @@ const STATUS_OPTS = [
 ];
 const STATUS_LABEL = { pending: 'Chờ thanh toán', payment_confirmed: 'Đã xác nhận', cancelled: 'Đã hủy' };
 const INTENT_LABEL = { deposit_request: 'Đặt cọc', buy: 'Mua đứt' };
+const COMMISSION_STATUS_LABEL = { pending: 'Chờ duyệt', approved: 'Đã duyệt', paid: 'Đã trả', cancelled: 'Đã hủy' };
+const COMMISSION_STATUS_TONE = { pending: 'orange', approved: 'mint', paid: 'mint', cancelled: 'neutral' };
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
 
 // UC37 — form "Tạo giao dịch", tái dùng cho cả nút tạo tay ở trang này và nút "Tạo giao dịch từ liên hệ này"
@@ -132,13 +134,14 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
       ) : (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
-            <div style={{ minWidth: 680 }}>
+            <div style={{ minWidth: 780 }}>
               <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                 <span style={{ flex: '1 1 100px' }}>Khách</span>
                 <span style={{ flex: '1 1 100px' }}>Biển số</span>
                 <span style={{ flex: '1 1 90px' }}>Số tiền</span>
                 <span style={{ flex: '1 1 80px' }}>Loại</span>
                 <span style={{ flex: '1 1 90px' }}>CTV</span>
+                <span style={{ flex: '1 1 110px' }}>Hoa hồng</span>
                 <span style={{ flex: '1 1 140px' }}>Trạng thái</span>
               </div>
               {items.map((t) => (
@@ -151,6 +154,16 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                   <span style={{ flex: '1 1 90px', fontWeight: 'var(--fw-semibold)' }}>{money(t.amount)}</span>
                   <span style={{ flex: '1 1 80px' }}>{INTENT_LABEL[t.intent] || t.intent}</span>
                   <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.referralCodeUsed || '—'}</span>
+                  <span style={{ flex: '1 1 110px' }}>
+                    {t.commissionAmount != null ? (
+                      <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(t.commissionAmount)}</span>
+                        <Badge tone={COMMISSION_STATUS_TONE[t.commissionStatus] || 'neutral'}>{COMMISSION_STATUS_LABEL[t.commissionStatus] || t.commissionStatus}</Badge>
+                      </span>
+                    ) : (
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
+                    )}
+                  </span>
                   <span style={{ flex: '1 1 140px', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Badge tone={t.status === 'payment_confirmed' ? 'mint' : t.status === 'cancelled' ? 'neutral' : 'orange'}>
                       {STATUS_LABEL[t.status] || t.status}

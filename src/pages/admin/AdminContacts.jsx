@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact } from '../../services/adminContacts.js';
 import { useCreatePaymentLink } from '../../services/paymentLinks.js';
-import { CreateTransactionForm } from './AdminTransactions.jsx';
+import AdminTransactions, { CreateTransactionForm } from './AdminTransactions.jsx';
 import { useStaffLite } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
@@ -22,8 +22,9 @@ import { loadAuth } from '../../lib/authStore.js';
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: 'var(--accent-orange-ink)', buy: 'var(--blue-700)', hunting: 'var(--accent-purple-ink)' };
 const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên hệ', 'plate-detail': 'Trang biển số', 'chatbot': 'Trợ lý AI' };
-const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Đã tìm thấy'];
-const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Đã tìm thấy': 'found' };
+const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt'];
+const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed' };
+// found giữ lại trong map hiển thị — phòng data cũ chưa migrate về closed vẫn hiện đúng nhãn thay vì "undefined".
 const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã tìm thấy' };
 const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#7B2D8B' };
 const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
@@ -53,6 +54,7 @@ export default function AdminContacts({ notify, go }) {
   const [linkAmountFor, setLinkAmountFor] = useState(null); // contact đang mở popup nhập số tiền tạo link ZaloPay
   const [linkAmountInput, setLinkAmountInput] = useState('');
   const [upgrading, setUpgrading] = useState(null); // ContactRequest đang mở form "Tạo giao dịch từ liên hệ này"
+  const [viewingTx, setViewingTx] = useState(null); // ContactRequest đang mở modal xem giao dịch liên quan
 
   // UC11 — 1 query stats cho các tab (thay 4 query perPage=1).
   const { data: stats } = useContactStats({ intent, q });
@@ -131,7 +133,7 @@ export default function AdminContacts({ notify, go }) {
       </div>
 
       <div role="tablist" aria-label="Lọc theo trạng thái" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        {[['all', 'Tất cả'], ['new', 'Mới'], ['consulting', 'Đang tư vấn'], ['closed', 'Đã chốt'], ['found', 'Đã tìm thấy']].map(([val, label]) => {
+        {[['all', 'Tất cả'], ['new', 'Mới'], ['consulting', 'Đang tư vấn'], ['closed', 'Đã chốt']].map(([val, label]) => {
           const active = status === val;
           return (
             <button key={val} role="tab" aria-selected={active} onClick={() => { setStatus(val); setPage(1); }}
@@ -195,7 +197,8 @@ export default function AdminContacts({ notify, go }) {
               <span className="contact-col-note" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
               <span style={{ flex: '1 1 80px' }}>
                 {c.transactionId ? (
-                  <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: 'color-mix(in srgb, var(--status-success) 16%, transparent)', color: 'var(--status-success)' }}>Đã cọc</span>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setViewingTx(c); }}
+                    style={{ display: 'inline-block', padding: '2px 8px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: 'color-mix(in srgb, var(--status-success) 16%, transparent)', color: 'var(--status-success)', cursor: 'pointer' }}>Đã cọc</button>
                 ) : (
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
                 )}
@@ -307,7 +310,7 @@ export default function AdminContacts({ notify, go }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Giao dịch</span>
                 {selected.transactionId ? (
-                  <Button variant="outline" size="sm" onClick={() => go?.('atransactions')()}>Xem giao dịch →</Button>
+                  <Button variant="outline" size="sm" onClick={() => setViewingTx(selected)}>Xem giao dịch →</Button>
                 ) : (
                   <Button variant="outline" size="sm" onClick={() => setUpgrading(selected)}>Tạo giao dịch từ liên hệ này</Button>
                 )}
@@ -383,6 +386,10 @@ export default function AdminContacts({ notify, go }) {
             }}
           />
         )}
+      </Modal>
+
+      <Modal open={!!viewingTx} onClose={() => setViewingTx(null)} title={`Giao dịch của ${viewingTx?.fullName || ''}`} maxWidth="820px">
+        {viewingTx && <AdminTransactions notify={notify} filterContactRequestId={viewingTx.id} />}
       </Modal>
     </div>
   );
