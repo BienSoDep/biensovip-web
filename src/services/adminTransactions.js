@@ -36,3 +36,14 @@ export function useConfirmTransactionPayment() {
     },
   });
 }
+
+export function useDeleteTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/api/admin/transactions/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
+      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
+    },
+  });
+}

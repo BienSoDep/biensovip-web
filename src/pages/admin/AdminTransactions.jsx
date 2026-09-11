@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useAdminTransactions, useCreateTransaction, useConfirmTransactionPayment } from '../../services/adminTransactions.js';
+import { useAdminTransactions, useCreateTransaction, useConfirmTransactionPayment, useDeleteTransaction } from '../../services/adminTransactions.js';
 import { usePlates } from '../../services/plates.js';
 import { Select, Input, Badge, ImageUrlInput } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
@@ -95,6 +95,8 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const [proofUrl, setProofUrl] = useState('');
   const { data, isLoading, isError, refetch } = useAdminTransactions({ status, page, limit: 20 });
   const confirmPayment = useConfirmTransactionPayment();
+  const deleteTransaction = useDeleteTransaction();
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const items = (data?.items || []).filter((t) => !filterContactRequestId || t.contactRequestId === filterContactRequestId);
   const total = data?.total || 0;
@@ -108,6 +110,16 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
       setProofUrl('');
     } catch (e) {
       notify(e.message || 'Xác nhận thất bại');
+    }
+  };
+
+  const submitDelete = async () => {
+    try {
+      await deleteTransaction.mutateAsync(deleteTarget.id);
+      notify('Đã xóa giao dịch');
+      setDeleteTarget(null);
+    } catch (e) {
+      notify(e.message || 'Xóa thất bại');
     }
   };
 
@@ -174,7 +186,10 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                       </span>
                     )}
                     {t.status === 'pending' && (
-                      <Button variant="outline" size="sm" onClick={() => { setConfirmTarget(t); setProofUrl(''); }}>Xác nhận đã nhận tiền</Button>
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => { setConfirmTarget(t); setProofUrl(''); }}>Xác nhận đã nhận tiền</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(t)} style={{ color: 'var(--status-danger)' }}>Xóa</Button>
+                      </>
                     )}
                   </span>
                 </div>
@@ -208,6 +223,20 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
             <Button variant="ghost" size="sm" onClick={() => setConfirmTarget(null)}>Hủy</Button>
             <Button variant="primary" size="sm" disabled={confirmPayment.isPending} onClick={submitConfirm}>
               {confirmPayment.isPending ? 'Đang xác nhận...' : 'Xác nhận'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Xóa giao dịch" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Xóa vĩnh viễn giao dịch {deleteTarget?.fullName} — {money(deleteTarget?.amount)}? Không thể khôi phục.
+          </span>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+            <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>Hủy</Button>
+            <Button variant="primary" size="sm" disabled={deleteTransaction.isPending} onClick={submitDelete} style={{ background: 'var(--status-danger)' }}>
+              {deleteTransaction.isPending ? 'Đang xóa...' : 'Xóa'}
             </Button>
           </div>
         </div>
