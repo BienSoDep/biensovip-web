@@ -15,12 +15,8 @@ import AdminCats from '../pages/admin/AdminCats.jsx';
 import AdminContacts from '../pages/admin/AdminContacts.jsx';
 import AdminTransactions from '../pages/admin/AdminTransactions.jsx';
 import AdminStaff from '../pages/admin/AdminStaff.jsx';
-import AdminPosts from '../pages/admin/AdminPosts.jsx';
-import AdminBlogComments from '../pages/admin/AdminBlogComments.jsx';
 import AdminCustomers from '../pages/admin/AdminCustomers.jsx';
 import AdminVideos from '../pages/admin/AdminVideos.jsx';
-import AdminNotifications from '../pages/admin/AdminNotifications.jsx';
-import EmailBuilder from '../pages/admin/EmailBuilder.jsx';
 import AdminCollaborators from '../pages/admin/AdminCollaborators.jsx';
 import AdminCollaboratorContent from '../pages/admin/AdminCollaboratorContent.jsx';
 import AdminInterestLeads from '../pages/admin/AdminInterestLeads.jsx';
@@ -28,17 +24,14 @@ import AdminReviews from '../pages/admin/AdminReviews.jsx';
 import AdminChatbot from '../pages/admin/AdminChatbot.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
 import Compose from '../pages/admin/Compose.jsx';
-import AdminAuditLog from '../pages/admin/AdminAuditLog.jsx';
-import AdminRiskLog from '../pages/admin/AdminRiskLog.jsx';
 import AdminGuide from '../pages/admin/AdminGuide.jsx';
-import AdminMaintenance from '../pages/admin/AdminMaintenance.jsx';
-import AdminVanityMetrics from '../pages/admin/AdminVanityMetrics.jsx';
-import AdminPlateSortSettings from '../pages/admin/AdminPlateSortSettings.jsx';
-import AdminErrorLogs from '../pages/admin/AdminErrorLogs.jsx';
-import AdminFeatureFlags from '../pages/admin/AdminFeatureFlags.jsx';
-import AdminDbConsole from '../pages/admin/AdminDbConsole.jsx';
 import AdminPolicyPages from '../pages/admin/AdminPolicyPages.jsx';
 import AdminCtvMessageTemplates from '../pages/admin/AdminCtvMessageTemplates.jsx';
+import AdminBlog from '../pages/admin/AdminBlog.jsx';
+import AdminLogs from '../pages/admin/AdminLogs.jsx';
+import AdminPublicDisplay from '../pages/admin/AdminPublicDisplay.jsx';
+import AdminOpsTools from '../pages/admin/AdminOpsTools.jsx';
+import AdminNotificationsHub from '../pages/admin/AdminNotificationsHub.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -58,6 +51,18 @@ const NAV_PERM = {
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
+// Trang gộp tab (2026-09) — slug phụ đã gộp vào slug chính (trang có tab bên trong). Giữ nguyên trong
+// ADMIN_SCREENS/ROUTE_MAP/NAV_PERM để URL cũ vẫn hợp lệ, chỉ tự redirect về trang chính khi vào thẳng.
+const GROUPED_REDIRECT = {
+  ablogcomments: 'aposts',
+  arisklog: 'aauditlog',
+  aerrorlogs: 'aauditlog',
+  asortsettings: 'ashowroom',
+  amaintenance: 'afeatureflags',
+  adbconsole: 'afeatureflags',
+  aemailtpl: 'anotifications',
+};
+
 // Banner thông tin ngắn đầu mỗi trang quản lý — 1 nơi cho toàn bộ, thay vì sửa từng trang.
 const ADMIN_INFO = {
   dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
@@ -66,12 +71,12 @@ const ADMIN_INFO = {
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
   atransactions: 'Giao dịch mua/đặt cọc biển số. Tự tạo khi khách gửi liên hệ đặt cọc/mua, hoặc admin tự tạo tay từ 1 liên hệ tư vấn. Bấm "Xác nhận đã nhận tiền" khi khách đã chuyển khoản (ảnh minh chứng không bắt buộc) — hoa hồng CTV liên quan tự chuyển sang "Chờ duyệt" → "Đã duyệt".',
-  aposts: 'Bài viết blog — nội dung SEO cho landing tỉnh/loại biển và tin phong thủy. Bấm "Đăng bài mới" để soạn bài.',
+  aposts: 'Bài viết blog — nội dung SEO cho landing tỉnh/loại biển và tin phong thủy. Bấm "Đăng bài mới" để soạn bài. Tab Bình luận để duyệt/từ chối bình luận độc giả.',
   ablogcomments: 'Bình luận độc giả gửi vào bài blog — duyệt hoặc từ chối trước khi hiện công khai.',
   astaff: 'Chỉ Quản trị viên thấy trang này. Tạo tài khoản nhân viên, phân quyền theo từng resource, khóa/mở tài khoản hoặc đổi mật khẩu hộ khi nhân viên quên.',
   acustomers: 'Danh sách tài khoản khách đã đăng ký — xem lịch sử mua và biển yêu thích của từng khách.',
   avideos: 'Video TikTok/Facebook giới thiệu biển. Dán link để hệ thống tự nhận diện nền tảng và tạo ảnh xem trước.',
-  anotifications: 'Soạn/gửi thông báo thủ công tới khách, quản lý email đăng ký nhận tin và cấu hình email tự động theo sự kiện.',
+  anotifications: 'Soạn/gửi thông báo thủ công tới khách, quản lý email đăng ký nhận tin và cấu hình email tự động theo sự kiện. Tab Mẫu email để kéo-thả dựng bố cục.',
   aemailtpl: 'Kéo-thả dựng bố cục email dùng chung cho các loại thông báo tự động.',
   acollabs: 'Danh sách cộng tác viên giới thiệu khách. Quy trình: CTV đăng ký tự kích hoạt ngay (không cần duyệt) → chia sẻ link giới thiệu → khách đặt cọc/mua qua link → hoa hồng tự tính (mặc định 10%, tối thiểu 10%, chỉnh riêng từng CTV ở cột "Hệ số") → hoa hồng ở trạng thái "Chờ duyệt" cho tới khi bạn xác nhận đã chuyển khoản và bấm chi trả trong mục hoa hồng của từng CTV.',
   acollabcontent: 'Nội dung trang giới thiệu ưu đãi hiển thị cho người muốn trở thành cộng tác viên.',
@@ -79,14 +84,14 @@ const ADMIN_INFO = {
   areviews: 'Duyệt đánh giá khách gửi trước khi hiển thị công khai trên trang chi tiết biển; có thể trả lời đánh giá.',
   ameanings: 'Mẫu ý nghĩa phong thủy chung theo loại biển/con số, và ý nghĩa riêng gắn cho từng biển cụ thể.',
   achatbot: 'Lịch sử hội thoại chatbot AI với khách — bật/tắt và chỉnh cấu hình trả lời tự động.',
-  aauditlog: 'Lịch sử mọi thay đổi dữ liệu (ai sửa gì, khi nào) — dùng để truy vết khi có sai sót. Nhân viên "Dev" hoặc được cấp quyền riêng mới xem được.',
+  aauditlog: 'Tab Hệ thống: lịch sử mọi thay đổi dữ liệu (ai sửa gì, khi nào). Tab Lỗi: nhật ký lỗi 500/exception. Tab Rủi ro CTV (chỉ Quản trị viên): cảnh báo bất thường ở cộng tác viên.',
   arisklog: 'Chỉ Quản trị viên thấy trang này. Cảnh báo tự động khi phát hiện dấu hiệu bất thường ở cộng tác viên — rà soát và xử lý.',
   compose: 'Soạn bài viết mới — điền tiêu đề, nội dung, ảnh bìa rồi đăng hoặc lưu nháp.',
   amaintenance: 'Bật/tắt bảo trì từng trang public. Khách sẽ thấy trang thông báo thay vì nội dung thật khi trang đang bảo trì; admin/nhân viên đăng nhập vẫn xem được trang thật.',
-  ashowroom: 'Số liệu hiển thị công khai (bán biển). Đây là lớp hiển thị riêng — chỉnh khuếch đại/tạo thêm các con số đưa ra ngoài website cho thêm sức thuyết phục, không làm thay đổi dữ liệu giao dịch, hoa hồng hay thống kê nội bộ. Tắt hết thì website về số thật.',
+  ashowroom: 'Tab Số liệu: khuếch đại/tạo thêm con số hiển thị công khai, không đổi dữ liệu giao dịch/hoa hồng nội bộ. Tab Thứ tự sắp xếp: kéo-thả đổi ưu tiên sắp xếp mặc định danh sách biển.',
   asortsettings: 'Thứ tự ưu tiên sắp xếp mặc định danh sách biển công khai — kéo-thả đổi thứ tự 4 tiêu chí (Tỉnh ưu tiên/Hot/Ngày đăng/Loại biển), chỉ áp dụng khi khách không chủ động chọn sắp xếp khác.',
   aerrorlogs: 'Nhật ký lỗi hệ thống (Warning trở lên) ghi từ Serilog — tra cứu lỗi 500/exception gần đây mà không cần SSH đọc log VPS. Tự xóa log cũ hơn 30 ngày.',
-  afeatureflags: 'Bật/tắt nhanh: hiển thị ảnh biển số sinh tự động, Trợ lý AI, Số liệu hiển thị, CTV tự báo giao dịch — không cần deploy lại code khi cần tắt gấp.',
+  afeatureflags: 'Tab Feature flags: bật/tắt nhanh tính năng không cần deploy lại. Tab Bảo trì: bật/tắt bảo trì từng trang public. Tab DB console: xem nhanh dữ liệu 7 bảng cố định.',
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
@@ -244,6 +249,13 @@ export default function AdminShell({
     if (denied) go('dash')();
   }, [denied, go]);
 
+  // Trang gộp tab (2026-09) — URL cũ của các trang phụ đã gộp vào trang chính vẫn resolve được,
+  // tự chuyển về trang chính (về tab đầu, không giữ tab cũ — đơn giản, không vỡ bookmark cũ).
+  const mergedRedirect = GROUPED_REDIRECT[s];
+  useEffect(() => {
+    if (mergedRedirect) go(mergedRedirect)();
+  }, [mergedRedirect, go]);
+
   return (
     <div className="admin-shell" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
       {!drawerOpen && (
@@ -326,32 +338,25 @@ export default function AdminShell({
         {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} go={go} />}
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
-        {s === 'ablogcomments' && <AdminBlogComments notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
         {s === 'acustomers' && <AdminCustomers st={st} setSt={setSt} notify={notify} />}
         {s === 'avideos' && <AdminVideos notify={notify} />}
-        {s === 'anotifications' && <AdminNotifications notify={notify} st={st} />}
-        {s === 'aemailtpl' && <EmailBuilder notify={notify} />}
+        {s === 'anotifications' && <AdminNotificationsHub st={st} notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'atransactions' && <AdminTransactions notify={notify} />}
         {s === 'acollabcontent' && <AdminCollaboratorContent notify={notify} />}
         {s === 'ainterestleads' && <AdminInterestLeads notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}
         {s === 'achatbot' && <AdminChatbot notify={notify} />}
-        {s === 'aauditlog' && <AdminAuditLog />}
-        {s === 'arisklog' && <AdminRiskLog notify={notify} />}
-        {s === 'amaintenance' && <AdminMaintenance notify={notify} patch={patch} />}
-        {s === 'ashowroom' && <AdminVanityMetrics notify={notify} />}
-        {s === 'asortsettings' && <AdminPlateSortSettings notify={notify} />}
-        {s === 'aerrorlogs' && <AdminErrorLogs />}
-        {s === 'afeatureflags' && <AdminFeatureFlags notify={notify} />}
-        {s === 'adbconsole' && <AdminDbConsole notify={notify} />}
+        {s === 'aauditlog' && <AdminLogs st={st} notify={notify} />}
+        {s === 'ashowroom' && <AdminPublicDisplay notify={notify} />}
+        {s === 'afeatureflags' && <AdminOpsTools notify={notify} patch={patch} />}
         {s === 'apolicypages' && <AdminPolicyPages notify={notify} />}
         {s === 'actvtemplates' && <AdminCtvMessageTemplates notify={notify} />}
         {s === 'ameanings' && <AdminMeanings notify={notify} prefillKeyword={st.meaningsPrefillKeyword} />}
-        {s === 'aposts' && <AdminPosts st={st} patch={patch} notify={notify} />}
+        {s === 'aposts' && <AdminBlog st={st} patch={patch} notify={notify} />}
         {s === 'compose' && <Compose st={st} patch={patch} notify={notify} />}
       </main>
 

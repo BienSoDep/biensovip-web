@@ -9,13 +9,16 @@ export const NAV = [
 // Nhóm theo luồng nghiệp vụ — mỗi nhóm render 1 khối toggle mở/thu trong sidebar admin (AdminShell.jsx
 // AdminSidebarNav) để admin đến thẳng mục cần thay vì lướt qua 21 mục phẳng như trước. group: null
 // đánh dấu mục hiện luôn ngoài mọi nhóm (không thu gọn được) — chỉ dùng cho Tổng quan/Hướng dẫn.
+// 2026-09 — tổ chức lại: gộp 1 số trang liên quan thành 1 mục có tab bên trong (xem AdminBlog.jsx,
+// AdminLogs.jsx, AdminPublicDisplay.jsx, AdminOpsTools.jsx, AdminNotificationsHub.jsx) để giảm số mục
+// sidebar (29→21) và xếp các mục liên quan gần nhau theo đúng luồng thao tác thật.
 export const ADMIN_NAV = [
   { group: null, items: [['dash', 'Tổng quan'], ['aguide', 'Hướng dẫn sử dụng']] },
-  { group: 'Bán hàng', items: [['aplates', 'Biển số'], ['acoupons', 'Mã giảm giá'], ['atransactions', 'Giao dịch'], ['acontacts', 'Yêu cầu liên hệ'], ['acustomers', 'Khách hàng'], ['ainterestleads', 'Khách quan tâm'], ['acats', 'Danh mục']] },
-  { group: 'Nội dung', items: [['aposts', 'Bài viết'], ['ablogcomments', 'Bình luận blog'], ['ameanings', 'Ý nghĩa phong thủy'], ['avideos', 'Video'], ['apolicypages', 'Trang chính sách']] },
-  { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['aemailtpl', 'Mẫu email'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
-  { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['actvtemplates', 'Mẫu tin nhắn CTV'], ['arisklog', 'Rủi ro CTV']] },
-  { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký hệ thống'], ['amaintenance', 'Bảo trì hệ thống'], ['ashowroom', 'Số liệu hiển thị'], ['aerrorlogs', 'Nhật ký lỗi'], ['afeatureflags', 'Feature flags'], ['adbconsole', 'DB console']] },
+  { group: 'Bán hàng', items: [['aplates', 'Biển số'], ['acats', 'Danh mục'], ['acoupons', 'Mã giảm giá'], ['acontacts', 'Yêu cầu liên hệ'], ['atransactions', 'Giao dịch'], ['acustomers', 'Khách hàng'], ['ainterestleads', 'Khách quan tâm']] },
+  { group: 'Nội dung', items: [['aposts', 'Blog'], ['avideos', 'Video'], ['ameanings', 'Ý nghĩa phong thủy'], ['apolicypages', 'Trang chính sách']] },
+  { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
+  { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['actvtemplates', 'Mẫu tin nhắn CTV']] },
+  { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký'], ['ashowroom', 'Hiển thị trang public'], ['afeatureflags', 'Công cụ vận hành']] },
 ];
 export const TONES = { 'Mới': 'blue', 'Đang tư vấn': 'amber', 'Đã chốt': 'mint', 'Còn hàng': 'mint', 'Đã bán': 'rose', 'Ẩn': 'neutral', 'Đã xuất bản': 'mint', 'Bản nháp': 'neutral' };
 export const STATUS_FG = { 'Mới': 'var(--blue-700)', 'Đang tư vấn': 'var(--status-warning-ink)', 'Đã chốt': 'var(--status-success-ink)' };

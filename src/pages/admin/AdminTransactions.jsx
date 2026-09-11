@@ -18,6 +18,15 @@ const INTENT_LABEL = { deposit_request: 'Đặt cọc', buy: 'Mua đứt' };
 const COMMISSION_STATUS_LABEL = { pending: 'Chờ duyệt', approved: 'Đã duyệt', paid: 'Đã trả', cancelled: 'Đã hủy' };
 const COMMISSION_STATUS_TONE = { pending: 'orange', approved: 'mint', paid: 'mint', cancelled: 'neutral' };
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
+// Tooltip đầy đủ thông tin chuyển khoản CTV — hiện khi hover cột CTV/Hoa hồng để admin đối chiếu lúc duyệt.
+const ctvBankInfo = (t) => {
+  if (!t.ctvName) return undefined;
+  const parts = [t.ctvName];
+  if (t.ctvBankAccountHolder) parts.push(`Chủ TK: ${t.ctvBankAccountHolder}`);
+  if (t.ctvBankAccount) parts.push(`STK: ${t.ctvBankAccount}`);
+  if (t.ctvBankCode) parts.push(`Ngân hàng: ${t.ctvBankCode}`);
+  return parts.join(' — ');
+};
 
 // UC37 — form "Tạo giao dịch", tái dùng cho cả nút tạo tay ở trang này và nút "Tạo giao dịch từ liên hệ này"
 // ở AdminContacts (truyền sẵn prefill).
@@ -165,12 +174,24 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                   <span style={{ flex: '1 1 100px' }}>{t.plateNumber || '—'}</span>
                   <span style={{ flex: '1 1 90px', fontWeight: 'var(--fw-semibold)' }}>{money(t.amount)}</span>
                   <span style={{ flex: '1 1 80px' }}>{INTENT_LABEL[t.intent] || t.intent}</span>
-                  <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.referralCodeUsed || '—'}</span>
+                  <span style={{ flex: '1 1 90px' }}>
+                    {t.ctvName ? (
+                      <span title={ctvBankInfo(t)} style={{ display: 'block', cursor: 'help' }}>
+                        <div style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{t.ctvName}</div>
+                        <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.ctvPhone}</div>
+                      </span>
+                    ) : (
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.referralCodeUsed || '—'}</span>
+                    )}
+                  </span>
                   <span style={{ flex: '1 1 110px' }}>
                     {t.commissionAmount != null ? (
-                      <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span title={ctvBankInfo(t)} style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: t.ctvBankAccount ? 'help' : 'default' }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(t.commissionAmount)}</span>
                         <Badge tone={COMMISSION_STATUS_TONE[t.commissionStatus] || 'neutral'}>{COMMISSION_STATUS_LABEL[t.commissionStatus] || t.commissionStatus}</Badge>
+                        {t.ctvBankAccount && (
+                          <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-faint)' }}>{t.ctvBankAccount}</span>
+                        )}
                       </span>
                     ) : (
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
