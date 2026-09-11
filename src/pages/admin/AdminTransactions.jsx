@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useAdminTransactions, useCreateTransaction, useConfirmTransactionPayment, useDeleteTransaction } from '../../services/adminTransactions.js';
+import { useAdminTransactions, useCreateTransaction, useConfirmTransactionPayment, useDeleteTransaction, useDeletedTransactions, useRestoreTransaction } from '../../services/adminTransactions.js';
 import { usePlates } from '../../services/plates.js';
 import { Select, Input, Badge, ImageUrlInput } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
@@ -18,6 +18,12 @@ const INTENT_LABEL = { deposit_request: 'Đặt cọc', buy: 'Mua đứt' };
 const COMMISSION_STATUS_LABEL = { pending: 'Chờ duyệt', approved: 'Đã duyệt', paid: 'Đã trả', cancelled: 'Đã hủy' };
 const COMMISSION_STATUS_TONE = { pending: 'orange', approved: 'mint', paid: 'mint', cancelled: 'neutral' };
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
+// Đếm ngược số ngày còn lại trước khi TransactionPurgeJob xóa cứng (retention 30 ngày, xem backend).
+const daysLeftInTrash = (deletedAt) => {
+  if (!deletedAt) return null;
+  const elapsedMs = Date.now() - new Date(deletedAt).getTime();
+  return Math.max(0, 30 - Math.floor(elapsedMs / 86400000));
+};
 // Tooltip đầy đủ thông tin chuyển khoản CTV — hiện khi hover cột CTV/Hoa hồng để admin đối chiếu lúc duyệt.
 const ctvBankInfo = (t) => {
   if (!t.ctvName) return undefined;
@@ -106,6 +112,9 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const confirmPayment = useConfirmTransactionPayment();
   const deleteTransaction = useDeleteTransaction();
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const { data: deletedData, isLoading: deletedLoading } = useDeletedTransactions({ page: 1, limit: 20 });
+  const restoreTransaction = useRestoreTransaction();
+  const deletedItems = deletedData?.items || [];
 
   const items = (data?.items || []).filter((t) => !filterContactRequestId || t.contactRequestId === filterContactRequestId);
   const total = data?.total || 0;
@@ -125,10 +134,19 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const submitDelete = async () => {
     try {
       await deleteTransaction.mutateAsync(deleteTarget.id);
-      notify('Đã xóa giao dịch');
+      notify('Đã chuyển vào Thùng rác — có thể khôi phục trong 30 ngày');
       setDeleteTarget(null);
     } catch (e) {
       notify(e.message || 'Xóa thất bại');
+    }
+  };
+
+  const handleRestore = async (t) => {
+    try {
+      await restoreTransaction.mutateAsync(t.id);
+      notify('Đã khôi phục giao dịch');
+    } catch (e) {
+      notify(e.message || 'Khôi phục thất bại');
     }
   };
 
@@ -230,6 +248,37 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
         </div>
       )}
 
+      {(deletedLoading || deletedItems.length > 0) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <h3 style={{ margin: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>
+            Giao dịch đã xóa {deletedItems.length > 0 && `(${deletedItems.length})`}
+          </h3>
+          {deletedLoading ? (
+            <SkeletonTable rows={2} cols={4} />
+          ) : (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+              {deletedItems.map((t) => {
+                const daysLeft = daysLeftInTrash(t.deletedAt);
+                return (
+                  <div key={t.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-200)', font: 'var(--type-body-sm)', opacity: 0.75 }}>
+                    <span style={{ flex: '1 1 100px' }}>
+                      <div>{t.fullName}</div>
+                      <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.phone}</div>
+                    </span>
+                    <span style={{ flex: '1 1 100px' }}>{t.plateNumber || '—'}</span>
+                    <span style={{ flex: '1 1 90px', fontWeight: 'var(--fw-semibold)' }}>{money(t.amount)}</span>
+                    <span style={{ flex: '1 1 140px', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>
+                      {daysLeft === 0 ? 'Xóa vĩnh viễn hôm nay' : `Tự xóa sau ${daysLeft} ngày`}
+                    </span>
+                    <Button variant="outline" size="sm" disabled={restoreTransaction.isPending} onClick={() => handleRestore(t)}>Khôi phục</Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       <Modal open={creating} onClose={() => setCreating(false)} title="Tạo giao dịch" maxWidth="480px">
         <CreateTransactionForm notify={notify} onDone={() => setCreating(false)} />
       </Modal>
@@ -252,7 +301,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Xóa giao dịch" maxWidth="420px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Xóa vĩnh viễn giao dịch {deleteTarget?.fullName} — {money(deleteTarget?.amount)}? Không thể khôi phục.
+            Chuyển giao dịch {deleteTarget?.fullName} — {money(deleteTarget?.amount)} vào Thùng rác? Có thể khôi phục trong 30 ngày, sau đó tự xóa vĩnh viễn.
           </span>
           <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
             <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>Hủy</Button>

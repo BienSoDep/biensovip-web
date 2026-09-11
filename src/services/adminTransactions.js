@@ -43,7 +43,28 @@ export function useDeleteTransaction() {
     mutationFn: (id) => apiClient.delete(`/api/admin/transactions/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-transactions'] });
+      qc.invalidateQueries({ queryKey: ['admin-transactions-deleted'] });
       qc.invalidateQueries({ queryKey: ['admin-contacts'] });
+    },
+  });
+}
+
+// Thùng rác — giao dịch soft-delete, tự xóa cứng sau 30 ngày (TransactionPurgeJob).
+export function useDeletedTransactions(filter = {}) {
+  const { page = 1, limit = 20 } = filter;
+  return useQuery({
+    queryKey: ['admin-transactions-deleted', page, limit],
+    queryFn: () => apiClient.get(`/api/admin/transactions/deleted?page=${page}&limit=${limit}`),
+  });
+}
+
+export function useRestoreTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/transactions/${id}/restore`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
+      qc.invalidateQueries({ queryKey: ['admin-transactions-deleted'] });
     },
   });
 }
