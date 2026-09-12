@@ -14,7 +14,7 @@ export const NAV = [
 // sidebar (29→21) và xếp các mục liên quan gần nhau theo đúng luồng thao tác thật.
 export const ADMIN_NAV = [
   { group: null, items: [['dash', 'Tổng quan'], ['aguide', 'Hướng dẫn sử dụng']] },
-  { group: 'Bán hàng', items: [['aplates', 'Biển số'], ['acats', 'Danh mục'], ['acoupons', 'Mã giảm giá'], ['acontacts', 'Yêu cầu liên hệ'], ['atransactions', 'Giao dịch'], ['acustomers', 'Khách hàng'], ['ainterestleads', 'Khách quan tâm']] },
+  { group: 'Bán hàng', items: [['aplates', 'Biển số'], ['akanban', 'Quy trình bán hàng'], ['acats', 'Danh mục'], ['acoupons', 'Mã giảm giá'], ['acontacts', 'Yêu cầu liên hệ'], ['atransactions', 'Giao dịch'], ['acustomers', 'Khách hàng'], ['ainterestleads', 'Khách quan tâm']] },
   { group: 'Nội dung', items: [['aposts', 'Blog'], ['avideos', 'Video'], ['ameanings', 'Ý nghĩa phong thủy'], ['apolicypages', 'Trang chính sách']] },
   { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
   { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['actvtemplates', 'Mẫu tin nhắn CTV']] },

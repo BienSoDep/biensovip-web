@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2, MessageCircle, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact } from '../../services/adminContacts.js';
+import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact, useDeleteContact, useDeletedContacts, useRestoreContact } from '../../services/adminContacts.js';
 import { useCreatePaymentLink } from '../../services/paymentLinks.js';
 import AdminTransactions, { CreateTransactionForm } from './AdminTransactions.jsx';
 import { useStaffLite } from '../../services/adminStaff.js';
@@ -29,6 +29,12 @@ const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đ�
 const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#7B2D8B', cancelled: 'var(--text-faint)' };
 const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ': 'hunting' };
+// Đếm ngược số ngày còn lại trước khi ContactPurgeJob xóa cứng (retention 30 ngày, xem backend).
+const daysLeftInTrash = (deletedAt) => {
+  if (!deletedAt) return null;
+  const elapsedMs = Date.now() - new Date(deletedAt).getTime();
+  return Math.max(0, 30 - Math.floor(elapsedMs / 86400000));
+};
 
 export default function AdminContacts({ notify, go }) {
   const [status, setStatus] = useState('all');
@@ -49,6 +55,11 @@ export default function AdminContacts({ notify, go }) {
   const { data, isLoading, isError, refetch } = useAdminContacts({ status, intent, q, page, perPage: 20, assignedTo, ...(fromDate && { fromDate }), ...(toDate && { toDate }) });
   const updateStatus = useUpdateContactStatus();
   const assignContact = useAssignContact();
+  const deleteContact = useDeleteContact();
+  const { data: deletedData, isLoading: deletedLoading } = useDeletedContacts({ page: 1, limit: 20 });
+  const restoreContact = useRestoreContact();
+  const deletedItems = deletedData?.items || [];
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const createPaymentLink = useCreatePaymentLink();
   const [creatingLinkFor, setCreatingLinkFor] = useState(null);
   const [linkAmountFor, setLinkAmountFor] = useState(null); // contact đang mở popup nhập số tiền tạo link ZaloPay
@@ -94,6 +105,26 @@ export default function AdminContacts({ notify, go }) {
     });
   };
 
+  // Xóa mềm — liên hệ vào Thùng rác 30 ngày, kéo theo giao dịch còn Pending của nó.
+  const submitDelete = async () => {
+    try {
+      await deleteContact.mutateAsync(deleteTarget.id);
+      toast.success('Đã chuyển vào Thùng rác — có thể khôi phục trong 30 ngày');
+      setDeleteTarget(null);
+    } catch (e) {
+      toast.error(e.message || 'Xóa thất bại');
+    }
+  };
+
+  const handleRestore = async (c) => {
+    try {
+      await restoreContact.mutateAsync(c.id);
+      toast.success('Đã khôi phục liên hệ');
+    } catch (e) {
+      toast.error(e.message || 'Khôi phục thất bại');
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <style>{'@keyframes bsd-spin { to { transform: rotate(360deg); } } .bsd-spin { animation: bsd-spin 0.8s linear infinite; }'}</style>
@@ -133,7 +164,7 @@ export default function AdminContacts({ notify, go }) {
       </div>
 
       <div role="tablist" aria-label="Lọc theo trạng thái" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        {[['all', 'Tất cả'], ['new', 'Mới'], ['consulting', 'Đang tư vấn'], ['closed', 'Đã chốt'], ['cancelled', 'Thùng rác']].map(([val, label]) => {
+        {[['all', 'Tất cả'], ['new', 'Mới'], ['consulting', 'Đang tư vấn'], ['closed', 'Đã chốt'], ['cancelled', 'Hủy']].map(([val, label]) => {
           const active = status === val;
           return (
             <button key={val} role="tab" aria-selected={active} onClick={() => { setStatus(val); setPage(1); }}
@@ -148,6 +179,13 @@ export default function AdminContacts({ notify, go }) {
             </button>
           );
         })}
+        {deletedItems.length > 0 && (
+          <button type="button" onClick={() => document.getElementById('contact-trash')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-medium)', background: 'var(--white)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+            <span>Thùng rác</span>
+            <span style={{ display: 'inline-flex', minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', padding: '0 6px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', background: 'var(--grey-100)', color: 'var(--text-muted)' }}>{deletedItems.length}</span>
+          </button>
+        )}
       </div>
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
@@ -319,6 +357,11 @@ export default function AdminContacts({ notify, go }) {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thùng rác</span>
+                <Button variant="outline" size="sm" onClick={() => { setDeleteTarget(selected); setSelected(null); }}>Xóa liên hệ này</Button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Ghi chú yêu cầu</span>
                 <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap', maxHeight: 160, overflowY: 'auto' }}>
                   {selected.note || <span style={{ color: 'var(--text-faint)' }}>Không có ghi chú</span>}
@@ -393,6 +436,51 @@ export default function AdminContacts({ notify, go }) {
       <Modal open={!!viewingTx} onClose={() => setViewingTx(null)} title={`Giao dịch của ${viewingTx?.fullName || ''}`} maxWidth="820px">
         {viewingTx && <AdminTransactions notify={notify} filterContactRequestId={viewingTx.id} />}
       </Modal>
+
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Xóa yêu cầu liên hệ" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Chuyển liên hệ {deleteTarget?.fullName} vào Thùng rác? Có thể khôi phục trong 30 ngày, sau đó tự xóa vĩnh viễn. Giao dịch chưa xác nhận thanh toán của liên hệ này cũng vào Thùng rác theo.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Hủy</Button>
+            <Button variant="primary" disabled={deleteContact.isPending} onClick={submitDelete}>
+              {deleteContact.isPending ? 'Đang xóa…' : 'Vào Thùng rác'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {(deletedLoading || deletedItems.length > 0) && (
+        <div id="contact-trash" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', scrollMarginTop: 'var(--space-4)' }}>
+          <h3 style={{ margin: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>
+            Liên hệ đã xóa {deletedItems.length > 0 && `(${deletedItems.length})`}
+          </h3>
+          {deletedLoading ? (
+            <SkeletonTable rows={2} cols={4} />
+          ) : (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+              {deletedItems.map((c) => {
+                const daysLeft = daysLeftInTrash(c.deletedAt);
+                return (
+                  <div key={c.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-200)', font: 'var(--type-body-sm)', opacity: 0.75 }}>
+                    <span style={{ flex: '1 1 120px' }}>
+                      <div>{c.fullName}</div>
+                      <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.phone}</div>
+                    </span>
+                    <span style={{ flex: '1 1 100px' }}>{c.plateNumber || '—'}</span>
+                    <span style={{ flex: '1 1 110px', color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}>{STATUS_LABEL[c.status] || c.status}</span>
+                    <span style={{ flex: '1 1 140px', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>
+                      {daysLeft === 0 ? 'Xóa vĩnh viễn hôm nay' : `Tự xóa sau ${daysLeft} ngày`}
+                    </span>
+                    <Button variant="outline" size="sm" disabled={restoreContact.isPending} onClick={() => handleRestore(c)}>Khôi phục</Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

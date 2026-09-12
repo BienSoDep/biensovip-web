@@ -6,6 +6,8 @@ import Modal from '../components/Modal.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { SearchField, AdminInfoBanner } from '../components/index.jsx';
 import { pill } from '../components/NavBtn.jsx';
+import AdminNotificationBell from './AdminNotificationBell.jsx';
+import AdminKanban from '../pages/admin/AdminKanban.jsx';
 import * as authApi from '../services/authService.js';
 import { apiClient } from '../services/apiClient.js';
 import Dashboard from '../pages/admin/Dashboard.jsx';
@@ -40,7 +42,7 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
 const NAV_PERM = {
-  aplates: 'plates:view', acoupons: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view', atransactions: 'transactions:view',
+  aplates: 'plates:view', acoupons: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
@@ -70,6 +72,7 @@ const ADMIN_INFO = {
   acoupons: 'Tạo và quản lý mã giảm giá — khách nhập mã khi gửi liên hệ/đặt cọc. Tắt mã khi không muốn dùng nữa, không cần xóa.',
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
+  akanban: 'Bảng quy trình dạng kanban — mỗi cột là một trạng thái, kéo thẻ khách sang cột khác để đổi trạng thái nhanh thay vì mở từng dòng. Cột Giao dịch chỉ để xem.',
   atransactions: 'Giao dịch mua/đặt cọc biển số. Tự tạo khi khách gửi liên hệ đặt cọc/mua, hoặc admin tự tạo tay từ 1 liên hệ tư vấn. Bấm "Xác nhận đã nhận tiền" khi khách đã chuyển khoản (ảnh minh chứng không bắt buộc) — hoa hồng CTV liên quan tự chuyển sang "Chờ duyệt" → "Đã duyệt".',
   aposts: 'Bài viết blog — nội dung SEO cho landing tỉnh/loại biển và tin phong thủy. Bấm "Đăng bài mới" để soạn bài. Tab Bình luận để duyệt/từ chối bình luận độc giả.',
   ablogcomments: 'Bình luận độc giả gửi vào bài blog — duyệt hoặc từ chối trước khi hiện công khai.',
@@ -284,7 +287,10 @@ export default function AdminShell({
                   <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: isSuperAdmin ? 'var(--action-primary)' : 'var(--text-muted)' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span>
                 </div>
               </div>
-              <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Đóng menu" style={{ width: 44, height: 44, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={22} /></button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
+                <AdminNotificationBell go={go} />
+                <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Đóng menu" style={{ width: 44, height: 44, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={22} /></button>
+              </div>
             </div>
             <div style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
               <AdminSidebarNav s={s} st={st} go={go} onNavigate={() => setDrawerOpen(false)} />
@@ -305,9 +311,12 @@ export default function AdminShell({
               <img src="/assets/logo-mark.png" alt="Biensovip" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}><span title={st.user?.email} style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.user?.fullName || st.user?.email || 'Tài khoản'}</span><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: isSuperAdmin ? 'var(--action-primary)' : 'var(--text-muted)' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span></div>
             </div>
-            <button type="button" onClick={toggleCollapsed} aria-label="Ẩn menu" title="Ẩn menu" style={{ flexShrink: 0, width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <PanelLeftClose size={16} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
+              <AdminNotificationBell go={go} />
+              <button type="button" onClick={toggleCollapsed} aria-label="Ẩn menu" title="Ẩn menu" style={{ flexShrink: 0, width: 32, height: 32, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <PanelLeftClose size={16} />
+              </button>
+            </div>
           </div>
           <AdminSidebarNav s={s} st={st} go={go} />
           <div style={{ flex: 1 }} />
@@ -348,6 +357,7 @@ export default function AdminShell({
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} />}
+        {s === 'akanban' && <AdminKanban notify={notify} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
         {s === 'acustomers' && <AdminCustomers st={st} setSt={setSt} notify={notify} />}
         {s === 'avideos' && <AdminVideos notify={notify} />}

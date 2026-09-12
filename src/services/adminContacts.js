@@ -53,3 +53,39 @@ export function useContactStats({ intent, q }) {
     queryFn: () => apiClient.get(`/api/admin/contact-requests/stats${qs ? `?${qs}` : ''}`),
   });
 }
+
+// Thùng rác — liên hệ soft-delete, tự xóa cứng sau 30 ngày (ContactPurgeJob). Xóa liên hệ kéo theo
+// giao dịch còn Pending của nó vào thùng rác, nên invalidate cả cache giao dịch.
+export function useDeleteContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(`/api/admin/contact-requests/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
+      qc.invalidateQueries({ queryKey: ['admin-contacts-deleted'] });
+      qc.invalidateQueries({ queryKey: ['admin-contacts-stats'] });
+      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
+    },
+  });
+}
+
+export function useDeletedContacts(filter = {}) {
+  const { page = 1, limit = 20 } = filter;
+  return useQuery({
+    queryKey: ['admin-contacts-deleted', page, limit],
+    queryFn: () => apiClient.get(`/api/admin/contact-requests/deleted?page=${page}&limit=${limit}`),
+  });
+}
+
+export function useRestoreContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => apiClient.post(`/api/admin/contact-requests/${id}/restore`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
+      qc.invalidateQueries({ queryKey: ['admin-contacts-deleted'] });
+      qc.invalidateQueries({ queryKey: ['admin-contacts-stats'] });
+      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
+    },
+  });
+}
