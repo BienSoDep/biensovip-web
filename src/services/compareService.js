@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 import { trackAddToCompare, trackRemoveFromCompare } from './tracking/events.js';
@@ -14,47 +14,54 @@ function loadIds() {
   } catch { return []; }
 }
 
-function saveIds(ids) {
+// Một store dùng chung cho toàn app — KHÔNG phải useState cục bộ mỗi hook.
+// Trước đây useCompareIds() dùng useState(loadIds) nên mỗi call site (Header, PlateList,
+// PlateDetail, Home, Compare, CompareBar) giữ một bản sao riêng: bấm "So sánh" ở danh sách
+// chỉ cập nhật bản sao của chính nó, Header không hề hay biết nên badge đếm đứng yên cho tới
+// khi F5. useSyncExternalStore cho mọi call site đọc cùng một nguồn và re-render đồng bộ.
+let ids = loadIds();
+const listeners = new Set();
+
+function emit() { for (const l of listeners) l(); }
+
+function setIds(next) {
+  if (next.length === ids.length && next.every((x, i) => x === ids[i])) return;
+  ids = next;
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
+  emit();
 }
 
-// ── Client-side compare list (localStorage) ──
-export function useCompareIds() {
-  const [ids, setIds] = useState(loadIds);
+const subscribeStore = (listener) => {
+  listeners.add(listener);
+  // Đồng bộ khi tab khác sửa cùng key (cross-tab).
+  const onStorage = (e) => { if (e.key === STORAGE_KEY) { ids = loadIds(); emit(); } };
+  window.addEventListener('storage', onStorage);
+  return () => { listeners.delete(listener); window.removeEventListener('storage', onStorage); };
+};
 
-  useEffect(() => {
-    const onStorage = () => setIds(loadIds());
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+const getSnapshot = () => ids;
+
+// ── Client-side compare list (localStorage, shared store) ──
+export function useCompareIds() {
+  const current = useSyncExternalStore(subscribeStore, getSnapshot, getSnapshot);
 
   const add = useCallback((id) => {
-    setIds((prev) => {
-      if (prev.length >= MAX || prev.includes(id)) return prev;
-      const next = [...prev, id];
-      saveIds(next);
-      trackAddToCompare(id);
-      return next;
-    });
+    if (ids.length >= MAX || ids.includes(id)) return;
+    setIds([...ids, id]);
+    trackAddToCompare(id);
   }, []);
 
   const remove = useCallback((id) => {
-    setIds((prev) => {
-      const next = prev.filter((x) => x !== id);
-      saveIds(next);
-      if (next.length !== prev.length) trackRemoveFromCompare(id);
-      return next;
-    });
+    if (!ids.includes(id)) return;
+    setIds(ids.filter((x) => x !== id));
+    trackRemoveFromCompare(id);
   }, []);
 
-  const clear = useCallback(() => {
-    setIds([]);
-    saveIds([]);
-  }, []);
+  const clear = useCallback(() => { setIds([]); }, []);
 
-  const isInList = useCallback((id) => ids.includes(id), [ids]);
+  const isInList = useCallback((id) => current.includes(id), [current]);
 
-  return { ids, add, remove, clear, isInList, max: MAX };
+  return { ids: current, add, remove, clear, isInList, max: MAX };
 }
 
 // ── API: fetch compare plates ──

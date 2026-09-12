@@ -50,7 +50,7 @@ export default function Footer({ settings, patch }) {
           <summary className="footer-section-title" style={navStyle}>{T('common.footer.explore_title')}</summary>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {exploreLinks.map(([href, label]) => (
-              <a key={href} href={href} onClick={navClick} style={linkStyle}>{label}</a>
+              <a key={href} href={href} onClick={navClick} rel={href === '/yeu-thich' ? 'nofollow' : undefined} style={linkStyle}>{label}</a>
             ))}
           </div>
         </details>

@@ -563,6 +563,100 @@ textarea,
     transition: transform 160ms var(--ease-out);
   }
   .dash-fold[open] > summary::after { transform: rotate(-135deg); }
+
+  /* ── Admin mobile ──────────────────────────────────────────────────────────
+     Toàn bộ khối này phải nằm trong (max-width: 768px). Trước đây nó bị đặt lẫn
+     trong @media (min-width: 481px) nên ở 375-480px không rule nào chạy: sidebar
+     vẫn hiện đè lên nội dung, nút hamburger bị ẩn, bảng 9 cột vẫn vuốt ngang. */
+  /* Sidebar thành drawer, mở bằng nút hamburger cố định góc trên trái */
+  .admin-sidebar {
+    display: none !important;
+  }
+  .admin-mobile-topbar-btn {
+    display: flex !important;
+  }
+  .admin-main {
+    padding-top: 64px !important;
+  }
+  /* Bảng admin 9 cột (min-width 820) trên điện thoại = vuốt ngang liên tục, không đọc được dòng nào
+     trọn vẹn. Dưới 768px chuyển mỗi dòng thành 1 thẻ dọc: ô tự rơi xuống, nhãn cột lấy từ
+     data-label để không mất ngữ cảnh. Chỉ áp cho .admin-rows — bảng nào chưa gắn class giữ nguyên.
+     Cấu trúc thật: .admin-rows > .admin-row > [data-label] (ô nằm trong .admin-row, không phải
+     con trực tiếp của .admin-rows) — nên phải chọn .admin-row mới ra được thẻ. */
+  .admin-table-scroll {
+    overflow-x: visible !important;
+  }
+  .admin-table-scroll > .admin-rows {
+    min-width: 0 !important;
+  }
+  .admin-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--surface-sunken);
+  }
+  /* .admin-row thành thẻ dọc. display:block !important đè inline flex của dòng. */
+  .admin-rows > .admin-row {
+    display: block !important;
+    padding: var(--space-3) var(--space-4) !important;
+    background: var(--white);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-inset-hairline) !important;
+    cursor: pointer;
+  }
+  /* Mỗi ô 1 dòng có nhãn; nhãn lấy từ data-label. Bỏ flex-basis inline để ô không bị co theo cột. */
+  .admin-rows > .admin-row > [data-label] {
+    display: flex !important;
+    flex: none !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 3px 0 !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+  }
+  /* Nút/chip trong ô đủ chỗ, không tràn sang ô bên (bảng Giao dịch có 3 control 1 ô). */
+  .admin-rows > .admin-row > [data-label] > button,
+  .admin-rows > .admin-row > [data-label] > a {
+    flex: 0 1 auto;
+    max-width: 100%;
+    white-space: normal;
+    height: auto !important;
+    min-height: 28px;
+    line-height: 1.3;
+  }
+  .admin-rows > .admin-row > [data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 92px;
+    font: var(--type-caption);
+    font-size: var(--fs-micro);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    line-height: 1.3;
+    color: var(--text-muted);
+  }
+  /* Ô có control tương tác (Select, nút) tự xuống dòng thay vì bóp chữ thành 2-3 dòng. */
+  .admin-rows > .admin-row > [data-label] > * {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  /* Ô đầu (tên khách) là tiêu đề thẻ — to hơn, không cần nhãn lặp lại. */
+  .admin-rows > .admin-row > [data-primary] {
+    display: block !important;
+    font: var(--type-title-3) !important;
+    padding-bottom: var(--space-2) !important;
+  }
+  .admin-rows > .admin-row > [data-primary]::before {
+    display: none;
+  }
+  /* Hàng tiêu đề cột vô nghĩa khi mỗi bản ghi đã là 1 thẻ có nhãn riêng. */
+  .admin-head {
+    display: none !important;
+  }
 }
 @media (min-width: 481px) {
   /* Desktop: luôn xổ hết (details có open trong JSX), summary chỉ đóng vai trò tiêu đề tĩnh (không toggle) */
@@ -620,16 +714,6 @@ textarea,
   /* Detail: fengshui meaning cards capped at 2 on mobile — nội dung phụ dài trước CTA chính */
   .meanings-extra {
     display: none !important;
-  }
-  /* Admin: sidebar becomes a drawer opened via fixed top-left hamburger button */
-  .admin-sidebar {
-    display: none !important;
-  }
-  .admin-mobile-topbar-btn {
-    display: flex !important;
-  }
-  .admin-main {
-    padding-top: 64px !important;
   }
 }
 /* Admin: viền/ranh giới đậm hơn public — nhiều bảng/card sát nhau cần phân biệt rõ hơn.

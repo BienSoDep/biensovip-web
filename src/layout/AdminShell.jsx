@@ -8,6 +8,7 @@ import { SearchField, AdminInfoBanner } from '../components/index.jsx';
 import { pill } from '../components/NavBtn.jsx';
 import AdminNotificationBell from './AdminNotificationBell.jsx';
 import AdminKanban from '../pages/admin/AdminKanban.jsx';
+import AdminSales from '../pages/admin/AdminSales.jsx';
 import * as authApi from '../services/authService.js';
 import { apiClient } from '../services/apiClient.js';
 import Dashboard from '../pages/admin/Dashboard.jsx';
@@ -42,7 +43,7 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
 const NAV_PERM = {
-  aplates: 'plates:view', acoupons: 'plates:view', acats: 'categories:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
+  aplates: 'plates:view', acoupons: 'plates:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
@@ -55,6 +56,9 @@ export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?
 
 // Trang gộp tab (2026-09) — slug phụ đã gộp vào slug chính (trang có tab bên trong). Giữ nguyên trong
 // ADMIN_SCREENS/ROUTE_MAP/NAV_PERM để URL cũ vẫn hợp lệ, chỉ tự redirect về trang chính khi vào thẳng.
+// Trang Bán hàng gộp 3 màn cũ thành 3 view — ?view= giữ đúng view người dùng quen (bookmark cũ
+// vào thẳng tab Giao dịch vẫn ra bảng giao dịch, không phải tự bấm lại). Xem AdminSales.jsx.
+const SALES_VIEW = { acontacts: 'list', akanban: 'pipeline', atransactions: 'transactions' };
 const GROUPED_REDIRECT = {
   ablogcomments: 'aposts',
   arisklog: 'aauditlog',
@@ -65,6 +69,13 @@ const GROUPED_REDIRECT = {
   aemailtpl: 'anotifications',
 };
 
+// View đang chọn của trang Bán hàng — đọc thẳng từ URL thay vì lưu state, để URL cũ có ?view=
+// (do GROUPED_REDIRECT sinh ra) và lần F5 sau đó vẫn mở đúng view.
+function salesViewFromUrl() {
+  if (typeof window === 'undefined') return undefined;
+  return new URLSearchParams(window.location.search).get('view') || undefined;
+}
+
 // Banner thông tin ngắn đầu mỗi trang quản lý — 1 nơi cho toàn bộ, thay vì sửa từng trang.
 const ADMIN_INFO = {
   dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
@@ -72,6 +83,7 @@ const ADMIN_INFO = {
   acoupons: 'Tạo và quản lý mã giảm giá — khách nhập mã khi gửi liên hệ/đặt cọc. Tắt mã khi không muốn dùng nữa, không cần xóa.',
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
+  asales: 'Toàn bộ luồng bán hàng trong một trang, chuyển giữa 3 chế độ xem: Quy trình (bảng kanban, kéo thẻ đổi trạng thái), Danh sách (bảng chi tiết để lọc/gán/xuất CSV) và Giao dịch (chốt thanh toán). Mọi view đọc chung một dữ liệu — đổi trạng thái ở view này là các view kia cập nhật ngay, không cần tải lại trang.',
   akanban: 'Bảng quy trình dạng kanban — mỗi cột là một trạng thái, kéo thẻ khách sang cột khác để đổi trạng thái nhanh thay vì mở từng dòng. Cột Giao dịch chỉ để xem.',
   atransactions: 'Giao dịch mua/đặt cọc biển số. Tự tạo khi khách gửi liên hệ đặt cọc/mua, hoặc admin tự tạo tay từ 1 liên hệ tư vấn. Bấm "Xác nhận đã nhận tiền" khi khách đã chuyển khoản (ảnh minh chứng không bắt buộc) — hoa hồng CTV liên quan tự chuyển sang "Chờ duyệt" → "Đã duyệt".',
   aposts: 'Bài viết blog — nội dung SEO cho landing tỉnh/loại biển và tin phong thủy. Bấm "Đăng bài mới" để soạn bài. Tab Bình luận để duyệt/từ chối bình luận độc giả.',
@@ -267,6 +279,14 @@ export default function AdminShell({
     if (mergedRedirect) go(mergedRedirect)();
   }, [mergedRedirect, go]);
 
+  // 3 màn cũ của nhóm Bán hàng gộp vào 'asales' — chuyển hướng kèm ?view= để giữ đúng view tương ứng.
+  useEffect(() => {
+    const view = SALES_VIEW[s];
+    if (!view) return;
+    window.history.replaceState(null, '', `/admin/ban-hang?view=${view}`);
+    go('asales')();
+  }, [s, go]);
+
   return (
     <div className="admin-shell" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
       {!drawerOpen && (
@@ -339,7 +359,7 @@ export default function AdminShell({
             <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{adminMeta[0]}</h1>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{adminMeta[1]}</p>
           </div>
-          {['aposts', 'acustomers', 'acollabs'].indexOf(s) >= 0 && (
+          {['aposts', 'acustomers', 'acollabs', 'asales', 'acontacts', 'aplates'].indexOf(s) >= 0 && (
             <SearchField placeholder="Tìm trong bảng…" value={st.adminQ} onChange={(e) => patch({ adminQ: e.target.value })} width={240} />
           )}
           {(s === 'aposts') && (
@@ -356,8 +376,9 @@ export default function AdminShell({
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
-        {s === 'acontacts' && <AdminContacts notify={notify} go={go} />}
-        {s === 'akanban' && <AdminKanban notify={notify} />}
+        {s === 'asales' && <AdminSales notify={notify} go={go} st={st} initialView={salesViewFromUrl()} />}
+        {s === 'acontacts' && <AdminContacts notify={notify} go={go} st={st} />}
+        {s === 'akanban' && <AdminKanban notify={notify} go={go} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
         {s === 'acustomers' && <AdminCustomers st={st} setSt={setSt} notify={notify} />}
         {s === 'avideos' && <AdminVideos notify={notify} />}

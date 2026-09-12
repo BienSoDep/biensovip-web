@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
+import { invalidateSales } from './adminContacts.js';
 
 export function useAdminTransactions(filter = {}) {
   const { status, plateId, userId, page = 1, limit = 20 } = filter;
@@ -19,10 +20,7 @@ export function useCreateTransaction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body) => apiClient.post('/api/admin/transactions', body),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
-      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
-    },
+    onSettled: () => invalidateSales(qc),
   });
 }
 
@@ -30,8 +28,21 @@ export function useConfirmTransactionPayment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, proofUrl }) => apiClient.post(`/api/admin/transactions/${id}/confirm-payment`, { proofUrl }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
+    // Optimistic: badge "Đã xác nhận" đổi ngay khi bấm, không chờ round-trip.
+    onMutate: async ({ id }) => {
+      await qc.cancelQueries({ queryKey: ['admin-transactions'] });
+      const snapshots = qc.getQueriesData({ queryKey: ['admin-transactions'] });
+      for (const [key, data] of snapshots) {
+        if (!data?.items) continue;
+        qc.setQueryData(key, { ...data, items: data.items.map((t) => (t.id === id ? { ...t, status: 'payment_confirmed' } : t)) });
+      }
+      return { snapshots };
+    },
+    onError: (_err, _vars, ctx) => {
+      for (const [key, data] of ctx?.snapshots || []) qc.setQueryData(key, data);
+    },
+    onSettled: () => {
+      invalidateSales(qc);
       qc.invalidateQueries({ queryKey: ['admin-collaborators'] });
     },
   });
@@ -41,11 +52,7 @@ export function useDeleteTransaction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => apiClient.delete(`/api/admin/transactions/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
-      qc.invalidateQueries({ queryKey: ['admin-transactions-deleted'] });
-      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
-    },
+    onSettled: () => invalidateSales(qc),
   });
 }
 
@@ -62,9 +69,6 @@ export function useRestoreTransaction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => apiClient.post(`/api/admin/transactions/${id}/restore`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
-      qc.invalidateQueries({ queryKey: ['admin-transactions-deleted'] });
-    },
+    onSettled: () => invalidateSales(qc),
   });
 }

@@ -40,7 +40,7 @@ export default function GlobalSearch({ go, patch }) {
     { label: 'Biển số', screen: 'aplates', items: (data.plates || []).map((p) => ({ id: p.id, text: p.plateNumber, sub: money(p.price) })) },
     { label: 'Khách hàng', screen: 'acustomers', items: (data.customers || []).map((c) => ({ id: c.id, text: c.fullName || c.email || c.phone, sub: c.email || c.phone })) },
     { label: 'Bài viết', screen: 'aposts', items: (data.posts || []).map((p) => ({ id: p.id, text: p.title, sub: p.slug })) },
-    { label: 'Liên hệ', screen: 'acontacts', items: (data.contacts || []).map((c) => ({ id: c.id, text: c.fullName, sub: c.phone })) },
+    { label: 'Liên hệ', screen: 'asales', items: (data.contacts || []).map((c) => ({ id: c.id, text: c.fullName, sub: c.phone })) },
   ].filter((g) => g.items.length > 0) : [];
 
   return (

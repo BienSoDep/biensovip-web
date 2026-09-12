@@ -26,15 +26,15 @@ export default function AdminInterestLeads({ notify }) {
 
   const handleClaim = (id) => claim.mutate(id, {
     onSuccess: () => notify('Đã nhận tư vấn khách này'),
-    onError: (e) => notify(e.code === 'ALREADY_CLAIMED' ? 'Nhân viên khác vừa nhận khách này rồi' : 'Nhận tư vấn thất bại'),
+    onError: (e) => notify(e?.code === 'ALREADY_CLAIMED' ? 'Nhân viên khác vừa nhận khách này rồi' : (e?.message || 'Nhận tư vấn thất bại, thử lại.'), 'error'),
   });
   const handleUnclaim = (id) => unclaim.mutate(id, {
     onSuccess: () => notify('Đã bỏ nhận'),
-    onError: () => notify('Thao tác thất bại'),
+    onError: (e) => notify(e?.message || 'Bỏ nhận thất bại, thử lại.', 'error'),
   });
   const handleContacted = (id) => markContacted.mutate(id, {
     onSuccess: () => notify('Đã đánh dấu đã liên hệ'),
-    onError: () => notify('Thao tác thất bại'),
+    onError: (e) => notify(e?.message || 'Đánh dấu đã liên hệ thất bại, thử lại.', 'error'),
   });
 
   return (

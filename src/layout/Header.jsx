@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, GitCompareArrows } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { IconButton, Avatar } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
@@ -108,7 +108,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const T = contentGet;
   const { ids: compareIds } = useCompareIds();
   const compareCount = compareIds.length;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare')], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
   const navRef = useRef(null);
   useEffect(() => {
     const active = navRef.current?.querySelector('[aria-current="page"]');
@@ -126,11 +126,12 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
           </div>
         </a>
         <nav ref={navRef} className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', gap: 'var(--space-3)', marginLeft: 'var(--space-6)', overflowX: 'auto', scrollbarWidth: 'none', minWidth: 0 }}>
-          {nav.map(([key, label], i) => (
+          {nav.map(([key, label, Icon]) => (
             <NavBtn key={key} onClick={go(String(key))} aria-current={s === key ? 'page' : undefined} {...pill(s === key)}>
+              {Icon && <Icon size={15} style={{ flexShrink: 0 }} />}
               {label}
               {key === 'compare' && compareCount > 0 && (
-                <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--action-primary)', color: s === key ? 'var(--action-primary)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
+                <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
               )}
             </NavBtn>
           ))}

@@ -216,7 +216,9 @@ function GiftedPlateField({ value, onChange, excludeId }) {
 export default function AdminPlates({ go, notify, st }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState('all');
-  const [keyword, setKeyword] = useState('');
+  // Seed từ st.adminQ — GlobalSearch (Ctrl+K) ghi từ khóa vào state chung rồi nhảy trang;
+  // không seed thì từ khóa rơi vào hư không, admin tưởng đã lọc nhưng bảng vẫn đầy đủ.
+  const [keyword, setKeyword] = useState(st?.adminQ || '');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);

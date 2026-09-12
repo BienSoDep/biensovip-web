@@ -8,7 +8,7 @@ import AdminTransactions, { CreateTransactionForm } from './AdminTransactions.js
 import { useStaffLite } from '../../services/adminStaff.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
-import { Select, Badge, Input } from '../../components/index.jsx';
+import { Select, Badge, Input, IconButton } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Modal from '../../components/Modal.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
@@ -25,7 +25,7 @@ const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên 
 const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Hủy'];
 const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Hủy': 'cancelled' };
 // found giữ lại trong map hiển thị — phòng data cũ chưa migrate về closed vẫn hiện đúng nhãn thay vì "undefined".
-const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã tìm thấy', cancelled: 'Hủy' };
+const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã chốt (cũ)', cancelled: 'Hủy' };
 const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#7B2D8B', cancelled: 'var(--text-faint)' };
 const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ': 'hunting' };
@@ -36,10 +36,12 @@ const daysLeftInTrash = (deletedAt) => {
   return Math.max(0, 30 - Math.floor(elapsedMs / 86400000));
 };
 
-export default function AdminContacts({ notify, go }) {
+export default function AdminContacts({ notify, go, st }) {
   const [status, setStatus] = useState('all');
   const [intent, setIntent] = useState('all');
-  const [search, setSearch] = useState('');
+  // Seed từ st.adminQ — GlobalSearch (Ctrl+K) ghi từ khóa vào state chung rồi nhảy trang;
+  // không seed thì từ khóa rơi vào hư không, admin tưởng đã lọc nhưng bảng vẫn đầy đủ.
+  const [search, setSearch] = useState(st?.adminQ || '');
   const [q] = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
@@ -117,6 +119,7 @@ export default function AdminContacts({ notify, go }) {
   };
 
   const handleRestore = async (c) => {
+    if (!window.confirm(`Khôi phục liên hệ ${c.fullName}? Liên hệ sẽ trở lại danh sách đang xử lý và không bị xóa vĩnh viễn nữa.`)) return;
     try {
       await restoreContact.mutateAsync(c.id);
       toast.success('Đã khôi phục liên hệ');
@@ -190,8 +193,8 @@ export default function AdminContacts({ notify, go }) {
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
       <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ minWidth: 820 }}>
-        <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+        <div className="admin-rows" style={{ minWidth: 820 }}>
+        <div className="admin-head" style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           <span style={{ flex: '1 1 96px' }}>Khách hàng</span>
           <span style={{ flex: '1 1 88px' }}>Điện thoại</span>
           <span style={{ flex: '1 1 100px' }}>Biển quan tâm</span>
@@ -215,25 +218,26 @@ export default function AdminContacts({ notify, go }) {
         {!isLoading && !isError && result.items.map((c) => {
           const parsed = parsePlateNumber(c.plateNumber);
           return (
-            <div key={c.id} onClick={() => setSelected(c)} role="button" tabIndex={0}
+            <div className="admin-row" key={c.id} onClick={() => setSelected(c)} role="button" tabIndex={0}
               onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelected(c); } }}
               title="Xem chi tiết" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}>
-              <span style={{ flex: '1 1 96px', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{c.fullName}</span>
-              <span style={{ flex: '1 1 88px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+              {/* data-label = nhãn cột cho chế độ thẻ trên mobile (xem .admin-rows trong app.css) */}
+              <span data-primary data-label="Khách hàng" style={{ flex: '1 1 96px', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{c.fullName}</span>
+              <span data-label="Điện thoại" style={{ flex: '1 1 88px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 {c.phone}
                 <a href={`tel:${c.phone}`} aria-label={`Gọi ${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={14} /></a>
                 <a href={`https://zalo.me/${c.phone}`} target="_blank" rel="noreferrer" aria-label="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
               </span>
-              <span style={{ flex: '1 1 100px' }}>
+              <span data-label="Biển quan tâm" style={{ flex: '1 1 100px' }}>
                 {parsed.num ? <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} /> : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
               </span>
-              <span style={{ flex: '1 1 72px' }}>
+              <span data-label="Mục đích" style={{ flex: '1 1 72px' }}>
                 <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: `color-mix(in srgb, ${INTENT_COLOR[c.intent] || 'var(--text-muted)'} 16%, transparent)`, color: INTENT_COLOR[c.intent] || 'var(--text-muted)' }}>
                   {INTENT_LABEL[c.intent] || c.intent}
                 </span>
               </span>
-              <span className="contact-col-note" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
-              <span style={{ flex: '1 1 80px' }}>
+              <span className="contact-col-note" data-label="Ghi chú" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
+              <span data-label="Đặt cọc" style={{ flex: '1 1 80px' }}>
                 {c.transactionId ? (
                   <button type="button" onClick={(e) => { e.stopPropagation(); setViewingTx(c); }}
                     style={{ display: 'inline-block', padding: '2px 8px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: 'color-mix(in srgb, var(--status-success) 16%, transparent)', color: 'var(--status-success)', cursor: 'pointer' }}>Đã cọc</button>
@@ -241,10 +245,10 @@ export default function AdminContacts({ notify, go }) {
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
                 )}
               </span>
-              <span className="contact-col-time" style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              <span className="contact-col-time" data-label="Thời gian" style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 {formatDate(c.createdAt)}
               </span>
-              <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 120px' }}>
+              <span onClick={(e) => e.stopPropagation()} data-label="Phụ trách" style={{ flex: '1 1 120px' }}>
                 <Select
                   value={c.assignedStaffId ? (c.assignedStaffName || '—') : 'Chưa gán'}
                   options={[{ value: 'Chưa gán', label: 'Chưa gán' }, ...staffList.map((s) => ({ value: s.fullName, label: s.fullName, _id: s.id }))]}
@@ -258,15 +262,16 @@ export default function AdminContacts({ notify, go }) {
                   style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)', boxShadow: 'inset 0 0 0 1px var(--grey-200)' }}
                 />
               </span>
-              <span onClick={(e) => e.stopPropagation()} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+              <span onClick={(e) => e.stopPropagation()} data-label="Trạng thái" style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                 <AuditHistoryButton entityType="contact_request" entityId={c.id} />
+                <IconButton name="trash-2" label="Xóa liên hệ" size="sm" onClick={() => setDeleteTarget(c)} />
                 {updatingId === c.id ? (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                     <Loader2 size={16} className="bsd-spin" />
                     <span style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}>{STATUS_LABEL[c.status] || c.status}</span>
                   </span>
                 ) : c.status === 'cancelled' ? (
-                  <Button variant="outline" size="sm" onClick={() => handleStatus(c.id, 'Mới')}>Khôi phục</Button>
+                  <Button variant="outline" size="sm" onClick={() => { if (window.confirm(`Đưa liên hệ ${c.fullName} về trạng thái "Mới"?`)) handleStatus(c.id, 'Mới'); }}>Khôi phục</Button>
                 ) : (
                   <Select
                     value={STATUS_LABEL[c.status] || c.status}

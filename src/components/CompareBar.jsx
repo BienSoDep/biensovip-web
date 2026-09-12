@@ -1,4 +1,4 @@
-import { ArrowLeftRight, X } from 'lucide-react';
+import { GitCompareArrows, X } from 'lucide-react';
 import Button from './Button.jsx';
 import { useCompareIds } from '../services/compareService.js';
 
@@ -17,7 +17,7 @@ export default function CompareBar({ go }) {
         <X size={16} />
       </button>
       <Button variant="primary" size="sm" onClick={go('compare')} style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-        <ArrowLeftRight size={14} /> Xem so sánh
+        <GitCompareArrows size={14} /> Xem so sánh
       </Button>
     </div>
   );

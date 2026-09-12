@@ -27,7 +27,8 @@ export default function AdminDbConsole({ notify }) {
   const run = () => {
     if (!table) { notify?.('Chọn bảng trước'); return; }
     query.mutate({ table, filters: filters.filter((f) => f.field && f.value !== ''), limit: 50 }, {
-      onError: (err) => notify?.(err.message || 'Truy vấn thất bại'),
+      // Console DB — thông điệp lỗi từ server là thứ duy nhất admin có để sửa điều kiện lọc.
+      onError: (err) => notify?.(err?.message || 'Truy vấn thất bại', 'error'),
     });
   };
 
@@ -38,7 +39,11 @@ export default function AdminDbConsole({ notify }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <Select label="Bảng" value={table} options={tableOpts} onChange={(v) => { setTable(v); setFilters([]); }} />
-        <Button variant="outline" size="md" onClick={addFilter} disabled={!table}>+ Thêm điều kiện lọc</Button>
+        {/* Điều kiện lọc gắn với cột của bảng — chưa chọn bảng thì chưa biết cột nào để lọc.
+            Nêu lý do trong title để nút xám không bị hiểu là lỗi. */}
+        <span title={table ? undefined : 'Chọn bảng trước để biết các cột có thể lọc'}>
+          <Button variant="outline" size="md" onClick={addFilter} disabled={!table}>+ Thêm điều kiện lọc</Button>
+        </span>
         <Button variant="primary" size="md" onClick={run} disabled={!table || query.isPending}>{query.isPending ? 'Đang chạy…' : 'Xem dữ liệu'}</Button>
       </div>
 

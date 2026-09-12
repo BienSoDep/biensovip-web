@@ -142,11 +142,12 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   };
 
   const handleRestore = async (t) => {
+    if (!window.confirm(`Khôi phục giao dịch của ${t.fullName}? Giao dịch sẽ trở lại danh sách và không bị xóa vĩnh viễn nữa.`)) return;
     try {
       await restoreTransaction.mutateAsync(t.id);
       notify('Đã khôi phục giao dịch');
     } catch (e) {
-      notify(e.message || 'Khôi phục thất bại');
+      notify(e.message || 'Khôi phục thất bại', 'error');
     }
   };
 
@@ -172,9 +173,9 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
         <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có giao dịch nào.</div>
       ) : (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <div style={{ minWidth: 780 }}>
-              <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+          <div className="admin-table-scroll" style={{ overflowX: 'auto' }}>
+            <div className="admin-rows" style={{ minWidth: 780 }}>
+              <div className="admin-head" style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                 <span style={{ flex: '1 1 100px' }}>Khách</span>
                 <span style={{ flex: '1 1 100px' }}>Biển số</span>
                 <span style={{ flex: '1 1 90px' }}>Số tiền</span>
@@ -184,15 +185,15 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                 <span style={{ flex: '1 1 140px' }}>Trạng thái</span>
               </div>
               {items.map((t) => (
-                <div key={t.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)' }}>
-                  <span style={{ flex: '1 1 100px' }}>
+                <div className="admin-row" key={t.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)' }}>
+                  <span data-primary data-label="Khách" style={{ flex: '1 1 100px' }}>
                     <div>{t.fullName}</div>
                     <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.phone}</div>
                   </span>
-                  <span style={{ flex: '1 1 100px' }}>{t.plateNumber || '—'}</span>
-                  <span style={{ flex: '1 1 90px', fontWeight: 'var(--fw-semibold)' }}>{money(t.amount)}</span>
-                  <span style={{ flex: '1 1 80px' }}>{INTENT_LABEL[t.intent] || t.intent}</span>
-                  <span style={{ flex: '1 1 90px' }}>
+                  <span data-label="Biển số" style={{ flex: '1 1 100px' }}>{t.plateNumber || '—'}</span>
+                  <span data-label="Số tiền" style={{ flex: '1 1 90px', fontWeight: 'var(--fw-semibold)' }}>{money(t.amount)}</span>
+                  <span data-label="Loại" style={{ flex: '1 1 80px' }}>{INTENT_LABEL[t.intent] || t.intent}</span>
+                  <span data-label="CTV" style={{ flex: '1 1 90px' }}>
                     {t.ctvName ? (
                       <span title={ctvBankInfo(t)} style={{ display: 'block', cursor: 'help' }}>
                         <div style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{t.ctvName}</div>
@@ -202,7 +203,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.referralCodeUsed || '—'}</span>
                     )}
                   </span>
-                  <span style={{ flex: '1 1 110px' }}>
+                  <span data-label="Hoa hồng" style={{ flex: '1 1 110px' }}>
                     {t.commissionAmount != null ? (
                       <span title={ctvBankInfo(t)} style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: t.ctvBankAccount ? 'help' : 'default' }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(t.commissionAmount)}</span>
@@ -215,7 +216,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
                     )}
                   </span>
-                  <span style={{ flex: '1 1 140px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span data-label="Trạng thái" style={{ flex: '1 1 140px', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Badge tone={t.status === 'payment_confirmed' ? 'mint' : t.status === 'cancelled' ? 'neutral' : 'orange'}>
                       {STATUS_LABEL[t.status] || t.status}
                     </Badge>

@@ -85,14 +85,14 @@ export default function AdminCats({ notify, goToMeanings }) {
   const toggleActive = (c) => {
     setCategoryActive.mutate({ id: c.id, isActive: !c.isActive }, {
       onSuccess: () => notify(c.isActive ? `Đã tắt ${c.name}` : `Đã bật ${c.name}`),
-      onError: (err) => notify(err.message || 'Có lỗi xảy ra.'),
+      onError: (err) => notify(err.message || 'Bật/tắt danh mục thất bại, thử lại.', 'error'),
     });
   };
 
   const toggleRegion = (region, isActive) => {
     setRegionActive.mutate({ region, isActive }, {
       onSuccess: () => notify(isActive ? 'Đã bật cả miền' : 'Đã tắt cả miền'),
-      onError: (err) => notify(err.message || 'Có lỗi xảy ra.'),
+      onError: (err) => notify(err.message || 'Bật/tắt cả miền thất bại, thử lại.', 'error'),
     });
   };
 
@@ -148,7 +148,7 @@ export default function AdminCats({ notify, goToMeanings }) {
     const next = arrayMove(items, oldIdx, newIdx);
     reorderCats.mutate(next.map((c) => c.id), {
       onSuccess: () => notify('Đã cập nhật thứ tự'),
-      onError: () => notify('Lỗi cập nhật thứ tự — thử lại.'),
+      onError: (e) => notify(e?.message || 'Lỗi cập nhật thứ tự — danh sách giữ nguyên, thử lại.', 'error'),
     });
   };
 
@@ -225,9 +225,16 @@ export default function AdminCats({ notify, goToMeanings }) {
           <Input label="Tên danh mục" placeholder="VD: Biển tiến" value={form.name} error={formErr}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
           {isBlogCategory && (
-            <Input label="Mã danh mục (khớp Category của bài viết, VD: phong-thuy)" placeholder="phong-thuy" value={form.code}
-              disabled={Boolean(editId)}
-              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} required={!editId} />
+            <>
+              <Input label="Mã danh mục (khớp Category của bài viết, VD: phong-thuy)" placeholder="phong-thuy" value={form.code}
+                disabled={Boolean(editId)}
+                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} required={!editId} />
+              {editId && (
+                <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                  Mã không sửa được sau khi tạo — bài viết cũ trỏ tới danh mục bằng mã này, đổi mã sẽ làm chúng mồ côi. Cần mã khác thì tạo danh mục mới rồi chuyển bài viết sang.
+                </p>
+              )}
+            </>
           )}
           {!editId && (
             <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Danh mục mới thêm vào cuối danh sách — kéo tay cầm ☰ để đổi thứ tự hiển thị trên website.</p>

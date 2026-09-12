@@ -49,7 +49,7 @@ export function useSeo(screen, data) {
   useEffect(() => {
     let title = BRAND;
     let desc = DEFAULT_DESC;
-    let canonical = SITE;
+    let canonical = SITE + '/';
     let type = 'website';
     let image = null;
     let ld = null;

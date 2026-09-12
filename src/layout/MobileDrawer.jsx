@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Car, Compass, Scale, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings } from 'lucide-react';
+import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { pill } from '../components/NavBtn.jsx';
@@ -7,7 +7,7 @@ import { pill } from '../components/NavBtn.jsx';
 const MAIN_NAV = [
   ['list', 'Biển số', Car],
   ['lucky', 'Hợp mệnh', Compass],
-  ['compare', 'So sánh', Scale],
+  ['compare', 'So sánh', GitCompareArrows],
   ['blog', 'Tin phong thủy', BookOpen],
   ['chat', 'Liên hệ', MessageCircle],
   ['collab', 'Cộng tác viên', Handshake],
@@ -58,7 +58,7 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout, fav
               <Icon size={18} style={{ flexShrink: 0 }} />
               <span style={{ flex: 1 }}>{label}</span>
               {key === 'compare' && compareCount > 0 && (
-                <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--action-primary)', color: s === key ? 'var(--action-primary)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
+                <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
               )}
             </button>
           ))}

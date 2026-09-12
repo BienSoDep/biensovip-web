@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
-import { ArrowLeftRight, X, Sparkles, Search, Heart } from 'lucide-react';
+import { GitCompareArrows, X, Sparkles, Search, Heart } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
@@ -222,7 +222,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
           })()}
           {Array.from({ length: slotsNeeded }, (_, i) => (
             <div key={i} style={{ flex: '1 1 220px', maxWidth: 320, border: '1.5px dashed var(--border-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', minHeight: 180 }}>
-              <ArrowLeftRight size={22} style={{ color: 'var(--text-faint)' }} />
+              <GitCompareArrows size={22} style={{ color: 'var(--text-faint)' }} />
               <PlateSlotSearch onAdd={add} excludeIds={ids} />
             </div>
           ))}
@@ -350,7 +350,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           {plates.length > 1 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-faint)' }}><ArrowLeftRight size={12} /> Vuốt ngang để xem hết các biển</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-faint)' }}><GitCompareArrows size={12} /> Vuốt ngang để xem hết các biển</span>
           )}
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ display: 'grid', gridTemplateColumns: `clamp(120px,32vw,200px) repeat(${plates.length},minmax(180px,1fr))`, minWidth: plates.length * 200 + 130 }}>

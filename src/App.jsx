@@ -207,7 +207,7 @@ export default function App() {
   // or opening a modal on a list page yanks the scroll to top).
   useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.postId, st.provinceCode, st.typeSlug]);
 
-  const notify = (msg) => toast(msg);
+  const notify = (msg, type) => (type === 'error' ? toast.error(msg) : toast(msg));
   const heroAnim = makeHeroAnim(fanDone);
 
   const go = (s) => () => {
@@ -621,8 +621,11 @@ export default function App() {
     aguide: ['Hướng dẫn sử dụng', 'Các tính năng theo vai trò của bạn'],
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
-    acontacts: ['Yêu cầu liên hệ', 'Quản lý yêu cầu liên hệ từ khách'],
-    atransactions: ['Giao dịch', 'Quản lý giao dịch mua/đặt cọc biển số và xác nhận thanh toán'],
+    // 3 trang cũ (liên hệ/quy trình/giao dịch) đã gộp vào 1 trang có view bên trong — xem AdminSales.jsx.
+    // Giữ key cũ ở đây vì URL cũ vẫn resolve được (GROUPED_REDIRECT đưa về asales).
+    asales: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
+    acontacts: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
+    atransactions: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
     astaff: ['Nhân viên', 'Quản lý tài khoản nhân viên và phân quyền'],
     aposts: ['Blog', 'Bài viết và bình luận blog'],
     compose: ['Viết bài mới', 'Bài sẽ có slug và meta riêng để tối ưu SEO'],

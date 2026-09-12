@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck, Gift, Scale, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck, Gift, GitCompareArrows, CheckCircle2 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
 import Modal from '../components/Modal.jsx';
@@ -113,7 +113,7 @@ function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, 
                 }}
                 style={{ position: 'absolute', top: 6, right: 6, zIndex: 1, width: 28, height: 28, borderRadius: '50%', border: 'none', background: inCompare ? 'var(--action-primary)' : 'var(--white)', color: inCompare ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-1, 0 1px 2px rgba(0,0,0,.12))', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
               >
-                {inCompare ? <CheckCircle2 size={15} /> : <Scale size={15} />}
+                {inCompare ? <CheckCircle2 size={15} /> : <GitCompareArrows size={15} />}
               </button>
               <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>

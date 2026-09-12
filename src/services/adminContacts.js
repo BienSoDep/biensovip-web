@@ -1,6 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
+// 1 nguồn duy nhất cho toàn bộ cache trang Bán hàng. Liên hệ và giao dịch liên kết 2 chiều
+// (contact.transactionId, transaction.contactRequestId) nên đổi 1 bên là bên kia đổi theo —
+// trước đây useUpdateContactStatus chỉ invalidate ['admin-contacts'] nên kéo thẻ Kanban xong
+// bảng Giao dịch vẫn hiện dữ liệu cũ cho tới khi F5, đúng lỗi "phải reload" user báo.
+// invalidation của react-query khớp theo prefix nên invalidate key cha là phủ hết mọi biến thể filter.
+const SALES_KEYS = [
+  ['admin-contacts'],
+  ['admin-contacts-stats'],
+  ['admin-contacts-deleted'],
+  ['admin-transactions'],
+  ['admin-transactions-deleted'],
+];
+export function invalidateSales(qc) {
+  for (const queryKey of SALES_KEYS) qc.invalidateQueries({ queryKey });
+}
+
 function buildQuery({ status, intent, q, page, perPage, fromDate, toDate, assignedTo }) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.set('status', status);
@@ -26,10 +42,22 @@ export function useUpdateContactStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status }) => apiClient.patch(`/api/admin/contact-requests/${id}/status`, { status }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
-      qc.invalidateQueries({ queryKey: ['admin-contacts-stats'] });
+    // Optimistic: kéo thẻ Kanban / đổi Select là cột và badge đổi ngay trong ~1 frame, không chờ
+    // server. Trước đây phải chờ response mới thấy thẻ nhảy cột — mạng chậm là giật rõ.
+    // Rollback về snapshot cũ nếu API lỗi, nên không bao giờ hiển thị trạng thái sai lâu dài.
+    onMutate: async ({ id, status }) => {
+      await qc.cancelQueries({ queryKey: ['admin-contacts'] });
+      const snapshots = qc.getQueriesData({ queryKey: ['admin-contacts'] });
+      for (const [key, data] of snapshots) {
+        if (!data?.items) continue;
+        qc.setQueryData(key, { ...data, items: data.items.map((c) => (c.id === id ? { ...c, status } : c)) });
+      }
+      return { snapshots };
     },
+    onError: (_err, _vars, ctx) => {
+      for (const [key, data] of ctx?.snapshots || []) qc.setQueryData(key, data);
+    },
+    onSettled: () => invalidateSales(qc),
   });
 }
 
@@ -38,7 +66,7 @@ export function useAssignContact() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, staffId }) => apiClient.patch(`/api/admin/contact-requests/${id}/assign`, { staffId }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-contacts'] }),
+    onSettled: () => invalidateSales(qc),
   });
 }
 
@@ -60,12 +88,7 @@ export function useDeleteContact() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => apiClient.delete(`/api/admin/contact-requests/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
-      qc.invalidateQueries({ queryKey: ['admin-contacts-deleted'] });
-      qc.invalidateQueries({ queryKey: ['admin-contacts-stats'] });
-      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
-    },
+    onSettled: () => invalidateSales(qc),
   });
 }
 
@@ -81,11 +104,6 @@ export function useRestoreContact() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => apiClient.post(`/api/admin/contact-requests/${id}/restore`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-contacts'] });
-      qc.invalidateQueries({ queryKey: ['admin-contacts-deleted'] });
-      qc.invalidateQueries({ queryKey: ['admin-contacts-stats'] });
-      qc.invalidateQueries({ queryKey: ['admin-transactions'] });
-    },
+    onSettled: () => invalidateSales(qc),
   });
 }

@@ -39,6 +39,16 @@
 --status-danger:var(--rose-500);--status-danger-bg:var(--rose-100);
 --status-info:var(--blue-500);--status-info-bg:var(--blue-100);
 
+/* Thang vàng Kanban bán hàng — đi từ vàng nhạt lên vàng đậm theo tiến độ (Mới → Đã xác nhận).
+   Mỗi bậc cần 3 biến thể: tint (nền cột), edge (viền/nút, đủ đậm để không chìm trên nền trắng),
+   ink (màu chữ, đủ tương phản trên tint). Không dùng chung --amber-* vì các token đó bị
+   component khác (badge "amber", banner) dùng với ý nghĩa khác — đổi chúng sẽ lan ra ngoài Kanban. */
+--kanban-1-tint:#FFFBEF;--kanban-1-edge:#F2D57E;--kanban-1-ink:#8A6100;
+--kanban-2-tint:#FFF4D6;--kanban-2-edge:#EDBE45;--kanban-2-ink:#7A5200;
+--kanban-3-tint:#FBE9B4;--kanban-3-edge:#DDA019;--kanban-3-ink:#6B4400;
+--kanban-4-tint:#F4D98C;--kanban-4-edge:#B98307;--kanban-4-ink:#5A3800;
+--kanban-5-tint:#EBC96A;--kanban-5-edge:#96680A;--kanban-5-ink:#4A2E00;
+
 --text-disabled:var(--grey-400);--surface-disabled:var(--grey-200);
 --skeleton:var(--grey-100); /* placeholder tone — stronger than sunken for perceived contrast */
 --link:var(--blue-600);--link-visited:var(--blue-700);
