@@ -8,6 +8,7 @@ import { useAdminPlates } from '../../services/adminPlates.js';
 import { Select, SearchField, IconButton, Switch, InfoTip } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
+import ConfirmModal from '../../components/ConfirmModal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 
 const CATEGORIES = [
@@ -140,8 +141,8 @@ function TemplatesTab({ notify, prefillKeyword }) {
           onSave={save} onClose={() => setEditing(null)} />
       )}
       {!!confirmDelete && (
-        <ConfirmModal title="Xác nhận xóa mẫu"
-          message="Xóa mẫu này? Ý nghĩa đang gắn vào biển đã sinh sẽ không bị ảnh hưởng." onCancel={() => setConfirmDelete(null)} onConfirm={remove} />
+        <ConfirmModal open title="Xác nhận xóa mẫu" danger confirmLabel="Xóa"
+          message="Xóa mẫu này? Ý nghĩa đang gắn vào biển đã sinh sẽ không bị ảnh hưởng." onClose={() => setConfirmDelete(null)} onConfirm={remove} />
       )}
     </>
   );
@@ -330,7 +331,7 @@ function PlatesTab({ notify }) {
           onSave={save} onClose={() => setEditing(null)} />
       )}
       {!!confirmDelete && (
-        <ConfirmModal title="Xóa ý nghĩa?" onCancel={() => setConfirmDelete(null)} onConfirm={remove} message="Xóa phần ý nghĩa này riêng cho biển đã chọn." />
+        <ConfirmModal open title="Xóa ý nghĩa?" danger confirmLabel="Xóa" onClose={() => setConfirmDelete(null)} onConfirm={remove} message="Xóa phần ý nghĩa này riêng cho biển đã chọn." />
       )}
       {confirmReseed && (
         <Modal open onClose={() => setConfirmReseed(false)} title="Sinh lại từ mẫu" maxWidth="480px">
@@ -402,17 +403,5 @@ function MeaningModal({ form, editId, saving, onSet, onSave, onClose }) {
         <Button variant="primary" size="md" onClick={onSave} disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu'}</Button>
       </div>
     </Drawer>
-  );
-}
-
-function ConfirmModal({ title, message, onCancel, onConfirm }) {
-  return (
-    <Modal open onClose={onCancel} title={title} maxWidth="380px">
-      <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{message}</p>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
-        <Button variant="ghost" size="md" onClick={onCancel}>Hủy</Button>
-        <Button variant="primary" size="md" onClick={onConfirm} style={{ background: 'var(--status-danger)', boxShadow: '0 8px 20px rgba(229,72,77,.26)' }}>Xóa</Button>
-      </div>
-    </Modal>
   );
 }

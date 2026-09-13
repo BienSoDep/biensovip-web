@@ -58,7 +58,7 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
         )}
       </div>
       {showPanel && (
-        <div style={{ position: 'absolute', zIndex: 30, top: '100%', left: 0, right: 0, marginTop: 6, background: 'var(--white)', border: '1px solid var(--border-hairline)', boxShadow: 'var(--shadow-elevated, var(--shadow-4))', borderRadius: 'var(--radius-field)', maxHeight: 280, overflowY: 'auto' }}>
+        <div style={{ position: 'absolute', zIndex: 30, top: '100%', left: 0, right: 0, marginTop: 6, background: 'var(--white)', border: '1px solid var(--border-hairline)', boxShadow: 'var(--shadow-4)', borderRadius: 'var(--radius-field)', maxHeight: 280, overflowY: 'auto' }}>
           {isFetching ? (
             <div style={{ padding: '14px', font: 'var(--type-caption)', color: 'var(--text-muted)', textAlign: 'center' }}>Đang tìm…</div>
           ) : results.length === 0 ? (

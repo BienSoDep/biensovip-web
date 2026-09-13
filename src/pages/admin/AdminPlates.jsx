@@ -1000,7 +1000,7 @@ export default function AdminPlates({ go, notify, st }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <textarea value={bulkText} onChange={(e) => onBulkTextChange(e.target.value)} rows={5}
               placeholder={'Mỗi dòng 1 biển, cách nhau bằng dấu phẩy / tab:\n43A1-999.99, 350000000\n43A1-666.66, 500000000\n43A1-777.77 (bỏ trống giá = Giá liên hệ)\n43A1-555.55, 45000000, đã bán (nhập lại biển đã bán trước đây)\n43AB-668.88, 39000000, , xe máy (cột 4 ghi rõ loại xe nếu hệ thống đoán sai từ seri)'}
-              style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none', fontFamily: 'monospace' }} />
+              style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none', fontFamily: 'var(--font-mono)' }} />
             {bulkRows.length > 0 && (
               <>
                 <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -1040,7 +1040,7 @@ export default function AdminPlates({ go, notify, st }) {
                               </select>
                               <span style={{ color: 'var(--text-muted)', flex: '1 1 110px' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
                               <span style={{ flex: '1 1 100px', color: r.sold ? 'var(--status-danger)' : 'var(--text-muted)' }}>{r.sold ? 'Đã bán' : 'Còn hàng'}</span>
-                              <span style={{ color: r.ok ? 'var(--mint-700)' : 'var(--status-danger)', flex: '0 0 96px', textAlign: 'right', font: 'var(--type-caption)' }}>
+                              <span style={{ color: r.ok ? 'var(--status-success-ink)' : 'var(--status-danger)', flex: '0 0 96px', textAlign: 'right', font: 'var(--type-caption)' }}>
                                 {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
                               </span>
                             </div>
@@ -1072,7 +1072,7 @@ export default function AdminPlates({ go, notify, st }) {
                               {provinces.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                             <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
-                            <span style={{ font: 'var(--type-caption)', color: r.done ? (r.ok ? 'var(--mint-700)' : 'var(--status-danger)') : 'var(--text-muted)' }}>
+                            <span style={{ font: 'var(--type-caption)', color: r.done ? (r.ok ? 'var(--status-success-ink)' : 'var(--status-danger)') : 'var(--text-muted)' }}>
                               {r.sold ? 'Đã bán · ' : ''}{r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : 'Sẵn sàng'}
                             </span>
                           </div>
@@ -1175,7 +1175,7 @@ export default function AdminPlates({ go, notify, st }) {
               {colPrefs.isNew && (
                 <span className="plate-col-new" style={{ flex: '0 0 48px' }}>
                   {isNewPlate(p) ? (
-                    <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--mint-100)', color: 'var(--mint-700)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>Mới</span>
+                    <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--mint-100)', color: 'var(--status-success-ink)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>Mới</span>
                   ) : (
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
                   )}
@@ -1259,7 +1259,7 @@ export default function AdminPlates({ go, notify, st }) {
 
       {/* Bulk action bar — floats above table when plates are selected */}
       {selected.size > 0 && (
-        <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 'var(--z-bulk, 80)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)', background: 'var(--text-strong)', color: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-4)' }}>
+        <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 'var(--z-bulk)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)', background: 'var(--text-strong)', color: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-4)' }}>
           <span style={{ font: 'var(--type-caption)', color: 'var(--white)' }}>Đã chọn {selected.size} biển</span>
           <select
             defaultValue=""
@@ -1298,7 +1298,7 @@ export default function AdminPlates({ go, notify, st }) {
       <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Xác nhận xóa" maxWidth="440px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {pendingCount > 0 && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--amber-100)', color: 'var(--amber-800)', font: 'var(--type-body-sm)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', background: 'var(--amber-100)', color: 'var(--status-warning-ink)', font: 'var(--type-body-sm)' }}>
               <span aria-hidden style={{ display: 'inline-flex' }}><TriangleAlert size={16} /></span>
               <span>Biển này đang có <b>{pendingCount}</b> yêu cầu chưa xử lý. Hãy <b>Ẩn thay vì xóa</b> để giữ lịch sử giao dịch.</span>
             </div>

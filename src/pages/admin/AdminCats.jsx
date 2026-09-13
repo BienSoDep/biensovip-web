@@ -35,7 +35,7 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, isToggleabl
         </span>
       )}
       {isBlogCategory && c.code && (
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{c.code}</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{c.code}</span>
       )}
       {isPriceRange && (
         <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>

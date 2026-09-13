@@ -111,7 +111,7 @@ function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, 
                   addCompare(p.id);
                   notify?.('Đã thêm vào so sánh');
                 }}
-                style={{ position: 'absolute', top: 6, right: 6, zIndex: 1, width: 28, height: 28, borderRadius: '50%', border: 'none', background: inCompare ? 'var(--action-primary)' : 'var(--white)', color: inCompare ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-1, 0 1px 2px rgba(0,0,0,.12))', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                style={{ position: 'absolute', top: 6, right: 6, zIndex: 1, width: 28, height: 28, borderRadius: '50%', border: 'none', background: inCompare ? 'var(--action-primary)' : 'var(--white)', color: inCompare ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
               >
                 {inCompare ? <CheckCircle2 size={15} /> : <GitCompareArrows size={15} />}
               </button>
@@ -327,11 +327,11 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           </div>
           {plate.giftedPlate && (
             plate.giftedPlate.id ? (
-              <a href={routeFor('detail', plate.giftedPlate.slug || plate.giftedPlate.id)} onClick={(e) => { e.preventDefault(); openPlate(plate.giftedPlate.slug || plate.giftedPlate.id); }} className="pressable" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--amber-800)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', textDecoration: 'none' }}>
+              <a href={routeFor('detail', plate.giftedPlate.slug || plate.giftedPlate.id)} onClick={(e) => { e.preventDefault(); openPlate(plate.giftedPlate.slug || plate.giftedPlate.id); }} className="pressable" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--status-warning-ink)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', textDecoration: 'none' }}>
                 <Gift size={14} aria-hidden /> Tặng kèm biển {plate.giftedPlate.plateNumber}
               </a>
             ) : (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--amber-800)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--status-warning-ink)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
                 <Gift size={14} aria-hidden /> Tặng kèm biển {plate.giftedPlate.plateNumber}
               </span>
             )

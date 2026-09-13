@@ -467,11 +467,11 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               )}
               <div style={{ display: 'flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: 3, gap: 2 }}>
                 <button type="button" aria-label="Xem dạng lưới" aria-pressed={filters.view !== 'list'} onClick={() => setFilter({ view: 'grid', page: filters.page })}
-                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view !== 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view !== 'list' ? 'var(--shadow-1, 0 1px 2px rgba(0,0,0,.08))' : 'none', color: filters.view !== 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
+                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view !== 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view !== 'list' ? 'var(--shadow-1)' : 'none', color: filters.view !== 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
                   <LayoutGrid size={16} />
                 </button>
                 <button type="button" aria-label="Xem dạng danh sách" aria-pressed={filters.view === 'list'} onClick={() => setFilter({ view: 'list', page: filters.page })}
-                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view === 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view === 'list' ? 'var(--shadow-1, 0 1px 2px rgba(0,0,0,.08))' : 'none', color: filters.view === 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
+                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view === 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view === 'list' ? 'var(--shadow-1)' : 'none', color: filters.view === 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
                   <ListIcon size={16} />
                 </button>
               </div>

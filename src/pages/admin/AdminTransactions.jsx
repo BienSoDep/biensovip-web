@@ -75,7 +75,7 @@ export function CreateTransactionForm({ prefill, onDone, notify }) {
         <div style={{ position: 'relative' }}>
           <Input label="Tìm biển số" placeholder="VD: 30A-123.45" value={plateQuery} onChange={(e) => setPlateQuery(e.target.value)} />
           {plateResults?.items?.length > 0 && (
-            <div style={{ position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0, background: 'var(--white)', boxShadow: 'var(--shadow-elevated)', borderRadius: 'var(--radius-field)', maxHeight: 220, overflowY: 'auto' }}>
+            <div style={{ position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0, background: 'var(--white)', boxShadow: 'var(--shadow-4)', borderRadius: 'var(--radius-field)', maxHeight: 220, overflowY: 'auto' }}>
               {plateResults.items.map((p) => (
                 <button key={p.id} type="button" onClick={() => { setPlate(p); setPlateQuery(''); }}
                   style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)' }}>

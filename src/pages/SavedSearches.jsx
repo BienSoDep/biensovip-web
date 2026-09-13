@@ -127,13 +127,13 @@ export default function SavedSearches({ go, notify, user }) {
           <Switch checked={!!settings.notifyByEmail} onChange={(v) => setSetting({ notifyByEmail: v })} label="Email" />
           <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             Giờ gửi
-            <select value={settings.notifyHour ?? 8} onChange={(e) => setSetting({ notifyHour: Number(e.target.value) })} style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-body-sm)' }}>
+            <select value={settings.notifyHour ?? 8} onChange={(e) => setSetting({ notifyHour: Number(e.target.value) })} style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-body-sm)' }}>
               {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{h}h</option>)}
             </select>
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             Ngôn ngữ
-            <select value={settings.language || 'vi'} onChange={(e) => setSetting({ language: e.target.value })} style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-body-sm)' }}>
+            <select value={settings.language || 'vi'} onChange={(e) => setSetting({ language: e.target.value })} style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-body-sm)' }}>
               <option value="vi">Tiếng Việt</option>
               <option value="en">English</option>
             </select>
@@ -163,7 +163,7 @@ export default function SavedSearches({ go, notify, user }) {
               <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
                 {editingId === s.id ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                    <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(s); if (e.key === 'Escape') cancelEdit(); }} style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', flex: 1, minWidth: 120 }} />
+                    <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(s); if (e.key === 'Escape') cancelEdit(); }} style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', flex: 1, minWidth: 120 }} />
                     <button onClick={() => saveEdit(s)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--status-success)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={16} /></button>
                     <button onClick={cancelEdit} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
                   </div>

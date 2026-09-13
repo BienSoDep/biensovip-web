@@ -1,6 +1,7 @@
 :root{
 --font-display:"Be Vietnam Pro",ui-sans-serif,system-ui,sans-serif;
 --font-text:"Be Vietnam Pro",ui-sans-serif,system-ui,sans-serif;
+--font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; /* mã/slug/nội dung nguồn — không dùng cho văn bản đọc */
 /* --- Base neutrals: warm-cool grey ramp, near-black ink --- */
 --ink-900:#0E0F12;--ink-800:#16181D;--ink-700:#24272E;--ink-600:#3A3E47;
 --grey-500:#6B7180;--grey-400:#9AA0AD;--grey-300:#C7CBD4;--grey-200:#E4E6EC;--grey-100:#F1F2F6;--grey-50:#F7F8FA;
@@ -26,7 +27,8 @@
 
 --surface-page:var(--white);--surface-card:var(--white);--surface-sunken:var(--grey-50);--surface-muted:var(--grey-100);--surface-inverse:var(--ink-900);
 --surface-hero:linear-gradient(135deg,var(--lilac-100) 0%,var(--lilac-50) 40%,var(--cream-100) 100%);
---surface-tint-blue:var(--blue-50);--surface-tint-cream:var(--cream-50);
+--surface-tint-blue:var(--blue-50);--surface-tint-cream:var(--cream-50);--surface-tint-rose:var(--rose-100);
+--surface-accent:var(--blue-50); /* nền banner nhấn — đi theo ramp brand, xem app.css override --blue-* sang cam */
 
 --border-hairline:var(--grey-200);--border-strong:var(--grey-300);--border-focus:var(--blue-500);
 
@@ -36,7 +38,7 @@
 
 --status-success:var(--mint-500);--status-success-bg:var(--mint-100);--status-success-ink:#1B7A5A;
 --status-warning:var(--amber-500);--status-warning-bg:var(--amber-100);--status-warning-ink:#8A6100;
---status-danger:var(--rose-500);--status-danger-bg:var(--rose-100);
+--status-danger:var(--rose-500);--status-danger-bg:var(--rose-100);--status-danger-ink:#991B1B;
 --status-info:var(--blue-500);--status-info-bg:var(--blue-100);
 
 /* Thang vàng Kanban bán hàng — đi từ vàng nhạt lên vàng đậm theo tiến độ (Mới → Đã xác nhận).
@@ -139,7 +141,8 @@
 }
 /* --- Z-index scale: dropdown popovers must clear every modal/scrim or options render invisible --- */
 :root{
---z-header:40;--z-chatbot:70;--z-drawer:80;--z-filter-overlay:85;--z-modal:90;--z-confirm:95;--z-popover:110;--z-toast:120;
+--z-header:40;--z-chatbot:70;--z-drawer:80;--z-bulk:80; /* bulk action bar dưới đáy — ngang drawer, trên nội dung trang */
+--z-filter-overlay:85;--z-modal:90;--z-confirm:95;--z-popover:110;--z-toast:120;
 }
 *,*::before,*::after{box-sizing:border-box}
 /* scroll-behavior:smooth removed from html — it animated the browser's native

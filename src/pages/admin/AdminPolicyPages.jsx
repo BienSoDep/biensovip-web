@@ -50,7 +50,7 @@ function PolicyPreview({ slug, title, subtitle, updatedLabel, contentJson }) {
   const textStyle = { font: 'inherit', color: 'inherit', lineHeight: 1.6 };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, font: '15px/1.5 var(--font-body, sans-serif)', color: '#1a1a1a' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, font: 'var(--type-body)', color: 'var(--text-body)' }}>
       <div>
         <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 700 }}>{title || '(chưa có tiêu đề)'}</h1>
         {subtitle && <p style={{ margin: 0, fontSize: 14, color: '#666' }}>{subtitle}</p>}
@@ -230,7 +230,7 @@ export default function AdminPolicyPages({ notify }) {
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Nội dung (JSON)</span>
             <textarea value={contentJson} onChange={(e) => set('contentJson', e.target.value)} rows={18}
-              style={{ resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', padding: '10px 12px', font: 'var(--type-mono, monospace)', fontSize: 13 }} />
+              style={{ resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 13 }} />
           </label>
         )}
 

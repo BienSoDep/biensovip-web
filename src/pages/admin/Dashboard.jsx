@@ -665,7 +665,7 @@ export default function Dashboard({ go, st }) {
         const failedCount = allQueries.filter((q) => q.isError).length;
         if (failedCount < 2) return null;
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-tint-rose, #fdecec)', borderRadius: 'var(--radius-card)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-tint-rose)', borderRadius: 'var(--radius-card)' }}>
             <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>{failedCount} mục tải lỗi.</span>
             <button type="button" onClick={() => allQueries.forEach((q) => q.isError && q.refetch())} style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', textDecoration: 'underline' }}>Thử lại tất cả</button>
           </div>

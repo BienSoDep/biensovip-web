@@ -40,8 +40,8 @@ function PasswordStrength({ value }) {
   const level = passed <= 2 ? 0 : passed <= 4 ? 1 : 2;
   const meta = [
     { text: 'Yếu', color: 'var(--status-danger)' },
-    { text: 'Trung bình', color: 'var(--status-warning, #D97706)' },
-    { text: 'Mạnh', color: 'var(--status-success, #16A34A)' },
+    { text: 'Trung bình', color: 'var(--status-warning)' },
+    { text: 'Mạnh', color: 'var(--status-success)' },
   ][level];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: -8 }}>
@@ -55,7 +55,7 @@ function PasswordStrength({ value }) {
         {PW_RULES.map((r) => {
           const ok = r.test(value);
           return (
-            <span key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 3, font: 'var(--type-caption)', color: ok ? 'var(--status-success, #16A34A)' : 'var(--text-faint)' }}>
+            <span key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 3, font: 'var(--type-caption)', color: ok ? 'var(--status-success)' : 'var(--text-faint)' }}>
               {ok ? <Check size={11} /> : <span style={{ width: 11, textAlign: 'center' }}>·</span>} {r.label}
             </span>
           );
@@ -285,9 +285,9 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
             {s === 'login' && !otpMode && !st.a2faToken && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 {st.aErr.lockedReason && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 'var(--space-4)', borderRadius: 'var(--radius-card)', background: 'var(--status-danger-bg, #FEF2F2)', border: '1px solid var(--status-danger, #DC2626)' }}>
-                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-danger-ink, #991B1B)' }}>Tài khoản của bạn đã bị khóa</span>
-                    <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger-ink, #991B1B)' }}>{st.aErr.lockedReason}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 'var(--space-4)', borderRadius: 'var(--radius-card)', background: 'var(--status-danger-bg)', border: '1px solid var(--status-danger)' }}>
+                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-danger-ink)' }}>Tài khoản của bạn đã bị khóa</span>
+                    <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger-ink)' }}>{st.aErr.lockedReason}</span>
                     {zalo && (
                       <a href={`https://zalo.me/${zalo}`} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'none' }}>
                         Liên hệ bộ phận hỗ trợ qua Zalo →

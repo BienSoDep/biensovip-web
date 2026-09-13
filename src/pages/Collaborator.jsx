@@ -130,8 +130,8 @@ function GmailLinkSection() {
       ) : status?.linked ? (
         <>
           {status.needsRelink && (
-            <div style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-field)', background: 'var(--status-warning-bg, #FFF7ED)', border: '1px solid var(--status-warning, #F59E0B)' }}>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-warning-ink, #B45309)' }}>
+            <div style={{ padding: 'var(--space-3)', borderRadius: 'var(--radius-field)', background: 'var(--status-warning-bg)', border: '1px solid var(--status-warning)' }}>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-warning-ink)' }}>
                 Liên kết Gmail đã hết hạn hoặc bị thu hồi. Vui lòng liên kết lại để tiếp tục gửi email từ địa chỉ cá nhân.
               </span>
             </div>
@@ -208,7 +208,7 @@ const CLICK_RANGE_OPTS = [
 function ClickTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-elevated)', padding: '8px 12px' }}>
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-3)', padding: '8px 12px' }}>
       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{label}</span>
       <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>{payload[0].value} lượt click</span>
     </div>
@@ -426,7 +426,7 @@ function DealReportForm() {
               </span>
               <Input placeholder="VD: 30A-123.45" value={plateQuery} onChange={(e) => setPlateQuery(e.target.value)} />
               {plateResults?.items?.length > 0 && (
-                <div style={{ position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0, background: 'var(--white)', boxShadow: 'var(--shadow-elevated)', borderRadius: 'var(--radius-field)', maxHeight: 220, overflowY: 'auto' }}>
+                <div style={{ position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0, background: 'var(--white)', boxShadow: 'var(--shadow-4)', borderRadius: 'var(--radius-field)', maxHeight: 220, overflowY: 'auto' }}>
                   {plateResults.items.map((p) => (
                     <button key={p.id} type="button" onClick={() => { setPlate(p); setPlateQuery(''); }}
                       style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-body-sm)' }}>
@@ -820,7 +820,7 @@ function DashboardBody({ data, onReset, go }) {
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
             style={{ flex: '1 1 0', minWidth: 'max-content', height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
               background: tab === t.key ? 'var(--white)' : 'transparent', color: tab === t.key ? 'var(--action-primary)' : 'var(--text-muted)',
-              boxShadow: tab === t.key ? 'var(--shadow-elevated)' : 'none', transition: 'var(--transition-control)' }}>
+              boxShadow: tab === t.key ? 'var(--shadow-3)' : 'none', transition: 'var(--transition-control)' }}>
             {t.label}
           </button>
         ))}
@@ -973,7 +973,7 @@ function CommissionTooltip({ active, payload, label }) {
   const byKey = Object.fromEntries(payload.map((p) => [p.dataKey, p.value]));
   const total = (byKey.paid || 0) + (byKey.approved || 0) + (byKey.pending || 0);
   return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-elevated)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160 }}>
+    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-3)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160 }}>
       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{label}</span>
       <span style={{ font: 'var(--type-caption)', color: '#16a34a' }}>Đã trả: {money(byKey.paid || 0)}</span>
       <span style={{ font: 'var(--type-caption)', color: '#2563eb' }}>Đã duyệt: {money(byKey.approved || 0)}</span>

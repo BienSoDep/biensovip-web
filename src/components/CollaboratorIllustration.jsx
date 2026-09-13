@@ -44,7 +44,7 @@ export default function CollaboratorIllustration({ style }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5, delay: c.delay, ease: [0.16, 1, 0.3, 1] }}
         >
-          <circle cx={c.cx} cy={c.cy} r={c.r} fill="var(--status-warning, #F59E0B)" />
+          <circle cx={c.cx} cy={c.cy} r={c.r} fill="var(--status-warning)" />
           <text x={c.cx} y={c.cy + 4} fontSize={c.r} fontWeight="700" fill="var(--white)" textAnchor="middle">đ</text>
         </motion.g>
       ))}

@@ -78,7 +78,7 @@ function DealReportsQueue({ notify }) {
           <input
             type="text" maxLength={255} value={reason} onChange={(e) => setReason(e.target.value)}
             placeholder="Lý do từ chối (không bắt buộc)"
-            style={{ width: '100%', padding: '8px 10px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
+            style={{ width: '100%', padding: '8px 10px', borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
           />
           <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
             <Button variant="ghost" size="sm" onClick={() => setRejectTarget(null)}>Hủy</Button>
@@ -189,7 +189,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                 value={rateDraft[c.id] ?? (c.commissionRate != null ? String(c.commissionRate * 100) : '')}
                 onChange={(e) => setRateDraft((d) => ({ ...d, [c.id]: e.target.value }))}
                 style={{
-                  width: 52, minHeight: 44, padding: '8px 6px', borderRadius: 'var(--radius-input)',
+                  width: 52, minHeight: 44, padding: '8px 6px', borderRadius: 'var(--radius-field)',
                   border: (() => { const v = rateDraft[c.id]; if (v === undefined || v === '') return '1px solid var(--border-hairline)'; const n = Number(v); return Number.isNaN(n) || n < 10 || n > 100 ? '1.5px solid var(--status-danger)' : '1px solid var(--border-hairline)'; })(),
                   font: 'var(--type-caption)',
                 }}
@@ -232,7 +232,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <input
               type="text" maxLength={255} value={reasonDraft} onChange={(e) => setReasonDraft(e.target.value)}
               placeholder="Lý do khóa (ghi để lưu vết cho CTV)"
-              style={{ width: '100%', marginBottom: 'var(--space-3)', padding: '8px 10px', borderRadius: 'var(--radius-input)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
+              style={{ width: '100%', marginBottom: 'var(--space-3)', padding: '8px 10px', borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)' }}
             />
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-3)', font: 'var(--type-body-sm)', color: confirm.hasEmail ? 'var(--text-strong)' : 'var(--text-faint)', cursor: confirm.hasEmail ? 'pointer' : 'default' }}>
               <input type="checkbox" checked={sendLockEmail} disabled={!confirm.hasEmail} onChange={(e) => setSendLockEmail(e.target.checked)} />

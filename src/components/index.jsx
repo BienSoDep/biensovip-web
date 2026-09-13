@@ -31,7 +31,7 @@ export function InfoTip({ text, size = 14, style }) {
             position: 'fixed', top: pos.top - 8, left: pos.left, transform: 'translate(-50%, -100%)',
             background: 'var(--action-dark)', color: 'var(--white)', padding: '8px 12px', borderRadius: 'var(--radius-md)',
             width: 'max-content', maxWidth: 280, font: 'var(--type-caption)', lineHeight: 1.55, textAlign: 'left',
-            boxShadow: 'var(--shadow-3)', zIndex: 'var(--z-popover, 70)', pointerEvents: 'none',
+            boxShadow: 'var(--shadow-3)', zIndex: 'var(--z-popover)', pointerEvents: 'none',
           }}>
           {text}
         </span>
@@ -238,7 +238,7 @@ export function Select({ label, value, options = [], onChange, variant, style, r
           <BaseSelect.Icon style={{ display: 'flex', color: 'var(--text-muted)' }}><ChevronDown size={16} /></BaseSelect.Icon>
         </BaseSelect.Trigger>
         <BaseSelect.Portal>
-          <BaseSelect.Positioner sideOffset={6} style={{ zIndex: 'var(--z-popover, 60)' }}>
+          <BaseSelect.Positioner sideOffset={6} style={{ zIndex: 'var(--z-popover)' }}>
             <BaseSelect.Popup
               style={{
                 background: 'var(--white)', borderRadius: 'var(--radius-field)', boxShadow: 'var(--shadow-3)',
@@ -251,7 +251,7 @@ export function Select({ label, value, options = [], onChange, variant, style, r
                   value={o.value}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-                    padding: '9px 12px', borderRadius: 'var(--radius-sm, 8px)', cursor: 'pointer',
+                    padding: '9px 12px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                     font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none',
                   }}
                   className="select-item"
@@ -369,14 +369,5 @@ export function Avatar({ name, size = 'sm' }) {
       width: px, height: px, borderRadius: '50%', background: 'var(--action-primary)', color: 'var(--white)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)',
     }}>{initial}</span>
-  );
-}
-
-export function Toast({ message, tone = 'dark' }) {
-  return (
-    <div style={{
-      background: tone === 'dark' ? 'var(--action-dark)' : 'var(--white)', color: 'var(--white)',
-      padding: '12px 18px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)', font: 'var(--type-body-sm)',
-    }}>{message}</div>
   );
 }

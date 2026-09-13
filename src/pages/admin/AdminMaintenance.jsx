@@ -89,7 +89,7 @@ export default function AdminMaintenance({ notify, patch }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       {staleItems.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', padding: 'var(--space-4)', borderRadius: 'var(--radius-card)', background: 'var(--red-50, #fef2f2)', boxShadow: 'inset 0 0 0 1px var(--status-danger)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', padding: 'var(--space-4)', borderRadius: 'var(--radius-card)', background: 'var(--status-danger-bg)', boxShadow: 'inset 0 0 0 1px var(--status-danger)' }}>
           <TriangleAlert size={18} style={{ color: 'var(--status-danger)', flexShrink: 0, marginTop: 2 }} />
           <div>
             <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-danger)' }}>Có trang bảo trì có thể bị quên tắt</div>

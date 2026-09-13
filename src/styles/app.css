@@ -54,11 +54,11 @@ button,
 [data-pressable],
 .pressable {
   transition:
-    transform 120ms var(--ease-standard, ease),
-    box-shadow 120ms var(--ease-standard, ease),
-    background-color 120ms var(--ease-standard, ease),
-    filter 120ms var(--ease-standard, ease),
-    opacity 120ms var(--ease-standard, ease);
+    transform 120ms var(--ease-standard),
+    box-shadow 120ms var(--ease-standard),
+    background-color 120ms var(--ease-standard),
+    filter 120ms var(--ease-standard),
+    opacity 120ms var(--ease-standard);
   -webkit-tap-highlight-color: transparent;
 }
 button:not(:disabled):active,
@@ -177,9 +177,9 @@ textarea,
    unselected state needs a visible hover tint — not just a global filter. */
 .pill-btn {
   transition:
-    background-color 120ms var(--ease-standard, ease),
-    color 120ms var(--ease-standard, ease),
-    transform 120ms var(--ease-standard, ease);
+    background-color 120ms var(--ease-standard),
+    color 120ms var(--ease-standard),
+    transform 120ms var(--ease-standard);
 }
 .pill-btn[data-on="true"]:hover {
   background: var(--action-primary-hover) !important;
@@ -1198,7 +1198,7 @@ textarea,
   background: var(--surface-sunken);
   color: var(--text-muted);
   font: var(--type-caption);
-  font-weight: var(--fw-medium, 500);
+  font-weight: var(--fw-medium);
   white-space: nowrap;
   clip-path: polygon(
     0 0,
@@ -1393,7 +1393,7 @@ textarea,
   background: var(--action-primary);
   box-shadow: var(--shadow-2);
   cursor: pointer;
-  transition: transform 120ms var(--ease-standard, ease);
+  transition: transform 120ms var(--ease-standard);
 }
 .ctv-calc-slider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
