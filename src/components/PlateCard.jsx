@@ -150,7 +150,7 @@ export default function PlateCard({
               )}
               {contact?.zalo && (
                 <button type="button" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ZaloIcon width={16} height={16} />
+                  <ZaloIcon width={19} height={19} />
                 </button>
               )}
             </div>

@@ -212,6 +212,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
                 onOpen={() => { trackSelectItem(p, 'home_featured'); openPlate(p.id); }}
                 href={routeFor('detail', p.slug || p.id)}
                 onBuy={() => openBuy?.(p.id)}
+                contact={contact}
                 style={stagger(i)} />
             ))}
           </div>
