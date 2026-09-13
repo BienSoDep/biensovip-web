@@ -42,13 +42,16 @@ function SystemHealthWidget() {
   );
 }
 
-const PIE_COLORS = ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#16a34a', '#ca8a04', '#0891b2', '#6d28d9'];
+// Bảng màu series biểu đồ — ngoại lệ đã duyệt (FRONTEND-DESIGN-RULES.md mục 4) nhưng phải khớp tone
+// thương hiệu: chỉ dùng blue/orange/amber/mint/rose/grey từ tokens.css, bỏ hẳn tím/hồng/teal lạ tone
+// (trước đây #7c3aed/#db2777/#0891b2 làm dashboard lệch nhận diện).
+const PIE_COLORS = ['#3B5BFF', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
 
 const KPI_CARDS = [
-  { key: 'totalViews', label: 'Tổng lượt xem', icon: FileText, series: 'views', color: '#2563eb', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
-  { key: 'contactRequests', label: 'Yêu cầu liên hệ', icon: Users, series: 'contacts', color: '#7c3aed', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
-  { key: 'closedContacts', label: 'Đã chốt', icon: BadgeCheck, series: 'closed', color: '#16a34a', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
-  { key: 'soldPlates', label: 'Đã bán', icon: CreditCard, series: 'sold', color: '#ea580c', access: (k) => k?.soldPlates },
+  { key: 'totalViews', label: 'Tổng lượt xem', icon: FileText, series: 'views', color: '#3B5BFF', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
+  { key: 'contactRequests', label: 'Yêu cầu liên hệ', icon: Users, series: 'contacts', color: '#C75B00', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
+  { key: 'closedContacts', label: 'Đã chốt', icon: BadgeCheck, series: 'closed', color: '#3FBF8F', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
+  { key: 'soldPlates', label: 'Đã bán', icon: CreditCard, series: 'sold', color: '#E5484D', access: (k) => k?.soldPlates },
 ];
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
@@ -439,7 +442,7 @@ export default function Dashboard({ go, st }) {
                 <div key={b.stars} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   <span style={{ width: 40, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{b.stars} ★</span>
                   <div style={{ flex: 1, height: 14, background: 'var(--grey-100)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-                    <div style={{ width: `${(b.count / ratings.data.total) * 100}%`, height: '100%', background: '#f59e0b', borderRadius: 'var(--radius-sm)' }} />
+                    <div style={{ width: `${(b.count / ratings.data.total) * 100}%`, height: '100%', background: 'var(--amber-500)', borderRadius: 'var(--radius-sm)' }} />
                   </div>
                   <span style={{ width: 32, textAlign: 'right', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{b.count}</span>
                 </div>
@@ -467,8 +470,8 @@ export default function Dashboard({ go, st }) {
                 <XAxis type="number" tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="fullName" width={110} tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Bar dataKey="paid" name="Đã trả" stackId="a" fill="#16a34a" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="pending" name="Chờ trả" stackId="a" fill="#ca8a04" />
+                <Bar dataKey="paid" name="Đã trả" stackId="a" fill="#3FBF8F" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="pending" name="Chờ trả" stackId="a" fill="#8A6100" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -535,7 +538,7 @@ export default function Dashboard({ go, st }) {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="count" name="Số khách" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" name="Số khách" fill="#3B5BFF" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -625,7 +628,7 @@ export default function Dashboard({ go, st }) {
                 <XAxis dataKey="hour" tick={{ fontSize: 10 }} tickFormatter={(h) => `${h}h`} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip labelFormatter={(h) => `${h}h`} />
-                <Bar dataKey="count" name="Lượt xem" fill="#0891b2" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="count" name="Lượt xem" fill="#C75B00" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -644,7 +647,7 @@ export default function Dashboard({ go, st }) {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="count" name="Lượt xem" fill="#6d28d9" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="count" name="Lượt xem" fill="#C75B00" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -806,7 +809,7 @@ function TopPlatesTable({ items }) {
         return (
           <div key={p.plateId} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', boxShadow: i < sorted.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
             <span style={{ width: 24, height: 24, borderRadius: 'var(--radius-sm)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', flex: '0 0 auto',
-              background: rank <= 3 ? '#f59e0b' : 'var(--surface-sunken)', color: rank <= 3 ? 'var(--white)' : 'var(--text-muted)' }}>
+              background: rank <= 3 ? 'var(--amber-500)' : 'var(--surface-sunken)', color: rank <= 3 ? 'var(--white)' : 'var(--text-muted)' }}>
               {rank}
             </span>
             <div style={{ width: 72, flexShrink: 0 }}>
@@ -831,10 +834,10 @@ function TopPlatesTable({ items }) {
 }
 
 const FUNNEL_STEPS = [
-  ['Lượt xem', 'views', '#2563eb'],
-  ['Liên hệ', 'contacts', '#7c3aed'],
-  ['Đang tư vấn', 'consulting', '#ca8a04'],
-  ['Đã chốt', 'closed', '#16a34a'],
+  ['Lượt xem', 'views', '#3B5BFF'],
+  ['Liên hệ', 'contacts', '#C75B00'],
+  ['Đang tư vấn', 'consulting', '#F5C542'],
+  ['Đã chốt', 'closed', '#3FBF8F'],
 ];
 
 function FunnelView({ data }) {
@@ -878,7 +881,7 @@ function DistributionCard({ title, data }) {
             <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} angle={-35} textAnchor="end" />
             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
             <Tooltip />
-            <Bar dataKey="count" name="Số biển" fill="#2563eb" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="count" name="Số biển" fill="#3B5BFF" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       ) : (

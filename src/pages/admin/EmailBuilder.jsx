@@ -29,15 +29,25 @@ const BLOCK_TYPES = [
   { type: 'divider', label: 'Đường kẻ ngang', hasProps: false },
 ];
 
+// Khớp 15 type canonical (NotificationTypeSettingBootstrap) + broadcast (BroadcastJob đọc FindActiveForTypeAsync("broadcast")).
+// Label đồng bộ TYPE_LABEL trong AdminNotifications.jsx.
 const NOTIFICATION_TYPES = [
-  { value: 'plate_match', label: 'Biển mới phù hợp' },
-  { value: 'digest', label: 'Digest tổng hợp' },
+  { value: 'plate_match', label: 'Biển mới khớp tìm kiếm đã lưu' },
+  { value: 'hot_alert', label: 'Biển yêu thích đang HOT' },
+  { value: 're_engage', label: 'Nhắc quay lại (không hoạt động)' },
+  { value: 'price_drop', label: 'Biển yêu thích giảm giá' },
+  { value: 'ai_pick', label: 'Gợi ý AI' },
+  { value: 'digest', label: 'Email tổng hợp hàng ngày' },
+  { value: 'plate_sold', label: 'Biển yêu thích đã bán' },
+  { value: 'fengshui_match', label: 'Biển mới hợp mệnh' },
+  { value: 'contact_status', label: 'Cập nhật yêu cầu liên hệ' },
+  { value: 'new_review', label: 'Đánh giá mới trên biển đang theo dõi' },
+  { value: 'search_stale', label: 'Tìm kiếm đã lưu chưa có kết quả' },
+  { value: 'viewed_price_drop', label: 'Giảm giá biển đã xem' },
+  { value: 'compare_price_drop', label: 'Giảm giá biển đang so sánh' },
+  { value: 'profile_incomplete', label: 'Nhắc hoàn thiện hồ sơ' },
+  { value: 'collaborator_commission', label: 'Hoa hồng CTV đã thanh toán (email)' },
   { value: 'broadcast', label: 'Thông báo chủ động (broadcast)' },
-  { value: 'hot_alert', label: 'Biển hot' },
-  { value: 'price_drop', label: 'Giảm giá' },
-  { value: 're_engage', label: 'Nhắc quay lại' },
-  { value: 'new_review', label: 'Đánh giá mới' },
-  { value: 'ai_pick', label: 'AI gợi ý' },
 ];
 
 function newBlockId() {

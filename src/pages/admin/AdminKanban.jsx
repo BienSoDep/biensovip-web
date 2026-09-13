@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, closestCorners, useSensor, useSensors, useDraggable, useDroppable } from '@dnd-kit/core';
 import { useAdminContacts, useUpdateContactStatus } from '../../services/adminContacts.js';
-import { useAdminTransactions, useConfirmTransactionPayment } from '../../services/adminTransactions.js';
+import { useAdminTransactions, useConfirmTransactionPayment, usePayCommission } from '../../services/adminTransactions.js';
 import { formatDateTime } from '../../lib/date.js';
 import Modal from '../../components/Modal.jsx';
 import Button from '../../components/Button.jsx';
@@ -147,9 +147,11 @@ function Row({ label, children }) {
 // mất ngữ cảnh cột đang đứng và phải cuộn tìm lại. Modal cho admin/staff xử lý ngay
 // (đổi trạng thái / chốt tiền) mà không rời bảng. Nút "Mở chi tiết đầy đủ" giữ đường cũ
 // cho các thao tác sâu (tạo link ZaloPay, ghi chú nội bộ, xóa) vốn chỉ có ở trang Danh sách.
-function DetailModal({ item, kind, onClose, onQuickMove, nextLabel, updateStatus, onConfirm, confirming, onOpenFull, proofUrl, onProofChange }) {
+function DetailModal({ item, kind, onClose, onQuickMove, nextLabel, updateStatus, onConfirm, confirming, onOpenFull, proofUrl, onProofChange, onPayCommission, paying }) {
   if (!item) return null;
   const isTx = kind === 'tx';
+  // Chỉ chi trả được khoản đã duyệt: Pending chưa đủ điều kiện, Paid rồi thì thôi, Cancelled thì hủy.
+  const canPayCommission = isTx && item.commissionId && item.commissionStatus === 'approved' && item.ctvId;
   return (
     <Modal open onClose={onClose} title={item.fullName || 'Chi tiết'} maxWidth="520px">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -209,6 +211,14 @@ function DetailModal({ item, kind, onClose, onQuickMove, nextLabel, updateStatus
               </Button>
             </>
           )}
+          {/* Chi trả hoa hồng ngay khi đang xem giao dịch — trước đây phải nhớ tên CTV rồi
+              sang trang Cộng tác viên tìm lại. Dùng đúng endpoint pay có sẵn, kèm số tiền
+              khớp Amount của khoản này (BE chặn lệch quá 1đ) nên không có đường ghi thứ 2. */}
+          {canPayCommission && (
+            <Button variant="outline" disabled={paying} onClick={() => onPayCommission(item)}>
+              {paying ? 'Đang chi trả…' : `Chi trả hoa hồng ${VND.format(item.commissionAmount)} đ`}
+            </Button>
+          )}
           {onOpenFull && <Button variant="ghost" onClick={() => { onClose(); onOpenFull(item); }}>Mở chi tiết đầy đủ →</Button>}
         </div>
       </div>
@@ -240,6 +250,7 @@ export default function AdminKanban({ notify, go, onOpenContact }) {
   const { data: txData } = useAdminTransactions({ page: 1, limit: 100 });
   const updateStatus = useUpdateContactStatus();
   const confirmPayment = useConfirmTransactionPayment();
+  const payCommission = usePayCommission();
   const [activeId, setActiveId] = useState(null);
   const [detail, setDetail] = useState(null); // { item, kind } — thẻ đang mở modal
   const [proofUrl, setProofUrl] = useState(''); // ảnh minh chứng cho lần chốt tiền sắp tới
@@ -289,6 +300,15 @@ export default function AdminKanban({ notify, go, onOpenContact }) {
     });
   };
 
+  // Chi trả hoa hồng: gửi đúng 1 commissionId + số tiền bằng Amount của khoản đó (BE đối chiếu
+  // tổng Pending phải khớp, lệch quá 1đ là chặn). Đóng modal khi xong để bảng tự vẽ lại.
+  const askPayCommission = (t) => {
+    payCommission.mutate({ ctvId: t.ctvId, commissionIds: [t.commissionId], paidAmount: t.commissionAmount }, {
+      onError: (err) => notify?.(err?.message || 'Không chi trả được hoa hồng.', 'error'),
+      onSuccess: () => { notify?.('Đã chi trả hoa hồng', 'success'); setDetail(null); },
+    });
+  };
+
   // 1 định nghĩa modal cho cả 2 layout — 2 nhánh render (narrow/desktop) cùng gọi nên không
   // lệch hành vi giữa mobile và desktop.
   const detailFor = () => (
@@ -299,6 +319,8 @@ export default function AdminKanban({ notify, go, onOpenContact }) {
       confirming={confirmPayment.isPending && confirmPayment.variables?.id === detail?.item?.id}
       onOpenFull={detail?.kind === 'contact' ? openFullContact : undefined}
       proofUrl={proofUrl} onProofChange={setProofUrl}
+      onPayCommission={askPayCommission}
+      paying={payCommission.isPending && payCommission.variables?.commissionIds?.[0] === detail?.item?.commissionId}
     />
   );
 

@@ -54,6 +54,15 @@ const NAV_PERM = {
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
+// Mục menu nào vai trò hiện tại được thấy. Sidebar lọc bằng hàm này; AdminGuide suy thẳng từ đây
+// nên hướng dẫn không thể lệch khỏi menu thật (trước đây AdminGuide tự chép tay danh sách mục →
+// đã lệch: còn nhắc 'Mẫu email'/'Rủi ro CTV' đã gộp thành tab, thiếu 16 mục đang có).
+export const canSeeNav = (st, navKey) => {
+  if (navKey === 'astaff' || navKey === 'arisklog') return st.user?.role === 'super-admin';
+  const perm = NAV_PERM[navKey];
+  return !perm || canPerm(st, perm);
+};
+
 // Trang gộp tab (2026-09) — slug phụ đã gộp vào slug chính (trang có tab bên trong). Giữ nguyên trong
 // ADMIN_SCREENS/ROUTE_MAP/NAV_PERM để URL cũ vẫn hợp lệ, chỉ tự redirect về trang chính khi vào thẳng.
 // Trang Bán hàng gộp 3 màn cũ thành 3 view — ?view= giữ đúng view người dùng quen (bookmark cũ
@@ -161,11 +170,7 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
     if (BADGE_NAV[navKey]) { try { localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString()); } catch { /* ignore */ } }
   };
 
-  const canSee = (navKey) => {
-    if (navKey === 'astaff' || navKey === 'arisklog') return st.user?.role === 'super-admin';
-    const perm = NAV_PERM[navKey];
-    return !perm || canPerm(st, perm);
-  };
+  const canSee = (navKey) => canSeeNav(st, navKey);
 
   const renderItem = ([key, label]) => {
     const on = s === key || (key === 'aposts' && s === 'compose');
@@ -372,7 +377,7 @@ export default function AdminShell({
         )}
 
         {s === 'dash' && <Dashboard st={st} go={go} />}
-        {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} go={go} />}
+        {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} canSee={(k) => canSeeNav(st, k)} go={go} />}
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}

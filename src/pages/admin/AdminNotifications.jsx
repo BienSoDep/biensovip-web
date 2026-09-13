@@ -9,7 +9,7 @@ import { useAdminCustomers } from '../../services/adminCustomers.js';
 import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import { canPerm } from '../../layout/AdminShell.jsx';
-import { useAdminEmailTemplates, useUpdateEmailTemplate } from '../../services/emailTemplates.js';
+import { useAdminEmailTemplates, useUpdateEmailTemplate, usePreviewEmailTemplate } from '../../services/emailTemplates.js';
 import { formatDate } from '../../lib/date.js';
 import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
 
@@ -69,6 +69,33 @@ function EmailPreview({ title, body }) {
         <div style={{ padding: '10px 20px', background: '#f1f2f4', color: '#6b7280', fontSize: 11, textAlign: 'center' }}>
           Biensovip.com — mua bán biển số xe đẹp
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Xem trước render thật của template drag-drop đã chọn (POST /admin/email-templates/{id}/preview) —
+// khác EmailPreview ở trên: đây là đúng HTML sẽ gửi, không phải mock Wrap tĩnh.
+function TemplatePreview({ templateId }) {
+  const preview = usePreviewEmailTemplate();
+  const [html, setHtml] = useState('');
+  useEffect(() => {
+    if (!templateId) { setHtml(''); return; }
+    let cancelled = false;
+    preview.mutateAsync({ id: templateId }).then((r) => { if (!cancelled) setHtml(r.html); }).catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateId]);
+  if (!templateId) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Xem trước layout template</span>
+      <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-2)' }}>
+        {html ? (
+          <iframe title="Template preview" srcDoc={html} style={{ width: '100%', height: 480, border: 'none', borderRadius: 'var(--radius-md)', background: '#ffffff' }} />
+        ) : (
+          <div style={{ height: 480, display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải preview…</div>
+        )}
       </div>
     </div>
   );
@@ -135,6 +162,13 @@ export default function AdminNotifications({ notify, st }) {
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
 
+  // UC27 — "Layout email" cho broadcast thủ công: chọn template drag-drop đã tạo (áp dụng type "broadcast")
+  // để gửi kèm thay vì dùng EmailTemplate.Wrap mặc định. Rỗng = mặc định hệ thống.
+  const { data: templatesData } = useAdminEmailTemplates();
+  const templates = templatesData?.items || templatesData || [];
+  const broadcastTemplates = templates.filter((t) => (t.appliesTo || []).includes('broadcast'));
+  const [templateId, setTemplateId] = useState('');
+
   // Ước lượng số người nhận theo đối tượng hiện tại — cập nhật mỗi khi target/channel/user thay đổi.
   let recipientEstimate = null;
   if (target === 'subscribers') recipientEstimate = subCount.data?.count;
@@ -159,8 +193,9 @@ export default function AdminNotifications({ notify, st }) {
       const res = await sendBroadcast.mutateAsync({
         title: title.trim(), content: body, channel, target,
         userIds: target === 'specific' ? selectedUsers.map((u) => u.id) : undefined,
+        templateId: target !== 'subscribers' && templateId ? templateId : undefined,
       });
-      setTitle(''); setPlainBody(''); setSelectedUsers([]);
+      setTitle(''); setPlainBody(''); setSelectedUsers([]); setTemplateId('');
       notify(res.recipientCount > 0 ? `Đã gửi thông báo tới ${res.recipientCount} người dùng` : 'Đã tạo thông báo nhưng không có người nhận hợp lệ');
     } catch (e) {
       setErr(e.message || 'Lỗi khi gửi.');
@@ -210,6 +245,15 @@ export default function AdminNotifications({ notify, st }) {
               <Select label="Đối tượng" value={target} options={TARGETS} onChange={setTarget} />
               {target === 'specific' && <UserPicker selected={selectedUsers} onChange={setSelectedUsers} />}
               {target !== 'subscribers' && <Select label="Kênh gửi" value={channel} options={CHANNELS} onChange={setChannel} />}
+              {target !== 'subscribers' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+                  <Select label="Layout email" value={templateId} onChange={setTemplateId}
+                    options={[{ value: '', label: 'Mặc định hệ thống' }, ...broadcastTemplates.map((t) => ({ value: t.id, label: t.name }))]} />
+                  {broadcastTemplates.length === 0 && (
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có template áp dụng cho "broadcast" — tạo ở tab "Mẫu email".</span>
+                  )}
+                </div>
+              )}
               {target === 'subscribers' && (
                 <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gửi email tới danh sách đăng ký nhận tin (footer/banner). Không cần tài khoản.</p>
               )}
@@ -230,6 +274,12 @@ export default function AdminNotifications({ notify, st }) {
           {(target === 'subscribers' || channel === 'email' || channel === 'email_zalo') && (
             <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
               <EmailPreview title={title} body={body} />
+            </div>
+          )}
+
+          {target !== 'subscribers' && templateId && (
+            <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
+              <TemplatePreview templateId={templateId} />
             </div>
           )}
 

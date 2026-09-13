@@ -72,3 +72,18 @@ export function useRestoreTransaction() {
     onSettled: () => invalidateSales(qc),
   });
 }
+
+// Chi trả hoa hồng cho 1 khoản của CTV — tái dùng endpoint có sẵn của trang CTV
+// (POST /admin/collaborators/{id}/commissions/pay), không thêm đường ghi mới.
+// paidAmount phải khớp đúng tổng Amount các commission được chọn (BE chặn lệch > 1đ).
+export function usePayCommission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ctvId, commissionIds, paidAmount, paidNote, proofUrl }) =>
+      apiClient.post(`/api/admin/collaborators/${ctvId}/commissions/pay`, { commissionIds, paidAmount, paidNote, proofUrl }),
+    onSettled: () => {
+      invalidateSales(qc);
+      qc.invalidateQueries({ queryKey: ['admin-collaborators'] });
+    },
+  });
+}

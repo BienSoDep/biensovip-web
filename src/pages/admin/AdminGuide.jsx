@@ -1,54 +1,37 @@
 import { Info } from 'lucide-react';
+import { ADMIN_NAV } from '../../common/constants.js';
 
-// Mỗi mục: [nav key, tiêu đề, mô tả ngắn, 'all' | 'super' — 'super' = chỉ Quản trị viên thấy trong sidebar].
-const SECTIONS = [
-  {
-    title: 'Vận hành hàng ngày',
-    items: [
-      ['dash', 'Tổng quan', 'Xem lượt xem, liên hệ mới, tỉ lệ chuyển đổi và biểu đồ traffic theo ngày/tuần/tháng — nơi bắt đầu mỗi ca làm việc.', 'all'],
-      ['acontacts', 'Yêu cầu liên hệ', 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Đổi trạng thái Mới → Đang tư vấn → Đã chốt, gán người phụ trách, ghi chú nội bộ.', 'all'],
-      ['ainterestleads', 'Khách quan tâm', 'Khách thả tim hoặc xem 1 biển nhiều lần nhưng chưa để lại liên hệ — bấm "Nhận tư vấn" để chủ động liên hệ trước.', 'all'],
-      ['areviews', 'Đánh giá', 'Duyệt đánh giá khách gửi trước khi hiển thị công khai trên trang chi tiết biển; trả lời đánh giá.', 'all'],
-    ],
-  },
-  {
-    title: 'Quản lý biển số & nội dung',
-    items: [
-      ['aplates', 'Biển số', 'Thêm/sửa/xóa biển, đổi trạng thái Còn hàng/Đã bán, upload ảnh, xem lịch sử thay đổi giá.', 'all'],
-      ['acats', 'Danh mục', 'Loại biển, tỉnh/thành, loại xe, khoảng giá — dùng cho bộ lọc phía khách. Kéo thả để đổi thứ tự hiển thị.', 'all'],
-      ['ameanings', 'Ý nghĩa phong thủy', 'Mẫu ý nghĩa chung theo loại biển/con số, và ý nghĩa riêng gắn cho từng biển cụ thể.', 'all'],
-      ['aposts', 'Bài viết', 'Viết/sửa bài blog — nội dung SEO cho landing tỉnh/loại biển và tin tức phong thủy.', 'all'],
-      ['avideos', 'Video', 'Gắn video TikTok/Facebook giới thiệu biển lên trang chủ và trang chi tiết.', 'all'],
-    ],
-  },
-  {
-    title: 'Khách hàng & Cộng tác viên',
-    items: [
-      ['acustomers', 'Khách hàng', 'Xem danh sách tài khoản khách đã đăng ký — lịch sử mua, biển yêu thích.', 'all'],
-      ['acollabs', 'Cộng tác viên', 'Danh sách CTV giới thiệu khách, theo dõi hoa hồng, duyệt thanh toán.', 'all'],
-      ['acollabcontent', 'Nội dung CTV', 'Chỉnh nội dung trang giới thiệu ưu đãi hiển thị cho người muốn trở thành CTV.', 'all'],
-    ],
-  },
-  {
-    title: 'Thông báo & Email',
-    items: [
-      ['anotifications', 'Thông báo', 'Soạn và gửi thông báo thủ công tới khách (chuông web/email), quản lý email đăng ký nhận tin, cấu hình email tự động theo sự kiện (biển mới khớp tìm kiếm, giảm giá…).', 'all'],
-      ['aemailtpl', 'Mẫu email', 'Kéo-thả dựng bố cục (layout) email dùng chung cho các loại thông báo tự động.', 'all'],
-      ['achatbot', 'Trợ lý AI', 'Xem lịch sử hội thoại chatbot với khách, bật/tắt và chỉnh cấu hình trả lời tự động.', 'all'],
-    ],
-  },
-  {
-    title: 'Chỉ Quản trị viên (super-admin)',
-    items: [
-      ['astaff', 'Nhân viên', 'Tạo tài khoản nhân viên mới, phân quyền theo từng resource (biển, liên hệ, bài viết…), khóa/mở tài khoản, đổi mật khẩu hộ.', 'super'],
-      ['aauditlog', 'Nhật ký hệ thống', 'Lịch sử mọi thay đổi dữ liệu (ai sửa gì, khi nào) — dùng để truy vết khi có sai sót.', 'super'],
-      ['arisklog', 'Rủi ro CTV', 'Cảnh báo tự động khi phát hiện dấu hiệu bất thường ở cộng tác viên (nhiều tài khoản, lead giả…) — rà soát và xử lý.', 'super'],
-    ],
-  },
-];
+// Mô tả ngắn từng mục, tra theo nav key. Nhóm + thứ tự + mục nào hiện đều suy TRỰC TIẾP từ
+// ADMIN_NAV (nguồn sự thật duy nhất của sidebar) qua prop canSee — thêm/bớt mục menu không phải
+// sửa file này. Thiếu mô tả thì mục vẫn hiện đủ tên, chỉ trống phần chữ giải thích.
+const DESC = {
+  dash: 'Lượt xem, liên hệ mới, tỉ lệ chuyển đổi và biểu đồ traffic — nơi bắt đầu mỗi ca làm việc.',
+  aguide: 'Chính trang này — toàn bộ tính năng vai trò của bạn được phép dùng.',
+  aplates: 'Thêm/sửa/xóa biển, đổi trạng thái Còn hàng/Đã bán, upload ảnh, xem lịch sử thay đổi giá.',
+  asales: 'Yêu cầu liên hệ, quy trình bán hàng và giao dịch trong cùng một trang — chuyển giữa 3 chế độ xem Quy trình / Danh sách / Giao dịch.',
+  acats: 'Loại biển, tỉnh/thành, loại xe, khoảng giá — dùng cho bộ lọc phía khách. Kéo thả để đổi thứ tự hiển thị.',
+  acoupons: 'Tạo mã giảm giá, đặt % giảm và số lần dùng tối đa, bật/tắt hiệu lực.',
+  acustomers: 'Danh sách tài khoản khách đã đăng ký — lịch sử mua, biển yêu thích.',
+  ainterestleads: 'Khách thả tim hoặc xem 1 biển nhiều lần nhưng chưa để lại liên hệ — bấm "Nhận tư vấn" để chủ động liên hệ trước.',
+  aposts: 'Viết/sửa bài blog — nội dung SEO cho landing tỉnh/loại biển và tin tức phong thủy. Kèm duyệt bình luận của khách.',
+  avideos: 'Gắn video TikTok/Facebook giới thiệu biển lên trang chủ và trang chi tiết.',
+  ameanings: 'Mẫu ý nghĩa chung theo loại biển/con số, và ý nghĩa riêng gắn cho từng biển cụ thể.',
+  apolicypages: 'Nội dung điều khoản, bảo mật, hướng dẫn sang tên và FAQ hiển thị ở chân trang.',
+  anotifications: 'Gửi thông báo thủ công tới khách (chuông web/email), quản lý email đăng ký nhận tin, và dựng mẫu email tự động theo sự kiện.',
+  areviews: 'Duyệt đánh giá khách gửi trước khi hiển thị công khai; trả lời đánh giá.',
+  achatbot: 'Lịch sử hội thoại chatbot với khách, bật/tắt và chỉnh cấu hình trả lời tự động.',
+  acollabs: 'Danh sách CTV giới thiệu khách, theo dõi hoa hồng, duyệt thanh toán.',
+  acollabcontent: 'Nội dung trang giới thiệu ưu đãi hiển thị cho người muốn trở thành CTV.',
+  actvtemplates: 'Mẫu tin nhắn soạn sẵn để cộng tác viên copy gửi khách.',
+  astaff: 'Tạo tài khoản nhân viên, phân quyền theo từng resource (biển, liên hệ, bài viết…), khóa/mở tài khoản, đổi mật khẩu hộ.',
+  aauditlog: 'Lịch sử mọi thay đổi dữ liệu, lỗi hệ thống và rủi ro cộng tác viên — dùng để truy vết khi có sai sót.',
+  ashowroom: 'Số liệu hiển thị trên trang public và thứ tự sắp xếp danh sách biển công khai.',
+  afeatureflags: 'Bật/tắt feature flags, chế độ bảo trì, và DB console để tra cứu dữ liệu.',
+};
 
 function GuideCard({ item, go }) {
-  const [key, title, desc] = item;
+  const [key, title] = item;
+  const desc = DESC[key];
   return (
     <button
       type="button" onClick={() => go(key)()}
@@ -59,17 +42,21 @@ function GuideCard({ item, go }) {
       }}
     >
       <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{title}</span>
-      <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>{desc}</span>
+      {desc && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>{desc}</span>}
       <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Mở trang này →</span>
     </button>
   );
 }
 
-// Hướng dẫn sử dụng theo vai trò — super-admin thấy đủ 5 nhóm, staff không thấy nhóm "Chỉ Quản trị viên".
-export default function AdminGuide({ isSuperAdmin, go }) {
-  const sections = SECTIONS
-    .map((s) => ({ ...s, items: s.items.filter((i) => isSuperAdmin || i[3] === 'all') }))
-    .filter((s) => s.items.length > 0);
+// Hướng dẫn sử dụng theo vai trò — nội dung là hình chiếu của ADMIN_NAV qua canSee, nên luôn khớp
+// đúng những gì người dùng thấy ở sidebar (staff thiếu quyền thì mục tự ẩn, nhóm rỗng tự bỏ).
+export default function AdminGuide({ isSuperAdmin, canSee, go }) {
+  const sections = ADMIN_NAV
+    .map(({ group, items }) => ({
+      title: group || 'Bắt đầu',
+      items: items.filter(([key]) => canSee(key)),
+    }))
+    .filter((sec) => sec.items.length > 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -81,8 +68,8 @@ export default function AdminGuide({ isSuperAdmin, go }) {
           </p>
           <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             {isSuperAdmin
-              ? 'Quản trị viên có toàn quyền trên mọi mục, bao gồm quản lý nhân viên, xem nhật ký hệ thống và rà soát rủi ro cộng tác viên.'
-              : 'Nhân viên chỉ thấy các mục được Quản trị viên cấp quyền ở trang "Nhân viên". Nếu thiếu mục nào bạn cần dùng, liên hệ Quản trị viên để được cấp thêm quyền.'}
+              ? 'Dưới đây là toàn bộ mục trong menu, xếp đúng theo nhóm bạn thấy ở sidebar.'
+              : 'Dưới đây là các mục Quản trị viên đã cấp quyền cho bạn, xếp đúng theo nhóm ở sidebar. Thiếu mục nào cần dùng, liên hệ Quản trị viên để được cấp thêm.'}
           </p>
         </div>
       </div>

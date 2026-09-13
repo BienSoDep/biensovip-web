@@ -621,6 +621,7 @@ export default function App() {
     aguide: ['Hướng dẫn sử dụng', 'Các tính năng theo vai trò của bạn'],
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
+    acoupons: ['Mã giảm giá', 'Mã giảm giá áp dụng khi khách đặt cọc'],
     // 3 trang cũ (liên hệ/quy trình/giao dịch) đã gộp vào 1 trang có view bên trong — xem AdminSales.jsx.
     // Giữ key cũ ở đây vì URL cũ vẫn resolve được (GROUPED_REDIRECT đưa về asales).
     asales: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],

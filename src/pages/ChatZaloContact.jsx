@@ -9,32 +9,11 @@ import { trackGenerateLead } from '../services/tracking/events.js';
 import { content } from '../lib/content/index.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { usePolicyPage } from '../services/policyPages.js';
+import ZaloIcon from '../components/ZaloIcon.jsx';
+import FacebookIcon from '../components/FacebookIcon.jsx';
+import TikTokIcon from '../components/TikTokIcon.jsx';
 
 const PROCESS_ICONS = [MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound];
-
-function ZaloIcon(props) {
-  return (
-    <svg viewBox="0 0 48 48" width={26} height={26} {...props}>
-      <text x="24" y="30" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="currentColor">Zalo</text>
-    </svg>
-  );
-}
-
-function FacebookIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" {...props}>
-      <path d="M22 12.06C22 6.51 17.52 2 12 2S2 6.51 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
-    </svg>
-  );
-}
-
-function TikTokIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" width={22} height={22} fill="currentColor" {...props}>
-      <path d="M16.6 5.82c-.9-.9-1.4-2.1-1.4-3.32h-3.3v13.86c0 1.5-1.22 2.72-2.72 2.72a2.72 2.72 0 0 1 0-5.44c.28 0 .55.04.8.12V10.4a6.03 6.03 0 0 0-.8-.06 6.06 6.06 0 1 0 6.06 6.06V9.4a8.24 8.24 0 0 0 4.82 1.54V7.64c-1.28 0-2.46-.42-3.46-1.14a5.6 5.6 0 0 1 0 -.68Z" />
-    </svg>
-  );
-}
 
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt', 'Yêu cầu về dữ liệu cá nhân'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy', 'Yêu cầu về dữ liệu cá nhân': 'data_request' };
