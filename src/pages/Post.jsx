@@ -139,6 +139,8 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const relatedPlates = relatedPlatesData?.items || [];
   const midPlate = relatedPlates[0];
   const illustrationUrl = post ? pickIllustration(post.slug, post.coverImageUrl) : null;
+  // Alt mô tả ảnh theo nhóm chủ đề, không lặp tiêu đề bài (tránh nhồi từ khóa vào alt).
+  const postImageAlt = `${CATEGORY_LABEL[post.category] || 'Biển số đẹp'} — ảnh minh họa bài viết`;
   const { sizeIdx, setSizeIdx, fontId, setFontId, fontSize, fontFamily } = useReaderPrefs();
   const articleBodyVars = { '--article-font-size': `${fontSize}px`, '--article-font-family': fontFamily };
 
@@ -189,6 +191,25 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
     document.head.appendChild(sc);
     return () => { sc.remove(); };
   }, [post?.faq]);
+
+  // UC40 — JSON-LD HowTo khi bài có các bước hướng dẫn có cấu trúc (rich snippet HowTo).
+  useEffect(() => {
+    const old = document.head.querySelector('script[data-post-howto-ld]');
+    if (old) old.remove();
+    if (!post?.howToSteps?.length) return;
+    const sc = document.createElement('script');
+    sc.type = 'application/ld+json';
+    sc.dataset.postHowtoLd = '1';
+    sc.textContent = JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'HowTo',
+      name: post.title,
+      step: post.howToSteps.map((s) => ({
+        '@type': 'HowToStep', name: s.name, text: s.text,
+      })),
+    });
+    document.head.appendChild(sc);
+    return () => { sc.remove(); };
+  }, [post?.howToSteps, post?.title]);
 
   const scrollMilestonesFired = useRef(new Set());
   useEffect(() => {
@@ -305,7 +326,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
 
       {post.coverImageUrl && (
         <figure style={{ margin: 0, borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-          <img src={post.coverImageUrl} alt={post.title} loading="eager" itemProp="image" style={{ width: '100%', maxHeight: 420, objectFit: 'cover', display: 'block' }} />
+          <img src={post.coverImageUrl} alt={postImageAlt} loading="eager" itemProp="image" style={{ width: '100%', maxHeight: 420, objectFit: 'cover', display: 'block' }} />
         </figure>
       )}
 
@@ -344,7 +365,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
           {parts.length === 3 && illustrationUrl && (
             <>
               <figure style={{ margin: 'var(--space-6) 0 0', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-                <img src={illustrationUrl} alt={post.title} loading="lazy" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
+                <img src={illustrationUrl} alt={postImageAlt} loading="lazy" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
               </figure>
               <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[1] }} />
             </>
@@ -388,6 +409,20 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
 
       {post.sourceNote && (
         <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Nguồn: {post.sourceNote}</p>
+      )}
+
+      {post.howToSteps?.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+          <h2 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Hướng dẫn từng bước</h2>
+          <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            {post.howToSteps.map((s, i) => (
+              <li key={i}>
+                <strong style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{s.name}</strong>
+                <p style={{ margin: 'var(--space-1) 0 0', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{s.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
 
       {post.tags?.length > 0 && (

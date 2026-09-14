@@ -54,10 +54,14 @@ export default function Compose({ st, patch, notify }) {
   const [summaryMeaning, setSummaryMeaning] = useState('');
   const [sourceNote, setSourceNote] = useState('');
   const [faq, setFaq] = useState([]);
+  // HowTo schema — các bước hướng dẫn có cấu trúc (rich snippet HowTo cho bài thủ tục).
+  const [howToSteps, setHowToSteps] = useState([]);
   const [loadedUpdatedAt, setLoadedUpdatedAt] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tags, setTags] = useState([]);
   const [newTagInput, setNewTagInput] = useState('');
+  // 1.3 — từ khóa chính để admin tự kiểm mật độ khi viết bài (chỉ tool, không lưu DB).
+  const [focusKeyword, setFocusKeyword] = useState('');
   const [err, setErr] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -113,6 +117,7 @@ export default function Compose({ st, patch, notify }) {
       setSummaryMeaning(full.summaryMeaning || '');
       setSourceNote(full.sourceNote || '');
       setFaq(full.faq || []);
+      setHowToSteps(full.howToSteps || []);
       if (full.contentHtml) editor.commands.setContent(full.contentHtml);
       setAttachedVideos(full.videos || []);
       savedRef.current = {
@@ -298,6 +303,13 @@ export default function Compose({ st, patch, notify }) {
   const plainText = editor?.getText() || '';
   const wordCount = plainText.trim() ? plainText.trim().split(/\s+/).length : 0;
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 200));
+  // Đếm số lần từ khóa chính xuất hiện trong 1 chuỗi (so khớp không phân biệt hoa thường).
+  const focusKw = focusKeyword.trim().toLowerCase();
+  const focusCount = (text) => {
+    if (!focusKw) return 0;
+    const esc = focusKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return (text.toLowerCase().match(new RegExp(esc, 'g')) || []).length;
+  };
   // Kho hashtag dùng chung (bảng blog_tags) — chọn lại hoặc gõ tạo mới, không gõ tay tự do nữa.
   const tagPool = allTagsData?.items || [];
   const currentTagsLower = new Set(tags.map((t) => t.toLowerCase()));
@@ -354,6 +366,7 @@ export default function Compose({ st, patch, notify }) {
       deliveryLocation: deliveryLocation.trim() || null,
       deliveryDate: deliveryDate || null,
       faq: faq.filter((f) => f.question.trim() && f.answer.trim()),
+      howToSteps: howToSteps.filter((s) => s.name.trim() && s.text.trim()),
       summaryFengShui: summaryFengShui.trim() || null,
       summaryTaboo: summaryTaboo.trim() || null,
       summaryMeaning: summaryMeaning.trim() || null,
@@ -474,6 +487,17 @@ export default function Compose({ st, patch, notify }) {
           </label>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Từ khóa chính (focus keyword)</span>
+            <InfoTip size={12} text="Gõ từ khóa chính của bài để kiểm tra mật độ xuất hiện trong tiêu đề, meta và nội dung. Chỉ để tự kiểm tra khi viết bài, không lưu vào bài viết." />
+          </div>
+          <Input value={focusKeyword} onChange={(e) => setFocusKeyword(e.target.value)} placeholder="VD: biển số đẹp Đà Nẵng" />
+          {focusKw && (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              Xuất hiện: Tiêu đề {focusCount(title)} · Meta title {focusCount(metaTitle)} · Meta description {focusCount(metaDescription)} · Nội dung {focusCount(plainText)}
+            </span>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Meta title (SEO)</span>
             <InfoTip size={12} text="Tiêu đề hiện trên tab trình duyệt và dòng đầu kết quả tìm kiếm Google. Để trống sẽ dùng tiêu đề bài viết." />
           </div>
@@ -550,6 +574,22 @@ export default function Compose({ st, patch, notify }) {
             </div>
           ))}
           <Button variant="outline" size="sm" disabled={faq.length >= 8} onClick={() => setFaq((cur) => [...cur, { question: '', answer: '' }])}>Thêm câu hỏi</Button>
+        </div>
+
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Hướng dẫn từng bước — HowTo (tùy chọn)<InfoTip size={12} text="Dành cho bài thủ tục (sang tên, tính nút, tra cứu…). Hiện thành danh sách bước, kèm schema HowTo — có cơ hội lên rich snippet." /></span>
+          {howToSteps.map((item, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <Input placeholder={`Bước ${i + 1} — tiêu đề`} value={item.name} onChange={(e) => setHowToSteps((cur) => cur.map((s, si) => (si === i ? { ...s, name: e.target.value } : s)))} />
+                </div>
+                <button type="button" onClick={() => setHowToSteps((cur) => cur.filter((_, si) => si !== i))} aria-label="Xóa bước" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--status-danger)', display: 'flex', padding: 6 }}><X size={16} /></button>
+              </div>
+              <Input placeholder="Mô tả bước" value={item.text} onChange={(e) => setHowToSteps((cur) => cur.map((s, si) => (si === i ? { ...s, text: e.target.value } : s)))} />
+            </div>
+          ))}
+          <Button variant="outline" size="sm" disabled={howToSteps.length >= 20} onClick={() => setHowToSteps((cur) => [...cur, { name: '', text: '' }])}>Thêm bước</Button>
         </div>
 
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
