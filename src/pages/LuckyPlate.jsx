@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, LayoutGrid, List as ListIcon } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
+import PlateCard from '../components/PlateCard.jsx';
 import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox } from '../components/index.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
 import { useSubmitContact } from '../services/contactService.js';
@@ -132,6 +133,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [resultView, setResultView] = useState('list'); // 'list' | 'grid' — cách hiển thị Top biển hợp mệnh
   const [filters, setFilters] = useState({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [] });
   const { data: plateTypes } = useCategories('plate_type');
   const { data: provinces } = useCategories('province');
@@ -246,7 +248,10 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
       </div>
 
       {!result ? (
-        <form onSubmit={(e) => { e.preventDefault(); submit(); }} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <form onSubmit={(e) => { e.preventDefault(); submit(); }} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)' }}>
+        {/* fieldset disabled khóa mọi input trong lúc chờ tra cứu — tránh sửa form/double-submit
+            khi mutation đang pending (nút submit tự disable rồi, nhưng input khác vẫn gõ được). */}
+        <fieldset disabled={lookup.isPending} style={{ border: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           {isAuthed && !hasProfileBirthDate && (
             <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
               Mẹo: <button type="button" onClick={() => go('profile')()} style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline', cursor: 'pointer' }}>lưu ngày sinh vào hồ sơ</button> để lần sau vào đây là có kết quả ngay.
@@ -339,6 +344,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
           </div>
 
           <Button variant="primary" size="lg" fullWidth onClick={submit} disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
+        </fieldset>
         </form>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'fadeIn 180ms var(--ease-out)' }}>
@@ -383,45 +389,83 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
             <Button variant="outline" size="md" onClick={downloadPng}><Icon name="download" size={16} style={{ marginRight: 6 }} />Tải ảnh PNG</Button>
           </div>
 
-          {/* Top biển ranked */}
+          {/* Top biển ranked — 2 kiểu hiển thị: list (chi tiết, giải thích rõ) hoặc grid (thẻ như trang danh sách). */}
           {result.ranked?.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Top biển hợp mệnh bạn</h2>
-              {result.ranked.map((r, i) => (
-                <div key={r.plateId} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-                    {shouldShowGeneratedImage(settings, r.thumbnailUrl ? [r.thumbnailUrl] : []) ? (
-                      <img src={optimizeImageUrl(r.thumbnailUrl)} alt={`Biển số ${r.plateNumber}`} style={{ width: 72, height: 45, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
-                    ) : (
-                      <div style={{ width: 72, flexShrink: 0 }}>
-                        <PlateVisual size="sm" {...splitPlateNumber(r.plateNumber)} shape="short" />
-                      </div>
-                    )}
-                    <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
-                    <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}</span>
-                    <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{Number(r.price).toLocaleString('vi-VN')}đ</span>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, minWidth: 150 }}>
-                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.score}% hợp mệnh</span>
-                      <div style={{ width: 140, height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)', overflow: 'hidden' }}>
-                        <div style={{ width: `${r.score}%`, height: '100%', background: scoreColor(r.score), borderRadius: 'var(--radius-pill)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Top biển hợp mệnh bạn</h2>
+                <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-lg)', padding: 3, gap: 3 }}>
+                  <button type="button" aria-pressed={resultView === 'list'} onClick={() => setResultView('list')}
+                    style={{ height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', background: resultView === 'list' ? 'var(--action-primary)' : 'transparent', color: resultView === 'list' ? 'var(--text-inverse)' : 'var(--text-body)' }}>
+                    <ListIcon size={14} />Danh sách
+                  </button>
+                  <button type="button" aria-pressed={resultView === 'grid'} onClick={() => setResultView('grid')}
+                    style={{ height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', background: resultView === 'grid' ? 'var(--action-primary)' : 'transparent', color: resultView === 'grid' ? 'var(--text-inverse)' : 'var(--text-body)' }}>
+                    <LayoutGrid size={14} />Dạng thẻ
+                  </button>
+                </div>
+              </div>
+
+              {resultView === 'list' ? (
+                result.ranked.map((r, i) => (
+                  <div key={r.plateId} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      {shouldShowGeneratedImage(settings, r.thumbnailUrl ? [r.thumbnailUrl] : []) ? (
+                        <img src={optimizeImageUrl(r.thumbnailUrl)} alt={`Biển số ${r.plateNumber}`} style={{ width: 72, height: 45, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
+                      ) : (
+                        <div style={{ width: 72, flexShrink: 0 }}>
+                          <PlateVisual size="sm" {...splitPlateNumber(r.plateNumber)} shape="short" />
+                        </div>
+                      )}
+                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
+                      <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}</span>
+                      <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{Number(r.price).toLocaleString('vi-VN')}đ</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, minWidth: 150 }}>
+                        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.score}% hợp mệnh</span>
+                        <div style={{ width: 140, height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)', overflow: 'hidden' }}>
+                          <div style={{ width: `${r.score}%`, height: '100%', background: scoreColor(r.score), borderRadius: 'var(--radius-pill)' }} />
+                        </div>
                       </div>
                     </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                      {r.explain.map((x, j) => <Badge key={j} tone="neutral">{x}</Badge>)}
+                    </div>
+                    <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2, flexWrap: 'wrap' }}>
+                      <Button variant="dark" size="sm" onClick={() => openPlate(r.plateId, 'lucky')}>Xem biển</Button>
+                      <a href={`tel:${contact?.phone || DEFAULT_CONTACT.phone}`} style={{ textDecoration: 'none' }}>
+                        <Button variant="primary" size="sm">Gọi ngay</Button>
+                      </a>
+                      {contact?.zalo && (
+                        <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(r.plateNumber))}>Nhắn Zalo</Button>
+                      )}
+                      <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-                    {r.explain.map((x, j) => <Badge key={j} tone="neutral">{x}</Badge>)}
-                  </div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2, flexWrap: 'wrap' }}>
-                    <Button variant="dark" size="sm" onClick={() => openPlate(r.plateId, 'lucky')}>Xem biển</Button>
-                    <a href={`tel:${contact?.phone || DEFAULT_CONTACT.phone}`} style={{ textDecoration: 'none' }}>
-                      <Button variant="primary" size="sm">Gọi ngay</Button>
-                    </a>
-                    {contact?.zalo && (
-                      <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(r.plateNumber))}>Nhắn Zalo</Button>
-                    )}
-                    <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />
-                  </div>
+                ))
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+                  {result.ranked.map((r, i) => (
+                    <div key={r.plateId} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                      <PlateCard
+                        plateNumber={r.plateNumber} type={r.type} province={r.province} vehicleType={r.vehicleType}
+                        price={r.price} salePrice={r.salePrice} status={r.status} thumbnailUrl={r.thumbnailUrl}
+                        onOpen={() => openPlate(r.plateId, 'lucky')} contact={contact} plateSize="md" layout="grid"
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
+                        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', flex: 1 }}>{r.score}% hợp mệnh</span>
+                      </div>
+                      <div style={{ width: '100%', height: 6, borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)', overflow: 'hidden' }}>
+                        <div style={{ width: `${r.score}%`, height: '100%', background: scoreColor(r.score), borderRadius: 'var(--radius-pill)' }} />
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {r.explain.slice(0, 2).map((x, j) => <Badge key={j} tone="neutral" style={{ font: 'var(--type-caption)' }}>{x}</Badge>)}
+                      </div>
+                      <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
               <Button variant="dark" size="lg" fullWidth onClick={viewLuckyPlates}>Xem biển số hợp mệnh →</Button>
             </div>
           )}
