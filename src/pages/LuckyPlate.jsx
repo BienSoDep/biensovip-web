@@ -20,6 +20,7 @@ import Breadcrumb from '../components/Breadcrumb.jsx';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { splitPlateNumber } from '../lib/plateFormat.js';
 import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
+import { routeFor } from '../config/routes.js';
 import { useSiteSettings } from '../services/siteSettings.js';
 import PlateVisual from '../components/PlateVisual.jsx';
 
@@ -448,7 +449,9 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                     <div key={r.plateId} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                       <PlateCard
                         plateNumber={r.plateNumber} type={r.type} province={r.province} vehicleType={r.vehicleType}
-                        price={r.price} salePrice={r.salePrice} status={r.status} thumbnailUrl={r.thumbnailUrl}
+                        price={r.price} salePrice={r.salePrice} priceOnRequest={r.priceOnRequest} status={r.status}
+                        thumbnailUrl={r.thumbnailUrl} isHot={r.isHot} badge={r.badge}
+                        href={routeFor('detail', r.slug || r.plateId)}
                         onOpen={() => openPlate(r.plateId, 'lucky')} contact={contact} plateSize="md" layout="grid"
                       />
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
