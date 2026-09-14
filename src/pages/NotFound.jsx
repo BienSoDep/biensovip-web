@@ -1,26 +1,31 @@
 import { useEffect } from 'react';
 import Button from '../components/Button.jsx';
+import ContactChannelList from '../components/ContactChannelList.jsx';
+import NotFoundIllustration from '../components/NotFoundIllustration.jsx';
 import { contentGet } from '../lib/content/index.js';
 
-export default function NotFound({ go }) {
+// Trang lỗi (404/500/bảo trì/crash) là nơi user dễ bỏ cuộc nhất — thêm đủ kênh liên hệ (không chỉ
+// 1 nút Zalo) để họ còn cách khác báo lỗi/hỏi hàng thay vì rời site (audit UI/UX 14/09/2026).
+// Nền trắng (không còn --surface-inverse tối) + minh họa SVG tự vẽ thay set-piece vòng tròn cam cũ.
+export default function NotFound({ go, notify }) {
   useEffect(() => { document.title = 'Trang không tìm thấy · Biensovip'; }, []);
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', minHeight: '70vh', background: 'var(--surface-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div aria-hidden style={{ position: 'absolute', top: -60, right: -60, width: 260, height: 260, borderRadius: '50%', background: 'var(--action-primary)', opacity: 0.9 }} />
-      <div aria-hidden style={{ position: 'absolute', top: 140, right: 40, width: 140, height: 140, borderRadius: '50%', background: 'var(--ink-700)' }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: -70, left: -70, width: 220, height: 220, borderRadius: '50%', background: 'var(--action-primary)', opacity: 0.9 }} />
-      <div aria-hidden style={{ position: 'absolute', bottom: 60, left: 160, width: 120, height: 120, borderRadius: '50%', background: 'var(--ink-700)' }} />
+    <section style={{ position: 'relative', overflow: 'hidden', minHeight: '70vh', background: 'var(--surface-page)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-6)', padding: 'var(--space-9) 0', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <NotFoundIllustration />
 
-      <div style={{ position: 'relative', maxWidth: 560, padding: 'var(--space-9) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-5)' }}>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span aria-hidden style={{ position: 'absolute', font: 'var(--fw-extrabold) clamp(48px,10vw,84px)/1 var(--font-display)', color: 'rgba(255,255,255,.08)', whiteSpace: 'nowrap' }}>{contentGet('common.notfound.ghost')}</span>
-          <span style={{ font: 'var(--fw-extrabold) clamp(64px,16vw,140px)/1 var(--font-display)', letterSpacing: 'var(--ls-display)', color: 'var(--white)' }}>{contentGet('common.notfound.code')}</span>
-        </div>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255,255,255,.66)', maxWidth: 420 }}>{contentGet('common.notfound.desc')}</p>
+      <div style={{ position: 'relative', width: '100%', maxWidth: 'var(--width-content)', padding: '0 var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-5)' }}>
+        <span style={{ font: 'var(--fw-extrabold) clamp(48px,10vw,84px)/1 var(--font-display)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{contentGet('common.notfound.code')}</span>
+        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 560 }}>{contentGet('common.notfound.desc')}</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'var(--space-3)' }}>
           <Button variant="primary" size="lg" onClick={go('home')}>{contentGet('common.notfound.cta_home')}</Button>
-          <Button variant="outline" size="lg" onClick={go('list')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>Xem kho biển số</Button>
-          <Button variant="outline" size="lg" onClick={go('chat')} style={{ color: 'var(--white)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.4)' }}>{contentGet('common.notfound.cta_chat')}</Button>
+          <Button variant="outline" size="lg" onClick={go('list')}>Xem kho biển số</Button>
+        </div>
+      </div>
+
+      <div style={{ position: 'relative', width: '100%', maxWidth: 860, padding: '0 var(--pad-page)' }}>
+        <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-muted)', textAlign: 'center' }}>Không tìm thấy trang cần đến? Liên hệ shop qua các kênh sau:</p>
+        <div className="notfound-channels">
+          <ContactChannelList notify={notify} zaloSource="404_page" />
         </div>
       </div>
     </section>

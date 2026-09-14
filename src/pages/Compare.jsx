@@ -18,15 +18,33 @@ import { PURPOSES, INDUSTRIES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
 import { buildConsultMessage, openZaloWithMessage, callOrCopyPhone, isMobileDevice } from '../lib/zaloMessage.js';
 
+// Lịch sử tra cứu — lưu tối đa 6 biển đã chọn qua slot search, localStorage per-browser (giống Fav guest mode).
+// ponytail: không đồng bộ server, per-thiết bị — nâng cấp lên server-side nếu user cần dùng đa thiết bị.
+const SEARCH_HISTORY_KEY = 'bsd_compare_search_history';
+function readSearchHistory() {
+  try { return JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || '[]'); } catch { return []; }
+}
+function pushSearchHistory(plate) {
+  try {
+    const prev = readSearchHistory().filter((p) => p.id !== plate.id);
+    const next = [{ id: plate.id, plateNumber: plate.plateNumber, thumbnailUrl: plate.thumbnailUrl, price: plate.price, priceOnRequest: plate.priceOnRequest }, ...prev].slice(0, 6);
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(next));
+    return next;
+  } catch { return readSearchHistory(); }
+}
+
 // Slot tìm nhanh — thay vì bắt user rời trang quay lại danh sách (pattern Thế Giới Di Động/FPT Shop):
 // mỗi slot trống là 1 ô tìm kiếm riêng, gõ số biển ra gợi ý ngay dưới, chọn là add() thẳng vào so sánh.
 function PlateSlotSearch({ onAdd, excludeIds }) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
+  const [justAdded, setJustAdded] = useState(null);
   const [debouncedQuery] = useDebouncedValue(query, 300);
   const { data, isFetching } = usePlates({ q: debouncedQuery, perPage: 8 }, { enabled: debouncedQuery.trim().length >= 2 });
   const results = (data?.items || []).filter((p) => !excludeIds.includes(p.id));
-  const showPanel = focused && debouncedQuery.trim().length >= 2;
+  const [history, setHistory] = useState(readSearchHistory);
+  const historyItems = history.filter((p) => !excludeIds.includes(p.id));
+  const showPanel = focused && (debouncedQuery.trim().length >= 2 || (!query && historyItems.length > 0));
   const wrapRef = useRef(null);
 
   // Click ngoài ô tìm → đóng panel gợi ý (blur riêng sẽ đóng cả khi bấm vào kết quả trước khi onClick kịp chạy).
@@ -36,6 +54,15 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [showPanel]);
+
+  const pick = (p) => {
+    onAdd(p.id);
+    setHistory(pushSearchHistory(p));
+    setQuery('');
+    setFocused(false);
+    setJustAdded(p.plateNumber);
+    setTimeout(() => setJustAdded(null), 1800);
+  };
 
   return (
     <div ref={wrapRef} style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
@@ -57,25 +84,52 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
           </button>
         )}
       </div>
-      {showPanel && (
-        <div style={{ position: 'absolute', zIndex: 30, top: '100%', left: 0, right: 0, marginTop: 6, background: 'var(--white)', border: '1px solid var(--border-hairline)', boxShadow: 'var(--shadow-4)', borderRadius: 'var(--radius-field)', maxHeight: 280, overflowY: 'auto' }}>
-          {isFetching ? (
-            <div style={{ padding: '14px', font: 'var(--type-caption)', color: 'var(--text-muted)', textAlign: 'center' }}>Đang tìm…</div>
-          ) : results.length === 0 ? (
-            <div style={{ padding: '14px', font: 'var(--type-caption)', color: 'var(--text-muted)', textAlign: 'center' }}>Không tìm thấy biển phù hợp</div>
-          ) : results.map((p) => {
-            const { prov, seri, num } = splitPlateNumber(p.plateNumber);
-            return (
-              <button key={p.id} type="button" onClick={() => { onAdd(p.id); setQuery(''); setFocused(false); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', borderBottom: '1px solid var(--surface-sunken)', background: 'none', cursor: 'pointer' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
-                <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
-                <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
-              </button>
-            );
-          })}
+      {/* Xác nhận rõ ràng biển vừa chọn đã vào ô so sánh — ô tìm tự xóa ngay sau khi chọn nên cần phản hồi riêng.
+          top cố định (44 = chiều cao input) thay vì top:100% — outer wrapper bị slot cha kéo cao hơn input
+          nhiều (dashed box), nên top:100% của wrapper đẩy panel rớt xuống tận đáy box thay vì sát input. */}
+      {justAdded && (
+        <div style={{ position: 'absolute', zIndex: 30, top: 44, left: 0, right: 0, marginTop: 6, padding: '8px 12px', background: 'var(--status-success-bg)', color: 'var(--status-success-ink)', borderRadius: 'var(--radius-field)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
+          Đã thêm {justAdded} vào so sánh
+        </div>
+      )}
+      {showPanel && !justAdded && (
+        <div style={{ position: 'absolute', zIndex: 30, top: 44, left: 0, right: 0, marginTop: 6, background: 'var(--white)', border: '1px solid var(--border-hairline)', boxShadow: 'var(--shadow-4)', borderRadius: 'var(--radius-field)', maxHeight: 280, overflowY: 'auto' }}>
+          {query.trim().length >= 2 ? (
+            isFetching ? (
+              <div style={{ padding: '14px', font: 'var(--type-caption)', color: 'var(--text-muted)', textAlign: 'center' }}>Đang tìm…</div>
+            ) : results.length === 0 ? (
+              <div style={{ padding: '14px', font: 'var(--type-caption)', color: 'var(--text-muted)', textAlign: 'center' }}>Không tìm thấy biển phù hợp</div>
+            ) : results.map((p) => {
+              const { prov, seri, num } = splitPlateNumber(p.plateNumber);
+              return (
+                <button key={p.id} type="button" onClick={() => pick(p)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', borderBottom: '1px solid var(--surface-sunken)', background: 'none', cursor: 'pointer' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
+                  <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                  <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
+                </button>
+              );
+            })
+          ) : (
+            <>
+              <div style={{ padding: '8px 12px', font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Tra cứu gần đây</div>
+              {historyItems.map((p) => {
+                const { prov, seri, num } = splitPlateNumber(p.plateNumber);
+                return (
+                  <button key={p.id} type="button" onClick={() => pick(p)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', borderBottom: '1px solid var(--surface-sunken)', background: 'none', cursor: 'pointer' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
+                    <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                    <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -96,11 +150,11 @@ function FavSuggestions({ favCards, excludeIds, onAdd }) {
           const { prov, seri, num } = splitPlateNumber(p.plateNumber);
           return (
             <button key={p.id} type="button" onClick={() => onAdd(p.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)', background: 'var(--white)', cursor: 'pointer' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)', background: 'var(--white)', cursor: 'pointer' }}>
               {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
-                <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 40, height: 22, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 72, height: 39, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
               ) : (
-                <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                <PlateVisual size="md" prov={prov} seri={seri} num={num} />
               )}
               <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
             </button>

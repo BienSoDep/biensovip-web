@@ -6,6 +6,7 @@ import { Badge } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Button from '../../components/Button.jsx';
 import { loadAuth } from '../../lib/authStore.js';
+import { toZaloUrl } from '../../lib/zaloMessage.js';
 
 const STATUS_TABS = [['all', 'Tất cả'], ['unassigned', 'Chưa nhận'], ['mine', 'Của tôi'], ['contacted', 'Đã liên hệ']];
 const SIGNAL_LABEL = { favorited: 'Đã thả tim', repeat_view: 'Xem nhiều lần' };
@@ -89,7 +90,7 @@ export default function AdminInterestLeads({ notify }) {
                       <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                         {lead.userPhone}
                         <a href={`tel:${lead.userPhone}`} aria-label={`Gọi ${lead.userPhone}`} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={13} /></a>
-                        <a href={`https://zalo.me/${lead.userPhone}`} target="_blank" rel="noreferrer" aria-label="Chat Zalo" style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={13} /></a>
+                        <a href={toZaloUrl(lead.userPhone)} target="_blank" rel="noreferrer" aria-label="Chat Zalo" style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={13} /></a>
                       </span>
                     )}
                   </span>

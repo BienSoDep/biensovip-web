@@ -1,21 +1,29 @@
 import { useEffect } from 'react';
 import { Server } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import ContactChannelList from '../components/ContactChannelList.jsx';
 
-export default function ServerError({ go }) {
+export default function ServerError({ go, notify }) {
   useEffect(() => { document.title = 'Lỗi hệ thống · Biensovip'; }, []);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 'var(--space-5)', padding: 'var(--pad-page)', textAlign: 'center', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ width: 72, height: 72, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Server size={32} style={{ color: 'var(--text-muted)' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 'var(--space-8)', padding: 'var(--pad-page)', textAlign: 'center', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-5)' }}>
+        <div style={{ width: 72, height: 72, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Server size={32} style={{ color: 'var(--text-muted)' }} />
+        </div>
+        <div>
+          <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', color: 'var(--text-strong)' }}>500 — Lỗi hệ thống</h1>
+          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Đã có lỗi xảy ra. Vui lòng thử lại sau ít phút.</p>
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+          <Button variant="primary" size="md" onClick={() => window.location.reload()}>Thử lại</Button>
+          <Button variant="outline" size="md" onClick={go('home')}>Về trang chủ</Button>
+        </div>
       </div>
-      <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', color: 'var(--text-strong)' }}>500 — Lỗi hệ thống</h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Đã có lỗi xảy ra. Vui lòng thử lại sau ít phút.</p>
-      </div>
-      <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-        <Button variant="primary" size="md" onClick={() => window.location.reload()}>Thử lại</Button>
-        <Button variant="outline" size="md" onClick={go('home')}>Về trang chủ</Button>
+
+      <div style={{ width: '100%', maxWidth: 560 }}>
+        <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trong lúc chờ hệ thống ổn định, bạn có thể liên hệ shop trực tiếp:</p>
+        <ContactChannelList notify={notify} zaloSource="500_page" />
       </div>
     </div>
   );

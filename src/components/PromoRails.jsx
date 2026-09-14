@@ -40,7 +40,14 @@ function PlateRail({ openPlate }) {
   const { data } = useFeaturedPlates(6);
   const items = data || [];
   if (!wide || !items.length || !openPlate) return null;
-  return <aside className="promo-rail promo-rail--left">{items.map((p) => <PlateRailItem key={p.id} plate={p} openPlate={openPlate} />)}</aside>;
+  return (
+    <aside className="promo-rail promo-rail--left">
+      <div className="promo-rail__track">
+        {items.map((p) => <PlateRailItem key={p.id} plate={p} openPlate={openPlate} />)}
+        {items.map((p) => <PlateRailItem key={`dup-${p.id}`} plate={p} openPlate={openPlate} />)}
+      </div>
+    </aside>
+  );
 }
 
 function TikTokRail() {
@@ -64,7 +71,14 @@ function TikTokRail() {
     </div>
   );
 
-  return <aside className="promo-rail promo-rail--right">{items.map(renderItem)}</aside>;
+  return (
+    <aside className="promo-rail promo-rail--right">
+      <div className="promo-rail__track">
+        {items.map(renderItem)}
+        {items.map((v) => renderItem({ ...v, id: `dup-${v.id}` }))}
+      </div>
+    </aside>
+  );
 }
 
 // Rail trái: biển nổi bật thật (liên quan trực tiếp mục đích mua hàng) — trước đây trùng TikTok với

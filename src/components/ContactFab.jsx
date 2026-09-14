@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Phone, X, MessageCircle } from 'lucide-react';
 import { content } from '../lib/content/index.js';
 import { logZaloClick } from '../services/zaloClicks.js';
+import { toZaloUrl } from '../lib/zaloMessage.js';
 import ZaloIcon from './ZaloIcon.jsx';
 import FacebookIcon from './FacebookIcon.jsx';
 
@@ -14,7 +15,7 @@ export default function ContactFab({ zalo, phone }) {
   const fbUrl = content.info.facebook_url;
 
   const items = [
-    zaloNumber && { key: 'zalo', label: 'Zalo', bg: '#0068FF', Icon: ZaloIcon, href: `https://zalo.me/${zaloNumber}`, onClick: () => logZaloClick(null, 'contact_fab') },
+    zaloNumber && { key: 'zalo', label: 'Zalo', bg: '#0068FF', Icon: ZaloIcon, href: toZaloUrl(zaloNumber), onClick: () => logZaloClick(null, 'contact_fab') },
     phoneNumber && { key: 'phone', label: 'Gọi điện', bg: 'var(--status-success-ink)', Icon: Phone, href: `tel:${phoneNumber}` },
     fbUrl && { key: 'facebook', label: 'Facebook', bg: '#1877F2', Icon: FacebookIcon, href: fbUrl, external: true },
   ].filter(Boolean);

@@ -696,11 +696,11 @@ export default function App() {
 
           {maintenanceActive ? (
             <Suspense fallback={<PageSkeleton screen={s} />}>
-              <MaintenancePage info={maintenanceActive} go={go} contact={contact} />
+              <MaintenancePage info={maintenanceActive} go={go} notify={notify} />
             </Suspense>
           ) : (
           <Suspense fallback={<PageSkeleton screen={s} />}>
-            {s === 'home' && <Home settings={st.settings} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} contact={contact} />}
+            {s === 'home' && <Home settings={st.settings} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} contact={contact} user={st.user} />}
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
@@ -752,7 +752,7 @@ export default function App() {
 
             {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} user={st.user} />}
 
-            {s === 'notfound' && <NotFound go={go} />}
+            {s === 'notfound' && <NotFound go={go} notify={notify} />}
 
             {isAdminShell && (
               <RequireAuth st={st} go={go}>

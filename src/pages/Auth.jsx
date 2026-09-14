@@ -11,8 +11,8 @@ import { useGoogleLogin, useGoogleConfirmLink } from '../services/googleAuth.js'
 import { routeFor } from '../config/routes.js';
 import { useFeaturedPlates } from '../services/plates.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { toZaloUrl } from '../lib/zaloMessage.js';
 
-const SWAP_TRANSITION = { type: 'spring', stiffness: 90, damping: 20, mass: 1 };
 const CONTENT_FADE = { duration: 0.3, ease: [0.22, 1, 0.36, 1] };
 
 const LAST_EMAIL_KEY = 'bsd_last_email';
@@ -160,17 +160,13 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
   const plate = plates[plateIdx % (plates.length || 1)];
   const goPlateDetail = plate ? (e) => { e.preventDefault(); openPlate?.(plate.id); go('detail')(); } : undefined;
 
-  // Register swaps the two blocks (info panel goes right, form goes left) — order is animated by
-  // framer-motion's layout prop so the swap reads as a slide rather than an instant jump.
-  const infoOrder = s === 'register' ? 2 : 1;
-  const formOrder = s === 'register' ? 1 : 2;
-  // The curved edge always faces the form panel, so it has to flip sides along with the swap.
-  const infoRadius = s === 'register' ? '48px 0 0 48px' : '0 48px 48px 0';
-
+  // Trước đây login/register đổi chỗ 2 cột (order + bo góc lật theo framer-motion layout) — gây khó
+  // theo dõi vì cả bố cục trang nhảy sang bên khác mỗi lần đổi form. Giờ info panel cố định bên trái,
+  // form cố định bên phải; chỉ nội dung BÊN TRONG mỗi panel đổi (vẫn giữ animation fade/slide cũ).
   return (
     <section style={{ minHeight: '100vh', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ minHeight: '100vh', display: 'flex', flexWrap: 'wrap' }}>
-        <motion.div className="auth-info" layout transition={SWAP_TRANSITION} style={{ order: infoOrder, zIndex: 1, position: 'relative', flex: '1 1 420px', background: 'var(--surface-hero)', borderRadius: infoRadius, padding: 'clamp(28px,4vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 'var(--space-8)', minHeight: '100vh' }}>
+        <div className="auth-info" style={{ zIndex: 1, position: 'relative', flex: '1 1 420px', background: 'var(--surface-hero)', borderRadius: '0 48px 48px 0', padding: 'clamp(28px,4vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 'var(--space-8)', minHeight: '100vh' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
               <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 38, height: 38, objectFit: 'contain' }} />
@@ -191,7 +187,7 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
                 transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textDecoration: 'none', cursor: 'pointer' }}
               >
-                <div style={{ width: 'clamp(200px, 22vw, 260px)', filter: 'drop-shadow(0 18px 32px rgba(0,0,0,.18))' }}>
+                <div style={{ width: 'clamp(260px, 30vw, 340px)', filter: 'drop-shadow(0 18px 32px rgba(0,0,0,.18))' }}>
                   <PlateVisual size="lg" {...splitPlateNumber(plate.plateNumber)} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center' }}>
@@ -242,8 +238,8 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
                 style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>3.240 biển số · Cập nhật mỗi ngày · Đà Nẵng</motion.span>
             )}
           </AnimatePresence>
-        </motion.div>
-        <motion.div layout transition={SWAP_TRANSITION} style={{ order: formOrder, flex: '1 1 420px', background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,4vw,64px)', minHeight: '100vh' }}>
+        </div>
+        <div style={{ flex: '1 1 420px', background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,4vw,64px)', minHeight: '100vh' }}>
           <AnimatePresence mode="wait">
           <motion.div key={`${s}-${otpMode ? 'otp' : 'std'}`}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={CONTENT_FADE}
@@ -289,7 +285,7 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
                     <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-danger-ink)' }}>Tài khoản của bạn đã bị khóa</span>
                     <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger-ink)' }}>{st.aErr.lockedReason}</span>
                     {zalo && (
-                      <a href={`https://zalo.me/${zalo}`} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'none' }}>
+                      <a href={toZaloUrl(zalo)} target="_blank" rel="noopener noreferrer" style={{ alignSelf: 'flex-start', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'none' }}>
                         Liên hệ bộ phận hỗ trợ qua Zalo →
                       </a>
                     )}
@@ -396,7 +392,7 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
             )}
           </motion.div>
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
 
       <Modal open={!!googleLinkPending} onClose={() => setGoogleLinkPending(null)} title="Xác nhận liên kết Google" maxWidth="420px">

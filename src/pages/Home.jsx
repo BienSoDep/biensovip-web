@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
-import { MessageCircle, Phone, SearchX } from 'lucide-react';
+import { SearchX } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { SearchField, Badge, Eyebrow, Input } from '../components/index.jsx';
+import { SearchField, Badge, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
+import ContactChannelList from '../components/ContactChannelList.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { contentGet } from '../lib/content/index.js';
@@ -15,10 +15,10 @@ import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import EmailCapture from '../components/EmailCapture.jsx';
 import { trackViewItemList, trackSelectItem } from '../services/tracking/events.js';
 import { routeFor } from '../config/routes.js';
-import { useSubmitContact } from '../services/contactService.js';
-import { validatePhone, normalizePhone } from '../lib/phone.js';
+import ContactRequestForm from '../components/ContactRequestForm.jsx';
 import { useSiteRating } from '../services/siteRating.js';
 import { useActivityFeed } from '../services/activityFeed.js';
+import { toZaloUrl } from '../lib/zaloMessage.js';
 
 // Debounce a value — waits `delay`ms of silence before committing, so typing doesn't fire
 // a request per keystroke. Pure client-side; React Query then caches each committed value.
@@ -31,7 +31,7 @@ function useDebounced(value, delay = 300) {
   return debounced;
 }
 
-export default function Home({ settings, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact }) {
+export default function Home({ settings, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact, user }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Tất cả');
   const stagger = useStaggeredReveal();
@@ -65,36 +65,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
     if (!displayLoading && displayItems.length > 0) trackViewItemList('home_featured', displayItems);
   }, [displayLoading, displayItems]);
 
-  const submitContact = useSubmitContact();
-  const [cForm, setCForm] = useState({ fullName: '', phone: '', note: '' });
   const zalo = (settings?.zalo || '').replace(/[^0-9]/g, '');
-  const hotline = settings?.phone || '';
-
-  const handleContactSubmit = () => {
-    if (!cForm.fullName.trim() || !cForm.phone.trim()) {
-      toast.error('Vui lòng nhập họ tên và số điện thoại.');
-      return;
-    }
-    if (!validatePhone(cForm.phone)) {
-      toast.error('Số điện thoại chưa đúng định dạng.');
-      return;
-    }
-    submitContact.mutate({
-      fullName: cForm.fullName.trim(),
-      phone: normalizePhone(cForm.phone),
-      plateId: null,
-      note: cForm.note.trim() || null,
-      source: 'home-page',
-      intent: 'inquiry',
-      honeypot: null,
-    }, {
-      onSuccess: () => {
-        toast.success('Đã gửi yêu cầu, chúng tôi sẽ liên hệ trong thời gian sớm nhất!');
-        setCForm({ fullName: '', phone: '', note: '' });
-      },
-      onError: (err) => toast.error(err?.message || 'Gửi thất bại, vui lòng thử lại.'),
-    });
-  };
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -106,7 +77,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
             <p className="hero-desc" style={{ margin: 0, maxWidth: 'var(--width-prose)', font: 'var(--type-body)', color: 'var(--text-body)' }}>{T('home.hero.desc')}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }} className="hero-cta-row">
               <Button variant="primary" size="lg" uppercase onClick={go('list')}>{T('home.hero.cta_list')}</Button>
-              <Button variant="outline" size="lg" onClick={() => { window.open(`https://zalo.me/${zalo}`, '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
+              <Button variant="outline" size="lg" onClick={() => { window.open(toZaloUrl(zalo), '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
             </div>
             {feedItems.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
@@ -260,32 +231,20 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
         </section>
       )}
 
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)' }}>
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-surface)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'clamp(28px,4vw,52px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)' }}>
-          <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-            <Eyebrow tone="blue">{T('home.contact.eyebrow')}</Eyebrow>
-            <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.contact.title')}</h2>
-            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{T('home.contact.desc')}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', paddingTop: 'var(--space-2)' }}>
-              <Button variant="primary" size="lg" onClick={() => { window.open(`https://zalo.me/${zalo}`, '_blank'); notify(T('home.hero.zalo_notify')); }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><MessageCircle size={18} />{T('home.contact.zalo_cta')}</span>
-              </Button>
-              {hotline && (
-                <a href={`tel:${hotline.replace(/[^0-9]/g, '')}`} style={{ textDecoration: 'none' }}>
-                  <Button variant="outline" size="lg"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}><Phone size={18} />{hotline}</span></Button>
-                </a>
-              )}
-            </div>
-          </div>
-          <div style={{ flex: '1 1 320px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <Eyebrow tone="blue">{T('home.contact.eyebrow')}</Eyebrow>
+          <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.contact.title')}</h2>
+          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{T('home.contact.desc')}</p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+          <ContactChannelList notify={notify} zaloSource="home_page" />
+          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <div>
               <h3 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{T('home.contact.form_title')}</h3>
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{T('home.contact.form_sub')}</p>
             </div>
-            <Input label={T('home.contact.name')} placeholder="Nguyễn Văn A" value={cForm.fullName} onChange={(e) => setCForm((f) => ({ ...f, fullName: e.target.value }))} />
-            <Input label={T('home.contact.phone')} placeholder="09xx xxx xxx" value={cForm.phone} onChange={(e) => setCForm((f) => ({ ...f, phone: e.target.value }))} />
-            <textarea rows={3} placeholder={T('home.contact.note')} value={cForm.note} onChange={(e) => setCForm((f) => ({ ...f, note: e.target.value }))} style={{ background: 'var(--white)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
-            <Button variant="primary" size="lg" fullWidth onClick={handleContactSubmit} disabled={submitContact.isPending}>{submitContact.isPending ? T('home.contact.sending') : T('home.contact.submit')}</Button>
+            <ContactRequestForm user={user} source="home-page" compact />
           </div>
         </div>
       </section>

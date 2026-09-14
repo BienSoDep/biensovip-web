@@ -25,7 +25,7 @@ import { content } from '../lib/content/index.js';
 import LazyImage from '../components/LazyImage.jsx';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import { maskName } from '../lib/textMask.js';
-import { buildConsultMessage, buildCtvPlateInviteMessage } from '../lib/zaloMessage.js';
+import { buildConsultMessage, buildCtvPlateInviteMessage, toZaloUrl } from '../lib/zaloMessage.js';
 import { useCreatePlateLink } from '../services/collaborators.js';
 import toast from 'react-hot-toast';
 
@@ -371,7 +371,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <LinkButton href={`tel:${plate.seller.phone}`} variant="outline" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 120px' }}>Gọi ngay</LinkButton>
             )}
             {plate.seller?.zalo && (
-              <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { navigator.clipboard?.writeText(buildConsultMessage(plate.plateNumber)).then(() => notify('Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra')).catch(() => {}); logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
+              <LinkButton href={toZaloUrl(plate.seller.zalo)} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { navigator.clipboard?.writeText(buildConsultMessage(plate.plateNumber)).then(() => notify('Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra')).catch(() => {}); logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
             )}
             <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
             <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
@@ -567,7 +567,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
           <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 0' }}>Gọi ngay</LinkButton>
         )}
         {plate.seller?.zalo && (
-          <LinkButton href={`https://zalo.me/${plate.seller.zalo}`} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { navigator.clipboard?.writeText(buildConsultMessage(plate.plateNumber)).then(() => notify('Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra')).catch(() => {}); logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 0' }}>Zalo</LinkButton>
+          <LinkButton href={toZaloUrl(plate.seller.zalo)} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { navigator.clipboard?.writeText(buildConsultMessage(plate.plateNumber)).then(() => notify('Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra')).catch(() => {}); logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 0' }}>Zalo</LinkButton>
         )}
         {!sold && (
           <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 0' }}>Chốt biển này</Button>

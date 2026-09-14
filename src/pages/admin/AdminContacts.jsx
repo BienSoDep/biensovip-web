@@ -18,6 +18,7 @@ import Button from '../../components/Button.jsx';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { routeFor } from '../../config/routes.js';
 import { loadAuth } from '../../lib/authStore.js';
+import { toZaloUrl } from '../../lib/zaloMessage.js';
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: 'var(--accent-orange-ink)', buy: 'var(--blue-700)', hunting: 'var(--accent-purple-ink)' };
@@ -226,7 +227,7 @@ export default function AdminContacts({ notify, go, st }) {
               <span data-label="Điện thoại" style={{ flex: '1 1 88px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                 {c.phone}
                 <a href={`tel:${c.phone}`} aria-label={`Gọi ${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={14} /></a>
-                <a href={`https://zalo.me/${c.phone}`} target="_blank" rel="noreferrer" aria-label="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
+                <a href={toZaloUrl(c.phone)} target="_blank" rel="noreferrer" aria-label="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
               </span>
               <span data-label="Biển quan tâm" style={{ flex: '1 1 100px' }}>
                 {parsed.num ? <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} /> : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}

@@ -1,5 +1,12 @@
 import toast from 'react-hot-toast';
 
+// zalo.me/<số> chỉ mở thẳng khung chat khi số ở định dạng quốc tế không số 0 đầu (84xxx…) —
+// số 0xxx nội địa bị Zalo coi không hợp lệ, fallback về trang đăng nhập QR chung thay vì
+// đúng người dùng (báo lỗi thực tế 14/09/2026, lỗi lặp lại ở mọi nút Nhắn Zalo trong site).
+export function toZaloUrl(rawPhone) {
+  return `https://zalo.me/${String(rawPhone).replace(/\D/g, '').replace(/^0/, '84')}`;
+}
+
 // Zalo không có tham số URL chính thức để tự điền sẵn tin nhắn (khác WhatsApp
 // ?text=) — copy tin nhắn vào clipboard trước khi mở link, khách chỉ cần dán
 // (Ctrl+V) khi khung chat mở ra. Giúp admin xác định đúng biển khách hỏi.
@@ -23,7 +30,7 @@ export async function openZaloWithMessage(zaloPhone, message) {
   } catch {
     /* clipboard API có thể bị chặn (không phải HTTPS, quyền bị từ chối) — vẫn mở Zalo bình thường */
   }
-  window.open(`https://zalo.me/${zaloPhone}`, '_blank', 'noopener,noreferrer');
+  window.open(toZaloUrl(zaloPhone), '_blank', 'noopener,noreferrer');
 }
 
 // Desktop không có handler xử lý tel: (trình duyệt desktop không mở app gọi điện nào) — bấm không

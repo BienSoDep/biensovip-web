@@ -2,6 +2,7 @@ import { contentGet } from '../lib/content/index.js';
 import { routeFor, parseRoute, PROVINCE_LANDINGS, PLATE_TYPE_LANDINGS } from '../config/routes.js';
 import EmailCapture from '../components/EmailCapture.jsx';
 import { DEFAULT_CONTACT } from '../common/constants.js';
+import { toZaloUrl } from '../lib/zaloMessage.js';
 
 // UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: thông tin doanh nghiệp thật.
 // Footer link href sinh từ routeFor() để không lệch slug (vd lucky: alias cũ tu-van → hop-menh).
@@ -85,7 +86,7 @@ export default function Footer({ settings, patch }) {
 
         <div style={{ flex: '1 1 240px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 'var(--space-5)', alignContent: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.hotline')}</span><a href={`tel:${phone}`} style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{phoneDisplay}</a></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.zalo_oa')}</span><a href={`https://zalo.me/${zalo}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', wordBreak: 'break-all' }}>zalo.me/{zalo}</a></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.zalo_oa')}</span><a href={toZaloUrl(zalo)} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', wordBreak: 'break-all' }}>zalo.me/{zalo}</a></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.address')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.address_value')}</span></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}><span style={navStyle}>{T('common.footer.hours')}</span><span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{T('common.footer.hours_value')}</span></div>
         </div>
