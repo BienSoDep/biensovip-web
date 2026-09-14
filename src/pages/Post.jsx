@@ -140,7 +140,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const midPlate = relatedPlates[0];
   const illustrationUrl = post ? pickIllustration(post.slug, post.coverImageUrl) : null;
   // Alt mô tả ảnh theo nhóm chủ đề, không lặp tiêu đề bài (tránh nhồi từ khóa vào alt).
-  const postImageAlt = `${CATEGORY_LABEL[post.category] || 'Biển số đẹp'} — ảnh minh họa bài viết`;
+  const postImageAlt = `${CATEGORY_LABEL[post?.category] || 'Biển số đẹp'} — ảnh minh họa bài viết`;
   const { sizeIdx, setSizeIdx, fontId, setFontId, fontSize, fontFamily } = useReaderPrefs();
   const articleBodyVars = { '--article-font-size': `${fontSize}px`, '--article-font-family': fontFamily };
 
