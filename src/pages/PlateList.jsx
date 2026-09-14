@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { SlidersHorizontal, X, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { SlidersHorizontal, X, LayoutGrid, List as ListIcon, Bike, Car } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Select, Checkbox, Radio, Input, Icon, SearchField } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
+import Pagination from '../components/Pagination.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useCategories } from '../services/categories.js';
@@ -247,26 +248,37 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           ...(activeType ? [{ label: activeType.name }] : []),
         ]} />
       )}
+      <div className="">
+        
+      </div>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
         <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
       </section>
-      {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển. */}
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-2)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        <button type="button" aria-pressed={!filters.vehicle} onClick={() => setFilter({ vehicle: '' })}
-          style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: !filters.vehicle ? 'var(--fw-bold)' : 'var(--fw-medium)', background: !filters.vehicle ? 'var(--action-primary)' : 'var(--surface-sunken)', color: !filters.vehicle ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: !filters.vehicle ? 'none' : 'var(--shadow-inset-hairline)' }}>
-          Tất cả loại xe
-        </button>
-        {(vehicleTypes?.items || []).map((v) => {
-          const active = filters.vehicle === v.id;
-          return (
-            <button key={v.id} type="button" aria-pressed={active} onClick={() => setFilter({ vehicle: active ? '' : v.id })}
-              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--surface-sunken)', color: active ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)' }}>
-              {v.name}
-            </button>
-          );
-        })}
+      {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển.
+          Track 2 icon bo góc nhẹ thay vì pill tròn rời — build từ vehicleTypes.items nên vẫn không crash
+          nếu admin thêm loại xe thứ 3, chỉ mất hiệu ứng "2 ô cạnh nhau" đẹp. */}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-2)' }}>
+        <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-lg)', padding: 3, boxShadow: 'var(--shadow-inset-hairline)', gap: 3 }}>
+          {(vehicleTypes?.items || []).map((v) => {
+            const active = filters.vehicle === v.id;
+            const Icon = v.name === 'Xe máy' ? Bike : Car;
+            return (
+              <button key={v.id} type="button" aria-pressed={active} onClick={() => setFilter({ vehicle: active ? '' : v.id })}
+                style={{
+                  height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-md)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                  font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                  background: active ? 'var(--action-primary)' : 'transparent', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                  transition: 'background-color 160ms var(--ease-standard), color 160ms var(--ease-standard)',
+                }}>
+                <Icon size={16} />
+                {v.name}
+              </button>
+            );
+          })}
+        </div>
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
         <button type="button" aria-pressed={filters.cat.length === 0} onClick={() => setFilter({ cat: [] })}
@@ -510,11 +522,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-4) 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải thêm…</div>
           )}
           {!useInfinite && totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)', paddingTop: 'var(--space-3)' }}>
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => goToPage(Math.max(1, page - 1))}>Trước</Button>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {page} / {totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => goToPage(Math.min(totalPages, page + 1))}>Sau</Button>
-            </div>
+            <Pagination page={page} totalPages={totalPages} onChange={goToPage} style={{ paddingTop: 'var(--space-3)' }} />
           )}
         </div>
       </section>

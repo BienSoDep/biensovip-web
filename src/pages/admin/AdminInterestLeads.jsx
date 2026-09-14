@@ -5,6 +5,7 @@ import { formatDate } from '../../lib/date.js';
 import { Badge } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Button from '../../components/Button.jsx';
+import Pagination from '../../components/Pagination.jsx';
 import { loadAuth } from '../../lib/authStore.js';
 import { toZaloUrl } from '../../lib/zaloMessage.js';
 
@@ -129,11 +130,7 @@ export default function AdminInterestLeads({ notify }) {
         </div>
 
         {totalPages > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)' }}>
-            <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Trước</Button>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Trang {page} / {totalPages}</span>
-            <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Sau →</Button>
-          </div>
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" style={{ padding: 'var(--space-3)' }} />
         )}
       </div>
     </div>

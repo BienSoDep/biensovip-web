@@ -12,6 +12,7 @@ import { useAdminCategories } from '../../services/categories.js';
 import { Select, IconButton, SearchField, InfoTip, Input, Checkbox } from '../../components/index.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 import Button from '../../components/Button.jsx';
+import Pagination from '../../components/Pagination.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import Modal from '../../components/Modal.jsx';
@@ -157,17 +158,6 @@ const num = (v) => Number(String(v ?? '').replace(/[^\d]/g, '') || 0);
 const isNewPlate = (p) => !!p.createdAt && (Date.now() - new Date(p.createdAt).getTime()) < 7 * 24 * 3600 * 1000;
 
 // Windowed pagination: first, current±1, last, with ellipsis (null) between gaps.
-function pageWindow(page, total) {
-  const pages = new Set([1, total, page - 1, page, page + 1].filter((p) => p >= 1 && p <= total));
-  const sorted = [...pages].sort((a, b) => a - b);
-  const out = [];
-  for (let i = 0; i < sorted.length; i++) {
-    if (i > 0 && sorted[i] - sorted[i - 1] > 1) out.push(null);
-    out.push(sorted[i]);
-  }
-  return out;
-}
-
 const ERR_MSG = {
   DUPLICATE: 'Trùng biển',
   INVALID_PROVINCE: 'Sai tỉnh',
@@ -1235,26 +1225,7 @@ export default function AdminPlates({ go, notify, st }) {
 
       {/* Pagination — prev/next + windowed pages */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}
-            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', cursor: page <= 1 ? 'default' : 'pointer', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: page <= 1 ? 'var(--grey-300)' : 'var(--text-body)' }}>
-            ‹ Trước
-          </button>
-          {pageWindow(page, totalPages).map((p, idx) =>
-            p === null
-              ? <span key={`e${idx}`} style={{ color: 'var(--text-faint)', font: 'var(--type-caption)' }}>…</span>
-              : <button key={p} type="button" onClick={() => setPage(p)}
-                  style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-caption)',
-                    background: p === page ? 'var(--action-primary)' : 'var(--surface-sunken)',
-                    color: p === page ? 'var(--white)' : 'var(--text-body)', fontWeight: p === page ? 'var(--fw-bold)' : 'var(--fw-medium)' }}>
-                  {p}
-                </button>
-          )}
-          <button type="button" disabled={page >= totalPages} onClick={() => setPage(page + 1)}
-            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', cursor: page >= totalPages ? 'default' : 'pointer', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: page >= totalPages ? 'var(--grey-300)' : 'var(--text-body)' }}>
-            Sau ›
-          </button>
-        </div>
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />
       )}
 
       {/* Bulk action bar — floats above table when plates are selected */}

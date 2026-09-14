@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../../components/Button.jsx';
+import Pagination from '../../components/Pagination.jsx';
 import { Select, Badge } from '../../components/index.jsx';
 import { useRiskEvents, useResolveRiskEvent, useFlaggedCollaborators, useResolveCollaboratorFlags } from '../../services/adminRisk.js';
 import { formatDate } from '../../lib/date.js';
@@ -129,11 +130,7 @@ export default function AdminRiskLog({ notify }) {
       )}
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center' }}>
-          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</button>
-          <span style={{ font: 'var(--type-caption)' }}>{page}/{totalPages}</span>
-          <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Sau</button>
-        </div>
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />
       )}
     </div>
   );

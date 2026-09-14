@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Select, Badge } from '../../components/index.jsx';
+import Pagination from '../../components/Pagination.jsx';
 import { useAdminErrorLogs } from '../../services/adminErrorLogs.js';
 import { formatDate } from '../../lib/date.js';
 
@@ -51,11 +52,7 @@ export default function AdminErrorLogs() {
       )}
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center' }}>
-          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} style={{ border: 'none', background: 'none', cursor: page <= 1 ? 'default' : 'pointer', color: page <= 1 ? 'var(--text-faint)' : 'var(--link)' }}>Trước</button>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Trang {page}/{totalPages}</span>
-          <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} style={{ border: 'none', background: 'none', cursor: page >= totalPages ? 'default' : 'pointer', color: page >= totalPages ? 'var(--text-faint)' : 'var(--link)' }}>Sau</button>
-        </div>
+        <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />
       )}
     </div>
   );

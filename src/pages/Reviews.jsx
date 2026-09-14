@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Star, ThumbsUp } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import Pagination from '../components/Pagination.jsx';
 import { Avatar } from '../components/index.jsx';
 import { usePlates } from '../services/plates.js';
 import { usePlateReviews, useCreateReview } from '../services/reviewService.js';
@@ -142,11 +143,7 @@ export default function Reviews({ notify, go }) {
           )}
 
           {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)' }}>
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Trước</Button>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {page} / {totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Sau</Button>
-            </div>
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
           )}
         </>
       )}

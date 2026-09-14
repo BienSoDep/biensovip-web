@@ -28,7 +28,7 @@ export default function PlateCard({
 
   if (layout === 'row') {
     return (
-      <Card tone="sunken" pad="10px" style={{ ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : null), ...style }}>
+      <Card tone="sunken" pad="10px" style={{ background: 'var(--surface-muted)', ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : null), ...style }}>
         <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer' }}>
           <div style={{ position: 'relative', flexShrink: 0, width: 108, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--white)' }}>
             {showThumbnail ? (
@@ -80,6 +80,7 @@ export default function PlateCard({
       pad="10px"
       style={{
         height: '100%',
+        background: 'var(--surface-muted)',
         ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : null),
         ...style,
       }}

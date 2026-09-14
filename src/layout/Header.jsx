@@ -125,7 +125,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{T('common.brand.tagline_header')}</span>
           </div>
         </a>
-        <nav ref={navRef} className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', gap: 'var(--space-3)', marginLeft: 'var(--space-6)', overflowX: 'auto', scrollbarWidth: 'none', minWidth: 0 }}>
+        <nav ref={navRef} className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', gap: 'var(--space-3)', marginLeft: 'var(--space-6)', overflowX: 'auto', overflowY: 'visible', padding: '3px 3px 3px 0', scrollbarWidth: 'none', minWidth: 0 }}>
           {nav.map(([key, label, Icon]) => (
             <NavBtn key={key} onClick={go(String(key))} aria-current={s === key ? 'page' : undefined} {...pill(s === key)}>
               {Icon && <Icon size={15} style={{ flexShrink: 0 }} />}

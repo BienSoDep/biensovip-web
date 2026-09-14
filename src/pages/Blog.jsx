@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Search } from 'lucide-react';
 import LazyImage from '../components/LazyImage.jsx';
 import Button from '../components/Button.jsx';
+import Pagination from '../components/Pagination.jsx';
 import PostCardSkeleton from '../components/skeletons/PostCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useBlogPosts } from '../services/blog.js';
@@ -150,11 +151,7 @@ export default function Blog({ patch }) {
               ))}
             </div>
             {!isFiltering && totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)', paddingTop: 'var(--space-4)' }}>
-                <Button variant="outline" size="md" disabled={page <= 1 || isFetching} onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>← Trước</Button>
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {page}/{totalPages}</span>
-                <Button variant="outline" size="md" disabled={page >= totalPages || isFetching} onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Sau →</Button>
-              </div>
+              <Pagination page={page} totalPages={totalPages} onChange={(n) => { if (isFetching) return; setPage(n); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ paddingTop: 'var(--space-4)' }} />
             )}
           </>
         )}
