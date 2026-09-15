@@ -867,7 +867,7 @@ textarea,
     grid-template-columns: 1fr !important;
   }
   .plate-grid.view-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: var(--space-3) !important;
   }
   /* Danh sách: ẩn hành động phụ (lưu tìm kiếm, toggle cuộn) để giữ trọng tâm view/sắp xếp */
