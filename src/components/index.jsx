@@ -175,12 +175,12 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
   const boxFocus = { onFocus: () => setFocused(true), onBlur: () => setFocused(false) };
 
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: '1 1 220px' }}>
       {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
       <span
         id={inputId}
         style={{
-          display: 'flex', alignItems: 'center', gap: 6, height: 40, width: '100%',
+          display: 'flex', alignItems: 'center', gap: 6, height: 40, width: '100%', minWidth: 0,
           borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)',
           boxShadow: error ? 'inset 0 0 0 1.5px var(--status-danger)' : focused ? 'inset 0 0 0 1.5px var(--action-primary)' : 'var(--shadow-inset-hairline)',
           padding: '0 14px',
@@ -188,11 +188,11 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={errId}
       >
-        <input ref={dRef} className="date-vn-input" inputMode="numeric" placeholder="ngày" value={d || ''} onChange={onDay} {...boxFocus} style={{ ...boxStyle, flex: '1 1 0' }} />
+        <input ref={dRef} className="date-vn-input" inputMode="numeric" placeholder="ngày" value={d || ''} onChange={onDay} {...boxFocus} style={{ ...boxStyle, flex: '1 1 0', minWidth: 0 }} />
         <span style={{ color: 'var(--text-faint)' }}>/</span>
-        <input ref={mRef} className="date-vn-input" inputMode="numeric" placeholder="tháng" value={m || ''} onChange={onMonth} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0' }} />
+        <input ref={mRef} className="date-vn-input" inputMode="numeric" placeholder="tháng" value={m || ''} onChange={onMonth} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0', minWidth: 0 }} />
         <span style={{ color: 'var(--text-faint)' }}>/</span>
-        <input ref={yRef} className="date-vn-input" inputMode="numeric" placeholder="năm" value={y || ''} onChange={onYear} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0' }} />
+        <input ref={yRef} className="date-vn-input" inputMode="numeric" placeholder="năm" value={y || ''} onChange={onYear} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0', minWidth: 0 }} />
       </span>
       {error ? <span id={errId} role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{error}</span>
         : hint ? <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{hint}</span> : null}
