@@ -27,6 +27,16 @@ body,
 #root {
   height: 100%;
 }
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+.compare-mobile-cards { display: none; }
+@media (max-width: 767px) {
+  .compare-mobile-cards { display: flex; }
+  .compare-desktop-table { display: none; }
+}
 .select-item[data-highlighted] {
   background: var(--surface-sunken);
 }

@@ -403,10 +403,71 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          {/* Mobile (<768px): thẻ xếp dọc mỗi biển 1 khối, thuộc tính liệt kê nhãn/giá trị theo hàng —
+              thay bảng cuộn ngang vốn khó đọc trên màn hẹp. Desktop vẫn dùng bảng ngang bên dưới
+              (ẩn qua CSS class compare-mobile-cards / compare-desktop-table, xem app.css). */}
+          <div className="compare-mobile-cards" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            {plates.map((p) => {
+              const { prov, seri, num } = splitPlateNumber(p.plateNumber);
+              const sold = p.status === 'sold';
+              const phone = p.seller?.phone, zalo = p.seller?.zalo;
+              const plateFengShuiRows = fengShuiRows.map((row) => ({ label: row.label, value: row.values.find((v) => v.id === p.id) }));
+              return (
+                <div key={p.id} style={{ border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+                  <div style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--orange-50)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', position: 'relative' }}>
+                    <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" title="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 6, right: 6, border: '1px solid var(--border-hairline)', background: 'var(--white)', boxShadow: 'var(--shadow-1)', borderRadius: '50%', cursor: 'pointer', color: 'var(--text-muted)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                    {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
+                      <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 96, height: 52, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
+                    ) : (
+                      <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
+                      <button onClick={() => openPlate(p.id)} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--action-primary)', textAlign: 'left' }}>Xem chi tiết</button>
+                    </div>
+                  </div>
+                  <div>
+                    {ROW_LABELS.map((row) => (
+                      <div key={row.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-3)', padding: 'var(--space-2-5,10px) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>{row.label}</span>
+                        <span style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-semibold)', textAlign: 'right' }}>{row.key === 'price' ? formatPrice(p.price, false) : (p[row.key] || '—')}</span>
+                      </div>
+                    ))}
+                    {plateFengShuiRows.length === 0 ? (
+                      <div style={{ padding: 'var(--space-3) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Ý nghĩa phong thủy — chưa có</span>
+                      </div>
+                    ) : plateFengShuiRows.map((row) => (
+                      <div key={row.label} style={{ padding: 'var(--space-2-5,10px) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+                        <span style={{ display: 'block', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', marginBottom: 2 }}>{row.label}</span>
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-body)' }}>{row.value?.text || '–'}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: 'var(--space-3) var(--space-4)', display: 'flex', gap: 8, justifyContent: 'center' }}>
+                    {sold ? (
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã bán</span>
+                    ) : (
+                      <>
+                        {phone && (isMobileDevice() ? (
+                          <a href={`tel:${phone}`} style={{ textDecoration: 'none' }}><Button variant="primary" size="sm">Gọi ngay</Button></a>
+                        ) : (
+                          <Button variant="primary" size="sm" onClick={() => callOrCopyPhone(phone)}>Gọi ngay</Button>
+                        ))}
+                        {zalo && <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(zalo, buildConsultMessage(p.plateNumber))}>Nhắn Zalo</Button>}
+                        {!phone && !zalo && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>—</span>}
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {plates.length > 1 && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-faint)' }}><GitCompareArrows size={12} /> Vuốt ngang để xem hết các biển</span>
+            <span className="compare-desktop-table" style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-faint)' }}><GitCompareArrows size={12} /> Vuốt ngang để xem hết các biển</span>
           )}
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div className="compare-desktop-table" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ display: 'grid', gridTemplateColumns: `clamp(120px,32vw,200px) repeat(${plates.length},minmax(180px,1fr))`, minWidth: plates.length * 200 + 130 }}>
             <div style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-caption)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', position: 'sticky', left: 0, zIndex: 2, background: 'var(--white)' }}>Thuộc tính</div>
             {plates.map((p) => {
