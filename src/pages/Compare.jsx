@@ -10,6 +10,7 @@ import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
 import { useSiteSettings } from '../services/siteSettings.js';
 import { useCompareIds, useComparePlates } from '../services/compareService.js';
 import { usePlates } from '../services/plates.js';
+import { useCategories } from '../services/categories.js';
 import { useScorePlates } from '../services/fengshuiService.js';
 import { routeFor } from '../config/routes.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
@@ -165,6 +166,54 @@ function FavSuggestions({ favCards, excludeIds, onAdd }) {
   );
 }
 
+// Gợi ý biển cùng loại/cùng tỉnh với biển đã chọn — giúp user tìm biển thứ 2 để so sánh nhanh hơn
+// thay vì tự gõ tìm kiếm. Tra id loại/tỉnh qua tên hiển thị trên plate (API compare trả tên, không
+// trả id) rồi query lại /api/plates lọc theo id đó, loại trừ biển đã có trong so sánh + đã bán.
+function SimilarPlateSuggestions({ plate, excludeIds, onAdd }) {
+  const { data: settings } = useSiteSettings();
+  const { data: plateTypes } = useCategories('plate_type');
+  const { data: provinces } = useCategories('province');
+  const typeId = plateTypes?.items?.find((c) => c.name === plate.type)?.id;
+  const provinceId = provinces?.items?.find((c) => c.name === plate.province)?.id;
+
+  const { data: sameTypeData } = usePlates({ cat: typeId ? [typeId] : [], perPage: 7 }, { enabled: !!typeId });
+  const { data: sameProvinceData } = usePlates({ city: provinceId ? [provinceId] : [], perPage: 7 }, { enabled: !!provinceId });
+
+  const filterList = (items) => (items || []).filter((p) => !excludeIds.includes(p.id) && p.status !== 'sold').slice(0, 6);
+  const sameType = filterList(sameTypeData?.items);
+  const sameProvince = filterList(sameProvinceData?.items);
+
+  const renderRow = (title, items) => items.length === 0 ? null : (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{title}</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+        {items.map((p) => {
+          const { prov, seri, num } = splitPlateNumber(p.plateNumber);
+          return (
+            <button key={p.id} type="button" onClick={() => onAdd(p.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)', background: 'var(--white)', cursor: 'pointer' }}>
+              {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
+                <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 72, height: 39, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+              ) : (
+                <PlateVisual size="md" prov={prov} seri={seri} num={num} />
+              )}
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  if (sameType.length === 0 && sameProvince.length === 0) return null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      {renderRow(`Cùng loại "${plate.type}"`, sameType)}
+      {renderRow(`Cùng tỉnh/thành "${plate.province}"`, sameProvince)}
+    </div>
+  );
+}
+
 // Hàng phụ (Loại biển / Loại xe) ẩn trên mobile hẹp — giá trị quyết định mua nằm ở Tỉnh/thành + Giá.
 const ROW_LABELS = [
   { key: 'type', label: 'Loại biển', extra: true },
@@ -281,6 +330,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
             </div>
           ))}
         </div>
+        {filledPlate && <SimilarPlateSuggestions plate={filledPlate} excludeIds={ids} onAdd={add} />}
         <FavSuggestions favCards={favCards} excludeIds={ids} onAdd={add} />
         <div style={{ textAlign: 'center' }}>
           <Button variant="ghost" size="md" onClick={go('list')}>Hoặc duyệt toàn bộ kho biển số</Button>
