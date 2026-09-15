@@ -175,7 +175,7 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
   const boxFocus = { onFocus: () => setFocused(true), onBlur: () => setFocused(false) };
 
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: '1 1 220px' }}>
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: '1 1 auto' }}>
       {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>}
       <span
         id={inputId}

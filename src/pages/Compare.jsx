@@ -187,7 +187,7 @@ function BirthDatePrompt({ onSubmit }) {
       </p>
       <form
         onSubmit={(e) => { e.preventDefault(); if (valid) onSubmit(date); }}
-        style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end' }}
+        style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-end', width: '100%', maxWidth: 360 }}
       >
         <DateInputVN value={date} onChange={(e) => setDate(e.target.value)} />
         <Button type="submit" variant="primary" size="md" disabled={!valid}>Xem điểm hợp mệnh</Button>
