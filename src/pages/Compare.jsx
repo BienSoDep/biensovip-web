@@ -520,8 +520,13 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               return (
                 <Fragment key={row.label}>
                   <div style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', background: 'var(--orange-50)', position: 'sticky', left: 0, zIndex: 1 }}>{ri === 0 && <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 4 }}>Ý nghĩa phong thủy</span>}{row.label}</div>
-                  {row.values.map((v) => (
-                    <div key={v.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left', background: allSame ? 'var(--green-50)' : undefined }}>
+                  {allSame ? (
+                    <div style={{ gridColumn: `span ${row.values.length}`, padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left', background: 'var(--green-50)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--status-success-ink)', fontWeight: 'var(--fw-semibold)', flexShrink: 0 }}>Giống nhau:</span>
+                      {row.values[0].text}
+                    </div>
+                  ) : row.values.map((v) => (
+                    <div key={v.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', font: 'var(--type-caption)', color: 'var(--text-body)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', textAlign: 'left' }}>
                       {v.text || <span style={{ color: 'var(--text-muted)', textAlign: 'center', display: 'block' }}>–</span>}
                     </div>
                   ))}
