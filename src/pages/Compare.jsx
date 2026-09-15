@@ -406,7 +406,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
           {/* Mobile (<768px): thẻ xếp dọc mỗi biển 1 khối, thuộc tính liệt kê nhãn/giá trị theo hàng —
               thay bảng cuộn ngang vốn khó đọc trên màn hẹp. Desktop vẫn dùng bảng ngang bên dưới
               (ẩn qua CSS class compare-mobile-cards / compare-desktop-table, xem app.css). */}
-          <div className="compare-mobile-cards" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div className="compare-mobile-cards" style={{ flexDirection: 'column', gap: 'var(--space-4)' }}>
             {plates.map((p) => {
               const { prov, seri, num } = splitPlateNumber(p.plateNumber);
               const sold = p.status === 'sold';
@@ -465,7 +465,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
           </div>
 
           {plates.length > 1 && (
-            <span className="compare-desktop-table" style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-faint)' }}><GitCompareArrows size={12} /> Vuốt ngang để xem hết các biển</span>
+            <span className="compare-desktop-table" style={{ alignItems: 'center', gap: 4, font: 'var(--type-caption)', color: 'var(--text-faint)' }}><GitCompareArrows size={12} /> Vuốt ngang để xem hết các biển</span>
           )}
           <div className="compare-desktop-table" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ display: 'grid', gridTemplateColumns: `clamp(120px,32vw,200px) repeat(${plates.length},minmax(180px,1fr))`, minWidth: plates.length * 200 + 130 }}>

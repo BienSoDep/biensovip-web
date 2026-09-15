@@ -33,6 +33,7 @@ body {
   overflow-x: hidden;
 }
 .compare-mobile-cards { display: none; }
+span.compare-desktop-table { display: flex; }
 @media (max-width: 767px) {
   .compare-mobile-cards { display: flex; }
   .compare-desktop-table { display: none; }
