@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles } from 'lucide-react';
 import { useSendChatbotMessage, useChatbotHistory, useChatbotWidgetEnabled } from '../services/chatbotService.js';
+import { useHideOnScroll } from '../hooks/useHideOnScroll.js';
 
 const ACTION_LABEL = { chat_with_staff: 'Chat với nhân viên', contact_form: 'Để lại thông tin liên hệ' };
 const SESSION_KEY = 'bsv.chatSessionId';
@@ -45,6 +46,8 @@ function nextQuickReplies(lastMsg) {
 export default function AiChatbot({ go }) {
   const { data: widgetFlag } = useChatbotWidgetEnabled();
   const [open, setOpen] = useState(false);
+  // Ẩn tạm nút FAB lúc cuộn — chỉ khi panel đang đóng, tránh gián đoạn lúc đang chat/cuộn trong panel.
+  const scrolling = useHideOnScroll();
   const [msgs, setMsgs] = useState([GREETING]);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
@@ -138,7 +141,14 @@ export default function AiChatbot({ go }) {
   return (
     <>
       {!open && (
-        <button ref={fabRef} aria-label="Mở trợ lý" onClick={() => setOpen(true)} className="chatbot-fab" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 'var(--z-chatbot)', width: 52, height: 52, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', boxShadow: 'var(--shadow-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button
+          ref={fabRef} aria-label="Mở trợ lý" onClick={() => setOpen(true)} className="chatbot-fab"
+          style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 'var(--z-chatbot)', width: 52, height: 52, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', boxShadow: 'var(--shadow-3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: scrolling ? 0 : 1, transform: scrolling ? 'translateX(72px)' : 'translateX(0)', pointerEvents: scrolling ? 'none' : 'auto',
+            transition: 'opacity 160ms var(--ease-standard), transform 160ms var(--ease-standard)',
+          }}
+        >
           <Sparkles size={24} />
         </button>
       )}
