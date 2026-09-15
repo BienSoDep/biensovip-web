@@ -144,12 +144,12 @@ export default function AiChatbot({ go }) {
         <button
           ref={fabRef} aria-label="Mở trợ lý" onClick={() => setOpen(true)} className="chatbot-fab"
           style={{
-            position: 'fixed', bottom: 24, right: 24, zIndex: 'var(--z-chatbot)', width: 52, height: 52, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', boxShadow: 'var(--shadow-3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'fixed', bottom: 14, right: 10, zIndex: 'var(--z-chatbot)', width: 42, height: 42, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', boxShadow: 'var(--shadow-3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
             opacity: scrolling ? 0 : 1, transform: scrolling ? 'translateX(72px)' : 'translateX(0)', pointerEvents: scrolling ? 'none' : 'auto',
             transition: 'opacity 160ms var(--ease-standard), transform 160ms var(--ease-standard)',
           }}
         >
-          <Sparkles size={24} />
+          <Sparkles size={19} />
         </button>
       )}
       {open && (

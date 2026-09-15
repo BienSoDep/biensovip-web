@@ -28,7 +28,7 @@ export default function ContactFab({ zalo, phone }) {
     <div
       className="contact-fab-wrap"
       style={{
-        position: 'fixed', bottom: 88, right: 20, zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12,
+        position: 'fixed', bottom: 66, right: 10, zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10,
         opacity: scrolling ? 0 : 1, transform: scrolling ? 'translateX(72px)' : 'translateX(0)', pointerEvents: scrolling ? 'none' : 'auto',
         transition: 'opacity 160ms var(--ease-standard), transform 160ms var(--ease-standard)',
       }}
@@ -43,7 +43,7 @@ export default function ContactFab({ zalo, phone }) {
           aria-label={it.label}
           title={it.label}
           style={{
-            width: 44, height: 44, borderRadius: '50%', background: it.bg, color: '#fff',
+            width: 38, height: 38, borderRadius: '50%', background: it.bg, color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)',
             textDecoration: 'none', animation: `contactFabIn 180ms var(--ease-out) ${i * 40}ms both`,
           }}
@@ -57,9 +57,9 @@ export default function ContactFab({ zalo, phone }) {
         aria-label={open ? 'Đóng liên hệ nhanh' : 'Mở liên hệ nhanh'}
         aria-expanded={open}
         className={`contact-fab${open ? '' : ' contact-fab-bounce'}`}
-        style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', cursor: 'pointer', transition: 'transform 160ms var(--ease-out)' }}
+        style={{ width: 42, height: 42, borderRadius: '50%', border: 'none', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', cursor: 'pointer', transition: 'transform 160ms var(--ease-out)' }}
       >
-        {open ? <X size={22} /> : <MessageCircle size={22} />}
+        {open ? <X size={19} /> : <MessageCircle size={19} />}
       </button>
     </div>
   );
