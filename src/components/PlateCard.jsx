@@ -136,23 +136,25 @@ export default function PlateCard({
             <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
           )}
           {!sold ? (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              {contact?.phone ? (
-                isMobileDevice() ? (
-                  <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></a>
-                ) : (
-                  <button type="button" onClick={() => callOrCopyPhone(contact.phone)} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
-                )
-              ) : onBuy ? (
-                <button type="button" onClick={onBuy} aria-label="Gọi ngay" title="Gọi ngay" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
-              ) : null}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" style={{ flex: 1, minWidth: 0 }}>Chốt biển này</Button>
+                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" fullWidth>Chốt biển này</Button>
               )}
-              {contact?.zalo && (
-                <button type="button" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ZaloIcon width={19} height={19} />
-                </button>
+              {(contact?.phone || contact?.zalo) && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {contact?.phone && (
+                    isMobileDevice() ? (
+                      <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textDecoration: 'none', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}><Phone size={15} />Gọi ngay</a>
+                    ) : (
+                      <button type="button" onClick={() => callOrCopyPhone(contact.phone)} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}><Phone size={15} />Gọi ngay</button>
+                    )
+                  )}
+                  {contact?.zalo && (
+                    <button type="button" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}>
+                      <ZaloIcon width={16} height={16} />Zalo
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           ) : (
