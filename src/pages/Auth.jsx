@@ -239,7 +239,15 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
             )}
           </AnimatePresence>
         </div>
-        <div style={{ flex: '1 1 420px', background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,4vw,64px)', minHeight: '100vh' }}>
+        <div style={{ flex: '1 1 420px', background: 'var(--white)', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          {/* .auth-info (logo + "Trang chủ") ẩn hoàn toàn dưới 768px — không còn cách nào thoát về
+              trang chủ ngoài nút back trình duyệt. Header rút gọn này chỉ hiện trên mobile để bù lại. */}
+          <a href={routeFor('home')} onClick={goHome} className="auth-mobile-back pressable" style={{ display: 'none', alignItems: 'center', gap: 8, padding: '16px clamp(28px,4vw,64px) 0', textDecoration: 'none' }}>
+            <ArrowLeft size={18} style={{ color: 'var(--text-strong)' }} />
+            <img src="/assets/logo-mark.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+            <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Duy Đinh</span>
+          </a>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,4vw,64px)' }}>
           <AnimatePresence mode="wait">
           <motion.div key={`${s}-${otpMode ? 'otp' : 'std'}`}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={CONTENT_FADE}
@@ -392,6 +400,7 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
             )}
           </motion.div>
           </AnimatePresence>
+          </div>
         </div>
       </div>
 

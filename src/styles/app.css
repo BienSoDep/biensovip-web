@@ -506,6 +506,9 @@ textarea,
   .auth-info {
     display: none !important;
   }
+  .auth-mobile-back {
+    display: flex !important;
+  }
   /* Detail: gallery thumbnails only swap background color, no real photos */
   .detail-gallery-thumbs {
     display: none !important;
