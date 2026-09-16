@@ -234,7 +234,14 @@ export function Select({ label, value, options = [], onChange, variant, style, r
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer', width: '100%',
           }}
         >
-          <BaseSelect.Value>{selected?.label ?? ''}</BaseSelect.Value>
+          <BaseSelect.Value>
+            {selected ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {selected.icon && <img src={selected.icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />}
+                {selected.label}
+              </span>
+            ) : ''}
+          </BaseSelect.Value>
           <BaseSelect.Icon style={{ display: 'flex', color: 'var(--text-muted)' }}><ChevronDown size={16} /></BaseSelect.Icon>
         </BaseSelect.Trigger>
         <BaseSelect.Portal>
@@ -256,7 +263,10 @@ export function Select({ label, value, options = [], onChange, variant, style, r
                   }}
                   className="select-item"
                 >
-                  <BaseSelect.ItemText>{o.label}</BaseSelect.ItemText>
+                  <BaseSelect.ItemText style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {o.icon && <img src={o.icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />}
+                    {o.label}
+                  </BaseSelect.ItemText>
                   <BaseSelect.ItemIndicator style={{ display: 'flex', color: 'var(--action-primary)' }}><Check size={14} /></BaseSelect.ItemIndicator>
                 </BaseSelect.Item>
               ))}

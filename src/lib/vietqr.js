@@ -4,7 +4,7 @@ const BANKS_URL = 'https://api.vietqr.io/v2/banks';
 let banksCache = null;
 let banksPromise = null;
 
-// Trả về [{ value: bin, label: "Vietcombank — Ngân hàng TMCP Ngoại Thương Việt Nam" }], cache trong phiên trình duyệt.
+// Trả về [{ value: bin, label: "Vietcombank — Ngân hàng TMCP Ngoại Thương Việt Nam", icon: logoUrl }], cache trong phiên trình duyệt.
 export async function fetchVietQrBanks() {
   if (banksCache) return banksCache;
   if (banksPromise) return banksPromise;
@@ -14,7 +14,7 @@ export async function fetchVietQrBanks() {
     .then((body) => {
       const list = Array.isArray(body?.data) ? body.data : [];
       banksCache = list
-        .map((b) => ({ value: b.bin, label: `${b.shortName} — ${b.name}` }))
+        .map((b) => ({ value: b.bin, label: `${b.shortName} — ${b.name}`, icon: b.logo }))
         .sort((a, b) => a.label.localeCompare(b.label));
       return banksCache;
     })

@@ -247,7 +247,7 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
             <img src="/assets/logo-mark.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>Duy Đinh</span>
           </a>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,4vw,64px)' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,4vw,64px)', paddingBottom: 'calc(clamp(28px,4vw,64px) + env(safe-area-inset-bottom, 0px) + 24px)' }}>
           <AnimatePresence mode="wait">
           <motion.div key={`${s}-${otpMode ? 'otp' : 'std'}`}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }} transition={CONTENT_FADE}
