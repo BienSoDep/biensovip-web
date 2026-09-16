@@ -138,20 +138,20 @@ export default function PlateCard({
           {!sold ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" fullWidth>Chốt biển này</Button>
+                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" fullWidth style={{ paddingTop: 12, paddingBottom: 12 }}>Chốt biển này</Button>
               )}
               {(contact?.phone || contact?.zalo) && (
                 <div style={{ display: 'flex', gap: 8 }}>
                   {contact?.phone && (
                     isMobileDevice() ? (
-                      <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, textDecoration: 'none', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', padding: '0 6px' }}><Phone size={14} style={{ flexShrink: 0 }} />Gọi ngay</a>
+                      <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></a>
                     ) : (
-                      <button type="button" onClick={() => callOrCopyPhone(contact.phone)} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', padding: '0 6px' }}><Phone size={14} style={{ flexShrink: 0 }} />Gọi ngay</button>
+                      <button type="button" onClick={() => callOrCopyPhone(contact.phone)} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
                     )
                   )}
                   {contact?.zalo && (
-                    <button type="button" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', padding: '0 6px' }}>
-                      <ZaloIcon width={14} height={14} style={{ flexShrink: 0 }} />Zalo
+                    <button type="button" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ZaloIcon width={17} height={17} />
                     </button>
                   )}
                 </div>

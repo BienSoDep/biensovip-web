@@ -446,6 +446,15 @@ textarea,
   .header-nav-pills {
     display: none !important;
   }
+  /* Logo lấy hết chỗ header trên mobile, đẩy nút Đăng nhập/Đăng ký ra ngoài — thu nhỏ logo + ẩn
+     tagline dòng phụ để nhường chỗ. */
+  .header-logo-mark {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .header-logo-tagline {
+    display: none !important;
+  }
   .page-breadcrumb {
     display: none !important;
   }

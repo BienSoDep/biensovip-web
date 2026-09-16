@@ -252,7 +252,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
         <form onSubmit={(e) => { e.preventDefault(); submit(); }} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)' }}>
         {/* fieldset disabled khóa mọi input trong lúc chờ tra cứu — tránh sửa form/double-submit
             khi mutation đang pending (nút submit tự disable rồi, nhưng input khác vẫn gõ được). */}
-        <fieldset disabled={lookup.isPending} style={{ border: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <fieldset disabled={lookup.isPending} style={{ border: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', minWidth: 0 }}>
           {isAuthed && !hasProfileBirthDate && (
             <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
               Mẹo: <button type="button" onClick={() => go('profile')()} style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline', cursor: 'pointer' }}>lưu ngày sinh vào hồ sơ</button> để lần sau vào đây là có kết quả ngay.
