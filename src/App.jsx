@@ -202,10 +202,14 @@ export default function App() {
 
   usePathRouter(st, patch);
 
-  // Scroll to top whenever the page changes (route change only — curId also
-  // doubles as the id for buy/contact modals, so it must NOT be a dep here
-  // or opening a modal on a list page yanks the scroll to top).
-  useEffect(() => { window.scrollTo(0, 0); }, [st.screen, st.postId, st.provinceCode, st.typeSlug]);
+  // Scroll to top whenever the page changes — route change, or curId change while NOT inside a
+  // modal (curId doubles as the buy/contact modal's target id, so a modal opening on a list page
+  // must not yank scroll; but navigating detail→detail via a related-plate link, or browser
+  // back/forward between two detail pages, DOES change curId with modal staying false and needs
+  // the scroll reset just like any other page change).
+  useEffect(() => {
+    if (!st.modal) window.scrollTo(0, 0);
+  }, [st.screen, st.postId, st.provinceCode, st.typeSlug, st.curId, st.modal]);
 
   const notify = (msg, type) => (type === 'error' ? toast.error(msg) : toast(msg));
   const heroAnim = makeHeroAnim(fanDone);
