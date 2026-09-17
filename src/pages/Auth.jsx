@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame, Check } from 'lucide-react';
 import Button from '../components/Button.jsx';
@@ -12,6 +12,7 @@ import { routeFor } from '../config/routes.js';
 import { useFeaturedPlates } from '../services/plates.js';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
+import { trackFormAbandon } from '../services/tracking/events.js';
 
 const CONTENT_FADE = { duration: 0.3, ease: [0.22, 1, 0.36, 1] };
 
@@ -102,6 +103,19 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
     if (s === 'login' && lastEmail && !st.aEmail) patch({ aEmail: lastEmail });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s, lastEmail]);
+
+  // Form-abandon: nếu khách đã gõ gì đó (đăng ký/đăng nhập) mà unmount trang chưa đăng nhập thành
+  // công (st.user vẫn falsy) → coi là bỏ dở. Ref giữ giá trị mới nhất để cleanup đọc đúng lúc unmount.
+  const abandonRef = useRef({ s, hasInput: false, loggedIn: false });
+  useEffect(() => {
+    abandonRef.current.s = s;
+    abandonRef.current.hasInput = Boolean(st.aName || st.aEmail || st.aPhone || st.aPw);
+    abandonRef.current.loggedIn = Boolean(st.user);
+  });
+  useEffect(() => () => {
+    const { s: lastS, hasInput, loggedIn } = abandonRef.current;
+    if (hasInput && !loggedIn) trackFormAbandon(lastS === 'register' ? 'auth_register' : 'auth_login');
+  }, []);
 
   const goHome = (e) => { e.preventDefault(); go('home')(); };
 

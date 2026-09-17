@@ -14,7 +14,7 @@ import { ELEMENTS, PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget, s
 import { loadAuth } from '../lib/authStore.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { validBirthDate } from '../lib/date.js';
-import { trackFengshuiLookup, trackGenerateLead } from '../services/tracking/events.js';
+import { trackFengshuiLookup, trackGenerateLead, trackFormAbandon } from '../services/tracking/events.js';
 import { buildConsultMessage, openZaloWithMessage } from '../lib/zaloMessage.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
@@ -150,6 +150,18 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
   const hasProfileBirthDate = !!user?.birthDate;
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Form-abandon: khách gõ ngày sinh (bước bắt buộc đầu tiên) nhưng rời trang trước khi tra cứu
+  // thành công lần nào → bỏ dở.
+  const abandonRef = useRef({ hasInput: false, succeeded: false });
+  useEffect(() => {
+    abandonRef.current.hasInput = Boolean(form.birthDate);
+    abandonRef.current.succeeded = Boolean(restoredResult) || lookup.isSuccess;
+  });
+  useEffect(() => () => {
+    const { hasInput, succeeded } = abandonRef.current;
+    if (hasInput && !succeeded) trackFormAbandon('lucky_plate');
+  }, []);
 
   const submit = () => {
     if (!validBirthDate(form.birthDate)) { setErr('Ngày sinh không hợp lệ hoặc ở tương lai.'); return; }
