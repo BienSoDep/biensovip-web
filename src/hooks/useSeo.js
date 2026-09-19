@@ -55,12 +55,23 @@ export function useSeo(screen, data) {
     let ld = null;
 
     if (screen === 'list') {
-      title = 'Kho Biển Số Xe Đẹp Toàn Quốc — Ngũ Quý, Tứ Quý, Thần Tài | ' + BRAND;
-      desc = 'Xem kho biển số xe đẹp đang chào bán: ngũ quý, tứ quý, tam hoa, lộc phát, thần tài, sảnh tiến. Cập nhật liên tục, giá công khai minh bạch, hỗ trợ sang tên toàn quốc.';
-      canonical = SITE + '/danh-sach';
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+      const isSearchPath = pathname.startsWith('/tim-kiem/');
+      const searchRaw = isSearchPath ? pathname.slice('/tim-kiem/'.length).split('/')[0] : '';
+      const searchTerm = searchRaw ? decodeURIComponent(searchRaw).replace(/-/g, ' ') : '';
+
+      if (isSearchPath && searchTerm) {
+        title = `Biển Số ${searchTerm.toUpperCase()} Đang Bán — Kho Biển Số Đẹp | ` + BRAND;
+        desc = `Xem các biển số đẹp phù hợp từ khóa "${searchTerm}" đang chào bán tại Biensovip: giá công khai minh bạch, hỗ trợ sang tên toàn quốc, tư vấn hợp mệnh.`;
+        canonical = SITE + pathname;
+      } else {
+        title = 'Kho Biển Số Xe Đẹp Toàn Quốc — Ngũ Quý, Tứ Quý, Thần Tài | ' + BRAND;
+        desc = 'Xem kho biển số xe đẹp đang chào bán: ngũ quý, tứ quý, tam hoa, lộc phát, thần tài, sảnh tiến. Cập nhật liên tục, giá công khai minh bạch, hỗ trợ sang tên toàn quốc.';
+        canonical = SITE + '/danh-sach';
+      }
       const items = data?.items || [];
       const itemListLd = {
-        '@type': 'ItemList', name: 'Danh sách biển số đẹp', url: canonical,
+        '@type': 'ItemList', name: isSearchPath && searchTerm ? `Biển số ${searchTerm}` : 'Danh sách biển số đẹp', url: canonical,
         ...(items.length ? {
           itemListElement: items.map((p, i) => ({
             '@type': 'ListItem', position: i + 1,
@@ -72,7 +83,8 @@ export function useSeo(screen, data) {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE },
-          { '@type': 'ListItem', position: 2, name: 'Danh sách biển số', item: canonical },
+          { '@type': 'ListItem', position: 2, name: 'Danh sách biển số', item: SITE + '/danh-sach' },
+          ...(isSearchPath && searchTerm ? [{ '@type': 'ListItem', position: 3, name: `Tìm kiếm: ${searchTerm}`, item: canonical }] : []),
         ],
       };
       ld = { '@context': 'https://schema.org', '@graph': [itemListLd, breadcrumbLd] };

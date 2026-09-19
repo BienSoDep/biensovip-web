@@ -97,6 +97,7 @@ const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) =>
 export function routeFor(s, id) {
   if (s === 'detail') return '/bien/' + (id || '');
   if (s === 'post') return '/bai-viet/' + (id || '');
+  if (s === 'search') return '/tim-kiem/' + (id || '');
   if (s === 'provinceLanding') return '/' + (PROVINCE_SLUG_BY_CODE[id] || id || 'bien-so-da-nang');
   if (s === 'plateTypeLanding') return '/bien-' + (id || 'tu-quy');
   if (s === 'notfound') return window.location.pathname;
@@ -109,6 +110,7 @@ export function parseRoute(pathname) {
   if (p[0] === 'bien') return { screen: 'detail', detailId: p[1] || 'p1' };
   if (p[0] === 'bai-viet') return { screen: 'post', postId: p[1] || 'a1' };
   if (p[0] === 'tu-van') return { screen: 'lucky' }; // alias cũ → hop-menh (redirect)
+  if (p[0] === 'tim-kiem') return { screen: 'list', searchTerm: p[1] || '' };
   if (PROVINCE_CODE_BY_SLUG[p[0]]) return { screen: 'provinceLanding', landingSlug: p[0], provinceCode: PROVINCE_CODE_BY_SLUG[p[0]] };
   if (PLATE_TYPE_SLUGS.has(p[0])) return { screen: 'plateTypeLanding', typeSlug: p[0].slice(5) };
   return { screen: REVERSE_MAP[p.join('/')] || 'notfound' };
