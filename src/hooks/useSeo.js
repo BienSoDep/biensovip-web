@@ -202,16 +202,17 @@ export function useSeo(screen, data) {
       canonical = SITE + '/hoi-dap';
     } else if (screen === 'notfound') {
       title = 'Không tìm thấy trang | ' + BRAND;
-    } else if ((screen === 'provinceLanding' || screen === 'plateTypeLanding') && data?.landing) {
+    } else if (screen === 'provinceLanding' && data?.landing) {
       const l = data.landing;
-      title = l.title + ' | ' + BRAND;
-      desc = truncateAtWordBoundary((l.intro || '').replace(/<[^>]+>/g, ''), 160) || DEFAULT_DESC;
+      title = `Mua Bán Biển Số Đẹp ${l.title} — Xe Máy & Ô Tô | ` + BRAND;
+      desc = truncateAtWordBoundary((l.intro || '').replace(/<[^>]+>/g, ''), 155) ||
+        `Kho biển số đẹp ${l.title} đang chào bán tại Biensovip — tư vấn hợp mệnh miễn phí, giá rõ ràng, hỗ trợ sang tên toàn quốc.`;
       canonical = SITE + window.location.pathname;
       const breadcrumbLd = {
         '@type': 'BreadcrumbList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE },
-          { '@type': 'ListItem', position: 2, name: l.title, item: canonical },
+          { '@type': 'ListItem', position: 2, name: `Biển số ${l.title}`, item: canonical },
         ],
       };
       const graph = [breadcrumbLd];
@@ -226,6 +227,31 @@ export function useSeo(screen, data) {
         });
       }
       ld = { '@context': 'https://schema.org', '@graph': graph };
+    } else if (screen === 'plateTypeLanding' && data?.landing) {
+      const l = data.landing;
+      title = `Biển Số ${l.title} — Ý Nghĩa Phong Thủy, Hợp Mệnh & Giá 2026 | ` + BRAND;
+      desc = truncateAtWordBoundary((l.intro || '').replace(/<[^>]+>/g, ''), 155) ||
+        `Tìm hiểu biển số ${l.title}: ý nghĩa phong thủy, con số hợp mệnh, bảng giá và kho biển đang có tại Biensovip. Tư vấn miễn phí qua Zalo.`;
+      canonical = SITE + window.location.pathname;
+      const bcLd = {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE },
+          { '@type': 'ListItem', position: 2, name: `Biển số ${l.title}`, item: canonical },
+        ],
+      };
+      const typeGraph = [bcLd];
+      if (l.faqs?.length) {
+        typeGraph.push({
+          '@type': 'FAQPage',
+          mainEntity: l.faqs.map((f) => ({
+            '@type': 'Question',
+            name: f.question,
+            acceptedAnswer: { '@type': 'Answer', text: f.answer },
+          })),
+        });
+      }
+      ld = { '@context': 'https://schema.org', '@graph': typeGraph };
     }
 
     if (screen === 'home') {
