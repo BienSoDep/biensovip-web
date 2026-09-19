@@ -31,6 +31,63 @@ function useDebounced(value, delay = 300) {
   return debounced;
 }
 
+const THEMATIC_PLATE_TYPES = [
+  {
+    name: 'Biển Ngũ Quý',
+    slug: 'bien-ngu-quy',
+    tag: 'Đẳng cấp tối thượng',
+    examples: '999.99 · 888.88 · 666.66',
+    desc: '5 chữ số đồng nhất, đỉnh cao quyền lực và tài vận dồi dào.',
+    accent: 'linear-gradient(135deg, rgba(234,179,8,.1), rgba(245,158,11,.04))',
+    borderColor: 'rgba(234,179,8,.22)',
+  },
+  {
+    name: 'Biển Tứ Quý',
+    slug: 'bien-tu-quy',
+    tag: 'Vững chãi bền lâu',
+    examples: '8888 · 9999 · 6666 · 7777',
+    desc: '4 số liền kề biểu trưng bốn mùa bình an, làm ăn thịnh vượng.',
+    accent: 'linear-gradient(135deg, rgba(59,130,246,.1), rgba(37,99,235,.04))',
+    borderColor: 'rgba(59,130,246,.22)',
+  },
+  {
+    name: 'Biển Tam Hoa',
+    slug: 'bien-tam-hoa',
+    tag: 'Hài hòa may mắn',
+    examples: '666 · 888 · 999 · 777',
+    desc: '3 số đuôi cân đối, tài lộc khởi sắc, phổ biến cho cả ô tô & xe máy.',
+    accent: 'linear-gradient(135deg, rgba(16,185,129,.1), rgba(5,150,105,.04))',
+    borderColor: 'rgba(16,185,129,.22)',
+  },
+  {
+    name: 'Biển Lộc Phát',
+    slug: 'bien-loc-phat',
+    tag: 'Tài lộc sinh sôi',
+    examples: '6868 · 8686 · 6688 · 8866',
+    desc: 'Cặp số vàng 68 - 86 được giới kinh doanh, buôn bán săn đón hàng đầu.',
+    accent: 'linear-gradient(135deg, rgba(249,115,22,.1), rgba(234,88,12,.04))',
+    borderColor: 'rgba(249,115,22,.22)',
+  },
+  {
+    name: 'Biển Thần Tài',
+    slug: 'bien-than-tai',
+    tag: 'May mắn bảo hộ',
+    examples: '7979 · 3979 · 7939 · 3939',
+    desc: 'Thần tài lớn 79 & nhỏ 39 mang lại hanh thông, quý nhân phù trợ.',
+    accent: 'linear-gradient(135deg, rgba(168,85,247,.1), rgba(147,51,234,.04))',
+    borderColor: 'rgba(168,85,247,.22)',
+  },
+  {
+    name: 'Biển Sảnh Tiến',
+    slug: 'bien-sanh-tien',
+    tag: 'Thăng tiến vượt bậc',
+    examples: '123.45 · 567.89 · 234.56',
+    desc: 'Dãy số tiến liên tục tượng trưng cho công danh sự nghiệp tiến bước.',
+    accent: 'linear-gradient(135deg, rgba(99,102,241,.1), rgba(79,70,229,.04))',
+    borderColor: 'rgba(99,102,241,.22)',
+  },
+];
+
 export default function Home({ settings, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact, user }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Tất cả');
@@ -188,6 +245,61 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
             ))}
           </div>
         )}
+      </section>
+
+      {/* Bộ sưu tập thế số đẹp phong thủy */}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Eyebrow tone="blue" className="section-eyebrow">{T('home.plate_types.eyebrow')}</Eyebrow>
+            <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
+              {T('home.plate_types.title')}
+            </h2>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>
+              {T('home.plate_types.desc')}
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={go('list')}>{T('home.plate_types.all')}</Button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+          {THEMATIC_PLATE_TYPES.map((pt, i) => (
+            <a
+              key={pt.slug}
+              href={`/${pt.slug}`}
+              onClick={(e) => {
+                e.preventDefault();
+                history.pushState(null, '', `/${pt.slug}`);
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="pressable"
+              style={{
+                textDecoration: 'none',
+                background: pt.accent,
+                border: `1px solid ${pt.borderColor}`,
+                borderRadius: 'var(--radius-card)',
+                padding: 'var(--space-5)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-3)',
+                boxShadow: 'var(--shadow-inset-hairline)',
+                ...stagger(i),
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--white)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-1)' }}>
+                  {pt.tag}
+                </span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Xem kho →</span>
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px', font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{pt.name}</h3>
+                <span style={{ font: 'var(--type-code, monospace)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)', letterSpacing: '.05em' }}>{pt.examples}</span>
+              </div>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.4 }}>{pt.desc}</p>
+            </a>
+          ))}
+        </div>
       </section>
 
       {soldItems.length > 0 && (

@@ -32,7 +32,7 @@ function FaqAccordion({ faqs }) {
   );
 }
 
-export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact, blogPost, listName = 'landing' }) {
+export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact, blogPost, listName = 'landing', relatedLandings }) {
   const stagger = useStaggeredReveal();
 
   useEffect(() => {
@@ -97,6 +97,42 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <h2 style={{ margin: 0, font: 'var(--type-display-3)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
           <FaqAccordion faqs={faqs} />
+        </section>
+      )}
+
+      {relatedLandings?.length > 0 && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
+            Khám phá các thế số đẹp khác
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(220px,100%),1fr))', gap: 'var(--space-3)' }}>
+            {relatedLandings.map((r) => (
+              <a
+                key={r.slug}
+                href={`/${r.slug}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  history.pushState(null, '', `/${r.slug}`);
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="pressable"
+                style={{
+                  textDecoration: 'none',
+                  background: 'var(--white)',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: 'var(--radius-card)',
+                  padding: '16px 18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  boxShadow: 'var(--shadow-inset-hairline)',
+                }}
+              >
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{r.name}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Xem kho biển →</span>
+              </a>
+            ))}
+          </div>
         </section>
       )}
     </div>

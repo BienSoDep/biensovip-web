@@ -26,6 +26,12 @@
     "empty": "Chưa có biển số nổi bật.",
     "empty_link": "Khám phá kho biển số"
   },
+  "plate_types": {
+    "eyebrow": "Thế số phong thủy",
+    "title": "Bộ sưu tập biển số theo thế số tài lộc",
+    "desc": "Khám phá các dòng biển số đẹp phong thủy được ưa chuộng nhất: ngũ quý, tứ quý, tam hoa, lộc phát, thần tài, sảnh tiến — trợ mệnh hanh thông, khẳng định vị thế.",
+    "all": "Xem toàn bộ kho biển →"
+  },
   "video": {
     "eyebrow": "Video",
     "title": "Xem shop trên TikTok & Facebook",
