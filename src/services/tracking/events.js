@@ -141,3 +141,17 @@ export function trackRemoveSavedSearch(savedSearchId) {
 export function trackToggleSavedSearchNotify(savedSearchId, enabled) {
   track('toggle_saved_search_notify', { saved_search_id: savedSearchId, enabled });
 }
+
+// ===== 06 — Customer Insight GĐ2 (hành vi chi tiết: CTA, rage-click, form-abandon) =====
+
+export function trackCtaClick(ctaName, plateId) {
+  track('cta_click', { cta: ctaName, item_id: plateId });
+}
+
+export function trackRageClick(targetSelector) {
+  track('rage_click', { target: targetSelector, screen: window.__bsdCurrentScreen });
+}
+
+export function trackFormAbandon(formName) {
+  track('form_abandon', { form_name: formName });
+}

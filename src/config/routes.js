@@ -1,4 +1,4 @@
-export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'adminForgot', 'adminReset', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'dash', 'aplates', 'acoupons', 'acats', 'asales', 'acontacts', 'akanban', 'atransactions', 'aposts', 'ablogcomments', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'amaintenance', 'ashowroom', 'asortsettings', 'aerrorlogs', 'afeatureflags', 'adbconsole', 'apolicypages', 'actvtemplates'];
+export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'adminForgot', 'adminReset', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'dash', 'aplates', 'acoupons', 'acats', 'asales', 'acontacts', 'akanban', 'atransactions', 'aposts', 'ablogcomments', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'amaintenance', 'ashowroom', 'asortsettings', 'aerrorlogs', 'afeatureflags', 'adbconsole', 'apolicypages', 'actvtemplates', 'ainsights'];
 
 // Market control — landing page tỉnh/thành. Slug sinh từ tên tỉnh bỏ dấu (khớp BlogService.GenerateSlug
 // phía backend), map ngược 2 chiều để routeFor()/parseRoute() không cần gọi API mới biết slug<->code.
@@ -88,7 +88,7 @@ export const ROUTE_MAP = {
   'adminForgot': 'quen-mat-khau-quan-tri', 'adminReset': 'dat-lai-mat-khau-quan-tri',
   'fav': 'yeu-thich', 'profile': 'tai-khoan', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'hop-menh',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'acoupons': 'admin/ma-giam-gia', 'acats': 'admin/danh-muc',
-  'asales': 'admin/ban-hang', 'acontacts': 'admin/lien-he', 'akanban': 'admin/quy-trinh', 'atransactions': 'admin/giao-dich', 'aposts': 'admin/bai-viet', 'ablogcomments': 'admin/binh-luan-blog', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'aemailtpl': 'admin/mau-email', 'acollabs': 'admin/cong-tac-vien', 'acollabcontent': 'admin/noi-dung-ctv', 'ainterestleads': 'admin/khach-quan-tam', 'areviews': 'admin/danh-gia', 'ameanings': 'admin/y-nghia', 'achatbot': 'admin/tro-ly-ai', 'compose': 'admin/them-bai', 'aauditlog': 'admin/nhat-ky-he-thong', 'arisklog': 'admin/rui-ro-ctv', 'aguide': 'admin/huong-dan', 'amaintenance': 'admin/bao-tri', 'ashowroom': 'admin/so-lieu-hien-thi', 'asortsettings': 'admin/thu-tu-hien-thi', 'aerrorlogs': 'admin/nhat-ky-loi', 'afeatureflags': 'admin/feature-flags', 'adbconsole': 'admin/db-console', 'apolicypages': 'admin/trang-chinh-sach', 'actvtemplates': 'admin/mau-tin-nhan-ctv',
+  'asales': 'admin/ban-hang', 'acontacts': 'admin/lien-he', 'akanban': 'admin/quy-trinh', 'atransactions': 'admin/giao-dich', 'aposts': 'admin/bai-viet', 'ablogcomments': 'admin/binh-luan-blog', 'astaff': 'admin/nhan-vien', 'acustomers': 'admin/khach-hang', 'avideos': 'admin/video', 'anotifications': 'admin/thong-bao', 'aemailtpl': 'admin/mau-email', 'acollabs': 'admin/cong-tac-vien', 'acollabcontent': 'admin/noi-dung-ctv', 'ainterestleads': 'admin/khach-quan-tam', 'areviews': 'admin/danh-gia', 'ameanings': 'admin/y-nghia', 'achatbot': 'admin/tro-ly-ai', 'compose': 'admin/them-bai', 'aauditlog': 'admin/nhat-ky-he-thong', 'arisklog': 'admin/rui-ro-ctv', 'aguide': 'admin/huong-dan', 'amaintenance': 'admin/bao-tri', 'ashowroom': 'admin/so-lieu-hien-thi', 'asortsettings': 'admin/thu-tu-hien-thi', 'aerrorlogs': 'admin/nhat-ky-loi', 'afeatureflags': 'admin/feature-flags', 'adbconsole': 'admin/db-console', 'apolicypages': 'admin/trang-chinh-sach', 'actvtemplates': 'admin/mau-tin-nhan-ctv', 'ainsights': 'admin/insight-khach-hang',
   'chat': 'lien-he', 'compare': 'so-sanh', 'saved': 'thong-bao', 'reviews': 'danh-gia', 'notifications': 'thong-bao-moi', 'collab': 'cong-tac-vien', 'collabProcess': 'cong-tac-vien/quy-trinh', 'collabLeaderboard': 'cong-tac-vien/bang-xep-hang', 'collabCustomers': 'cong-tac-vien/khach-hang', 'terms': 'dieu-khoan', 'privacy': 'bao-mat', 'transfer': 'sang-ten', 'faq': 'hoi-dap', 'gmailCallback': 'gmail-callback',
 };
 
@@ -97,6 +97,7 @@ const REVERSE_MAP = Object.fromEntries(Object.entries(ROUTE_MAP).map(([k, v]) =>
 export function routeFor(s, id) {
   if (s === 'detail') return '/bien/' + (id || '');
   if (s === 'post') return '/bai-viet/' + (id || '');
+  if (s === 'search') return '/tim-kiem/' + (id || '');
   if (s === 'provinceLanding') return '/' + (PROVINCE_SLUG_BY_CODE[id] || id || 'bien-so-da-nang');
   if (s === 'plateTypeLanding') return '/bien-' + (id || 'tu-quy');
   if (s === 'notfound') return window.location.pathname;
@@ -109,10 +110,11 @@ export function parseRoute(pathname) {
   if (p[0] === 'bien') return { screen: 'detail', detailId: p[1] || 'p1' };
   if (p[0] === 'bai-viet') return { screen: 'post', postId: p[1] || 'a1' };
   if (p[0] === 'tu-van') return { screen: 'lucky' }; // alias cũ → hop-menh (redirect)
+  if (p[0] === 'tim-kiem') return { screen: 'list', searchTerm: p[1] || '' };
   if (PROVINCE_CODE_BY_SLUG[p[0]]) return { screen: 'provinceLanding', landingSlug: p[0], provinceCode: PROVINCE_CODE_BY_SLUG[p[0]] };
   if (PLATE_TYPE_SLUGS.has(p[0])) return { screen: 'plateTypeLanding', typeSlug: p[0].slice(5) };
   return { screen: REVERSE_MAP[p.join('/')] || 'notfound' };
 }
 
-export const ADMIN_SCREENS = ['dash', 'aplates', 'acoupons', 'acats', 'asales', 'acontacts', 'akanban', 'atransactions', 'aposts', 'ablogcomments', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'aguide', 'amaintenance', 'ashowroom', 'asortsettings', 'aerrorlogs', 'afeatureflags', 'adbconsole', 'apolicypages', 'actvtemplates'];
+export const ADMIN_SCREENS = ['dash', 'aplates', 'acoupons', 'acats', 'asales', 'acontacts', 'akanban', 'atransactions', 'aposts', 'ablogcomments', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'aguide', 'amaintenance', 'ashowroom', 'asortsettings', 'aerrorlogs', 'afeatureflags', 'adbconsole', 'apolicypages', 'actvtemplates', 'ainsights'];
 export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'collabProcess', 'collabLeaderboard', 'collabCustomers', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'notfound', 'adminForgot', 'adminReset'];

@@ -1,10 +1,27 @@
 import { useEffect, useRef } from 'react';
-import { parseRoute, routeFor } from '../config/routes.js';
+import { parseRoute, routeFor, ADMIN_SCREENS } from '../config/routes.js';
 import { isComposeDirty, resetComposeDirty } from '../lib/unsavedGuard.js';
+import { trackPageView, closeSessionBeacon } from '../services/tracking/providers/biensovipDbProvider.js';
 
 export function usePathRouter(st, patch) {
   const screenRef = useRef(st.screen);
   screenRef.current = st.screen;
+
+  // Đóng phiên khi tab đóng/ẩn đột ngột — sendBeacon không bị hủy giữa chừng khi trang unload.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden' && !ADMIN_SCREENS.includes(screenRef.current)) {
+        closeSessionBeacon(screenRef.current);
+      }
+    };
+    window.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', onHide);
+    return () => {
+      window.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', onHide);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const onPop = () => {
@@ -28,5 +45,8 @@ export function usePathRouter(st, patch) {
     const scr = st.screen;
     const target = scr === 'detail' ? routeFor('detail', st.curId) : scr === 'post' ? routeFor('post', st.postId) : scr === 'provinceLanding' ? routeFor('provinceLanding', st.provinceCode) : scr === 'plateTypeLanding' ? routeFor('plateTypeLanding', st.typeSlug) : routeFor(scr);
     if (window.location.pathname !== target) history.pushState(null, '', target + window.location.search);
+
+    window.__bsdCurrentScreen = scr;
+    if (!ADMIN_SCREENS.includes(scr)) trackPageView(scr, target + window.location.search);
   }, [st.screen, st.curId, st.postId]);
 }

@@ -14,6 +14,7 @@ export default function PlateTypeLandingPage({ typeSlug, openPlate, onBuy, conta
     title: `Bài viết chi tiết biển ${pt.name}`,
     excerpt: `Ý nghĩa phong thủy, đặc điểm và cách sở hữu biển ${pt.name} — đọc ngay trong bài viết chi tiết.`,
   } : null;
+  const relatedLandings = PLATE_TYPE_LANDINGS.filter((p) => p.slug !== landingSlug);
   return (
     <>
       {go && <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, { label: 'Biển số', onClick: go('list') }, { label: pt?.name || 'Loại biển' }]} />}
@@ -21,6 +22,7 @@ export default function PlateTypeLandingPage({ typeSlug, openPlate, onBuy, conta
         title={data?.title} intro={data?.intro} plates={data?.plates} faqs={data?.faqs}
         isLoading={isLoading} isError={isError} openPlate={openPlate} onBuy={onBuy} contact={contact}
         blogPost={blogPost} listName="plate_type_landing"
+        relatedLandings={relatedLandings}
       />
     </>
   );

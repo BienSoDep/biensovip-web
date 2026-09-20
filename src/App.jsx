@@ -29,6 +29,8 @@ import { useBlogPost } from './services/blog.js';
 import { usePlateRealtime } from './services/plateRealtime.js';
 import { useNotificationRealtime } from './services/notificationRealtime.js';
 import { usePathRouter } from './hooks/usePathRouter.js';
+import { useScrollDepthTracking } from './hooks/useScrollDepthTracking.js';
+import { useRageClickDetection } from './hooks/useRageClickDetection.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 import { usePublicMaintenance } from './services/maintenanceService.js';
@@ -201,6 +203,8 @@ export default function App() {
   }, [st.user]);
 
   usePathRouter(st, patch);
+  useScrollDepthTracking(st.screen);
+  useRageClickDetection();
 
   // Scroll to top whenever the page changes — route change, or curId change while NOT inside a
   // modal (curId doubles as the buy/contact modal's target id, so a modal opening on a list page

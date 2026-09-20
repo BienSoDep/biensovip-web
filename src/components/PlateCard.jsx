@@ -8,6 +8,7 @@ import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { buildConsultMessage, openZaloWithMessage, callOrCopyPhone, isMobileDevice } from '../lib/zaloMessage.js';
 import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
 import { useSiteSettings } from '../services/siteSettings.js';
+import { trackCtaClick } from '../services/tracking/events.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 
@@ -62,11 +63,11 @@ export default function PlateCard({
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             {onFav && (
               <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
-                <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onFav(); }} style={fav ? { color: 'var(--status-danger)' } : undefined} />
+                <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }} style={fav ? { color: 'var(--status-danger)' } : undefined} />
               </span>
             )}
             {onCompare && (
-              <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+              <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
             )}
           </div>
         </a>
@@ -97,11 +98,11 @@ export default function PlateCard({
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               {onFav && (
                 <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
-                  <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={onFav} style={fav ? { color: 'var(--status-danger)' } : undefined} />
+                  <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={() => { if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }} style={fav ? { color: 'var(--status-danger)' } : undefined} />
                 </span>
               )}
               {onCompare && (
-                <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={onCompare} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+                <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={() => { if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
               )}
             </div>
           </div>
@@ -138,19 +139,19 @@ export default function PlateCard({
           {!sold ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={onBuy} className="plate-card-cta-primary" fullWidth style={{ paddingTop: 12, paddingBottom: 12 }}>Chốt biển này</Button>
+                <Button variant="primary" size="sm" onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" fullWidth style={{ paddingTop: 12, paddingBottom: 12 }}>Chốt biển này</Button>
               )}
               {(contact?.phone || contact?.zalo) && (
                 <div style={{ display: 'flex', gap: 8 }}>
                   {contact?.phone && (
                     isMobileDevice() ? (
-                      <a href={`tel:${contact.phone}`} aria-label="Gọi ngay" title="Gọi ngay" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></a>
+                      <a href={`tel:${contact.phone}`} onClick={() => trackCtaClick('goi_ngay', plateNumber)} aria-label="Gọi ngay" title="Gọi ngay" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></a>
                     ) : (
-                      <button type="button" onClick={() => callOrCopyPhone(contact.phone)} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
+                      <button type="button" onClick={() => { trackCtaClick('goi_ngay', plateNumber); callOrCopyPhone(contact.phone); }} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={16} /></button>
                     )
                   )}
                   {contact?.zalo && (
-                    <button type="button" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber))} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button type="button" onClick={() => { trackCtaClick('zalo', plateNumber); openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber)); }} aria-label="Nhắn Zalo" title="Nhắn Zalo" style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <ZaloIcon width={17} height={17} />
                     </button>
                   )}

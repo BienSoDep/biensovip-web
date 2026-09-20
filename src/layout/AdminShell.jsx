@@ -35,6 +35,7 @@ import AdminLogs from '../pages/admin/AdminLogs.jsx';
 import AdminPublicDisplay from '../pages/admin/AdminPublicDisplay.jsx';
 import AdminOpsTools from '../pages/admin/AdminOpsTools.jsx';
 import AdminNotificationsHub from '../pages/admin/AdminNotificationsHub.jsx';
+import AdminInsights from '../pages/admin/AdminInsights.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -51,6 +52,7 @@ const NAV_PERM = {
   aauditlog: 'audit_logs:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
   apolicypages: 'policy_pages:view',
   actvtemplates: 'ctv_message_templates:view',
+  ainsights: 'analytics:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
@@ -396,6 +398,7 @@ export default function AdminShell({
         {s === 'achatbot' && <AdminChatbot notify={notify} />}
         {s === 'aauditlog' && <AdminLogs st={st} notify={notify} />}
         {s === 'ashowroom' && <AdminPublicDisplay notify={notify} />}
+        {s === 'ainsights' && <AdminInsights />}
         {s === 'afeatureflags' && <AdminOpsTools notify={notify} patch={patch} />}
         {s === 'apolicypages' && <AdminPolicyPages notify={notify} />}
         {s === 'actvtemplates' && <AdminCtvMessageTemplates notify={notify} />}

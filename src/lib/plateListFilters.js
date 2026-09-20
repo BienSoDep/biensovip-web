@@ -3,12 +3,17 @@
 
 export function readFiltersFromUrl() {
   const params = new URLSearchParams(window.location.search);
+  let q = params.get('q') || '';
+  if (!q && typeof window !== 'undefined' && window.location.pathname.startsWith('/tim-kiem/')) {
+    const raw = window.location.pathname.slice('/tim-kiem/'.length).split('/')[0];
+    if (raw) q = decodeURIComponent(raw).replace(/-/g, ' ');
+  }
   return {
     cat: params.getAll('cat'),
     city: params.getAll('city'),
     avoidNumbers: params.getAll('avoidNumbers'),
     vehicle: params.get('vehicle') || '',
-    q: params.get('q') || '',
+    q,
     sort: params.get('sort') || 'newest',
     page: Number(params.get('page')) || 1,
     perPage: Number(params.get('perPage')) || 18,
@@ -25,7 +30,16 @@ export function writeFiltersToUrl(filters) {
   filters.city.forEach((id) => params.append('city', id));
   filters.avoidNumbers.forEach((n) => params.append('avoidNumbers', n));
   if (filters.vehicle) params.set('vehicle', filters.vehicle);
-  if (filters.q) params.set('q', filters.q);
+
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isSearchPath = pathname.startsWith('/tim-kiem/');
+  const pathTerm = isSearchPath ? decodeURIComponent(pathname.slice('/tim-kiem/'.length).split('/')[0]).replace(/-/g, ' ') : '';
+
+  if (filters.q) {
+    if (!isSearchPath || filters.q.toLowerCase() !== pathTerm.toLowerCase()) {
+      params.set('q', filters.q);
+    }
+  }
   if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
   if (filters.page > 1) params.set('page', String(filters.page));
   if (filters.perPage !== 18) params.set('perPage', String(filters.perPage));
@@ -34,7 +48,10 @@ export function writeFiltersToUrl(filters) {
   if (filters.priceMax) params.set('priceMax', filters.priceMax);
   if (filters.status) params.set('status', filters.status);
   const qs = params.toString();
-  const base = window.location.pathname || '/danh-sach';
+  let base = pathname || '/danh-sach';
+  if (isSearchPath && (!filters.q || filters.q.toLowerCase() !== pathTerm.toLowerCase())) {
+    base = '/danh-sach';
+  }
   const next = qs ? `${base}?${qs}` : base;
   if (next !== window.location.pathname + window.location.search) history.replaceState(null, '', next);
 }
