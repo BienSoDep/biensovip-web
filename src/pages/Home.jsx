@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { SearchX } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { SearchField, Badge, Eyebrow } from '../components/index.jsx';
+import { SearchField, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { contentGet } from '../lib/content/index.js';
+import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { useCategories } from '../services/categories.js';
 import { useFeaturedPlates, usePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
@@ -148,17 +149,14 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_3_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_3_l')}</span></div>
             </div>
           </div>
-          <div style={{ flex: '1 1 340px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
-            <div style={{ position: 'relative', width: '100%', maxWidth: 520, aspectRatio: '1.42/1' }} className="hero-plate-container">
-              <picture><source srcSet="/assets/hero-plate-left.webp" type="image/webp" /><img src="/assets/hero-plate-left.png" alt="Biển số 43A 888.88" loading="eager" style={{ position: 'absolute', left: '-1%', top: '-1%', width: '71%', zIndex: 1, transform: 'rotate(-13deg)', animation: heroAnim('fanLeft', 100) }} /></picture>
-              <picture><source srcSet="/assets/hero-plate-right.webp" type="image/webp" /><img src="/assets/hero-plate-right.png" alt="Biển số 43K 556.68" loading="eager" style={{ position: 'absolute', left: '25%', top: '47%', width: '71%', zIndex: 2, transform: 'rotate(7deg)', animation: heroAnim('fanRight', 180) }} /></picture>
-              <picture><source srcSet="/assets/hero-plate-main.webp" type="image/webp" /><img src="/assets/hero-plate-main.png" alt="Biển số 43A1 999.99" fetchpriority="high" loading="eager" style={{ position: 'absolute', left: '8%', top: '15%', width: '84%', zIndex: 3, transform: 'rotate(-5deg)', animation: heroAnim('fanMain', 0) }} /></picture>
-            </div>
-            <div className="hero-plate-badge-row" style={{ width: '100%', maxWidth: 520, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', padding: '0 4px' }}>
-              <Badge tone="rose">{T('home.hero.plate_badge')}</Badge>
-              <div style={{ flex: '1 1 auto' }} />
-              <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)' }}>{T('home.hero.plate_price')}</span>
-            </div>
+          <div style={{ flex: '1 1 340px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src={optimizeImageUrl('https://res.cloudinary.com/dvwt6npcl/image/upload/v1789878145/biensovip/branding/home.png')}
+              alt="Biển số đẹp Biensovip"
+              loading="eager"
+              fetchpriority="high"
+              style={{ width: '100%', maxWidth: 420, height: 'auto', borderRadius: 'var(--radius-surface)' }}
+            />
           </div>
         </div>
       </section>

@@ -2,6 +2,7 @@ import { Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound
 import ContactRequestForm from '../components/ContactRequestForm.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import { content } from '../lib/content/index.js';
+import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { usePolicyPage } from '../services/policyPages.js';
 
 const PROCESS_ICONS = [MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound];
@@ -14,9 +15,16 @@ export default function ChatZaloContact({ notify, user }) {
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Liên hệ tư vấn</h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Chọn kênh phù hợp — phản hồi trong 15 phút, kể cả cuối tuần.</p>
+      <section style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-6)' }}>
+        <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Liên hệ tư vấn</h1>
+          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Chọn kênh phù hợp — phản hồi trong 15 phút, kể cả cuối tuần.</p>
+        </div>
+        <img
+          src={optimizeImageUrl('https://res.cloudinary.com/dvwt6npcl/image/upload/v1789878152/biensovip/branding/contact.png')}
+          alt="Biensovip — đội ngũ tư vấn biển số"
+          style={{ width: '100%', maxWidth: 240, height: 'auto', borderRadius: 'var(--radius-surface)', boxShadow: 'var(--shadow-3)' }}
+        />
       </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--gutter-section)' }}>
