@@ -301,10 +301,10 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
       </section>
 
       {soldItems.length > 0 && (
-        <section className="sold-marquee-section" style={{ padding: '0 0 var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <section className="sold-marquee-section" style={{ 'margin-top': '48x', padding: '0 0 var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Eyebrow tone="blue" className="section-eyebrow">Đã giao dịch thành công</Eyebrow>
-            <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Những biển số đã về chủ mới</h2>
+            <h2 style={{ margin: '16px 0', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Những biển số đã về chủ mới</h2>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Giao dịch thật, khách hàng thật — minh bạch giá bán.</p>
           </div>
           <div className="plate-marquee sold-marquee">

@@ -155,6 +155,8 @@ export function useSeo(screen, data) {
         '@context': 'https://schema.org', '@type': 'BlogPosting',
         headline: post.title, description: desc,
         datePublished: post.publishedAt,
+        ...(post.updatedAt ? { dateModified: post.updatedAt } : {}),
+        ...(post.coverImageUrl ? { image: post.coverImageUrl } : {}),
         author: { '@type': 'Organization', name: 'Duy Đinh' },
         publisher: { '@type': 'Organization', name: 'Duy Đinh', logo: { '@type': 'ImageObject', url: SITE + '/assets/logo-mark.png' } },
         mainEntityOfPage: canonical,

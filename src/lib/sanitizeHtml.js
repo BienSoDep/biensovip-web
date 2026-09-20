@@ -4,5 +4,5 @@ import DOMPurify from 'dompurify';
 // chặn <script>/onerror/onclick... để tài khoản admin bị chiếm hoặc gõ nhầm không thể chạy JS trên
 // trình duyệt khách xem trang public. Cùng profile với Post.jsx (đã dùng từ trước).
 export function sanitizeHtml(html) {
-  return DOMPurify.sanitize(html || '', { USE_PROFILES: { html: true } });
+  return DOMPurify.sanitize(html || '', { USE_PROFILES: { html: true }, ADD_ATTR: ['width', 'height'] });
 }
