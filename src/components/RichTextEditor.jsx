@@ -9,6 +9,21 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 
+// Ảnh hỗ trợ chiều rộng (width %) để phóng to/thu nhỏ trong bài. Lưu thành attr HTML width="50%";
+// cả DOMPurify (frontend) lẫn Ganss.Xss (backend) đều đã allow attr `width`/`height`.
+export const ResizableImage = TiptapImage.extend({
+  addAttributes() {
+    return { ...this.parent?.(), width: { default: null } };
+  },
+});
+
+const IMAGE_SIZES = [
+  { v: '100%', label: 'Đầy' },
+  { v: '75%', label: 'Lớn' },
+  { v: '50%', label: 'Vừa' },
+  { v: '30%', label: 'Nhỏ' },
+];
+
 function ToolbarButton({ onClick, active, disabled, label, children }) {
   return (
     <button
@@ -40,6 +55,7 @@ export function EditorToolbar({ editor }) {
   const [imgUrl, setImgUrl] = useState('');
   const [error, setError] = useState('');
   const [uploadErr, setUploadErr] = useState('');
+  const [imgSize, setImgSize] = useState('100%');
   if (!editor) return null;
 
   const submitLink = (e) => {
@@ -51,7 +67,7 @@ export function EditorToolbar({ editor }) {
   const submitImage = (e) => {
     e.preventDefault();
     if (!/^https?:\/\//.test(imgUrl)) { setError(URL_ERROR); return; }
-    editor.chain().focus().setImage({ src: imgUrl }).run();
+    editor.chain().focus().setImage({ src: imgUrl, width: imgSize }).run();
     setImgUrl(''); setImgOpen(false); setError('');
   };
   const uploadImage = async (file) => {
@@ -61,7 +77,7 @@ export function EditorToolbar({ editor }) {
     setUploadErr('');
     try {
       const res = await apiClient.upload('/api/admin/plates/upload', fd);
-      editor.chain().focus().setImage({ src: res.url }).run();
+      editor.chain().focus().setImage({ src: res.url, width: imgSize }).run();
     } catch (e) {
       setUploadErr(e.message || 'Lỗi tải ảnh lên');
     } finally {
@@ -89,6 +105,19 @@ export function EditorToolbar({ editor }) {
       <ToolbarButton label="Chèn liên kết" active={editor.isActive('link')} onClick={() => { setImgOpen(false); setLinkOpen((v) => !v); setError(''); }}><Link2 size={16} /></ToolbarButton>
       <ToolbarButton label="Chèn ảnh (dán link)" onClick={() => { setLinkOpen(false); setImgOpen((v) => !v); setError(''); }}><ImageIcon size={16} /></ToolbarButton>
       <ToolbarButton label="Tải ảnh lên" onClick={() => { setUploadErr(''); imgFileRef.current?.click(); }}><Upload size={16} /></ToolbarButton>
+      <select
+        aria-label="Kích thước ảnh"
+        title="Kích thước ảnh — chọn ảnh rồi đổi sẽ áp dụng luôn"
+        value={imgSize}
+        onChange={(e) => {
+          const v = e.target.value;
+          setImgSize(v);
+          if (editor.isActive('image')) editor.chain().focus().updateAttributes('image', { width: v }).run();
+        }}
+        style={{ height: 32, marginLeft: 4, padding: '0 6px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-body)' }}
+      >
+        {IMAGE_SIZES.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
+      </select>
       <input ref={imgFileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => uploadImage(e.target.files[0])} style={{ display: 'none' }} />
       {linkOpen && (
         <form onSubmit={submitLink} style={rowStyle} aria-label="Chèn liên kết">

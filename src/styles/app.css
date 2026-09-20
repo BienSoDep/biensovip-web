@@ -1510,3 +1510,125 @@ textarea,
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Liên hệ — hero brand panel + ảnh floating + chip tín nhiệm. */
+.contact-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  background: var(--surface-hero);
+  border-radius: var(--radius-surface);
+  padding: clamp(20px, 4vw, 48px);
+  box-shadow: var(--shadow-inset-hairline);
+}
+.contact-hero__glow {
+  position: absolute;
+  top: -90px;
+  right: -50px;
+  width: 360px;
+  height: 360px;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(circle, var(--brand-200) 0%, transparent 68%);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.contact-hero__text {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.contact-hero__media {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 auto;
+}
+.contact-hero__img {
+  display: block;
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-surface);
+  box-shadow: var(--shadow-3);
+  animation: contactFloat 6s var(--ease-out) infinite;
+}
+.contact-hero__badge {
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--white);
+  color: var(--text-strong);
+  font: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-2);
+  white-space: nowrap;
+}
+.contact-hero__badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--status-success);
+  box-shadow: 0 0 0 3px var(--status-success-bg);
+}
+.contact-hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.contact-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--white);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  box-shadow: var(--shadow-inset-hairline);
+  font: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--text-body);
+}
+.contact-hero__chip svg {
+  color: var(--action-primary);
+  flex-shrink: 0;
+}
+.contact-hero__decor {
+  position: absolute;
+  top: -12px;
+  left: -8px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+@keyframes contactFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@media (max-width: 768px) {
+  .contact-hero {
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-6) var(--space-5);
+  }
+  .contact-hero__text {
+    align-items: center;
+    flex-basis: 100%;
+  }
+  .contact-hero__media { margin-bottom: var(--space-4); }
+  .contact-hero__img { width: 200px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contact-hero__img { animation: none; }
+}

@@ -5,7 +5,11 @@ import { usePlates } from '../../services/plates.js';
 import { Select, Input, Badge, ImageUrlInput } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Modal from '../../components/Modal.jsx';
+import Drawer from '../../components/Drawer.jsx';
 import Button from '../../components/Button.jsx';
+import PlateVisual from '../../components/PlateVisual.jsx';
+import { parsePlateNumber } from '../../lib/plateFormat.js';
+import { formatDateTime } from '../../lib/date.js';
 
 const STATUS_OPTS = [
   { value: 'all', label: 'Tất cả' },
@@ -108,6 +112,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const [creating, setCreating] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [proofUrl, setProofUrl] = useState('');
+  const [detailTx, setDetailTx] = useState(null); // giao dịch đang mở Drawer chi tiết (trượt từ phải)
   const { data, isLoading, isError, refetch } = useAdminTransactions({ status, page, limit: 20 });
   const confirmPayment = useConfirmTransactionPayment();
   const deleteTransaction = useDeleteTransaction();
@@ -185,7 +190,9 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                 <span style={{ flex: '1 1 140px' }}>Trạng thái</span>
               </div>
               {items.map((t) => (
-                <div className="admin-row" key={t.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)' }}>
+                <div className="admin-row" key={t.id} onClick={() => setDetailTx(t)} role="button" tabIndex={0}
+                  onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setDetailTx(t); } }}
+                  title="Xem chi tiết giao dịch" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)', cursor: 'pointer' }}>
                   <span data-primary data-label="Khách" style={{ flex: '1 1 100px' }}>
                     <div>{t.fullName}</div>
                     <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.phone}</div>
@@ -227,8 +234,8 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                     )}
                     {t.status === 'pending' && (
                       <>
-                        <Button variant="outline" size="sm" onClick={() => { setConfirmTarget(t); setProofUrl(''); }}>Xác nhận đã nhận tiền</Button>
-                        <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(t)} style={{ color: 'var(--status-danger)' }}>Xóa</Button>
+                        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setConfirmTarget(t); setProofUrl(''); }}>Xác nhận đã nhận tiền</Button>
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} style={{ color: 'var(--status-danger)' }}>Xóa</Button>
                       </>
                     )}
                   </span>
@@ -312,6 +319,79 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
           </div>
         </div>
       </Modal>
+
+      <Drawer open={!!detailTx} onClose={() => setDetailTx(null)} title="Chi tiết giao dịch" width="min(52%, 720px)">
+        {detailTx && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{detailTx.fullName}</span>
+                <a href={`tel:${detailTx.phone}`} style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)', textDecoration: 'none' }}>{detailTx.phone}</a>
+              </div>
+              <Badge tone={detailTx.status === 'payment_confirmed' ? 'mint' : detailTx.status === 'cancelled' ? 'neutral' : 'orange'}>
+                {STATUS_LABEL[detailTx.status] || detailTx.status}
+              </Badge>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-3)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Biển số</span>
+                {detailTx.plateNumber ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <PlateVisual size="sm" {...(parsePlateNumber(detailTx.plateNumber) || {})} />
+                    <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{detailTx.plateNumber}</span>
+                  </span>
+                ) : <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-faint)' }}>—</span>}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Số tiền</span>
+                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(detailTx.amount)}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Loại giao dịch</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{INTENT_LABEL[detailTx.intent] || detailTx.intent}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Kênh xác nhận</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
+                  {detailTx.status === 'payment_confirmed' ? (detailTx.paymentConfirmedVia === 'zalopay_webhook' ? 'ZaloPay' : 'Thủ công') : '—'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Xác nhận lúc</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{detailTx.paymentConfirmedAt ? formatDateTime(detailTx.paymentConfirmedAt) : '—'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Ngày tạo</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{detailTx.createdAt ? formatDateTime(detailTx.createdAt) : '—'}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Ảnh minh chứng thanh toán</span>
+              {detailTx.paymentProofUrl ? (
+                <a href={detailTx.paymentProofUrl} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
+                  <img src={detailTx.paymentProofUrl} alt="Ảnh minh chứng thanh toán"
+                    style={{ width: '100%', maxWidth: 420, borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-inset-hairline)', display: 'block' }} />
+                </a>
+              ) : <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-faint)' }}>Không có ảnh minh chứng</span>}
+            </div>
+
+            {detailTx.ctvName && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Hoa hồng CTV</span>
+                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{detailTx.ctvName} — {money(detailTx.commissionAmount)}</span>
+                {detailTx.commissionStatus && <Badge tone={COMMISSION_STATUS_TONE[detailTx.commissionStatus] || 'neutral'}>{COMMISSION_STATUS_LABEL[detailTx.commissionStatus] || detailTx.commissionStatus}</Badge>}
+                {(detailTx.ctvBankAccount || detailTx.ctvBankAccountHolder) && (
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                    {[detailTx.ctvBankAccountHolder && `Chủ TK ${detailTx.ctvBankAccountHolder}`, detailTx.ctvBankAccount && `STK ${detailTx.ctvBankAccount}${detailTx.ctvBankCode ? ` · ${detailTx.ctvBankCode}` : ''}`].filter(Boolean).join(' — ')}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 }

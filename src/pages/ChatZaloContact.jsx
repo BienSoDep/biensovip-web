@@ -1,4 +1,4 @@
-import { Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound } from 'lucide-react';
+import { Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound, Clock, ShieldCheck, BadgeCheck } from 'lucide-react';
 import ContactRequestForm from '../components/ContactRequestForm.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import { content } from '../lib/content/index.js';
@@ -15,16 +15,38 @@ export default function ChatZaloContact({ notify, user }) {
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <section style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-6)' }}>
-        <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <section className="contact-hero">
+        <div className="contact-hero__glow" aria-hidden="true" />
+        <svg className="contact-hero__decor" aria-hidden="true" width="180" height="150" viewBox="0 0 180 150" fill="none">
+          <path d="M24 32c8-9 24-9 32 0" stroke="var(--action-primary)" strokeWidth="2" strokeLinecap="round" />
+          <path d="M16 48c4-5 12-5 16 0" stroke="var(--brand-400)" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="34" cy="78" r="4" fill="var(--action-primary)" />
+          <circle cx="54" cy="98" r="3" fill="var(--brand-400)" />
+          <path d="M78 88l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="var(--status-warning)" />
+          <path d="M120 26l3 6 6 3-6 3-3 6-3-6-6-3 6-3z" fill="var(--action-primary)" opacity="0.7" />
+          <path d="M128 104c-10 0-16 6-16 16h32c0-10-6-16-16-16z" fill="var(--action-primary)" opacity="0.35" />
+          <rect x="108" y="120" width="40" height="22" rx="11" fill="var(--white)" stroke="var(--border-hairline)" strokeWidth="1.5" />
+          <circle cx="118" cy="131" r="2" fill="var(--action-primary)" />
+          <circle cx="126" cy="131" r="2" fill="var(--action-primary)" />
+          <circle cx="134" cy="131" r="2" fill="var(--action-primary)" />
+        </svg>
+        <div className="contact-hero__text">
           <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Liên hệ tư vấn</h1>
           <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Chọn kênh phù hợp — phản hồi trong 15 phút, kể cả cuối tuần.</p>
+          <div className="contact-hero__chips">
+            <span className="contact-hero__chip"><Clock size={14} />Phản hồi &lt; 15 phút</span>
+            <span className="contact-hero__chip"><ShieldCheck size={14} />Bảo mật thông tin</span>
+            <span className="contact-hero__chip"><BadgeCheck size={14} />Tư vấn miễn phí</span>
+          </div>
         </div>
-        <img
-          src={optimizeImageUrl('https://res.cloudinary.com/dvwt6npcl/image/upload/v1789878152/biensovip/branding/contact.png')}
-          alt="Biensovip — đội ngũ tư vấn biển số"
-          style={{ width: '100%', maxWidth: 240, height: 'auto', borderRadius: 'var(--radius-surface)', boxShadow: 'var(--shadow-3)' }}
-        />
+        <div className="contact-hero__media">
+          <img
+            className="contact-hero__img"
+            src={optimizeImageUrl('https://res.cloudinary.com/dvwt6npcl/image/upload/v1789878152/biensovip/branding/contact.png')}
+            alt="Biensovip — đội ngũ tư vấn biển số"
+          />
+          <span className="contact-hero__badge"><span className="contact-hero__badge-dot" aria-hidden="true" />Tư vấn tận tâm 24/7</span>
+        </div>
       </section>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--gutter-section)' }}>

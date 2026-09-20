@@ -1,14 +1,13 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TiptapLink from '@tiptap/extension-link';
-import TiptapImage from '@tiptap/extension-image';
 import { useEffect, useState, useRef } from 'react';
 import { marked } from 'marked';
 import mammoth from 'mammoth';
 import { Eye, X, Upload } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, Select, InfoTip } from '../../components/index.jsx';
-import { EditorToolbar } from '../../components/RichTextEditor.jsx';
+import { EditorToolbar, ResizableImage } from '../../components/RichTextEditor.jsx';
 import Modal from '../../components/Modal.jsx';
 import BlogVersionHistoryModal from '../../components/BlogVersionHistoryModal.jsx';
 import { apiClient } from '../../services/apiClient.js';
@@ -28,6 +27,50 @@ function slugify(title) {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .slice(0, 300);
+}
+
+// 5 mệnh ngũ hành — Hợp mệnh/Kỵ mệnh là giá trị cố định, dùng chip toggle thay vì gõ tay.
+const MENH = ['Kim', 'Mộc', 'Thủy', 'Hỏa', 'Thổ'];
+const splitMenh = (s) => (s || '').split(/,\s*/).map((x) => x.trim()).filter(Boolean);
+const hasMenh = (s, m) => splitMenh(s).includes(m);
+const toggleMenh = (current, m) => {
+  const parts = splitMenh(current);
+  const i = parts.indexOf(m);
+  if (i >= 0) parts.splice(i, 1); else parts.push(m);
+  return parts.join(', ');
+};
+// Cắt tại khoảng trắng gần nhất trước giới hạn — cho nút tự điền meta title/description.
+const truncateAt = (text, max) => {
+  const t = (text || '').trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.lastIndexOf(' ');
+  return (sp > 0 ? cut.slice(0, sp) : cut).trim();
+};
+const AUTO_FILL_BTN = { border: 'none', background: 'none', cursor: 'pointer', color: 'var(--action-primary)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', padding: 0 };
+
+function MenhChips({ value, onChange, label }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {MENH.map((m) => {
+          const on = hasMenh(value, m);
+          return (
+            <button key={m} type="button" onClick={() => onChange(toggleMenh(value, m))} aria-pressed={on}
+              style={{
+                border: on ? '1px solid var(--action-primary)' : '1px dashed var(--border-strong)',
+                background: on ? 'var(--action-primary)' : 'transparent',
+                color: on ? 'var(--white)' : 'var(--action-primary)',
+                borderRadius: 'var(--radius-pill)', padding: '2px 12px', font: 'var(--type-caption)', cursor: 'pointer',
+              }}>
+              {m}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 
@@ -69,7 +112,7 @@ export default function Compose({ st, patch, notify }) {
   const fileInputRef = useRef(null);
   const previewCloseRef = useRef(null);
   // Ảnh trạng thái "đã lưu" để so sánh phát hiện thay đổi chưa lưu (unsaved-changes guard).
-  const savedRef = useRef({ title: '', slug: '', coverImageUrl: '', metaTitle: '', metaDescription: '', category: 'kien-thuc', tags: [], contentHtml: '' });
+  const savedRef = useRef({ title: '', slug: '', coverImageUrl: '', metaTitle: '', metaDescription: '', category: 'kien-thuc', tags: '[]', contentHtml: '', summaryFengShui: '', summaryTaboo: '', summaryMeaning: '', sourceNote: '', scheduledPublishAt: '', deliveryLocation: '', deliveryDate: '', plateId: '', faq: '[]', howToSteps: '[]', videoIds: '[]' });
 
   const createPost = useCreateBlogPost();
   const updatePost = useUpdateBlogPost();
@@ -90,7 +133,7 @@ export default function Compose({ st, patch, notify }) {
 
   const [, forceEditorUpdate] = useState(0);
   const editor = useEditor({
-    extensions: [StarterKit, TiptapLink, TiptapImage],
+    extensions: [StarterKit, TiptapLink, ResizableImage],
     content: '',
     onUpdate: () => forceEditorUpdate((n) => n + 1),
   });
@@ -123,7 +166,14 @@ export default function Compose({ st, patch, notify }) {
       savedRef.current = {
         title: full.title || '', slug: full.slug || '', coverImageUrl: full.coverImageUrl || '',
         metaTitle: full.metaTitle || '', metaDescription: full.metaDescription || '',
-        category: full.category || 'kien-thuc', tags: full.tags || [], contentHtml: full.contentHtml || '',
+        category: full.category || 'kien-thuc', tags: JSON.stringify(full.tags || []), contentHtml: full.contentHtml || '',
+        summaryFengShui: full.summaryFengShui || '', summaryTaboo: full.summaryTaboo || '',
+        summaryMeaning: full.summaryMeaning || '', sourceNote: full.sourceNote || '',
+        scheduledPublishAt: full.scheduledPublishAt ? full.scheduledPublishAt.slice(0, 16) : '',
+        deliveryLocation: full.deliveryLocation || '', deliveryDate: full.deliveryDate || '',
+        plateId: full.plateId || '',
+        faq: JSON.stringify(full.faq || []), howToSteps: JSON.stringify(full.howToSteps || []),
+        videoIds: JSON.stringify((full.videos || []).map((v) => v.id)),
       };
     });
   };
@@ -147,13 +197,14 @@ export default function Compose({ st, patch, notify }) {
   const isDirty = () => {
     const s = savedRef.current;
     const c = {
-      title, slug, coverImageUrl, metaTitle, metaDescription, category, tags,
-      contentHtml: editor?.getHTML() || '',
+      title, slug, coverImageUrl, metaTitle, metaDescription, category,
+      tags: JSON.stringify(tags), contentHtml: editor?.getHTML() || '',
+      summaryFengShui, summaryTaboo, summaryMeaning, sourceNote,
+      scheduledPublishAt, deliveryLocation, deliveryDate, plateId,
+      faq: JSON.stringify(faq), howToSteps: JSON.stringify(howToSteps),
+      videoIds: JSON.stringify(attachedVideos.map((v) => v.id)),
     };
-    return c.title !== s.title || c.slug !== s.slug || c.coverImageUrl !== s.coverImageUrl ||
-      c.metaTitle !== s.metaTitle || c.metaDescription !== s.metaDescription || c.category !== s.category ||
-      c.tags.length !== (s.tags || []).length || c.tags.some((t, i) => t !== (s.tags || [])[i]) ||
-      c.contentHtml !== (s.contentHtml || '');
+    return Object.keys(c).some((k) => c[k] !== (s[k] ?? null));
   };
 
   useEffect(() => {
@@ -411,7 +462,7 @@ export default function Compose({ st, patch, notify }) {
           <InfoTip size={12} text="Đường dẫn riêng của bài viết, dùng cho URL/SEO. Tự sinh từ tiêu đề (VD: 'phong-thuy-bien-so'). Để trống để hệ thống tự tạo." />
         </div>
         <Input placeholder="tu-dong-sinh-tu-tieu-de" value={slug} error={err?.field === 'slug' ? err.message : undefined} onChange={(e) => { setSlugTouched(true); setSlug(e.target.value); }} />
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nội dung</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -430,14 +481,14 @@ export default function Compose({ st, patch, notify }) {
             </div>
           </div>
           {err?.field === 'content' && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err.message}</span>}
-        </label>
+        </div>
         {err && !err.field && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err.message}</span>}
       </div>
       <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <Select label="Danh mục" value={category} options={categoryOpts} onChange={setCategory} />
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ảnh đại diện</span>
             {coverImageUrl && (
               <div style={{ position: 'relative', borderRadius: 'var(--radius-sm)', overflow: 'hidden', aspectRatio: '16/9', background: 'var(--surface-sunken)' }}>
@@ -450,7 +501,7 @@ export default function Compose({ st, patch, notify }) {
               <Button variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()} style={{ flex: 1 }}>{uploading ? 'Đang tải…' : 'Tải ảnh lên'}</Button>
             </div>
             <Input placeholder="hoặc dán URL ảnh trực tiếp" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} />
-          </label>
+          </div>
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Từ khóa<InfoTip size={12} text="Chọn từ kho hashtag có sẵn hoặc gõ tạo mới. Tối đa 10 từ khóa mỗi bài." /></span>
@@ -500,6 +551,7 @@ export default function Compose({ st, patch, notify }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Meta title (SEO)</span>
             <InfoTip size={12} text="Tiêu đề hiện trên tab trình duyệt và dòng đầu kết quả tìm kiếm Google. Để trống sẽ dùng tiêu đề bài viết." />
+            <button type="button" onClick={() => setMetaTitle(truncateAt(title, 60))} style={AUTO_FILL_BTN}>Tự điền</button>
           </div>
           <Input value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} />
           <span style={{ font: 'var(--type-caption)', color: metaTitle.length > 60 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
@@ -509,6 +561,7 @@ export default function Compose({ st, patch, notify }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Meta description (SEO)</span>
             <InfoTip size={12} text="Đoạn mô tả ngắn hiện dưới kết quả tìm kiếm. Nên 1-2 câu tóm tắt nội dung để tăng tỷ lệ nhấp." />
+            <button type="button" onClick={() => setMetaDescription(truncateAt(plainText, 155))} style={AUTO_FILL_BTN}>Tự điền</button>
           </div>
           <Input value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} />
           <span style={{ font: 'var(--type-caption)', color: metaDescription.length > 155 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
@@ -554,8 +607,8 @@ export default function Compose({ st, patch, notify }) {
 
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Tóm tắt nhanh (tùy chọn)<InfoTip size={12} text="Hiện ngay đầu bài dưới dạng box tóm tắt — giúp người đọc lướt nhanh, tăng dwell time cho SEO." /></span>
-          <Input label="Hợp mệnh" placeholder="VD: Kim, Thủy" value={summaryFengShui} onChange={(e) => setSummaryFengShui(e.target.value)} />
-          <Input label="Kỵ mệnh" placeholder="VD: Hỏa" value={summaryTaboo} onChange={(e) => setSummaryTaboo(e.target.value)} />
+          <MenhChips label="Hợp mệnh" value={summaryFengShui} onChange={setSummaryFengShui} />
+          <MenhChips label="Kỵ mệnh" value={summaryTaboo} onChange={setSummaryTaboo} />
           <Input label="Ý nghĩa chính" placeholder="VD: Số mang lại tài lộc, thăng tiến" value={summaryMeaning} onChange={(e) => setSummaryMeaning(e.target.value)} />
           <Input label="Nguồn tham khảo" placeholder="VD: Theo kinh nghiệm tư vấn thực tế của Biensovip" value={sourceNote} onChange={(e) => setSourceNote(e.target.value)} />
         </div>
