@@ -173,24 +173,26 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
     });
   }, [post]);
 
-  // UC40 — JSON-LD FAQPage khi bài có FAQ, cho cơ hội rich snippet Google (pattern giống Faq.jsx).
+  // Kho FAQ chung — bài gắn nhiều bộ (post.faqSets), gộp toàn bộ câu hỏi làm JSON-LD FAQPage
+  // (pattern giống Faq.jsx) cho cơ hội rich snippet Google.
+  const postFaqItems = post?.faqSets?.flatMap((s) => s.items) || [];
   useEffect(() => {
     const old = document.head.querySelector('script[data-post-faq-ld]');
     if (old) old.remove();
-    if (!post?.faq?.length) return;
+    if (!postFaqItems.length) return;
     const sc = document.createElement('script');
     sc.type = 'application/ld+json';
     sc.dataset.postFaqLd = '1';
     sc.textContent = JSON.stringify({
       '@context': 'https://schema.org', '@type': 'FAQPage',
-      mainEntity: post.faq.map((item) => ({
+      mainEntity: postFaqItems.map((item) => ({
         '@type': 'Question', name: item.question,
         acceptedAnswer: { '@type': 'Answer', text: item.answer },
       })),
     });
     document.head.appendChild(sc);
     return () => { sc.remove(); };
-  }, [post?.faq]);
+  }, [postFaqItems]);
 
   // UC40 — JSON-LD HowTo khi bài có các bước hướng dẫn có cấu trúc (rich snippet HowTo).
   useEffect(() => {
@@ -390,10 +392,10 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         <div className="article-body" itemProp="articleBody" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentWithIds }} />
       )}
 
-      {post.faq?.length > 0 && (
+      {postFaqItems.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           <h2 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
-          {post.faq.map((item, i) => (
+          {postFaqItems.map((item, i) => (
             <div key={i} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
               <button type="button" onClick={() => setOpenFaqIdx((cur) => (cur === i ? null : i))}
                 style={{ width: '100%', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>

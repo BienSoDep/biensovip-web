@@ -22,6 +22,30 @@ const TYPE_LABEL = {
   profile_incomplete: 'Nhắc hoàn thiện hồ sơ', collaborator_commission: 'Hoa hồng CTV đã thanh toán (email)',
 };
 
+// Mô tả điều kiện kích hoạt thật — lấy trực tiếp từ logic job/service backend, không phải suy đoán.
+const TYPE_DESC = {
+  plate_match: 'Gửi khi có biển mới đăng (15 phút gần nhất) khớp bộ lọc tìm kiếm đã lưu của người dùng.',
+  hot_alert: 'Gửi khi biển đã yêu thích vừa được đánh dấu HOT trong 1 giờ gần nhất.',
+  re_engage: 'Gửi cho user không hoạt động quá lâu, hoặc tài khoản mới 2-5 ngày chưa lưu biển nào.',
+  price_drop: 'Gửi khi biển đã yêu thích giảm giá vượt ngưỡng cấu hình so với lúc lưu.',
+  ai_pick: 'Gửi gợi ý biển cùng tỉnh/loại xe với biển đã lưu, xếp theo lượt xem — tối đa 3 gợi ý/ngày.',
+  digest: 'Gửi email gộp mọi thông báo web trong 24h qua, vào đúng giờ mỗi user tự chọn trong hồ sơ cá nhân — không phải giờ admin đặt ở đây.',
+  plate_sold: 'Gửi ngay khi biển đã yêu thích chuyển sang trạng thái Đã bán.',
+  fengshui_match: 'Gửi khi có biển mới đăng có số cuối hợp mệnh theo năm sinh của người dùng.',
+  contact_status: 'Gửi ngay khi admin đổi trạng thái yêu cầu liên hệ của người dùng.',
+  new_review: 'Gửi ngay khi 1 đánh giá về biển được admin duyệt lần đầu — báo cho ai đã yêu thích biển đó.',
+  search_stale: 'Gửi khi 1 tìm kiếm đã lưu quá 30 ngày không có kết quả mới — nhắc user nới bộ lọc.',
+  viewed_price_drop: 'Gửi khi biển đã xem (không cần yêu thích) giảm giá vượt ngưỡng so với lúc xem.',
+  compare_price_drop: 'Gửi khi biển trong danh sách so sánh giảm giá vượt ngưỡng so với lúc mở so sánh.',
+  profile_incomplete: 'Gửi cho user đăng ký ≥2 ngày còn thiếu họ tên/ngày sinh/giới tính, đúng giờ admin đặt bên dưới.',
+  collaborator_commission: 'Gửi tới email CTV khi hoa hồng của họ chuyển sang trạng thái Đã thanh toán.',
+};
+
+// Job backend THẬT SỰ đọc field TriggerHour để quyết định giờ gửi — chỉ loại này sửa "Giờ gửi" mới có
+// tác dụng. digest dùng giờ user tự chọn (không phải TriggerHour); search_stale có seed TriggerHour
+// nhưng job bỏ qua field này (chạy cố định 1 lần/ngày) — sửa giờ 2 loại này KHÔNG có tác dụng thật.
+const HOUR_HAS_EFFECT = new Set(['profile_incomplete']);
+
 const TARGETS = [
   { value: 'all', label: 'Tất cả người dùng' },
   { value: 'subscribed', label: 'Đã đăng ký nhận thông báo' },
@@ -31,6 +55,7 @@ const TARGETS = [
 const CHANNELS = [
   { value: 'web', label: 'Chỉ chuông web' },
   { value: 'email', label: 'Chỉ email' },
+  { value: 'zalo', label: 'Chỉ Zalo' },
   { value: 'email_zalo', label: 'Chuông web + Email' },
 ];
 const CHANNEL_LABEL = { web: 'Chuông web', email: 'Email', zalo: 'Zalo', email_zalo: 'Chuông web + Email' };
@@ -645,8 +670,14 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
         <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
           <input type="checkbox" checked={setting.emailEnabled} onChange={() => toggle('emailEnabled')} disabled={update.isPending} /> Email
         </label>
+        {!setting.webEnabled && !setting.emailEnabled && (
+          <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontWeight: 'var(--fw-semibold)' }}>⚠ Đã tắt hoàn toàn — user sẽ không nhận loại này qua bất kỳ kênh nào</span>
+        )}
         <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{editing ? 'Đang sửa ▸' : ''}</span>
       </div>
+      {!editing && TYPE_DESC[setting.type] && (
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{TYPE_DESC[setting.type]}</span>
+      )}
       {editing && (
         <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 'var(--space-2) var(--space-3)', background: 'var(--white)', borderRadius: 'var(--radius-field)', boxShadow: 'var(--shadow-inset-hairline)' }}>
@@ -660,18 +691,30 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
             <textarea rows={2} value={draftContent} placeholder={setting.defaultContent} onChange={(e) => setDraftContent(e.target.value)} style={{ background: 'var(--white)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '8px 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Biến có sẵn: {`{UserName}`} · {`{SiteName}`} — thay tự động theo từng người khi gửi.</span>
           </label>
-          {setting.triggerHour !== null && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 160 }}>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giờ gửi (UTC, 0-23)</span>
+          {setting.triggerHour !== null && HOUR_HAS_EFFECT.has(setting.type) ? (
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 220 }}>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giờ gửi (giờ UTC, 0-23)</span>
               <input type="number" min="0" max="23" value={triggerHour} onChange={(e) => setTriggerHour(e.target.value)}
                 style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 10px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
+                Giờ Việt Nam = UTC + 7 → gửi lúc {triggerHour !== '' ? `${(Number(triggerHour) + 7) % 24}h VN` : '—'} nếu nhập {triggerHour !== '' ? `${triggerHour}h UTC` : 'ở trên'}.
+              </span>
             </label>
+          ) : setting.triggerHour !== null ? (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontStyle: 'italic' }}>
+              ⚠ Loại này không dùng "Giờ gửi" cố định — {setting.type === 'digest' ? 'mỗi user tự chọn giờ riêng trong hồ sơ cá nhân' : 'job chạy cố định 1 lần/ngày, bỏ qua giờ đặt ở đây'}. Ẩn field để tránh admin tưởng chỉnh được.
+            </span>
+          ) : (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Loại này gửi ngay khi sự kiện xảy ra (real-time), không có giờ cố định để chỉnh.</span>
           )}
           <div style={{ maxWidth: 280 }}>
             <Select label="Layout email (UC27)" value={activeTemplate?.id || ''} onChange={setEmailLayout}
               options={[{ value: '', label: 'Mặc định hệ thống' }, ...applicableTemplates.map((t) => ({ value: t.id, label: t.name }))]} />
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
+              Khung "Xem trước email" bên phải luôn hiện đúng layout hiện tại (mặc định hoặc template đã chọn) — không cần preview riêng.
+            </span>
             {applicableTemplates.length === 0 && (
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có template nào gắn cho loại này — tạo ở trang "Mẫu email".</span>
+              <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có template nào gắn cho loại này — tạo ở trang "Mẫu email".</span>
             )}
           </div>
           <Button variant="dark" size="sm" style={{ alignSelf: 'flex-start' }} onClick={saveEdit} disabled={update.isPending}>{update.isPending ? 'Đang lưu…' : 'Lưu'}</Button>
