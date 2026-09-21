@@ -1,12 +1,18 @@
+import { useEffect } from 'react';
 import LandingBody from '../components/LandingBody.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { useProvinceLanding } from '../services/landing.js';
 import { useSeo } from '../hooks/useSeo.js';
 import { PROVINCE_LANDINGS } from '../config/routes.js';
+import { forceScrollToTop } from '../lib/scrollRestoration.js';
 
 export default function ProvinceLandingPage({ provinceCode = '43', openPlate, onBuy, contact, go }) {
   const { data, isLoading, isError } = useProvinceLanding(provinceCode);
   useSeo('provinceLanding', { landing: data });
+
+  useEffect(() => {
+    forceScrollToTop();
+  }, [provinceCode]);
   const prov = PROVINCE_LANDINGS.find((p) => p.code === provinceCode);
   const name = prov?.name || '';
   const blogPost = prov ? {

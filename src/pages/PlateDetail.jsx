@@ -27,6 +27,7 @@ import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import { maskName } from '../lib/textMask.js';
 import { buildConsultMessage, buildCtvPlateInviteMessage, toZaloUrl } from '../lib/zaloMessage.js';
 import { useCreatePlateLink } from '../services/collaborators.js';
+import { forceScrollToTop } from '../lib/scrollRestoration.js';
 import toast from 'react-hot-toast';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
@@ -141,6 +142,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const logContact = useLogPlateContact();
 
   useEffect(() => {
+    forceScrollToTop();
     if (plateId) logView.mutate(plateId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plateId]);

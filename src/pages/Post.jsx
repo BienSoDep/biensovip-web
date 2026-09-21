@@ -13,6 +13,7 @@ import Breadcrumb from '../components/Breadcrumb.jsx';
 import { Input } from '../components/index.jsx';
 import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } from '../services/tracking/events.js';
 import { sanitizeHtml } from '../lib/sanitizeHtml.js';
+import { forceScrollToTop } from '../lib/scrollRestoration.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -143,6 +144,10 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const postImageAlt = `${CATEGORY_LABEL[post?.category] || 'Biển số đẹp'} — ảnh minh họa bài viết`;
   const { sizeIdx, setSizeIdx, fontId, setFontId, fontSize, fontFamily } = useReaderPrefs();
   const articleBodyVars = { '--article-font-size': `${fontSize}px`, '--article-font-family': fontFamily };
+
+  useEffect(() => {
+    forceScrollToTop();
+  }, [postId]);
 
   useEffect(() => {
     if (!post) return;

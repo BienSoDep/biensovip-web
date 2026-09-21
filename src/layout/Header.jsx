@@ -111,8 +111,17 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
   const navRef = useRef(null);
   useEffect(() => {
-    const active = navRef.current?.querySelector('[aria-current="page"]');
-    active?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    const container = navRef.current;
+    const active = container?.querySelector('[aria-current="page"]');
+    if (container && active) {
+      const cRect = container.getBoundingClientRect();
+      const aRect = active.getBoundingClientRect();
+      if (aRect.left < cRect.left) {
+        container.scrollLeft -= (cRect.left - aRect.left) + 8;
+      } else if (aRect.right > cRect.right) {
+        container.scrollLeft += (aRect.right - cRect.right) + 8;
+      }
+    }
   }, [s]);
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 'var(--z-header)', background: 'var(--glass-fill)', backdropFilter: 'var(--glass-blur)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>

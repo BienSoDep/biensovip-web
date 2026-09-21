@@ -16,6 +16,7 @@ import { routeFor } from '../config/routes.js';
 import { readFiltersFromUrl, writeFiltersToUrl } from '../lib/plateListFilters.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { useSeo } from '../hooks/useSeo.js';
+import { restoreScrollPosition, getScrollPosition } from '../lib/scrollRestoration.js';
 import {
   trackViewItemList, trackSelectItem, trackSearch, trackFilterApply,
   trackSearchNoResults, trackSelectPricePreset, trackAvoidNumberToggle, trackSaveSearch,
@@ -194,9 +195,12 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   useEffect(() => {
     if (loading || !items.length) return;
     const y = Number(sessionStorage.getItem('bsd_plate_list_scroll') || 0);
-    if (y > 0) { window.scrollTo(0, y); sessionStorage.removeItem('bsd_plate_list_scroll'); }
+    if (y > 0) {
+      restoreScrollPosition(y);
+      sessionStorage.removeItem('bsd_plate_list_scroll');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [loading, items.length]);
   const showSkeleton = useInfinite ? inf.isLoading : (isLoading || isFetching);
   const showError = useInfinite ? inf.isError : isError;
 
@@ -218,7 +222,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   // Lưu vị trí cuộn trước khi vào chi tiết biển — bộ lọc đã tự lưu qua URL (readFiltersFromUrl),
   // chỉ còn vị trí cuộn cần lưu riêng để quay lại không phải lướt tìm lại từ đầu.
   const saveScrollBeforeOpen = () => {
-    try { sessionStorage.setItem('bsd_plate_list_scroll', String(window.scrollY)); } catch { /* storage blocked */ }
+    try { sessionStorage.setItem('bsd_plate_list_scroll', String(getScrollPosition())); } catch { /* storage blocked */ }
   };
 
   const cardProps = (p) => ({
