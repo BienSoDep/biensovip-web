@@ -336,7 +336,7 @@ export default function AdminCats({ notify, goToMeanings }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+      <div className="admin-tablist">
         {MAIN_TABS.map((t) => (
           <button key={t.value} type="button" onClick={() => setMainTab(t.value)}
             style={{
@@ -351,7 +351,7 @@ export default function AdminCats({ notify, goToMeanings }) {
       {mainTab === 'howto' && <HowToManager notify={notify} />}
 
       {mainTab === 'categories' && (<>
-      <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+      <div className="admin-tablist">
         {CATEGORY_GROUPS.map((g) => (
           <button key={g.value} type="button" onClick={() => setGroup(g.value)}
             style={{

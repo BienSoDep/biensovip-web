@@ -29,7 +29,7 @@ export default function AdminSales({ notify, go, st, initialView }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <div role="tablist" aria-label="Chế độ xem bán hàng" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+      <div role="tablist" className="admin-tablist" aria-label="Chế độ xem bán hàng" style={{ display: 'flex', gap: 'var(--space-2)' }}>
         {VIEWS.map(({ key, label, Icon }) => {
           const active = view === key;
           return (

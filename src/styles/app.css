@@ -608,11 +608,90 @@ textarea,
      Cấu trúc thật: .admin-rows > .admin-row > [data-label] (ô nằm trong .admin-row, không phải
      con trực tiếp của .admin-rows) — nên phải chọn .admin-row mới ra được thẻ. */
   .admin-table-scroll {
-    overflow-x: visible !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
   }
   .admin-table-scroll > .admin-rows {
     min-width: 0 !important;
   }
+
+  /* Tablist ngang trượt vuốt mượt mà trên mobile, không bị rớt dòng lộn xộn */
+  .admin-tablist {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+    gap: var(--space-2);
+  }
+  .admin-tablist::-webkit-scrollbar {
+    display: none;
+  }
+  .admin-tablist > * {
+    flex-shrink: 0 !important;
+  }
+
+  /* Admin Plates mobile card view & collapsible filters */
+  .admin-plates-mobile-bar {
+    display: flex !important;
+  }
+  .admin-plates-filters {
+    display: none !important;
+  }
+  .admin-plates-filters.admin-filters-mobile-open {
+    display: flex !important;
+    background: var(--white);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-inset-hairline);
+  }
+  .admin-plates-cards-container {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .admin-plates-cards-container.is-active {
+    display: flex !important;
+  }
+  .admin-plates-table-container {
+    display: none !important;
+  }
+  .admin-plates-table-container.force-mobile-table {
+    display: block !important;
+  }
+
+  /* Admin Contacts mobile card view & collapsible filters */
+  .admin-contacts-mobile-bar {
+    display: flex !important;
+  }
+  .admin-contacts-filters {
+    display: none !important;
+  }
+  .admin-contacts-filters.admin-filters-mobile-open {
+    display: flex !important;
+    background: var(--white);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-inset-hairline);
+  }
+  .admin-contacts-cards-container {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .admin-contacts-cards-container.is-active {
+    display: flex !important;
+  }
+  .admin-contacts-table-container {
+    display: none !important;
+  }
+  .admin-contacts-table-container.force-mobile-table {
+    display: block !important;
+  }
+
   .admin-rows {
     display: flex;
     flex-direction: column;
@@ -681,6 +760,18 @@ textarea,
   .admin-head {
     display: none !important;
   }
+}
+.admin-plates-mobile-bar,
+.admin-contacts-mobile-bar {
+  display: none;
+}
+.admin-plates-cards-container,
+.admin-contacts-cards-container {
+  display: none;
+}
+.admin-plates-table-container,
+.admin-contacts-table-container {
+  display: block;
 }
 @media (min-width: 481px) {
   /* Desktop: luôn xổ hết (details có open trong JSX), summary chỉ đóng vai trò tiêu đề tĩnh (không toggle) */
