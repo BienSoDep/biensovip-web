@@ -1,18 +1,29 @@
+import { useEffect } from 'react';
 import LandingBody from '../components/LandingBody.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { usePlateTypeLanding } from '../services/landing.js';
+import { useBlogPost } from '../services/blog.js';
 import { useSeo } from '../hooks/useSeo.js';
 import { PLATE_TYPE_LANDINGS } from '../config/routes.js';
+import { forceScrollToTop } from '../lib/scrollRestoration.js';
 
 export default function PlateTypeLandingPage({ typeSlug, openPlate, onBuy, contact, go }) {
   const { data, isLoading, isError } = usePlateTypeLanding(typeSlug);
   useSeo('plateTypeLanding', { landing: data });
+
+  useEffect(() => {
+    forceScrollToTop();
+  }, [typeSlug]);
   const landingSlug = 'bien-' + typeSlug;
   const pt = PLATE_TYPE_LANDINGS.find((p) => p.slug === landingSlug);
+  // Bài blog cùng slug ("bien-ngu-quy"...) đã có sẵn cover ảnh thật trong DB — lấy để hiện ảnh minh họa
+  // ở khối "Bài viết chi tiết" thay vì object dựng tay thiếu ảnh trước đây.
+  const { data: relatedPost } = useBlogPost(pt?.slug);
   const blogPost = pt ? {
     slug: pt.slug,
-    title: `Bài viết chi tiết biển ${pt.name}`,
-    excerpt: `Ý nghĩa phong thủy, đặc điểm và cách sở hữu biển ${pt.name} — đọc ngay trong bài viết chi tiết.`,
+    title: relatedPost?.title || `Bài viết chi tiết biển ${pt.name}`,
+    excerpt: relatedPost?.excerpt || `Ý nghĩa phong thủy, đặc điểm và cách sở hữu biển ${pt.name} — đọc ngay trong bài viết chi tiết.`,
+    coverImageUrl: relatedPost?.coverImageUrl,
   } : null;
   const relatedLandings = PLATE_TYPE_LANDINGS.filter((p) => p.slug !== landingSlug);
   return (

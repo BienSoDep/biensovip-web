@@ -9,6 +9,7 @@ import Modal from '../../components/Modal.jsx';
 import { Input, IconButton, InfoTip, Badge, Switch } from '../../components/index.jsx';
 import { CATEGORY_GROUPS, REGIONS, useAdminCategories, useCreateCategory, useUpdateCategory, useDeleteCategory, useReorderCategories, useRestoreCategory, useSetCategoryActive, useSetRegionActive } from '../../services/categories.js';
 import { useAdminPlates } from '../../services/adminPlates.js';
+import { useAdminFaqSets, useCreateFaqSet, useUpdateFaqSet, useDeleteFaqSet, useAdminHowToSteps, useReplaceHowToSteps } from '../../services/faqHowTo.js';
 
 // 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
 // xung đột với click nút Sửa/Xóa trên cùng hàng).
@@ -53,7 +54,157 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, isToggleabl
   );
 }
 
+// Tab "Kho FAQ" — quản lý các bộ FAQ dùng chung, mỗi bộ gắn 1 category blog. Bài viết ở Compose
+// chỉ chọn (multi-select), không gõ tay per-bài nữa.
+function FaqSetManager({ notify }) {
+  const { data, isLoading } = useAdminFaqSets();
+  const { data: blogCatData } = useAdminCategories('blog_category');
+  const catOpts = (blogCatData?.items || []).map((c) => ({ code: c.code || c.name, name: c.name }));
+  const createSet = useCreateFaqSet();
+  const updateSet = useUpdateFaqSet();
+  const deleteSet = useDeleteFaqSet();
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({ name: '', blogCategoryCode: '', items: [] });
+  const [err, setErr] = useState('');
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const items = data?.items || [];
+
+  const resetForm = () => { setForm({ name: '', blogCategoryCode: '', items: [] }); setEditId(null); setErr(''); };
+  const startEdit = (s) => { setEditId(s.id); setForm({ name: s.name, blogCategoryCode: s.blogCategoryCode || '', items: s.items.map((it) => ({ question: it.question, answer: it.answer })) }); setErr(''); };
+
+  const save = () => {
+    const name = form.name.trim();
+    if (!name) { setErr('Nhập tên bộ FAQ.'); return; }
+    const validItems = form.items.filter((it) => it.question.trim() && it.answer.trim());
+    if (validItems.length === 0) { setErr('Cần ít nhất 1 câu hỏi có đủ câu hỏi và trả lời.'); return; }
+    setErr('');
+    const body = { name, blogCategoryCode: form.blogCategoryCode || null, items: validItems };
+    const opts = {
+      onSuccess: () => { resetForm(); notify(editId ? 'Đã cập nhật bộ FAQ' : 'Đã tạo bộ FAQ'); },
+      onError: (e) => setErr(e.message || 'Có lỗi xảy ra.'),
+    };
+    if (editId) updateSet.mutate({ id: editId, body }, opts);
+    else createSet.mutate(body, opts);
+  };
+
+  const doDelete = () => {
+    deleteSet.mutate(confirmDel.id, {
+      onSuccess: () => { setConfirmDel(null); notify('Đã xóa bộ FAQ'); },
+      onError: (e) => notify(e.message || 'Xóa thất bại.', 'error'),
+    });
+  };
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
+      <div style={{ flex: '1 1 340px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
+          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Kho bộ FAQ</span>
+        </div>
+        {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
+        {!isLoading && items.length === 0 && (
+          <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có bộ FAQ nào.</div>
+        )}
+        {items.map((s) => (
+          <div key={s.id} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{s.name}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{s.blogCategoryCode || 'Không gắn danh mục'} · {s.items.length} câu hỏi</span>
+            </div>
+            <IconButton name="pencil" label="Sửa bộ FAQ" size="sm" onClick={() => startEdit(s)} />
+            <IconButton name="trash-2" label="Xóa bộ FAQ" size="sm" onClick={() => setConfirmDel(s)} />
+          </div>
+        ))}
+      </div>
+      <div style={{ flex: '1 1 340px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{editId ? 'Sửa bộ FAQ' : 'Tạo bộ FAQ mới'}</span>
+        <Input label="Tên bộ" placeholder="VD: FAQ mua bán biển số" value={form.name} error={err}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Danh mục blog áp dụng</span>
+          <select value={form.blogCategoryCode} onChange={(e) => setForm((f) => ({ ...f, blogCategoryCode: e.target.value }))}
+            style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }}>
+            <option value="">— Không gắn danh mục —</option>
+            {catOpts.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+          </select>
+        </label>
+        {form.items.map((item, i) => (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <Input placeholder="Câu hỏi" value={item.question} onChange={(e) => setForm((f) => ({ ...f, items: f.items.map((it, ii) => (ii === i ? { ...it, question: e.target.value } : it)) }))} />
+              </div>
+              <IconButton name="x" label="Xóa câu hỏi" size="sm" onClick={() => setForm((f) => ({ ...f, items: f.items.filter((_, ii) => ii !== i) }))} />
+            </div>
+            <Input placeholder="Câu trả lời" value={item.answer} onChange={(e) => setForm((f) => ({ ...f, items: f.items.map((it, ii) => (ii === i ? { ...it, answer: e.target.value } : it)) }))} />
+          </div>
+        ))}
+        <Button variant="outline" size="sm" disabled={form.items.length >= 8} onClick={() => setForm((f) => ({ ...f, items: [...f.items, { question: '', answer: '' }] }))}>Thêm câu hỏi</Button>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          {editId && <Button variant="ghost" size="md" onClick={resetForm}>Hủy sửa</Button>}
+          <Button variant="dark" size="md" onClick={save} disabled={createSet.isPending || updateSet.isPending}>
+            {editId ? 'Lưu thay đổi' : 'Tạo bộ FAQ'}
+          </Button>
+        </div>
+      </div>
+
+      <Modal open={!!confirmDel} onClose={() => setConfirmDel(null)} title="Xác nhận xóa" maxWidth="420px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Bộ FAQ <b>{confirmDel?.name}</b> sẽ bị xóa vĩnh viễn — mọi bài viết đang gắn bộ này sẽ mất câu hỏi đó.</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            <Button variant="ghost" size="md" onClick={() => setConfirmDel(null)}>Hủy</Button>
+            <Button variant="danger" size="md" onClick={doDelete} loading={deleteSet.isPending}>Xóa</Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// Tab "Kho HowTo" — 1 bộ DUY NHẤT toàn site, mọi bài blog tự động hiển thị giống nhau.
+function HowToManager({ notify }) {
+  const { data, isLoading } = useAdminHowToSteps();
+  const replaceSteps = useReplaceHowToSteps();
+  const [steps, setSteps] = useState(null); // null = chưa load xong, chưa sync từ server
+
+  const serverItems = data?.items || [];
+  const current = steps ?? serverItems.map((s) => ({ name: s.name, text: s.text }));
+  if (steps === null && data) setSteps(serverItems.map((s) => ({ name: s.name, text: s.text })));
+
+  const save = () => {
+    const valid = current.filter((s) => s.name.trim() && s.text.trim());
+    replaceSteps.mutate(valid, {
+      onSuccess: () => notify('Đã lưu HowTo — áp dụng ngay cho mọi bài viết.'),
+      onError: (e) => notify(e.message || 'Lưu thất bại.', 'error'),
+    });
+  };
+
+  return (
+    <div style={{ maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Hướng dẫn từng bước (HowTo) — chung toàn site</span>
+      <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Chỉ 1 bộ duy nhất — hiện ở cuối MỌI bài blog, không gắn riêng từng bài.</p>
+      {isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
+      {!isLoading && current.map((item, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <Input placeholder={`Bước ${i + 1} — tiêu đề`} value={item.name} onChange={(e) => setSteps(current.map((s, si) => (si === i ? { ...s, name: e.target.value } : s)))} />
+            </div>
+            <IconButton name="x" label="Xóa bước" size="sm" onClick={() => setSteps(current.filter((_, si) => si !== i))} />
+          </div>
+          <Input placeholder="Mô tả bước" value={item.text} onChange={(e) => setSteps(current.map((s, si) => (si === i ? { ...s, text: e.target.value } : s)))} />
+        </div>
+      ))}
+      <Button variant="outline" size="sm" disabled={current.length >= 20} onClick={() => setSteps([...current, { name: '', text: '' }])}>Thêm bước</Button>
+      <Button variant="dark" size="md" onClick={save} disabled={replaceSteps.isPending} style={{ alignSelf: 'flex-start' }}>
+        {replaceSteps.isPending ? 'Đang lưu…' : 'Lưu toàn bộ'}
+      </Button>
+    </div>
+  );
+}
+
 export default function AdminCats({ notify, goToMeanings }) {
+  const [mainTab, setMainTab] = useState('categories');
   const [group, setGroup] = useState('plate_type');
   const [form, setForm] = useState({ name: '', displayOrder: 0, minPrice: '', maxPrice: '', code: '' });
   const [formErr, setFormErr] = useState('');
@@ -177,9 +328,30 @@ export default function AdminCats({ notify, goToMeanings }) {
 
   const closeDelete = () => { setConfirmDel(null); setDeleteErr(null); };
 
+  const MAIN_TABS = [
+    { value: 'categories', label: 'Danh mục' },
+    { value: 'faq', label: 'Kho FAQ' },
+    { value: 'howto', label: 'Kho HowTo' },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+      <div className="admin-tablist">
+        {MAIN_TABS.map((t) => (
+          <button key={t.value} type="button" onClick={() => setMainTab(t.value)}
+            style={{
+              height: 36, padding: '0 16px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
+              background: mainTab === t.value ? 'var(--action-primary)' : 'var(--surface-sunken)',
+              color: mainTab === t.value ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
+            }}>{t.label}</button>
+        ))}
+      </div>
+
+      {mainTab === 'faq' && <FaqSetManager notify={notify} />}
+      {mainTab === 'howto' && <HowToManager notify={notify} />}
+
+      {mainTab === 'categories' && (<>
+      <div className="admin-tablist">
         {CATEGORY_GROUPS.map((g) => (
           <button key={g.value} type="button" onClick={() => setGroup(g.value)}
             style={{
@@ -298,6 +470,7 @@ export default function AdminCats({ notify, goToMeanings }) {
           </div>
         )}
       </Modal>
+      </>)}
     </div>
   );
 }

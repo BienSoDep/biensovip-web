@@ -15,6 +15,7 @@ import { useCreateBlogPost, useUpdateBlogPost, useAdminBlogTags, useCreateBlogTa
 import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
 import { useAdminPromoVideos, useCreatePromoVideo } from '../../services/promoVideoService.js';
 import { useAdminCategories } from '../../services/categories.js';
+import { useFaqSets } from '../../services/faqHowTo.js';
 import { setComposeDirty, resetComposeDirty } from '../../lib/unsavedGuard.js';
 
 function slugify(title) {
@@ -96,9 +97,8 @@ export default function Compose({ st, patch, notify }) {
   const [summaryTaboo, setSummaryTaboo] = useState('');
   const [summaryMeaning, setSummaryMeaning] = useState('');
   const [sourceNote, setSourceNote] = useState('');
-  const [faq, setFaq] = useState([]);
-  // HowTo schema — các bước hướng dẫn có cấu trúc (rich snippet HowTo cho bài thủ tục).
-  const [howToSteps, setHowToSteps] = useState([]);
+  // Kho FAQ chung — bài chọn (không gõ tay) các bộ FAQ có sẵn, lọc theo category đang chọn.
+  const [faqSetIds, setFaqSetIds] = useState([]);
   const [loadedUpdatedAt, setLoadedUpdatedAt] = useState(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [tags, setTags] = useState([]);
@@ -107,10 +107,8 @@ export default function Compose({ st, patch, notify }) {
   const [focusKeyword, setFocusKeyword] = useState('');
   const [err, setErr] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
   const fileInputRef = useRef(null);
-  const previewCloseRef = useRef(null);
   // Ảnh trạng thái "đã lưu" để so sánh phát hiện thay đổi chưa lưu (unsaved-changes guard).
   const savedRef = useRef({ title: '', slug: '', coverImageUrl: '', metaTitle: '', metaDescription: '', category: 'kien-thuc', tags: '[]', contentHtml: '', summaryFengShui: '', summaryTaboo: '', summaryMeaning: '', sourceNote: '', scheduledPublishAt: '', deliveryLocation: '', deliveryDate: '', plateId: '', faq: '[]', howToSteps: '[]', videoIds: '[]' });
 
@@ -118,6 +116,15 @@ export default function Compose({ st, patch, notify }) {
   const updatePost = useUpdateBlogPost();
   const { data: blogCatData } = useAdminCategories('blog_category');
   const categoryOpts = (blogCatData?.items || []).map((c) => ({ value: c.code || c.name, label: c.name }));
+  const { data: faqSetsData } = useFaqSets(category);
+  const faqSetOpts = faqSetsData?.items || [];
+  // Đổi category → bộ FAQ đang gắn không còn khớp category mới thì tự gỡ (kho lọc theo category, tránh gắn lệch).
+  useEffect(() => {
+    if (!faqSetsData) return;
+    const validIds = new Set(faqSetOpts.map((s) => s.id));
+    setFaqSetIds((cur) => cur.filter((id) => validIds.has(id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, faqSetsData]);
   const { data: allVideos } = useAdminPromoVideos();
   const createVideo = useCreatePromoVideo();
   const { data: allTagsData } = useAdminBlogTags();
@@ -159,8 +166,7 @@ export default function Compose({ st, patch, notify }) {
       setSummaryTaboo(full.summaryTaboo || '');
       setSummaryMeaning(full.summaryMeaning || '');
       setSourceNote(full.sourceNote || '');
-      setFaq(full.faq || []);
-      setHowToSteps(full.howToSteps || []);
+      setFaqSetIds((full.faqSets || []).map((s) => s.id));
       if (full.contentHtml) editor.commands.setContent(full.contentHtml);
       setAttachedVideos(full.videos || []);
       savedRef.current = {
@@ -172,7 +178,7 @@ export default function Compose({ st, patch, notify }) {
         scheduledPublishAt: full.scheduledPublishAt ? full.scheduledPublishAt.slice(0, 16) : '',
         deliveryLocation: full.deliveryLocation || '', deliveryDate: full.deliveryDate || '',
         plateId: full.plateId || '',
-        faq: JSON.stringify(full.faq || []), howToSteps: JSON.stringify(full.howToSteps || []),
+        faqSetIds: JSON.stringify((full.faqSets || []).map((s) => s.id)),
         videoIds: JSON.stringify((full.videos || []).map((v) => v.id)),
       };
     });
@@ -201,7 +207,7 @@ export default function Compose({ st, patch, notify }) {
       tags: JSON.stringify(tags), contentHtml: editor?.getHTML() || '',
       summaryFengShui, summaryTaboo, summaryMeaning, sourceNote,
       scheduledPublishAt, deliveryLocation, deliveryDate, plateId,
-      faq: JSON.stringify(faq), howToSteps: JSON.stringify(howToSteps),
+      faqSetIds: JSON.stringify(faqSetIds),
       videoIds: JSON.stringify(attachedVideos.map((v) => v.id)),
     };
     return Object.keys(c).some((k) => c[k] !== (s[k] ?? null));
@@ -216,15 +222,6 @@ export default function Compose({ st, patch, notify }) {
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   });
-
-  // Preview modal a11y: focus nút đóng + Esc đóng.
-  useEffect(() => {
-    if (!previewOpen) return;
-    previewCloseRef.current?.focus();
-    const onKey = (e) => { if (e.key === 'Escape') { e.preventDefault(); setPreviewOpen(false); } };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [previewOpen]);
 
   // Route-guard trong-SPA: đăng ký trạng thái dirty cho App/usePathRouter chặn rời trang.
   useEffect(() => { setComposeDirty(isDirty()); });
@@ -389,6 +386,8 @@ export default function Compose({ st, patch, notify }) {
   const submit = async (status) => {
     if (!title.trim()) { setErr({ field: 'title', message: 'Nhập tiêu đề bài viết.' }); return; }
     if (status === 'published' && !plainText.trim()) { setErr({ field: 'content', message: 'Bài viết cần có nội dung để đăng.' }); return; }
+    if (status === 'published' && metaTitle.length > 60) { setErr({ field: 'metaTitle', message: 'Meta title vượt 60 ký tự — bấm "Tự điền" hoặc rút ngắn trước khi đăng.' }); return; }
+    if (status === 'published' && metaDescription.length > 155) { setErr({ field: 'metaDescription', message: 'Meta description vượt 155 ký tự — bấm "Tự điền" hoặc rút ngắn trước khi đăng.' }); return; }
     setErr(null);
 
     if (editPostId && loadedUpdatedAt) {
@@ -416,8 +415,7 @@ export default function Compose({ st, patch, notify }) {
       ...(editPostId && !plateId ? { clearPlateId: true } : {}),
       deliveryLocation: deliveryLocation.trim() || null,
       deliveryDate: deliveryDate || null,
-      faq: faq.filter((f) => f.question.trim() && f.answer.trim()),
-      howToSteps: howToSteps.filter((s) => s.name.trim() && s.text.trim()),
+      faqSetIds,
       summaryFengShui: summaryFengShui.trim() || null,
       summaryTaboo: summaryTaboo.trim() || null,
       summaryMeaning: summaryMeaning.trim() || null,
@@ -452,10 +450,13 @@ export default function Compose({ st, patch, notify }) {
   };
 
   const saving = createPost.isPending || updatePost.isPending;
+  const previewMetaTitle = metaTitle.trim() || title.trim() || 'Chưa có tiêu đề';
+  const previewMetaDesc = metaDescription.trim() || truncateAt(plainText, 155);
 
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ flex: '2 1 520px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <Input label="Tiêu đề" placeholder="VD: Ngũ quý 99999 — vì sao đắt nhất?" value={title} error={err?.field === 'title' ? err.message : undefined} onChange={onTitleChange} required />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Slug</span>
@@ -484,9 +485,10 @@ export default function Compose({ st, patch, notify }) {
         </div>
         {err && !err.field && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err.message}</span>}
       </div>
-      <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <Select label="Danh mục" value={category} options={categoryOpts} onChange={setCategory} />
+        </div>
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ảnh đại diện</span>
@@ -614,35 +616,28 @@ export default function Compose({ st, patch, notify }) {
         </div>
 
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Câu hỏi thường gặp — FAQ (tùy chọn)<InfoTip size={12} text="Hiện thành accordion cuối bài, kèm schema FAQPage — có cơ hội lên rich snippet trên Google." /></span>
-          {faq.map((item, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <Input placeholder="Câu hỏi" value={item.question} onChange={(e) => setFaq((cur) => cur.map((f, fi) => (fi === i ? { ...f, question: e.target.value } : f)))} />
-                </div>
-                <button type="button" onClick={() => setFaq((cur) => cur.filter((_, fi) => fi !== i))} aria-label="Xóa câu hỏi" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--status-danger)', display: 'flex', padding: 6 }}><X size={16} /></button>
-              </div>
-              <Input placeholder="Câu trả lời" value={item.answer} onChange={(e) => setFaq((cur) => cur.map((f, fi) => (fi === i ? { ...f, answer: e.target.value } : f)))} />
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Bộ FAQ áp dụng (tùy chọn)<InfoTip size={12} text="Chọn từ kho FAQ chung (quản lý ở trang Danh mục, tab Kho FAQ) — lọc theo danh mục bài đang chọn. Không gõ tay từng bài nữa, sửa 1 bộ áp dụng cho mọi bài đã gắn." /></span>
+          {faqSetOpts.length === 0 ? (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Chưa có bộ FAQ nào cho danh mục này — tạo ở trang Danh mục &gt; Kho FAQ.</span>
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {faqSetOpts.map((s) => {
+                const on = faqSetIds.includes(s.id);
+                return (
+                  <button key={s.id} type="button" aria-pressed={on}
+                    onClick={() => setFaqSetIds((cur) => (on ? cur.filter((id) => id !== s.id) : [...cur, s.id]))}
+                    style={{
+                      border: on ? '1px solid var(--action-primary)' : '1px dashed var(--border-strong)',
+                      background: on ? 'var(--action-primary)' : 'transparent',
+                      color: on ? 'var(--white)' : 'var(--action-primary)',
+                      borderRadius: 'var(--radius-pill)', padding: '4px 12px', font: 'var(--type-caption)', cursor: 'pointer',
+                    }}>
+                    {s.name} ({s.items.length})
+                  </button>
+                );
+              })}
             </div>
-          ))}
-          <Button variant="outline" size="sm" disabled={faq.length >= 8} onClick={() => setFaq((cur) => [...cur, { question: '', answer: '' }])}>Thêm câu hỏi</Button>
-        </div>
-
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Hướng dẫn từng bước — HowTo (tùy chọn)<InfoTip size={12} text="Dành cho bài thủ tục (sang tên, tính nút, tra cứu…). Hiện thành danh sách bước, kèm schema HowTo — có cơ hội lên rich snippet." /></span>
-          {howToSteps.map((item, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <Input placeholder={`Bước ${i + 1} — tiêu đề`} value={item.name} onChange={(e) => setHowToSteps((cur) => cur.map((s, si) => (si === i ? { ...s, name: e.target.value } : s)))} />
-                </div>
-                <button type="button" onClick={() => setHowToSteps((cur) => cur.filter((_, si) => si !== i))} aria-label="Xóa bước" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--status-danger)', display: 'flex', padding: 6 }}><X size={16} /></button>
-              </div>
-              <Input placeholder="Mô tả bước" value={item.text} onChange={(e) => setHowToSteps((cur) => cur.map((s, si) => (si === i ? { ...s, text: e.target.value } : s)))} />
-            </div>
-          ))}
-          <Button variant="outline" size="sm" disabled={howToSteps.length >= 20} onClick={() => setHowToSteps((cur) => [...cur, { name: '', text: '' }])}>Thêm bước</Button>
+          )}
         </div>
 
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -680,10 +675,6 @@ export default function Compose({ st, patch, notify }) {
             </div>
         </div>
 
-        <Button variant="ghost" size="md" onClick={() => setPreviewOpen(true)} disabled={!title.trim()}>
-          <Eye size={16} style={{ marginRight: 6 }} />Xem trước
-        </Button>
-
         {editPostId && (
           <Button variant="ghost" size="md" onClick={() => setHistoryOpen(true)}>Lịch sử phiên bản</Button>
         )}
@@ -700,35 +691,42 @@ export default function Compose({ st, patch, notify }) {
         </div>
       </div>
 
-      {editPostId && (
-        <BlogVersionHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} postId={editPostId} notify={notify} onRolledBack={loadPost} />
-      )}
-
-      {previewOpen && (
-        <div role="dialog" aria-modal="true" aria-label="Xem trước bài viết" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div style={{ width: '100%', maxWidth: 800, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-4) var(--space-6)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-              <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Xem trước bài viết</span>
-              <button type="button" ref={previewCloseRef} onClick={() => setPreviewOpen(false)} aria-label="Đóng" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }}><X size={22} /></button>
-            </div>
-            <article style={{ padding: 'var(--space-8) var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{categoryOpts.find((c) => c.value === category)?.label || category}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>~{readingMinutes} phút đọc</span>
-              </div>
-              <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title || 'Chưa có tiêu đề'}</h1>
-              {coverImageUrl && (
-                <img src={coverImageUrl} alt={title} style={{ width: '100%', maxHeight: 400, objectFit: 'cover', borderRadius: 'var(--radius-card)' }} />
-              )}
-              <div style={{ font: 'var(--type-body)', fontSize: 17, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentHtml ? sanitizeHtml(contentHtml) : '<p style="color:var(--text-faint)">Chưa có nội dung.</p>' }} />
-              {tags.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-                  {tags.map((t) => <span key={t} style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</span>)}
-                </div>
-              )}
-            </article>
+      {/* Cột preview — sticky, cuộn riêng khi form dài hơn viewport */}
+      <div style={{ flex: '1 1 380px', minWidth: 0, position: 'sticky', top: 'var(--space-4)', maxHeight: '100vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><Eye size={14} />Xem trước Google</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontFamily: 'arial, sans-serif' }}>
+            <span style={{ fontSize: 14, color: '#202124' }}>biensovip.com › bai-viet › {slug || 'duong-dan-bai-viet'}</span>
+            <span style={{ fontSize: 20, color: '#1a0dab', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{previewMetaTitle}</span>
+            <span style={{ fontSize: 14, color: '#4d5156', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{previewMetaDesc || 'Chưa có mô tả.'}</span>
           </div>
         </div>
+
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+          <div style={{ padding: 'var(--space-3) var(--gutter-card) 0' }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Xem trước bài viết</span>
+          </div>
+          <article style={{ padding: 'var(--space-6) var(--gutter-card) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{categoryOpts.find((c) => c.value === category)?.label || category}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>~{readingMinutes} phút đọc</span>
+            </div>
+            <h1 style={{ margin: 0, font: 'var(--type-title-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title || 'Chưa có tiêu đề'}</h1>
+            {coverImageUrl && (
+              <img src={coverImageUrl} alt={title} style={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 'var(--radius-card)' }} />
+            )}
+            <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentHtml ? sanitizeHtml(contentHtml) : '<p style="color:var(--text-faint)">Chưa có nội dung.</p>' }} />
+            {tags.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+                {tags.map((t) => <span key={t} style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</span>)}
+              </div>
+            )}
+          </article>
+        </div>
+      </div>
+
+      {editPostId && (
+        <BlogVersionHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} postId={editPostId} notify={notify} onRolledBack={loadPost} />
       )}
 
       {confirmPublish && (

@@ -3,13 +3,19 @@ import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
 import { usePolicyPage } from '../services/policyPages.js';
+import { useFaqSets } from '../services/faqHowTo.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
 
 export default function Faq({ go, zalo }) {
   const [open, setOpen] = useState(null);
   const { data: db } = usePolicyPage('faq');
   const dbContent = db ? (() => { try { return JSON.parse(db.contentJson); } catch { return null; } })() : null;
-  const QA = dbContent?.items || contentItems('faq.items');
+  const policyQA = dbContent?.items || contentItems('faq.items');
+  // Kho FAQ chung (gắn theo bài blog) nối tiếp bên dưới nội dung chính sách cũ — 2 nguồn tách biệt,
+  // không thay thế nhau. field q/a (policy) khác question/answer (kho) — chuẩn hóa về 1 shape khi gộp.
+  const { data: faqSetsData } = useFaqSets();
+  const poolQA = (faqSetsData?.items || []).flatMap((s) => s.items).map((it) => ({ q: it.question, a: it.answer }));
+  const QA = [...policyQA, ...poolQA];
   const title = db?.title || contentGet('faq.title');
   const subtitle = db?.subtitle || contentGet('faq.subtitle');
 
@@ -40,7 +46,7 @@ export default function Faq({ go, zalo }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         {QA.map((item, i) => (
-          <div key={item.q} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+          <div key={i} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
             <button
               type="button"
               id={`faq-q-${i}`}

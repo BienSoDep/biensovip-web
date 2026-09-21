@@ -8,6 +8,7 @@ import PostCardSkeleton from '../components/skeletons/PostCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useBlogPosts } from '../services/blog.js';
 import { routeFor } from '../config/routes.js';
+import { restoreScrollPosition, getScrollPosition } from '../lib/scrollRestoration.js';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -59,14 +60,14 @@ export default function Blog({ patch }) {
   // Khôi phục vị trí cuộn đã lưu (nếu quay lại từ bài viết) — chạy sau khi data đã load xong.
   useEffect(() => {
     if (hasQueryParams || !saved?.scrollY || isLoading) return;
-    window.scrollTo(0, saved.scrollY);
+    restoreScrollPosition(saved.scrollY);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading]);
 
   // Lưu state (filter/trang/vị trí cuộn) trước khi rời trang — dùng để phục hồi khi back từ bài viết,
   // tránh người dùng phải lướt tìm lại từ đầu ở trang tổng.
   const saveStateBeforeLeave = () => {
-    try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ query, category, tag, page, scrollY: window.scrollY })); } catch { /* storage blocked */ }
+    try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ query, category, tag, page, scrollY: getScrollPosition() })); } catch { /* storage blocked */ }
   };
 
   const all = data?.items || [];

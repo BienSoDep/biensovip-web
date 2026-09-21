@@ -34,6 +34,15 @@ import { useRageClickDetection } from './hooks/useRageClickDetection.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 import { usePublicMaintenance } from './services/maintenanceService.js';
+import {
+  getRouteKey,
+  getScrollPosition,
+  saveScrollForRoute,
+  getSavedScrollForRoute,
+  clearSavedScrollForRoute,
+  restoreScrollPosition,
+  forceScrollToTop,
+} from './lib/scrollRestoration.js';
 
 const MaintenancePage = lazy(() => import('./pages/MaintenancePage.jsx'));
 const Home = lazy(() => import('./pages/Home.jsx'));
@@ -206,14 +215,46 @@ export default function App() {
   useScrollDepthTracking(st.screen);
   useRageClickDetection();
 
-  // Scroll to top whenever the page changes — route change, or curId change while NOT inside a
-  // modal (curId doubles as the buy/contact modal's target id, so a modal opening on a list page
-  // must not yank scroll; but navigating detail→detail via a related-plate link, or browser
-  // back/forward between two detail pages, DOES change curId with modal staying false and needs
-  // the scroll reset just like any other page change).
+  const routeKey = getRouteKey(st);
+  const prevRouteKeyRef = useRef(routeKey);
+
+  // Quản lý cuộn trang:
+  // - Đi đến trang tiếp theo (bấm nút/link/card): LUÔN cuộn lên đầu trang (top: 0)
+  // - Quay lại trang trước (như từ chi tiết biển số về danh sách): Khôi phục vị trí cuộn trước đó
+  // - Đóng/mở modal: KHÔNG làm nhảy cuộn trang
   useEffect(() => {
-    if (!st.modal) window.scrollTo(0, 0);
-  }, [st.screen, st.postId, st.provinceCode, st.typeSlug, st.curId, st.modal]);
+    const prevKey = prevRouteKeyRef.current;
+    if (prevKey === routeKey) return;
+    prevRouteKeyRef.current = routeKey;
+
+    // Lưu vị trí cuộn của trang trước đó
+    saveScrollForRoute(prevKey);
+
+    // Kiểm tra xem đây có phải là thao tác QUAY LẠI TRANG TRƯỚC (back navigation)
+    const isBackNav = window.__bsdIsBackNav === true;
+    window.__bsdIsBackNav = false;
+
+    // Trường hợp quay lại từ chi tiết biển số về danh sách biển số, hoặc từ bài viết về blog
+    const isReturningDetailToList = prevKey.startsWith('detail:') && routeKey === 'list';
+    const isReturningPostToBlog = prevKey.startsWith('post:') && routeKey === 'blog';
+
+    if (isBackNav || isReturningDetailToList || isReturningPostToBlog) {
+      const savedY =
+        getSavedScrollForRoute(routeKey) ||
+        (routeKey === 'list' ? Number(sessionStorage.getItem('bsd_plate_list_scroll') || 0) : 0);
+      if (savedY > 0) {
+        restoreScrollPosition(savedY);
+        return;
+      }
+    }
+
+    // ĐI ĐẾN TRANG MỚI/TIẾP THEO: Luôn cuộn lên đầu trang (top: 0)
+    clearSavedScrollForRoute(routeKey);
+    if (routeKey === 'list' && !isReturningDetailToList) {
+      sessionStorage.removeItem('bsd_plate_list_scroll');
+    }
+    forceScrollToTop();
+  }, [routeKey]);
 
   const notify = (msg, type) => (type === 'error' ? toast.error(msg) : toast(msg));
   const heroAnim = makeHeroAnim(fanDone);
@@ -224,6 +265,12 @@ export default function App() {
       if (!window.confirm('Bạn có thay đổi chưa lưu. Rời đi sẽ mất những thay đổi này?')) return;
     }
     resetComposeDirty();
+    if (s !== 'list' || !st.screen?.startsWith('detail')) {
+      clearSavedScrollForRoute(s);
+      if (s === 'list') {
+        sessionStorage.removeItem('bsd_plate_list_scroll');
+      }
+    }
     patchAuth({ aErr: {}, step: s === 'forgot' ? 1 : ast.step });
     patch({ screen: s, modal: false, sent: false, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo, ...(s !== 'compose' ? { editPostId: null } : {}), drawerOpen: false });
   };
@@ -280,7 +327,17 @@ export default function App() {
     patch({ favs: {} });
     notify('Đã bỏ lưu tất cả');
   };
-  const openPlate = (id, from) => patch({ screen: 'detail', curId: id, modal: false, detailFrom: from || null });
+  const openPlate = (id, from) => {
+    if (st.screen === 'list') {
+      saveScrollForRoute('list');
+      try {
+        sessionStorage.setItem('bsd_plate_list_scroll', String(getScrollPosition()));
+      } catch {
+        /* ignore */
+      }
+    }
+    patch({ screen: 'detail', curId: id, modal: false, detailFrom: from || (st.screen !== 'detail' ? st.screen : st.detailFrom) || null });
+  };
   const openPost = (slug) => patch({ screen: 'post', postId: slug, modal: false });
   // intent mặc định 'deposit_request' (Đặt cọc giữ biển) — khớp Modal #2 (PlateDetail.jsx's "Chốt
   // biển này"). Prefill từ profile nếu đã đăng nhập (ưu tiên user.phone riêng, xem prefillFromUser).

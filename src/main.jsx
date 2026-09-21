@@ -21,6 +21,10 @@ document.addEventListener('pointerdown', preventFocusScroll, true);
 document.addEventListener('mousedown', preventFocusScroll, true);
 document.addEventListener('touchstart', preventFocusScroll, true);
 
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 })
