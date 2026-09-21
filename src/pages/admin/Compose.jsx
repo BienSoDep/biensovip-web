@@ -386,6 +386,8 @@ export default function Compose({ st, patch, notify }) {
   const submit = async (status) => {
     if (!title.trim()) { setErr({ field: 'title', message: 'Nhập tiêu đề bài viết.' }); return; }
     if (status === 'published' && !plainText.trim()) { setErr({ field: 'content', message: 'Bài viết cần có nội dung để đăng.' }); return; }
+    if (status === 'published' && metaTitle.length > 60) { setErr({ field: 'metaTitle', message: 'Meta title vượt 60 ký tự — bấm "Tự điền" hoặc rút ngắn trước khi đăng.' }); return; }
+    if (status === 'published' && metaDescription.length > 155) { setErr({ field: 'metaDescription', message: 'Meta description vượt 155 ký tự — bấm "Tự điền" hoặc rút ngắn trước khi đăng.' }); return; }
     setErr(null);
 
     if (editPostId && loadedUpdatedAt) {

@@ -34,8 +34,12 @@ export function usePathRouter(st, patch) {
 
   useEffect(() => {
     const onPop = (e) => {
-      const newIdx = e?.state?.bsdIdx ?? window.history.state?.bsdIdx ?? 0;
-      window.__bsdIsBackNav = newIdx < currentHistoryIdx;
+      // state=null (không có bsdIdx) nghĩa là 1 nơi khác tự pushState thủ công (link nội bộ dispatch
+      // popstate giả, không qua go()/patch()) — coi là điều hướng TIẾN, không phải back, để không bị
+      // hiểu nhầm thành back-nav rồi khôi phục scroll cũ thay vì cuộn lên đầu trang mới.
+      const rawIdx = e?.state?.bsdIdx ?? window.history.state?.bsdIdx;
+      const newIdx = rawIdx ?? currentHistoryIdx + 1;
+      window.__bsdIsBackNav = rawIdx != null && newIdx < currentHistoryIdx;
       currentHistoryIdx = newIdx;
 
       const r = parseRoute(window.location.pathname);
