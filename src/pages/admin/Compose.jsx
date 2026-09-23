@@ -692,7 +692,7 @@ export default function Compose({ st, patch, notify }) {
       </div>
 
       {/* Cột preview — sticky, cuộn riêng khi form dài hơn viewport */}
-      <div style={{ flex: '1 1 380px', minWidth: 0, position: 'sticky', top: 'var(--space-4)', maxHeight: '100vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ flex: '1 1 380px', minWidth: 0, position: 'sticky', top: 'var(--space-4)', maxHeight: 'calc(100vh - var(--space-8))', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><Eye size={14} />Xem trước Google</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontFamily: 'arial, sans-serif' }}>
@@ -715,7 +715,7 @@ export default function Compose({ st, patch, notify }) {
             {coverImageUrl && (
               <img src={coverImageUrl} alt={title} style={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 'var(--radius-card)' }} />
             )}
-            <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentHtml ? sanitizeHtml(contentHtml) : '<p style="color:var(--text-faint)">Chưa có nội dung.</p>' }} />
+            <div className="article-body" style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentHtml ? sanitizeHtml(contentHtml) : '<p style="color:var(--text-faint)">Chưa có nội dung.</p>' }} />
             {tags.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
                 {tags.map((t) => <span key={t} style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</span>)}

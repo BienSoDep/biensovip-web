@@ -1237,6 +1237,13 @@ textarea,
 .article-body figure {
   margin: 0;
 }
+/* Editor Compose (Tiptap) — ảnh chèn trong bài không co max-width như .article-body (trang public),
+   nên ảnh gốc to (VD chụp điện thoại 3000px+) tràn khung soạn thảo. */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
 .article-body figcaption {
   margin-top: 6px;
   font: var(--type-caption);
