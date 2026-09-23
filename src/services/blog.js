@@ -54,7 +54,7 @@ export function useCreateBlogTag() {
   });
 }
 
-export function useAdminBlogPosts(status, q, page = 1, limit = 50) {
+export function useAdminBlogPosts(status, q, page = 1, limit = 500) {
   const params = new URLSearchParams();
   if (status) params.set('status', status);
   if (q) params.set('q', q);
