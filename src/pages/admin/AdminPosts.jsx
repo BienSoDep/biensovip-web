@@ -1,12 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { Badge, IconButton } from '../../components/index.jsx';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Badge, IconButton, Select } from '../../components/index.jsx';
+import Button from '../../components/Button.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import ConfirmBulkModal from '../../components/ConfirmBulkModal.jsx';
 import { useAdminBlogPosts, useDeleteBlogPost } from '../../services/blog.js';
 
 const STATUS_TONE = { draft: 'amber', published: 'mint' };
 const STATUS_LABEL = { draft: 'Bản nháp', published: 'Đã xuất bản' };
+const PAGE_SIZE = 20;
+const SORT_OPTS = [
+  { value: 'createdAt:desc', label: 'Mới tạo trước' },
+  { value: 'createdAt:asc', label: 'Cũ tạo trước' },
+  { value: 'publishedAt:desc', label: 'Mới đăng trước' },
+  { value: 'publishedAt:asc', label: 'Cũ đăng trước' },
+  { value: 'title:asc', label: 'Tiêu đề A→Z' },
+  { value: 'title:desc', label: 'Tiêu đề Z→A' },
+];
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -24,15 +35,32 @@ const STATUS_KEY = 'bsd_admin_posts_status';
 
 export default function AdminPosts({ st, patch, notify }) {
   const [status, setStatus] = useState(() => { try { return sessionStorage.getItem(STATUS_KEY) || ''; } catch { return ''; } });
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState('createdAt:desc');
   const [confirmPost, setConfirmPost] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const adminQ = (st?.adminQ || '').trim();
-  const { data, isLoading, isError } = useAdminBlogPosts(status || undefined, adminQ || undefined);
+  const [sortBy, sortDir] = sort.split(':');
+  const { data, isLoading, isError } = useAdminBlogPosts(status || undefined, adminQ || undefined, page, PAGE_SIZE, sortBy, sortDir);
   const deletePost = useDeleteBlogPost();
   const items = data?.items || [];
+  const total = data?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const changeStatus = (v) => {
+    setStatus(v); setPage(1);
+    try { sessionStorage.setItem(STATUS_KEY, v); } catch { /* storage blocked */ }
+  };
+
+  // Đổi search (adminQ đến từ header admin, ngoài component này) → về trang 1, tránh kẹt ở trang
+  // rỗng khi kết quả lọc ít hơn trang đang xem.
+  const prevQRef = useRef(adminQ);
+  useEffect(() => {
+    if (prevQRef.current !== adminQ) { prevQRef.current = adminQ; setPage(1); }
+  }, [adminQ]);
 
   const openEditPost = (post) => patch({ screen: 'compose', editPostId: post.id });
 
@@ -64,13 +92,16 @@ export default function AdminPosts({ st, patch, notify }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-        {[{ v: '', l: 'Tất cả' }, { v: 'draft', l: 'Bản nháp' }, { v: 'published', l: 'Đã xuất bản' }].map((o) => (
-          <button key={o.v} type="button" onClick={() => { setStatus(o.v); try { sessionStorage.setItem(STATUS_KEY, o.v); } catch { /* storage blocked */ } }}
-            style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: status === o.v ? 'var(--action-dark)' : 'var(--surface-muted)', color: status === o.v ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)' }}>
-            {o.l}
-          </button>
-        ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          {[{ v: '', l: 'Tất cả' }, { v: 'draft', l: 'Bản nháp' }, { v: 'published', l: 'Đã xuất bản' }].map((o) => (
+            <button key={o.v} type="button" onClick={() => changeStatus(o.v)}
+              style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: status === o.v ? 'var(--action-dark)' : 'var(--surface-muted)', color: status === o.v ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)' }}>
+              {o.l}
+            </button>
+          ))}
+        </div>
+        <Select value={sort} options={SORT_OPTS} onChange={(v) => { setSort(v); setPage(1); }} style={{ width: 180 }} />
       </div>
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -103,6 +134,18 @@ export default function AdminPosts({ st, patch, notify }) {
         </div>
         {!isLoading && !isError && items.length === 0 && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có bài viết nào.</div>}
       </div>
+
+      {!isLoading && !isError && total > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            {total} bài viết — trang {page}/{totalPages}
+          </span>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}><ChevronLeft size={16} /></Button>
+            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}><ChevronRight size={16} /></Button>
+          </div>
+        </div>
+      )}
 
       {selected.size > 0 && (
         <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 'var(--z-bulk)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)', background: 'var(--text-strong)', color: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-4)' }}>

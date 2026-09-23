@@ -147,7 +147,7 @@ export function EditorToolbar({ editor }) {
 export default function RichTextEditor({ value, onChange, minHeight = 220, placeholder }) {
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [StarterKit.configure({ link: false }), TiptapLink, TiptapImage],
+    extensions: [StarterKit.configure({ link: false }), TiptapLink, ResizableImage],
     content: value || '',
     editorProps: placeholder ? { attributes: { 'data-placeholder': placeholder } } : undefined,
     onUpdate: ({ editor: ed }) => onChange(ed.getHTML()),
