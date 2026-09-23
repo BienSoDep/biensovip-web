@@ -54,14 +54,16 @@ export function useCreateBlogTag() {
   });
 }
 
-export function useAdminBlogPosts(status, q, page = 1, limit = 500) {
+export function useAdminBlogPosts(status, q, page = 1, limit = 20, sortBy = 'createdAt', sortDir = 'desc') {
   const params = new URLSearchParams();
   if (status) params.set('status', status);
   if (q) params.set('q', q);
   params.set('page', String(page));
   params.set('limit', String(limit));
+  params.set('sortBy', sortBy);
+  params.set('sortDir', sortDir);
   return useQuery({
-    queryKey: ['admin-blog-posts', status ?? 'all', q ?? '', page, limit],
+    queryKey: ['admin-blog-posts', status ?? 'all', q ?? '', page, limit, sortBy, sortDir],
     queryFn: () => apiClient.get(`/api/admin/blog/posts?${params.toString()}`),
   });
 }
