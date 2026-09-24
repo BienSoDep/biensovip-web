@@ -1,47 +1,29 @@
 import { useState } from 'react';
-import { Loader2, MessageCircle, Phone, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useAdminContacts, useUpdateContactStatus, useContactStats, useAssignContact, useDeleteContact, useDeletedContacts, useRestoreContact } from '../../services/adminContacts.js';
+import {
+  useAdminContacts,
+  useUpdateContactStatus,
+  useContactStats,
+  useAssignContact,
+  useDeleteContact,
+  useDeletedContacts,
+  useRestoreContact,
+} from '../../services/adminContacts.js';
 import { useCreatePaymentLink } from '../../services/paymentLinks.js';
-import AdminTransactions, { CreateTransactionForm } from './AdminTransactions.jsx';
 import { useStaffLite } from '../../services/adminStaff.js';
-import { formatDate, formatDateTime } from '../../lib/date.js';
-import { parsePlateNumber } from '../../lib/plateFormat.js';
-import { Select, Badge, Input, IconButton } from '../../components/index.jsx';
-import { SkeletonTable } from '../../components/Skeleton.jsx';
-import Modal from '../../components/Modal.jsx';
-import PlateVisual from '../../components/PlateVisual.jsx';
-import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
-import InternalNotesPanel from '../../components/InternalNotesPanel.jsx';
-import Button from '../../components/Button.jsx';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
-import { routeFor } from '../../config/routes.js';
 import { loadAuth } from '../../lib/authStore.js';
-import { toZaloUrl } from '../../lib/zaloMessage.js';
 
-const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
-const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: 'var(--accent-orange-ink)', buy: 'var(--blue-700)', hunting: 'var(--accent-purple-ink)' };
-const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên hệ', 'plate-detail': 'Trang biển số', 'chatbot': 'Trợ lý AI' };
-const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Hủy'];
-const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Hủy': 'cancelled' };
-// found giữ lại trong map hiển thị — phòng data cũ chưa migrate về closed vẫn hiện đúng nhãn thay vì "undefined".
-const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã chốt (cũ)', cancelled: 'Hủy' };
-const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#7B2D8B', cancelled: 'var(--text-faint)' };
-const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
-const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ': 'hunting' };
-// Đếm ngược số ngày còn lại trước khi ContactPurgeJob xóa cứng (retention 30 ngày, xem backend).
-const daysLeftInTrash = (deletedAt) => {
-  if (!deletedAt) return null;
-  const elapsedMs = Date.now() - new Date(deletedAt).getTime();
-  return Math.max(0, 30 - Math.floor(elapsedMs / 86400000));
-};
+// Modular Contacts Subcomponents & Utils
+import { STATUS_VAL } from './contacts/contactUtils.js';
+import ContactTable from './contacts/ContactTable.jsx';
+import ContactDetailModal from './contacts/ContactDetailModal.jsx';
+import ContactModals from './contacts/ContactModals.jsx';
 
 export default function AdminContacts({ notify, go, st }) {
-  const [status, setStatus] = useState('all');
+  const [status, setStatus] = useState(st?.contactStatus || 'all');
   const [intent, setIntent] = useState('all');
-  // Seed từ st.adminQ — GlobalSearch (Ctrl+K) ghi từ khóa vào state chung rồi nhảy trang;
-  // không seed thì từ khóa rơi vào hư không, admin tưởng đã lọc nhưng bảng vẫn đầy đủ.
   const [search, setSearch] = useState(st?.adminQ || '');
   const [q] = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
@@ -50,14 +32,17 @@ export default function AdminContacts({ notify, go, st }) {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [assignedTo, setAssignedTo] = useState('all');
-  const [mobileView, setMobileView] = useState('card'); // 'card' | 'table'
+  const [mobileView, setMobileView] = useState('card');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/contact-requests');
   const { data: staffData } = useStaffLite();
   const staffList = staffData?.items || [];
   const currentUserId = loadAuth()?.user?.id;
 
-  const { data, isLoading, isError, refetch } = useAdminContacts({ status, intent, q, page, perPage: 20, assignedTo, ...(fromDate && { fromDate }), ...(toDate && { toDate }) });
+  const { data, isLoading, isError, refetch } = useAdminContacts({
+    status, intent, q, page, perPage: 20, assignedTo,
+    ...(fromDate && { fromDate }), ...(toDate && { toDate }),
+  });
   const updateStatus = useUpdateContactStatus();
   const assignContact = useAssignContact();
   const deleteContact = useDeleteContact();
@@ -67,17 +52,23 @@ export default function AdminContacts({ notify, go, st }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const createPaymentLink = useCreatePaymentLink();
   const [creatingLinkFor, setCreatingLinkFor] = useState(null);
-  const [linkAmountFor, setLinkAmountFor] = useState(null); // contact đang mở popup nhập số tiền tạo link ZaloPay
+  const [linkAmountFor, setLinkAmountFor] = useState(null);
   const [linkAmountInput, setLinkAmountInput] = useState('');
-  const [upgrading, setUpgrading] = useState(null); // ContactRequest đang mở form "Tạo giao dịch từ liên hệ này"
-  const [viewingTx, setViewingTx] = useState(null); // ContactRequest đang mở modal xem giao dịch liên quan
+  const [upgrading, setUpgrading] = useState(null);
+  const [viewingTx, setViewingTx] = useState(null);
 
-  // UC11 — 1 query stats cho các tab (thay 4 query perPage=1).
   const { data: stats } = useContactStats({ intent, q });
 
   const result = data ?? { items: [], total: 0, page: 1, perPage: 20 };
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
-  const statusCounts = { all: result.total, new: stats?.new ?? 0, consulting: stats?.consulting ?? 0, closed: stats?.closed ?? 0, found: stats?.found ?? 0, cancelled: stats?.cancelled ?? 0 };
+  const statusCounts = {
+    all: result.total,
+    new: stats?.new ?? 0,
+    consulting: stats?.consulting ?? 0,
+    closed: stats?.closed ?? 0,
+    found: stats?.found ?? 0,
+    cancelled: stats?.cancelled ?? 0,
+  };
 
   const openLinkAmountPopup = (contact) => {
     if (!contact.plateId) return;
@@ -101,31 +92,35 @@ export default function AdminContacts({ notify, go, st }) {
     });
   };
 
-  const handleStatus = (id, label) => {
-    if (updatingId) return;
+  const handleStatus = async (id, newStatusLabel) => {
+    const nextVal = STATUS_VAL[newStatusLabel] || newStatusLabel;
     setUpdatingId(id);
-    updateStatus.mutate({ id, status: STATUS_VAL[label] }, {
-      onSuccess: () => { toast.success('Đã cập nhật trạng thái'); setUpdatingId(null); },
-      onError: (err) => { toast.error(err.message || 'Lỗi cập nhật trạng thái'); setUpdatingId(null); },
-    });
+    try {
+      await updateStatus.mutateAsync({ id, status: nextVal });
+      notify?.(`Đã chuyển sang "${newStatusLabel}"`);
+    } catch (err) {
+      notify?.(err?.message || 'Cập nhật trạng thái thất bại, thử lại.');
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
-  // Xóa mềm — liên hệ vào Thùng rác 30 ngày, kéo theo giao dịch còn Pending của nó.
   const submitDelete = async () => {
+    if (!deleteTarget) return;
     try {
       await deleteContact.mutateAsync(deleteTarget.id);
-      toast.success('Đã chuyển vào Thùng rác — có thể khôi phục trong 30 ngày');
+      toast.success(`Đã chuyển liên hệ ${deleteTarget.fullName} vào Thùng rác`);
       setDeleteTarget(null);
+      if (selected?.id === deleteTarget.id) setSelected(null);
     } catch (e) {
       toast.error(e.message || 'Xóa thất bại');
     }
   };
 
   const handleRestore = async (c) => {
-    if (!window.confirm(`Khôi phục liên hệ ${c.fullName}? Liên hệ sẽ trở lại danh sách đang xử lý và không bị xóa vĩnh viễn nữa.`)) return;
     try {
       await restoreContact.mutateAsync(c.id);
-      toast.success('Đã khôi phục liên hệ');
+      toast.success(`Đã khôi phục liên hệ ${c.fullName}`);
     } catch (e) {
       toast.error(e.message || 'Khôi phục thất bại');
     }
@@ -141,601 +136,68 @@ export default function AdminContacts({ notify, go, st }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <style>{'@keyframes bsd-spin { to { transform: rotate(360deg); } } .bsd-spin { animation: bsd-spin 0.8s linear infinite; }'}</style>
+      {/* 1. Main Contacts Table, Cards & Filters */}
+      <ContactTable
+        search={search} setSearch={setSearch}
+        status={status} setStatus={setStatus}
+        intent={intent} setIntent={setIntent}
+        fromDate={fromDate} setFromDate={setFromDate}
+        toDate={toDate} setToDate={setToDate}
+        assignedTo={assignedTo} setAssignedTo={setAssignedTo}
+        setPage={setPage} page={page} totalPages={totalPages}
+        activeFiltersCount={activeFiltersCount}
+        mobileFiltersOpen={mobileFiltersOpen} setMobileFiltersOpen={setMobileFiltersOpen}
+        mobileView={mobileView} setMobileView={setMobileView}
+        exportCsv={exportCsv} exporting={exporting}
+        result={result} statusCounts={statusCounts}
+        isLoading={isLoading} isError={isError} refetch={refetch}
+        staffList={staffList}
+        setSelected={setSelected}
+        updatingId={updatingId}
+        handleStatus={handleStatus}
+        setDeleteTarget={setDeleteTarget}
+        setViewingTx={setViewingTx}
+        assignContact={assignContact}
+        notify={notify}
+        deletedItems={deletedItems}
+        deletedLoading={deletedLoading}
+        restoreContact={restoreContact}
+        handleRestore={handleRestore}
+      />
 
-      {/* Mobile-only top bar */}
-      <div className="admin-contacts-mobile-bar" style={{ flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <input
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Tìm tên / SĐT..."
-          style={{ width: '100%', boxSizing: 'border-box', padding: '8px 14px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)', color: 'var(--text-body)', background: 'var(--white)' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <Button
-            variant={mobileFiltersOpen ? 'dark' : 'ghost'}
-            size="sm"
-            onClick={() => setMobileFiltersOpen((v) => !v)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            <SlidersHorizontal size={14} />
-            <span>Bộ lọc {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ''}</span>
-            {mobileFiltersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </Button>
+      {/* 2. Contact Detail Modal */}
+      <ContactDetailModal
+        selected={selected}
+        setSelected={setSelected}
+        updatingId={updatingId}
+        handleStatus={handleStatus}
+        openLinkAmountPopup={openLinkAmountPopup}
+        creatingLinkFor={creatingLinkFor}
+        setViewingTx={setViewingTx}
+        setUpgrading={setUpgrading}
+        setDeleteTarget={setDeleteTarget}
+        notify={notify}
+      />
 
-          <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: 2, border: '1px solid var(--grey-200)' }}>
-            <button
-              type="button"
-              onClick={() => setMobileView('card')}
-              style={{
-                border: 'none',
-                background: mobileView === 'card' ? 'var(--white)' : 'none',
-                boxShadow: mobileView === 'card' ? 'var(--shadow-1)' : 'none',
-                borderRadius: 'var(--radius-pill)',
-                padding: '4px 10px',
-                font: 'var(--type-caption)',
-                fontWeight: mobileView === 'card' ? 'var(--fw-semibold)' : 'var(--fw-regular)',
-                color: mobileView === 'card' ? 'var(--text-strong)' : 'var(--text-muted)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                cursor: 'pointer',
-              }}
-            >
-              <LayoutGrid size={13} /> Thẻ
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileView('table')}
-              style={{
-                border: 'none',
-                background: mobileView === 'table' ? 'var(--white)' : 'none',
-                boxShadow: mobileView === 'table' ? 'var(--shadow-1)' : 'none',
-                borderRadius: 'var(--radius-pill)',
-                padding: '4px 10px',
-                font: 'var(--type-caption)',
-                fontWeight: mobileView === 'table' ? 'var(--fw-semibold)' : 'var(--fw-regular)',
-                color: mobileView === 'table' ? 'var(--text-strong)' : 'var(--text-muted)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                cursor: 'pointer',
-              }}
-            >
-              <ListIcon size={13} /> Bảng
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter toolbar (collapsible on mobile, normal flex on desktop) */}
-      <div className={`admin-contacts-filters ${mobileFiltersOpen ? 'admin-filters-mobile-open' : ''}`} style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
-        <input
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Tìm tên / SĐT..."
-          style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)', color: 'var(--text-body)', background: 'var(--white)', minWidth: 200 }}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái:</span>
-          <Select value={status === 'all' ? 'Tất cả' : STATUS_LABEL[status]} options={['Tất cả', ...STATUS_OPTS].map((o) => ({ value: o, label: o }))} onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }} variant="pill" />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Mục đích:</span>
-          <Select value={intent === 'all' ? 'Tất cả' : INTENT_LABEL[intent]} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => { setIntent(v === 'Tất cả' ? 'all' : INTENT_VAL[v]); setPage(1); }} variant="pill" />
-        </div>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-          Từ ngày
-          <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
-        </label>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-          Đến ngày
-          <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
-        </label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Phụ trách:</span>
-          <Select value={assignedTo === 'all' ? 'Tất cả' : assignedTo === 'me' ? 'Của tôi' : 'Chưa gán'}
-            options={[{ value: 'Tất cả', label: 'Tất cả' }, { value: 'Của tôi', label: 'Của tôi' }, { value: 'Chưa gán', label: 'Chưa gán' }]}
-            onChange={(v) => { setAssignedTo(v === 'Tất cả' ? 'all' : v === 'Của tôi' ? 'me' : 'unassigned'); setPage(1); }} variant="pill" />
-        </div>
-        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, intent, q, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e?.message || 'Xuất CSV thất bại, thử lại.'))}>
-          {exporting ? 'Đang xuất…' : 'Xuất CSV'}
-        </Button>
-        <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} yêu cầu</span>
-      </div>
-
-      {/* Horizontally scrollable status tabs on mobile */}
-      <div role="tablist" aria-label="Lọc theo trạng thái" className="admin-tablist">
-        {[['all', 'Tất cả'], ['new', 'Mới'], ['consulting', 'Đang tư vấn'], ['closed', 'Đã chốt'], ['cancelled', 'Hủy']].map(([val, label]) => {
-          const active = status === val;
-          return (
-            <button key={val} role="tab" aria-selected={active} onClick={() => { setStatus(val); setPage(1); }}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px', border: 'none',
-                borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
-                boxShadow: 'var(--shadow-inset-hairline)',
-              }}>
-              <span>{label}</span>
-              <span style={{ display: 'inline-flex', minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', padding: '0 6px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', background: active ? 'rgba(255,255,255,.22)' : 'var(--grey-100)', color: active ? 'var(--text-inverse)' : 'var(--text-muted)' }}>{statusCounts[val]}</span>
-            </button>
-          );
-        })}
-        {deletedItems.length > 0 && (
-          <button type="button" onClick={() => document.getElementById('contact-trash')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-medium)', background: 'var(--white)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-            <span>Thùng rác</span>
-            <span style={{ display: 'inline-flex', minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', padding: '0 6px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', background: 'var(--grey-100)', color: 'var(--text-muted)' }}>{deletedItems.length}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Mobile Card View */}
-      <div className={`admin-contacts-cards-container ${mobileView === 'card' ? 'is-active' : ''}`}>
-        {isLoading && <div style={{ padding: 'var(--space-4)' }}><SkeletonTable rows={4} cols={2} /></div>}
-
-        {isError && (
-          <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', alignItems: 'center' }}>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Lỗi tải dữ liệu. Vui lòng thử lại.</span>
-            <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
-          </div>
-        )}
-
-        {!isLoading && !isError && result.items.length === 0 && (
-          <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có yêu cầu nào.</div>
-        )}
-
-        {!isLoading && !isError && result.items.map((c) => {
-          const parsed = parsePlateNumber(c.plateNumber);
-          return (
-            <div
-              key={c.id}
-              onClick={() => setSelected(c)}
-              style={{
-                background: 'var(--white)',
-                borderRadius: 'var(--radius-card)',
-                boxShadow: 'var(--shadow-inset-hairline)',
-                padding: 'var(--space-3) var(--space-4)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--space-3)',
-                cursor: 'pointer',
-              }}
-            >
-              {/* Header: Customer name + Intent + Time */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)' }}>{c.fullName}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: `color-mix(in srgb, ${INTENT_COLOR[c.intent] || 'var(--text-muted)'} 16%, transparent)`, color: INTENT_COLOR[c.intent] || 'var(--text-muted)' }}>
-                      {INTENT_LABEL[c.intent] || c.intent}
-                    </span>
-                    {c.source && <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--text-faint)' }}>• {SOURCE_LABEL[c.source] || c.source}</span>}
-                  </div>
-                </div>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>
-                  {formatDate(c.createdAt)}
-                </span>
-              </div>
-
-              {/* Phone & Quick Contact Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '6px 12px' }}>
-                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{c.phone}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }} onClick={(e) => e.stopPropagation()}>
-                  <a
-                    href={`tel:${c.phone}`}
-                    aria-label={`Gọi ${c.phone}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '4px 10px',
-                      borderRadius: 'var(--radius-pill)',
-                      background: 'var(--mint-100)',
-                      color: 'var(--status-success-ink)',
-                      font: 'var(--type-caption)',
-                      fontWeight: 'var(--fw-semibold)',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    <Phone size={13} /> Gọi
-                  </a>
-                  <a
-                    href={toZaloUrl(c.phone)}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Chat Zalo"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '4px 10px',
-                      borderRadius: 'var(--radius-pill)',
-                      background: 'var(--blue-50)',
-                      color: 'var(--blue-700)',
-                      font: 'var(--type-caption)',
-                      fontWeight: 'var(--fw-semibold)',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    <MessageCircle size={13} /> Zalo
-                  </a>
-                </div>
-              </div>
-
-              {/* Plate of Interest & Deposit Info */}
-              {(parsed.num || c.plateNumber || c.transactionId) && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển:</span>
-                    {parsed.num ? (
-                      <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
-                    ) : (
-                      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)' }}>{c.plateNumber || '—'}</span>
-                    )}
-                  </div>
-                  {c.transactionId && (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setViewingTx(c); }}
-                      style={{ display: 'inline-block', padding: '2px 8px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: 'color-mix(in srgb, var(--status-success) 16%, transparent)', color: 'var(--status-success)', cursor: 'pointer' }}
-                    >
-                      Đã đặt cọc
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Note preview if any */}
-              {c.note && (
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--action-primary)' }}>
-                  {c.note}
-                </div>
-              )}
-
-              {/* Assignment & Status Controls */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--grey-100)' }} onClick={(e) => e.stopPropagation()}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Phụ trách:</span>
-                  <Select
-                    value={c.assignedStaffId ? (c.assignedStaffName || '—') : 'Chưa gán'}
-                    options={[{ value: 'Chưa gán', label: 'Chưa gán' }, ...staffList.map((s) => ({ value: s.fullName, label: s.fullName, _id: s.id }))]}
-                    onChange={(v) => {
-                      const onError = (err) => notify?.(err?.message || 'Gán nhân viên thất bại, thử lại.');
-                      if (v === 'Chưa gán') { assignContact.mutate({ id: c.id, staffId: null }, { onError }); return; }
-                      const staff = staffList.find((s) => s.fullName === v);
-                      if (staff) assignContact.mutate({ id: c.id, staffId: staff.id }, { onError });
-                    }}
-                    variant="pill"
-                    style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)', boxShadow: 'inset 0 0 0 1px var(--grey-200)' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
-                    <AuditHistoryButton entityType="contact_request" entityId={c.id} />
-                    <IconButton name="trash-2" label="Xóa liên hệ" size="sm" onClick={() => setDeleteTarget(c)} />
-                  </div>
-
-                  {updatingId === c.id ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                      <Loader2 size={16} className="bsd-spin" />
-                      <span style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}>{STATUS_LABEL[c.status] || c.status}</span>
-                    </span>
-                  ) : c.status === 'cancelled' ? (
-                    <Button variant="outline" size="sm" onClick={() => { if (window.confirm(`Đưa liên hệ ${c.fullName} về trạng thái "Mới"?`)) handleStatus(c.id, 'Mới'); }}>Khôi phục</Button>
-                  ) : (
-                    <Select
-                      value={STATUS_LABEL[c.status] || c.status}
-                      options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
-                      onChange={(v) => handleStatus(c.id, v)}
-                      variant="pill"
-                      style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Table Container (desktop default or switched by user) */}
-      <div className={`admin-contacts-table-container ${mobileView === 'table' ? 'force-mobile-table' : ''}`} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-      <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div className="admin-rows" style={{ minWidth: 820 }}>
-        <div className="admin-head" style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-          <span style={{ flex: '1 1 96px' }}>Khách hàng</span>
-          <span style={{ flex: '1 1 88px' }}>Điện thoại</span>
-          <span style={{ flex: '1 1 100px' }}>Biển quan tâm</span>
-          <span style={{ flex: '1 1 72px' }}>Mục đích</span>
-          <span className="contact-col-note" style={{ flex: '1 1 120px' }}>Ghi chú</span>
-          <span style={{ flex: '1 1 80px' }}>Đặt cọc</span>
-          <span className="contact-col-time" style={{ flex: '1 1 64px' }}>Thời gian</span>
-          <span style={{ flex: '1 1 120px' }}>Phụ trách</span>
-          <span style={{ flex: '1 1 160px' }}>Trạng thái</span>
-        </div>
-
-        {isLoading && <div style={{ padding: 'var(--space-4) var(--gutter-card)' }}><SkeletonTable rows={5} cols={8} /></div>}
-
-        {isError && (
-          <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', alignItems: 'center' }}>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Lỗi tải dữ liệu. Vui lòng thử lại.</span>
-            <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
-          </div>
-        )}
-
-        {!isLoading && !isError && result.items.map((c) => {
-          const parsed = parsePlateNumber(c.plateNumber);
-          return (
-            <div className="admin-row" key={c.id} onClick={() => setSelected(c)} role="button" tabIndex={0}
-              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelected(c); } }}
-              title="Xem chi tiết" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}>
-              {/* data-label = nhãn cột cho chế độ thẻ trên mobile (xem .admin-rows trong app.css) */}
-              <span data-primary data-label="Khách hàng" style={{ flex: '1 1 96px', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{c.fullName}</span>
-              <span data-label="Điện thoại" style={{ flex: '1 1 88px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                {c.phone}
-                <a href={`tel:${c.phone}`} aria-label={`Gọi ${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={14} /></a>
-                <a href={toZaloUrl(c.phone)} target="_blank" rel="noreferrer" aria-label="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
-              </span>
-              <span data-label="Biển quan tâm" style={{ flex: '1 1 100px' }}>
-                {parsed.num ? <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} /> : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
-              </span>
-              <span data-label="Mục đích" style={{ flex: '1 1 72px' }}>
-                <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: `color-mix(in srgb, ${INTENT_COLOR[c.intent] || 'var(--text-muted)'} 16%, transparent)`, color: INTENT_COLOR[c.intent] || 'var(--text-muted)' }}>
-                  {INTENT_LABEL[c.intent] || c.intent}
-                </span>
-              </span>
-              <span className="contact-col-note" data-label="Ghi chú" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
-              <span data-label="Đặt cọc" style={{ flex: '1 1 80px' }}>
-                {c.transactionId ? (
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setViewingTx(c); }}
-                    style={{ display: 'inline-block', padding: '2px 8px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: 'color-mix(in srgb, var(--status-success) 16%, transparent)', color: 'var(--status-success)', cursor: 'pointer' }}>Đã cọc</button>
-                ) : (
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
-                )}
-              </span>
-              <span className="contact-col-time" data-label="Thời gian" style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                {formatDate(c.createdAt)}
-              </span>
-              <span onClick={(e) => e.stopPropagation()} data-label="Phụ trách" style={{ flex: '1 1 120px' }}>
-                <Select
-                  value={c.assignedStaffId ? (c.assignedStaffName || '—') : 'Chưa gán'}
-                  options={[{ value: 'Chưa gán', label: 'Chưa gán' }, ...staffList.map((s) => ({ value: s.fullName, label: s.fullName, _id: s.id }))]}
-                  onChange={(v) => {
-                    const onError = (err) => notify?.(err?.message || 'Gán nhân viên thất bại, thử lại.');
-                    if (v === 'Chưa gán') { assignContact.mutate({ id: c.id, staffId: null }, { onError }); return; }
-                    const staff = staffList.find((s) => s.fullName === v);
-                    if (staff) assignContact.mutate({ id: c.id, staffId: staff.id }, { onError });
-                  }}
-                  variant="pill"
-                  style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)', boxShadow: 'inset 0 0 0 1px var(--grey-200)' }}
-                />
-              </span>
-              <span onClick={(e) => e.stopPropagation()} data-label="Trạng thái" style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-                <AuditHistoryButton entityType="contact_request" entityId={c.id} />
-                <IconButton name="trash-2" label="Xóa liên hệ" size="sm" onClick={() => setDeleteTarget(c)} />
-                {updatingId === c.id ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                    <Loader2 size={16} className="bsd-spin" />
-                    <span style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}>{STATUS_LABEL[c.status] || c.status}</span>
-                  </span>
-                ) : c.status === 'cancelled' ? (
-                  <Button variant="outline" size="sm" onClick={() => { if (window.confirm(`Đưa liên hệ ${c.fullName} về trạng thái "Mới"?`)) handleStatus(c.id, 'Mới'); }}>Khôi phục</Button>
-                ) : (
-                  <Select
-                    value={STATUS_LABEL[c.status] || c.status}
-                    options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
-                    onChange={(v) => handleStatus(c.id, v)}
-                    variant="pill"
-                    style={{ color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}
-                  />
-                )}
-              </span>
-            </div>
-          );
-        })}
-        </div>
-        </div>
-
-        {!isLoading && !isError && result.items.length === 0 && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có yêu cầu nào.</div>}
-      </div>
-
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)', alignItems: 'center' }}>
-          <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page <= 1 ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page <= 1 ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }} aria-label="Trang trước">‹</button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button key={p} onClick={() => setPage(p)} aria-current={p === page ? 'page' : undefined} style={{
-              minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)',
-              background: p === page ? 'var(--action-primary)' : 'var(--white)',
-              color: p === page ? 'var(--white)' : 'var(--text-body)',
-              font: 'var(--type-body-sm)', fontWeight: p === page ? 'var(--fw-bold)' : 'var(--fw-medium)',
-              cursor: 'pointer', boxShadow: 'var(--shadow-inset-hairline)',
-            }}>{p}</button>
-          ))}
-          <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page >= totalPages ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page >= totalPages ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }} aria-label="Trang sau">›</button>
-        </div>
-      )}
-
-      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.fullName || ''} maxWidth="520px">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          {selected && (
-            <>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{INTENT_LABEL[selected.intent] || selected.intent}</span>
-                {selected.source && <Badge tone="blue">{SOURCE_LABEL[selected.source] || selected.source}</Badge>}
-              </span>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Điện thoại</span>
-                <a href={`tel:${selected.phone}`} style={{ font: 'var(--type-body)', color: 'var(--text-link)', textDecoration: 'none' }}>{selected.phone}</a>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Biển quan tâm</span>
-                {selected.plateNumber ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                    <PlateVisual size="sm" {...(parsePlateNumber(selected.plateNumber) || {})} />
-                    {selected.plateId
-                      ? <a href={routeFor('detail', selected.plateId)} target="_blank" rel="noreferrer" style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)', textDecoration: 'none' }}>Xem biển {selected.plateNumber} →</a>
-                      : <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{selected.plateNumber}</span>}
-                  </span>
-                ) : (
-                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-faint)' }}>Khách hỏi chung, không có biển cụ thể</span>
-                )}
-              </div>
-
-              {selected.plateId && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thanh toán ZaloPay</span>
-                  {selected.paymentLink?.paymentUrl ? (
-                    <a href={selected.paymentLink.paymentUrl} target="_blank" rel="noreferrer" style={{ font: 'var(--type-body-sm)', color: 'var(--text-link)' }}>
-                      Mở link đã tạo — gửi cho khách qua Zalo OA →
-                    </a>
-                  ) : (
-                    <Button variant="outline" size="sm" disabled={creatingLinkFor === selected.id} onClick={() => openLinkAmountPopup(selected)}>
-                      {creatingLinkFor === selected.id ? 'Đang tạo…' : 'Tạo link ZaloPay'}
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Giao dịch</span>
-                {selected.transactionId ? (
-                  <Button variant="outline" size="sm" onClick={() => setViewingTx(selected)}>Xem giao dịch →</Button>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={() => setUpgrading(selected)}>Tạo giao dịch từ liên hệ này</Button>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thùng rác</span>
-                <Button variant="outline" size="sm" onClick={() => { setDeleteTarget(selected); setSelected(null); }}>Xóa liên hệ này</Button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Ghi chú yêu cầu</span>
-                <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body-sm)', color: 'var(--text-body)', whiteSpace: 'pre-wrap', maxHeight: 160, overflowY: 'auto' }}>
-                  {selected.note || <span style={{ color: 'var(--text-faint)' }}>Không có ghi chú</span>}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Thời gian gửi</span>
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{formatDateTime(selected.createdAt)}</span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái xử lý</span>
-                {updatingId === selected.id ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                    <Loader2 size={16} className="bsd-spin" />
-                    <span style={{ color: STATUS_COLOR[selected.status] || 'var(--text-strong)' }}>{STATUS_LABEL[selected.status] || selected.status}</span>
-                  </span>
-                ) : (
-                  <Select
-                    value={STATUS_LABEL[selected.status] || selected.status}
-                    options={STATUS_OPTS.map((o) => ({ value: o, label: o }))}
-                    onChange={(v) => { handleStatus(selected.id, v); setSelected((s) => ({ ...s, status: STATUS_VAL[v] })); }}
-                    variant="pill"
-                    style={{ color: STATUS_COLOR[selected.status] || 'var(--text-strong)' }}
-                  />
-                )}
-              </div>
-
-              <InternalNotesPanel entityType="contact_request" entityId={selected.id} notify={notify} />
-            </>
-          )}
-        </div>
-      </Modal>
-
-      <Modal open={!!linkAmountFor} onClose={() => setLinkAmountFor(null)} title="Tạo link thanh toán ZaloPay" maxWidth="420px">
-        {linkAmountFor && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <Input
-              label="Số tiền cần thu (VNĐ)"
-              placeholder="VD: 50000000"
-              value={linkAmountInput}
-              onChange={(e) => setLinkAmountInput(e.target.value.replace(/[^\d]/g, ''))}
-              required
-            />
-            <Button
-              variant="primary"
-              disabled={creatingLinkFor === linkAmountFor.id || !linkAmountInput}
-              onClick={handleCreatePaymentLink}
-            >
-              {creatingLinkFor === linkAmountFor.id ? 'Đang tạo…' : 'Tạo link'}
-            </Button>
-          </div>
-        )}
-      </Modal>
-
-      <Modal open={!!upgrading} onClose={() => setUpgrading(null)} title="Tạo giao dịch từ liên hệ này" maxWidth="480px">
-        {upgrading && (
-          <CreateTransactionForm
-            notify={notify}
-            onDone={() => { setUpgrading(null); refetch(); }}
-            prefill={{
-              contactRequestId: upgrading.id,
-              fullName: upgrading.fullName,
-              phone: upgrading.phone,
-              plate: upgrading.plateId ? { id: upgrading.plateId, plateNumber: upgrading.plateNumber } : null,
-            }}
-          />
-        )}
-      </Modal>
-
-      <Modal open={!!viewingTx} onClose={() => setViewingTx(null)} title={`Giao dịch của ${viewingTx?.fullName || ''}`} maxWidth="820px">
-        {viewingTx && <AdminTransactions notify={notify} filterContactRequestId={viewingTx.id} />}
-      </Modal>
-
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Xóa yêu cầu liên hệ" maxWidth="420px">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Chuyển liên hệ {deleteTarget?.fullName} vào Thùng rác? Có thể khôi phục trong 30 ngày, sau đó tự xóa vĩnh viễn. Giao dịch chưa xác nhận thanh toán của liên hệ này cũng vào Thùng rác theo.
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-            <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Hủy</Button>
-            <Button variant="primary" disabled={deleteContact.isPending} onClick={submitDelete}>
-              {deleteContact.isPending ? 'Đang xóa…' : 'Vào Thùng rác'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {(deletedLoading || deletedItems.length > 0) && (
-        <div id="contact-trash" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', scrollMarginTop: 'var(--space-4)' }}>
-          <h3 style={{ margin: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>
-            Liên hệ đã xóa {deletedItems.length > 0 && `(${deletedItems.length})`}
-          </h3>
-          {deletedLoading ? (
-            <SkeletonTable rows={2} cols={4} />
-          ) : (
-            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-              {deletedItems.map((c) => {
-                const daysLeft = daysLeftInTrash(c.deletedAt);
-                return (
-                  <div key={c.id} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-200)', font: 'var(--type-body-sm)', opacity: 0.75 }}>
-                    <span style={{ flex: '1 1 120px' }}>
-                      <div>{c.fullName}</div>
-                      <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{c.phone}</div>
-                    </span>
-                    <span style={{ flex: '1 1 100px' }}>{c.plateNumber || '—'}</span>
-                    <span style={{ flex: '1 1 110px', color: STATUS_COLOR[c.status] || 'var(--text-strong)' }}>{STATUS_LABEL[c.status] || c.status}</span>
-                    <span style={{ flex: '1 1 140px', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>
-                      {daysLeft === 0 ? 'Xóa vĩnh viễn hôm nay' : `Tự xóa sau ${daysLeft} ngày`}
-                    </span>
-                    <Button variant="outline" size="sm" disabled={restoreContact.isPending} onClick={() => handleRestore(c)}>Khôi phục</Button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+      {/* 3. Action Modals (Payment Link, Create Tx, View Tx, Delete) */}
+      <ContactModals
+        linkAmountFor={linkAmountFor}
+        setLinkAmountFor={setLinkAmountFor}
+        linkAmountInput={linkAmountInput}
+        setLinkAmountInput={setLinkAmountInput}
+        handleCreatePaymentLink={handleCreatePaymentLink}
+        creatingLinkFor={creatingLinkFor}
+        upgrading={upgrading}
+        setUpgrading={setUpgrading}
+        refetch={refetch}
+        viewingTx={viewingTx}
+        setViewingTx={setViewingTx}
+        deleteTarget={deleteTarget}
+        setDeleteTarget={setDeleteTarget}
+        deleteContact={deleteContact}
+        submitDelete={submitDelete}
+        notify={notify}
+      />
     </div>
   );
 }

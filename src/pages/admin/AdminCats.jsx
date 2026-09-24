@@ -1,5 +1,17 @@
-import { useState } from 'react';
-import { GripVertical } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import {
+  GripVertical,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Plus,
+  CheckCircle2,
+  HelpCircle,
+  FileText,
+  Eye,
+  Save,
+  RotateCcw,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -11,8 +23,44 @@ import { CATEGORY_GROUPS, REGIONS, useAdminCategories, useCreateCategory, useUpd
 import { useAdminPlates } from '../../services/adminPlates.js';
 import { useAdminFaqSets, useCreateFaqSet, useUpdateFaqSet, useDeleteFaqSet, useAdminHowToSteps, useReplaceHowToSteps } from '../../services/faqHowTo.js';
 
-// 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo (chỉ tay cầm nhận sự kiện kéo, tránh
-// xung đột với click nút Sửa/Xóa trên cùng hàng).
+// Dữ liệu mẫu chuẩn của website cho Kho FAQ và Kho HowTo
+const DEFAULT_HOW_TO_STEPS = [
+  { name: '1. Liên hệ & Chọn biển số ưng ý', text: 'Khách hàng chọn biển số đẹp trên website Biensovip.com, liên hệ qua Zalo hoặc Hotline để nhân viên kiểm tra tình trạng biển và giữ chỗ tạm thời trong 15 phút.' },
+  { name: '2. Kiểm tra & Đối chiếu hồ sơ gốc', text: 'Nhân viên gửi hình ảnh/video hồ sơ gốc, giấy đăng ký xe và xác nhận tình trạng pháp lý, đảm bảo biển sạch, không tranh chấp trước khi đặt cọc.' },
+  { name: '3. Thống nhất giá & Đặt cọc giữ biển', text: 'Hai bên chốt giá cuối cùng, khách hàng đặt cọc 10–30% giá trị biển số (có biên nhận hoặc hợp đồng đặt cọc có dấu pháp lý) để khoá giao dịch.' },
+  { name: '4. Ký hợp đồng công chứng & Sang tên', text: 'Hai bên ký hợp đồng chuyển nhượng tại văn phòng công chứng. Biensovip hỗ trợ nộp hồ sơ sang tên chính chủ tại Phòng Cảnh sát Giao thông.' },
+  { name: '5. Nhận giấy tờ mới & Hoàn tất thanh toán', text: 'Khách hàng nhận giấy đăng ký xe mới mang tên chính chủ, kiểm tra thông tin trên cổng dịch vụ công quốc gia và thanh toán phần còn lại.' },
+];
+
+const DEFAULT_FAQ_SETS = [
+  {
+    name: 'FAQ Mua bán & Sang tên biển số đẹp',
+    blogCategoryCode: '',
+    items: [
+      { question: 'Biển số đẹp có sang tên được không?', answer: 'Có. Tất cả biển số trên Biensovip đều có hồ sơ đầy đủ và sang tên được theo đúng quy định pháp luật. Xem thêm tại trang Hướng dẫn sang tên.' },
+      { question: 'Mua biển số trả góp được không?', answer: 'Hiện tại chúng tôi hỗ trợ thanh toán 2 đợt: đặt cọc 30–50% khi ký hợp đồng, phần còn lại sau khi sang tên hoàn tất. Với biển giá trị cao, có thể thương lượng thêm.' },
+      { question: 'Tôi ở tỉnh khác, mua biển số Đà Nẵng có được không?', answer: 'Được. Bạn cần có hộ khẩu hoặc tạm trú dài hạn tại Đà Nẵng để đăng ký sang tên. Nếu chưa có, chúng tôi sẽ tư vấn giải pháp phù hợp.' },
+      { question: 'Làm sao biết biển số là thật, không phải lừa đảo?', answer: 'Biensovip hoạt động công khai tại Đà Nẵng, có địa chỉ văn phòng rõ ràng. Mọi giao dịch đều có hợp đồng công chứng. Bạn có thể đến xem giấy tờ gốc trước khi đặt cọc.' },
+      { question: 'Sau khi mua, tôi có bán lại được không?', answer: 'Có. Biển số sau khi sang tên là tài sản của bạn. Bạn có thể bán lại bất kỳ lúc nào. Liên hệ chúng tôi để được hỗ trợ đăng bán miễn phí.' },
+      { question: 'Phí sang tên là bao nhiêu?', answer: 'Phí sang tên do Nhà nước quy định, khoảng 2–4 triệu đồng tùy loại xe và tỉnh thành. Phí này không bao gồm trong giá biển số.' },
+      { question: 'Thời gian sang tên mất bao lâu?', answer: 'Thông thường 1–2 ngày làm việc kể từ khi nộp hồ sơ đầy đủ. Trường hợp phức tạp có thể kéo dài 3–5 ngày.' },
+      { question: 'Tôi muốn ký gửi bán biển số, thủ tục thế nào?', answer: 'Liên hệ Zalo 0905 221 334 hoặc đến văn phòng. Chúng tôi sẽ kiểm tra hồ sơ, chụp ảnh biển số và đăng lên website. Hoa hồng thỏa thuận khi có khách mua.' },
+      { question: 'Có hỗ trợ vận chuyển xe không?', answer: 'Có. Chúng tôi hợp tác với đơn vị vận chuyển uy tín, hỗ trợ chở xe từ tỉnh khác về Đà Nẵng nếu cần.' },
+      { question: 'Biển số đã bán có hiển thị lại không?', answer: 'Biển đã bán sẽ được đánh dấu "Đã bán" và không hiển thị trong danh sách mặc định. Bạn vẫn có thể xem lại trong trang chi tiết nếu có link.' },
+    ],
+  },
+  {
+    name: 'FAQ Định danh & Ý nghĩa phong thủy',
+    blogCategoryCode: '',
+    items: [
+      { question: 'Thế nào là biển số đẹp theo phong thủy?', answer: 'Biển số đẹp phong thủy là biển có các con số tương sinh với bản mệnh (Kim, Mộc, Thủy, Hỏa, Thổ), tổng số nút cao (8, 9 nút) và các cặp số mang ý nghĩa may mắn như Lộc Phát (68, 86), Thần Tài (39, 79), Tứ Quý, Ngũ Quý mang lại bình an, phát tài.' },
+      { question: 'Biển số định danh theo Thông tư 24/2023 là gì?', answer: 'Biển số định danh là biển số được cấp và quản lý theo mã định danh của chủ xe. Khi bán xe, chủ xe phải giữ lại đăng ký và biển số nộp lại cho công an để cấp cho xe khác thuộc quyền sở hữu của mình.' },
+      { question: 'Làm sao để biết biển số có hợp tuổi/mệnh của tôi?', answer: 'Bạn có thể sử dụng công cụ Tra cứu phong thủy trên Biensovip.com hoặc liên hệ hotline để được đội ngũ tư vấn viên luận giải ngũ hành nạp âm, quẻ dịch chi tiết theo ngày tháng năm sinh.' },
+    ],
+  },
+];
+
+// 1 hàng danh mục kéo-thả được — GripVertical làm tay cầm kéo
 function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, isToggleable, onEdit, onDelete, onToggleActive }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
   const style = {
@@ -54,8 +102,7 @@ function SortableCategoryRow({ c, idx, isBlogCategory, isPriceRange, isToggleabl
   );
 }
 
-// Tab "Kho FAQ" — quản lý các bộ FAQ dùng chung, mỗi bộ gắn 1 category blog. Bài viết ở Compose
-// chỉ chọn (multi-select), không gõ tay per-bài nữa.
+// Tab "Kho FAQ" — quản lý các bộ FAQ dùng chung
 function FaqSetManager({ notify }) {
   const { data, isLoading } = useAdminFaqSets();
   const { data: blogCatData } = useAdminCategories('blog_category');
@@ -67,11 +114,39 @@ function FaqSetManager({ notify }) {
   const [form, setForm] = useState({ name: '', blogCategoryCode: '', items: [] });
   const [err, setErr] = useState('');
   const [confirmDel, setConfirmDel] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const items = data?.items || [];
 
   const resetForm = () => { setForm({ name: '', blogCategoryCode: '', items: [] }); setEditId(null); setErr(''); };
-  const startEdit = (s) => { setEditId(s.id); setForm({ name: s.name, blogCategoryCode: s.blogCategoryCode || '', items: s.items.map((it) => ({ question: it.question, answer: it.answer })) }); setErr(''); };
+  const startEdit = (s) => {
+    setEditId(s.id);
+    setForm({
+      name: s.name,
+      blogCategoryCode: s.blogCategoryCode || '',
+      items: s.items.map((it) => ({ question: it.question, answer: it.answer })),
+    });
+    setErr('');
+  };
+
+  const seedDefaultSets = async () => {
+    setIsSeeding(true);
+    try {
+      for (const s of DEFAULT_FAQ_SETS) {
+        await createSet.mutateAsync({
+          name: s.name,
+          blogCategoryCode: s.blogCategoryCode || null,
+          items: s.items,
+        });
+      }
+      notify('Đã khởi tạo thành công 2 bộ FAQ chuẩn từ website');
+    } catch (e) {
+      notify(e?.message || 'Lỗi khi khởi tạo bộ FAQ', 'error');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   const save = () => {
     const name = form.name.trim();
@@ -96,61 +171,199 @@ function FaqSetManager({ notify }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
-      <div style={{ flex: '1 1 340px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Kho bộ FAQ</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', width: '100%' }}>
+      {/* Thanh toolbar */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 'var(--space-3)',
+        background: 'var(--white)',
+        padding: 'var(--gutter-card)',
+        borderRadius: 'var(--radius-card)',
+        boxShadow: 'var(--shadow-inset-hairline)',
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Kho bộ FAQ dùng chung</span>
+            <span style={{ background: 'var(--brand-50)', color: 'var(--action-primary)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>
+              {items.length} bộ FAQ
+            </span>
+          </div>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            Quản lý các bộ câu hỏi thường gặp được gắn vào bài viết blog và hiển thị trên trang hỏi đáp toàn site.
+          </span>
         </div>
-        {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
-        {!isLoading && items.length === 0 && (
-          <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có bộ FAQ nào.</div>
-        )}
-        {items.map((s) => (
-          <div key={s.id} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{s.name}</span>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{s.blogCategoryCode || 'Không gắn danh mục'} · {s.items.length} câu hỏi</span>
-            </div>
-            <IconButton name="pencil" label="Sửa bộ FAQ" size="sm" onClick={() => startEdit(s)} />
-            <IconButton name="trash-2" label="Xóa bộ FAQ" size="sm" onClick={() => setConfirmDel(s)} />
-          </div>
-        ))}
-      </div>
-      <div style={{ flex: '1 1 340px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{editId ? 'Sửa bộ FAQ' : 'Tạo bộ FAQ mới'}</span>
-        <Input label="Tên bộ" placeholder="VD: FAQ mua bán biển số" value={form.name} error={err}
-          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Danh mục blog áp dụng</span>
-          <select value={form.blogCategoryCode} onChange={(e) => setForm((f) => ({ ...f, blogCategoryCode: e.target.value }))}
-            style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }}>
-            <option value="">— Không gắn danh mục —</option>
-            {catOpts.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
-          </select>
-        </label>
-        {form.items.map((item, i) => (
-          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <Input placeholder="Câu hỏi" value={item.question} onChange={(e) => setForm((f) => ({ ...f, items: f.items.map((it, ii) => (ii === i ? { ...it, question: e.target.value } : it)) }))} />
-              </div>
-              <IconButton name="x" label="Xóa câu hỏi" size="sm" onClick={() => setForm((f) => ({ ...f, items: f.items.filter((_, ii) => ii !== i) }))} />
-            </div>
-            <Input placeholder="Câu trả lời" value={item.answer} onChange={(e) => setForm((f) => ({ ...f, items: f.items.map((it, ii) => (ii === i ? { ...it, answer: e.target.value } : it)) }))} />
-          </div>
-        ))}
-        <Button variant="outline" size="sm" disabled={form.items.length >= 8} onClick={() => setForm((f) => ({ ...f, items: [...f.items, { question: '', answer: '' }] }))}>Thêm câu hỏi</Button>
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          {editId && <Button variant="ghost" size="md" onClick={resetForm}>Hủy sửa</Button>}
-          <Button variant="dark" size="md" onClick={save} disabled={createSet.isPending || updateSet.isPending}>
-            {editId ? 'Lưu thay đổi' : 'Tạo bộ FAQ'}
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={seedDefaultSets}
+            loading={isSeeding}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Sparkles size={14} color="var(--action-primary)" />
+            <span>Nạp bộ FAQ chuẩn từ website</span>
           </Button>
+          {editId && (
+            <Button variant="ghost" size="sm" onClick={resetForm}>
+              Tạo bộ mới
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
+        {/* Cột 1: Danh sách các bộ FAQ */}
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+          <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Danh sách bộ FAQ ({items.length})</span>
+          </div>
+          {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
+          {!isLoading && items.length === 0 && (
+            <div style={{ padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
+              <HelpCircle size={32} color="var(--text-faint)" />
+              <div>
+                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', display: 'block' }}>
+                  Chưa có bộ FAQ nào trong cơ sở dữ liệu
+                </span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
+                  Bấm nút bên dưới để tự động đưa 13 câu hỏi thường gặp thực tế từ website vào kho quản trị.
+                </span>
+              </div>
+              <Button variant="primary" size="sm" onClick={seedDefaultSets} loading={isSeeding}>
+                <Sparkles size={14} style={{ marginRight: 6 }} /> Khởi tạo bộ FAQ mẫu
+              </Button>
+            </div>
+          )}
+          {items.map((s) => {
+            const isEditing = editId === s.id;
+            const isExpanded = expandedId === s.id;
+            return (
+              <div key={s.id} style={{
+                padding: 'var(--space-3) var(--gutter-card)',
+                boxShadow: 'inset 0 -1px 0 var(--grey-100)',
+                background: isEditing ? 'var(--surface-tint-cream)' : 'transparent',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-2)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{s.name}</span>
+                      {isEditing && <span style={{ background: 'var(--brand-100)', color: 'var(--action-primary)', padding: '1px 6px', borderRadius: 'var(--radius-xs)', fontSize: '0.7rem', fontWeight: 'bold' }}>Đang sửa</span>}
+                    </div>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                      {s.blogCategoryCode ? `Danh mục: ${s.blogCategoryCode}` : 'Áp dụng chung (Toàn site)'} · {s.items?.length || 0} câu hỏi
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(isExpanded ? null : s.id)}
+                    title="Xem chi tiết câu hỏi"
+                    style={{ border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: '4px 8px', font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    <span>{isExpanded ? 'Thu gọn' : 'Xem câu hỏi'}</span>
+                    {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                  </button>
+                  <IconButton name="pencil" label="Sửa bộ FAQ" size="sm" onClick={() => startEdit(s)} />
+                  <IconButton name="trash-2" label="Xóa bộ FAQ" size="sm" onClick={() => setConfirmDel(s)} />
+                </div>
+
+                {/* Danh sách câu hỏi thu gọn/mở rộng */}
+                {isExpanded && s.items?.length > 0 && (
+                  <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 4 }}>
+                    {s.items.map((it, iidx) => (
+                      <div key={iidx} style={{ paddingBottom: 6, borderBottom: iidx < s.items.length - 1 ? '1px dashed var(--border-hairline)' : 'none' }}>
+                        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', display: 'block' }}>
+                          Q: {it.question}
+                        </span>
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-body)', display: 'block', marginTop: 2, lineHeight: 1.5 }}>
+                          A: {it.answer}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Cột 2: Form tạo / sửa bộ FAQ */}
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
+              {editId ? 'Sửa bộ FAQ' : 'Tạo bộ FAQ mới'}
+            </span>
+            {editId && (
+              <button type="button" onClick={resetForm} style={{ border: 'none', background: 'transparent', color: 'var(--action-primary)', cursor: 'pointer', font: 'var(--type-caption)' }}>
+                + Đổi sang tạo mới
+              </button>
+            )}
+          </div>
+          <Input label="Tên bộ FAQ" placeholder="VD: FAQ mua bán biển số" value={form.name} error={err}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Danh mục blog áp dụng</span>
+            <select value={form.blogCategoryCode} onChange={(e) => setForm((f) => ({ ...f, blogCategoryCode: e.target.value }))}
+              style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }}>
+              <option value="">— Không gắn danh mục (Áp dụng chung) —</option>
+              {catOpts.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+            </select>
+          </label>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+            <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+              Danh sách câu hỏi & câu trả lời ({form.items.length})
+            </span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              Tối đa 15 câu/bộ
+            </span>
+          </div>
+
+          {form.items.map((item, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', border: '1px solid var(--border-hairline)' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--brand-50)', color: 'var(--action-primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                  {i + 1}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <Input placeholder="Nhập câu hỏi..." value={item.question} onChange={(e) => setForm((f) => ({ ...f, items: f.items.map((it, ii) => (ii === i ? { ...it, question: e.target.value } : it)) }))} />
+                </div>
+                <IconButton name="trash-2" label="Xóa câu hỏi" size="sm" onClick={() => setForm((f) => ({ ...f, items: f.items.filter((_, ii) => ii !== i) }))} />
+              </div>
+              <textarea
+                placeholder="Nhập câu trả lời chi tiết..."
+                value={item.answer}
+                rows={2}
+                onChange={(e) => setForm((f) => ({ ...f, items: f.items.map((it, ii) => (ii === i ? { ...it, answer: e.target.value } : it)) }))}
+                style={{ resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '8px 10px', font: 'var(--type-body-sm)', fontFamily: 'inherit' }}
+              />
+            </div>
+          ))}
+
+          <Button variant="outline" size="sm" disabled={form.items.length >= 15} onClick={() => setForm((f) => ({ ...f, items: [...f.items, { question: '', answer: '' }] }))}>
+            <Plus size={14} style={{ marginRight: 4 }} /> Thêm câu hỏi
+          </Button>
+
+          <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
+            {editId && <Button variant="ghost" size="md" onClick={resetForm}>Hủy sửa</Button>}
+            <Button variant="primary" size="md" onClick={save} disabled={createSet.isPending || updateSet.isPending}>
+              {editId ? 'Lưu thay đổi' : 'Tạo bộ FAQ'}
+            </Button>
+          </div>
         </div>
       </div>
 
       <Modal open={!!confirmDel} onClose={() => setConfirmDel(null)} title="Xác nhận xóa" maxWidth="420px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Bộ FAQ <b>{confirmDel?.name}</b> sẽ bị xóa vĩnh viễn — mọi bài viết đang gắn bộ này sẽ mất câu hỏi đó.</p>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Bộ FAQ <b>{confirmDel?.name}</b> sẽ bị xóa vĩnh viễn khỏi hệ thống.
+          </p>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
             <Button variant="ghost" size="md" onClick={() => setConfirmDel(null)}>Hủy</Button>
             <Button variant="danger" size="md" onClick={doDelete} loading={deleteSet.isPending}>Xóa</Button>
@@ -161,44 +374,246 @@ function FaqSetManager({ notify }) {
   );
 }
 
-// Tab "Kho HowTo" — 1 bộ DUY NHẤT toàn site, mọi bài blog tự động hiển thị giống nhau.
+// Tab "Kho HowTo" — 1 bộ DUY NHẤT toàn site, hiển thị chân trang bài blog & tạo schema SEO
 function HowToManager({ notify }) {
   const { data, isLoading } = useAdminHowToSteps();
   const replaceSteps = useReplaceHowToSteps();
-  const [steps, setSteps] = useState(null); // null = chưa load xong, chưa sync từ server
+  const [steps, setSteps] = useState(null);
 
   const serverItems = data?.items || [];
-  const current = steps ?? serverItems.map((s) => ({ name: s.name, text: s.text }));
-  if (steps === null && data) setSteps(serverItems.map((s) => ({ name: s.name, text: s.text })));
+  // Nếu server chưa có dữ liệu và local chưa chỉnh, tự động gán DEFAULT_HOW_TO_STEPS để admin không bị trống
+  const current = steps ?? (serverItems.length > 0
+    ? serverItems.map((s) => ({ name: s.name, text: s.text }))
+    : DEFAULT_HOW_TO_STEPS);
+
+  useEffect(() => {
+    if (steps === null && data?.items) {
+      if (serverItems.length > 0) {
+        setSteps(serverItems.map((s) => ({ name: s.name, text: s.text })));
+      } else {
+        setSteps(DEFAULT_HOW_TO_STEPS);
+      }
+    }
+  }, [data, steps, serverItems]);
+
+  const loadPreset = () => {
+    setSteps(DEFAULT_HOW_TO_STEPS);
+    notify('Đã nạp 5 bước quy trình chuẩn từ website');
+  };
 
   const save = () => {
     const valid = current.filter((s) => s.name.trim() && s.text.trim());
+    if (valid.length === 0) {
+      notify('Cần ít nhất 1 bước có đủ tiêu đề và nội dung.', 'error');
+      return;
+    }
     replaceSteps.mutate(valid, {
-      onSuccess: () => notify('Đã lưu HowTo — áp dụng ngay cho mọi bài viết.'),
+      onSuccess: () => notify('Đã lưu HowTo — áp dụng ngay cho mọi bài viết và schema SEO.'),
       onError: (e) => notify(e.message || 'Lưu thất bại.', 'error'),
     });
   };
 
   return (
-    <div style={{ maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Hướng dẫn từng bước (HowTo) — chung toàn site</span>
-      <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Chỉ 1 bộ duy nhất — hiện ở cuối MỌI bài blog, không gắn riêng từng bài.</p>
-      {isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
-      {!isLoading && current.map((item, i) => (
-        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)' }}>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
-              <Input placeholder={`Bước ${i + 1} — tiêu đề`} value={item.name} onChange={(e) => setSteps(current.map((s, si) => (si === i ? { ...s, name: e.target.value } : s)))} />
-            </div>
-            <IconButton name="x" label="Xóa bước" size="sm" onClick={() => setSteps(current.filter((_, si) => si !== i))} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', width: '100%' }}>
+      {/* Header Toolbar */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 'var(--space-3)',
+        background: 'var(--white)',
+        padding: 'var(--gutter-card)',
+        borderRadius: 'var(--radius-card)',
+        boxShadow: 'var(--shadow-inset-hairline)',
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>
+              Hướng dẫn từng bước (HowTo) — Hiển thị toàn site
+            </span>
+            <span style={{ background: 'var(--status-success-bg)', color: 'var(--status-success-ink)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>
+              Rich Snippet SEO
+            </span>
           </div>
-          <Input placeholder="Mô tả bước" value={item.text} onChange={(e) => setSteps(current.map((s, si) => (si === i ? { ...s, text: e.target.value } : s)))} />
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            Chỉ 1 bộ duy nhất — hiển thị ở cuối MỌI bài viết blog và tự động sinh cấu trúc dữ liệu Google HowTo Schema.
+          </span>
         </div>
-      ))}
-      <Button variant="outline" size="sm" disabled={current.length >= 20} onClick={() => setSteps([...current, { name: '', text: '' }])}>Thêm bước</Button>
-      <Button variant="dark" size="md" onClick={save} disabled={replaceSteps.isPending} style={{ alignSelf: 'flex-start' }}>
-        {replaceSteps.isPending ? 'Đang lưu…' : 'Lưu toàn bộ'}
-      </Button>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadPreset}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Sparkles size={14} color="var(--action-primary)" />
+            <span>Nạp lại 5 bước chuẩn</span>
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={save}
+            loading={replaceSteps.isPending}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Save size={14} />
+            <span>Lưu toàn bộ</span>
+          </Button>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
+        {/* Cột trái: Trình chỉnh sửa các bước */}
+        <div style={{
+          background: 'var(--white)',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: 'var(--shadow-inset-hairline)',
+          padding: 'var(--gutter-card)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-3)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
+              Các bước thực hiện ({current.length})
+            </span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              Tối đa 20 bước
+            </span>
+          </div>
+
+          {isLoading && <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</span>}
+
+          {!isLoading && current.map((item, i) => (
+            <div key={i} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              padding: 'var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--surface-sunken)',
+              border: '1px solid var(--border-hairline)',
+            }}>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                <span style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--brand-50)',
+                  color: 'var(--action-primary)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                }}>
+                  {i < 9 ? `0${i + 1}` : i + 1}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <Input
+                    placeholder={`Bước ${i + 1} — tiêu đề`}
+                    value={item.name}
+                    onChange={(e) => setSteps(current.map((s, si) => (si === i ? { ...s, name: e.target.value } : s)))}
+                  />
+                </div>
+                <IconButton name="trash-2" label="Xóa bước" size="sm" onClick={() => setSteps(current.filter((_, si) => si !== i))} />
+              </div>
+              <textarea
+                placeholder="Mô tả chi tiết bước này..."
+                rows={2}
+                value={item.text}
+                onChange={(e) => setSteps(current.map((s, si) => (si === i ? { ...s, text: e.target.value } : s)))}
+                style={{ resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '8px 10px', font: 'var(--type-body-sm)', fontFamily: 'inherit' }}
+              />
+            </div>
+          ))}
+
+          <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
+            <Button variant="outline" size="sm" disabled={current.length >= 20} onClick={() => setSteps([...current, { name: `${current.length + 1}. `, text: '' }])}>
+              <Plus size={14} style={{ marginRight: 4 }} /> Thêm bước mới
+            </Button>
+            <Button variant="primary" size="md" onClick={save} loading={replaceSteps.isPending}>
+              Lưu toàn bộ
+            </Button>
+          </div>
+        </div>
+
+        {/* Cột phải: Live Preview giao diện thực tế của khách hàng */}
+        <div style={{
+          background: 'var(--white)',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: 'var(--shadow-inset-hairline)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          {/* Header trình duyệt giả lập */}
+          <div style={{
+            background: 'var(--surface-sunken)',
+            borderBottom: '1px solid var(--border-hairline)',
+            padding: '8px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '0.75rem',
+            color: 'var(--text-muted)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+              <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', color: 'var(--text-faint)' }}>
+                biensovip.com/bai-viet/...#huong-dan
+              </span>
+            </div>
+            <span style={{ background: 'var(--white)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontWeight: 'var(--fw-semibold)' }}>
+              Xem trước chân trang bài viết
+            </span>
+          </div>
+
+          <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ borderBottom: '1px solid var(--border-hairline)', paddingBottom: 'var(--space-2)' }}>
+              <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>
+                Hướng dẫn từng bước
+              </h2>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                Quy trình mua bán và sang tên chuẩn hóa
+              </span>
+            </div>
+
+            <ol style={{ margin: 0, paddingLeft: 22, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              {current.map((s, idx) => (
+                <li key={idx} style={{ color: 'var(--action-primary)' }}>
+                  <strong style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)', display: 'block' }}>
+                    {s.name || `Bước ${idx + 1}`}
+                  </strong>
+                  <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.6 }}>
+                    {s.text || '(Chưa nhập nội dung bước)'}
+                  </p>
+                </li>
+              ))}
+            </ol>
+
+            <div style={{
+              background: 'var(--surface-sunken)',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-hairline)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <CheckCircle2 size={16} color="var(--status-success)" />
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                Tự động nhúng cấu trúc Schema <b>HowTo</b> của Google giúp bài viết đạt vị trí tìm kiếm nổi bật.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

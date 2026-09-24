@@ -1,12 +1,12 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TiptapLink from '@tiptap/extension-link';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { marked } from 'marked';
 import mammoth from 'mammoth';
-import { Eye, X, Upload } from 'lucide-react';
+import { Eye, X, Upload, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
 import Button from '../../components/Button.jsx';
-import { Input, Select, InfoTip } from '../../components/index.jsx';
+import { Input, Select, InfoTip, Badge } from '../../components/index.jsx';
 import { EditorToolbar, ResizableImage } from '../../components/RichTextEditor.jsx';
 import Modal from '../../components/Modal.jsx';
 import BlogVersionHistoryModal from '../../components/BlogVersionHistoryModal.jsx';
@@ -453,6 +453,166 @@ export default function Compose({ st, patch, notify }) {
   const previewMetaTitle = metaTitle.trim() || title.trim() || 'Chưa có tiêu đề';
   const previewMetaDesc = metaDescription.trim() || truncateAt(plainText, 155);
 
+  // Đánh giá chất lượng và độ hoàn thiện dữ liệu bài viết (tương tự quản lý biển số)
+  const quality = useMemo(() => {
+    const checks = [];
+    const issues = [];
+
+    // 1. Tiêu đề
+    const hasTitle = title.trim().length >= 10;
+    checks.push({ id: 'title', label: 'Tiêu đề đủ dài (≥10 ký tự)', ok: hasTitle });
+    if (!hasTitle) issues.push('Tiêu đề cần tối thiểu 10 ký tự');
+
+    // 2. Slug
+    const hasSlug = !!slug.trim();
+    checks.push({ id: 'slug', label: 'Slug thân thiện URL', ok: hasSlug });
+    if (!hasSlug) issues.push('Chưa có đường dẫn riêng (slug)');
+
+    // 3. Ảnh bìa
+    const hasCover = !!coverImageUrl.trim();
+    checks.push({ id: 'cover', label: 'Ảnh đại diện bài viết', ok: hasCover });
+    if (!hasCover) issues.push('Thiếu ảnh bìa bài viết');
+
+    // 4. Meta Title
+    const metaTitleEffective = (metaTitle.trim() || title.trim());
+    const hasMetaTitle = metaTitleEffective.length >= 15 && metaTitleEffective.length <= 60;
+    checks.push({ id: 'metaTitle', label: 'Tiêu đề SEO Meta (15-60 ký tự)', ok: hasMetaTitle });
+    if (!metaTitle.trim()) issues.push('Chưa điền riêng Meta Title');
+    else if (metaTitle.trim().length > 60) issues.push('Meta Title quá dài (>60 ký tự)');
+
+    // 5. Meta Description
+    const hasMetaDesc = metaDescription.trim().length >= 50 && metaDescription.trim().length <= 160;
+    checks.push({ id: 'metaDesc', label: 'Mô tả SEO Meta (50-160 ký tự)', ok: hasMetaDesc });
+    if (!metaDescription.trim()) issues.push('Chưa điền riêng Meta Description');
+    else if (metaDescription.trim().length < 50) issues.push('Meta Description quá ngắn (<50 ký tự)');
+    else if (metaDescription.trim().length > 160) issues.push('Meta Description quá dài (>160 ký tự)');
+
+    // 6. Độ dài nội dung
+    const hasLength = wordCount >= 300;
+    checks.push({ id: 'length', label: 'Nội dung chi tiết (≥300 từ)', ok: hasLength });
+    if (!hasLength) issues.push(`Nội dung còn ngắn (${wordCount}/300 từ)`);
+
+    // 7. Chuyên mục
+    const hasCategory = !!category && category !== 'general';
+    checks.push({ id: 'category', label: 'Chuyên mục bài viết', ok: hasCategory });
+    if (!hasCategory) issues.push('Chưa chọn chuyên mục cụ thể');
+
+    // 8. Tags
+    const hasTags = tags.length >= 2;
+    checks.push({ id: 'tags', label: 'Gắn thẻ từ khóa (≥2 tags)', ok: hasTags });
+    if (tags.length === 0) issues.push('Chưa gắn thẻ Tags nào');
+    else if (tags.length < 2) issues.push('Nên gắn thêm ít nhất 2 thẻ Tags');
+
+    // 9. FAQ
+    const hasFaqs = faqSetIds.length > 0;
+    checks.push({ id: 'faqs', label: 'Bộ câu hỏi FAQ giải đáp', ok: hasFaqs });
+    if (!hasFaqs) issues.push('Chưa gắn bộ FAQ giải đáp');
+
+    const passed = checks.filter(c => c.ok).length;
+    const score = Math.round((passed / checks.length) * 100);
+
+    return {
+      score,
+      passed,
+      totalChecks: checks.length,
+      checks,
+      issues,
+      statusTone: score >= 85 ? 'mint' : score >= 60 ? 'amber' : 'danger',
+      statusLabel: score >= 85 ? 'Chuẩn SEO Tối Ưu' : score >= 60 ? 'Tương Đối Đầy Đủ' : 'Cần Bổ Sung Thông Tin',
+    };
+  }, [title, slug, coverImageUrl, metaTitle, metaDescription, wordCount, category, tags, faqSetIds]);
+
+  // Tự động sinh các trường thông tin còn thiếu (SEO, Slug, Tags, Category)
+  const autoGenerateAllMissing = () => {
+    let count = 0;
+
+    // 1. Slug
+    if (!slug.trim() && title.trim()) {
+      setSlug(slugify(title));
+      setSlugTouched(true);
+      count++;
+    }
+
+    // 2. Meta Title
+    if (!metaTitle.trim() && title.trim()) {
+      setMetaTitle(truncateAt(title, 60));
+      count++;
+    }
+
+    // 3. Meta Description
+    if (!metaDescription.trim()) {
+      const candidate = truncateAt(plainText || title, 155);
+      if (candidate) {
+        setMetaDescription(candidate);
+        count++;
+      }
+    }
+
+    // 4. Tags
+    if (tags.length < 2) {
+      const pool = availableTags.length > 0 ? availableTags : (allTagsData?.items || []);
+      const matched = [];
+      const titleLower = title.toLowerCase();
+      const contentLower = plainText.toLowerCase();
+
+      for (const t of pool) {
+        const tl = t.toLowerCase();
+        if (titleLower.includes(tl) || contentLower.includes(tl)) {
+          matched.push(t);
+        }
+      }
+
+      const fallbackTagsByCategory = {
+        'kien-thuc': ['biển số đẹp', 'định danh biển số', 'ý nghĩa biển số'],
+        'phong-thuy': ['phong thủy biển số', 'biển số hợp mệnh', 'ngũ quý'],
+        'thi-truong': ['đấu giá biển số', 'giá biển số', 'thị trường biển đẹp'],
+        'huong-dan': ['thủ tục sang tên', 'đăng ký biển số', 'hướng dẫn'],
+        'hanh-trinh': ['giao biển tận nơi', 'khách hàng biensovip'],
+      };
+
+      const candidates = [...matched, ...(fallbackTagsByCategory[category] || ['biển số đẹp', 'biensovip'])];
+      const newTags = [...tags];
+      for (const cand of candidates) {
+        if (newTags.length >= 4) break;
+        if (!newTags.some(existing => existing.toLowerCase() === cand.toLowerCase())) {
+          newTags.push(cand);
+          count++;
+        }
+      }
+      setTags(newTags.slice(0, 10));
+    }
+
+    // 5. Category (nếu đang là rỗng hoặc general)
+    if (!category || category === 'general') {
+      const tl = title.toLowerCase();
+      if (tl.includes('phong thủy') || tl.includes('hợp mệnh') || tl.includes('ngũ hành') || tl.includes('tam hoa') || tl.includes('tứ quý') || tl.includes('ngũ quý')) {
+        setCategory('phong-thuy');
+        count++;
+      } else if (tl.includes('đấu giá') || tl.includes('giá') || tl.includes('thị trường') || tl.includes('kỷ lục')) {
+        setCategory('thi-truong');
+        count++;
+      } else if (tl.includes('thủ tục') || tl.includes('hướng dẫn') || tl.includes('sang tên') || tl.includes('định danh')) {
+        setCategory('huong-dan');
+        count++;
+      } else if (tl.includes('giao biển') || tl.includes('bàn giao') || tl.includes('khách hàng')) {
+        setCategory('hanh-trinh');
+        count++;
+      }
+    }
+
+    // 6. Summary Meaning (nếu trống và có từ khóa tài lộc)
+    if (!summaryMeaning.trim() && (title.includes('lộc') || title.includes('phát') || title.includes('thần tài') || title.includes('tứ quý') || title.includes('ngũ quý'))) {
+      setSummaryMeaning('Mang lại may mắn, vượng khí, tài lộc hanh thông cho gia chủ.');
+      count++;
+    }
+
+    if (count > 0) {
+      notify(`Đã tự động tạo và điền ${count} mục thông tin SEO & dữ liệu còn thiếu!`);
+    } else {
+      notify('Các trường cơ bản đã có đủ thông tin, không cần tự sinh thêm.');
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ flex: '2 1 520px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -686,6 +846,9 @@ export default function Compose({ st, patch, notify }) {
         </label>
 
         <div className="compose-actions-mobile" style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <Button variant="outline" size="md" disabled={saving} onClick={autoGenerateAllMissing} style={{ display: 'flex', alignItems: 'center', gap: 6 }} title="Tự động điền Slug, Meta SEO và Tags còn thiếu">
+            <Sparkles size={15} /> Tự sinh SEO
+          </Button>
           <Button variant="outline" size="md" disabled={saving} onClick={() => submit('draft')} style={{ flex: 1 }}>{scheduledPublishAt ? 'Lưu & hẹn giờ' : 'Lưu nháp'}</Button>
           <Button variant="primary" size="md" disabled={saving} onClick={publish} style={{ flex: 1 }}>{editPostId ? 'Cập nhật' : 'Xuất bản'}</Button>
         </div>
@@ -693,6 +856,71 @@ export default function Compose({ st, patch, notify }) {
 
       {/* Cột preview — sticky, cuộn riêng khi form dài hơn viewport */}
       <div style={{ flex: '1 1 380px', minWidth: 0, position: 'sticky', top: 'var(--space-4)', maxHeight: 'calc(100vh - var(--space-8))', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        {/* Thẻ Đánh giá chất lượng & Chuẩn SEO */}
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Sparkles size={16} style={{ color: 'var(--action-primary)' }} />
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Độ hoàn thiện & SEO</span>
+            </div>
+            <Badge tone={quality.statusTone}>{quality.score}% · {quality.statusLabel}</Badge>
+          </div>
+
+          {/* Thanh tiến trình điểm chất lượng */}
+          <div style={{ width: '100%', height: 6, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }}>
+            <div style={{
+              width: `${quality.score}%`,
+              height: '100%',
+              background: quality.score >= 80 ? 'var(--status-mint)' : quality.score >= 50 ? 'var(--status-amber)' : 'var(--status-danger)',
+              transition: 'width 250ms ease-out',
+            }} />
+          </div>
+
+          {/* Nút tự sinh các trường còn thiếu */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={autoGenerateAllMissing}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderColor: 'var(--action-primary)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}
+            title="Tự động điền Slug, Meta Title, Meta Description và gợi ý Hashtags từ nội dung bài viết"
+          >
+            <Sparkles size={14} /> Tự động sinh các mục còn thiếu
+          </Button>
+
+          {/* Danh sách tiêu chí kiểm tra */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4 }}>
+            {quality.checks.map((c) => (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', font: 'var(--type-caption)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: c.ok ? 'var(--text-body)' : 'var(--text-muted)' }}>
+                  {c.ok ? (
+                    <CheckCircle2 size={13} style={{ color: 'var(--status-mint)', flexShrink: 0 }} />
+                  ) : (
+                    <AlertTriangle size={13} style={{ color: 'var(--status-amber)', flexShrink: 0 }} />
+                  )}
+                  <span>{c.label}</span>
+                </span>
+                <span style={{ color: c.ok ? 'var(--status-mint)' : 'var(--text-faint)', fontWeight: c.ok ? 'var(--fw-semibold)' : 'normal' }}>
+                  {c.ok ? 'Đạt' : 'Thiếu'}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {quality.issues.length > 0 && (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-amber)' }}>Cần cải thiện ({quality.issues.length}):</span>
+              <ul style={{ margin: 0, paddingLeft: 16, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                {quality.issues.slice(0, 3).map((iss, i) => (
+                  <li key={i}>{iss}</li>
+                ))}
+                {quality.issues.length > 3 && (
+                  <li>Và {quality.issues.length - 3} mục khác…</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><Eye size={14} />Xem trước Google</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontFamily: 'arial, sans-serif' }}>

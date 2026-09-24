@@ -44,3 +44,11 @@ export function useAnalyticsEvents(fromDate, toDate, eventName) {
     enabled: Boolean(fromDate && toDate),
   });
 }
+
+export function useBusinessInsights(fromDate, toDate) {
+  return useQuery({
+    queryKey: ['admin-business-insights', fromDate, toDate],
+    queryFn: () => apiClient.get('/api/admin/analytics/business-insights', { params: { fromDate, toDate } }),
+    enabled: Boolean(fromDate && toDate),
+  });
+}

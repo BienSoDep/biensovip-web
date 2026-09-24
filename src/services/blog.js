@@ -54,16 +54,17 @@ export function useCreateBlogTag() {
   });
 }
 
-export function useAdminBlogPosts(status, q, page = 1, limit = 20, sortBy = 'createdAt', sortDir = 'desc') {
+export function useAdminBlogPosts(status, q, page = 1, limit = 20, sortBy = 'createdAt', sortDir = 'desc', category) {
   const params = new URLSearchParams();
   if (status) params.set('status', status);
   if (q) params.set('q', q);
+  if (category && category !== 'all') params.set('category', category);
   params.set('page', String(page));
   params.set('limit', String(limit));
   params.set('sortBy', sortBy);
   params.set('sortDir', sortDir);
   return useQuery({
-    queryKey: ['admin-blog-posts', status ?? 'all', q ?? '', page, limit, sortBy, sortDir],
+    queryKey: ['admin-blog-posts', status ?? 'all', q ?? '', category ?? 'all', page, limit, sortBy, sortDir],
     queryFn: () => apiClient.get(`/api/admin/blog/posts?${params.toString()}`),
   });
 }

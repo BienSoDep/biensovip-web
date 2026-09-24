@@ -1278,7 +1278,7 @@ function BenefitLanding({ go, onActivated }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)' }}>
           <div style={{ flex: '1 1 360px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', minWidth: 0 }}>
             <h1 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)', textWrap: 'balance' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }} />
-            {body && <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', font: 'var(--type-body)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />}
+            {body && <div className="ctv-benefit-prose" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', font: 'var(--type-body)', color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-5)' }}>
               {STATS.map((s) => {
                 const StatIcon = s.icon;

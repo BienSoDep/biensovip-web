@@ -1,14 +1,46 @@
 import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import {
+  Sparkles,
+  SlidersHorizontal,
+  RefreshCw,
+} from 'lucide-react';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import {
-  useAnalyticsOverview, useAnalyticsPages, useAnalyticsDevices, useAnalyticsFunnel, useAnalyticsEvents,
+  useAnalyticsOverview,
+  useAnalyticsPages,
+  useAnalyticsDevices,
+  useAnalyticsFunnel,
+  useAnalyticsEvents,
+  useBusinessInsights,
 } from '../../services/analytics.js';
+import { formatPrice } from '../../lib/plateFormat.js';
 
-const PIE_COLORS = ['var(--action-primary)', 'var(--amber-500)', 'var(--status-success-ink)', 'var(--status-danger)', 'var(--blue-500)'];
+// Modular Subcomponents
+import ExecutiveSummaryBanner from './insights/ExecutiveSummaryBanner.jsx';
+import FunnelKpiSection from './insights/FunnelKpiSection.jsx';
+import BottleneckRadarSection from './insights/BottleneckRadarSection.jsx';
+import PlateEngagementSection from './insights/PlateEngagementSection.jsx';
+import SupplyDemandSection from './insights/SupplyDemandSection.jsx';
+import LeadHealthAndGapsSection from './insights/LeadHealthAndGapsSection.jsx';
+import StalledPlatesSection from './insights/StalledPlatesSection.jsx';
+import TechnicalAnalyticsSection from './insights/TechnicalAnalyticsSection.jsx';
+
+// Bảng màu series chuẩn thương hiệu (khớp tokens.css & Dashboard.jsx)
+const PIE_COLORS = [
+  'var(--brand-500, #d4650a)',
+  'var(--status-warning, #f5c542)',
+  'var(--status-success, #3fbf8f)',
+  'var(--status-danger, #e5484d)',
+  'var(--ink-700, #24272e)',
+  'var(--grey-500, #6b7180)',
+];
 
 function todayIso() { return new Date().toISOString().slice(0, 10); }
 function daysAgoIso(n) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+function startOfMonthIso() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+}
 
 function fmtDuration(seconds) {
   const s = Math.round(seconds || 0);
@@ -16,166 +48,366 @@ function fmtDuration(seconds) {
   return `${Math.floor(s / 60)}p${s % 60}s`;
 }
 
-function StatCard({ label, value }) {
-  return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 16, flex: 1, minWidth: 160 }}>
-      <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</div>
-      <div style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', marginTop: 4 }}>{value}</div>
-    </div>
-  );
-}
-
-export default function AdminInsights() {
-  const [fromDate, setFromDate] = useState(daysAgoIso(7));
+export default function AdminInsights({ go, patch, st }) {
+  const [fromDate, setFromDate] = useState(daysAgoIso(14));
   const [toDate, setToDate] = useState(todayIso());
+  const [viewMode, setViewMode] = useState('business'); // 'business' | 'technical'
 
+  // Business Insights Data
+  const businessInsights = useBusinessInsights(fromDate, toDate);
+
+  // Technical Analytics Data
   const overview = useAnalyticsOverview(fromDate, toDate);
   const pages = useAnalyticsPages(fromDate, toDate);
   const devices = useAnalyticsDevices(fromDate, toDate);
   const funnel = useAnalyticsFunnel(fromDate, toDate, null);
   const events = useAnalyticsEvents(fromDate, toDate, null);
 
-  const loading = overview.isLoading || pages.isLoading || devices.isLoading;
+  const loading = businessInsights.isLoading || (viewMode === 'technical' && (overview.isLoading || pages.isLoading));
+
+  const bData = businessInsights.data;
+  const bottlenecks = bData?.bottlenecks || [];
+  const funnelData = bData?.funnel;
+  const searchGaps = bData?.searchGaps || [];
+  const stalledPlates = bData?.stalledPlates || [];
+  const leadHealth = bData?.leadHealth;
+  const plateEngagement = bData?.plateEngagement;
+  const categorySupplyDemand = bData?.categorySupplyDemand || [];
+  const priceSegments = bData?.priceSegments || [];
+  const topInteracted = plateEngagement?.topInteractedPlates || [];
+
+  const handleActionClick = (link, extraParams = {}) => {
+    if (!link) return;
+
+    if (link === 'tab:technical') {
+      setViewMode('technical');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    let targetPath = link;
+    let queryString = '';
+    if (link.includes('?')) {
+      const parts = link.split('?');
+      targetPath = parts[0];
+      queryString = parts[1];
+    }
+    const params = new URLSearchParams(queryString);
+    const statusParam = extraParams.status || params.get('status');
+    const qParam = extraParams.adminQ || params.get('q');
+    const viewParam = extraParams.view || params.get('view');
+
+    if (targetPath.startsWith('/admin/')) {
+      const part = targetPath.replace('/admin/', '');
+      const screenMap = {
+        'ban-hang': 'asales',
+        'bien-so': 'aplates',
+        'lien-he': 'acontacts',
+        'quy-trinh': 'akanban',
+        'giao-dich': 'atransactions',
+        'khach-hang': 'acustomers',
+        'khach-quan-tam': 'ainterestleads',
+        'danh-muc': 'acats',
+        'bai-viet': 'aposts',
+        'nhat-ky-loi': 'aerrorlogs',
+        'nhat-ky-he-thong': 'aauditlog',
+        'y-nghia': 'ameanings',
+        'thu-tu-hien-thi': 'asortsettings',
+        'mau-tin-nhan-ctv': 'actvtemplates',
+      };
+
+      const targetScreen = screenMap[part] || 'dash';
+
+      if (typeof window !== 'undefined') {
+        const fullUrl = link.startsWith('http') ? link : (link.startsWith('/') ? link : '/' + link);
+        try {
+          window.history.pushState(null, '', fullUrl);
+        } catch { /* ignore */ }
+      }
+
+      if (patch) {
+        patch({
+          screen: targetScreen,
+          ...(statusParam ? { contactStatus: statusParam } : {}),
+          ...(qParam ? { adminQ: qParam } : {}),
+          ...(viewParam ? { salesView: viewParam } : {}),
+        });
+      }
+
+      if (typeof go === 'function') {
+        const goFn = go(targetScreen);
+        if (typeof goFn === 'function') {
+          goFn();
+        }
+      }
+      return;
+    }
+
+    window.location.href = link;
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <h1 style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', margin: 0 }}>Insight khách hàng</h1>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ width: 150, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px' }} />
-          <span style={{ color: 'var(--text-muted)' }}>—</span>
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ width: 150, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)', width: '100%' }}>
+      {/* 1. Header & Bộ lọc thời gian đồng bộ */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 'var(--space-4)',
+        background: 'var(--surface-card)',
+        padding: 'var(--gutter-card)',
+        borderRadius: 'var(--radius-card)',
+        boxShadow: 'var(--shadow-inset-hairline)',
+      }}>
+        <div style={{ minWidth: 260 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <h1 style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)', margin: 0 }}>
+              Insight Khách Hàng & Điểm Nghẽn
+            </h1>
+            <span style={{
+              background: 'var(--blue-50)',
+              color: 'var(--action-primary)',
+              padding: '3px 10px',
+              borderRadius: 'var(--radius-pill)',
+              font: 'var(--type-caption)',
+              fontWeight: 'var(--fw-bold)',
+              letterSpacing: '0.02em',
+              border: '1px solid var(--blue-100)',
+            }}>
+              Phân tích thông minh
+            </span>
+          </div>
+          <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Tự động rà soát luồng khách, đo lường điểm rơi rớt, sức khỏe tư vấn và cơ hội bán hàng.
+          </p>
+        </div>
+
+        {/* Date Filters & Presets đồng bộ Dashboard */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 4, background: 'var(--surface-sunken)', padding: 3, borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-hairline)' }}>
+            {[
+              { label: '7 ngày', from: daysAgoIso(7) },
+              { label: '14 ngày', from: daysAgoIso(14) },
+              { label: '30 ngày', from: daysAgoIso(30) },
+              { label: 'Tháng này', from: startOfMonthIso() },
+            ].map((preset) => {
+              const active = fromDate === preset.from;
+              return (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => { setFromDate(preset.from); setToDate(todayIso()); }}
+                  style={{
+                    border: 'none',
+                    background: active ? 'var(--text-strong)' : 'transparent',
+                    boxShadow: active ? 'var(--shadow-1)' : 'none',
+                    padding: '6px 14px',
+                    borderRadius: 'var(--radius-pill)',
+                    font: 'var(--type-caption)',
+                    fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                    cursor: 'pointer',
+                    color: active ? 'var(--white)' : 'var(--text-muted)',
+                    transition: 'var(--transition-control)',
+                  }}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            padding: '4px 12px',
+            borderRadius: 'var(--radius-pill)',
+            background: 'var(--surface-sunken)',
+            border: '1px solid var(--border-hairline)',
+          }}>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                font: 'var(--type-caption)',
+                color: 'var(--text-body)',
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            />
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>→</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                font: 'var(--type-caption)',
+                color: 'var(--text-body)',
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              businessInsights.refetch();
+              if (viewMode === 'technical') {
+                overview.refetch();
+                pages.refetch();
+                devices.refetch();
+                funnel.refetch();
+                events.refetch();
+              }
+            }}
+            title="Tải lại dữ liệu"
+            style={{
+              height: 32,
+              width: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid var(--border-hairline)',
+              borderRadius: 'var(--radius-pill)',
+              background: 'var(--surface-card)',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              transition: 'var(--transition-control)',
+            }}
+          >
+            <RefreshCw size={14} />
+          </button>
         </div>
       </div>
 
-      {loading ? <SkeletonTable rows={4} /> : (
+      {/* 2. Mode Switcher Tabs */}
+      <div style={{
+        display: 'flex',
+        gap: 'var(--space-3)',
+        borderBottom: '1px solid var(--border-hairline)',
+        paddingBottom: 0,
+      }}>
+        <button
+          type="button"
+          onClick={() => setViewMode('business')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            padding: '10px 16px',
+            border: 'none',
+            background: 'transparent',
+            borderBottom: viewMode === 'business' ? '2.5px solid var(--action-primary)' : '2.5px solid transparent',
+            marginBottom: -1,
+            cursor: 'pointer',
+            font: 'var(--type-label)',
+            fontWeight: viewMode === 'business' ? 'var(--fw-bold)' : 'var(--fw-medium)',
+            color: viewMode === 'business' ? 'var(--action-primary)' : 'var(--text-muted)',
+            transition: 'var(--transition-control)',
+          }}
+        >
+          <Sparkles size={16} />
+          <span>Tổng quan & Điểm nghẽn kinh doanh (Dễ hiểu)</span>
+          {bottlenecks.length > 0 && (
+            <span style={{
+              background: 'var(--status-danger-bg)',
+              color: 'var(--status-danger-ink)',
+              padding: '1px 7px',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.75rem',
+              fontWeight: 'var(--fw-bold)',
+            }}>
+              {bottlenecks.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setViewMode('technical')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            padding: '10px 16px',
+            border: 'none',
+            background: 'transparent',
+            borderBottom: viewMode === 'technical' ? '2.5px solid var(--action-primary)' : '2.5px solid transparent',
+            marginBottom: -1,
+            cursor: 'pointer',
+            font: 'var(--type-label)',
+            fontWeight: viewMode === 'technical' ? 'var(--fw-bold)' : 'var(--fw-medium)',
+            color: viewMode === 'technical' ? 'var(--action-primary)' : 'var(--text-muted)',
+            transition: 'var(--transition-control)',
+          }}
+        >
+          <SlidersHorizontal size={16} />
+          <span>Nhật ký kỹ thuật & Dữ liệu chi tiết</span>
+        </button>
+      </div>
+
+
+      {loading ? (
+        <SkeletonTable rows={6} />
+      ) : viewMode === 'business' ? (
+        /* BUSINESS & BOTTLENECKS VIEW (Dành cho Admin & Quản lý shop) */
         <>
-          {/* Tổng quan */}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <StatCard label="Tổng phiên" value={overview.data?.sessionCount ?? 0} />
-            <StatCard label="Thời lượng TB" value={fmtDuration(overview.data?.avgDurationSeconds)} />
-            <StatCard label="Tổng lượt xem trang" value={overview.data?.totalPageViews ?? 0} />
-          </div>
+          {/* Executive Summary Banner */}
+          <ExecutiveSummaryBanner summary={bData?.executiveSummary} />
 
-          {/* Bảng theo trang */}
-          <section style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 16 }}>
-            <h2 style={{ font: 'var(--type-title-3)', margin: '0 0 12px' }}>Theo trang</h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body)' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', color: 'var(--text-muted)', font: 'var(--type-caption)' }}>
-                    <th style={{ padding: '6px 8px' }}>Màn hình</th>
-                    <th style={{ padding: '6px 8px' }}>Lượt xem</th>
-                    <th style={{ padding: '6px 8px' }}>TG trung bình</th>
-                    <th style={{ padding: '6px 8px' }}>Tỷ lệ thoát</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(pages.data?.pages || []).map((p) => (
-                    <tr key={p.screen} style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                      <td style={{ padding: '6px 8px' }}>{p.screen}</td>
-                      <td style={{ padding: '6px 8px' }}>{p.views}</td>
-                      <td style={{ padding: '6px 8px' }}>{fmtDuration(p.avgDurationSeconds)}</td>
-                      <td style={{ padding: '6px 8px' }}>{p.bounceRatePct.toFixed(0)}%</td>
-                    </tr>
-                  ))}
-                  {!pages.data?.pages?.length && (
-                    <tr><td colSpan={4} style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Chưa có dữ liệu trong khoảng ngày này.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          {/* KPI Cards & Funnel */}
+          <FunnelKpiSection funnelData={funnelData} onActionClick={handleActionClick} onSelectTab={setViewMode} />
 
-          {/* Luồng đi */}
-          <section style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 16 }}>
-            <h2 style={{ font: 'var(--type-title-3)', margin: '0 0 12px' }}>Luồng đi</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
-              <div>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Trang vào đầu tiên</div>
-                {(funnel.data?.topEntryScreens || []).map((e) => (
-                  <div key={e.screen} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                    <span>{e.screen}</span><span style={{ color: 'var(--text-muted)' }}>{e.count}</span>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Trang thoát</div>
-                {(funnel.data?.topExitScreens || []).map((e) => (
-                  <div key={e.screen} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                    <span>{e.screen}</span><span style={{ color: 'var(--text-muted)' }}>{e.count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {!!(funnel.data?.transitions || []).length && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Vào trang X rồi thường đi đâu tiếp</div>
-                {funnel.data.transitions.slice(0, 10).map((t, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                    <span>{t.fromScreen} → {t.toScreen}</span><span style={{ color: 'var(--text-muted)' }}>{t.count}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          {/* Radar Bottlenecks & Recommendations */}
+          <BottleneckRadarSection bottlenecks={bottlenecks} onActionClick={handleActionClick} onSelectTab={setViewMode} />
 
-          {/* CTA/hành vi */}
-          <section style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 16 }}>
-            <h2 style={{ font: 'var(--type-title-3)', margin: '0 0 12px' }}>CTA & hành vi</h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body)' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', color: 'var(--text-muted)', font: 'var(--type-caption)' }}>
-                    <th style={{ padding: '6px 8px' }}>Sự kiện</th>
-                    <th style={{ padding: '6px 8px' }}>Chi tiết</th>
-                    <th style={{ padding: '6px 8px' }}>Số lần</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(events.data?.events || []).slice(0, 20).map((e, i) => (
-                    <tr key={i} style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                      <td style={{ padding: '6px 8px' }}>{e.eventName}</td>
-                      <td style={{ padding: '6px 8px', maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.eventData || '—'}</td>
-                      <td style={{ padding: '6px 8px' }}>{e.count}</td>
-                    </tr>
-                  ))}
-                  {!events.data?.events?.length && (
-                    <tr><td colSpan={3} style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Chưa có dữ liệu trong khoảng ngày này.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          {/* Micro-interactions & Plate Engagement */}
+          <PlateEngagementSection
+            plateEngagement={plateEngagement}
+            topInteracted={topInteracted}
+            formatPrice={formatPrice}
+            onActionClick={handleActionClick}
+          />
 
-          {/* Thiết bị/nguồn */}
-          <section style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 16 }}>
-            <h2 style={{ font: 'var(--type-title-3)', margin: '0 0 12px' }}>Thiết bị & nguồn</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
-              <div style={{ height: 220 }}>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Thiết bị</div>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={devices.data?.devices || []} dataKey="count" nameKey="device" outerRadius={70} label>
-                      {(devices.data?.devices || []).map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip /><Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div style={{ height: 220 }}>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Nguồn truy cập</div>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={devices.data?.sources || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="source" /><YAxis allowDecimals={false} />
-                    <Tooltip /><Bar dataKey="count" fill="var(--action-primary)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </section>
+          {/* Supply & Demand Balance (Category & Price Segments) */}
+          <SupplyDemandSection
+            categorySupplyDemand={categorySupplyDemand}
+            priceSegments={priceSegments}
+            onActionClick={handleActionClick}
+          />
+
+          {/* Lead Response Health & Search Gaps */}
+          <LeadHealthAndGapsSection
+            leadHealth={leadHealth}
+            searchGaps={searchGaps}
+            onActionClick={handleActionClick}
+          />
+
+          {/* Stalled Hot Plates */}
+          <StalledPlatesSection
+            stalledPlates={stalledPlates}
+            formatPrice={formatPrice}
+            onActionClick={handleActionClick}
+          />
         </>
+      ) : (
+        /* TECHNICAL & RAW EVENTS VIEW (Dành cho Lập trình viên / Dev) */
+        <TechnicalAnalyticsSection
+          overview={overview}
+          pages={pages}
+          funnel={funnel}
+          events={events}
+          devices={devices}
+          fmtDuration={fmtDuration}
+          pieColors={PIE_COLORS}
+        />
       )}
     </div>
   );
