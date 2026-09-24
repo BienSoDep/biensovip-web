@@ -1,4 +1,4 @@
-import { Layers, DollarSign, Lightbulb } from 'lucide-react';
+import { Layers, DollarSign, Lightbulb, ArrowRight } from 'lucide-react';
 
 export default function SupplyDemandSection({ categorySupplyDemand = [], priceSegments = [], onActionClick }) {
   return (
@@ -26,7 +26,7 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
             </h3>
           </div>
           <p style={{ margin: '0 0 var(--space-4)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            So sánh tỷ lệ khách quan tâm (% Cầu) với số lượng biển sẵn có trong kho (% Cung).
+            So sánh tỷ lệ khách quan tâm (% Cầu) với số lượng biển sẵn có trong kho (% Cung). Bấm vào từng loại để mở kho quản lý.
           </p>
 
           {categorySupplyDemand.length === 0 ? (
@@ -43,16 +43,34 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
                 const borderColor = isShort ? 'rgba(229, 72, 77, 0.3)' : isSurplus ? 'rgba(245, 197, 66, 0.4)' : 'rgba(63, 191, 143, 0.3)';
 
                 return (
-                  <div key={i} style={{
-                    padding: '12px 14px',
-                    background: 'var(--surface-sunken)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-hairline)',
-                  }}>
+                  <div
+                    key={i}
+                    onClick={() => onActionClick && onActionClick('/admin/bien-so', { adminQ: cat.categoryName })}
+                    title={`Mở kho biển số dòng ${cat.categoryName}`}
+                    style={{
+                      padding: '12px 14px',
+                      background: 'var(--surface-sunken)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-hairline)',
+                      cursor: 'pointer',
+                      transition: 'var(--transition-card)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--action-primary)';
+                      e.currentTarget.style.background = 'var(--surface-card)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-hairline)';
+                      e.currentTarget.style.background = 'var(--surface-sunken)';
+                    }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-                      <span style={{ fontWeight: 'var(--fw-bold)', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
-                        {cat.categoryName}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontWeight: 'var(--fw-bold)', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
+                          {cat.categoryName}
+                        </span>
+                        <ArrowRight size={12} color="var(--text-muted)" />
+                      </div>
                       <span style={{
                         font: 'var(--type-caption)',
                         fontWeight: 'var(--fw-bold)',
@@ -108,7 +126,7 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
             onClick={() => onActionClick && onActionClick('/admin/bien-so')}
             style={{
               width: '100%',
-              padding: '9px',
+              padding: '10px',
               borderRadius: 'var(--radius-pill)',
               background: 'var(--surface-card)',
               border: '1px solid var(--border-hairline)',
@@ -118,11 +136,22 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
               cursor: 'pointer',
               transition: 'var(--transition-control)',
               boxShadow: 'var(--shadow-1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--action-primary)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-hairline)'; }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--action-primary)';
+              e.currentTarget.style.color = 'var(--action-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-hairline)';
+              e.currentTarget.style.color = 'var(--text-strong)';
+            }}
           >
-            Quản lý kho biển số →
+            <span>Mở toàn bộ kho biển số</span>
+            <ArrowRight size={13} />
           </button>
         </div>
       </section>
@@ -162,12 +191,27 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
                 const borderColor = isHot ? 'rgba(229, 72, 77, 0.3)' : isSlow ? 'rgba(245, 197, 66, 0.4)' : 'rgba(63, 191, 143, 0.3)';
 
                 return (
-                  <div key={i} style={{
-                    padding: '12px 14px',
-                    background: 'var(--surface-sunken)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-hairline)',
-                  }}>
+                  <div
+                    key={i}
+                    onClick={() => onActionClick && onActionClick('/admin/bien-so')}
+                    title="Mở kho biển số"
+                    style={{
+                      padding: '12px 14px',
+                      background: 'var(--surface-sunken)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-hairline)',
+                      cursor: 'pointer',
+                      transition: 'var(--transition-card)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--action-primary)';
+                      e.currentTarget.style.background = 'var(--surface-card)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-hairline)';
+                      e.currentTarget.style.background = 'var(--surface-sunken)';
+                    }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
                       <span style={{ fontWeight: 'var(--fw-bold)', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
                         {seg.segmentName}
@@ -194,6 +238,10 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
                       marginBottom: 6,
                     }}>
                       <span>Tồn kho hiện có: <strong style={{ color: 'var(--text-strong)' }}>{seg.stockCount} biển</strong></span>
+                      <span style={{ color: 'var(--action-primary)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>Xem kho</span>
+                        <ArrowRight size={11} />
+                      </span>
                     </div>
 
                     {seg.suggestedAction && (

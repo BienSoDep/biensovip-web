@@ -22,7 +22,7 @@ import ContactDetailModal from './contacts/ContactDetailModal.jsx';
 import ContactModals from './contacts/ContactModals.jsx';
 
 export default function AdminContacts({ notify, go, st }) {
-  const [status, setStatus] = useState('all');
+  const [status, setStatus] = useState(st?.contactStatus || 'all');
   const [intent, setIntent] = useState('all');
   const [search, setSearch] = useState(st?.adminQ || '');
   const [q] = useDebouncedValue(search, 300);

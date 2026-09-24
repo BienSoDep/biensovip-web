@@ -82,17 +82,23 @@ export default function StalledPlatesSection({ stalledPlates = [], formatPrice, 
               {stalledPlates.map((plate) => (
                 <tr key={plate.plateId} style={{ borderTop: '1px solid var(--border-hairline)' }}>
                   <td style={{ padding: '12px 14px' }}>
-                    <span style={{
-                      fontWeight: 'var(--fw-bold)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.925rem',
-                      letterSpacing: '0.04em',
-                      color: 'var(--text-strong)',
-                      background: 'var(--surface-sunken)',
-                      padding: '3px 8px',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-hairline)',
-                    }}>
+                    <span
+                      onClick={() => onActionClick && onActionClick('/admin/bien-so', { adminQ: plate.plateNumber })}
+                      title={`Bấm để tìm và sửa biển ${plate.plateNumber}`}
+                      style={{
+                        fontWeight: 'var(--fw-bold)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.925rem',
+                        letterSpacing: '0.04em',
+                        color: 'var(--text-strong)',
+                        background: 'var(--surface-sunken)',
+                        padding: '3px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-hairline)',
+                        cursor: 'pointer',
+                        display: 'inline-block',
+                      }}
+                    >
                       {plate.plateNumber}
                     </span>
                   </td>
@@ -124,7 +130,7 @@ export default function StalledPlatesSection({ stalledPlates = [], formatPrice, 
                   <td style={{ padding: '12px 14px', textAlign: 'right' }}>
                     <button
                       type="button"
-                      onClick={() => onActionClick && onActionClick('/admin/bien-so')}
+                      onClick={() => onActionClick && onActionClick('/admin/bien-so', { adminQ: plate.plateNumber })}
                       style={{
                         padding: '6px 14px',
                         background: 'var(--surface-card)',
@@ -138,8 +144,8 @@ export default function StalledPlatesSection({ stalledPlates = [], formatPrice, 
                         boxShadow: 'var(--shadow-1)',
                         whiteSpace: 'nowrap',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--action-primary)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-hairline)'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--action-primary)'; e.currentTarget.style.color = 'var(--action-primary)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-hairline)'; e.currentTarget.style.color = 'var(--text-strong)'; }}
                     >
                       Chỉnh giá / Sửa
                     </button>

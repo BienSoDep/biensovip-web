@@ -18,7 +18,10 @@ const VIEWS = [
 ];
 
 export default function AdminSales({ notify, go, st, initialView }) {
-  const [view, setView] = useState(VIEWS.some((v) => v.key === initialView) ? initialView : 'pipeline');
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialStatus = urlParams?.get('status') || st?.contactStatus;
+  const targetView = initialStatus ? 'list' : (VIEWS.some((v) => v.key === initialView) ? initialView : 'pipeline');
+  const [view, setView] = useState(targetView);
   // Mở chi tiết 1 liên hệ từ thẻ Kanban → nhảy sang view Danh sách kèm từ khóa, thay vì rời trang.
   const [focusQ, setFocusQ] = useState(null);
 
@@ -46,7 +49,7 @@ export default function AdminSales({ notify, go, st, initialView }) {
           từ đầu. key chỉ dùng để ép AdminContacts seed lại ô tìm kiếm khi bấm thẻ Kanban. */}
       <div hidden={view !== 'pipeline'}><AdminKanban notify={notify} go={go} onOpenContact={openContact} /></div>
       <div hidden={view !== 'list'}>
-        <AdminContacts key={focusQ ?? 'default'} notify={notify} go={go} st={focusQ != null ? { ...st, adminQ: focusQ } : st} />
+        <AdminContacts key={focusQ ?? initialStatus ?? 'default'} notify={notify} go={go} st={focusQ != null ? { ...st, adminQ: focusQ } : { ...st, contactStatus: initialStatus }} />
       </div>
       <div hidden={view !== 'transactions'}><AdminTransactions notify={notify} /></div>
     </div>

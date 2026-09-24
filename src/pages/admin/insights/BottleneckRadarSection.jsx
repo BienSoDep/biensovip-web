@@ -1,6 +1,19 @@
 import { ShieldAlert, CheckCircle, ArrowRight, Lightbulb } from 'lucide-react';
 
-export default function BottleneckRadarSection({ bottlenecks = [], onActionClick }) {
+function getFallbackLink(item) {
+  if (item.actionLink) return item.actionLink;
+  const id = item.id || '';
+  if (id.includes('LEADS_WAITING')) return '/admin/ban-hang?status=new';
+  if (id.includes('LEADS_STAGNANT')) return '/admin/ban-hang?status=consulting';
+  if (id.includes('HIGH_INDECISION')) return '/admin/bien-so';
+  if (id.includes('SHORTAGE')) return '/admin/bien-so';
+  if (id.includes('FORM_ABANDON')) return '/admin/ban-hang?status=new';
+  if (id.includes('RAGE_CLICKS')) return 'tab:technical';
+  if (id.includes('HOMEPAGE_BOUNCE')) return '/admin/so-lieu-hien-thi';
+  return '/admin/bien-so';
+}
+
+export default function BottleneckRadarSection({ bottlenecks = [], onActionClick, onSelectTab }) {
   return (
     <section style={{
       background: 'var(--surface-card)',
@@ -24,7 +37,7 @@ export default function BottleneckRadarSection({ bottlenecks = [], onActionClick
             </h2>
           </div>
           <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Thuật toán tự động rà soát những rào cản khiến khách hàng chưa liên hệ hoặc không chốt đơn.
+            Thuật toán tự động rà soát những rào cản khiến khách hàng chưa liên hệ hoặc không chốt đơn. Bấm &ldquo;Xử lý ngay&rdquo; để chuyển thẳng đến điểm cần giải quyết.
           </p>
         </div>
         <span style={{
@@ -67,6 +80,16 @@ export default function BottleneckRadarSection({ bottlenecks = [], onActionClick
             const accentBorder = isCrit ? 'var(--status-danger)' : isWarn ? 'var(--status-warning)' : 'var(--status-success)';
             const badgeLabel = isCrit ? 'Cấp bách' : isWarn ? 'Cảnh báo' : 'Cơ hội';
             const dotColor = isCrit ? '#ef4444' : isWarn ? '#f59e0b' : '#10b981';
+            const actionLink = getFallbackLink(item);
+
+            const handleCardClick = () => {
+              if (actionLink === 'tab:technical') {
+                if (onSelectTab) onSelectTab('technical');
+                else if (onActionClick) onActionClick('tab:technical');
+              } else if (onActionClick && actionLink) {
+                onActionClick(actionLink);
+              }
+            };
 
             return (
               <div
@@ -179,34 +202,32 @@ export default function BottleneckRadarSection({ bottlenecks = [], onActionClick
                     </span>
                   </div>
 
-                  {item.actionLink && (
-                    <button
-                      type="button"
-                      onClick={() => onActionClick && onActionClick(item.actionLink)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '6px 14px',
-                        background: 'var(--action-primary)',
-                        color: 'var(--text-inverse)',
-                        border: 'none',
-                        borderRadius: 'var(--radius-pill)',
-                        fontWeight: 'var(--fw-semibold)',
-                        font: 'var(--type-caption)',
-                        cursor: 'pointer',
-                        boxShadow: 'var(--shadow-1)',
-                        transition: 'var(--transition-control)',
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--action-primary-hover)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--action-primary)'; }}
-                    >
-                      <span>Xử lý ngay</span>
-                      <ArrowRight size={13} />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleCardClick}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '7px 16px',
+                      background: 'var(--action-primary)',
+                      color: 'var(--text-inverse)',
+                      border: 'none',
+                      borderRadius: 'var(--radius-pill)',
+                      fontWeight: 'var(--fw-semibold)',
+                      font: 'var(--type-caption)',
+                      cursor: 'pointer',
+                      boxShadow: 'var(--shadow-1)',
+                      transition: 'var(--transition-control)',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--action-primary-hover)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--action-primary)'; }}
+                  >
+                    <span>Xử lý ngay</span>
+                    <ArrowRight size={13} />
+                  </button>
                 </div>
               </div>
             );

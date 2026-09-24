@@ -48,7 +48,7 @@ function fmtDuration(seconds) {
   return `${Math.floor(s / 60)}p${s % 60}s`;
 }
 
-export default function AdminInsights({ go }) {
+export default function AdminInsights({ go, patch, st }) {
   const [fromDate, setFromDate] = useState(daysAgoIso(14));
   const [toDate, setToDate] = useState(todayIso());
   const [viewMode, setViewMode] = useState('business'); // 'business' | 'technical'
@@ -76,22 +76,73 @@ export default function AdminInsights({ go }) {
   const priceSegments = bData?.priceSegments || [];
   const topInteracted = plateEngagement?.topInteractedPlates || [];
 
-  const handleActionClick = (link) => {
+  const handleActionClick = (link, extraParams = {}) => {
     if (!link) return;
-    if (link.startsWith('/admin/') && go) {
-      const part = link.replace('/admin/', '').split('?')[0];
+
+    if (link === 'tab:technical') {
+      setViewMode('technical');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    let targetPath = link;
+    let queryString = '';
+    if (link.includes('?')) {
+      const parts = link.split('?');
+      targetPath = parts[0];
+      queryString = parts[1];
+    }
+    const params = new URLSearchParams(queryString);
+    const statusParam = extraParams.status || params.get('status');
+    const qParam = extraParams.adminQ || params.get('q');
+    const viewParam = extraParams.view || params.get('view');
+
+    if (targetPath.startsWith('/admin/')) {
+      const part = targetPath.replace('/admin/', '');
       const screenMap = {
         'ban-hang': 'asales',
         'bien-so': 'aplates',
         'lien-he': 'acontacts',
         'quy-trinh': 'akanban',
+        'giao-dich': 'atransactions',
         'khach-hang': 'acustomers',
+        'khach-quan-tam': 'ainterestleads',
+        'danh-muc': 'acats',
+        'bai-viet': 'aposts',
+        'nhat-ky-loi': 'aerrorlogs',
+        'nhat-ky-he-thong': 'aauditlog',
+        'y-nghia': 'ameanings',
+        'thu-tu-hien-thi': 'asortsettings',
+        'mau-tin-nhan-ctv': 'actvtemplates',
       };
-      if (screenMap[part]) {
-        go(screenMap[part]);
-        return;
+
+      const targetScreen = screenMap[part] || 'dash';
+
+      if (typeof window !== 'undefined') {
+        const fullUrl = link.startsWith('http') ? link : (link.startsWith('/') ? link : '/' + link);
+        try {
+          window.history.pushState(null, '', fullUrl);
+        } catch { /* ignore */ }
       }
+
+      if (patch) {
+        patch({
+          screen: targetScreen,
+          ...(statusParam ? { contactStatus: statusParam } : {}),
+          ...(qParam ? { adminQ: qParam } : {}),
+          ...(viewParam ? { salesView: viewParam } : {}),
+        });
+      }
+
+      if (typeof go === 'function') {
+        const goFn = go(targetScreen);
+        if (typeof goFn === 'function') {
+          goFn();
+        }
+      }
+      return;
     }
+
     window.location.href = link;
   };
 
@@ -312,16 +363,17 @@ export default function AdminInsights({ go }) {
           <ExecutiveSummaryBanner summary={bData?.executiveSummary} />
 
           {/* KPI Cards & Funnel */}
-          <FunnelKpiSection funnelData={funnelData} />
+          <FunnelKpiSection funnelData={funnelData} onActionClick={handleActionClick} onSelectTab={setViewMode} />
 
           {/* Radar Bottlenecks & Recommendations */}
-          <BottleneckRadarSection bottlenecks={bottlenecks} onActionClick={handleActionClick} />
+          <BottleneckRadarSection bottlenecks={bottlenecks} onActionClick={handleActionClick} onSelectTab={setViewMode} />
 
           {/* Micro-interactions & Plate Engagement */}
           <PlateEngagementSection
             plateEngagement={plateEngagement}
             topInteracted={topInteracted}
             formatPrice={formatPrice}
+            onActionClick={handleActionClick}
           />
 
           {/* Supply & Demand Balance (Category & Price Segments) */}

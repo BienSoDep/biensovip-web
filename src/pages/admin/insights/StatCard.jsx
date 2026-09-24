@@ -1,17 +1,43 @@
-export default function StatCard({ label, value, sub, icon: Icon, color = 'var(--action-primary)' }) {
+export default function StatCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  color = 'var(--action-primary)',
+  onClick,
+}) {
+  const isClickable = typeof onClick === 'function';
+
   return (
-    <div style={{
-      background: 'var(--surface-card)',
-      borderRadius: 'var(--radius-card)',
-      padding: '16px 18px',
-      boxShadow: 'var(--shadow-inset-hairline)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      gap: 'var(--space-2)',
-      transition: 'var(--transition-card)',
-      minWidth: 0,
-    }}>
+    <div
+      onClick={isClickable ? onClick : undefined}
+      style={{
+        background: 'var(--surface-card)',
+        borderRadius: 'var(--radius-card)',
+        padding: '16px 18px',
+        boxShadow: 'var(--shadow-inset-hairline)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        gap: 'var(--space-2)',
+        transition: 'var(--transition-card)',
+        minWidth: 0,
+        cursor: isClickable ? 'pointer' : 'default',
+        userSelect: 'none',
+      }}
+      onMouseEnter={(e) => {
+        if (isClickable) {
+          e.currentTarget.style.transform = 'translateY(-1px)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-2), var(--shadow-inset-hairline)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (isClickable) {
+          e.currentTarget.style.transform = 'none';
+          e.currentTarget.style.boxShadow = 'var(--shadow-inset-hairline)';
+        }
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--text-muted)' }}>
           {label}
