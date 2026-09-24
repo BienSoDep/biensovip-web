@@ -398,7 +398,7 @@ export default function AdminShell({
         {s === 'achatbot' && <AdminChatbot notify={notify} />}
         {s === 'aauditlog' && <AdminLogs st={st} notify={notify} />}
         {s === 'ashowroom' && <AdminPublicDisplay notify={notify} />}
-        {s === 'ainsights' && <AdminInsights />}
+        {s === 'ainsights' && <AdminInsights go={go} />}
         {s === 'afeatureflags' && <AdminOpsTools notify={notify} patch={patch} />}
         {s === 'apolicypages' && <AdminPolicyPages notify={notify} />}
         {s === 'actvtemplates' && <AdminCtvMessageTemplates notify={notify} />}
