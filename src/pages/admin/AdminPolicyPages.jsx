@@ -23,6 +23,7 @@ import {
   Code2,
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
+import EditableBlock from '../../components/EditableBlock.jsx';
 import { ImageUrlInput } from '../../components/index.jsx';
 import { useAdminPolicyPages, useUpdatePolicyPage } from '../../services/policyPages.js';
 import { contentGet, contentItems } from '../../lib/content/index.js';
@@ -86,8 +87,31 @@ function SectionBody({ s }) {
   );
 }
 
-// LIVE PREVIEW: Render 100% chuẩn xác theo giao diện thật của khách ngoài trang chủ
-function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, deviceMode = 'desktop' }) {
+// LIVE PREVIEW: Render 100% chuẩn xác theo giao diện thật của khách ngoài trang chủ — HỖ TRỢ CHỈNH SỬA 2 CHIỀU TRỰC TIẾP
+function PolicyLivePreview({
+  slug,
+  title,
+  subtitle,
+  updatedLabel,
+  content,
+  deviceMode = 'desktop',
+  onUpdateTitle,
+  onUpdateSubtitle,
+  onUpdateUpdatedLabel,
+  onUpdateSection,
+  onAddSection,
+  onRemoveSection,
+  onUpdateFaqItem,
+  onAddFaqItem,
+  onRemoveFaqItem,
+  onUpdateTransferStep,
+  onAddTransferStep,
+  onRemoveTransferStep,
+  onUpdateTransferNote,
+  onUpdateProcessStep,
+  onAddProcessStep,
+  onRemoveProcessStep,
+}) {
   const [openFaq, setOpenFaq] = useState(0);
   const previewScrollRef = useRef(null);
 
@@ -133,6 +157,24 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
         </span>
       </div>
 
+      {/* Thanh thông báo chế độ chỉnh sửa trực tiếp 2 chiều */}
+      <div style={{
+        background: 'var(--brand-50)',
+        borderBottom: '1px solid var(--brand-200)',
+        padding: '7px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 'var(--space-2)',
+        fontSize: '0.75rem',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>
+          <Edit3 size={13} />
+          <span>Chỉnh sửa trực tiếp: Nhấp vào tiêu đề hoặc nội dung điều khoản để sửa — tự động đồng bộ sang ô JSON bên trái.</span>
+        </div>
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>Đồng bộ 2 chiều</span>
+      </div>
+
       {/* Nội dung thực tế hiển thị cho người dùng */}
       <div
         ref={previewScrollRef}
@@ -147,25 +189,51 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
       >
         {/* 1. Header Trang Public */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
-          <div>
-            <h1 style={{
-              margin: '0 0 var(--space-2)',
-              font: deviceMode === 'mobile' ? 'var(--type-title-1)' : 'var(--type-display-2)',
-              letterSpacing: 'var(--ls-display)',
-              color: 'var(--text-strong)',
-              lineHeight: 1.25,
-            }}>
-              {title || '(Chưa nhập tiêu đề)'}
-            </h1>
-            {subtitle && (
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                {subtitle}
-              </p>
-            )}
-            {updatedLabel && (
-              <p style={{ margin: '6px 0 0', font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-                {updatedLabel}
-              </p>
+          <div style={{ flex: 1 }}>
+            <EditableBlock
+              tag="h1"
+              html={title || '(Chưa nhập tiêu đề)'}
+              onChange={onUpdateTitle}
+              multiline={false}
+              title="Nhấp vào để sửa Tiêu đề trang (tự động đồng bộ sang form bên trái)"
+              style={{
+                margin: '0 0 var(--space-2)',
+                font: deviceMode === 'mobile' ? 'var(--type-title-1)' : 'var(--type-display-2)',
+                letterSpacing: 'var(--ls-display)',
+                color: 'var(--text-strong)',
+                lineHeight: 1.25,
+                padding: '2px 6px',
+              }}
+            />
+            <EditableBlock
+              tag="p"
+              html={subtitle || ''}
+              onChange={onUpdateSubtitle}
+              placeholder="Nhấp để thêm mô tả phụ đề..."
+              title="Nhấp vào để sửa Phụ đề mô tả (tự động đồng bộ sang form bên trái)"
+              style={{
+                margin: 0,
+                font: 'var(--type-body-sm)',
+                color: 'var(--text-muted)',
+                lineHeight: 1.5,
+                padding: '2px 6px',
+              }}
+            />
+            {slug !== 'process' && (
+              <EditableBlock
+                tag="p"
+                html={updatedLabel || ''}
+                onChange={onUpdateUpdatedLabel}
+                multiline={false}
+                placeholder="Nhấp để sửa nhãn ngày cập nhật..."
+                title="Nhấp vào để sửa Nhãn ngày cập nhật"
+                style={{
+                  margin: '6px 0 0',
+                  font: 'var(--type-caption)',
+                  color: 'var(--text-faint)',
+                  padding: '2px 6px',
+                }}
+              />
             )}
           </div>
 
@@ -235,17 +303,85 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
               border: '1px solid var(--border-hairline)',
             }}>
               {sections.map((s, idx) => (
-                <div key={idx} id={`sec-${slugify(s.title)}`} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)', fontSize: '1.15rem' }}>
-                    {s.title}
-                  </h2>
-                  <SectionBody s={s} />
+                <div key={idx} id={`sec-${slugify(s.title)}`} style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-2)',
+                  padding: '12px 14px',
+                  borderRadius: 'var(--radius-card)',
+                  background: 'var(--surface-sunken)',
+                  border: '1px solid var(--border-hairline)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+                    <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>
+                      Điều khoản {idx + 1}
+                    </span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {onAddSection && (
+                        <button
+                          type="button"
+                          onClick={() => onAddSection(idx)}
+                          title="Thêm điều khoản mới bên dưới mục này"
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--action-primary)', display: 'inline-flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)' }}
+                        >
+                          <Plus size={13} /> Thêm mục sau
+                        </button>
+                      )}
+                      {onRemoveSection && sections.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => onRemoveSection(idx)}
+                          title="Xóa điều khoản này"
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--status-danger)', display: 'inline-flex', alignItems: 'center', padding: '0 4px' }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <EditableBlock
+                    tag="h2"
+                    html={s.title || ''}
+                    onChange={(val) => onUpdateSection && onUpdateSection(idx, 'title', val)}
+                    multiline={false}
+                    title="Nhấp vào để sửa Tiêu đề điều khoản (tự động cập nhật vào JSON)"
+                    style={{
+                      margin: 0,
+                      font: 'var(--type-title-2)',
+                      color: 'var(--text-strong)',
+                      fontSize: '1.15rem',
+                      padding: '4px 6px',
+                    }}
+                  />
+                  <EditableBlock
+                    tag="div"
+                    html={s.body || ''}
+                    onChange={(val) => onUpdateSection && onUpdateSection(idx, 'body', val)}
+                    multiline={true}
+                    title="Nhấp vào để sửa Nội dung điều khoản (tự động cập nhật vào JSON)"
+                    style={{
+                      font: 'var(--type-body)',
+                      color: 'var(--text-body)',
+                      lineHeight: 'var(--lh-body)',
+                      padding: '6px 8px',
+                    }}
+                  />
                 </div>
               ))}
               {sections.length === 0 && (
                 <p style={{ color: 'var(--text-muted)', textAlign: 'center', margin: '20px 0' }}>
                   Chưa có điều khoản nào được thiết lập.
                 </p>
+              )}
+              {onAddSection && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAddSection(-1)}
+                  style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={14} /> Thêm điều khoản mới
+                </Button>
               )}
             </div>
           </>
@@ -282,16 +418,47 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
                   }}>
                     {idx + 1}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
-                      {s.title}
-                    </h3>
-                    <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.55 }}>
-                      {s.desc}
-                    </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <EditableBlock
+                        tag="h3"
+                        html={s.title || ''}
+                        onChange={(val) => onUpdateTransferStep && onUpdateTransferStep(idx, 'title', val)}
+                        multiline={false}
+                        title="Nhấp để sửa tiêu đề bước"
+                        style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', flex: 1, padding: '2px 4px' }}
+                      />
+                      {onRemoveTransferStep && transferSteps.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => onRemoveTransferStep(idx)}
+                          title="Xóa bước này"
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--status-danger)', display: 'inline-flex', alignItems: 'center' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <EditableBlock
+                      tag="div"
+                      html={s.desc || ''}
+                      onChange={(val) => onUpdateTransferStep && onUpdateTransferStep(idx, 'desc', val)}
+                      title="Nhấp để sửa mô tả bước"
+                      style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.55, padding: '4px' }}
+                    />
                   </div>
                 </div>
               ))}
+              {onAddTransferStep && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onAddTransferStep}
+                  style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={14} /> Thêm bước sang tên mới
+                </Button>
+              )}
             </div>
 
             {/* Banner Hỗ Trợ Kèm Hotline / Zalo */}
@@ -345,9 +512,17 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
                 <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
                   Lưu ý quan trọng khi sang tên:
                 </h3>
-                <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
+                <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
                   {transferNotes.map((n, idx) => (
-                    <li key={idx}>{n}</li>
+                    <li key={idx}>
+                      <EditableBlock
+                        tag="span"
+                        html={n}
+                        onChange={(val) => onUpdateTransferNote && onUpdateTransferNote(idx, val)}
+                        title="Nhấp để sửa lưu ý"
+                        style={{ padding: '2px 4px' }}
+                      />
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -371,45 +546,65 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
                       transition: 'border-color 140ms var(--ease-out)',
                     }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    <div
                       style={{
-                        width: '100%',
-                        border: 'none',
-                        background: 'transparent',
-                        padding: '14px 18px',
+                        padding: '10px 14px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        gap: 'var(--space-3)',
-                        cursor: 'pointer',
-                        textAlign: 'left',
+                        gap: 'var(--space-2)',
+                        background: 'var(--surface-sunken)',
+                        borderBottom: '1px solid var(--border-hairline)',
                       }}
                     >
-                      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
-                        {item.q}
+                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>
+                        Câu hỏi #{idx + 1}
                       </span>
-                      <ChevronDown
-                        size={17}
-                        style={{
-                          color: 'var(--text-muted)',
-                          transform: isOpen ? 'rotate(180deg)' : 'none',
-                          transition: 'transform 180ms var(--ease-out)',
-                          flexShrink: 0,
-                        }}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {onRemoveFaqItem && faqItems.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => onRemoveFaqItem(idx)}
+                            title="Xóa câu hỏi này"
+                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--status-danger)', display: 'inline-flex', alignItems: 'center' }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setOpenFaq(isOpen ? null : idx)}
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center' }}
+                        >
+                          <ChevronDown size={15} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 180ms ease' }} />
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ padding: '12px 16px' }}>
+                      <EditableBlock
+                        tag="div"
+                        html={item.q}
+                        onChange={(val) => onUpdateFaqItem && onUpdateFaqItem(idx, 'q', val)}
+                        title="Nhấp để sửa câu hỏi"
+                        style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', padding: '4px 6px' }}
                       />
-                    </button>
+                    </div>
                     {isOpen && (
                       <div style={{
-                        padding: '0 18px 16px',
+                        padding: '0 16px 14px',
                         font: 'var(--type-body-sm)',
                         color: 'var(--text-body)',
                         lineHeight: 1.6,
                         borderTop: '1px dashed var(--border-hairline)',
-                        paddingTop: 12,
+                        paddingTop: 10,
                       }}>
-                        {item.a}
+                        <EditableBlock
+                          tag="div"
+                          html={item.a}
+                          onChange={(val) => onUpdateFaqItem && onUpdateFaqItem(idx, 'a', val)}
+                          title="Nhấp để sửa câu trả lời"
+                          style={{ padding: '4px 6px' }}
+                        />
                       </div>
                     )}
                   </div>
@@ -419,6 +614,16 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
                 <p style={{ color: 'var(--text-muted)', textAlign: 'center', margin: '20px 0' }}>
                   Chưa có câu hỏi nào trong danh mục.
                 </p>
+              )}
+              {onAddFaqItem && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onAddFaqItem}
+                  style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={14} /> Thêm câu hỏi FAQ mới
+                </Button>
               )}
             </div>
 
@@ -475,12 +680,32 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
                   {idx + 1}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-                  <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
-                    {s.title}
-                  </h3>
-                  <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.55 }}>
-                    {s.desc}
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <EditableBlock
+                      tag="h3"
+                      html={s.title}
+                      onChange={(val) => onUpdateProcessStep && onUpdateProcessStep(idx, 'title', val)}
+                      title="Nhấp để sửa tiêu đề bước"
+                      style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', flex: 1, padding: '2px 4px' }}
+                    />
+                    {onRemoveProcessStep && processSteps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveProcessStep(idx)}
+                        title="Xóa bước này"
+                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--status-danger)', display: 'inline-flex', alignItems: 'center' }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <EditableBlock
+                    tag="div"
+                    html={s.desc}
+                    onChange={(val) => onUpdateProcessStep && onUpdateProcessStep(idx, 'desc', val)}
+                    title="Nhấp để sửa mô tả bước"
+                    style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.55, padding: '4px' }}
+                  />
                   {s.detail && (
                     <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', padding: '6px 10px', borderRadius: 'var(--radius-sm)' }}>
                       {s.detail}
@@ -492,6 +717,16 @@ function PolicyLivePreview({ slug, title, subtitle, updatedLabel, content, devic
                 </div>
               </div>
             ))}
+            {onAddProcessStep && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onAddProcessStep}
+                style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <Plus size={14} /> Thêm bước quy trình mới
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -595,6 +830,122 @@ export default function AdminPolicyPages({ notify }) {
     } catch {
       notify('JSON đang có lỗi cú pháp, vui lòng kiểm tra dấu phẩy hoặc ngoặc');
     }
+  };
+
+  // Đồng bộ 2 chiều từ Preview ngược lại vào contentJson
+  const updateContentObject = (updater) => {
+    try {
+      let currentObj = {};
+      try {
+        currentObj = JSON.parse(contentJson || '{}');
+      } catch {
+        currentObj = {};
+      }
+      const nextObj = updater(currentObj);
+      set('contentJson', JSON.stringify(nextObj, null, 2));
+    } catch {
+      // ignore
+    }
+  };
+
+  const updateSection = (idx, field, value) => {
+    updateContentObject((obj) => {
+      const curSections = obj.sections?.length ? [...obj.sections] : (contentItems(`${slug}.sections`) || []);
+      const nextSections = curSections.map((s, i) => (i === idx ? { ...s, [field]: value } : s));
+      return { ...obj, sections: nextSections };
+    });
+  };
+
+  const addSection = (afterIdx = -1) => {
+    updateContentObject((obj) => {
+      const curSections = obj.sections?.length ? [...obj.sections] : (contentItems(`${slug}.sections`) || []);
+      const newSec = { title: `${curSections.length + 1}. Điều khoản mới`, body: 'Nhập nội dung quy định chi tiết vào đây.' };
+      const next = [...curSections];
+      if (afterIdx >= 0) next.splice(afterIdx + 1, 0, newSec);
+      else next.push(newSec);
+      return { ...obj, sections: next };
+    });
+  };
+
+  const removeSection = (idx) => {
+    updateContentObject((obj) => {
+      const curSections = obj.sections?.length ? [...obj.sections] : [];
+      return { ...obj, sections: curSections.filter((_, i) => i !== idx) };
+    });
+  };
+
+  const updateFaqItem = (idx, field, value) => {
+    updateContentObject((obj) => {
+      const curItems = obj.items?.length ? [...obj.items] : (contentItems('faq.items') || []);
+      const nextItems = curItems.map((item, i) => (i === idx ? { ...item, [field]: value } : item));
+      return { ...obj, items: nextItems };
+    });
+  };
+
+  const addFaqItem = () => {
+    updateContentObject((obj) => {
+      const curItems = obj.items?.length ? [...obj.items] : (contentItems('faq.items') || []);
+      return { ...obj, items: [...curItems, { q: 'Câu hỏi mới?', a: 'Nhập câu trả lời chi tiết tại đây.' }] };
+    });
+  };
+
+  const removeFaqItem = (idx) => {
+    updateContentObject((obj) => {
+      const curItems = obj.items?.length ? [...obj.items] : [];
+      return { ...obj, items: curItems.filter((_, i) => i !== idx) };
+    });
+  };
+
+  const updateTransferStep = (idx, field, value) => {
+    updateContentObject((obj) => {
+      const curSteps = obj.steps?.length ? [...obj.steps] : (contentItems('transfer.steps') || []);
+      const nextSteps = curSteps.map((s, i) => (i === idx ? { ...s, [field]: value } : s));
+      return { ...obj, steps: nextSteps };
+    });
+  };
+
+  const addTransferStep = () => {
+    updateContentObject((obj) => {
+      const curSteps = obj.steps?.length ? [...obj.steps] : (contentItems('transfer.steps') || []);
+      return { ...obj, steps: [...curSteps, { title: 'Bước mới', desc: 'Mô tả hướng dẫn cho bước này.' }] };
+    });
+  };
+
+  const removeTransferStep = (idx) => {
+    updateContentObject((obj) => {
+      const curSteps = obj.steps?.length ? [...obj.steps] : [];
+      return { ...obj, steps: curSteps.filter((_, i) => i !== idx) };
+    });
+  };
+
+  const updateTransferNote = (idx, value) => {
+    updateContentObject((obj) => {
+      const curNotes = obj.notes?.length ? [...obj.notes] : (contentItems('transfer.notes') || []);
+      const nextNotes = curNotes.map((n, i) => (i === idx ? value : n));
+      return { ...obj, notes: nextNotes };
+    });
+  };
+
+  const updateProcessStep = (idx, field, value) => {
+    updateContentObject((obj) => {
+      const curSteps = obj.steps?.length ? [...obj.steps] : (contentItems('process.steps') || []);
+      const nextSteps = curSteps.map((s, i) => (i === idx ? { ...s, [field]: value } : s));
+      return { ...obj, steps: nextSteps };
+    });
+  };
+
+  const addProcessStep = () => {
+    updateContentObject((obj) => {
+      const curSteps = obj.steps?.length ? [...obj.steps] : (contentItems('process.steps') || []);
+      return { ...obj, steps: [...curSteps, { title: 'Bước mới', desc: 'Mô tả bước...', detail: '' }] };
+    });
+  };
+
+  const removeProcessStep = (idx) => {
+    updateContentObject((obj) => {
+      const curSteps = obj.steps?.length ? [...obj.steps] : [];
+      return { ...obj, steps: curSteps.filter((_, i) => i !== idx) };
+    });
   };
 
   const save = async () => {
@@ -1008,6 +1359,22 @@ export default function AdminPolicyPages({ notify }) {
               updatedLabel={updatedLabel}
               content={jsonStatus.valid ? jsonStatus.parsed : null}
               deviceMode={deviceMode}
+              onUpdateTitle={(val) => set('title', val)}
+              onUpdateSubtitle={(val) => set('subtitle', val)}
+              onUpdateUpdatedLabel={(val) => set('updatedLabel', val)}
+              onUpdateSection={updateSection}
+              onAddSection={addSection}
+              onRemoveSection={removeSection}
+              onUpdateFaqItem={updateFaqItem}
+              onAddFaqItem={addFaqItem}
+              onRemoveFaqItem={removeFaqItem}
+              onUpdateTransferStep={updateTransferStep}
+              onAddTransferStep={addTransferStep}
+              onRemoveTransferStep={removeTransferStep}
+              onUpdateTransferNote={updateTransferNote}
+              onUpdateProcessStep={updateProcessStep}
+              onAddProcessStep={addProcessStep}
+              onRemoveProcessStep={removeProcessStep}
             />
           </div>
         )}

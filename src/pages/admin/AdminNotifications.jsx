@@ -20,6 +20,11 @@ const TYPE_LABEL = {
   fengshui_match: 'Biển mới hợp mệnh', contact_status: 'Cập nhật yêu cầu liên hệ', new_review: 'Đánh giá mới trên biển đang theo dõi',
   search_stale: 'Tìm kiếm đã lưu chưa có kết quả', viewed_price_drop: 'Giảm giá biển đã xem', compare_price_drop: 'Giảm giá biển đang so sánh',
   profile_incomplete: 'Nhắc hoàn thiện hồ sơ', collaborator_commission: 'Hoa hồng CTV đã thanh toán (email)',
+  guest_contact_received: 'Xác nhận tiếp nhận yêu cầu (Khách để lại thông tin)',
+  guest_contact_status: 'Cập nhật tiến độ tư vấn (Khách để lại thông tin)',
+  subscriber_welcome: 'Chào mừng đăng ký nhận tin (Newsletter)',
+  guest_account_invite: 'Mời khách để lại thông tin tạo tài khoản VIP',
+  lead_plate_reminder: 'Nhắc nhở biển số đẹp khách từng quan tâm',
 };
 
 // Mô tả điều kiện kích hoạt thật — lấy trực tiếp từ logic job/service backend, không phải suy đoán.
@@ -39,7 +44,21 @@ const TYPE_DESC = {
   compare_price_drop: 'Gửi khi biển trong danh sách so sánh giảm giá vượt ngưỡng so với lúc mở so sánh.',
   profile_incomplete: 'Gửi cho user đăng ký ≥2 ngày còn thiếu họ tên/ngày sinh/giới tính, đúng giờ admin đặt bên dưới.',
   collaborator_commission: 'Gửi tới email CTV khi hoa hồng của họ chuyển sang trạng thái Đã thanh toán.',
+  guest_contact_received: 'Tự động gửi email xác nhận ngay khi khách để lại thông tin liên hệ / đặt cọc / mua biển trên website.',
+  guest_contact_status: 'Tự động gửi email thông báo khi chuyên viên/admin cập nhật trạng thái yêu cầu tư vấn của khách vãng lai.',
+  subscriber_welcome: 'Tự động gửi email chào mừng và gửi mã ưu đãi ngay khi người dùng đăng ký nhận tin ở chân trang / popup.',
+  guest_account_invite: 'Tự động gửi email mời khách hàng đã để lại thông tin tạo tài khoản thành viên để nhận ưu đãi và lưu biển.',
+  lead_plate_reminder: 'Tự động nhắc nhở khách về biển số đẹp họ từng quan tâm nhưng chưa chốt giao dịch.',
 };
+
+// Nhóm các loại thông báo dành riêng cho khách chưa đăng ký / người để lại thông tin
+const GUEST_TYPES = new Set([
+  'guest_contact_received',
+  'guest_contact_status',
+  'subscriber_welcome',
+  'guest_account_invite',
+  'lead_plate_reminder',
+]);
 
 // Job backend THẬT SỰ đọc field TriggerHour để quyết định giờ gửi — chỉ loại này sửa "Giờ gửi" mới có
 // tác dụng. digest dùng giờ user tự chọn (không phải TriggerHour); search_stale có seed TriggerHour
@@ -444,6 +463,7 @@ function SubscriberSection({ notify }) {
 function TypeSettingsSection({ notify }) {
   const { data, isLoading, isError, refetch } = useNotificationTypeSettings();
   const [editingType, setEditingType] = useState(null);
+  const [filterGroup, setFilterGroup] = useState('all'); // 'all' | 'guest' | 'registered'
   // Title/content đang gõ dở (chưa lưu) của row đang edit — nằm ở section cha để panel preview bên
   // phải đọc được real-time mà không cần lift state phức tạp qua nhiều tầng props.
   const [draftTitle, setDraftTitle] = useState('');
@@ -498,6 +518,12 @@ function TypeSettingsSection({ notify }) {
   }, [leftPct]);
 
   const showSplit = Boolean(editingType);
+  const rawList = data || [];
+  const filteredList = rawList.filter((t) => {
+    if (filterGroup === 'guest') return GUEST_TYPES.has(t.type);
+    if (filterGroup === 'registered') return !GUEST_TYPES.has(t.type);
+    return true;
+  });
 
   return (
     <div ref={containerRef} style={{ flex: '1 1 100%', minWidth: 0, display: 'flex', alignItems: 'flex-start' }}>
@@ -507,13 +533,14 @@ function TypeSettingsSection({ notify }) {
           <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt chuông web, email, sửa câu chữ và khung giờ gửi cho từng loại — áp dụng toàn hệ thống.</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
             {(() => {
-              const list = data || [];
+              const list = rawList;
               const webOn = list.filter((t) => t.webEnabled).length;
               const emailOn = list.filter((t) => t.emailEnabled).length;
               const sent = list.reduce((s, t) => s + (t.emailsSent || 0), 0);
               const chips = [
                 ['Tổng loại', list.length],
-                ['Chuông web bật', webOn],
+                ['Khách để lại thông tin', list.filter(t => GUEST_TYPES.has(t.type)).length],
+                ['Thành viên đăng ký', list.filter(t => !GUEST_TYPES.has(t.type)).length],
                 ['Email bật', emailOn],
                 ['Email đã gửi', sent],
               ];
@@ -526,6 +553,29 @@ function TypeSettingsSection({ notify }) {
             })()}
           </div>
         </div>
+
+        {/* Phân nhóm đối tượng thông báo */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px var(--gutter-card)', background: 'var(--surface-subtle)', borderBottom: '1px solid var(--border-hairline)' }}>
+          {[
+            { id: 'all', label: `Tất cả (${rawList.length})` },
+            { id: 'guest', label: `Khách chưa đăng ký / Để lại thông tin (${rawList.filter(t => GUEST_TYPES.has(t.type)).length})` },
+            { id: 'registered', label: `Thành viên đã đăng ký (${rawList.filter(t => !GUEST_TYPES.has(t.type)).length})` },
+          ].map((b) => (
+            <button key={b.id} type="button" onClick={() => setFilterGroup(b.id)}
+              style={{
+                padding: '6px 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
+                font: 'var(--type-body-sm)', fontSize: 13,
+                fontWeight: filterGroup === b.id ? 'var(--fw-semibold)' : 'var(--fw-normal)',
+                background: filterGroup === b.id ? (b.id === 'guest' ? '#d97706' : 'var(--action-dark)') : 'var(--white)',
+                color: filterGroup === b.id ? 'var(--white)' : 'var(--text-body)',
+                boxShadow: filterGroup === b.id ? 'var(--shadow-sm)' : 'var(--shadow-inset-hairline)',
+                transition: 'all 0.15s ease',
+              }}>
+              {b.label}
+            </button>
+          ))}
+        </div>
+
         {isLoading ? (
           <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
         ) : isError ? (
@@ -533,8 +583,10 @@ function TypeSettingsSection({ notify }) {
             <span>Lỗi tải dữ liệu</span>
             <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
           </div>
+        ) : filteredList.length === 0 ? (
+          <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có loại thông báo nào trong nhóm này.</div>
         ) : (
-          (data || []).map((t) => (
+          filteredList.map((t) => (
             <TypeSettingRow key={t.type} setting={t} notify={notify}
               editing={editingType === t.type}
               onEdit={() => startEdit(t)}
@@ -647,9 +699,9 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
   };
 
   const sendTestNow = async () => {
-    if (!testEmail.trim()) { notify('Nhập email để gửi thử'); return; }
+    if (!testEmail.trim()) { notify('Vui lòng nhập địa chỉ email nhận'); return; }
     try {
-      await sendTest.mutateAsync({ type: setting.type, email: testEmail.trim() });
+      await sendTest.mutateAsync({ type: setting.type, toEmail: testEmail.trim() });
       notify(`Đã gửi email thử tới ${testEmail.trim()}`);
     } catch (e) { notify(e.message || 'Lỗi khi gửi thử'); }
   };
@@ -662,7 +714,14 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
       style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', boxShadow: editing ? 'inset 3px 0 0 var(--action-primary), inset 0 -1px 0 var(--grey-100)' : 'inset 0 -1px 0 var(--grey-100)', background: editing ? 'var(--surface-tint-cream)' : 'transparent', cursor: 'pointer' }}
     >
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-        <span style={{ flex: '1 1 220px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{TYPE_LABEL[setting.type] || setting.type}</span>
+        <div style={{ flex: '1 1 240px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{TYPE_LABEL[setting.type] || setting.type}</span>
+          {GUEST_TYPES.has(setting.type) && (
+            <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center' }}>
+              Khách chưa đăng ký
+            </span>
+          )}
+        </div>
         <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{setting.emailsSent ?? 0} email</span>
         <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
           <input type="checkbox" checked={setting.webEnabled} onChange={() => toggle('webEnabled')} disabled={update.isPending} /> Chuông web
@@ -689,7 +748,11 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nội dung tùy chỉnh (để trống = dùng mặc định ở trên)</span>
             <textarea rows={2} value={draftContent} placeholder={setting.defaultContent} onChange={(e) => setDraftContent(e.target.value)} style={{ background: 'var(--white)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '8px 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Biến có sẵn: {`{UserName}`} · {`{SiteName}`} — thay tự động theo từng người khi gửi.</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
+              {GUEST_TYPES.has(setting.type)
+                ? 'Biến có sẵn: {CustomerName} · {PlateNumber} · {StatusLabel} · {Phone} · {SiteName} — thay tự động khi gửi.'
+                : 'Biến có sẵn: {UserName} · {SiteName} — thay tự động theo từng người khi gửi.'}
+            </span>
           </label>
           {setting.triggerHour !== null && HOUR_HAS_EFFECT.has(setting.type) ? (
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 220 }}>
