@@ -27,3 +27,9 @@ export function useAdminNotificationFeed(limit = 20) {
     refetchInterval: 30000,
   });
 }
+
+export function useTestSystemEmail() {
+  return {
+    sendTestEmail: () => apiClient.post('/api/admin/system-health/test-email', {}),
+  };
+}
