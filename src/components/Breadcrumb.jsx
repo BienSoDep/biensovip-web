@@ -8,11 +8,13 @@ export default function Breadcrumb({ items, keepOnMobile, inset }) {
   const wrapStyle = inset
     ? { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0, font: 'var(--type-caption)' }
     : { maxWidth: 'var(--width-content)', margin: '0 auto', padding: '12px var(--pad-page)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0, font: 'var(--type-caption)' };
+  const validItems = (items || []).filter((it) => it && it.label);
+  if (!validItems.length) return null;
   return (
     <nav aria-label={contentGet('common.breadcrumb.aria')} className={'page-breadcrumb' + (keepOnMobile ? ' keep-mobile' : '')} style={inset ? undefined : { boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
       <div style={wrapStyle}>
-        {items.map((it, i) => {
-          const last = i === items.length - 1;
+        {validItems.map((it, i) => {
+          const last = i === validItems.length - 1;
           const first = i === 0;
           const Tag = !last && it.onClick ? 'button' : 'span';
           return (

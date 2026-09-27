@@ -121,6 +121,7 @@ const ADMIN_INFO = {
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
+  ainsights: 'Báo cáo chuyên sâu: Phễu chuyển đổi toàn diện, radar phát hiện điểm nghẽn, đối soát cung - cầu kho biển, sức khỏe nguồn lead và danh sách biển số tồn đọng cần kích cầu.',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -361,18 +362,20 @@ export default function AdminShell({
           </button>
         )}
         <Breadcrumb inset items={[{ label: 'Quản trị', onClick: go('dash') }, { label: adminMeta[0] }]} />
-        <div className="tablet-stack" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
-          <div style={{ flex: '1 1 280px' }}>
-            <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{adminMeta[0]}</h1>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{adminMeta[1]}</p>
+        {s !== 'ainsights' && (
+          <div className="tablet-stack" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
+            <div style={{ flex: '1 1 280px' }}>
+              <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{adminMeta[0]}</h1>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{adminMeta[1]}</p>
+            </div>
+            {['aposts', 'acustomers', 'acollabs', 'asales', 'acontacts', 'aplates'].indexOf(s) >= 0 && (
+              <SearchField placeholder="Tìm trong bảng…" value={st.adminQ} onChange={(e) => patch({ adminQ: e.target.value })} width={240} />
+            )}
+            {(s === 'aposts') && (
+              <Button variant="primary" size="md" onClick={go('compose')}>Đăng bài mới</Button>
+            )}
           </div>
-          {['aposts', 'acustomers', 'acollabs', 'asales', 'acontacts', 'aplates'].indexOf(s) >= 0 && (
-            <SearchField placeholder="Tìm trong bảng…" value={st.adminQ} onChange={(e) => patch({ adminQ: e.target.value })} width={240} />
-          )}
-          {(s === 'aposts') && (
-            <Button variant="primary" size="md" onClick={go('compose')}>Đăng bài mới</Button>
-          )}
-        </div>
+        )}
 
         {ADMIN_INFO[s] && (
           <AdminInfoBanner storageKey={s} title="Về trang này">{ADMIN_INFO[s]}</AdminInfoBanner>

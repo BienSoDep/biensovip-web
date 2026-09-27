@@ -52,14 +52,15 @@ export default function Faq({ go, zalo }) {
               id={`faq-q-${i}`}
               aria-expanded={open === i}
               aria-controls={`faq-a-${i}`}
+              className="faq-accordion-btn"
               onClick={() => setOpen(open === i ? null : i)}
-              style={{ width: '100%', border: 'none', background: 'transparent', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', textAlign: 'left' }}
+              style={{ width: '100%', border: 'none', background: 'transparent', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', textAlign: 'left', outline: 'none' }}
             >
               <span style={{ flex: 1, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{item.q}</span>
-              <ChevronDown size={18} style={{ color: 'var(--text-muted)', transform: open === i ? 'rotate(180deg)' : 'none', transition: 'transform 180ms var(--ease-out)', flexShrink: 0 }} />
+              <ChevronDown size={18} style={{ color: open === i ? 'var(--action-primary)' : 'var(--text-muted)', transform: open === i ? 'rotate(180deg)' : 'none', transition: 'transform 180ms var(--ease-out)', flexShrink: 0 }} />
             </button>
             {open === i && (
-              <div id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} style={{ padding: '0 var(--gutter-card) var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)', animation: 'fadeIn 140ms var(--ease-out)' }}>
+              <div id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} style={{ padding: '12px var(--gutter-card) var(--space-4)', borderTop: '1px solid var(--border-hairline)', font: 'var(--type-body)', color: 'var(--text-body)', lineHeight: 1.6, animation: 'fadeIn 140ms var(--ease-out)' }}>
                 {item.a}
               </div>
             )}

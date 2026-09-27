@@ -709,6 +709,8 @@ export default function App() {
     afeatureflags: ['Công cụ vận hành', 'Feature flags, bảo trì hệ thống, DB console'],
     apolicypages: ['Trang chính sách', 'Chỉnh nội dung điều khoản/bảo mật/hướng dẫn sang tên/FAQ'],
     actvtemplates: ['Mẫu tin nhắn CTV', 'Soạn sẵn mẫu tin nhắn để cộng tác viên copy gửi khách'],
+    ainsights: ['Insight khách hàng', 'Tự động rà soát luồng khách, đo lường điểm rơi rớt, sức khỏe tư vấn và cơ hội bán hàng.'],
+    akanban: ['Quy trình bán hàng', 'Quy trình bán hàng theo dạng thẻ Kanban'],
   }[s] || ['', ''];
 
   const authMeta = {
@@ -740,6 +742,7 @@ export default function App() {
           {isPublic && (function () {
             let trail = [];
             if (s === 'fav') trail = [{ label: 'Yêu thích' }];
+            else if (s === 'profile') trail = [{ label: 'Hồ sơ tài khoản' }];
             else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
@@ -755,6 +758,9 @@ export default function App() {
             else if (s === 'privacy') trail = [{ label: 'Chính sách bảo mật' }];
             else if (s === 'transfer') trail = [{ label: 'Hướng dẫn sang tên' }];
             else if (s === 'faq') trail = [{ label: 'Câu hỏi thường gặp' }];
+            else if (s === 'login') trail = [{ label: 'Đăng nhập' }];
+            else if (s === 'register') trail = [{ label: 'Đăng ký tài khoản' }];
+            else if (s === 'forgot') trail = [{ label: 'Quên mật khẩu' }];
             if (!trail.length) return null;
             return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), onClick: go('home') }, ...trail]} />;
           })()}
