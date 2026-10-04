@@ -98,6 +98,18 @@ textarea:focus-visible {
   outline: none !important;
 }
 
+/* Tắt outline đè ngang qua nội dung câu trả lời khi click accordion FAQ */
+.faq-accordion-btn:focus,
+.faq-accordion-btn:focus-visible,
+.accordion-btn:focus,
+.accordion-btn:focus-visible {
+  outline: none !important;
+}
+.faq-accordion-btn:focus-visible,
+.accordion-btn:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--action-primary) !important;
+}
+
 /* Header sticky che khuất phần trên element khi focus — thiếu scroll-margin-top
    khiến trình duyệt tự cuộn lên vài chục px để lộ hết element (cảm giác "nhích"
    mỗi khi bấm bất kỳ đâu sau khi đã cuộn trang xuống). */
@@ -1418,8 +1430,31 @@ textarea,
 .landing-intro h2:first-child {
   margin-top: var(--space-3);
 }
+.landing-intro h3 {
+  margin: var(--space-5) 0 var(--space-2);
+  font: var(--type-title-3);
+  color: var(--text-strong);
+}
 .landing-intro p {
   margin: 0 0 var(--space-3);
+  line-height: 1.65;
+}
+.landing-intro img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-card);
+  display: block;
+  margin: var(--space-4) auto var(--space-2);
+}
+.landing-intro figure {
+  margin: var(--space-4) 0;
+  text-align: center;
+}
+.landing-intro figcaption {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: var(--space-2);
 }
 
 /* Print — chỉ giữ nội dung trang, ẩn chrome: header/footer, mục lục, FAB, nút in, back-to-top */

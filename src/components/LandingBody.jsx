@@ -16,14 +16,66 @@ function FaqAccordion({ faqs }) {
       {faqs.map((f, i) => {
         const open = openIdx === i;
         return (
-          <div key={i} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-            <button type="button" onClick={() => setOpenIdx(open ? -1 : i)}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '14px 16px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-              {f.question}
-              <ChevronDown size={18} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 160ms var(--ease-out)', flexShrink: 0 }} />
+          <div
+            key={i}
+            style={{
+              background: 'var(--surface-sunken)',
+              borderRadius: 'var(--radius-md)',
+              border: open ? '1px solid var(--border-hairline)' : '1px solid transparent',
+              overflow: 'hidden',
+              transition: 'border-color 160ms ease',
+            }}
+          >
+            <button
+              type="button"
+              className="faq-accordion-btn"
+              onClick={() => setOpenIdx(open ? -1 : i)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+                padding: '14px 16px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                textAlign: 'left',
+                font: 'var(--type-body)',
+                fontWeight: 'var(--fw-semibold)',
+                color: 'var(--text-strong)',
+                outline: 'none',
+              }}
+            >
+              <span>{f.question}</span>
+              <ChevronDown
+                size={18}
+                style={{
+                  transform: open ? 'rotate(180deg)' : 'none',
+                  transition: 'transform 160ms var(--ease-out)',
+                  flexShrink: 0,
+                  color: open ? 'var(--action-primary)' : 'var(--text-muted)',
+                }}
+              />
             </button>
             {open && (
-              <p style={{ margin: 0, padding: '0 16px 16px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{f.answer}</p>
+              <div
+                style={{
+                  padding: '10px 16px 16px',
+                  borderTop: '1px solid var(--border-hairline)',
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    font: 'var(--type-body-sm)',
+                    color: 'var(--text-body)',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {f.answer}
+                </p>
+              </div>
             )}
           </div>
         );

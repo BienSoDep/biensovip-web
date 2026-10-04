@@ -16,28 +16,219 @@ import {
   useTopInterested, usePlateConversion, useConvertedOrders, useTopContent, useRatings, useIntent,
   useCollaboratorPerf, useDemand, useCustomerDemographics, useSearchInsights, useCompareInsights, useTrafficHeatmap,
 } from '../../services/adminDashboard.js';
-import { useSystemHealth } from '../../services/systemHealth.js';
+import { useBusinessInsights } from '../../services/analytics.js';
 import GoogleAnalyticsPanel from './GoogleAnalyticsPanel.jsx';
 import { useExportReport } from '../../hooks/useExportCsv.js';
+import {
+  ExecutiveSummaryBanner,
+  EnhancedActionsChart,
+  MultiDimensionPlateDistributionMatrix,
+  SupplyDemandComparisonChart,
+  PriceSegmentsSweetSpotChart,
+  MicroEngagementsChart,
+  LeadPipelineHealthCard,
+} from './dashboard/DashboardAdvancedCharts.jsx';
+import { useSystemHealth, useTestSystemEmail } from '../../services/systemHealth.js';
 
-const HEALTH_LABEL = { ok: 'Ổn định', degraded: 'Cần chú ý', down: 'Sự cố' };
-const HEALTH_COLOR = { ok: 'var(--status-success-ink)', degraded: 'var(--status-warning-ink)', down: 'var(--status-danger)' };
+const HEALTH_LABEL = { ok: 'Ổn định', degraded: 'Cần chú ý', down: 'Sự cố', running: 'Đang chạy' };
+const HEALTH_COLOR = {
+  ok: 'var(--status-success-ink)',
+  degraded: 'var(--status-warning-ink)',
+  down: 'var(--status-danger)',
+  running: 'var(--action-primary)',
+};
 
 function SystemHealthWidget() {
-  const { data, isLoading } = useSystemHealth();
+  const { data, isLoading, refetch, isFetching } = useSystemHealth();
+  const { sendTestEmail } = useTestSystemEmail();
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [showJobs, setShowJobs] = useState(false);
+
   if (isLoading || !data) return null;
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    try {
+      const res = await sendTestEmail();
+      toast.success(res?.data || 'Đã gửi email kiểm tra thành công!');
+      refetch();
+    } catch (err) {
+      toast.error(err?.message || 'Gửi email kiểm tra thất bại.');
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
+  const metrics = data.serverMetrics;
+  const jobs = data.jobsLastRun || [];
+
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-      <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Tình trạng hệ thống</span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
-        <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.emailStatus] || 'var(--text-faint)', display: 'inline-block' }} />
-        Email: <b style={{ color: HEALTH_COLOR[data.emailStatus] }}>{HEALTH_LABEL[data.emailStatus] || data.emailStatus}</b>
-        {data.lastEmailFailedAt && data.emailStatus === 'down' && <span style={{ color: 'var(--text-faint)' }}>(lỗi lúc {new Date(data.lastEmailFailedAt).toLocaleString('vi-VN')})</span>}
-      </span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
-        <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.dbStatus] || 'var(--text-faint)', display: 'inline-block' }} />
-        Database: <b style={{ color: HEALTH_COLOR[data.dbStatus] }}>{HEALTH_LABEL[data.dbStatus] || data.dbStatus}</b>
-      </span>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 'var(--space-3)',
+      background: 'var(--white)',
+      borderRadius: 'var(--radius-card)',
+      padding: 'var(--gutter-card)',
+      boxShadow: 'var(--shadow-inset-hairline)',
+    }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)' }}>
+            Hạ tầng &amp; Trạng thái hệ thống
+          </span>
+
+          {/* Database */}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
+            <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.dbStatus] || 'var(--text-faint)', display: 'inline-block' }} />
+            Database: <b style={{ color: HEALTH_COLOR[data.dbStatus] }}>{HEALTH_LABEL[data.dbStatus] || data.dbStatus}</b>
+            {data.dbLatencyMs != null && (
+              <span style={{ color: data.dbLatencyMs > 100 ? 'var(--status-warning-ink)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', fontSize: '0.8rem' }}>
+                ({data.dbLatencyMs}ms)
+              </span>
+            )}
+          </span>
+
+          {/* Email */}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
+            <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.emailStatus] || 'var(--text-faint)', display: 'inline-block' }} />
+            Email (SMTP): <b style={{ color: HEALTH_COLOR[data.emailStatus] }}>{HEALTH_LABEL[data.emailStatus] || data.emailStatus}</b>
+            {data.lastEmailFailedAt && data.emailStatus === 'down' && (
+              <span style={{ color: 'var(--status-danger)', fontSize: '0.8rem' }}>
+                (lỗi: {new Date(data.lastEmailFailedAt).toLocaleTimeString('vi-VN')})
+              </span>
+            )}
+          </span>
+
+          {/* Cloudinary */}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
+            <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.cloudinaryStatus] || 'var(--text-faint)', display: 'inline-block' }} />
+            Kho ảnh (Cloudinary): <b style={{ color: HEALTH_COLOR[data.cloudinaryStatus] }}>{HEALTH_LABEL[data.cloudinaryStatus] || data.cloudinaryStatus}</b>
+          </span>
+
+          {/* Uptime & RAM */}
+          {metrics && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
+              <span>Uptime: <b>{metrics.uptimeFormatted}</b></span>
+              <span>•</span>
+              <span>RAM: <b>{metrics.memoryUsedMb} MB</b></span>
+            </span>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            type="button"
+            onClick={handleTestEmail}
+            disabled={testingEmail}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--border-hairline)',
+              background: 'transparent',
+              color: 'var(--text-body)',
+              font: 'var(--type-caption)',
+              fontWeight: 'var(--fw-medium)',
+              cursor: testingEmail ? 'default' : 'pointer',
+            }}
+          >
+            {testingEmail ? 'Đang gửi test…' : 'Gửi mail test'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--action-primary)',
+              background: 'var(--brand-50)',
+              color: 'var(--action-primary)',
+              font: 'var(--type-caption)',
+              fontWeight: 'var(--fw-semibold)',
+              cursor: isFetching ? 'default' : 'pointer',
+            }}
+          >
+            {isFetching ? 'Đang kiểm tra…' : 'Kiểm tra lại'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowJobs(!showJobs)}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-pill)',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--link)',
+              font: 'var(--type-caption)',
+              cursor: 'pointer',
+            }}
+          >
+            {showJobs ? 'Ẩn Background Jobs ▲' : `Xem Jobs ngầm (${jobs.length}) ▼`}
+          </button>
+        </div>
+      </div>
+
+      {/* Danh sách Background Jobs ngầm khi mở rộng */}
+      {showJobs && (
+        <div style={{
+          marginTop: 'var(--space-2)',
+          paddingTop: 'var(--space-3)',
+          borderTop: '1px solid var(--border-hairline)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: 'var(--space-2)',
+        }}>
+          {jobs.length > 0 ? (
+            jobs.map((job) => (
+              <div
+                key={job.jobName}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--surface-sunken)',
+                  border: '1px solid var(--border-hairline)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  font: 'var(--type-caption)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: HEALTH_COLOR[job.status] || 'var(--text-faint)',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-strong)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {job.jobName}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>
+                    {job.lastRunAt ? format(new Date(job.lastRunAt), 'HH:mm:ss') : 'Chưa chạy'}
+                  </span>
+                  <span style={{ color: HEALTH_COLOR[job.status] || 'var(--text-muted)', fontWeight: 'var(--fw-bold)' }}>
+                    {HEALTH_LABEL[job.status] || job.status}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              Đang đồng bộ trạng thái background jobs...
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -128,6 +319,52 @@ export default function Dashboard({ go, st }) {
   const heatmap = useTrafficHeatmap(range);
   const { exportReport, loading: exportingReport } = useExportReport('/api/admin/dashboard/export');
 
+  // Business Insights tổng hợp (Cung cầu, Phân khúc giá, Tương tác vi mô, Sức khỏe Lead)
+  const fromIso = useMemo(() => format(range.from, 'yyyy-MM-dd'), [range.from]);
+  const toIso = useMemo(() => format(range.to, 'yyyy-MM-dd'), [range.to]);
+  const businessInsights = useBusinessInsights(fromIso, toIso);
+  const bData = businessInsights.data;
+
+  // Phân bổ kho biển đa chiều (Dòng số đẹp, Tỉnh thành, Loại xe, Phân khúc giá, Vùng miền, Tình trạng)
+  const [distTab, setDistTab] = useState('plate_type');
+  const [distChartType, setDistChartType] = useState('bar');
+  const activeDistData = usePlateDistribution(distTab);
+
+  const handleActionClick = (link, extraParams = {}) => {
+    if (!link) return;
+    let targetPath = link;
+    let queryString = '';
+    if (link.includes('?')) {
+      const parts = link.split('?');
+      targetPath = parts[0];
+      queryString = parts[1];
+    }
+    const params = new URLSearchParams(queryString);
+    const qParam = extraParams.adminQ || params.get('q');
+    const statusParam = extraParams.status || params.get('status');
+
+    if (targetPath.startsWith('/admin/')) {
+      const part = targetPath.replace('/admin/', '');
+      const screenMap = {
+        'ban-hang': 'asales',
+        'bien-so': 'aplates',
+        'danh-muc': 'acats',
+        'khach-hang': 'acustomers',
+      };
+      const targetScreen = screenMap[part] || 'dash';
+      if (typeof window !== 'undefined') {
+        const fullUrl = link.startsWith('/') ? link : '/' + link;
+        try { window.history.pushState(null, '', fullUrl); } catch { /* ignore */ }
+      }
+      if (typeof go === 'function') {
+        const goFn = go(targetScreen);
+        if (typeof goFn === 'function') goFn();
+      }
+      return;
+    }
+    window.location.href = link;
+  };
+
   const kpis = summary.data;
 
   const selectPreset = (i) => { setRangeIdx(i); setCustomFrom(''); setCustomTo(''); };
@@ -187,6 +424,9 @@ export default function Dashboard({ go, st }) {
         </button>
       </div>
 
+      {/* Banner Tóm tắt điều hành kinh doanh tổng hợp */}
+      <ExecutiveSummaryBanner summary={bData?.executiveSummary} leadHealth={bData?.leadHealth} isSuperAdmin={isSuperAdmin} />
+
       {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
         {summary.isLoading ? (
@@ -242,32 +482,7 @@ export default function Dashboard({ go, st }) {
 
       {/* Views chart + Traffic sources */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <div style={{ flex: '1 1 500px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Hành vi khách hàng</h3>
-          {chart.isLoading ? (
-            <SkeletonBase height={280} />
-          ) : chart.data?.points?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={chart.data.points}>
-                <defs>
-                  <linearGradient id="gViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563eb" stopOpacity={0.28} />
-                    <stop offset="100%" stopColor="#2563eb" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="views" stroke="#2563eb" strokeWidth={2} fill="url(#gViews)" isAnimationActive={!reduceMotion} animationDuration={700} name="Xem" />
-                <Line type="monotone" dataKey="contacts" stroke="#16a34a" strokeWidth={2} dot={false} isAnimationActive={!reduceMotion} name="Liên hệ" />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyBlock>Chưa có dữ liệu trong khoảng thời gian này</EmptyBlock>
-          )}
-        </div>
+        <EnhancedActionsChart chartData={chart.data} reduceMotion={reduceMotion} />
 
         <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
           <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nguồn truy cập</h3>
@@ -281,7 +496,7 @@ export default function Dashboard({ go, st }) {
         </div>
       </div>
 
-      {/* Top interested plates */}
+      {/* Top interested plates + Lead pipeline health */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 500px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
@@ -296,25 +511,7 @@ export default function Dashboard({ go, st }) {
           )}
         </div>
 
-        <div style={{ flex: '1 1 280px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Mục đích liên hệ</h3>
-          {intent.isLoading ? (
-            <SkeletonBase height={280} />
-          ) : intent.data?.items?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={intent.data.items} dataKey="count" nameKey="intent" cx="50%" cy="50%" outerRadius={90} label={({ intent, count }) => `${INTENT_LABEL[intent] || intent}: ${count}`}>
-                  {intent.data.items.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyBlock>Chưa có dữ liệu mục đích</EmptyBlock>
-          )}
-        </div>
+        <LeadPipelineHealthCard leadHealth={bData?.leadHealth} intentData={intent.data} onActionClick={handleActionClick} />
       </div>
 
       {/* Plate conversion + trending */}
@@ -422,38 +619,37 @@ export default function Dashboard({ go, st }) {
         </div>
       </div>
 
-      {/* Distribution */}
+      {/* Multi-Dimension Distribution & Supply vs Demand Balance */}
       <details className="dash-fold" open>
-      <summary>Phân bổ kho biển &amp; đánh giá</summary>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <DistributionCard title="Kho biển theo tỉnh" data={distProvince} />
-        <DistributionCard title="Kho biển theo loại xe" data={distVehicle} />
-        <div style={{ flex: '1 1 320px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đánh giá biển số</h3>
-          {ratings.isLoading ? (
-            <SkeletonBase height={260} />
-          ) : ratings.data?.total > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)' }}>
-                <span style={{ font: 'var(--type-display-2)', color: 'var(--text-strong)' }}>{ratings.data.average}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>/ 5 · {ratings.data.total} đánh giá</span>
-              </div>
-              {[...ratings.data.distribution].reverse().map((b) => (
-                <div key={b.stars} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  <span style={{ width: 40, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{b.stars} ★</span>
-                  <div style={{ flex: 1, height: 14, background: 'var(--grey-100)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-                    <div style={{ width: `${(b.count / ratings.data.total) * 100}%`, height: '100%', background: 'var(--amber-500)', borderRadius: 'var(--radius-sm)' }} />
-                  </div>
-                  <span style={{ width: 32, textAlign: 'right', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{b.count}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyBlock>Chưa có đánh giá</EmptyBlock>
-          )}
+      <summary>Phân bổ kho biển đa chiều &amp; Cân bằng Cung - Cầu</summary>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
+        <MultiDimensionPlateDistributionMatrix
+          distTab={distTab}
+          onTabChange={setDistTab}
+          distData={activeDistData}
+          chartType={distChartType}
+          onChartTypeChange={setDistChartType}
+          ratingsData={ratings}
+          onActionClick={handleActionClick}
+        />
+
+        <SupplyDemandComparisonChart
+          categorySupplyDemand={bData?.categorySupplyDemand || []}
+          onActionClick={handleActionClick}
+        />
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
+          <PriceSegmentsSweetSpotChart
+            priceSegments={bData?.priceSegments || []}
+            onActionClick={handleActionClick}
+          />
+          <MicroEngagementsChart
+            plateEngagement={bData?.plateEngagement}
+          />
         </div>
       </div>
       </details>
+
 
       {/* Collaborator performance (SuperAdmin only) + demand */}
       <details className="dash-fold" open>
@@ -659,7 +855,7 @@ export default function Dashboard({ go, st }) {
 
       {/* Bulk retry — khi nhiều block lỗi cùng lúc (vd mất mạng), tránh phải cuộn click "Thử lại" từng cái */}
       {(() => {
-        const allQueries = [summary, chart, traffic, funnel, distProvince, distVehicle, interested, conversion,
+        const allQueries = [summary, chart, traffic, funnel, distProvince, distVehicle, activeDistData, businessInsights, interested, conversion,
           orders, topContent, ratings, intent, ...(isSuperAdmin ? [collabPerf] : []), demand, demographics,
           searchInsights, compareInsights, heatmap];
         const failedCount = allQueries.filter((q) => q.isError).length;
