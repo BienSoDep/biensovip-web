@@ -4,8 +4,8 @@
 // There is no separate "/admin" screen or "demo account" button.
 import { expect } from '@playwright/test';
 
-export const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'duydinhadmin@biensovip.com';
-export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'duydinhadmin@8386';
+export const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin123@biensovip.com';
+export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'admin@123';
 
 export async function loginAdmin(page) {
   await page.goto('/dang-nhap');
