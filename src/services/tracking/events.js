@@ -3,7 +3,7 @@
 // đủ (lý do track, vị trí gọi, câu hỏi kinh doanh) tại docs/features/analytics/01..04-*.md.
 import { track } from './TrackingService.js';
 
-// ===== 01 — Hành trình đấu giá hộ (docs/features/analytics/01-hanh-trinh-dau-gia-ho.md) =====
+// ===== 01 — Hành trình liên hệ đặt biển (docs/features/analytics/01-hanh-trinh-lien-he-dat-bien.md) =====
 
 export function trackViewItemList(listName, plates) {
   track('view_item_list', {
