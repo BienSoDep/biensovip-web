@@ -17,3 +17,11 @@ export function useCreateReview() {
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['plates', vars.plateId, 'reviews'] }),
   });
 }
+
+export function useSystemReviews({ page = 1, perPage = 10 } = {}) {
+  return useQuery({
+    queryKey: ['system-reviews', { page, perPage }],
+    queryFn: () => apiClient.get('/api/reviews', { params: { page, perPage } }),
+  });
+}
+

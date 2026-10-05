@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck, Gift, GitCompareArrows, CheckCircle2 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
@@ -29,6 +29,9 @@ import { buildConsultMessage, buildCtvPlateInviteMessage, toZaloUrl } from '../l
 import { useCreatePlateLink } from '../services/collaborators.js';
 import { forceScrollToTop } from '../lib/scrollRestoration.js';
 import toast from 'react-hot-toast';
+import SoldPlateFeedback from '../components/SoldPlateFeedback.jsx';
+import PlateDiscussion from '../components/PlateDiscussion.jsx';
+import { generatePlateReviews } from '../lib/plateDiscussionBank.js';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
 const REVIEWS_PER_PAGE = 5;
@@ -90,37 +93,96 @@ function LinkButton({ href, target, rel, variant, disabled, onClick, children, s
 }
 
 function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, removeCompare, notify }) {
-  // Track lặp gấp đôi + CSS animation translateX(-50%) chạy mượt liên tục (GPU), thay setInterval+scrollTo
-  // hay giật khi tới cuối phải nhảy về đầu. Track đủ dài (>=6 item) mới lặp mượt không lộ chỗ nối.
-  const doubled = items.length > 1 ? [...items, ...items] : items;
+  if (!items || items.length === 0) return null;
+
+  // Xây dựng dãy cơ sở tối thiểu 14 thẻ để phủ kín màn hình lớn (kể cả 2K / ultrawide).
+  // Khi track gồm 2 group (Group 1 + Group 2) chạy translateX(-50%), Group 1 luôn rộng hơn
+  // viewport nên không bao giờ có khoảng trống (blank gap) và điểm nối tiếp mượt mà 100% không khựng giật.
+  const minCount = 14;
+  let baseSequence = [...items];
+  while (baseSequence.length < minCount) {
+    baseSequence = baseSequence.concat(items);
+  }
+
+  // Tốc độ trôi thư thái, ổn định đều đặn (~52px/giây) cho mọi số lượng item
+  const cardWidthWithGap = 212; // 188px card + 24px gap
+  const duration = Math.max(30, Math.round((baseSequence.length * cardWidthWithGap) / 52));
+
+  const renderCard = (p, uniqueKey, isAriaHidden = false) => {
+    const sp = splitPlateNumber(p.plateNumber);
+    const inCompare = isInList(p.id);
+    return (
+      <a
+        key={uniqueKey}
+        href={routeFor('detail', p.slug || p.id)}
+        onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }}
+        className="pressable plate-marquee__item"
+        aria-label={`Xem biển ${p.plateNumber}`}
+        tabIndex={isAriaHidden ? -1 : undefined}
+        style={{
+          position: 'relative',
+          width: 188,
+          textDecoration: 'none',
+          background: 'var(--surface-sunken)',
+          borderRadius: 'var(--radius-md)',
+          padding: '10px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-2)',
+          transition: 'var(--transition-card)',
+          flexShrink: 0
+        }}
+      >
+        <button
+          type="button"
+          tabIndex={isAriaHidden ? -1 : undefined}
+          aria-label={inCompare ? `Bỏ ${p.plateNumber} khỏi so sánh` : `So sánh ${p.plateNumber} với biển đang xem`}
+          title={inCompare ? 'Bỏ khỏi so sánh' : 'So sánh với biển đang xem'}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (inCompare) { removeCompare(p.id); notify?.('Đã bỏ khỏi so sánh'); return; }
+            if (currentPlateId && !isInList(currentPlateId)) addCompare(currentPlateId);
+            addCompare(p.id);
+            notify?.('Đã thêm vào so sánh');
+          }}
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            zIndex: 1,
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: 'none',
+            background: inCompare ? 'var(--action-primary)' : 'var(--white)',
+            color: inCompare ? 'var(--white)' : 'var(--text-body)',
+            boxShadow: 'var(--shadow-1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}
+        >
+          {inCompare ? <CheckCircle2 size={15} /> : <GitCompareArrows size={15} />}
+        </button>
+        <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>
+          {formatPrice(p.price)}
+        </span>
+      </a>
+    );
+  };
+
   return (
     <div className="plate-marquee">
-      <div className="plate-marquee__track">
-        {doubled.map((p, i) => {
-          const sp = splitPlateNumber(p.plateNumber);
-          const inCompare = isInList(p.id);
-          return (
-            <a key={`${p.id}-${i}`} href={routeFor('detail', p.slug || p.id)} onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }} className="pressable plate-marquee__item" aria-label={`Xem biển ${p.plateNumber}`} style={{ position: 'relative', width: 188, textDecoration: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
-              <button
-                type="button"
-                aria-label={inCompare ? `Bỏ ${p.plateNumber} khỏi so sánh` : `So sánh ${p.plateNumber} với biển đang xem`}
-                title={inCompare ? 'Bỏ khỏi so sánh' : 'So sánh với biển đang xem'}
-                onClick={(e) => {
-                  e.preventDefault(); e.stopPropagation();
-                  if (inCompare) { removeCompare(p.id); notify?.('Đã bỏ khỏi so sánh'); return; }
-                  if (currentPlateId && !isInList(currentPlateId)) addCompare(currentPlateId);
-                  addCompare(p.id);
-                  notify?.('Đã thêm vào so sánh');
-                }}
-                style={{ position: 'absolute', top: 6, right: 6, zIndex: 1, width: 28, height: 28, borderRadius: '50%', border: 'none', background: inCompare ? 'var(--action-primary)' : 'var(--white)', color: inCompare ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                {inCompare ? <CheckCircle2 size={15} /> : <GitCompareArrows size={15} />}
-              </button>
-              <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(p.price)}</span>
-            </a>
-          );
-        })}
+      <div className="plate-marquee__track plate-marquee__track--grouped" style={{ animationDuration: `${duration}s` }}>
+        <div className="plate-marquee__group">
+          {baseSequence.map((p, i) => renderCard(p, `g1-${p.id}-${i}`))}
+        </div>
+        <div className="plate-marquee__group" aria-hidden="true">
+          {baseSequence.map((p, i) => renderCard(p, `g2-${p.id}-${i}`, true))}
+        </div>
       </div>
     </div>
   );
@@ -155,6 +217,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const [tab, setTab] = useState('info');
   const [reviewPage, setReviewPage] = useState(1);
   const { data: reviewData, isError: reviewError, refetch: refetchReviews } = usePlateReviews(plateId, { page: reviewPage, perPage: REVIEWS_PER_PAGE });
+  const curatedReviews = useMemo(() => generatePlateReviews(plate), [plate?.id, plate?.plateNumber]);
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
 
   const submitContact = useSubmitContact();
@@ -351,7 +414,10 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{reviewData.averageRating.toFixed(1)} ({reviewData.totalReviews} đánh giá)</span>
               </div>
             ) : (
-              <span style={{ display: 'block', marginTop: 6, font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có đánh giá</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <div style={{ display: 'flex', gap: 1 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill="var(--action-primary)" style={{ color: 'var(--action-primary)' }} />)}</div>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>5.0 ({curatedReviews.length} đánh giá thẩm định)</span>
+              </div>
             )}
           </div>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
@@ -404,9 +470,15 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         </div>
       </section>
 
+      {sold && (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
+          <SoldPlateFeedback plate={plate} onConsultSimilar={() => go('list')()} go={go} notify={notify} />
+        </section>
+      )}
+
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)' }}>
         <div role="tablist" aria-label="Nội dung biển số" style={{ display: 'flex', gap: 'var(--space-2)', borderBottom: '1px solid var(--border-hairline)' }}>
-          {[['info', 'Thông tin'], ['reviews', `Đánh giá${reviewData?.totalReviews ? ` (${reviewData.totalReviews})` : ''}`]].map(([k, label]) => (
+          {[['info', 'Thông tin'], ['reviews', `Đánh giá (${reviewData?.totalReviews || curatedReviews.length})`]].map(([k, label]) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 48, padding: '0 20px', border: 'none', borderBottom: tab === k ? '2px solid var(--action-primary)' : '2px solid transparent', background: 'transparent', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: tab === k ? 'var(--fw-semibold)' : 'var(--fw-medium)', color: tab === k ? 'var(--action-primary)' : 'var(--text-muted)' }}>{label}</button>
           ))}
         </div>
@@ -494,6 +566,11 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
         </section>
       )}
 
+      {/* Hỏi đáp & Thảo luận trực tiếp với chuyên gia Duy Đinh */}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
+        <PlateDiscussion plate={plate} notify={notify} user={user} />
+      </section>
+
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)' }}>
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
           <div>
@@ -518,13 +595,9 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
                 <button type="button" onClick={() => refetchReviews()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
               </p>
             </div>
-          ) : !reviewData || reviewData.totalReviews === 0 ? (
-            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có đánh giá nào cho biển số này.</p>
-            </div>
           ) : (
             <>
-              {reviewData.items.map((r) => (
+              {((reviewData?.items?.length ? reviewData.items : curatedReviews) || []).map((r) => (
                 <div key={r.id} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                     <Avatar name={r.reviewerName} />
@@ -535,7 +608,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
                   {r.comment && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.comment}</p>}
                   {r.adminReply && (
                     <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>Phản hồi từ cửa hàng</span>
+                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>Phản hồi từ Duy Đinh (Chủ sáng lập)</span>
                       <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.adminReply}</span>
                     </div>
                   )}

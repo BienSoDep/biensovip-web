@@ -13,7 +13,7 @@ import { useCompareIds } from '../services/compareService.js';
 import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
 import { routeFor } from '../config/routes.js';
-import { readFiltersFromUrl, writeFiltersToUrl } from '../lib/plateListFilters.js';
+import { readFiltersFromUrl, writeFiltersToUrl, buildPageUrl } from '../lib/plateListFilters.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { useSeo } from '../hooks/useSeo.js';
 import { restoreScrollPosition, getScrollPosition } from '../lib/scrollRestoration.js';
@@ -526,7 +526,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-4) 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải thêm…</div>
           )}
           {!useInfinite && totalPages > 1 && (
-            <Pagination page={page} totalPages={totalPages} onChange={goToPage} style={{ paddingTop: 'var(--space-3)' }} />
+            <Pagination page={page} totalPages={totalPages} onChange={goToPage} getHref={(p) => buildPageUrl(filters, p)} style={{ paddingTop: 'var(--space-3)' }} />
           )}
         </div>
       </section>

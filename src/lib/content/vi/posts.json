@@ -66,11 +66,35 @@
   },
   "a5": {
     "title": "Quy định mới về sang tên biển số cá nhân 2026",
-    "excerpt": "Những điểm chủ xe cần lưu ý khi làm hồ sơ chuyển nhượng."
+    "desc": "Hướng dẫn chi tiết thủ tục chuyển nhượng phương tiện, cấp biển số định danh và quy định chuyển nhượng xe kèm biển trúng đấu giá theo Thông tư 24.",
+    "imgAlt": "Quy trình sang tên đổi chủ và cấp biển số định danh theo Thông tư 24",
+    "excerpt": "Những điểm cốt lõi chủ xe bắt buộc phải biết khi chuyển nhượng xe và định danh biển số 2026.",
+    "body": [
+      { "t": "p", "v": "Kể từ khi Thông tư 24/2023/TT-BCA chính thức có hiệu lực, phương thức quản lý biển số xe tại Việt Nam đã bước sang trang mới: biển số đi theo mã định danh của chủ xe thay vì đi theo chiếc xe như trước đây. Điều này tạo ra nhiều thay đổi căn bản trong quy trình mua bán, sang tên đổi chủ mà người chơi xe cần nắm vững." },
+      { "t": "h2", "v": "Biển số định danh quản lý như thế nào?" },
+      { "t": "p", "v": "Biển số định danh gắn liền với cá nhân chủ xe theo số định danh cá nhân (CCCD gắn chip). Khi bán xe, chủ xe bắt buộc phải giữ lại đăng ký và biển số xe để nộp lại cho cơ quan công an làm thủ tục thu hồi. Biển số này sẽ được giữ lại trong kho dữ liệu định danh của chủ cũ trong vòng 5 năm; khi mua xe mới, chủ cũ sẽ được cấp lại chính biển số này." },
+      { "t": "h2", "v": "Trường hợp duy nhất được bán xe kèm biển số" },
+      { "t": "p", "v": "Theo Khoản 2 Điều 28 Thông tư 24, chỉ duy nhất biển số xe ô tô trúng đấu giá mới được phép chuyển nhượng quyền sở hữu xe kèm theo biển số trúng đấu giá. Người nhận chuyển nhượng xe kèm biển đấu giá sau đó sẽ không được tiếp tục chuyển nhượng riêng biển số đó cho người khác (chỉ được bán xe kèm biển đúng 1 lần duy nhất)." },
+      { "t": "quote", "v": "Nắm vững quy định thu hồi và định danh giúp chủ xe tiết kiệm thời gian, đảm bảo 100% tính pháp lý và sang tên nhanh chóng trong 1–2 ngày làm việc." },
+      { "t": "h2", "v": "Quy trình 3 bước sang tên chuẩn tại Biensovip" },
+      { "t": "p", "v": "Bước 1: Chủ cũ nộp hồ sơ và biển số làm thủ tục thu hồi tại Phòng CSGT. Bước 2: Hai bên ký hợp đồng mua bán công chứng theo đúng quy định. Bước 3: Chủ mới kê khai đăng ký xe trên Cổng Dịch vụ công quốc gia và nhận biển số định danh mới của mình. Toàn bộ quy trình này được Biensovip hỗ trợ thực hiện trọn gói." }
+    ]
   },
   "a6": {
     "title": "Biển gánh, biển đối xứng — vẻ đẹp của thế cân bằng",
-    "excerpt": "Nhóm số đối xứng và lý do người mệnh Thổ thường chọn nhóm này."
+    "desc": "Ý nghĩa phong thủy của các thế số gánh (ABA), số đối xứng (ABBA) và lý do người làm kinh doanh ưa chuộng thế vững chãi.",
+    "imgAlt": "Biển số xe gánh và đối xứng phong thủy đẹp",
+    "excerpt": "Giải mã thế số đối xứng mang lại sự bình an, cân bằng âm dương và giữ vững cơ nghiệp.",
+    "body": [
+      { "t": "p", "v": "Bên cạnh các dòng biển ngũ quý, tứ quý đắt đỏ, biển số gánh (dạng ABA) và biển đối xứng (dạng ABBA hoặc ABCBA) luôn chiếm một vị trí đặc biệt trong lòng giới mộ điệu bởi tính thẩm mỹ hài hòa và ý nghĩa phong thủy vững chãi." },
+      { "t": "h2", "v": "Thế nào là biển số gánh và biển đối xứng?" },
+      { "t": "p", "v": "Biển gánh là dãy số có hai con số giống nhau ở hai đầu che chắn cho một con số ở giữa (ví dụ: 686, 868, 797, 898). Biển đối xứng (soi gương) là dãy số có cấu trúc đối xứng qua tâm (ví dụ: 68.86, 79.97, 23.32). Khi đọc xuôi hay đọc ngược, các cặp số đều tạo nên sự nhịp nhàng, bắt mắt." },
+      { "t": "h2", "v": "Ý nghĩa phong thủy: Cân bằng âm dương, giữ vững cơ nghiệp" },
+      { "t": "p", "v": "Trong phong thủy học, sự đối xứng đại diện cho trạng thái cân bằng tuyệt đối của âm dương. Cặp số gánh đóng vai trò như đòn gánh gánh vác tài lộc, giúp gia chủ vượt qua thăng trầm, biến động của thương trường. Đây là thế số biểu trưng cho sự che chở, bảo bọc và giữ gìn tài sản không bị thất thoát." },
+      { "t": "quote", "v": "Biển gánh không ồn ào như ngũ quý nhưng mang lại sự điềm đạm, an tâm và bền vững trên mọi chặng đường." },
+      { "t": "h2", "v": "Ai nên chọn biển số gánh và đối xứng?" },
+      { "t": "p", "v": "Những người làm công tác quản lý, các doanh nhân coi trọng sự ổn định, thăng tiến từng bước và người mệnh Thổ, mệnh Kim rất hợp với thế số này. Mức giá của dòng biển gánh cũng rất hợp lý, dễ tiếp cận hơn nhiều so với tứ quý mà vẫn giữ trọn vẹn nét độc đáo." }
+    ]
   },
   "ui": {
     "not_found_title": "Bài viết không tồn tại",

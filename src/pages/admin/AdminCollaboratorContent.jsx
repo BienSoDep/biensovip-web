@@ -30,93 +30,7 @@ import { useAdminCollaboratorBenefitContent } from '../../services/adminCollabor
 import { useCollaboratorBenefitContent } from '../../services/collaborators.js';
 import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
 
-// Mốc trượt tính hoa hồng mô phỏng thực tế khớp với Collaborator.jsx
-const CALC_STEPS = [3_000_000, 5_000_000, 10_000_000, 20_000_000, 50_000_000, 100_000_000, 300_000_000];
-const CALC_RATE = 0.10;
-const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
 
-const STATS_DATA = [
-  { icon: UserPlus, value: 50, suffix: '+', label: 'CTV đang hoạt động' },
-  { icon: Wallet, value: 100, suffix: 'tr+', label: 'Đã chi trả hoa hồng' },
-  { icon: HandCoins, value: 10, suffix: '%', label: 'Hoa hồng mặc định' },
-];
-
-const PROCESS_PREVIEW_STEPS = [
-  { n: 1, title: 'Đăng ký & Kích hoạt', desc: 'Bấm kích hoạt CTV và xác thực email trong 30 giây.' },
-  { n: 2, title: 'Chia sẻ liên kết', desc: 'Gửi link biển số hoặc mã QR cho người quen có nhu cầu.' },
-  { n: 3, title: 'Khách chốt cọc', desc: 'Hệ thống tự động ghi nhận hoa hồng ngay khi có đơn cọc.' },
-  { n: 4, title: 'Nhận hoa hồng', desc: 'Rút tiền đối soát định kỳ về tài khoản ngân hàng VietQR.' },
-];
-
-const DEFAULT_SAMPLE_TITLE = 'Trở thành Cộng tác viên Biển Số VIP';
-const DEFAULT_SAMPLE_BODY = `<p>Giới thiệu bạn bè mua biển số đẹp, bạn nhận hoa hồng hấp dẫn trên mỗi giao dịch thành công. Chia sẻ mã giới thiệu, theo dõi hoa hồng và đối soát minh bạch ngay trên bảng điều khiển CTV.</p>
-<ul>
-  <li>Nhận hoa hồng lên đến 10% cho mỗi khách mua thành công</li>
-  <li>Theo dõi lượt click, khách giới thiệu, giao dịch realtime</li>
-  <li>Quản lý hoa hồng chờ chi trả và đã chi trả rõ ràng, minh bạch</li>
-  <li>Bộ công cụ marketing chuyên nghiệp: link giới thiệu cá nhân & mã QR tiện lợi</li>
-</ul>`;
-
-// Kiểm tra tính cân bằng của các thẻ HTML phổ biến
-function validateHtmlTags(html) {
-  if (!html) return [];
-  const tags = ['p', 'ul', 'li', 'strong', 'em', 'span', 'b', 'i', 'mark'];
-  const issues = [];
-  tags.forEach((t) => {
-    const openMatches = html.match(new RegExp(`<${t}(\\s[^>]*)?>`, 'gi')) || [];
-    const closeMatches = html.match(new RegExp(`</${t}>`, 'gi')) || [];
-    if (openMatches.length !== closeMatches.length) {
-      issues.push(`Thẻ <${t}> chưa cân bằng (${openMatches.length} mở, ${closeMatches.length} đóng)`);
-    }
-  });
-  return issues;
-}
-
-// Máy tính hoa hồng tương tác trong Live Preview
-function LiveCommissionCalculator() {
-  const [step, setStep] = useState(2);
-  const deposit = CALC_STEPS[step];
-  const commission = Math.round(deposit * CALC_RATE);
-
-  return (
-    <div style={{
-      background: 'var(--surface-tint-cream)',
-      borderRadius: 'var(--radius-card)',
-      padding: 'var(--gutter-card)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 'var(--space-3)',
-      border: '1px solid rgba(212, 101, 10, 0.12)',
-    }}>
-      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <HandCoins size={16} color="var(--action-primary)" /> Thử tính hoa hồng của bạn
-      </span>
-      <input
-        type="range"
-        min={0}
-        max={CALC_STEPS.length - 1}
-        step={1}
-        value={step}
-        onChange={(e) => setStep(Number(e.target.value))}
-        aria-label="Chọn số tiền khách đặt cọc"
-        className="ctv-calc-slider"
-      />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-        <div>
-          <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Khách đặt cọc</span>
-          <span style={{ display: 'block', font: 'var(--type-title-2)', color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.3 }}>{money(deposit)}</span>
-        </div>
-        <ArrowRight size={20} style={{ color: 'var(--text-faint)', flexShrink: 0 }} />
-        <div style={{ textAlign: 'right' }}>
-          <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bạn nhận (10%)</span>
-          <span style={{ display: 'block', font: 'var(--type-title-1)', color: 'var(--action-primary)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.3, fontWeight: 'var(--fw-bold)' }}>
-            {money(commission)}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // LIVE PREVIEW CHUẨN XÁC 100% THEO GIAO DIỆN TRANG /cong-tac-vien — HỖ TRỢ CHỈNH SỬA 2 CHIỀU TRỰC TIẾP
 function CollaboratorBenefitLivePreview({ titleHtml, bodyHtml, onUpdateTitle, onUpdateBody, deviceMode = 'desktop' }) {
@@ -334,9 +248,6 @@ function CollaboratorBenefitLivePreview({ titleHtml, bodyHtml, onUpdateTitle, on
               <CollaboratorIllustration style={{ width: '100%', height: 'auto', maxHeight: isMobile ? 180 : 260 }} />
             </div>
           </div>
-
-          {/* Máy tính hoa hồng tương tác */}
-          <LiveCommissionCalculator />
         </div>
 
         {/* KHỐI 2: MÔ PHỎNG QUY TRÌNH 4 BƯỚC NHẬN HOA HỒNG */}

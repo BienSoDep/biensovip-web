@@ -55,3 +55,21 @@ export function writeFiltersToUrl(filters) {
   const next = qs ? `${base}?${qs}` : base;
   if (next !== window.location.pathname + window.location.search) history.replaceState(null, '', next);
 }
+
+export function buildPageUrl(filters, targetPage) {
+  const params = new URLSearchParams();
+  filters.cat?.forEach((id) => params.append('cat', id));
+  filters.city?.forEach((id) => params.append('city', id));
+  filters.avoidNumbers?.forEach((n) => params.append('avoidNumbers', n));
+  if (filters.vehicle) params.set('vehicle', filters.vehicle);
+  if (filters.q) params.set('q', filters.q);
+  if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
+  if (targetPage > 1) params.set('page', String(targetPage));
+  if (filters.perPage && filters.perPage !== 18) params.set('perPage', String(filters.perPage));
+  if (filters.priceMin) params.set('priceMin', filters.priceMin);
+  if (filters.priceMax) params.set('priceMax', filters.priceMax);
+  if (filters.status) params.set('status', filters.status);
+  const qs = params.toString();
+  return qs ? `/danh-sach?${qs}` : '/danh-sach';
+}
+
