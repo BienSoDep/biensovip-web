@@ -13,7 +13,7 @@ export function useVpaAdminFacets(params) {
   });
 }
 
-// Admin UC49: duyệt giá biển VPA, ẩn/ghim, cài đặt + lần chạy (super-admin), "Crawl ngay".
+// Admin UC49: duyệt giá biển VPA, ẩn/ghim, cài đặt + lần chạy (super-admin), giám sát và điều khiển crawl (T19).
 const KEY = 'admin-vpa';
 
 function toQuery(params) {
@@ -37,7 +37,8 @@ export function useVpaOverview(options) {
     queryKey: [KEY, 'overview'],
     queryFn: () => apiClient.get('/api/admin/vpa/overview'),
     retry: false,
-    refetchInterval: options?.poll ? 15000 : false,
+    // Có lượt đang chạy thì làm mới dày hơn để thấy tiến độ theo tỉnh.
+    refetchInterval: options?.poll ? (q) => (q.state.data?.running?.length ? 4000 : 15000) : false,
     enabled: options?.enabled,
   });
 }
@@ -89,7 +90,67 @@ export async function exportVpaCsv(params) {
 }
 
 export const useUpdateVpaSettings = () => useVpaMutation((body) => apiClient.put('/api/admin/vpa/settings', body));
-export const useRunVpaCrawl = () => useVpaMutation((source) => apiClient.post(`/api/admin/vpa/crawl/${source}/run`));
+// "Crawl ngay": source = key ('official'|'published'|'results'); options = { vehicle, province, fresh, resultsFull, dryRun } (tất cả tùy chọn).
+export const useRunVpaCrawl = () => useVpaMutation((arg) => {
+  const { source, ...options } = typeof arg === 'string' ? { source: arg } : arg;
+  return apiClient.post(`/api/admin/vpa/crawl/${source}/run`, options);
+});
+export const useStopVpaCrawl = () => useVpaMutation((source) => apiClient.post(`/api/admin/vpa/crawl/${source}/stop`));
+export const usePauseVpaCrawl = () => useVpaMutation((value) => apiClient.post('/api/admin/vpa/crawl/pause', { value }));
+export const useRevertVpaRun = () => useVpaMutation((runId) => apiClient.post(`/api/admin/vpa/crawl/runs/${runId}/revert`));
+export const useApplyVpaVanish = () => useVpaMutation((runId) => apiClient.post(`/api/admin/vpa/crawl/runs/${runId}/apply-vanish`));
+export const useVpaAlertTest = () => useMutation({ mutationFn: () => apiClient.post('/api/admin/vpa/crawl/alert-test') });
+
+// Lịch sử lượt chạy có lọc + phân trang (super-admin).
+export function useVpaRunSearch(params, enabled = true) {
+  const qs = toQuery(params);
+  return useQuery({
+    queryKey: [KEY, 'run-search', qs],
+    queryFn: () => apiClient.get(`/api/admin/vpa/crawl/runs/search?${qs}`),
+    placeholderData: (prev) => prev,
+    retry: false,
+    enabled,
+  });
+}
+
+// Thay đổi tab của một lượt (từ vpa_plate_status_history).
+export function useVpaRunChanges(runId, params) {
+  const qs = toQuery(params);
+  return useQuery({
+    queryKey: [KEY, 'run-changes', runId, qs],
+    queryFn: () => apiClient.get(`/api/admin/vpa/crawl/runs/${runId}/changes?${qs}`),
+    enabled: !!runId,
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useVpaQuality(enabled = true) {
+  return useQuery({
+    queryKey: [KEY, 'quality'],
+    queryFn: () => apiClient.get('/api/admin/vpa/quality'),
+    retry: false,
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+async function downloadCsv(path, fallbackName) {
+  const auth = loadAuth();
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}${path}`, {
+    headers: auth?.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
+  });
+  if (!res.ok) throw new Error(`Xuất file thất bại (${res.status})`);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${fallbackName}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+export const exportVpaRunsCsv = (params) => downloadCsv(`/api/admin/vpa/crawl/runs/export?${toQuery(params)}`, 'vpa-luot-chay');
+export const exportVpaRunChangesCsv = (runId, params) => downloadCsv(`/api/admin/vpa/crawl/runs/${runId}/changes/export?${toQuery(params)}`, 'vpa-thay-doi-luot');
 
 // Import Excel dự phòng (super-admin): file .xlsx theo mẫu; trả { totalRows, inserted, updated, tabChanged, errorCount, errors[] }.
 export function useImportVpaExcel() {

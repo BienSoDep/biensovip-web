@@ -40,6 +40,39 @@ export const VPA_SOURCES = [
   { id: 3, key: 'results', label: 'Kết quả đấu giá', prefix: 'results' },
 ];
 export const VPA_RUN_STATUS = { 0: 'Đang chạy', 1: 'Thành công', 2: 'Chưa đủ dữ liệu', 3: 'Lỗi' };
+export const VPA_RUN_STATUS_TONE = { 0: 'blue', 1: 'mint', 2: 'amber', 3: 'rose' };
+
+// Ghi chú lưu trong lượt chạy (vpa_crawl_runs.note) → câu dễ hiểu cho Admin.
+export function vpaRunNote(note) {
+  if (!note) return null;
+  if (note.startsWith('sudden_drop')) return 'Số biển giảm đột ngột so với lượt đủ trước nên đã bỏ qua phát hiện biến mất (không đổi biển nào sang tab nội bộ).';
+  if (note.startsWith('MSG_VPA_ERR_04')) return `Lượt chưa đủ dữ liệu — ${note.replace(/^MSG_VPA_ERR_04:\s*/, '')}`;
+  return note;
+}
+
+// Lý do đổi tab ghi trong vpa_plate_status_history.
+export const VPA_CHANGE_REASONS = {
+  official_listed: 'Lên danh sách chính thức (→ Tuần)',
+  reappeared_official: 'Xuất hiện lại ở chính thức (→ Tuần)',
+  auction_ended: 'Hết phiên (→ Hết hạn)',
+  reappeared_published: 'Xuất hiện lại ở công bố (→ Tháng)',
+  vanished_from_published: 'Biến mất khỏi công bố (→ Nội bộ)',
+  run_reverted: 'Admin hoàn tác lượt',
+  admin_edit: 'Admin sửa tay',
+  manual_create: 'Admin thêm tay',
+};
+
+export function formatDuration(ms) {
+  if (ms == null || !Number.isFinite(ms) || ms < 0) return '—';
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s} giây`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} phút ${s % 60 ? `${s % 60} giây` : ''}`.trim();
+  const h = Math.floor(m / 60);
+  return `${h} giờ ${m % 60} phút`;
+}
+
+export const formatInt = (n) => (n == null ? '—' : new Intl.NumberFormat('vi-VN').format(n));
 
 // Cờ trường Admin đã sửa tay (khớp VpaLockedFields ở backend): crawl không ghi đè các trường này.
 export const VPA_LOCK_FLAGS = [
