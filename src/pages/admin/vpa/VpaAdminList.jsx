@@ -11,6 +11,7 @@ import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
 import { Badge, Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
 import VpaPlateDrawer from './VpaPlateDrawer.jsx';
 import MultiFilter from './MultiFilter.jsx';
+import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
@@ -98,6 +99,7 @@ export default function VpaAdminList({ queue = false, notify }) {
 
   const params = { queue: queue || undefined, ...f, q: dq, page, limit, sort: sort?.key, dir: sort?.dir };
   const { data, isLoading, isError, refetch } = useVpaAdminPlates(params);
+  const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: f.tab, page: 1, limit: 1 }); // tổng của tab, không lọc khác
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
@@ -291,6 +293,8 @@ export default function VpaAdminList({ queue = false, notify }) {
           </span>
         </div>
       )}
+
+      <PlateCountSummary matched={data?.total} all={baseData?.total} filtered={filterCount > 0 || !!dq} scope={f.tab ? `trong tab ${VPA_TAB_LABELS[f.tab]}` : queue ? 'đang chờ duyệt' : ''} />
 
       <div className="admin-plates-mobile-bar" style={{ flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
