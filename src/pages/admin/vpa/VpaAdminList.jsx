@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
-  CarFront, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp,
+  CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import Skeleton from '../../../components/Skeleton.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
-import { Badge, Input, Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
+import { Badge, Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
 import VpaPlateDrawer from './VpaPlateDrawer.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
@@ -187,10 +187,17 @@ export default function VpaAdminList({ queue = false, notify }) {
 
   const actions = (p) => (
     <>
-      {pending(p) && p.suggestedPrice && <Button variant="primary" size="sm" onClick={() => run(() => approve.mutateAsync([p.id]), 'Đã đồng ý giá gợi ý')}>Duyệt</Button>}
-      {pending(p) && <Button variant="outline" size="sm" onClick={() => run(() => reject.mutateAsync([p.id]), 'Đã từ chối')}>Từ chối</Button>}
+      {pending(p) && p.suggestedPrice && (
+        <button type="button" aria-label="Duyệt giá gợi ý" title="Duyệt giá gợi ý" onClick={() => run(() => approve.mutateAsync([p.id]), 'Đã đồng ý giá gợi ý')}
+          style={{ ...roundBtn, background: 'var(--action-primary)', color: 'var(--white)' }}><Check size={16} /></button>
+      )}
+      {pending(p) && (
+        <button type="button" aria-label="Từ chối giá gợi ý" title="Từ chối giá gợi ý" onClick={() => run(() => reject.mutateAsync([p.id]), 'Đã từ chối')}
+          style={{ ...roundBtn, background: 'var(--surface-muted)', color: 'var(--status-danger)' }}><X size={16} /></button>
+      )}
       {pending(p) && p.priceGroupId && p.suggestedPrice && (
-        <Button variant="ghost" size="sm" onClick={() => run(() => approveGroup.mutateAsync(p.priceGroupId), (r) => `Đã đồng ý ${r.affected} biển trong nhóm`)}>Cả nhóm</Button>
+        <button type="button" aria-label="Duyệt cả nhóm" title="Duyệt cả nhóm biển cùng giá" onClick={() => run(() => approveGroup.mutateAsync(p.priceGroupId), (r) => `Đã đồng ý ${r.affected} biển trong nhóm`)}
+          style={{ ...roundBtn, background: 'var(--surface-muted)', color: 'var(--text-body)' }}><Users size={16} /></button>
       )}
       <IconButton name="pencil" label="Sửa" size="sm" onClick={() => setDrawer({ plate: p })} />
       <button type="button" aria-label={p.isHidden ? 'Hiện biển' : 'Ẩn biển'} title={p.isHidden ? 'Hiện biển' : 'Ẩn khỏi khách'} onClick={() => toggleHide(p)}
@@ -234,13 +241,21 @@ export default function VpaAdminList({ queue = false, notify }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       {!queue && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)', background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-3) var(--gutter-card)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', alignSelf: 'center' }}>Thêm nhanh</span>
-          <Input label="Số biển" placeholder="30A-567.89" value={quick.plateNumber} onChange={(e) => setQuick((x) => ({ ...x, plateNumber: e.target.value }))} />
-          <Select label="Loại xe" value={quick.vehicle} options={VEHICLES.slice(1)} onChange={(v) => setQuick((x) => ({ ...x, vehicle: v }))} />
-          <Select label="Tab" value={quick.tab} options={TAB_ROW.slice(0, 3)} onChange={(v) => setQuick((x) => ({ ...x, tab: v }))} />
-          <Input label="Giá (đ)" type="number" min="1" placeholder="Để trống = giá liên hệ" value={quick.price} onChange={(e) => setQuick((x) => ({ ...x, price: e.target.value }))} />
-          <Button variant="primary" size="md" loading={create.isPending} onClick={quickAdd}>Thêm</Button>
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', flex: '0 0 auto' }}>Thêm nhanh</span>
+            {[['plateNumber', '30A-567.89', 'text'], ['price', 'Giá (VNĐ) — trống = Giá liên hệ', 'text']].map(([k, ph]) => (
+              <input key={k} value={quick[k]} placeholder={ph} onChange={(e) => setQuick((x) => ({ ...x, [k]: e.target.value }))}
+                onKeyDown={(e) => { if (e.key === 'Enter') quickAdd(); }}
+                style={{ height: 36, minWidth: 0, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 12px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none', flex: '1 1 150px' }} />
+            ))}
+            <Select value={quick.tab} options={TAB_ROW.slice(0, 3)} onChange={(v) => setQuick((x) => ({ ...x, tab: v }))} />
+            <Select value={quick.vehicle} options={VEHICLES.slice(1)} onChange={(v) => setQuick((x) => ({ ...x, vehicle: v }))} />
+            <Button variant="primary" size="md" loading={create.isPending} onClick={quickAdd}>Thêm</Button>
+          </div>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            Nhập biển số, giá (bỏ trống = Giá liên hệ), chọn tab và loại xe rồi bấm Thêm. Hệ thống tự nhận loại biển và tỉnh từ số biển; crawl không đổi biển thêm tay. Cần chỉnh thêm loại biển/tỉnh/giờ phiên? Bấm &quot;Thêm biển VPA (đầy đủ)&quot;.
+          </span>
         </div>
       )}
 
@@ -356,7 +371,7 @@ export default function VpaAdminList({ queue = false, notify }) {
               <span style={{ flex: '0 0 34px' }}>
                 <input type="checkbox" aria-label="Chọn tất cả" checked={allSelected} onChange={toggleAll} ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }} style={{ width: 16, height: 16, accentColor: 'var(--action-primary)', cursor: 'pointer' }} />
               </span>
-              <span style={{ flex: '0 0 56px' }}>Biển</span>
+              <span style={{ flex: '0 0 56px' }}>Ảnh</span>
               <SortHeader {...sh} label="Biển số" sortKey="plateNumber" style={{ flex: '1 1 150px' }} />
               {cols.plateType && <SortHeader {...sh} label="Loại biển" sortKey="plateTypeName" style={{ flex: '1 1 88px' }} />}
               {cols.vehicle && <SortHeader {...sh} label="Loại xe" sortKey="vehicle" style={{ flex: '0 0 72px' }} />}
@@ -367,7 +382,7 @@ export default function VpaAdminList({ queue = false, notify }) {
               {cols.approved && <SortHeader {...sh} label="Giá duyệt" sortKey="approvedPrice" tip={VPA_HELP.approved} style={{ flex: '1 1 110px' }} />}
               {cols.priceState && <SortHeader {...sh} label="Trạng thái giá" sortKey="priceState" tip={VPA_HELP.priceState} style={{ flex: '1 1 120px' }} />}
               {cols.updatedAt && <SortHeader {...sh} label="Cập nhật" sortKey="updatedAt" style={{ flex: '1 1 90px' }} />}
-              <span style={{ flex: '0 0 250px' }}>Thao tác</span>
+              <span style={{ flex: '0 0 296px' }}>Thao tác</span>
             </div>
 
             {isLoading && <div style={{ padding: 'var(--space-4)' }}><Skeleton variant="table" rows={6} /></div>}
@@ -400,7 +415,7 @@ export default function VpaAdminList({ queue = false, notify }) {
                   {cols.approved && <span style={{ flex: '1 1 110px' }}>{priceCell(p)}</span>}
                   {cols.priceState && <span style={{ flex: '1 1 120px' }}><Badge tone={st.tone}>{st.label}</Badge></span>}
                   {cols.updatedAt && <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>}
-                  <span style={{ flex: '0 0 250px', display: 'flex', gap: 'var(--space-1)', alignItems: 'center', flexWrap: 'wrap' }}>{actions(p)}</span>
+                  <span style={{ flex: '0 0 296px', display: 'flex', gap: 'var(--space-1)', alignItems: 'center', flexWrap: 'wrap' }}>{actions(p)}</span>
                 </div>
               );
             })}
