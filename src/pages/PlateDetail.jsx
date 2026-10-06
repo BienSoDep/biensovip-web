@@ -429,7 +429,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
                 <span style={{ font: 'var(--type-body)', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(plate.price, false)}</span>
               </span>
             ) : (
-              <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{plate.vpa && plate.priceOnRequest ? 'Liên hệ báo giá' : formatPrice(plate.price, plate.priceOnRequest)}</span>
+              <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
             )}
           </div>
           {plate.vpa && (
