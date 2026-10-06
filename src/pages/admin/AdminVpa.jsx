@@ -1,5 +1,4 @@
 import AdminTabbedPage from '../../components/AdminTabbedPage.jsx';
-import PlateSourceTabs from './PlateSourceTabs.jsx';
 import VpaAdminList from './vpa/VpaAdminList.jsx';
 import VpaOverview from './vpa/VpaOverview.jsx';
 
@@ -13,7 +12,6 @@ export default function AdminVpa({ notify, isSuperAdmin, go }) {
   ];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <PlateSourceTabs active="avpa" go={go} />
       <AdminTabbedPage tabs={tabs} initialTab="plates" />
     </div>
   );
