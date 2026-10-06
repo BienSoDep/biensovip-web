@@ -108,7 +108,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const T = contentGet;
   const { ids: compareIds } = useCompareIds();
   const compareCount = compareIds.length;
-  const nav = [['list', T('common.nav.plates')], ['vpa', 'Biển đấu giá'], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
   const navRef = useRef(null);
   useEffect(() => {
     const container = navRef.current;

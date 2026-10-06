@@ -1,23 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { Select, SearchField } from '../components/index.jsx';
-import Button from '../components/Button.jsx';
-import PlateCard from '../components/PlateCard.jsx';
-import Pagination from '../components/Pagination.jsx';
-import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
-import Breadcrumb from '../components/Breadcrumb.jsx';
+import { Select, SearchField } from './index.jsx';
+import Button from './Button.jsx';
+import PlateCard from './PlateCard.jsx';
+import Pagination from './Pagination.jsx';
+import PlateCardSkeleton from './skeletons/PlateCardSkeleton.jsx';
 import { useCategories } from '../services/categories.js';
 import { useCompareIds } from '../services/compareService.js';
-import { useVpaPlates, useVpaCounts, useVpaProvinces, openVpaPlate } from '../services/vpa.js';
+import { useVpaPlates, useVpaProvinces, openVpaPlate } from '../services/vpa.js';
 import { vpaBadge, isCar } from '../lib/vpaFormat.js';
 
 const PAGE_SIZE = 24;
-const TABS = [
-  { key: 'monthly', label: 'Biển tháng' },
-  { key: 'weekly', label: 'Biển tuần' },
-  { key: 'available', label: 'Biển có sẵn' },
-  { key: 'expired', label: 'Biển hết hạn' },
-];
 const VEHICLES = [{ value: '', label: 'Tất cả loại xe' }, { value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const SORTS = {
   monthly: [['soon', 'Phiên sắp diễn ra'], ['number', 'Số biển A→Z']],
@@ -27,9 +20,8 @@ const SORTS = {
 const GRID = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' };
 const BOX = { background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' };
 
-// Danh sách biển đấu giá VPA (UC49): 3 tab lấy từ API VPA + tab "Biển có sẵn" dẫn về danh sách kho Duy Định.
-export default function VpaPlates({ go, openPlate, notify, favs, onFav }) {
-  const [tab, setTab] = useState('monthly');
+// Nội dung 3 tab VPA (UC49: tháng / tuần / hết hạn) trong trang Biển số. Tab do trang cha chọn; đổi tab thì cha remount (key).
+export default function VpaPlatesPanel({ tab, openPlate, notify, favs, onFav }) {
   const [vehicle, setVehicle] = useState('');
   const [type, setType] = useState('');
   const [province, setProvince] = useState('');
@@ -49,7 +41,6 @@ export default function VpaPlates({ go, openPlate, notify, favs, onFav }) {
     return () => clearInterval(t);
   }, [tab]);
 
-  const { data: counts } = useVpaCounts(vehicle);
   const { data: types } = useCategories('plate_type');
   const { data: provinces } = useVpaProvinces();
   const { data, isLoading, isError, refetch, isFetching } = useVpaPlates({ tab, vehicle, province, type, q: dq, sort, page, pageSize: PAGE_SIZE });
@@ -57,11 +48,6 @@ export default function VpaPlates({ go, openPlate, notify, favs, onFav }) {
   const totalPages = Math.max(1, Math.ceil((data?.total || 0) / PAGE_SIZE));
 
   const reset = (fn) => (v) => { fn(v); setPage(1); };
-  const pickTab = (key) => {
-    if (key === 'available') return go('list')();
-    setTab(key); setSort(''); setPage(1);
-  };
-  const count = (key) => ({ monthly: counts?.monthly, weekly: counts?.weekly, expired: counts?.expired }[key]);
 
   // Tương tác lần đầu (mở, yêu thích, so sánh) → tạo Plate (get-or-create) rồi dùng luồng biển thường. null nếu lỗi.
   const ensurePlate = async (p) => {
@@ -96,28 +82,7 @@ export default function VpaPlates({ go, openPlate, notify, favs, onFav }) {
 
   return (
     <>
-      <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, { label: 'Biển đấu giá' }]} />
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-4) var(--pad-page) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <h1 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Biển số đấu giá</h1>
-
-        <div role="tablist" style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 4 }}>
-          {TABS.map((t) => {
-            const active = t.key === tab;
-            const n = count(t.key);
-            return (
-              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => pickTab(t.key)}
-                style={{
-                  flex: '0 0 auto', height: 40, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-                  font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                  background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
-                  boxShadow: 'var(--shadow-inset-hairline)',
-                }}>
-                {t.label}{n != null ? ` (${new Intl.NumberFormat('vi-VN').format(n)})` : ''}
-              </button>
-            );
-          })}
-        </div>
-
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'center' }}>
           <SearchField placeholder="Tìm số biển, vd 8888" value={q} onChange={(e) => reset(setQ)(e && e.target ? e.target.value : e)} width="min(280px,100%)" ariaLabel="Tìm số biển" />
           <Select value={vehicle} options={VEHICLES} onChange={reset(setVehicle)} variant="pill" />

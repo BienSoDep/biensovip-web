@@ -47,7 +47,6 @@ import {
 const MaintenancePage = lazy(() => import('./pages/MaintenancePage.jsx'));
 const Home = lazy(() => import('./pages/Home.jsx'));
 const PlateList = lazy(() => import('./pages/PlateList.jsx'));
-const VpaPlates = lazy(() => import('./pages/VpaPlates.jsx'));
 const PlateDetail = lazy(() => import('./pages/PlateDetail.jsx'));
 const Auth = lazy(() => import('./pages/Auth.jsx'));
 const AdminForgotPassword = lazy(() => import('./pages/AdminForgotPassword.jsx'));
@@ -777,7 +776,6 @@ export default function App() {
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
-            {s === 'vpa' && <VpaPlates go={go} openPlate={openPlate} notify={notify} favs={st.favs} onFav={toggleFav} />}
 
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} fromScreen={st.detailFrom} />}
 

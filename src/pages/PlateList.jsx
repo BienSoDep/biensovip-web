@@ -4,12 +4,14 @@ import { SlidersHorizontal, X, LayoutGrid, List as ListIcon, Bike, Car } from 'l
 import Button from '../components/Button.jsx';
 import { Select, Checkbox, Radio, Input, Icon, SearchField } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
+import VpaPlatesPanel from '../components/VpaPlatesPanel.jsx';
 import Pagination from '../components/Pagination.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useCategories } from '../services/categories.js';
 import { usePlates, useInfinitePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
+import { useVpaCounts } from '../services/vpa.js';
 import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
 import { routeFor } from '../config/routes.js';
@@ -50,9 +52,19 @@ const AVOID_NUMBER_PRESETS = ['4', '7', '49', '53', '13'];
 
 const PROVINCE_VISIBLE_COUNT = 10;
 
+// 4 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 3 tab còn lại lấy từ VPA (UC49).
+const TABS = [
+  { key: 'monthly', label: 'Biển tháng' },
+  { key: 'weekly', label: 'Biển tuần' },
+  { key: 'available', label: 'Biển có sẵn' },
+  { key: 'expired', label: 'Biển hết hạn' },
+];
+
 export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice, contact }) {
   const [filters, setFilters] = useState(readFiltersFromUrl);
   const [provinceExpanded, setProvinceExpanded] = useState(false);
+  const vpaTab = filters.tab; // '' = Biển có sẵn
+  const { data: vpaCounts } = useVpaCounts('');
   useEffect(() => { writeFiltersToUrl(filters); }, [filters]);
 
   const setFilter = (patch, isPreset = false) => {
@@ -147,7 +159,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
   }), [filters, qDebounced]);
 
-  const { data, isLoading, isError, isFetching, refetch } = usePlates(apiFilters, { enabled: !infinite && filters.perPage !== 0 });
+  const { data, isLoading, isError, isFetching, refetch } = usePlates(apiFilters, { enabled: !vpaTab && !infinite && filters.perPage !== 0 });
 
   // Infinite scroll: bật khi toggle bật hoặc chọn "Xem tất cả" (bỏ cap 100).
   const useInfinite = infinite || filters.perPage === 0;
@@ -156,7 +168,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
     status: filters.status || undefined, sort: filters.sort, perPage: 18,
   }), [filters, qDebounced]);
-  const inf = useInfinitePlates(infiniteFilters, { enabled: useInfinite });
+  const inf = useInfinitePlates(infiniteFilters, { enabled: !vpaTab && useInfinite });
   const stagger = useStaggeredReveal();
 
   useEffect(() => {
@@ -212,7 +224,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     setFilter({ [key]: isRemoving ? filters[key].filter((x) => x !== id) : [...filters[key], id] });
   };
 
-  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], avoidNumbers: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view }));
+  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], avoidNumbers: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view, tab: f.tab }));
 
   const goToPage = (p) => {
     setFilters((f) => ({ ...f, page: p }));
@@ -257,9 +269,34 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       </div>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
-        <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
-        <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
+        {!vpaTab && <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>}
+        {!vpaTab && <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />}
       </section>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)' }}>
+        <div role="tablist" aria-label="Nguồn biển số" style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 4 }}>
+          {TABS.map((t) => {
+            const key = t.key === 'available' ? '' : t.key;
+            const active = filters.tab === key;
+            const n = vpaCounts?.[t.key];
+            return (
+              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setFilters((f) => ({ ...f, tab: key, page: 1 }))}
+                style={{
+                  flex: '0 0 auto', height: 40, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                  font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                  background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                  boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)',
+                }}>
+                {t.label}{n != null ? ` (${new Intl.NumberFormat('vi-VN').format(n)})` : ''}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+      {vpaTab ? (
+        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-2) var(--pad-page) var(--pad-section-y)' }}>
+          <VpaPlatesPanel key={vpaTab} tab={vpaTab} openPlate={openPlate} notify={notify} favs={favs} onFav={onFav} />
+        </section>
+      ) : (<>
       {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển.
           Track 2 icon bo góc nhẹ thay vì pill tròn rời — build từ vehicleTypes.items nên vẫn không crash
           nếu admin thêm loại xe thứ 3, chỉ mất hiệu ứng "2 ô cạnh nhau" đẹp. */}
@@ -530,6 +567,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           )}
         </div>
       </section>
+      </>)}
 
       {saveOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 18px', animation: 'fadeIn 140ms var(--ease-out)' }}>

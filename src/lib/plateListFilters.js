@@ -1,8 +1,14 @@
 // CLEAN-CODE-ISSUES.md #1 — PlateList.jsx pure logic (URL↔filter-state serialization), tách khỏi
 // component để giữ PlateList.jsx ở mức fetch+compose.
 
+// Tab biển VPA trong trang Biển số: '' = Biển có sẵn (kho Duy Định). Giá trị URL ngắn gọn, tiếng Việt không dấu.
+export const VPA_TAB_PARAM = { monthly: 'thang', weekly: 'tuan', expired: 'het-han' };
+const VPA_TAB_BY_PARAM = Object.fromEntries(Object.entries(VPA_TAB_PARAM).map(([k, v]) => [v, k]));
+
 export function readFiltersFromUrl() {
   const params = new URLSearchParams(window.location.search);
+  // /bien-dau-gia (đường dẫn cũ của trang riêng) mở thẳng tab Biển tháng.
+  const tab = VPA_TAB_BY_PARAM[params.get('tab')] || (window.location.pathname === '/bien-dau-gia' ? 'monthly' : '');
   let q = params.get('q') || '';
   if (!q && typeof window !== 'undefined' && window.location.pathname.startsWith('/tim-kiem/')) {
     const raw = window.location.pathname.slice('/tim-kiem/'.length).split('/')[0];
@@ -21,6 +27,7 @@ export function readFiltersFromUrl() {
     priceMin: params.get('priceMin') || '',
     priceMax: params.get('priceMax') || '',
     status: params.get('status') || '',
+    tab,
   };
 }
 
@@ -30,6 +37,7 @@ export function writeFiltersToUrl(filters) {
   filters.city.forEach((id) => params.append('city', id));
   filters.avoidNumbers.forEach((n) => params.append('avoidNumbers', n));
   if (filters.vehicle) params.set('vehicle', filters.vehicle);
+  if (filters.tab) params.set('tab', VPA_TAB_PARAM[filters.tab]);
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const isSearchPath = pathname.startsWith('/tim-kiem/');
@@ -48,7 +56,7 @@ export function writeFiltersToUrl(filters) {
   if (filters.priceMax) params.set('priceMax', filters.priceMax);
   if (filters.status) params.set('status', filters.status);
   const qs = params.toString();
-  let base = pathname || '/danh-sach';
+  let base = pathname && pathname !== '/bien-dau-gia' ? pathname : '/danh-sach';
   if (isSearchPath && (!filters.q || filters.q.toLowerCase() !== pathTerm.toLowerCase())) {
     base = '/danh-sach';
   }

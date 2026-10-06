@@ -1,4 +1,4 @@
-export const SCREENS = ['home', 'list', 'vpa', 'detail', 'register', 'login', 'forgot', 'adminForgot', 'adminReset', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'dash', 'aplates', 'avpa', 'acoupons', 'acats', 'asales', 'acontacts', 'akanban', 'atransactions', 'aposts', 'ablogcomments', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'amaintenance', 'ashowroom', 'asortsettings', 'aerrorlogs', 'afeatureflags', 'adbconsole', 'apolicypages', 'actvtemplates', 'ainsights'];
+export const SCREENS = ['home', 'list', 'detail', 'register', 'login', 'forgot', 'adminForgot', 'adminReset', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'dash', 'aplates', 'avpa', 'acoupons', 'acats', 'asales', 'acontacts', 'akanban', 'atransactions', 'aposts', 'ablogcomments', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'amaintenance', 'ashowroom', 'asortsettings', 'aerrorlogs', 'afeatureflags', 'adbconsole', 'apolicypages', 'actvtemplates', 'ainsights'];
 
 // Market control — landing page tỉnh/thành. Slug sinh từ tên tỉnh bỏ dấu (khớp BlogService.GenerateSlug
 // phía backend), map ngược 2 chiều để routeFor()/parseRoute() không cần gọi API mới biết slug<->code.
@@ -84,7 +84,7 @@ export const PLATE_TYPE_LANDINGS = [
 const PLATE_TYPE_SLUGS = new Set(PLATE_TYPE_LANDINGS.map((p) => p.slug));
 
 export const ROUTE_MAP = {
-  'list': 'danh-sach', 'vpa': 'bien-dau-gia', 'register': 'dang-ky', 'login': 'dang-nhap', 'forgot': 'quen-mat-khau',
+  'list': 'danh-sach', 'register': 'dang-ky', 'login': 'dang-nhap', 'forgot': 'quen-mat-khau',
   'adminForgot': 'quen-mat-khau-quan-tri', 'adminReset': 'dat-lai-mat-khau-quan-tri',
   'fav': 'yeu-thich', 'profile': 'tai-khoan', 'about': 'gioi-thieu', 'blog': 'tin', 'lucky': 'hop-menh',
   'dash': 'admin/tong-quan', 'aplates': 'admin/bien-so', 'avpa': 'admin/bien-vpa', 'acoupons': 'admin/ma-giam-gia', 'acats': 'admin/danh-muc',
@@ -111,10 +111,11 @@ export function parseRoute(pathname) {
   if (p[0] === 'bai-viet') return { screen: 'post', postId: p[1] || 'a1' };
   if (p[0] === 'tu-van') return { screen: 'lucky' }; // alias cũ → hop-menh (redirect)
   if (p[0] === 'tim-kiem') return { screen: 'list', searchTerm: p[1] || '' };
+  if (p[0] === 'bien-dau-gia') return { screen: 'list' }; // đã gộp vào trang Biển số (tab VPA)
   if (PROVINCE_CODE_BY_SLUG[p[0]]) return { screen: 'provinceLanding', landingSlug: p[0], provinceCode: PROVINCE_CODE_BY_SLUG[p[0]] };
   if (PLATE_TYPE_SLUGS.has(p[0])) return { screen: 'plateTypeLanding', typeSlug: p[0].slice(5) };
   return { screen: REVERSE_MAP[p.join('/')] || 'notfound' };
 }
 
 export const ADMIN_SCREENS = ['dash', 'aplates', 'avpa', 'acoupons', 'acats', 'asales', 'acontacts', 'akanban', 'atransactions', 'aposts', 'ablogcomments', 'astaff', 'acustomers', 'avideos', 'anotifications', 'aemailtpl', 'acollabs', 'acollabcontent', 'ainterestleads', 'areviews', 'ameanings', 'achatbot', 'compose', 'aauditlog', 'arisklog', 'aguide', 'amaintenance', 'ashowroom', 'asortsettings', 'aerrorlogs', 'afeatureflags', 'adbconsole', 'apolicypages', 'actvtemplates', 'ainsights'];
-export const PUBLIC_SCREENS = ['home', 'list', 'vpa', 'detail', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'collabProcess', 'collabLeaderboard', 'collabCustomers', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'notfound', 'adminForgot', 'adminReset'];
+export const PUBLIC_SCREENS = ['home', 'list', 'detail', 'fav', 'profile', 'about', 'blog', 'post', 'lucky', 'chat', 'compare', 'saved', 'reviews', 'notifications', 'collab', 'collabProcess', 'collabLeaderboard', 'collabCustomers', 'terms', 'privacy', 'transfer', 'faq', 'gmailCallback', 'provinceLanding', 'plateTypeLanding', 'notfound', 'adminForgot', 'adminReset'];
