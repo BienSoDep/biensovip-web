@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Badge, Input, Switch } from '../../../components/index.jsx';
 import Button from '../../../components/Button.jsx';
+import VpaExcelImport from './VpaExcelImport.jsx';
 import { useVpaOverview, useVpaRuns, useUpdateVpaSettings, useRunVpaCrawl } from '../../../services/adminVpa.js';
 import { VPA_SOURCES, VPA_RUN_STATUS, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 
@@ -89,6 +90,8 @@ function OverviewBody({ data, runs, notify }) {
           <Button variant="primary" size="md" loading={save.isPending} onClick={onSave}>Lưu cấu hình</Button>
         </div>
       </div>
+
+      <VpaExcelImport notify={notify} />
 
       <div style={{ ...CARD, padding: 0, overflowX: 'auto' }}>
         <div style={{ minWidth: 720 }}>

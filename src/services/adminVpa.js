@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
+import { loadAuth } from '../lib/authStore.js';
 
 // Admin UC49: duyệt giá biển VPA, ẩn/ghim, cài đặt + lần chạy (super-admin), "Crawl ngay".
 const KEY = 'admin-vpa';
@@ -55,3 +56,29 @@ export const useHideVpaPlate = () => useVpaMutation(({ id, value }) => apiClient
 export const usePinVpaPlate = () => useVpaMutation(({ id, value }) => apiClient.post(`/api/admin/vpa/plates/${id}/pin`, { value }));
 export const useUpdateVpaSettings = () => useVpaMutation((body) => apiClient.put('/api/admin/vpa/settings', body));
 export const useRunVpaCrawl = () => useVpaMutation((source) => apiClient.post(`/api/admin/vpa/crawl/${source}/run`));
+
+// Import Excel dự phòng (super-admin): file .xlsx theo mẫu; trả { totalRows, inserted, updated, tabChanged, errorCount, errors[] }.
+export function useImportVpaExcel() {
+  return useVpaMutation((file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return apiClient.upload('/api/admin/vpa/plates/import', fd);
+  });
+}
+
+// Tải mẫu có auth header (link trực tiếp không gửi được Authorization).
+export async function downloadVpaTemplate() {
+  const auth = loadAuth();
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/plates/import-template`, {
+    headers: auth?.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
+  });
+  if (!res.ok) throw new Error(`Không tải được file mẫu (${res.status})`);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mau-import-vpa.xlsx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
