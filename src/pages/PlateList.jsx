@@ -52,10 +52,10 @@ const AVOID_NUMBER_PRESETS = ['4', '7', '49', '53', '13'];
 
 const PROVINCE_VISIBLE_COUNT = 10;
 
-// Sắp xếp riêng của 3 tab VPA (khác kho Duy Định).
+// Sắp xếp của 3 tab VPA. 'Mặc định' = cài đặt thứ tự ưu tiên của Admin (tỉnh ưu tiên, nổi bật, ngày, loại), giống kho Duy Định.
 const VPA_SORTS = {
-  soon: [{ value: 'soon', label: 'Phiên sắp diễn ra' }, { value: 'number', label: 'Số biển A→Z' }],
-  expired: [{ value: 'latest', label: 'Mới kết thúc' }, { value: 'number', label: 'Số biển A→Z' }],
+  soon: [{ value: 'default', label: 'Mặc định' }, { value: 'soon', label: 'Phiên sắp diễn ra' }, { value: 'number', label: 'Số biển A→Z' }],
+  expired: [{ value: 'default', label: 'Mặc định' }, { value: 'latest', label: 'Mới kết thúc' }, { value: 'number', label: 'Số biển A→Z' }],
 };
 
 // 4 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 3 tab còn lại lấy từ VPA (UC49).
