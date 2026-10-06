@@ -87,7 +87,7 @@ export default function PlateCard({
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
-        <div style={{ minHeight: 60, overflow: 'hidden' }}>
+        <div style={{ minHeight: badge ? 84 : 60, overflow: 'hidden' }}> {/* có nhãn đếm ngược/phiên: chừa đủ 3 dòng để biển số không bị đẩy lệch giữa các thẻ */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 6 }}>
               {isHot && <Badge tone="hot">🔥 HOT</Badge>}
