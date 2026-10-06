@@ -7,7 +7,7 @@ import Pagination from '../components/Pagination.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { useCategories } from '../services/categories.js';
-import { useVpaPlates, useVpaCounts, openVpaPlate } from '../services/vpa.js';
+import { useVpaPlates, useVpaCounts, useVpaProvinces, openVpaPlate } from '../services/vpa.js';
 import { vpaBadge, isCar } from '../lib/vpaFormat.js';
 
 const PAGE_SIZE = 24;
@@ -31,6 +31,7 @@ export default function VpaPlates({ go, openPlate, notify }) {
   const [tab, setTab] = useState('monthly');
   const [vehicle, setVehicle] = useState('');
   const [type, setType] = useState('');
+  const [province, setProvince] = useState('');
   const [q, setQ] = useState('');
   const [sort, setSort] = useState('');
   const [page, setPage] = useState(1);
@@ -39,7 +40,8 @@ export default function VpaPlates({ go, openPlate, notify }) {
 
   const { data: counts } = useVpaCounts(vehicle);
   const { data: types } = useCategories('plate_type');
-  const { data, isLoading, isError, refetch, isFetching } = useVpaPlates({ tab, vehicle, type, q: dq, sort, page, pageSize: PAGE_SIZE });
+  const { data: provinces } = useVpaProvinces();
+  const { data, isLoading, isError, refetch, isFetching } = useVpaPlates({ tab, vehicle, province, type, q: dq, sort, page, pageSize: PAGE_SIZE });
   const items = data?.items || [];
   const totalPages = Math.max(1, Math.ceil((data?.total || 0) / PAGE_SIZE));
 
@@ -66,6 +68,7 @@ export default function VpaPlates({ go, openPlate, notify }) {
 
   const typeList = types?.items || types || [];
   const typeOptions = [{ value: '', label: 'Tất cả loại biển' }, ...typeList.map((t) => ({ value: t.id, label: t.name }))];
+  const provinceOptions = [{ value: '', label: 'Tất cả tỉnh/thành' }, ...(provinces || []).map((p) => ({ value: p.code, label: p.name }))];
   const sortOptions = (SORTS[tab] || SORTS.monthly).map(([value, label]) => ({ value, label }));
 
   return (
@@ -95,6 +98,7 @@ export default function VpaPlates({ go, openPlate, notify }) {
         <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'center' }}>
           <SearchField placeholder="Tìm số biển, vd 8888" value={q} onChange={(e) => reset(setQ)(e && e.target ? e.target.value : e)} width="min(280px,100%)" ariaLabel="Tìm số biển" />
           <Select value={vehicle} options={VEHICLES} onChange={reset(setVehicle)} variant="pill" />
+          <Select value={province} options={provinceOptions} onChange={reset(setProvince)} variant="pill" />
           <Select value={type} options={typeOptions} onChange={reset(setType)} variant="pill" />
           <Select value={sort || sortOptions[0].value} options={sortOptions} onChange={reset(setSort)} variant="pill" />
         </div>
@@ -118,7 +122,7 @@ export default function VpaPlates({ go, openPlate, notify }) {
               {items.map((p) => (
                 <PlateCard key={p.id} plateNumber={p.plateNumber} type={p.plateTypeName} province={p.provinceName}
                   vehicleType={isCar(p.vehicle) ? 'Ô tô' : 'Xe máy'} price={p.price} priceOnRequest={p.price == null}
-                  isHot={p.isFeatured} badge={vpaBadge(p)} onOpen={() => open(p)} href="#" />
+                  isHot={p.isFeatured} priceOnRequestLabel="Liên hệ báo giá" badge={vpaBadge(p)} onOpen={() => open(p)} href="#" />
               ))}
             </div>
             {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} style={{ paddingTop: 'var(--space-3)' }} />}

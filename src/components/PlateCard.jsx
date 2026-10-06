@@ -15,7 +15,7 @@ const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose'
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
   status, badge, fav, onFav, onCompare, inCompare, onOpen, href, onBuy, style, plateSize = 'md',
-  contact, salePrice, layout = 'grid',
+  contact, salePrice, layout = 'grid', priceOnRequestLabel,
 }) {
   // Ảnh biển số sinh tự động chỉ hiện khi admin đã bật cờ toàn hệ thống (mặc định tắt — ưu tiên
   // PlateVisual). Xem AdminMaintenance > "Hiển thị biển số" hoặc trang cài đặt tương ứng.
@@ -57,7 +57,7 @@ export default function PlateCard({
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{formatPrice(price, false)}</span>
               </span>
             ) : (
-              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
+              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{priceOnRequest && priceOnRequestLabel ? priceOnRequestLabel : formatPrice(price, priceOnRequest)}</span>
             )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
@@ -134,7 +134,7 @@ export default function PlateCard({
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{formatPrice(price, false)}</span>
             </span>
           ) : (
-            <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{formatPrice(price, priceOnRequest)}</span>
+            <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{priceOnRequest && priceOnRequestLabel ? priceOnRequestLabel : formatPrice(price, priceOnRequest)}</span>
           )}
           {!sold ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

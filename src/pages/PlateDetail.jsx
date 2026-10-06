@@ -310,7 +310,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     submitContact.mutate({
       fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
       email: cForm.email?.trim() || null, plateId: plate.id, plateNumber: plate.plateNumber,
-      note: cForm.note?.trim() || '', source: 'plate-detail', intent: cForm.intent,
+      note: cForm.note?.trim() || '', source: 'plate-detail', intent: plate.vpa ? 'inquiry' : cForm.intent,
       subscribeToNotifications: !!cForm.subscribe,
       honeypot: cForm.honeypot || null,
       couponCode: couponStatus?.valid ? cForm.couponCode.trim() : null,
@@ -429,7 +429,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
                 <span style={{ font: 'var(--type-body)', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(plate.price, false)}</span>
               </span>
             ) : (
-              <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+              <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{plate.vpa && plate.priceOnRequest ? 'Liên hệ báo giá' : formatPrice(plate.price, plate.priceOnRequest)}</span>
             )}
           </div>
           {plate.vpa && (
@@ -680,7 +680,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <Input label="Số điện thoại" type="tel" value={cForm.phone} onChange={setCF('phone')} placeholder="0xxxxxxxxx" error={cErr?.field === 'phone' ? cErr.message : undefined} required />
             </div>
             <div>
-              <Select label="Mục đích" value={cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={INTENT_OPTS.map((o) => ({ value: INTENT_VAL[o], label: o }))} />
+              <Select label="Mục đích" value={plate.vpa ? 'inquiry' : cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={(plate.vpa ? INTENT_OPTS.slice(0, 1) : INTENT_OPTS).map((o) => ({ value: INTENT_VAL[o], label: o }))} />
             </div>
             <div>
               <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />

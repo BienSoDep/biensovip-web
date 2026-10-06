@@ -17,6 +17,14 @@ export function useVpaPlates(params) {
   });
 }
 
+export function useVpaProvinces() {
+  return useQuery({
+    queryKey: ['vpa-provinces'],
+    queryFn: () => apiClient.get('/api/vpa/provinces'),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
 export function useVpaCounts(vehicle) {
   const qs = toQuery({ vehicle });
   return useQuery({
