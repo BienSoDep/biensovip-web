@@ -199,8 +199,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     page: filters.page, pageSize: filters.perPage === 0 ? 100 : filters.perPage,
   }, { enabled: !!vpaTab });
   const { data: vpaFacets } = useVpaFacets(vpaTab, vpaVehicle, { enabled: !!vpaTab });
-  const provinceItems = vpaTab ? (vpaProvinces || []).map((p) => ({ id: p.code, name: p.name, plateCount: vpaFacets?.provinces?.[p.code] ?? 0 })) : (provinces?.items || []);
-  const typeItems = vpaTab ? (plateTypes?.items || []).map((t) => ({ ...t, plateCount: vpaFacets?.types?.[t.id] ?? 0 })) : (plateTypes?.items || []);
+  const provinceItems = vpaTab ? (vpaProvinces || []).map((p) => ({ id: p.code, name: p.name, plateCount: vpaFacets ? (vpaFacets.provinces?.[p.code] ?? 0) : undefined })) : (provinces?.items || []);
+  const typeItems = vpaTab ? (plateTypes?.items || []).map((t) => ({ ...t, plateCount: vpaFacets ? (vpaFacets.types?.[t.id] ?? 0) : undefined })) : (plateTypes?.items || []);
 
   useEffect(() => {
     if (!useInfinite) return;
