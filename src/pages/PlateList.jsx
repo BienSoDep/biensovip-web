@@ -272,7 +272,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         {!vpaTab && <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>}
-        {!vpaTab && <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />}
+        <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)' }}>
         <div role="tablist" aria-label="Nguồn biển số" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(150px,46%),1fr))', gap: 'var(--space-3)' }}>
@@ -300,7 +300,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       </section>
       {vpaTab ? (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-2) var(--pad-page) var(--pad-section-y)' }}>
-          <VpaPlatesPanel key={vpaTab} tab={vpaTab} openPlate={openPlate} notify={notify} favs={favs} onFav={onFav} />
+          <VpaPlatesPanel key={vpaTab} tab={vpaTab} q={qDebounced} openPlate={openPlate} notify={notify} favs={favs} onFav={onFav} />
         </section>
       ) : (<>
       {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển.

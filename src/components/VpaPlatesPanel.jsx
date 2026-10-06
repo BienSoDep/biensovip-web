@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useDebouncedValue } from '@mantine/hooks';
-import { Select, SearchField } from './index.jsx';
+import { Select } from './index.jsx';
 import Button from './Button.jsx';
 import PlateCard from './PlateCard.jsx';
 import Pagination from './Pagination.jsx';
@@ -21,18 +20,18 @@ const GRID = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(mi
 const BOX = { background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' };
 
 // Nội dung 3 tab VPA (UC49: tháng / tuần / hết hạn) trong trang Biển số. Tab do trang cha chọn; đổi tab thì cha remount (key).
-export default function VpaPlatesPanel({ tab, openPlate, notify, favs, onFav }) {
+export default function VpaPlatesPanel({ tab, q: dq, openPlate, notify, favs, onFav }) {
   const [vehicle, setVehicle] = useState('');
   const [type, setType] = useState('');
   const [province, setProvince] = useState('');
-  const [q, setQ] = useState('');
   const [sort, setSort] = useState('');
-  const [page, setPage] = useState(1);
+  const [pageState, setPageState] = useState({ q: dq, page: 1 });
+  const page = pageState.q === dq ? pageState.page : 1; // đổi từ khóa (ô tìm ở trang cha) → về trang 1
+  const setPage = (p) => setPageState({ q: dq, page: p });
   const [opening, setOpening] = useState(null);
   const [plateIds, setPlateIds] = useState({}); // vpaId → plateId đã tạo trong phiên (danh sách chưa tải lại)
   const [now, setNow] = useState(() => Date.now());
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
-  const [dq] = useDebouncedValue(q, 350);
 
   // Đếm ngược tab Tuần cập nhật mỗi 30 giây.
   useEffect(() => {
@@ -84,7 +83,6 @@ export default function VpaPlatesPanel({ tab, openPlate, notify, favs, onFav }) 
     <>
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', alignItems: 'center' }}>
-          <SearchField placeholder="Tìm số biển, vd 8888" value={q} onChange={(e) => reset(setQ)(e && e.target ? e.target.value : e)} width="min(280px,100%)" ariaLabel="Tìm số biển" />
           <Select value={vehicle} options={VEHICLES} onChange={reset(setVehicle)} variant="pill" />
           <Select value={province} options={provinceOptions} onChange={reset(setProvince)} variant="pill" />
           <Select value={type} options={typeOptions} onChange={reset(setType)} variant="pill" />
