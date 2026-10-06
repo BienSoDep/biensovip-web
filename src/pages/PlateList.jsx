@@ -303,11 +303,12 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     const pid = plateIds[p.id] || p.plateId;
     return {
       plateNumber: p.plateNumber, type: p.plateTypeName, province: p.provinceName, vehicleType: isCar(p.vehicle) ? 'Ô tô' : 'Xe máy',
-      price: p.price, priceOnRequest: p.price == null, priceOnRequestLabel: 'Liên hệ báo giá', isHot: p.isFeatured, badge: vpaBadge(p, now), href: '#',
+      price: p.price, priceOnRequest: p.price == null, contact, isHot: p.isFeatured, badge: vpaBadge(p, now), href: '#',
       fav: !!(pid && favs?.[pid]), inCompare: !!(pid && isInList(pid)),
       onOpen: async () => { const id = await ensurePlate(p); if (id) openPlate(id); },
       onFav: onFav ? async () => { const id = await ensurePlate(p); if (id) onFav(id); } : undefined,
       onCompare: async () => { const id = await ensurePlate(p); if (!id) return; if (isInList(id)) removeCompare(id); else addCompare(id); },
+      onBuy: async () => { const id = await ensurePlate(p); if (id) openBuy?.(id); },
     };
   };
 
