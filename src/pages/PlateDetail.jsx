@@ -6,6 +6,7 @@ import Modal from '../components/Modal.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { VPA_EXPIRED_LABELS, formatDateTime } from '../lib/vpaFormat.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { prefillFromUser, maybeSavePhoneToProfile } from '../lib/contactPrefill.js';
 import { useSubmitContact } from '../services/contactService.js';
@@ -431,6 +432,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
             )}
           </div>
+          {plate.vpa && (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển đấu giá VPA{plate.vpa.resultLabel ? ` · ${VPA_EXPIRED_LABELS[plate.vpa.resultLabel] || plate.vpa.resultLabel}` : ''}</span>
+              {plate.vpa.registerEndAt && <span>Hạn đăng ký: {formatDateTime(plate.vpa.registerEndAt)}</span>}
+              {plate.vpa.auctionStartAt && <span>Phiên đấu giá: {formatDateTime(plate.vpa.auctionStartAt)}{plate.vpa.auctionEndAt ? ` → ${formatDateTime(plate.vpa.auctionEndAt)}` : ''}</span>}
+              <span style={{ color: 'var(--text-muted)' }}>Liên hệ để được hướng dẫn đăng ký tham gia đấu giá.</span>
+            </div>
+          )}
           <div className="plate-actions-desktop" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {!sold && (
               <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 160px' }}>Chốt biển này</Button>

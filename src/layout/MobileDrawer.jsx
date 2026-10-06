@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings } from 'lucide-react';
+import { X, Car, Gavel, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { pill } from '../components/NavBtn.jsx';
 
 const MAIN_NAV = [
   ['list', 'Biển số', Car],
+  ['vpa', 'Biển đấu giá', Gavel],
   ['lucky', 'Hợp mệnh', Compass],
   ['compare', 'So sánh', GitCompareArrows],
   ['blog', 'Tin phong thủy', BookOpen],
