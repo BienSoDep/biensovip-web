@@ -10,7 +10,7 @@ import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useCategories } from '../services/categories.js';
 import { usePlates, useInfinitePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
-import { useVpaCounts, useVpaPlates, useVpaProvinces, openVpaPlate } from '../services/vpa.js';
+import { useVpaCounts, useVpaPlates, useVpaProvinces, useVpaFacets, openVpaPlate } from '../services/vpa.js';
 import { vpaBadge, isCar } from '../lib/vpaFormat.js';
 import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -192,12 +192,15 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const vpaSorts = VPA_SORTS[vpaTab === 'expired' ? 'expired' : 'soon'];
   const vpaSort = vpaSorts.some((o) => o.value === filters.sort) ? filters.sort : vpaSorts[0].value;
   const vehicleName = vehicleTypes?.items?.find((v) => v.id === filters.vehicle)?.name;
+  const vpaVehicle = !filters.vehicle ? '' : (vehicleName === 'Xe máy' ? 'MotorBike' : 'Car');
   const vpaQuery = useVpaPlates({
-    tab: vpaTab || 'monthly', vehicle: !filters.vehicle ? '' : (vehicleName === 'Xe máy' ? 'MotorBike' : 'Car'),
+    tab: vpaTab || 'monthly', vehicle: vpaVehicle,
     province: filters.city[0] || '', type: filters.cat[0] || '', q: qDebounced, sort: vpaSort,
     page: filters.page, pageSize: filters.perPage === 0 ? 100 : filters.perPage,
   }, { enabled: !!vpaTab });
-  const provinceItems = vpaTab ? (vpaProvinces || []).map((p) => ({ id: p.code, name: p.name })) : (provinces?.items || []);
+  const { data: vpaFacets } = useVpaFacets(vpaTab, vpaVehicle, { enabled: !!vpaTab });
+  const provinceItems = vpaTab ? (vpaProvinces || []).map((p) => ({ id: p.code, name: p.name, plateCount: vpaFacets?.provinces?.[p.code] ?? 0 })) : (provinces?.items || []);
+  const typeItems = vpaTab ? (plateTypes?.items || []).map((t) => ({ ...t, plateCount: vpaFacets?.types?.[t.id] ?? 0 })) : (plateTypes?.items || []);
 
   useEffect(() => {
     if (!useInfinite) return;
@@ -419,10 +422,10 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
-                  {(plateTypes?.items || []).map((c) => (
+                  {typeItems.map((c) => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                       <Checkbox label={c.name} checked={filters.cat.includes(c.id)} onChange={() => toggleArrayFilter('cat', c.id)} style={{ flex: 1 }} />
-                      {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
                     </div>
                   ))}
                 </div>
@@ -432,7 +435,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                   {(provinceExpanded ? provinceItems : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                       <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
-                      {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
                     </div>
                   ))}
                   {provinceItems.length > PROVINCE_VISIBLE_COUNT && (
@@ -502,10 +505,10 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
-            {(plateTypes?.items || []).map((c) => (
+            {typeItems.map((c) => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <Checkbox label={c.name} checked={filters.cat.includes(c.id)} onChange={() => toggleArrayFilter('cat', c.id)} style={{ flex: 1 }} />
-                {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
               </div>
             ))}
           </div>
@@ -515,7 +518,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             {(provinceExpanded ? provinceItems : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
-                {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
               </div>
             ))}
             {provinceItems.length > PROVINCE_VISIBLE_COUNT && (

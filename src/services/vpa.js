@@ -18,6 +18,18 @@ export function useVpaPlates(params, { enabled = true } = {}) {
   });
 }
 
+// Số biển theo loại biển / tỉnh trong một tab (bộ lọc bên trái).
+export function useVpaFacets(tab, vehicle, { enabled = true } = {}) {
+  const qs = toQuery({ tab, vehicle });
+  return useQuery({
+    queryKey: ['vpa-facets', qs],
+    queryFn: () => apiClient.get(`/api/vpa/plates/facets?${qs}`),
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (prev) => prev,
+    enabled,
+  });
+}
+
 export function useVpaProvinces() {
   return useQuery({
     queryKey: ['vpa-provinces'],
