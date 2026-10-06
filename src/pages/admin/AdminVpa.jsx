@@ -1,13 +1,20 @@
 import AdminTabbedPage from '../../components/AdminTabbedPage.jsx';
-import VpaPlatesTable from './vpa/VpaPlatesTable.jsx';
+import PlateSourceTabs from './PlateSourceTabs.jsx';
+import VpaAdminList from './vpa/VpaAdminList.jsx';
 import VpaOverview from './vpa/VpaOverview.jsx';
 
-// Quản trị biển đấu giá VPA (UC49): hàng đợi duyệt giá, danh sách biển (kể cả hết hạn nội bộ), cấu hình đồng bộ (super-admin).
-export default function AdminVpa({ notify, isSuperAdmin }) {
+// Quản trị biển đấu giá VPA (UC49): cùng giao diện/công cụ với trang Biển số. Tab: danh sách (kể cả hết hạn nội bộ),
+// hàng đợi duyệt giá, cấu hình đồng bộ (super-admin).
+export default function AdminVpa({ notify, isSuperAdmin, go }) {
   const tabs = [
-    { key: 'queue', label: 'Duyệt giá', render: () => <VpaPlatesTable key="queue" queue notify={notify} /> },
-    { key: 'plates', label: 'Biển VPA', render: () => <VpaPlatesTable key="plates" notify={notify} /> },
+    { key: 'plates', label: 'Danh sách biển VPA', render: () => <VpaAdminList key="plates" notify={notify} /> },
+    { key: 'queue', label: 'Duyệt giá', render: () => <VpaAdminList key="queue" queue notify={notify} /> },
     { key: 'sync', label: 'Đồng bộ & cấu hình', render: () => <VpaOverview notify={notify} isSuperAdmin={isSuperAdmin} /> },
   ];
-  return <AdminTabbedPage tabs={tabs} initialTab="queue" />;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <PlateSourceTabs active="avpa" go={go} />
+      <AdminTabbedPage tabs={tabs} initialTab="plates" />
+    </div>
+  );
 }

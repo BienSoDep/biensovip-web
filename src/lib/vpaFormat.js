@@ -40,3 +40,23 @@ export const VPA_SOURCES = [
   { id: 3, key: 'results', label: 'Kết quả đấu giá', prefix: 'results' },
 ];
 export const VPA_RUN_STATUS = { 0: 'Đang chạy', 1: 'Thành công', 2: 'Chưa đủ dữ liệu', 3: 'Lỗi' };
+
+// Cờ trường Admin đã sửa tay (khớp VpaLockedFields ở backend): crawl không ghi đè các trường này.
+export const VPA_LOCK_FLAGS = [
+  { flag: 1, label: 'Loại biển' },
+  { flag: 2, label: 'Tỉnh' },
+  { flag: 4, label: 'Tab' },
+  { flag: 8, label: 'Nổi bật' },
+];
+
+// Giải thích hiển thị ở tiêu đề cột / khung "Về trang này".
+export const VPA_HELP = {
+  tab: 'Tháng = biển sắp đấu giá (công bố trước). Tuần = có phiên trong tuần. Hết hạn = phiên đã qua. Hết hạn nội bộ = biến mất khỏi VPA, chỉ Admin thấy, không hiện cho khách.',
+  startingPrice: 'Giá khởi điểm VPA công bố cho biển. Chỉ Admin thấy, không bao giờ hiện cho khách.',
+  suggested: 'Giá gợi ý = trung bình giá trúng của nhóm biển giống nhau (tỉnh + loại xe + loại biển + chữ ký) × hệ số. Số trong ngoặc là số mẫu dùng để tính; ít mẫu thì gợi ý kém tin cậy.',
+  approved: 'Giá khách thấy sau khi bạn duyệt. Chưa duyệt thì khách thấy "Giá liên hệ". Giá này không tự đổi khi crawl.',
+  priceState: 'Chưa có gợi ý = nhóm chưa đủ mẫu. Có gợi ý = chờ duyệt. Đã duyệt = đang hiện cho khách. Từ chối = không dùng gợi ý. Đề xuất đổi giá = có gợi ý mới lệch quá % so với giá đã duyệt (giá khách thấy chưa đổi).',
+  featured: 'Biển nổi bật (ngũ quý, lộc phát…). Xếp trước trong danh sách khách và được đưa vào sitemap khi đang ở tab Tháng/Tuần.',
+  manual: 'Biển Admin thêm tay, không có trong dữ liệu VPA. Crawl không đổi tab hay đánh dấu biến mất.',
+  lock: 'Trường bạn đã sửa tay được khóa: crawl VPA sẽ không ghi đè. Bấm "Trả về theo VPA" để bỏ khóa.',
+};

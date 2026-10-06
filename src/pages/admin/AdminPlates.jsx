@@ -35,6 +35,7 @@ import {
   detectVehicleTypeId,
   num,
 } from './plates/plateUtils.js';
+import PlateSourceTabs from './PlateSourceTabs.jsx';
 import PlateQuickAddBar from './plates/PlateQuickAddBar.jsx';
 import PlateDrawerForm from './plates/PlateDrawerForm.jsx';
 import PlateBulkModals from './plates/PlateBulkModals.jsx';
@@ -668,6 +669,8 @@ export default function AdminPlates({ go, notify, st }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <PlateSourceTabs active="aplates" go={go} />
+
       {/* 1. Quick-add & Bulk import bar */}
       <PlateQuickAddBar
         quickNum={quickNum} setQuickNum={setQuickNum}
