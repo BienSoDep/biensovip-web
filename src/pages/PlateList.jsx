@@ -4,14 +4,14 @@ import { SlidersHorizontal, X, LayoutGrid, List as ListIcon, Bike, Car } from 'l
 import Button from '../components/Button.jsx';
 import { Select, Checkbox, Radio, Input, Icon, SearchField } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
-import VpaPlatesPanel from '../components/VpaPlatesPanel.jsx';
 import Pagination from '../components/Pagination.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useCategories } from '../services/categories.js';
 import { usePlates, useInfinitePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
-import { useVpaCounts } from '../services/vpa.js';
+import { useVpaCounts, useVpaPlates, useVpaProvinces, openVpaPlate } from '../services/vpa.js';
+import { vpaBadge, isCar } from '../lib/vpaFormat.js';
 import { useCreateSavedSearch } from '../services/savedSearchService.js';
 import { loadAuth } from '../lib/authStore.js';
 import { routeFor } from '../config/routes.js';
@@ -51,6 +51,12 @@ const PRICE_PRESETS = [
 const AVOID_NUMBER_PRESETS = ['4', '7', '49', '53', '13'];
 
 const PROVINCE_VISIBLE_COUNT = 10;
+
+// Sắp xếp riêng của 3 tab VPA (khác kho Duy Định).
+const VPA_SORTS = {
+  soon: [{ value: 'soon', label: 'Phiên sắp diễn ra' }, { value: 'number', label: 'Số biển A→Z' }],
+  expired: [{ value: 'latest', label: 'Mới kết thúc' }, { value: 'number', label: 'Số biển A→Z' }],
+};
 
 // 4 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 3 tab còn lại lấy từ VPA (UC49).
 const TABS = [
@@ -164,7 +170,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const { data, isLoading, isError, isFetching, refetch } = usePlates(apiFilters, { enabled: !vpaTab && !infinite && filters.perPage !== 0 });
 
   // Infinite scroll: bật khi toggle bật hoặc chọn "Xem tất cả" (bỏ cap 100).
-  const useInfinite = infinite || filters.perPage === 0;
+  const useInfinite = !vpaTab && (infinite || filters.perPage === 0);
   const infiniteFilters = useMemo(() => ({
     cat: filters.cat, city: filters.city, avoidNumbers: filters.avoidNumbers, vehicle: filters.vehicle || undefined,
     q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
@@ -172,6 +178,26 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   }), [filters, qDebounced]);
   const inf = useInfinitePlates(infiniteFilters, { enabled: !vpaTab && useInfinite });
   const stagger = useStaggeredReveal();
+
+  // ---- 3 tab VPA dùng chung bố cục/bộ lọc với kho; chỉ khác nguồn dữ liệu ----
+  const { data: vpaProvinces } = useVpaProvinces();
+  const [plateIds, setPlateIds] = useState({}); // vpaId → plateId đã tạo trong phiên
+  const [opening, setOpening] = useState(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (vpaTab !== 'weekly') return undefined;
+    const t = setInterval(() => setNow(Date.now()), 30000); // đếm ngược tab Tuần
+    return () => clearInterval(t);
+  }, [vpaTab]);
+  const vpaSorts = VPA_SORTS[vpaTab === 'expired' ? 'expired' : 'soon'];
+  const vpaSort = vpaSorts.some((o) => o.value === filters.sort) ? filters.sort : vpaSorts[0].value;
+  const vehicleName = vehicleTypes?.items?.find((v) => v.id === filters.vehicle)?.name;
+  const vpaQuery = useVpaPlates({
+    tab: vpaTab || 'monthly', vehicle: !filters.vehicle ? '' : (vehicleName === 'Xe máy' ? 'MotorBike' : 'Car'),
+    province: filters.city[0] || '', type: filters.cat[0] || '', q: qDebounced, sort: vpaSort,
+    page: filters.page, pageSize: filters.perPage === 0 ? 100 : filters.perPage,
+  }, { enabled: !!vpaTab });
+  const provinceItems = vpaTab ? (vpaProvinces || []).map((p) => ({ id: p.code, name: p.name })) : (provinces?.items || []);
 
   useEffect(() => {
     if (!useInfinite) return;
@@ -183,18 +209,19 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   }, [useInfinite, inf.hasNextPage, inf.isFetchingNextPage, inf.fetchNextPage]);
 
   const infiniteItems = inf.data?.pages?.flatMap((p) => p.items || []) || [];
-  const items = useInfinite ? infiniteItems : (data?.items || []);
-  const total = useInfinite ? (inf.data?.pages?.[0]?.total || 0) : (data?.total || 0);
-  const totalPages = useInfinite ? (inf.data?.pages?.[0]?.totalPages || 1) : (data?.totalPages || 1);
-  const page = useInfinite ? 0 : (data?.page || filters.page);
+  const vpaItems = vpaQuery.data?.items || [];
+  const items = vpaTab ? vpaItems : useInfinite ? infiniteItems : (data?.items || []);
+  const total = vpaTab ? (vpaQuery.data?.total || 0) : useInfinite ? (inf.data?.pages?.[0]?.total || 0) : (data?.total || 0);
+  const totalPages = vpaTab ? Math.max(1, Math.ceil(total / (filters.perPage === 0 ? 100 : filters.perPage))) : useInfinite ? (inf.data?.pages?.[0]?.totalPages || 1) : (data?.totalPages || 1);
+  const page = vpaTab ? filters.page : useInfinite ? 0 : (data?.page || filters.page);
 
   useEffect(() => {
     if (qDebounced) trackSearch(qDebounced);
   }, [qDebounced]);
 
-  const listReady = useInfinite ? !inf.isLoading : !isLoading;
+  const listReady = vpaTab ? !vpaQuery.isLoading : useInfinite ? !inf.isLoading : !isLoading;
   useEffect(() => {
-    if (!listReady) return;
+    if (!listReady || vpaTab) return;
     if (items.length > 0) {
       trackViewItemList(filters.q ? 'search_results' : 'danh-sach', items);
     } else if (filters.q) {
@@ -205,7 +232,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
 
   // Khôi phục vị trí cuộn đã lưu (quay lại từ trang chi tiết biển) — chỉ chạy 1 lần sau khi có dữ liệu,
   // tránh cuộn hụt trong lúc trang còn đang load skeleton.
-  const loading = useInfinite ? inf.isLoading : isLoading;
+  const loading = vpaTab ? vpaQuery.isLoading : useInfinite ? inf.isLoading : isLoading;
   useEffect(() => {
     if (loading || !items.length) return;
     const y = Number(sessionStorage.getItem('bsd_plate_list_scroll') || 0);
@@ -215,13 +242,14 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, items.length]);
-  const showSkeleton = useInfinite ? inf.isLoading : (isLoading || isFetching);
-  const showError = useInfinite ? inf.isError : isError;
+  const showSkeleton = vpaTab ? vpaQuery.isLoading : useInfinite ? inf.isLoading : (isLoading || isFetching);
+  const showError = vpaTab ? vpaQuery.isError : useInfinite ? inf.isError : isError;
 
-  useSeo('list', { items });
+  useSeo('list', { items: vpaTab ? [] : items });
 
   const toggleArrayFilter = (key, id) => {
     const isRemoving = filters[key].includes(id);
+    if (vpaTab && (key === 'cat' || key === 'city')) { setFilter({ [key]: isRemoving ? [] : [id] }); return; } // VPA chỉ lọc 1 giá trị
     if (key === 'avoidNumbers') trackAvoidNumberToggle(id, isRemoving ? 'remove' : 'add');
     setFilter({ [key]: isRemoving ? filters[key].filter((x) => x !== id) : [...filters[key], id] });
   };
@@ -251,6 +279,35 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     contact,
   });
 
+  // Tương tác lần đầu với biển VPA (mở, yêu thích, so sánh) → tạo Plate (get-or-create) rồi dùng luồng biển thường. null nếu lỗi.
+  const ensurePlate = async (p) => {
+    const known = plateIds[p.id] || p.plateId;
+    if (known) return known;
+    if (opening) return null;
+    setOpening(p.id);
+    try {
+      const r = await openVpaPlate(p.id);
+      setPlateIds((m) => ({ ...m, [p.id]: r.plateId }));
+      return r.plateId;
+    } catch (e) {
+      notify?.(e.message || 'Không thực hiện được với biển này, vui lòng thử lại');
+      return null;
+    } finally {
+      setOpening(null);
+    }
+  };
+  const vpaCardProps = (p) => {
+    const pid = plateIds[p.id] || p.plateId;
+    return {
+      plateNumber: p.plateNumber, type: p.plateTypeName, province: p.provinceName, vehicleType: isCar(p.vehicle) ? 'Ô tô' : 'Xe máy',
+      price: p.price, priceOnRequest: p.price == null, priceOnRequestLabel: 'Liên hệ báo giá', isHot: p.isFeatured, badge: vpaBadge(p, now), href: '#',
+      fav: !!(pid && favs?.[pid]), inCompare: !!(pid && isInList(pid)),
+      onOpen: async () => { const id = await ensurePlate(p); if (id) openPlate(id); },
+      onFav: onFav ? async () => { const id = await ensurePlate(p); if (id) onFav(id); } : undefined,
+      onCompare: async () => { const id = await ensurePlate(p); if (!id) return; if (isInList(id)) removeCompare(id); else addCompare(id); },
+    };
+  };
+
   // Breadcrumb bám theo filter tỉnh/loại biển đang chọn (chỉ khi đúng 1 giá trị — nhiều lựa chọn thì
   // không còn 1 "đường dẫn" rõ ràng để hiện, giữ flat "Biển số").
   const activeProvince = filters.city.length === 1 ? (provinces?.items || []).find((c) => c.id === filters.city[0]) : null;
@@ -271,7 +328,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       </div>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
-        {!vpaTab && <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>}
+        <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
         <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)' }}>
@@ -281,7 +338,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             const active = filters.tab === key;
             const n = t.key === 'available' ? stockTotal : vpaCounts?.[t.key];
             return (
-              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setFilters((f) => ({ ...f, tab: key, page: 1 }))}
+              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setFilters((f) => ({ ...f, tab: key, page: 1, city: [] }))}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: 'var(--space-3) var(--space-4)', border: 'none',
                   borderRadius: 'var(--radius-card)', cursor: 'pointer', textAlign: 'left',
@@ -298,11 +355,6 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           })}
         </div>
       </section>
-      {vpaTab ? (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-2) var(--pad-page) var(--pad-section-y)' }}>
-          <VpaPlatesPanel key={vpaTab} tab={vpaTab} q={qDebounced} openPlate={openPlate} notify={notify} favs={favs} onFav={onFav} />
-        </section>
-      ) : (<>
       {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển.
           Track 2 icon bo góc nhẹ thay vì pill tròn rời — build từ vehicleTypes.items nên vẫn không crash
           nếu admin thêm loại xe thứ 3, chỉ mất hiệu ứng "2 ô cạnh nhau" đẹp. */}
@@ -370,23 +422,23 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                   {(plateTypes?.items || []).map((c) => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                       <Checkbox label={c.name} checked={filters.cat.includes(c.id)} onChange={() => toggleArrayFilter('cat', c.id)} style={{ flex: 1 }} />
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+                      {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
                     </div>
                   ))}
                 </div>
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tỉnh / thành</span>
-                  {(provinceExpanded ? (provinces?.items || []) : (provinces?.items || []).slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
+                  {(provinceExpanded ? provinceItems : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                       <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+                      {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
                     </div>
                   ))}
-                  {(provinces?.items?.length || 0) > PROVINCE_VISIBLE_COUNT && (
+                  {provinceItems.length > PROVINCE_VISIBLE_COUNT && (
                     <button type="button" onClick={() => setProvinceExpanded((v) => !v)}
                       style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>
-                      {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinces.items.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
+                      {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinceItems.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
                     </button>
                   )}
                 </div>
@@ -396,6 +448,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                   <input value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} placeholder="VD: 51A"
                     style={{ height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
                 </div>
+                {!vpaTab && (
+                <>
                 <div style={{ height: 1, background: 'var(--border-hairline)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
@@ -428,6 +482,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trạng thái</span>
                   <Checkbox label="Chỉ xem biển đã bán" checked={filters.status === 'sold'} onChange={() => setFilter({ status: filters.status === 'sold' ? '' : 'sold' })} />
                 </div>
+                </>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
                 <Button variant="outline" size="md" onClick={() => { clearFilters(); }} style={{ flex: 1 }}>Xóa bộ lọc</Button>
@@ -449,23 +505,23 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             {(plateTypes?.items || []).map((c) => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <Checkbox label={c.name} checked={filters.cat.includes(c.id)} onChange={() => toggleArrayFilter('cat', c.id)} style={{ flex: 1 }} />
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+                {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
               </div>
             ))}
           </div>
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tỉnh / thành</span>
-            {(provinceExpanded ? (provinces?.items || []) : (provinces?.items || []).slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
+            {(provinceExpanded ? provinceItems : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+                {!vpaTab && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>}
               </div>
             ))}
-            {(provinces?.items?.length || 0) > PROVINCE_VISIBLE_COUNT && (
+            {provinceItems.length > PROVINCE_VISIBLE_COUNT && (
               <button type="button" onClick={() => setProvinceExpanded((v) => !v)}
                 style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>
-                {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinces.items.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
+                {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinceItems.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
               </button>
             )}
           </div>
@@ -475,6 +531,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <input value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} placeholder="VD: 51A"
               style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
           </div>
+          {!vpaTab && (
+          <>
           <div style={{ height: 1, background: 'var(--border-hairline)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
@@ -507,6 +565,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trạng thái</span>
             <Checkbox label="Chỉ xem biển đã bán" checked={filters.status === 'sold'} onChange={() => setFilter({ status: filters.status === 'sold' ? '' : 'sold' })} />
           </div>
+          </>
+          )}
           <Button variant="outline" size="sm" fullWidth onClick={clearFilters}>Xóa bộ lọc</Button>
         </aside>
         <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
@@ -536,10 +596,10 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               </div>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-              {hasActiveFilters && <Button className="list-toolbar-secondary" variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
-              <button type="button" className="list-toolbar-secondary" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm: {infinite ? 'Bật' : 'Tắt'}</button>
+              {hasActiveFilters && !vpaTab && <Button className="list-toolbar-secondary" variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
+              {!vpaTab && <button type="button" className="list-toolbar-secondary" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm: {infinite ? 'Bật' : 'Tắt'}</button>}
               {!infinite && <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />}
-              <Select  value={filters.sort} options={SORT_OPTIONS} onChange={(v) => setFilter({ sort: v })} variant="pill" />
+              <Select value={vpaTab ? vpaSort : filters.sort} options={vpaTab ? vpaSorts : SORT_OPTIONS} onChange={(v) => setFilter({ sort: v })} variant="pill" />
             </div>
           </div>
           {showSkeleton ? (
@@ -555,7 +615,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{total} biển số</span>
               <div className={`plate-grid ${filters.view === 'list' ? 'view-list' : 'view-grid'}`} style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-                {items.map((p, i) => <PlateCard key={p.id} {...cardProps(p)} plateSize={filters.view === 'list' ? 'listLg' : 'md'} layout={filters.view === 'list' ? 'row' : 'grid'} style={stagger(i)} />)}
+                {items.map((p, i) => <PlateCard key={p.id} {...(vpaTab ? vpaCardProps(p) : cardProps(p))} plateSize={filters.view === 'list' ? 'listLg' : 'md'} layout={filters.view === 'list' ? 'row' : 'grid'} style={stagger(i)} />)}
               </div>
             </div>
           ) : (
@@ -573,7 +633,6 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           )}
         </div>
       </section>
-      </>)}
 
       {saveOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 18px', animation: 'fadeIn 140ms var(--ease-out)' }}>

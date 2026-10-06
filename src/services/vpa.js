@@ -8,12 +8,13 @@ function toQuery(params) {
   return q.toString();
 }
 
-export function useVpaPlates(params) {
+export function useVpaPlates(params, { enabled = true } = {}) {
   const qs = toQuery(params);
   return useQuery({
     queryKey: ['vpa-plates', qs],
     queryFn: () => apiClient.get(`/api/vpa/plates?${qs}`),
     placeholderData: (prev) => prev,
+    enabled,
   });
 }
 
