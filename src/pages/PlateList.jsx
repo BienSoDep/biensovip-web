@@ -65,6 +65,8 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [provinceExpanded, setProvinceExpanded] = useState(false);
   const vpaTab = filters.tab; // '' = Biển có sẵn
   const { data: vpaCounts } = useVpaCounts('');
+  const { data: stockData } = usePlates({ perPage: 1 }); // chỉ để lấy tổng biển kho Duy Định cho nhãn tab
+  const stockTotal = stockData?.total;
   useEffect(() => { writeFiltersToUrl(filters); }, [filters]);
 
   const setFilter = (patch, isPreset = false) => {
@@ -273,20 +275,24 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
         {!vpaTab && <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />}
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)' }}>
-        <div role="tablist" aria-label="Nguồn biển số" style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', paddingBottom: 4 }}>
+        <div role="tablist" aria-label="Nguồn biển số" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(150px,46%),1fr))', gap: 'var(--space-3)' }}>
           {TABS.map((t) => {
             const key = t.key === 'available' ? '' : t.key;
             const active = filters.tab === key;
-            const n = vpaCounts?.[t.key];
+            const n = t.key === 'available' ? stockTotal : vpaCounts?.[t.key];
             return (
               <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setFilters((f) => ({ ...f, tab: key, page: 1 }))}
                 style={{
-                  flex: '0 0 auto', height: 40, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
-                  font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                  background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
-                  boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)',
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: 'var(--space-3) var(--space-4)', border: 'none',
+                  borderRadius: 'var(--radius-card)', cursor: 'pointer', textAlign: 'left',
+                  background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-strong)',
+                  boxShadow: active ? 'var(--shadow-2)' : 'var(--shadow-inset-hairline)',
+                  transition: 'background-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)',
                 }}>
-                {t.label}{n != null ? ` (${new Intl.NumberFormat('vi-VN').format(n)})` : ''}
+                <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)' }}>{t.label}</span>
+                <span style={{ font: 'var(--type-caption)', color: active ? 'var(--text-inverse)' : 'var(--text-muted)', opacity: active ? 0.9 : 1 }}>
+                  {n != null ? `${new Intl.NumberFormat('vi-VN').format(n)} biển` : '—'}
+                </span>
               </button>
             );
           })}
