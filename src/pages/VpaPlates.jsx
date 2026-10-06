@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Select, SearchField } from '../components/index.jsx';
 import Button from '../components/Button.jsx';
@@ -7,6 +7,7 @@ import Pagination from '../components/Pagination.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import { useCategories } from '../services/categories.js';
+import { useCompareIds } from '../services/compareService.js';
 import { useVpaPlates, useVpaCounts, useVpaProvinces, openVpaPlate } from '../services/vpa.js';
 import { vpaBadge, isCar } from '../lib/vpaFormat.js';
 
@@ -27,7 +28,7 @@ const GRID = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(mi
 const BOX = { background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' };
 
 // Danh sách biển đấu giá VPA (UC49): 3 tab lấy từ API VPA + tab "Biển có sẵn" dẫn về danh sách kho Duy Định.
-export default function VpaPlates({ go, openPlate, notify }) {
+export default function VpaPlates({ go, openPlate, notify, favs, onFav }) {
   const [tab, setTab] = useState('monthly');
   const [vehicle, setVehicle] = useState('');
   const [type, setType] = useState('');
@@ -36,7 +37,17 @@ export default function VpaPlates({ go, openPlate, notify }) {
   const [sort, setSort] = useState('');
   const [page, setPage] = useState(1);
   const [opening, setOpening] = useState(null);
+  const [plateIds, setPlateIds] = useState({}); // vpaId → plateId đã tạo trong phiên (danh sách chưa tải lại)
+  const [now, setNow] = useState(() => Date.now());
+  const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const [dq] = useDebouncedValue(q, 350);
+
+  // Đếm ngược tab Tuần cập nhật mỗi 30 giây.
+  useEffect(() => {
+    if (tab !== 'weekly') return undefined;
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, [tab]);
 
   const { data: counts } = useVpaCounts(vehicle);
   const { data: types } = useCategories('plate_type');
@@ -52,19 +63,31 @@ export default function VpaPlates({ go, openPlate, notify }) {
   };
   const count = (key) => ({ monthly: counts?.monthly, weekly: counts?.weekly, expired: counts?.expired }[key]);
 
-  // Bấm thẻ → tạo Plate (get-or-create) rồi dùng luồng chi tiết sẵn có.
-  const open = async (p) => {
-    if (opening) return;
+  // Tương tác lần đầu (mở, yêu thích, so sánh) → tạo Plate (get-or-create) rồi dùng luồng biển thường. null nếu lỗi.
+  const ensurePlate = async (p) => {
+    const known = plateIds[p.id] || p.plateId;
+    if (known) return known;
+    if (opening) return null;
     setOpening(p.id);
     try {
       const r = await openVpaPlate(p.id);
-      openPlate(r.plateId);
+      setPlateIds((m) => ({ ...m, [p.id]: r.plateId }));
+      return r.plateId;
     } catch (e) {
-      notify?.(e.message || 'Không mở được biển này, vui lòng thử lại');
+      notify?.(e.message || 'Không thực hiện được với biển này, vui lòng thử lại');
+      return null;
     } finally {
       setOpening(null);
     }
   };
+  const open = async (p) => { const id = await ensurePlate(p); if (id) openPlate(id); };
+  const toggleFavorite = async (p) => { const id = await ensurePlate(p); if (id && onFav) onFav(id); };
+  const toggleCompare = async (p) => {
+    const id = await ensurePlate(p);
+    if (!id) return;
+    if (isInList(id)) removeCompare(id); else addCompare(id);
+  };
+  const pidOf = (p) => plateIds[p.id] || p.plateId;
 
   const typeList = types?.items || types || [];
   const typeOptions = [{ value: '', label: 'Tất cả loại biển' }, ...typeList.map((t) => ({ value: t.id, label: t.name }))];
@@ -122,7 +145,9 @@ export default function VpaPlates({ go, openPlate, notify }) {
               {items.map((p) => (
                 <PlateCard key={p.id} plateNumber={p.plateNumber} type={p.plateTypeName} province={p.provinceName}
                   vehicleType={isCar(p.vehicle) ? 'Ô tô' : 'Xe máy'} price={p.price} priceOnRequest={p.price == null}
-                  isHot={p.isFeatured} priceOnRequestLabel="Liên hệ báo giá" badge={vpaBadge(p)} onOpen={() => open(p)} href="#" />
+                  isHot={p.isFeatured} priceOnRequestLabel="Liên hệ báo giá" badge={vpaBadge(p, now)} onOpen={() => open(p)} href="#"
+                  fav={!!(pidOf(p) && favs?.[pidOf(p)])} onFav={onFav ? () => toggleFavorite(p) : undefined}
+                  inCompare={!!(pidOf(p) && isInList(pidOf(p)))} onCompare={() => toggleCompare(p)} />
               ))}
             </div>
             {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} style={{ paddingTop: 'var(--space-3)' }} />}

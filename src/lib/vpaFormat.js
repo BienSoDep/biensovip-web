@@ -16,8 +16,8 @@ export function formatDateTime(iso) {
 }
 
 // Chuỗi hiện trên thẻ: tab Tuần = đếm ngược, tab Tháng = ngày phiên, tab Hết hạn = nhãn kết quả.
-export function vpaBadge(p) {
-  if (p.tab === 'weekly') return formatCountdown(p.auctionStartAt);
+export function vpaBadge(p, now = Date.now()) {
+  if (p.tab === 'weekly') return formatCountdown(p.auctionStartAt, now);
   if (p.tab === 'monthly') return p.auctionStartAt ? `Phiên ${new Date(p.auctionStartAt).toLocaleDateString('vi-VN')}` : 'Sắp đấu giá';
   return VPA_EXPIRED_LABELS[p.expiredLabel] || 'Hết hạn';
 }

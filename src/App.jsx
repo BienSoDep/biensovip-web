@@ -777,7 +777,7 @@ export default function App() {
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
 
-            {s === 'vpa' && <VpaPlates go={go} openPlate={openPlate} notify={notify} />}
+            {s === 'vpa' && <VpaPlates go={go} openPlate={openPlate} notify={notify} favs={st.favs} onFav={toggleFav} />}
 
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} fromScreen={st.detailFrom} />}
 

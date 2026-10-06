@@ -83,8 +83,8 @@ export default function VpaPlatesTable({ queue = false, notify }) {
       )}
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', overflowX: 'auto', opacity: isFetching ? 0.75 : 1 }}>
-        <div style={{ minWidth: 980 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: COLS, gap: 8, alignItems: 'center', padding: '10px 16px', font: 'var(--type-label)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-hairline)' }}>
+        <div className="vpa-table" style={{ minWidth: 980 }}>
+          <div className="vpa-head" style={{ display: 'grid', gridTemplateColumns: COLS, gap: 8, alignItems: 'center', padding: '10px 16px', font: 'var(--type-label)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-hairline)' }}>
             <Checkbox checked={allOnPage} onChange={toggleAll} label="" />
             <span>Biển</span><span>Tab / Phiên</span><span>Giá khởi điểm</span><span>Giá gợi ý (mẫu)</span><span>Giá duyệt</span><span>Trạng thái</span><span>Thao tác</span>
           </div>
@@ -98,21 +98,21 @@ export default function VpaPlatesTable({ queue = false, notify }) {
             const st = VPA_PRICE_STATES[p.priceState] || VPA_PRICE_STATES[0];
             const pending = p.priceState === 1 || p.priceState === 4;
             return (
-              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: COLS, gap: 8, alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)', background: p.isHidden ? 'var(--surface-sunken)' : undefined }}>
+              <div key={p.id} className="vpa-row" style={{ display: 'grid', gridTemplateColumns: COLS, gap: 8, alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)', background: p.isHidden ? 'var(--surface-sunken)' : undefined }}>
                 <Checkbox checked={sel.has(p.id)} onChange={() => toggle(p.id)} label="" />
                 <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                   <span style={{ fontWeight: 'var(--fw-semibold)' }}>{p.isPinned ? '📌 ' : ''}{p.plateNumber}</span>
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{isCar(p.vehicle) ? 'Ô tô' : 'Xe máy'} · {p.plateTypeName || '—'}{p.isHidden ? ' · đã ẩn' : ''}</span>
                 </span>
-                <span style={{ display: 'flex', flexDirection: 'column' }}>
+                <span data-label="Tab / Phiên" style={{ display: 'flex', flexDirection: 'column' }}>
                   <span>{VPA_TAB_LABELS[p.tab]}</span>
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDateTime(p.auctionStartAt)}</span>
                 </span>
-                <span>{money(p.startingPrice)}</span>
-                <span>{p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : `— (${p.sampleCount ?? 0} mẫu)`}</span>
-                <span style={{ fontWeight: 'var(--fw-semibold)' }}>{money(p.approvedPrice)}</span>
-                <Badge tone={st.tone}>{st.label}</Badge>
-                <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                <span data-label="Giá khởi điểm">{money(p.startingPrice)}</span>
+                <span data-label="Giá gợi ý">{p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : `— (${p.sampleCount ?? 0} mẫu)`}</span>
+                <span data-label="Giá duyệt" style={{ fontWeight: 'var(--fw-semibold)' }}>{money(p.approvedPrice)}</span>
+                <span data-label="Trạng thái"><Badge tone={st.tone}>{st.label}</Badge></span>
+                <span className="vpa-actions" style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {p.suggestedPrice && p.priceState !== 2 && <Button variant="primary" size="sm" onClick={() => run(() => approve.mutateAsync([p.id]), 'Đã đồng ý giá gợi ý')}>Đồng ý</Button>}
                   {pending && <Button variant="outline" size="sm" onClick={() => run(() => reject.mutateAsync([p.id]), 'Đã từ chối')}>Từ chối</Button>}
                   <Button variant="ghost" size="sm" onClick={() => setEdit({ id: p.id, plateNumber: p.plateNumber, price: p.approvedPrice || p.suggestedPrice || '' })}>Sửa giá</Button>
