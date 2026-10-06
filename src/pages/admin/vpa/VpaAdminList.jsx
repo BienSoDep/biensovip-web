@@ -10,9 +10,10 @@ import PlateVisual from '../../../components/PlateVisual.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
 import { Badge, Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
 import VpaPlateDrawer from './VpaPlateDrawer.jsx';
+import MultiFilter from './MultiFilter.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
-  useVpaAdminPlates, useSetVpaPrice, useApproveVpaSuggested, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
+  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
   useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv,
 } from '../../../services/adminVpa.js';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
@@ -40,6 +41,14 @@ const COLUMNS = [
   { key: 'priceState', label: 'Trạng thái giá', default: true },
   { key: 'updatedAt', label: 'Cập nhật', default: false },
 ];
+const FILTER_KEY = 'bsv.admin.vpaFilters';
+// Loại biển / tỉnh đã chọn được nhớ cho lần mở sau (chỉ trang danh sách, không áp cho hàng đợi duyệt giá).
+const loadSavedFilters = () => {
+  try {
+    const s = JSON.parse(localStorage.getItem(FILTER_KEY) || 'null') || {};
+    return { plateTypeIds: Array.isArray(s.plateTypeIds) ? s.plateTypeIds : [], provinceIds: Array.isArray(s.provinceIds) ? s.provinceIds : [] };
+  } catch { return { plateTypeIds: [], provinceIds: [] }; }
+};
 const loadCols = () => {
   const base = Object.fromEntries(COLUMNS.map((c) => [c.key, c.default]));
   try { return { ...base, ...(JSON.parse(localStorage.getItem(COL_KEY) || 'null') || {}) }; } catch { return base; }
@@ -66,7 +75,7 @@ function SortHeader({ sort, toggleSort, label, sortKey, style, tip }) {
 // Danh sách biển VPA cho Admin — cùng bố cục và công cụ với trang Biển số (lọc, cột, sắp xếp, sửa nhanh, hàng loạt, CSV, ngăn kéo).
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
 export default function VpaAdminList({ queue = false, notify }) {
-  const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', plateTypeId: '', provinceId: '', from: '', to: '' });
+  const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', from: '', to: '', ...(queue ? { plateTypeIds: [], provinceIds: [] } : loadSavedFilters()) });
   const [q, setQ] = useState('');
   const [dq] = useDebouncedValue(q, 300);
   const [page, setPage] = useState(1);
@@ -89,6 +98,7 @@ export default function VpaAdminList({ queue = false, notify }) {
 
   const params = { queue: queue || undefined, ...f, q: dq, page, limit, sort: sort?.key, dir: sort?.dir };
   const { data, isLoading, isError, refetch } = useVpaAdminPlates(params);
+  const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
   const reject = useRejectVpaPrice();
@@ -102,8 +112,18 @@ export default function VpaAdminList({ queue = false, notify }) {
   const items = data?.items || [];
   const total = data?.total || 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  const filterCount = Object.values(f).filter(Boolean).length;
-  const setFilter = (k) => (v) => { setF((x) => ({ ...x, [k]: v })); setPage(1); setSel(new Set()); };
+  const filterCount = Object.values(f).filter((v) => (Array.isArray(v) ? v.length : v)).length;
+  const setFilter = (k) => (v) => {
+    setF((x) => {
+      const n = { ...x, [k]: v };
+      if (!queue && (k === 'plateTypeIds' || k === 'provinceIds')) {
+        try { localStorage.setItem(FILTER_KEY, JSON.stringify({ plateTypeIds: n.plateTypeIds, provinceIds: n.provinceIds })); } catch { /* ignore */ }
+      }
+      return n;
+    });
+    setPage(1); setSel(new Set());
+  };
+  const clearCats = () => { setFilter('plateTypeIds')([]); setFilter('provinceIds')([]); };
   const toggleCol = (key) => setCols((p) => {
     const n = { ...p, [key]: !p[key] };
     try { localStorage.setItem(COL_KEY, JSON.stringify(n)); } catch { /* ignore */ }
@@ -219,6 +239,19 @@ export default function VpaAdminList({ queue = false, notify }) {
     </select>
   );
 
+  const catSelect = (p, field, options, label) => {
+    const key = field === 'plateTypeId' ? p.plateTypeId : p.provinceId;
+    const none = { value: '', label: '—' };
+    return (
+      <select value={key || ''} aria-label={label} title={`${label} (sửa tay → khóa, crawl không ghi đè)`}
+        onChange={(e) => e.target.value && run(() => update.mutateAsync({ id: p.id, body: { [field]: e.target.value } }), `Đã đổi ${label.toLowerCase()} (khóa, crawl không ghi đè)`)}
+        style={{ border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '4px 6px', font: 'var(--type-caption)', color: 'var(--text-body)', outline: 'none', cursor: 'pointer', maxWidth: '100%' }}>
+        {!key && <option value={none.value}>{none.label}</option>}
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    );
+  };
+
   const emptyBox = !isLoading && !isError && items.length === 0 && (
     <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
       <CarFront size={40} style={{ color: 'var(--text-faint)' }} />
@@ -313,13 +346,16 @@ export default function VpaAdminList({ queue = false, notify }) {
           {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>Thêm biển VPA (đầy đủ)</Button>}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
-          <Select label="Loại biển" value={f.plateTypeId} options={[ALL, ...plateTypes]} onChange={setFilter('plateTypeId')} />
+          <MultiFilter label="Loại biển" options={plateTypes} value={f.plateTypeIds} onChange={setFilter('plateTypeIds')} counts={facets?.types} />
           <Select label="Loại xe" value={f.vehicle} options={VEHICLES} onChange={setFilter('vehicle')} />
-          <Select label="Tỉnh/thành" value={f.provinceId} options={[ALL, ...provinces]} onChange={setFilter('provinceId')} />
+          <MultiFilter label="Tỉnh/thành" options={provinces} value={f.provinceIds} onChange={setFilter('provinceIds')} counts={facets?.provinces} searchable />
           <Select label="Nổi bật" value={f.featured} options={YES_NO('Chỉ nổi bật', 'Không nổi bật')} onChange={setFilter('featured')} />
           {!queue && <Select label="Trạng thái giá" value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />}
           {!queue && <Select label="Ẩn/hiện" value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />}
           {!queue && <Select label="Nguồn" value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />}
+          {(f.plateTypeIds.length > 0 || f.provinceIds.length > 0) && (
+            <Button variant="ghost" size="md" onClick={clearCats}>Xóa lọc loại biển/tỉnh</Button>
+          )}
         </div>
       </div>
 
@@ -401,13 +437,15 @@ export default function VpaAdminList({ queue = false, notify }) {
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
                     {rowBadges(p)}
                   </span>
-                  {cols.plateType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>}
+                  {cols.plateType && <span style={{ flex: '1 1 88px', minWidth: 0 }}>{catSelect(p, 'plateTypeId', plateTypes, 'Loại biển')}</span>}
                   {cols.vehicle && <span style={{ flex: '0 0 72px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{isCar(p.vehicle) ? 'Ô tô' : 'Xe máy'}</span>}
-                  {cols.province && <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>}
+                  {cols.province && <span style={{ flex: '1 1 96px', minWidth: 0 }}>{catSelect(p, 'provinceId', provinces, 'Tỉnh/thành')}</span>}
                   {cols.tab && (
                     <span style={{ flex: '1 1 140px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {tabSelect(p)}
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDateTime(p.auctionStartAt)}</span>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }} title="Giờ bắt đầu → kết thúc phiên đấu giá">
+                        {p.auctionStartAt ? `${formatDateTime(p.auctionStartAt)} → ${p.auctionEndAt ? formatDateTime(p.auctionEndAt).slice(0, 5) : '?'}` : 'Chưa có phiên'}
+                      </span>
                     </span>
                   )}
                   {cols.startingPrice && <span style={{ flex: '1 1 104px', font: 'var(--type-body-sm)' }}>{money(p.startingPrice)}</span>}
@@ -437,6 +475,13 @@ export default function VpaAdminList({ queue = false, notify }) {
             <option value="" disabled>Đổi tab ▾</option>
             {TAB_ROW.slice(0, 3).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
+          {[['Loại biển ▾', 'plateTypeId', plateTypes, 'Đã đổi loại biển cho'], ['Tỉnh ▾', 'provinceId', provinces, 'Đã đổi tỉnh cho']].map(([ph, field, opts, verb]) => (
+            <select key={field} defaultValue="" aria-label={ph} onChange={(e) => { if (e.target.value) { bulkEdit({ [field]: e.target.value }, verb); e.target.value = ''; } }}
+              style={{ border: 'none', background: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', font: 'var(--type-caption)', color: 'var(--text-strong)', cursor: 'pointer', outline: 'none', maxWidth: 140 }}>
+              <option value="" disabled>{ph}</option>
+              {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          ))}
           {[
             ['Nổi bật', { isFeatured: true }, 'Đã đánh dấu nổi bật'], ['Bỏ nổi bật', { isFeatured: false }, 'Đã bỏ nổi bật'],
             ['Ghim', { isPinned: true }, 'Đã ghim'], ['Bỏ ghim', { isPinned: false }, 'Đã bỏ ghim'],

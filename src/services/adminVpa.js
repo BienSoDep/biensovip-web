@@ -2,6 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 import { loadAuth } from '../lib/authStore.js';
 
+// Số biển theo loại biển / tỉnh (tính theo bộ lọc hiện tại, bỏ chính chiều đó).
+export function useVpaAdminFacets(params) {
+  const qs = toQuery(params);
+  return useQuery({
+    queryKey: [KEY, 'facets', qs],
+    queryFn: () => apiClient.get(`/api/admin/vpa/plates/facets?${qs}`),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
+}
+
 // Admin UC49: duyệt giá biển VPA, ẩn/ghim, cài đặt + lần chạy (super-admin), "Crawl ngay".
 const KEY = 'admin-vpa';
 
