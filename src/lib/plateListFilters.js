@@ -7,8 +7,7 @@ const VPA_TAB_BY_PARAM = Object.fromEntries(Object.entries(VPA_TAB_PARAM).map(([
 
 export function readFiltersFromUrl() {
   const params = new URLSearchParams(window.location.search);
-  // /bien-dau-gia (đường dẫn cũ của trang riêng) mở thẳng tab Biển tháng.
-  const tab = VPA_TAB_BY_PARAM[params.get('tab')] || (window.location.pathname === '/bien-dau-gia' ? 'monthly' : '');
+  const tab = VPA_TAB_BY_PARAM[params.get('tab')] || '';
   let q = params.get('q') || '';
   if (!q && typeof window !== 'undefined' && window.location.pathname.startsWith('/tim-kiem/')) {
     const raw = window.location.pathname.slice('/tim-kiem/'.length).split('/')[0];

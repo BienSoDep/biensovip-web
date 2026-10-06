@@ -79,6 +79,8 @@ const Modals = lazy(() => import('./layout/Modals.jsx'));
 const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
 export default function App() {
+  // Đường dẫn cũ /bien-dau-gia → trang Biển số, tab Biển tháng (phải đổi URL trước khi App chuẩn hóa đường dẫn).
+  if (typeof window !== 'undefined' && window.location.pathname === '/bien-dau-gia') window.history.replaceState(null, '', '/danh-sach?tab=thang');
   const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.pathname) : { screen: 'home' };
   // Mobile lần đầu vào domain gốc "/" — chuyển thẳng vào kho biển số thay vì Home,
   // giúp khách xem biển ngay thay vì lướt qua landing page trên màn hình nhỏ.
