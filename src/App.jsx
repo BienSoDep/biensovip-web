@@ -79,6 +79,8 @@ const Modals = lazy(() => import('./layout/Modals.jsx'));
 const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
 export default function App() {
+  // Đường dẫn cũ /bien-dau-gia → trang Biển số, tab Biển tháng (phải đổi URL trước khi App chuẩn hóa đường dẫn).
+  if (typeof window !== 'undefined' && window.location.pathname === '/bien-dau-gia') window.history.replaceState(null, '', '/danh-sach?tab=thang');
   const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.pathname) : { screen: 'home' };
   // Mobile lần đầu vào domain gốc "/" — chuyển thẳng vào kho biển số thay vì Home,
   // giúp khách xem biển ngay thay vì lướt qua landing page trên màn hình nhỏ.
@@ -687,6 +689,7 @@ export default function App() {
     aplates: ['Biển số', 'Quản lý biển số trong hệ thống'],
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
     acoupons: ['Mã giảm giá', 'Mã giảm giá áp dụng khi khách đặt cọc'],
+    avpa: ['Biển VPA', 'Biển đấu giá VPA: duyệt giá, đồng bộ và cấu hình'],
     // 3 trang cũ (liên hệ/quy trình/giao dịch) đã gộp vào 1 trang có view bên trong — xem AdminSales.jsx.
     // Giữ key cũ ở đây vì URL cũ vẫn resolve được (GROUPED_REDIRECT đưa về asales).
     asales: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
@@ -774,6 +777,7 @@ export default function App() {
             {s === 'home' && <Home settings={st.settings} go={go} notify={notify} heroAnim={heroAnim} openPlate={openPlate} openBuy={openBuy} favs={st.favs} onFav={toggleFav} contact={contact} user={st.user} />}
 
             {s === 'list' && <PlateList favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} notify={notify} go={go} listNotice={st.listNotice} onClearNotice={() => patch({ listNotice: null })} contact={contact} />}
+
 
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} fromScreen={st.detailFrom} />}
 

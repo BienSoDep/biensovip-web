@@ -14,6 +14,7 @@ import { apiClient } from '../services/apiClient.js';
 import Dashboard from '../pages/admin/Dashboard.jsx';
 import AdminPlates from '../pages/admin/AdminPlates.jsx';
 import AdminCoupons from '../pages/admin/AdminCoupons.jsx';
+import AdminVpa from '../pages/admin/AdminVpa.jsx';
 import AdminCats from '../pages/admin/AdminCats.jsx';
 import AdminContacts from '../pages/admin/AdminContacts.jsx';
 import AdminTransactions from '../pages/admin/AdminTransactions.jsx';
@@ -44,7 +45,7 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
 const NAV_PERM = {
-  aplates: 'plates:view', acoupons: 'plates:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
+  aplates: 'plates:view', avpa: 'vpa_prices:view', acoupons: 'plates:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
@@ -91,6 +92,7 @@ function salesViewFromUrl() {
 const ADMIN_INFO = {
   dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
   aplates: 'Quản lý toàn bộ biển số rao bán. Đổi trạng thái Còn hàng/Đã bán khi có giao dịch, cập nhật giá đúng lúc để khách không thấy giá cũ.',
+  avpa: 'Quản lý biển đấu giá lấy từ VPA bằng cùng công cụ như Biển của shop. Giá khách thấy là "Giá duyệt": chưa duyệt thì khách thấy "Giá liên hệ". Giá gợi ý = trung bình giá trúng của nhóm tương tự × hệ số (số trong ngoặc là số mẫu). Trường bạn sửa tay (loại biển, tỉnh, tab, nổi bật) được khóa, crawl không ghi đè. "Hết hạn nội bộ" = biển biến mất khỏi VPA, chỉ Admin thấy. Ẩn = giấu khỏi khách, dữ liệu vẫn giữ; biển VPA không xóa hẳn vì lần crawl sau sẽ tạo lại. Rê chuột vào biểu tượng (i) ở tiêu đề cột để xem giải thích.',
   acoupons: 'Tạo và quản lý mã giảm giá — khách nhập mã khi gửi liên hệ/đặt cọc. Tắt mã khi không muốn dùng nữa, không cần xóa.',
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
@@ -385,6 +387,7 @@ export default function AdminShell({
         {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} canSee={(k) => canSeeNav(st, k)} go={go} />}
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
+        {s === 'avpa' && <AdminVpa notify={notify} isSuperAdmin={isSuperAdmin} go={go} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
         {s === 'asales' && <AdminSales notify={notify} go={go} st={st} initialView={salesViewFromUrl()} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} st={st} />}

@@ -6,6 +6,7 @@ import Modal from '../components/Modal.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
+import { VPA_EXPIRED_LABELS, formatDateTime } from '../lib/vpaFormat.js';
 import { validatePhone, normalizePhone } from '../lib/phone.js';
 import { prefillFromUser, maybeSavePhoneToProfile } from '../lib/contactPrefill.js';
 import { useSubmitContact } from '../services/contactService.js';
@@ -309,7 +310,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     submitContact.mutate({
       fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
       email: cForm.email?.trim() || null, plateId: plate.id, plateNumber: plate.plateNumber,
-      note: cForm.note?.trim() || '', source: 'plate-detail', intent: cForm.intent,
+      note: cForm.note?.trim() || '', source: 'plate-detail', intent: plate.vpa ? 'inquiry' : cForm.intent,
       subscribeToNotifications: !!cForm.subscribe,
       honeypot: cForm.honeypot || null,
       couponCode: couponStatus?.valid ? cForm.couponCode.trim() : null,
@@ -431,6 +432,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
             )}
           </div>
+          {plate.vpa && (
+            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển đấu giá VPA{plate.vpa.resultLabel ? ` · ${VPA_EXPIRED_LABELS[plate.vpa.resultLabel] || plate.vpa.resultLabel}` : ''}</span>
+              {plate.vpa.registerEndAt && <span>Hạn đăng ký: {formatDateTime(plate.vpa.registerEndAt)}</span>}
+              {plate.vpa.auctionStartAt && <span>Phiên đấu giá: {formatDateTime(plate.vpa.auctionStartAt)}{plate.vpa.auctionEndAt ? ` → ${formatDateTime(plate.vpa.auctionEndAt)}` : ''}</span>}
+              <span style={{ color: 'var(--text-muted)' }}>Liên hệ để được hướng dẫn đăng ký tham gia đấu giá.</span>
+            </div>
+          )}
           <div className="plate-actions-desktop" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {!sold && (
               <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 160px' }}>Chốt biển này</Button>
@@ -671,7 +680,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               <Input label="Số điện thoại" type="tel" value={cForm.phone} onChange={setCF('phone')} placeholder="0xxxxxxxxx" error={cErr?.field === 'phone' ? cErr.message : undefined} required />
             </div>
             <div>
-              <Select label="Mục đích" value={cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={INTENT_OPTS.map((o) => ({ value: INTENT_VAL[o], label: o }))} />
+              <Select label="Mục đích" value={plate.vpa ? 'inquiry' : cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={(plate.vpa ? INTENT_OPTS.slice(0, 1) : INTENT_OPTS).map((o) => ({ value: INTENT_VAL[o], label: o }))} />
             </div>
             <div>
               <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />

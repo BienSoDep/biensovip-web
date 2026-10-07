@@ -1828,3 +1828,13 @@ textarea,
 @media (prefers-reduced-motion: reduce) {
   .contact-hero__img { animation: none; }
 }
+
+/* UC49 — bảng Admin biển VPA trên điện thoại: mỗi dòng thành thẻ, bỏ cuộn ngang; ô có nhãn qua data-label. */
+@media (max-width: 768px) {
+  .vpa-table { min-width: 0 !important; }
+  .vpa-head { display: none !important; }
+  .vpa-row { display: flex !important; flex-wrap: wrap; gap: 6px 12px !important; }
+  .vpa-row > [data-label] { flex: 1 1 42%; min-width: 0; }
+  .vpa-row > [data-label]::before { content: attr(data-label); display: block; font: var(--type-caption); color: var(--text-muted); }
+  .vpa-row > .vpa-actions { flex: 1 1 100%; }
+}
