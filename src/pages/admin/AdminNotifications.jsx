@@ -4,7 +4,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { Input, Select } from '../../components/index.jsx';
-import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail, useNotificationRecipientCount } from '../../services/adminNotificationService.js';
+import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail, useNotificationRecipientCount, useFengShuiQueueStats } from '../../services/adminNotificationService.js';
 import { useAdminCustomers } from '../../services/adminCustomers.js';
 import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
@@ -658,6 +658,9 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
   const update = useUpdateNotificationTypeSetting();
   const sendTest = useSendTestEmail();
   const [triggerHour, setTriggerHour] = useState(setting.triggerHour ?? '');
+  const isFengShui = setting.type === 'fengshui_match';
+  const [dailyLimit, setDailyLimit] = useState(setting.dailyLimitPerUser ?? 2);
+  const { data: queueStats } = useFengShuiQueueStats(isFengShui && editing);
   const [testEmail, setTestEmail] = useState('');
 
   // UC27 — dropdown "Layout email": liệt kê template áp dụng type này + tùy chọn "Mặc định hệ thống".
@@ -680,7 +683,7 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
 
   const toggle = (field) => {
     update.mutate({ type: setting.type, webEnabled: setting.webEnabled, emailEnabled: setting.emailEnabled,
-      titleTemplate: setting.titleTemplate, contentTemplate: setting.contentTemplate, triggerHour: setting.triggerHour,
+      titleTemplate: setting.titleTemplate, contentTemplate: setting.contentTemplate, triggerHour: setting.triggerHour, dailyLimitPerUser: setting.dailyLimitPerUser,
       [field]: !setting[field] }, {
       onError: (err) => notify?.(err?.message || 'Đổi cài đặt thất bại, thử lại.'),
     });
@@ -692,6 +695,7 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
         type: setting.type, webEnabled: setting.webEnabled, emailEnabled: setting.emailEnabled,
         titleTemplate: draftTitle.trim() || null, contentTemplate: draftContent.trim() || null,
         triggerHour: setting.triggerHour !== null ? (triggerHour === '' ? null : Number(triggerHour)) : null,
+        dailyLimitPerUser: isFengShui ? Math.max(0, Math.min(50, Number(dailyLimit) || 0)) : setting.dailyLimitPerUser,
       });
       notify('Đã lưu');
       onCloseEdit();
@@ -754,6 +758,22 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
                 : 'Biến có sẵn: {UserName} · {SiteName} — thay tự động theo từng người khi gửi.'}
             </span>
           </label>
+          {isFengShui && (
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 320 }}>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hạn mức thông báo mỗi người / ngày (0 = tạm dừng gửi)</span>
+              <input type="number" min="0" max="50" value={dailyLimit} onChange={(e) => setDailyLimit(e.target.value)}
+                style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 10px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
+                Biển kho và biển VPA hợp mệnh (điểm ≥ 70%) xếp hàng theo từng người, kho gửi trước. Mỗi người nhận tối đa số thông báo này mỗi ngày, dàn đều
+                {Number(dailyLimit) > 0 ? ` (cách nhau khoảng ${(24 / Number(dailyLimit)).toFixed(1)} giờ)` : ''}; phần còn lại chờ trong hàng đợi (giữ tối đa 50 biển/người, bỏ sau 7 ngày).
+              </span>
+              {queueStats && (
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-body)' }}>
+                  Hàng đợi hiện tại: <b>{queueStats.pending.toLocaleString('vi-VN')}</b> biển đang chờ (kho {queueStats.pendingOwn.toLocaleString('vi-VN')} · VPA {queueStats.pendingVpa.toLocaleString('vi-VN')}) của <b>{queueStats.usersWaiting.toLocaleString('vi-VN')}</b> người; đã gửi 24 giờ qua: <b>{queueStats.sentLast24h.toLocaleString('vi-VN')}</b>.
+                </span>
+              )}
+            </label>
+          )}
           {setting.triggerHour !== null && HOUR_HAS_EFFECT.has(setting.type) ? (
             <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 220 }}>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giờ gửi (giờ UTC, 0-23)</span>
