@@ -147,7 +147,7 @@ function OverviewBody({ data, notify }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <span style={caption}>
-            Email nhận cảnh báo: <b>{data.alertEmail || 'chưa cấu hình (Contact:Email) — chỉ ghi log'}</b>
+            Email kỹ thuật nhận cảnh báo: <b>{data.alertEmail || 'chưa cấu hình (Contact:DevEmail) — chỉ ghi log'}</b>
             {data.alertEmail && <> · <button type="button" onClick={onAlertTest} disabled={alertTest.isPending} style={{ border: 'none', background: 'none', color: 'var(--link)', cursor: 'pointer', padding: 0, font: 'inherit' }}>Gửi email thử</button></>}
           </span>
           <Button variant="primary" size="md" loading={save.isPending} onClick={onSave}>Lưu cấu hình</Button>
