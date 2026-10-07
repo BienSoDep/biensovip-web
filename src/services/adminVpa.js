@@ -177,3 +177,19 @@ export async function downloadVpaTemplate() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// Kiểm tra & sửa lỗi dữ liệu biển (trùng, hỏng, lệch). Đếm nặng nên chỉ chạy khi panel mở.
+export function useVpaIntegrity(enabled) {
+  return useQuery({ queryKey: [KEY, 'integrity'], queryFn: () => apiClient.get('/api/admin/vpa/plates/integrity'), enabled, staleTime: 0, retry: false });
+}
+
+export function useVpaIntegrityRows(code, page) {
+  return useQuery({
+    queryKey: [KEY, 'integrity-rows', code, page],
+    queryFn: () => apiClient.get(`/api/admin/vpa/plates/integrity/${code}?page=${page}&limit=20`),
+    enabled: !!code,
+    placeholderData: (prev) => prev,
+  });
+}
+
+export const useFixVpaIntegrity = () => useVpaMutation(({ code, ids }) => apiClient.post(`/api/admin/vpa/plates/integrity/${code}/fix`, { ids: ids || null }));

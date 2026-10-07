@@ -11,6 +11,7 @@ import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
 import { Badge, Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
 import VpaPlateDrawer from './VpaPlateDrawer.jsx';
 import MultiFilter from './MultiFilter.jsx';
+import VpaIntegrityPanel from './VpaIntegrityPanel.jsx';
 import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
@@ -90,6 +91,7 @@ export default function VpaAdminList({ queue = false, notify }) {
   const [drawer, setDrawer] = useState(null); // null | { plate? }
   const [cell, setCell] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [integrity, setIntegrity] = useState(false);
   const [quick, setQuick] = useState({ plateNumber: '', vehicle: 'Car', tab: '1', price: '' });
 
   const { data: typeData } = useAdminCategories('plate_type');
@@ -294,6 +296,8 @@ export default function VpaAdminList({ queue = false, notify }) {
         </div>
       )}
 
+      {integrity && !queue && <VpaIntegrityPanel notify={notify} onClose={() => setIntegrity(false)} />}
+
       <PlateCountSummary matched={data?.total} all={baseData?.total} filtered={filterCount > 0 || !!dq} scope={f.tab ? `trong tab ${VPA_TAB_LABELS[f.tab]}` : queue ? 'đang chờ duyệt' : ''} />
 
       <div className="admin-plates-mobile-bar" style={{ flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -346,6 +350,7 @@ export default function VpaAdminList({ queue = false, notify }) {
             )}
           </div>
           <div style={{ flex: 1 }} />
+          {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
           <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
           {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>Thêm biển VPA (đầy đủ)</Button>}
         </div>
