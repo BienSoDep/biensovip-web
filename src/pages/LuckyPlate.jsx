@@ -117,6 +117,8 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
   );
 }
 
+const SOURCE_OPTIONS = [{ value: '', label: 'Tất cả' }, { value: 'own', label: 'Biển có sẵn' }, { value: 'vpa', label: 'Biển VPA' }];
+
 export default function LuckyPlate({ go, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
   const { data: settings } = useSiteSettings();
   const stored = useRef(loadStoredResult()).current;
@@ -135,13 +137,13 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
   const [copied, setCopied] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [resultView, setResultView] = useState('list'); // 'list' | 'grid' — cách hiển thị Top biển hợp mệnh
-  const [filters, setFilters] = useState({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [] });
+  const [filters, setFilters] = useState({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [], source: '' });
   const { data: plateTypes } = useCategories('plate_type');
   const { data: provinces } = useCategories('province');
   const { data: vehicleTypes } = useCategories('vehicle_type');
   const toggleFilterArray = (key, id) => setFilters((f) => ({ ...f, [key]: f[key].includes(id) ? f[key].filter((x) => x !== id) : [...f[key], id] }));
   const setFilter = (patch) => setFilters((f) => ({ ...f, ...patch }));
-  const activeFilterCount = filters.catIds.length + filters.cityIds.length + filters.avoidNumbers.length + (filters.vehicleTypeId ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0);
+  const activeFilterCount = filters.catIds.length + filters.cityIds.length + filters.avoidNumbers.length + (filters.vehicleTypeId ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.source ? 1 : 0);
   const shareCardRef = useRef(null);
   const lookup = useFengShuiLookup();
   const saveHistory = useSaveFengShuiHistory();
@@ -181,6 +183,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
       priceMax: filters.priceMax || undefined,
       q: filters.q || undefined,
       avoidNumbers: filters.avoidNumbers.length ? filters.avoidNumbers : undefined,
+      source: filters.source || undefined,
     }, {
       onSuccess: (data) => { setRestoredResult(null); storeResult(form, data); },
       onError: () => notify('Không tra cứu được, thử lại sau.'),
@@ -349,8 +352,17 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                     ))}
                   </div>
                 </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Nguồn biển</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                    {SOURCE_OPTIONS.map((o) => (
+                      <Button key={o.value || 'all'} variant={filters.source === o.value ? 'dark' : 'ghost'} size="sm" onClick={() => setFilter({ source: o.value })}>{o.label}</Button>
+                    ))}
+                  </div>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển có sẵn của Duy Định luôn xếp trước; biển đấu giá VPA chưa duyệt giá hiển thị "Giá liên hệ".</span>
+                </div>
                 {activeFilterCount > 0 && (
-                  <Button variant="ghost" size="sm" onClick={() => setFilters({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [] })}>Xóa bộ lọc</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setFilters({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [], source: '' })}>Xóa bộ lọc</Button>
                 )}
               </div>
             )}
@@ -431,8 +443,8 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                         </div>
                       )}
                       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
-                      <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}</span>
-                      <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{Number(r.price).toLocaleString('vi-VN')}đ</span>
+                      <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}{r.source === 'vpa' && <Badge tone="blue" style={{ marginLeft: 8 }}>Biển VPA</Badge>}</span>
+                      <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{r.priceOnRequest ? 'Giá liên hệ' : `${Number(r.price).toLocaleString('vi-VN')}đ`}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, minWidth: 150 }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.score}% hợp mệnh</span>
                         <div style={{ width: 140, height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)', overflow: 'hidden' }}>
@@ -444,14 +456,14 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                       {r.explain.map((x, j) => <Badge key={j} tone="neutral">{x}</Badge>)}
                     </div>
                     <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2, flexWrap: 'wrap' }}>
-                      <Button variant="dark" size="sm" onClick={() => openPlate(r.plateId, 'lucky')}>Xem biển</Button>
+                      <Button variant="dark" size="sm" onClick={() => openPlate(r.slug || r.plateId, 'lucky')}>Xem biển</Button>
                       <a href={`tel:${contact?.phone || DEFAULT_CONTACT.phone}`} style={{ textDecoration: 'none' }}>
                         <Button variant="primary" size="sm">Gọi ngay</Button>
                       </a>
                       {contact?.zalo && (
                         <Button variant="outline" size="sm" onClick={() => openZaloWithMessage(contact.zalo, buildConsultMessage(r.plateNumber))}>Nhắn Zalo</Button>
                       )}
-                      <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />
+                      {r.source !== 'vpa' && <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />}
                     </div>
                   </div>
                 ))
@@ -464,8 +476,9 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                         price={r.price} salePrice={r.salePrice} priceOnRequest={r.priceOnRequest} status={r.status}
                         thumbnailUrl={r.thumbnailUrl} isHot={r.isHot} badge={r.badge}
                         href={routeFor('detail', r.slug || r.plateId)}
-                        onOpen={() => openPlate(r.plateId, 'lucky')} contact={contact} plateSize="md" layout="grid"
+                        onOpen={() => openPlate(r.slug || r.plateId, 'lucky')} contact={contact} plateSize="md" layout="grid"
                       />
+                      {r.source === 'vpa' && <Badge tone="blue" style={{ alignSelf: 'flex-start' }}>Biển VPA</Badge>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', flex: 1 }}>{r.score}% hợp mệnh</span>
@@ -476,7 +489,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {r.explain.slice(0, 2).map((x, j) => <Badge key={j} tone="neutral" style={{ font: 'var(--type-caption)' }}>{x}</Badge>)}
                       </div>
-                      <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />
+                      {r.source !== 'vpa' && <RequestConsultButton plate={r} user={user} notify={notify} onUserUpdate={onUserUpdate} />}
                     </div>
                   ))}
                 </div>
