@@ -193,3 +193,9 @@ export function useVpaIntegrityRows(code, page) {
 }
 
 export const useFixVpaIntegrity = () => useVpaMutation(({ code, ids }) => apiClient.post(`/api/admin/vpa/plates/integrity/${code}/fix`, { ids: ids || null }));
+
+export function useVpaIntegrityFixes(enabled) {
+  return useQuery({ queryKey: [KEY, 'integrity-fixes'], queryFn: () => apiClient.get('/api/admin/vpa/plates/integrity-fixes'), enabled, retry: false });
+}
+
+export const useUndoVpaIntegrity = () => useVpaMutation((fixId) => apiClient.post(`/api/admin/vpa/plates/integrity-fixes/${fixId}/undo`));

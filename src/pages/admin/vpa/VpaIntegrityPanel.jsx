@@ -2,8 +2,8 @@ import { useState } from 'react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import { Badge } from '../../../components/index.jsx';
-import { useVpaIntegrity, useVpaIntegrityRows, useFixVpaIntegrity } from '../../../services/adminVpa.js';
-import { VPA_TAB_LABELS, formatInt, isCar } from '../../../lib/vpaFormat.js';
+import { useVpaIntegrity, useVpaIntegrityRows, useFixVpaIntegrity, useVpaIntegrityFixes, useUndoVpaIntegrity } from '../../../services/adminVpa.js';
+import { VPA_TAB_LABELS, formatDateTime, formatInt, isCar } from '../../../lib/vpaFormat.js';
 
 const CARD = { background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' };
 const SEVERITY = { error: { tone: 'rose', label: 'Lỗi' }, warn: { tone: 'amber', label: 'Cảnh báo' } };
@@ -52,6 +52,33 @@ function Rows({ check, notify }) {
   );
 }
 
+// Lịch sử các lần sửa gần nhất; mỗi lần hoàn tác được một lần (biển bị sửa tiếp sau đó giữ nguyên).
+function FixHistory({ notify }) {
+  const { data } = useVpaIntegrityFixes(true);
+  const undo = useUndoVpaIntegrity();
+  if (!data || data.length === 0) return null;
+  const doUndo = async (f) => {
+    if (!window.confirm(`Hoàn tác "${f.title}" (${formatInt(f.fixed)} biển)? Biển đã bị sửa tiếp sau lần sửa đó sẽ giữ nguyên.`)) return;
+    try {
+      const r = await undo.mutateAsync(f.id);
+      notify?.(`Đã hoàn tác ${formatInt(r.restored)} biển` + (r.skipped > 0 ? `, giữ nguyên ${formatInt(r.skipped)} biển đã bị sửa tiếp` : ''));
+    } catch (e) { notify?.(e.message || 'Hoàn tác thất bại'); }
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', borderTop: '1px solid var(--grey-100)', paddingTop: 'var(--space-3)' }}>
+      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử sửa gần đây</span>
+      {data.map((f) => (
+        <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', font: 'var(--type-body-sm)' }}>
+          <span style={{ ...caption, minWidth: 110 }}>{formatDateTime(f.at)}</span>
+          <span style={{ flex: 1, minWidth: 160, color: 'var(--text-body)' }}>{f.title} — {formatInt(f.fixed)} biển ({f.actorLabel})</span>
+          {f.undoneAt ? <Badge tone="neutral">Đã hoàn tác</Badge>
+            : <Button variant="outline" size="sm" disabled={undo.isPending} onClick={() => doUndo(f)}>Hoàn tác</Button>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Kiểm tra dữ liệu biển VPA ngay trong danh sách: nhóm lỗi + số biển, bấm vào để xem biển lỗi và sửa từng biển hoặc cả nhóm.
 export default function VpaIntegrityPanel({ notify, onClose }) {
   const { data, isLoading, isError, isFetching, refetch } = useVpaIntegrity(true);
@@ -89,6 +116,7 @@ export default function VpaIntegrityPanel({ notify, onClose }) {
           </div>
         );
       })}
+      <FixHistory notify={notify} />
     </div>
   );
 }
