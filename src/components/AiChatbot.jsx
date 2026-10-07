@@ -215,7 +215,7 @@ function PlateMiniCard({ plate, onOpen }) {
       border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)',
       padding: '8px 12px', cursor: sold ? 'default' : 'pointer', textAlign: 'left', width: '100%',
     }}>
-      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{plate.plateNumber}</span>
+      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{plate.plateNumber}{plate.source === 'VPA' && <span style={{ marginLeft: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-regular)', color: 'var(--text-muted)' }}>Biển VPA</span>}</span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {sold && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Đã bán</span>}
         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{price}</span>

@@ -307,17 +307,35 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
             <h2 style={{ margin: '16px 0', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-primary)' }}>Những biển số đã về chủ mới</h2>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Giao dịch thật, khách hàng thật — minh bạch giá bán.</p>
           </div>
-          <div className="plate-marquee sold-marquee">
-            <div className="plate-marquee__track sold-marquee__track">
-              {[...soldItems, ...soldItems].map((p, i) => (
-                <div key={`${p.id}-${i}`} className="sold-marquee__item">
-                  <PlateCard {...p}
-                    onOpen={() => { trackSelectItem(p, 'home_sold'); openPlate(p.id); }}
-                    href={routeFor('detail', p.slug || p.id)} />
+          {(() => {
+            let soldSeq = [...soldItems];
+            while (soldSeq.length < 10) soldSeq = soldSeq.concat(soldItems);
+            const duration = Math.max(35, Math.round((soldSeq.length * 324) / 48));
+            return (
+              <div className="plate-marquee sold-marquee">
+                <div className="plate-marquee__track sold-marquee__track plate-marquee__track--grouped" style={{ animationDuration: `${duration}s` }}>
+                  <div className="plate-marquee__group">
+                    {soldSeq.map((p, i) => (
+                      <div key={`sold-g1-${p.id}-${i}`} className="sold-marquee__item">
+                        <PlateCard {...p}
+                          onOpen={() => { trackSelectItem(p, 'home_sold'); openPlate(p.id); }}
+                          href={routeFor('detail', p.slug || p.id)} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="plate-marquee__group" aria-hidden="true">
+                    {soldSeq.map((p, i) => (
+                      <div key={`sold-g2-${p.id}-${i}`} className="sold-marquee__item" tabIndex={-1}>
+                        <PlateCard {...p}
+                          onOpen={() => { trackSelectItem(p, 'home_sold'); openPlate(p.id); }}
+                          href={routeFor('detail', p.slug || p.id)} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            );
+          })()}
         </section>
       )}
 

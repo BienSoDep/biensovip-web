@@ -137,8 +137,62 @@ export function useSeo(screen, data) {
       image = SITE + '/assets/logo-mark.png';
     } else if (screen === 'about') {
       title = 'Về Duy Đinh — Shop Biển Số Đẹp Đà Nẵng Uy Tín | ' + BRAND;
-      desc = 'Duy Đinh — chuyên gia tư vấn biển số đẹp phong thủy tại Đà Nẵng. Hơn 5 năm kinh nghiệm, hỗ trợ sang tên toàn quốc, dịch vụ Zalo nhanh trong 15 phút.';
+      desc = 'Duy Đinh — chuyên gia tư vấn biển số đẹp phong thủy tại Đà Nẵng. Hơn 10 năm kinh nghiệm, hỗ trợ sang tên toàn quốc, dịch vụ Zalo nhanh trong 15 phút.';
       canonical = SITE + '/gioi-thieu';
+      ld = {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'AboutPage',
+            name: title,
+            description: desc,
+            url: canonical,
+          },
+          {
+            '@type': 'Person',
+            name: 'Duy Đinh',
+            jobTitle: 'Chuyên gia phong thủy & Định giá biển số xe',
+            url: canonical,
+            image: SITE + '/assets/logo-mark.png',
+            description: 'Người sáng lập Biensovip, chuyên gia hơn 10 năm kinh nghiệm trong lĩnh vực định giá và tư vấn biển số xe đẹp phong thủy tại Đà Nẵng.',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: '106 Hoàng Diệu, P. Phước Ninh, Q. Hải Châu',
+              addressLocality: 'Đà Nẵng',
+              addressCountry: 'VN',
+            },
+            telephone: '0815792699',
+            sameAs: [
+              'https://zalo.me/0815792699',
+              'https://www.tiktok.com/@duydinhbiensodepdanang',
+            ],
+          },
+          {
+            '@type': 'AutoDealer',
+            name: 'Biensovip — Biển số đẹp Duy Đinh',
+            url: SITE,
+            telephone: '0815792699',
+            priceRange: '10.000.000đ - 5.000.000.000đ',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: '106 Hoàng Diệu, P. Phước Ninh, Q. Hải Châu',
+              addressLocality: 'Đà Nẵng',
+              addressCountry: 'VN',
+            },
+            geo: {
+              '@type': 'GeoCoordinates',
+              latitude: 16.0645,
+              longitude: 108.2195,
+            },
+            openingHoursSpecification: {
+              '@type': 'OpeningHoursSpecification',
+              dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+              opens: '08:00',
+              closes: '21:00',
+            },
+          },
+        ],
+      };
     } else if (screen === 'blog') {
       title = 'Tin Tức Phong Thủy Biển Số & Cẩm Nang Chọn Biển Đẹp | ' + BRAND;
       desc = 'Ý nghĩa dãy số biển số xe, cách chọn biển hợp mệnh theo ngũ hành, quy định đấu giá biển số và sang tên mới nhất 2026.';
@@ -157,8 +211,14 @@ export function useSeo(screen, data) {
         datePublished: post.publishedAt,
         ...(post.updatedAt ? { dateModified: post.updatedAt } : {}),
         ...(post.coverImageUrl ? { image: post.coverImageUrl } : {}),
-        author: { '@type': 'Organization', name: 'Duy Đinh' },
-        publisher: { '@type': 'Organization', name: 'Duy Đinh', logo: { '@type': 'ImageObject', url: SITE + '/assets/logo-mark.png' } },
+        author: {
+          '@type': 'Person',
+          name: 'Duy Đinh',
+          jobTitle: 'Chuyên gia phong thủy & Định giá biển số xe',
+          url: SITE + '/gioi-thieu',
+          sameAs: ['https://zalo.me/0815792699'],
+        },
+        publisher: { '@type': 'Organization', name: 'Biensovip', logo: { '@type': 'ImageObject', url: SITE + '/assets/logo-mark.png' } },
         mainEntityOfPage: canonical,
       };
     } else if (screen === 'fav') { title = 'Biển số yêu thích | ' + BRAND; canonical = SITE + '/yeu-thich'; }
@@ -195,25 +255,95 @@ export function useSeo(screen, data) {
       canonical = SITE + '/bao-mat';
     } else if (screen === 'transfer') {
       title = 'Hướng Dẫn Sang Tên Biển Số Xe Ô Tô & Xe Máy 2026 | ' + BRAND;
-      desc = 'Hướng dẫn chi tiết thủ tục sang tên đổi chủ biển số xe — hồ sơ cần thiết, phí sang tên, quy trình tại cơ quan đăng ký xe theo Thông tư 24.';
+      desc = 'Hướng dẫn chi tiết thủ tục sang tên đổi chủ biển số định danh & xe gắn biển trúng đấu giá theo Thông tư 24/2023/TT-BCA — hồ sơ, phí trước bạ, quy trình rút hồ sơ gốc tận nơi.';
       canonical = SITE + '/sang-ten';
-      const steps = contentItems('transfer.steps');
-      if (steps.length) {
-        ld = {
-          '@context': 'https://schema.org', '@type': 'HowTo',
-          name: contentGet('transfer.title') || 'Hướng dẫn sang tên biển số',
-          description: desc,
-          step: steps.map((s) => ({
-            '@type': 'HowToStep',
-            name: s.title,
-            text: s.desc,
-          })),
-        };
-      }
+      const transferFaqs = contentItems('transfer.faqs') || [];
+      const faqLd = transferFaqs.length > 0 ? {
+        '@type': 'FAQPage',
+        mainEntity: transferFaqs.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+      } : null;
+      const webPageLd = {
+        '@type': 'WebPage',
+        name: contentGet('transfer.title') || 'Hướng dẫn thủ tục sang tên đổi chủ biển số xe',
+        description: desc,
+        url: canonical,
+        author: {
+          '@type': 'Person',
+          name: 'Duy Đinh',
+          jobTitle: 'Chuyên gia phong thủy & Định giá biển số xe',
+          url: SITE + '/gioi-thieu',
+          sameAs: ['https://zalo.me/0815792699'],
+        },
+      };
+      const breadcrumbLd = {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE },
+          { '@type': 'ListItem', position: 2, name: 'Hướng dẫn sang tên', item: canonical },
+        ],
+      };
+      const serviceLd = {
+        '@type': 'Service',
+        name: 'Dịch vụ hỗ trợ sang tên & rút hồ sơ gốc biển số xe toàn quốc',
+        serviceType: 'Thủ tục pháp lý sang tên đổi chủ, cấp biển số định danh theo Thông tư 24/2023/TT-BCA',
+        provider: {
+          '@type': 'Person',
+          name: 'Duy Đinh',
+          jobTitle: 'Chuyên gia phong thủy & Định giá biển số xe',
+          url: SITE + '/gioi-thieu',
+          telephone: '0815792699',
+        },
+        areaServed: {
+          '@type': 'Country',
+          name: 'Việt Nam',
+        },
+        offers: {
+          '@type': 'Offer',
+          priceCurrency: 'VND',
+          description: 'Tư vấn miễn phí qua Zalo, chi phí minh bạch theo từng hồ sơ thực tế',
+        },
+      };
+      ld = {
+        '@context': 'https://schema.org',
+        '@graph': [webPageLd, breadcrumbLd, serviceLd, ...(faqLd ? [faqLd] : [])],
+      };
     } else if (screen === 'faq') {
-      title = 'Hỏi Đáp về Biển Số Đẹp, Đấu Giá & Sang Tên | ' + BRAND;
-      desc = 'Giải đáp các câu hỏi thường gặp về biển số đẹp phong thủy, quy trình đấu giá biển số, thủ tục sang tên và bảng giá tham khảo.';
+      title = 'Hỏi Đáp về Biển Số Đẹp, Đấu Giá & Sang Tên 2026 | ' + BRAND;
+      desc = 'Giải đáp các câu hỏi thường gặp về biển số đẹp phong thủy, quy trình đấu giá biển số, thủ tục sang tên định danh và bảng giá tham khảo tại Biensovip.';
       canonical = SITE + '/hoi-dap';
+      const faqItems = contentItems('faq.items') || [];
+      const faqLd = faqItems.length > 0 ? {
+        '@type': 'FAQPage',
+        mainEntity: faqItems.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+      } : null;
+      const breadcrumbLd = {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE },
+          { '@type': 'ListItem', position: 2, name: 'Hỏi đáp thường gặp', item: canonical },
+        ],
+      };
+      ld = {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'WebPage',
+            name: title,
+            description: desc,
+            url: canonical,
+          },
+          breadcrumbLd,
+          ...(faqLd ? [faqLd] : []),
+        ],
+      };
     } else if (screen === 'notfound') {
       title = 'Không tìm thấy trang | ' + BRAND;
     } else if (screen === 'provinceLanding' && data?.landing) {
@@ -291,6 +421,45 @@ export function useSeo(screen, data) {
               availableLanguage: 'Vietnamese',
               hoursAvailable: 'Mo-Su 08:00-21:00',
             },
+          },
+          {
+            '@type': 'AutoDealer',
+            name: 'Biensovip — Biển số đẹp Đà Nẵng',
+            alternateName: ['Biển số đẹp Duy Đinh', 'Biensovip'],
+            url: SITE + '/',
+            logo: SITE + '/assets/logo-mark.png',
+            image: SITE + '/assets/logo-mark.png',
+            description: DEFAULT_DESC,
+            telephone: '0815792699',
+            priceRange: '10.000.000đ - 5.000.000.000đ',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: '106 Hoàng Diệu, P. Phước Ninh, Q. Hải Châu',
+              addressLocality: 'Đà Nẵng',
+              addressCountry: 'VN',
+            },
+            geo: {
+              '@type': 'GeoCoordinates',
+              latitude: 16.0645,
+              longitude: 108.2195,
+            },
+            openingHoursSpecification: {
+              '@type': 'OpeningHoursSpecification',
+              dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+              opens: '08:00',
+              closes: '21:00',
+            },
+            founder: {
+              '@type': 'Person',
+              name: 'Duy Đinh',
+              jobTitle: 'Chuyên gia phong thủy & Định giá biển số xe',
+              url: SITE + '/gioi-thieu',
+            },
+            sameAs: [
+              'https://zalo.me/0815792699',
+              'https://www.tiktok.com/@duydinhbiensodepdanang',
+              'https://www.facebook.com/duydinhbiensodepdanang',
+            ],
           },
           {
             '@type': 'WebSite',

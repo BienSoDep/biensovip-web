@@ -35,6 +35,7 @@ import {
   detectVehicleTypeId,
   num,
 } from './plates/plateUtils.js';
+import PlateCountSummary from './PlateCountSummary.jsx';
 import PlateQuickAddBar from './plates/PlateQuickAddBar.jsx';
 import PlateDrawerForm from './plates/PlateDrawerForm.jsx';
 import PlateBulkModals from './plates/PlateBulkModals.jsx';
@@ -303,6 +304,7 @@ export default function AdminPlates({ go, notify, st }) {
   const { data, isLoading, isError, refetch } = useAdminPlates(filters);
   const plates = data?.items || [];
   const total = data?.total || 0;
+  const { data: allData } = useAdminPlates({ page: 1, perPage: 1, status: 'all' }); // tổng không lọc
 
   const { data: dataIssuesRes } = usePlateDataIssues();
   const dataIssuesByPlateId = new Map((dataIssuesRes?.items || []).map((i) => [i.plateId, i.issues]));
@@ -668,6 +670,7 @@ export default function AdminPlates({ go, notify, st }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+
       {/* 1. Quick-add & Bulk import bar */}
       <PlateQuickAddBar
         quickNum={quickNum} setQuickNum={setQuickNum}
@@ -690,6 +693,8 @@ export default function AdminPlates({ go, notify, st }) {
         vehicleTypes={catOpts(vehicleTypes)}
         provinces={catOpts(provinces)}
       />
+
+      <PlateCountSummary matched={data?.total} all={allData?.total} filtered={activeFiltersCount > 0 || !!debouncedKeyword} />
 
       {/* 2. Plates Table, Cards & Filters */}
       <PlateTable

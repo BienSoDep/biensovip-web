@@ -35,52 +35,7 @@ const STATS = [
 
 const STEP_ICONS = [UserPlus, Share2, Link2, HandCoins];
 
-// Mốc trượt tiêu biểu — từ cọc nhỏ tới biển tiền tỷ, người xem thấy ngay hoa hồng tăng theo giá trị thật.
-const CALC_STEPS = [3_000_000, 5_000_000, 10_000_000, 20_000_000, 50_000_000, 100_000_000, 300_000_000];
-const CALC_RATE = 0.10;
 
-// Máy tính hoa hồng — biến "nhận % hoa hồng" trừu tượng thành con số cụ thể ngay trong hero,
-// kéo trượt số tiền khách đặt cọc để thấy hoa hồng đổi theo thời gian thực (không gọi API, tính tại chỗ).
-function CommissionCalculator() {
-  const [step, setStep] = useState(2);
-  const deposit = CALC_STEPS[step];
-  const commission = Math.round(deposit * CALC_RATE);
-
-  return (
-    <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <HandCoins size={16} color="var(--action-primary)" /> Thử tính hoa hồng của bạn
-      </span>
-      <input
-        type="range" min={0} max={CALC_STEPS.length - 1} step={1} value={step}
-        onChange={(e) => setStep(Number(e.target.value))}
-        aria-label="Chọn số tiền khách đặt cọc"
-        className="ctv-calc-slider"
-      />
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-        <div>
-          <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Khách đặt cọc</span>
-          <span style={{ display: 'block', font: 'var(--type-title-2)', color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums' }}>{money(deposit)}</span>
-        </div>
-        <ArrowRight size={20} style={{ color: 'var(--text-faint)', flexShrink: 0 }} />
-        <div>
-          <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bạn nhận (10%)</span>
-          <motion.span
-            key={commission}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            style={{ display: 'block', font: 'var(--type-display-3)', color: 'var(--action-primary)', fontVariantNumeric: 'tabular-nums' }}
-          >
-            {money(commission)}
-          </motion.span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
 
 // Fallback copy cho trình duyệt không có Clipboard API (HTTP không HTTPS).
 function fallbackCopy(text, onOk) {
@@ -1298,7 +1253,6 @@ function BenefitLanding({ go, onActivated }) {
             <CollaboratorIllustration />
           </div>
         </div>
-        <CommissionCalculator />
       </motion.div>
 
       <CtvTools />

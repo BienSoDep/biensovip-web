@@ -57,3 +57,13 @@ export function usePreviewEmail() {
     mutationFn: (body) => apiClient.post('/api/admin/notifications/preview', body),
   });
 }
+
+// Hàng đợi thông báo "biển mới hợp mệnh" (UC49 T22): đang chờ, số người chờ, đã gửi 24 giờ qua, hạn mức hiện hành.
+export function useFengShuiQueueStats(enabled = true) {
+  return useQuery({
+    queryKey: ['admin', 'fengshui-queue'],
+    queryFn: () => apiClient.get('/api/admin/notifications/fengshui-queue'),
+    enabled,
+    refetchInterval: 60_000,
+  });
+}

@@ -10,6 +10,7 @@ import { useBlogPost, useRelatedPosts, useRelatedPlates } from '../services/blog
 import { useBlogComments, useSubmitBlogComment } from '../services/blogComments.js';
 import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
+import AuthorBox from '../components/AuthorBox.jsx';
 import { Input } from '../components/index.jsx';
 import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } from '../services/tracking/events.js';
 import { sanitizeHtml } from '../lib/sanitizeHtml.js';
@@ -458,6 +459,8 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         <Button variant="outline" size="md" onClick={copyLink}><Link2 size={16} style={{ marginRight: 6 }} />{copied ? contentGet('posts.ui.copied') : contentGet('posts.ui.cta_share')}</Button>
       </div>
 
+      <AuthorBox />
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
         <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bình luận</h2>
         {user ? (
@@ -495,24 +498,37 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Biển số liên quan đến bài viết</h2>
           <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Những biển số cùng dãy ý nghĩa phong thủy với bài viết này, còn hàng trong hệ thống:</p>
-          <div className="plate-marquee">
-            <div className="plate-marquee__track">
-              {[...relatedPlates, ...relatedPlates].map((p, i) => {
-                const sp = splitPlateNumber(p.plateNumber);
-                return (
-                  <div key={`${p.id}-${i}`} className="plate-marquee__item">
-                    <div onClick={() => { trackSelectContent('related_plate_end_article', p.id, post.id, post.meaningKey); openPlate?.(p.slug || p.id); }} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
-                      <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{p.plateNumber} · {p.province}</span>
-                        <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(p.price, p.priceOnRequest)}</span>
-                      </div>
+          {(() => {
+            let relSeq = [...relatedPlates];
+            while (relSeq.length < 14) relSeq = relSeq.concat(relatedPlates);
+            const duration = Math.max(30, Math.round((relSeq.length * 224) / 52));
+            const renderRelated = (p, key, isHidden = false) => {
+              const sp = splitPlateNumber(p.plateNumber);
+              return (
+                <div key={key} className="plate-marquee__item" tabIndex={isHidden ? -1 : undefined}>
+                  <div onClick={() => { trackSelectContent('related_plate_end_article', p.id, post.id, post.meaningKey); openPlate?.(p.slug || p.id); }} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+                    <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{p.plateNumber} · {p.province}</span>
+                      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(p.price, p.priceOnRequest)}</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+              );
+            };
+            return (
+              <div className="plate-marquee">
+                <div className="plate-marquee__track plate-marquee__track--grouped" style={{ animationDuration: `${duration}s` }}>
+                  <div className="plate-marquee__group">
+                    {relSeq.map((p, i) => renderRelated(p, `p-g1-${p.id}-${i}`))}
+                  </div>
+                  <div className="plate-marquee__group" aria-hidden="true">
+                    {relSeq.map((p, i) => renderRelated(p, `p-g2-${p.id}-${i}`, true))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -10,6 +10,7 @@ const STATUS_OPTS = [
   { value: 'pending', label: 'Chờ duyệt' },
   { value: 'approved', label: 'Đã duyệt' },
   { value: 'rejected', label: 'Đã từ chối' },
+  { value: '', label: 'Tất cả trạng thái' },
 ];
 
 export default function AdminReviews({ notify }) {
@@ -22,7 +23,12 @@ export default function AdminReviews({ notify }) {
   const updateStatus = useUpdateReviewStatus();
   const replyReview = useReplyReview();
 
-  const items = data?.items || [];
+  const [plateFilter, setPlateFilter] = useState('all');
+
+  const rawItems = data?.items || [];
+  const items = plateFilter === 'all'
+    ? rawItems
+    : rawItems.filter((r) => r.plateStatus === plateFilter);
   const total = data?.total || 0;
   const perPage = data?.limit || 20;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
@@ -41,15 +47,74 @@ export default function AdminReviews({ notify }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      {/* Filter bar: Status pills, Plate type filter & search */}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)' }}>
-        <Select value={status} options={STATUS_OPTS} onChange={(v) => { setStatus(v); setPage(1); }} />
-        <input
-          value={keyword}
-          onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-          placeholder="Tìm theo tên khách / nội dung…"
-          style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)', color: 'var(--text-body)', background: 'var(--white)', minWidth: 220 }}
-        />
-        <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{total} đánh giá</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {[
+            { key: 'pending', label: 'Chờ duyệt' },
+            { key: 'approved', label: 'Đã duyệt' },
+            { key: 'rejected', label: 'Đã từ chối' },
+            { key: '', label: 'Tất cả trạng thái' },
+          ].map((tab) => {
+            const isActive = status === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => { setStatus(tab.key); setPage(1); }}
+                style={{
+                  padding: '6px 14px', borderRadius: 'var(--radius-pill)',
+                  border: isActive ? '1px solid var(--action-primary)' : '1px solid var(--border-hairline)',
+                  background: isActive ? 'var(--action-primary)' : 'var(--white)',
+                  color: isActive ? 'var(--white)' : 'var(--text-body)',
+                  font: 'var(--type-body-sm)', fontWeight: isActive ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                  cursor: 'pointer', transition: 'all 120ms ease-out',
+                  boxShadow: isActive ? '0 1px 4px rgba(217,119,6,.25)' : 'none',
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+
+          <span style={{ width: 1, height: 20, background: 'var(--border-hairline)', margin: '0 4px' }} />
+
+          {/* Lọc theo loại biển */}
+          {[
+            { key: 'all', label: 'Mọi biển' },
+            { key: 'available', label: 'Đang bán' },
+            { key: 'sold', label: 'Đã bán' },
+          ].map((pf) => {
+            const isPfActive = plateFilter === pf.key;
+            return (
+              <button
+                key={pf.key}
+                type="button"
+                onClick={() => setPlateFilter(pf.key)}
+                style={{
+                  padding: '4px 10px', borderRadius: 'var(--radius-pill)',
+                  border: isPfActive ? '1px solid var(--text-strong)' : '1px solid var(--border-hairline)',
+                  background: isPfActive ? 'var(--surface-sunken)' : 'transparent',
+                  color: isPfActive ? 'var(--text-strong)' : 'var(--text-muted)',
+                  fontSize: 12, fontWeight: isPfActive ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                  cursor: 'pointer', transition: 'all 100ms ease-out',
+                }}
+              >
+                {pf.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <input
+            value={keyword}
+            onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
+            placeholder="Tìm theo biển số / tên khách / nội dung…"
+            style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)', color: 'var(--text-body)', background: 'var(--white)', minWidth: 260 }}
+          />
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>{total} đánh giá/bình luận</span>
+        </div>
       </div>
 
       {isLoading ? (
@@ -60,26 +125,66 @@ export default function AdminReviews({ notify }) {
           <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
         </div>
       ) : items.length === 0 ? (
-        <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có đánh giá nào ở trạng thái này.</div>
+        <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <span>{status === 'pending' ? 'Hiện không có đánh giá/bình luận nào đang chờ duyệt.' : 'Không có bản ghi nào ở bộ lọc này.'}</span>
+          {(status !== '' || plateFilter !== 'all') && (
+            <Button variant="outline" size="sm" onClick={() => { setStatus(''); setPlateFilter('all'); setPage(1); }}>
+              Xem tất cả
+            </Button>
+          )}
+        </div>
       ) : (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           {items.map((r) => (
             <div key={r.id} style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.reviewerName}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{r.plateNumber || '—'}</span>
+                <span style={{
+                  padding: '2px 8px', borderRadius: 4, font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)',
+                  background: 'rgba(217,119,6,.1)', color: 'var(--action-primary)'
+                }}>{r.plateNumber || '—'}</span>
+
+                {/* Badge trạng thái biển số: Đang bán hay Đã bán */}
+                {r.plateStatus && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 'var(--fw-bold)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                    background: r.plateStatus === 'available' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(107, 114, 128, 0.12)',
+                    color: r.plateStatus === 'available' ? '#059669' : '#4B5563',
+                  }}>
+                    {r.plateStatus === 'available' ? 'Đang bán' : 'Đã bán'}
+                  </span>
+                )}
+
                 <div role="img" aria-label={`${r.rating}/5 sao`} style={{ display: 'flex', gap: 2 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= r.rating ? 'var(--action-primary)' : 'none'} style={{ color: n <= r.rating ? 'var(--action-primary)' : 'var(--grey-300)' }} aria-hidden />)}</div>
+                
+                {/* Badge trạng thái duyệt */}
+                <span style={{
+                  fontSize: 11, fontWeight: 'var(--fw-bold)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                  background: r.status === 'pending' ? 'var(--amber-100)' : r.status === 'approved' ? 'var(--green-100)' : 'var(--grey-100)',
+                  color: r.status === 'pending' ? 'var(--status-warning-ink)' : r.status === 'approved' ? 'var(--status-success-ink)' : 'var(--text-muted)',
+                }}>
+                  {r.status === 'pending' ? 'Chờ duyệt' : r.status === 'approved' ? 'Đã duyệt' : 'Đã từ chối'}
+                </span>
+
                 <div style={{ flex: 1 }} />
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{formatDate(r.createdAt)}</span>
               </div>
+
               {r.comment && <ReviewComment text={r.comment} />}
-              {status === 'pending' && (
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+
+              {/* Action buttons theo trạng thái của từng bản ghi */}
+              {r.status === 'pending' && (
+                <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
                   <Button variant="primary" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'approved')}>{pendingId === r.id ? 'Đang…' : 'Duyệt'}</Button>
                   <Button variant="ghost" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'rejected')}>Từ chối</Button>
                 </div>
               )}
-              {status === 'approved' && <ReplyBlock review={r} replyReview={replyReview} notify={notify} />}
+              {r.status === 'approved' && <ReplyBlock review={r} replyReview={replyReview} notify={notify} />}
+              {r.status === 'rejected' && (
+                <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
+                  <Button variant="outline" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'approved')}>Duyệt lại</Button>
+                </div>
+              )}
             </div>
           ))}
         </div>

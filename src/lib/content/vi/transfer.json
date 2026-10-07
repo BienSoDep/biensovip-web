@@ -1,22 +1,57 @@
 {
-  "title": "Hướng dẫn sang tên",
-  "subtitle": "Quy trình mua bán và sang tên biển số tại Biensovip — minh bạch, nhanh gọn, đúng luật.",
-  "updated": "Cập nhật: Tháng 8, 2026",
+  "title": "Hướng dẫn thủ tục sang tên đổi chủ biển số xe",
+  "subtitle": "Quy trình chuyển nhượng phương tiện kèm biển số trúng đấu giá và định danh tại Biensovip — minh bạch, nhanh gọn, chuẩn Thông tư 24/2023/TT-BCA.",
+  "updated": "Cập nhật: Tháng 10, 2026 bởi Chuyên gia Duy Đinh",
   "steps": {
-    "step_0": { "title": "1. Kiểm tra hồ sơ", "desc": "Chúng tôi kiểm tra giấy tờ gốc: đăng ký xe, CMND/CCCD chính chủ, sổ đăng kiểm (ô tô). Đảm bảo biển số sạch, không tranh chấp, không cầm cố." },
-    "step_1": { "title": "2. Đặt cọc & ký hợp đồng", "desc": "Hai bên ký hợp đồng mua bán có công chứng. Đặt cọc 30–50% giá trị biển số. Phần còn lại thanh toán khi hoàn tất sang tên." },
-    "step_2": { "title": "3. Sang tên tại CA", "desc": "Nhân viên Duy Đinh hỗ trợ làm thủ tục sang tên tại Phòng Cảnh sát Giao thông tỉnh/thành phố nơi xe đăng ký. Thời gian: 1–2 ngày làm việc." },
-    "step_3": { "title": "4. Nhận biển & thanh toán", "desc": "Sau khi sang tên hoàn tất, bạn thanh toán phần còn lại và nhận toàn bộ giấy tờ mới mang tên mình." }
+    "step_0": {
+      "title": "1. Thẩm định hồ sơ pháp lý & Check phạt nguội",
+      "desc": "Đối chiếu giấy tờ xe gốc, số khung số máy, tình trạng pháp lý phương tiện và số định danh chủ sở hữu trên hệ thống Cục CSGT. Đảm bảo xe chính chủ, không tranh chấp, không vướng phạt nguội trước khi giao dịch."
+    },
+    "step_1": {
+      "title": "2. Ký hợp đồng mua bán công chứng & Đặt cọc",
+      "desc": "Hai bên tiến hành lập và công chứng Hợp đồng mua bán chuyển nhượng phương tiện (kèm biển số trúng đấu giá hợp pháp theo quy định). Khách hàng đặt cọc bảo đảm và nhận biên nhận pháp lý từ Biensovip."
+    },
+    "step_2": {
+      "title": "3. Thủ tục thu hồi đăng ký, biển số tại CSGT",
+      "desc": "Chuyên viên Biensovip nộp hồ sơ kê khai trên Cổng Dịch vụ công Quốc gia/Bộ Công an, thực hiện thủ tục thu hồi chứng nhận đăng ký và biển số cũ tại Phòng CSGT Công an tỉnh/thành phố trong 1–2 ngày làm việc."
+    },
+    "step_3": {
+      "title": "4. Đăng ký sang tên & Bàn giao xe tận tay",
+      "desc": "Nộp hồ sơ đăng ký sang tên chính chủ cho người mua tại nơi cư trú (thường trú hoặc tạm trú trên VNeID). Bàn giao xe, giấy hẹn cà vẹt và biển số tận tay quý khách, hỗ trợ ép biển Mica chống nước cao cấp."
+    }
   },
-  "need_help_title": "Cần tư vấn thêm?",
-  "need_help_desc": "Gọi 0905 221 334 hoặc nhắn Zalo để được hướng dẫn chi tiết cho trường hợp của bạn.",
-  "cta_zalo": "Nhắn Zalo",
-  "cta_list": "Xem kho biển số",
-  "notes_title": "Lưu ý quan trọng",
+  "faqs_title": "Hỏi đáp thủ tục sang tên & biển định danh (Thông tư 24)",
+  "faqs": [
+    {
+      "q": "Biển số trúng đấu giá có được bán kèm theo xe cho người khác không?",
+      "a": "Được phép. Căn cứ khoản 1 Điều 28 Thông tư 24/2023/TT-BCA, chủ sở hữu xe ô tô gắn biển số trúng đấu giá được quyền chuyển nhượng xe kèm theo biển số trúng đấu giá. Người nhận chuyển quyền sở hữu sẽ được đăng ký, quản lý biển số đó theo mã định danh của mình."
+    },
+    {
+      "q": "Bán xe thông thường thì biển số định danh sẽ đi về đâu?",
+      "a": "Khi bán hoặc chuyển nhượng xe thông thường (không phải xe gắn biển đấu giá), chủ xe phải làm thủ tục thu hồi đăng ký và biển số. Biển số định danh đó được cơ quan CSGT giữ lại trong kho dữ liệu định danh của bạn tối đa 5 năm để cấp lại khi bạn đăng ký xe mới."
+    },
+    {
+      "q": "Người ở tỉnh khác mua xe gắn biển số Đà Nẵng có sang tên được không?",
+      "a": "Hoàn toàn được. Theo quy định mới, bạn chỉ cần có tài khoản VNeID mức 2 (nơi thường trú hoặc tạm trú hợp pháp) là có thể thực hiện đăng ký xe tại Phòng CSGT nơi bạn cư trú hoặc nơi quản lý biển số trúng đấu giá. Đội ngũ Biensovip hỗ trợ rút hồ sơ gốc và chuyển vùng tận nơi."
+    },
+    {
+      "q": "Thời gian hoàn tất thủ tục thu hồi và sang tên mất bao lâu?",
+      "a": "Tại Biensovip, quy trình rút hồ sơ thu hồi thông thường chỉ mất 1–2 ngày làm việc. Thủ tục nộp đăng ký sang tên mới tại cơ quan CSGT mất khoảng 2 ngày làm việc để nhận giấy hẹn và biển số."
+    },
+    {
+      "q": "Chi phí dịch vụ sang tên trọn gói tại Biensovip bao gồm những gì?",
+      "a": "Dịch vụ trọn gói của Biensovip bao gồm: công chứng hợp đồng, nộp lệ phí trước bạ hộ, rút hồ sơ gốc thu hồi tại CSGT, cà số khung số máy, nộp hồ sơ dịch vụ công và giao nhận tận nhà. Báo giá luôn minh bạch từ đầu, không phát sinh chi phí."
+    }
+  ],
+  "need_help_title": "Cần hỗ trợ thủ tục sang tên trực tiếp?",
+  "need_help_desc": "Hotline / Zalo Duy Đinh: 0815 792 699. Hỗ trợ tư vấn pháp lý hồ sơ xe, check phạt nguội và thủ tục thu hồi tận nơi.",
+  "cta_zalo": "Nhắn Zalo Duy Đinh",
+  "cta_list": "Xem kho biển số đẹp",
+  "notes_title": "4 Lưu ý pháp lý quan trọng khi giao dịch",
   "notes": [
-    "Biển số chỉ được sang tên khi xe đã đăng ký chính chủ, không vi phạm giao thông chưa xử lý.",
-    "Người mua cần có CMND/CCCD còn hiệu lực và hộ khẩu tại tỉnh/thành muốn đăng ký (hoặc tạm trú dài hạn).",
-    "Phí sang tên do Nhà nước quy định, không nằm trong giá biển số.",
-    "Thời gian sang tên có thể kéo dài hơn nếu hồ sơ phức tạp hoặc ngày lễ, cuối tuần."
+    "Biển số định danh thông thường gắn liền với chủ xe và KHÔNG ĐƯỢC mua bán riêng lẻ nếu không kèm phương tiện hoặc không phải biển trúng đấu giá.",
+    "Chỉ xe ô tô gắn biển số trúng đấu giá mới được phép chuyển nhượng xe kèm theo biển số theo khoản 1 Điều 28 Thông tư 24/2023/TT-BCA.",
+    "Khách hàng cần kích hoạt tài khoản định danh điện tử VNeID mức 2 để xác thực kê khai giấy tờ trên Cổng Dịch vụ công Bộ Công an.",
+    "Biensovip cam kết hỗ trợ trọn đời về nguồn gốc pháp lý phương tiện, bảo đảm hồ sơ hợp lệ 100% trước cơ quan đăng ký xe."
   ]
 }

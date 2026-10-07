@@ -73,7 +73,7 @@ export default function Faq({ go, zalo }) {
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 480 }}>{contentGet('faq.not_found_desc')}</p>
         <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
           <Button variant="primary" size="md" onClick={go('chat')}>{contentGet('faq.cta_request')}</Button>
-          <Button variant="outline" size="md" onClick={() => window.open(toZaloUrl(zalo || '0905221334'), '_blank')}>{contentGet('faq.cta_zalo')}</Button>
+          <Button variant="outline" size="md" onClick={() => window.open(toZaloUrl(zalo || '0815792699'), '_blank')}>{contentGet('faq.cta_zalo')}</Button>
         </div>
       </div>
     </div>
