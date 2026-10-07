@@ -15,7 +15,7 @@ const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose'
 export default function PlateCard({
   plateNumber, type, province, vehicleType, price, priceOnRequest, isHot, thumbnailUrl,
   status, badge, fav, onFav, onCompare, inCompare, onOpen, href, onBuy, style, plateSize = 'md',
-  contact, salePrice, layout = 'grid', priceOnRequestLabel,
+  contact, salePrice, layout = 'grid', priceOnRequestLabel, fengShui,
 }) {
   // Ảnh biển số sinh tự động chỉ hiện khi admin đã bật cờ toàn hệ thống (mặc định tắt — ưu tiên
   // PlateVisual). Xem AdminMaintenance > "Hiển thị biển số" hoặc trang cài đặt tương ứng.
@@ -26,10 +26,13 @@ export default function PlateCard({
   const meta = [vehicleType, province].filter(Boolean).join(' · ');
   const onSale = !priceOnRequest && salePrice != null && salePrice < price;
   const discountPct = onSale ? Math.round((1 - salePrice / price) * 100) : 0;
+  // Biển hợp mệnh của khách: viền xanh lá + nhãn 🍀 (biển nổi bật giữ viền hổ phách, vẫn có nhãn hợp mệnh).
+  const fsRing = fengShui && !sold && !isHot ? { boxShadow: '0 0 0 2px var(--mint-500), var(--shadow-2)' } : null;
+  const fsBadge = fengShui ? <Badge tone="mint">🍀 Hợp mệnh {fengShui.element} · {fengShui.score}%</Badge> : null;
 
   if (layout === 'row') {
     return (
-      <Card tone="sunken" pad="10px" style={{ background: 'var(--surface-muted)', ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : null), ...style }}>
+      <Card tone="sunken" pad="10px" style={{ background: 'var(--surface-muted)', ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : fsRing), ...style }}>
         <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer' }}>
           <div style={{ position: 'relative', flexShrink: 0, width: 108, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--white)' }}>
             {showThumbnail ? (
@@ -46,6 +49,7 @@ export default function PlateCard({
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               {isHot && <Badge tone="hot">🔥 HOT</Badge>}
+              {fsBadge}
               {type && <Badge tone="dark">{type}</Badge>}
               {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
             </div>
@@ -82,7 +86,7 @@ export default function PlateCard({
       style={{
         height: '100%',
         background: 'var(--surface-muted)',
-        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : null),
+        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : fsRing),
         ...style,
       }}
     >
@@ -91,6 +95,7 @@ export default function PlateCard({
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 6 }}>
               {isHot && <Badge tone="hot">🔥 HOT</Badge>}
+              {fsBadge}
               {onSale && !sold && <Badge tone="rose">-{discountPct}%</Badge>}
               {type && <Badge tone="dark">{type}</Badge>}
               {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
