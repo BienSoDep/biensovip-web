@@ -63,12 +63,11 @@ const VPA_SORTS = {
   expired: [{ value: 'default', label: 'Mặc định' }, { value: 'latest', label: 'Mới kết thúc' }, { value: 'number', label: 'Số biển A→Z' }],
 };
 
-// 4 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 3 tab còn lại lấy từ VPA (UC49).
+// 3 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 2 tab còn lại lấy từ VPA (UC49).
 const TABS = [
-  { key: 'monthly', label: 'Biển tháng' },
   { key: 'weekly', label: 'Biển tuần' },
+  { key: 'monthly', label: 'Biển tháng' },
   { key: 'available', label: 'Biển có sẵn' },
-  { key: 'expired', label: 'Biển hết hạn' },
 ];
 
 export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice, contact }) {
