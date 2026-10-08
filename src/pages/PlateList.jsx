@@ -384,7 +384,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       {/* 1 thanh pill dài duy nhất, chia khúc bằng divider mỏng — trước đây là nhiều ô/pill rời rạc
           cạnh nhau (search + năm sinh + input + OK), bị phản ánh "khó chịu" về mặt thị giác. */}
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
-        <div style={{
+        <div className="plate-search-bar" style={{
           display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', width: 'fit-content', maxWidth: '100%',
           background: 'var(--white)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)',
           overflow: 'hidden',
@@ -397,7 +397,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               style={{ height: 44, width: 'min(320px, 56vw)', minWidth: 0, border: 'none', background: 'transparent', padding: '0 16px 0 40px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }}
             />
           </span>
-          <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
+          <div className="plate-search-divider" style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
           {birthYear ? (
             <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
               style={{ height: 44, padding: '0 16px', border: 'none', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>
@@ -406,7 +406,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           ) : null}
           {birthYear && fsData && (
             <>
-              <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
+              <div className="plate-search-divider" style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
               <button type="button" aria-pressed={fengshuiOnly} onClick={() => setFengshuiOnly((v) => !v)}
                 style={{ height: 44, padding: '0 16px', border: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: fengshuiOnly ? 'var(--action-primary)' : 'transparent', color: fengshuiOnly ? 'var(--action-primary-text)' : 'var(--text-body)', whiteSpace: 'nowrap' }}>
                 Chỉ hiện biển hợp mệnh
@@ -426,7 +426,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           )}
           {yearOpen && (
             <>
-              <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
+              <div className="plate-search-divider" style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
               <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Năm sinh" value={yearDraft} onChange={(e) => setYearDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
                 style={{ width: 100, height: 44, border: 'none', background: 'transparent', padding: '0 12px', font: 'var(--type-body-sm)', outline: 'none' }} />

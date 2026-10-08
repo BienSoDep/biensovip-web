@@ -540,6 +540,26 @@ textarea,
   .list-filter-aside {
     display: none !important;
   }
+  /* PlateList: thanh pill dài (search + năm sinh) vỡ hình khi wrap 2 dòng trên mobile — border-radius-pill
+     áp cho cả khối khiến nó thành viên "thuốc" sai dạng khi search+năm sinh không đủ chỗ cùng 1 hàng.
+     Mobile: xếp dọc từng khúc riêng (mỗi khúc tự bo pill), input full width, divider đổi hướng ngang. */
+  .plate-search-bar {
+    flex-direction: column !important;
+    width: 100% !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .plate-search-bar > span,
+  .plate-search-bar > input,
+  .plate-search-bar > button,
+  .plate-search-bar > span > input {
+    width: 100% !important;
+  }
+  .plate-search-divider {
+    width: auto !important;
+    height: 1px !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+  }
   /* Auth (login/register): hide info panel on mobile — chỉ còn form */
   .auth-info {
     display: none !important;

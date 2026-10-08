@@ -33,48 +33,69 @@ export default function PlateCard({
   if (layout === 'row') {
     return (
       <Card tone="sunken" pad="10px" style={{ background: 'var(--surface-muted)', ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : fsRing), ...style }}>
-        <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer' }}>
-          <div style={{ position: 'relative', flexShrink: 0, width: 108, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--white)' }}>
-            {showThumbnail ? (
-              <img src={optimizeImageUrl(thumbnailUrl)} alt={`Biển số ${plateNumber}${meta ? ' — ' + meta : ''}`} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', display: 'block' }} />
-            ) : (
-              <PlateVisual size="sm" prov={prov} seri={seri} num={num} shape="short" />
-            )}
-            {sold && (
-              <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,15,18,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ font: 'var(--type-caption)', fontSize: 10, letterSpacing: '.1em', color: 'var(--white)', background: 'rgba(14,15,18,.72)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>ĐÃ BÁN</span>
-              </div>
-            )}
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              {isHot && <Badge tone="hot">🔥 HOT</Badge>}
-              {fsBadge}
-              {type && <Badge tone="dark">{type}</Badge>}
-              {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <a href={href || '#'} onClick={(e) => { e.preventDefault(); onOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer', flex: '1 1 260px', minWidth: 0 }}>
+            <div style={{ position: 'relative', flexShrink: 0, width: 108, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--white)' }}>
+              {showThumbnail ? (
+                <img src={optimizeImageUrl(thumbnailUrl)} alt={`Biển số ${plateNumber}${meta ? ' — ' + meta : ''}`} style={{ width: '100%', aspectRatio: '1.6/1', objectFit: 'cover', display: 'block' }} />
+              ) : (
+                <PlateVisual size="sm" prov={prov} seri={seri} num={num} shape="short" />
+              )}
+              {sold && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(14,15,18,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ font: 'var(--type-caption)', fontSize: 10, letterSpacing: '.1em', color: 'var(--white)', background: 'rgba(14,15,18,.72)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>ĐÃ BÁN</span>
+                </div>
+              )}
             </div>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta}</span>
-            {onSale ? (
-              <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-danger)', whiteSpace: 'nowrap' }}>{formatPrice(salePrice, false)}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{formatPrice(price, false)}</span>
-              </span>
-            ) : (
-              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{priceOnRequest && priceOnRequestLabel ? priceOnRequestLabel : formatPrice(price, priceOnRequest)}</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            {onFav && (
-              <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
-                <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }} style={fav ? { color: 'var(--status-danger)' } : undefined} />
-              </span>
-            )}
-            {onCompare && (
-              <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
-            )}
-          </div>
-        </a>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                {isHot && <Badge tone="hot">🔥 HOT</Badge>}
+                {fsBadge}
+                {type && <Badge tone="dark">{type}</Badge>}
+                {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
+              </div>
+              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prov}{seri} · {num}</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta}</span>
+              {onSale ? (
+                <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--status-danger)', whiteSpace: 'nowrap' }}>{formatPrice(salePrice, false)}</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{formatPrice(price, false)}</span>
+                </span>
+              ) : (
+                <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{priceOnRequest && priceOnRequestLabel ? priceOnRequestLabel : formatPrice(price, priceOnRequest)}</span>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              {onFav && (
+                <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
+                  <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }} style={fav ? { color: 'var(--status-danger)' } : undefined} />
+                </span>
+              )}
+              {onCompare && (
+                <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+              )}
+            </div>
+          </a>
+          {!sold && (onBuy || contact?.phone || contact?.zalo) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
+              {onBuy && (
+                <Button variant="primary" size="sm" onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" style={{ whiteSpace: 'nowrap' }}>Chốt biển này</Button>
+              )}
+              {contact?.phone && (
+                isMobileDevice() ? (
+                  <a href={`tel:${contact.phone}`} onClick={() => trackCtaClick('goi_ngay', plateNumber)} aria-label="Gọi ngay" title="Gọi ngay" className="plate-card-cta-secondary" style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Phone size={16} /></a>
+                ) : (
+                  <button type="button" onClick={() => { trackCtaClick('goi_ngay', plateNumber); callOrCopyPhone(contact.phone); }} aria-label="Sao chép số điện thoại" title={`Sao chép số ${contact.phone}`} className="plate-card-cta-secondary" style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: 'var(--status-success-ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Phone size={16} /></button>
+                )
+              )}
+              {contact?.zalo && (
+                <button type="button" onClick={() => { trackCtaClick('zalo', plateNumber); openZaloWithMessage(contact.zalo, buildConsultMessage(plateNumber)); }} aria-label="Nhắn Zalo" title="Nhắn Zalo" className="plate-card-cta-secondary" style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer', background: '#0068FF', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <ZaloIcon width={17} height={17} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </Card>
     );
   }
