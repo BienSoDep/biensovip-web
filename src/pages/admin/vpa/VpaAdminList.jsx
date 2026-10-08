@@ -12,6 +12,7 @@ import { Badge, Select, IconButton, SearchField, InfoTip } from '../../../compon
 import VpaPlateDrawer from './VpaPlateDrawer.jsx';
 import MultiFilter from './MultiFilter.jsx';
 import VpaIntegrityPanel from './VpaIntegrityPanel.jsx';
+import VpaStatsCharts from './VpaStatsCharts.jsx';
 import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
@@ -281,6 +282,7 @@ export default function VpaAdminList({ queue = false, notify }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {!queue && <VpaStatsCharts />}
       {!queue && (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>

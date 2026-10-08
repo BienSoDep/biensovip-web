@@ -43,6 +43,16 @@ export function useVpaOverview(options) {
   });
 }
 
+// 4 biểu đồ tab "Danh sách biển VPA" — enabled=false khi khung đang gấp lại (không tải cho tới khi mở ra).
+export function useVpaStats(enabled = true) {
+  return useQuery({
+    queryKey: [KEY, 'stats'],
+    queryFn: () => apiClient.get('/api/admin/vpa/stats'),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
 export function useVpaRuns(limit = 30, enabled = true) {
   return useQuery({
     queryKey: [KEY, 'runs', limit],
