@@ -440,6 +440,12 @@ export default function PlateTable({
               {colPrefs.vehicleType && <SortHeader label="Loại xe" sortKey="vehicleTypeName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.province && <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.price && <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />}
+              {colPrefs.suggestedPrice && (
+                <span style={{ flex: '1 1 110px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Giá gợi ý VPA" sortKey="suggestedPrice" />
+                  <InfoTip size={12} text="Giá ước tính từ kết quả đấu giá VPA biển trùng đuôi số (hoặc giá sàn cùng nhóm nếu chưa có mẫu) × hệ số. Chỉ để tham khảo, không tự áp vào Giá bán." />
+                </span>
+              )}
               {colPrefs.salePrice && <SortHeader label="Giá KM" sortKey="salePrice" style={{ flex: '1 1 96px' }} />}
               {colPrefs.gifted && <span style={{ flex: '1 1 96px' }}>Biển tặng</span>}
               {colPrefs.isNew && <span className="plate-col-new" style={{ flex: '0 0 48px' }}>Mới</span>}
@@ -502,7 +508,24 @@ export default function PlateTable({
                   {colPrefs.plateType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>}
                   {colPrefs.vehicleType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.vehicleTypeName}</span>}
                   {colPrefs.province && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.provinceName}</span>}
-                  {colPrefs.price && <span style={{ flex: '1 1 110px' }}>{renderCell(p, 'price')}</span>}
+                  {colPrefs.price && (
+                    <span style={{ flex: '1 1 110px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      {renderCell(p, 'price')}
+                      {!p.priceOnRequest && p.suggestedPrice > 0 && p.price > 0
+                        && Math.abs(p.price - p.suggestedPrice) > p.suggestedPrice * 0.1 && (
+                        <TriangleAlert
+                          size={14}
+                          style={{ color: 'var(--status-warning-ink)', flexShrink: 0 }}
+                          title={`Lệch ${Math.round(Math.abs(p.price - p.suggestedPrice) / p.suggestedPrice * 100)}% so giá gợi ý VPA (${fmt(p.suggestedPrice)})`}
+                        />
+                      )}
+                    </span>
+                  )}
+                  {colPrefs.suggestedPrice && (
+                    <span style={{ flex: '1 1 110px', font: 'var(--type-body-sm)', color: p.suggestedPrice ? 'var(--text-default)' : 'var(--text-faint)' }}>
+                      {p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}
+                    </span>
+                  )}
                   {colPrefs.salePrice && <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)', color: p.salePrice ? 'var(--status-danger)' : 'var(--text-faint)' }}>{p.salePrice ? fmt(p.salePrice) : '—'}</span>}
                   {colPrefs.gifted && (
                     <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)' }}>
