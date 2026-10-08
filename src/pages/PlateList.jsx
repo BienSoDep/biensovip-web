@@ -415,8 +415,11 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       </section>
       {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển.
           Track 2 icon bo góc nhẹ thay vì pill tròn rời — build từ vehicleTypes.items nên vẫn không crash
-          nếu admin thêm loại xe thứ 3, chỉ mất hiệu ứng "2 ô cạnh nhau" đẹp. */}
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-2)' }}>
+          nếu admin thêm loại xe thứ 3, chỉ mất hiệu ứng "2 ô cạnh nhau" đẹp.
+          Nhãn nhóm + space-6 phía trên (thay vì space-2 trước đó) tách rõ khỏi hàng tìm kiếm/năm sinh ở trên,
+          vốn bị người dùng phản ánh là "rối" khi 4 hàng control liền kề không khoảng cách/nhãn phân biệt. */}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--space-2)' }}>
+        <span style={{ display: 'block', marginBottom: 'var(--space-2)', font: 'var(--type-label)', color: 'var(--text-muted)' }}>Loại xe</span>
         <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-lg)', padding: 3, boxShadow: 'var(--shadow-inset-hairline)', gap: 3 }}>
           {(vehicleTypes?.items || []).map((v) => {
             const active = filters.vehicle === v.id;
@@ -437,7 +440,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           })}
         </div>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-4) var(--pad-page) var(--space-4)' }}>
+        <span style={{ display: 'block', marginBottom: 'var(--space-2)', font: 'var(--type-label)', color: 'var(--text-muted)' }}>Loại biển</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
         <button type="button" aria-pressed={filters.cat.length === 0} onClick={() => setFilter({ cat: [] })}
           style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: filters.cat.length === 0 ? 'var(--fw-bold)' : 'var(--fw-medium)', background: filters.cat.length === 0 ? 'var(--action-primary)' : 'var(--surface-sunken)', color: filters.cat.length === 0 ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: filters.cat.length === 0 ? 'none' : 'var(--shadow-inset-hairline)' }}>
           Tất cả
@@ -451,6 +456,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             </button>
           );
         })}
+        </div>
       </section>
       <section className="list-filter-toggle-row" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', display: 'none' }}>
         <button type="button" onClick={() => setFilterOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer' }}>
