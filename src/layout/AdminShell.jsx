@@ -37,6 +37,7 @@ import AdminPublicDisplay from '../pages/admin/AdminPublicDisplay.jsx';
 import AdminOpsTools from '../pages/admin/AdminOpsTools.jsx';
 import AdminNotificationsHub from '../pages/admin/AdminNotificationsHub.jsx';
 import AdminInsights from '../pages/admin/AdminInsights.jsx';
+import AdminVpaMarket from '../pages/admin/AdminVpaMarket.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -54,6 +55,7 @@ const NAV_PERM = {
   apolicypages: 'policy_pages:view',
   actvtemplates: 'ctv_message_templates:view',
   ainsights: 'analytics:view',
+  avpamarket: 'vpa_prices:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
@@ -124,6 +126,7 @@ const ADMIN_INFO = {
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
   ainsights: 'Báo cáo chuyên sâu: Phễu chuyển đổi toàn diện, radar phát hiện điểm nghẽn, đối soát cung - cầu kho biển, sức khỏe nguồn lead và danh sách biển số tồn đọng cần kích cầu.',
+  avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật (không phải giá gợi ý/giá duyệt): so kỳ 7 ngày, xu hướng giá theo tuần kèm trung bình động, dự báo tuần tới (ước tính thô, xem R² để biết độ tin cậy), xếp hạng tỉnh/loại biển tăng giá nhanh nhất, lời khuyên tự sinh từ số liệu, và đối chiếu giá trúng VPA với giá niêm yết biển của shop — hai con số khác bản chất, chỉ để tham khảo mặt bằng.',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -405,6 +408,7 @@ export default function AdminShell({
         {s === 'aauditlog' && <AdminLogs st={st} notify={notify} />}
         {s === 'ashowroom' && <AdminPublicDisplay notify={notify} />}
         {s === 'ainsights' && <AdminInsights go={go} patch={patch} st={st} />}
+        {s === 'avpamarket' && <AdminVpaMarket notify={notify} />}
         {s === 'afeatureflags' && <AdminOpsTools notify={notify} patch={patch} />}
         {s === 'apolicypages' && <AdminPolicyPages notify={notify} />}
         {s === 'actvtemplates' && <AdminCtvMessageTemplates notify={notify} />}

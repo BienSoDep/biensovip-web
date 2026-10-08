@@ -53,6 +53,15 @@ export function useVpaStats(enabled = true) {
   });
 }
 
+// Trang Phân tích thị trường VPA — { provinceId, plateTypeId } null = toàn thị trường.
+export function useVpaMarketAnalysis({ provinceId, plateTypeId } = {}) {
+  return useQuery({
+    queryKey: [KEY, 'market-analysis', provinceId || '', plateTypeId || ''],
+    queryFn: () => apiClient.get('/api/admin/vpa/market-analysis', { params: { provinceId, plateTypeId } }),
+    staleTime: 60_000,
+  });
+}
+
 export function useVpaRuns(limit = 30, enabled = true) {
   return useQuery({
     queryKey: [KEY, 'runs', limit],
