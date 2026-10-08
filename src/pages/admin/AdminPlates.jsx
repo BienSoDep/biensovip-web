@@ -6,7 +6,10 @@ import {
   useAdminPlates, useDeletePlate, useUpdatePlateStatus,
   useUpdatePlateVisibility, useUpdatePlate, useCreatePlate,
   useBulkCreatePlate, useUploadImage, useAdminPlate, checkPlateVersion, useRestorePlate,
+  usePlatePriceReference,
 } from '../../services/adminPlates.js';
+import PriceReferenceModal from '../../components/PriceReferenceModal.jsx';
+import { openVpaWithSearch } from './vpa/VpaAdminList.jsx';
 import { useAdminCategories } from '../../services/categories.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
@@ -291,6 +294,8 @@ export default function AdminPlates({ go, notify, st }) {
   const [bulkView, setBulkView] = useState('list');
   const [cell, setCell] = useState(null);
   const [selected, setSelected] = useState(new Set());
+  const [priceRefPlateId, setPriceRefPlateId] = useState(null); // UC49 — biển đang xem popup nguồn giá gợi ý
+  const priceRefQuery = usePlatePriceReference(priceRefPlateId, !!priceRefPlateId);
 
   const filters = {
     status, keyword: debouncedKeyword, page, perPage,
@@ -729,6 +734,15 @@ export default function AdminPlates({ go, notify, st }) {
         sort={sort} toggleSort={toggleSort}
         cell={cell} setCell={setCell} commitPrice={commitPrice}
         notify={notify}
+        openPriceReference={setPriceRefPlateId}
+      />
+
+      <PriceReferenceModal
+        open={!!priceRefPlateId}
+        onClose={() => setPriceRefPlateId(null)}
+        data={priceRefQuery.data}
+        isLoading={priceRefQuery.isLoading}
+        onOpenPlate={(plateNumber) => { setPriceRefPlateId(null); openVpaWithSearch(go, plateNumber); }}
       />
 
       {/* 3. Add/Edit Plate Form Drawer */}
