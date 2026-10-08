@@ -13,7 +13,7 @@ export const NAV = [
 // AdminLogs.jsx, AdminPublicDisplay.jsx, AdminOpsTools.jsx, AdminNotificationsHub.jsx) để giảm số mục
 // sidebar (29→21) và xếp các mục liên quan gần nhau theo đúng luồng thao tác thật.
 export const ADMIN_NAV = [
-  { group: null, items: [['dash', 'Tổng quan'], ['aguide', 'Hướng dẫn sử dụng']] },
+  { group: null, items: [['dash', 'Tổng quan'], ['avpamarket', 'Phân tích thị trường VPA'], ['ainsights', 'Insight khách hàng'], ['aguide', 'Hướng dẫn sử dụng']] },
   // 2026-09 — 3 mục Yêu cầu liên hệ / Quy trình bán hàng / Giao dịch gộp thành 1 mục 'Bán hàng'
   // (3 view bên trong, xem AdminSales.jsx). Slug cũ giữ trong ADMIN_SCREENS/ROUTE_MAP để URL cũ
   // vẫn mở được — AdminShell tự redirect sang 'asales' kèm ?view= tương ứng.
@@ -22,7 +22,6 @@ export const ADMIN_NAV = [
   { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
   { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['actvtemplates', 'Mẫu tin nhắn CTV']] },
   { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký'], ['ashowroom', 'Hiển thị trang public'], ['afeatureflags', 'Công cụ vận hành']] },
-  { group: 'Báo cáo', items: [['ainsights', 'Insight khách hàng'], ['avpamarket', 'Phân tích thị trường VPA']] },
 ];
 export const TONES = { 'Mới': 'blue', 'Đang tư vấn': 'amber', 'Đã chốt': 'mint', 'Còn hàng': 'mint', 'Đã bán': 'rose', 'Ẩn': 'neutral', 'Đã xuất bản': 'mint', 'Bản nháp': 'neutral' };
 export const STATUS_FG = { 'Mới': 'var(--blue-700)', 'Đang tư vấn': 'var(--status-warning-ink)', 'Đã chốt': 'var(--status-success-ink)' };
