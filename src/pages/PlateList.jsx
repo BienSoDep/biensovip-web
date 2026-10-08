@@ -381,9 +381,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           })}
         </div>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
         <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
-        <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
           {birthYear ? (
             <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
               style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-inset-hairline)' }}>
