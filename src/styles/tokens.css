@@ -18,9 +18,12 @@
 --amber-500:#F5C542;--amber-400:#F7D070;--amber-100:#FDF2D2;--amber-50:#FFF4E8;
 --mint-500:#3FBF8F;--mint-100:#DFF5EC;
 --rose-500:#E5484D;--rose-100:#FCE7E7;
---orange-100:#FFE1BF;--orange-50:#FFF4E8;
+/* Khớp hue/saturation với --brand-* (app.css, màu logo) — trước đây 2 ramp cam lệch tông nhau
+   (bug "loạn màu" người dùng phản ánh 2026-10). Giá trị literal thay vì var(--brand-200) vì
+   file này là base token, không phụ thuộc app.css override thứ tự nạp. */
+--orange-100:#F6C8A2;--orange-50:#FBE4D0;
 --green-50:#EEFCF3;
---accent-orange-ink:#C75B00;--accent-purple-ink:#7B2D8B;
+--accent-orange-ink:#8C470D;--accent-purple-ink:#7B2D8B;
 
 /* --- Semantic aliases: use these in components --- */
 --text-strong:var(--ink-900);--text-body:var(--ink-700);--text-muted:var(--grey-500);--text-faint:var(--grey-400);--text-inverse:var(--white);--text-link:var(--blue-600);

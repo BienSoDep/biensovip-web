@@ -317,6 +317,7 @@ const BADGE_TONES = {
   rose: { background: 'var(--rose-100)', color: 'var(--rose-500)' },
   hot: { background: 'var(--amber-500)', color: 'var(--white)' },
   amber: { background: 'var(--amber-100)', color: 'var(--status-warning-ink)' },
+  orange: { background: 'var(--orange-100)', color: 'var(--accent-orange-ink)' },
   mint: { background: 'var(--mint-100)', color: 'var(--status-success-ink)' },
   blue: { background: 'var(--blue-100)', color: 'var(--blue-700)' },
   neutral: { background: 'var(--grey-100)', color: 'var(--text-muted)' },

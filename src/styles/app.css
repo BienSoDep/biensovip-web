@@ -1,12 +1,17 @@
-/* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity */
+/* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity.
+   Đo trực tiếp từ logo-mark.png (2026-10): 2 tông chủ đạo #f1961f (sáng) và #eb7e23 (đậm).
+   Giữ đúng hue/saturation của logo (~H 0.076, S 0.83) xuyên suốt ramp — khác bản cũ (#d4650a)
+   vốn ngả nâu/đỏ, lệch hue so với logo thật. #eb7e23/#f1961f không đạt WCAG AA cho chữ trắng
+   trên nút (contrast 2.78/2.3, cần ≥4.5) nên --brand-500 (action-primary) hạ lightness xuống
+   #b25a10 (cùng hue/sat, contrast 4.81) — vẫn "đúng chất" cam logo, không ngả nâu, nhưng đọc được. */
 :root {
-  --brand-700: #8a3f00;
-  --brand-600: #b85600;
-  --brand-500: #d4650a;
-  --brand-400: #e8903e;
-  --brand-200: #f4c89e;
-  --brand-100: #f9e2cc;
-  --brand-50: #fcf2e6;
+  --brand-700: #8c470d;
+  --brand-600: #9f500e;
+  --brand-500: #b25a10;
+  --brand-400: #ec842d;
+  --brand-200: #f6c8a2;
+  --brand-100: #fbe4d0;
+  --brand-50: #fdf1e8;
   --blue-700: var(--brand-700);
   --blue-600: var(--brand-600);
   --blue-500: var(--brand-500);
@@ -14,11 +19,11 @@
   --blue-200: var(--brand-200);
   --blue-100: var(--brand-100);
   --blue-50: var(--brand-50);
-  --shadow-blue: 0 8px 20px rgba(212, 101, 10, 0.26);
+  --shadow-blue: 0 8px 20px rgba(178, 90, 16, 0.26);
   --surface-hero: linear-gradient(
     135deg,
-    #f9e2cc 0%,
-    #fcf2e6 42%,
+    #fbe4d0 0%,
+    #fdf1e8 42%,
     var(--cream-100) 100%
   );
 }
