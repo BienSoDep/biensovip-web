@@ -12,12 +12,14 @@ import { Badge, Select, IconButton, SearchField, InfoTip } from '../../../compon
 import VpaPlateDrawer from './VpaPlateDrawer.jsx';
 import MultiFilter from './MultiFilter.jsx';
 import VpaIntegrityPanel from './VpaIntegrityPanel.jsx';
+import VpaStatsCharts from './VpaStatsCharts.jsx';
 import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
-  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
+  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useApproveAllVpaSuggested, useApproveRecomputedVpa, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
   useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv,
 } from '../../../services/adminVpa.js';
+import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { formatDate } from '../../../lib/date.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
@@ -105,6 +107,9 @@ export default function VpaAdminList({ queue = false, notify }) {
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
+  const approveAll = useApproveAllVpaSuggested();
+  const approveRecomputed = useApproveRecomputedVpa();
+  const [confirmAction, setConfirmAction] = useState(null); // null | 'all' | 'recomputed' | 'recomputed-override'
   const reject = useRejectVpaPrice();
   const approveGroup = useApproveVpaGroup();
   const hide = useHideVpaPlate();
@@ -277,6 +282,7 @@ export default function VpaAdminList({ queue = false, notify }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {!queue && <VpaStatsCharts />}
       {!queue && (
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -352,6 +358,22 @@ export default function VpaAdminList({ queue = false, notify }) {
           <div style={{ flex: 1 }} />
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
           <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
+          {queue && (
+            <>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Button variant="primary" size="md" title={VPA_HELP.approveAll} onClick={() => setConfirmAction('all')}>Duyệt tất cả theo bộ lọc</Button>
+                <InfoTip size={13} text={VPA_HELP.approveAll} />
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Button variant="ghost" size="md" title={VPA_HELP.approveRecomputed} onClick={() => setConfirmAction('recomputed')}>Duyệt lại giá toàn bộ</Button>
+                <InfoTip size={13} text={VPA_HELP.approveRecomputed} />
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Button variant="ghost" size="md" title={VPA_HELP.approveRecomputedOverride} onClick={() => setConfirmAction('recomputed-override')}>Duyệt lại giá toàn bộ (ghi đè cả sửa tay)</Button>
+                <InfoTip size={13} text={VPA_HELP.approveRecomputedOverride} />
+              </span>
+            </>
+          )}
           {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>Thêm biển VPA (đầy đủ)</Button>}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
@@ -507,6 +529,33 @@ export default function VpaAdminList({ queue = false, notify }) {
       )}
 
       {drawer && <VpaPlateDrawer plate={drawer.plate} plateTypes={plateTypes} provinces={provinces} notify={notify} onClose={() => setDrawer(null)} />}
+
+      {confirmAction && (
+        <ConfirmModal
+          open
+          onClose={() => setConfirmAction(null)}
+          title={confirmAction === 'all' ? 'Duyệt tất cả theo bộ lọc' : 'Duyệt lại giá toàn bộ'}
+          message={
+            confirmAction === 'all'
+              ? `Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc — không chỉ trang đang xem. Có thể mất một lúc với số lượng lớn.`
+              : confirmAction === 'recomputed'
+                ? 'Tính lại giá mọi nhóm (theo kết quả đấu giá mới nhất) rồi áp giá gợi ý mới cho các biển đã duyệt — CHỈ biển nghi chưa từng sửa giá tay (giá duyệt cũ khớp giá gợi ý cũ). Dùng khi Published/Official đi chậm hơn Results nên lúc duyệt lần đầu còn thiếu mẫu.'
+                : 'Tính lại giá mọi nhóm rồi áp giá gợi ý mới cho TẤT CẢ biển đã duyệt — kể cả biển nghi đã sửa giá tay. Có thể ghi đè giá Admin đã cố ý chỉnh khác giá gợi ý.'
+          }
+          confirmLabel="Thực hiện"
+          danger={confirmAction === 'recomputed-override'}
+          loading={approveAll.isPending || approveRecomputed.isPending}
+          onConfirm={() => {
+            const action = confirmAction;
+            const after = (r) => { setConfirmAction(null); notify?.(`Đã duyệt ${r.affected} biển`); };
+            if (action === 'all') {
+              approveAll.mutateAsync({ queue: true, ...f, q: dq }).then(after).catch((e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); });
+            } else {
+              approveRecomputed.mutateAsync(action === 'recomputed-override').then(after).catch((e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

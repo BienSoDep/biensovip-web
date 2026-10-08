@@ -92,4 +92,7 @@ export const VPA_HELP = {
   featured: 'Biển nổi bật (ngũ quý, lộc phát…). Xếp trước trong danh sách khách và được đưa vào sitemap khi đang ở tab Tháng/Tuần.',
   manual: 'Biển Admin thêm tay, không có trong dữ liệu VPA. Crawl không đổi tab hay đánh dấu biến mất.',
   lock: 'Trường bạn đã sửa tay được khóa: crawl VPA sẽ không ghi đè. Bấm "Trả về theo VPA" để bỏ khóa.',
+  approveAll: 'Duyệt giá gợi ý cho TẤT CẢ biển đang khớp bộ lọc hiện tại — không chỉ các dòng đang hiển thị trên trang. Dùng khi đã kiểm bộ lọc đúng và muốn duyệt hàng loạt thay vì từng dòng.',
+  approveRecomputed: 'Nguồn Công bố/Chính thức thường đi chậm hơn Kết quả đấu giá — lúc duyệt lần đầu, nhóm giá có thể chưa đủ mẫu nên giá gợi ý còn thiếu hoặc kém chính xác. Nút này tính lại giá mọi nhóm theo dữ liệu mới nhất, rồi áp giá gợi ý mới cho các biển đã duyệt — CHỈ với biển nghi chưa từng bị sửa giá tay (giá đã duyệt trùng giá gợi ý tại thời điểm đó). Biển Admin đã tự sửa giá khác giá gợi ý sẽ được giữ nguyên, không đổi.',
+  approveRecomputedOverride: 'Giống "Duyệt lại giá toàn bộ", nhưng áp cho MỌI biển đã duyệt — kể cả biển nghi Admin đã sửa giá tay khác giá gợi ý. Có thể ghi đè mất giá bạn đã cố ý chỉnh (ví dụ theo thỏa thuận riêng với khách). Chỉ dùng khi chắc chắn muốn đồng bộ lại toàn bộ theo công thức.',
 };
