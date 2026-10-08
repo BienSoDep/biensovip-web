@@ -358,9 +358,18 @@ export default function VpaAdminList({ queue = false, notify }) {
           <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
           {queue && (
             <>
-              <Button variant="primary" size="md" onClick={() => setConfirmAction('all')}>Duyệt tất cả theo bộ lọc</Button>
-              <Button variant="ghost" size="md" onClick={() => setConfirmAction('recomputed')}>Duyệt lại giá toàn bộ</Button>
-              <Button variant="ghost" size="md" onClick={() => setConfirmAction('recomputed-override')}>Duyệt lại giá toàn bộ (ghi đè cả sửa tay)</Button>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Button variant="primary" size="md" title={VPA_HELP.approveAll} onClick={() => setConfirmAction('all')}>Duyệt tất cả theo bộ lọc</Button>
+                <InfoTip size={13} text={VPA_HELP.approveAll} />
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Button variant="ghost" size="md" title={VPA_HELP.approveRecomputed} onClick={() => setConfirmAction('recomputed')}>Duyệt lại giá toàn bộ</Button>
+                <InfoTip size={13} text={VPA_HELP.approveRecomputed} />
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Button variant="ghost" size="md" title={VPA_HELP.approveRecomputedOverride} onClick={() => setConfirmAction('recomputed-override')}>Duyệt lại giá toàn bộ (ghi đè cả sửa tay)</Button>
+                <InfoTip size={13} text={VPA_HELP.approveRecomputedOverride} />
+              </span>
             </>
           )}
           {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>Thêm biển VPA (đầy đủ)</Button>}
