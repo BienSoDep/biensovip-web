@@ -65,8 +65,8 @@ const VPA_SORTS = {
 
 // 3 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 2 tab còn lại lấy từ VPA (UC49).
 const TABS = [
-  { key: 'weekly', label: 'Biển tuần' },
-  { key: 'monthly', label: 'Biển tháng' },
+  { key: 'weekly', label: 'Biển đặt theo tuần' },
+  { key: 'monthly', label: 'Biển đặt theo tháng' },
   { key: 'available', label: 'Biển có sẵn' },
 ];
 
