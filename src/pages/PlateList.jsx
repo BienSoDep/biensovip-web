@@ -414,9 +414,14 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             </>
           )}
           {!birthYear && (
-            <button type="button" onClick={() => setYearOpen((v) => !v)}
-              style={{ height: 44, padding: '0 16px', border: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'transparent', color: 'var(--text-body)', whiteSpace: 'nowrap' }}>
-              🍀 Nhập năm sinh để xem biển hợp mệnh
+            <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Nhập năm sinh để tìm biển số phong thủy" value={yearDraft}
+              onChange={(e) => setYearDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
+              style={{ height: 44, width: 340, flexShrink: 0, border: 'none', background: 'transparent', padding: '0 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
+          )}
+          {!birthYear && yearDraft && (
+            <button type="button" onClick={submitYear}
+              style={{ height: 44, padding: '0 20px', border: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--action-primary)', color: 'var(--action-primary-text)' }}>
+              🍀 Xem
             </button>
           )}
           {yearOpen && (
