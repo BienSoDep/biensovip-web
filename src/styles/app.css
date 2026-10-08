@@ -560,6 +560,17 @@ textarea,
     align-self: stretch !important;
     margin: 0 !important;
   }
+  /* Compare (chưa chọn biển nào): 3 khung flex-wrap 220px không đủ chỗ 1 hàng trên mobile nên mỗi
+     khung rơi xuống dòng riêng, full width — đổi grid 2 cột cố định, khung thứ 3 (nếu còn) xuống hàng dưới. */
+  .compare-empty-slots {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .compare-empty-slot {
+    flex: none !important;
+    max-width: none !important;
+    min-height: 0 !important;
+  }
   /* Auth (login/register): hide info panel on mobile — chỉ còn form */
   .auth-info {
     display: none !important;
