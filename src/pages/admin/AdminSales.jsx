@@ -37,7 +37,7 @@ export default function AdminSales({ notify, go, st, initialView }) {
           const active = view === key;
           return (
             <button key={key} role="tab" aria-selected={active} type="button" onClick={() => setView(key)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--action-primary-text)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
               <Icon size={16} />
               {label}
             </button>

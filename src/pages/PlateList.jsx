@@ -368,12 +368,12 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: 'var(--space-3) var(--space-4)', border: 'none',
                   borderRadius: 'var(--radius-card)', cursor: 'pointer', textAlign: 'left',
-                  background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-strong)',
+                  background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--action-primary-text)' : 'var(--text-strong)',
                   boxShadow: active ? 'var(--shadow-2)' : 'var(--shadow-inset-hairline)',
                   transition: 'background-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)',
                 }}>
                 <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)' }}>{t.label}</span>
-                <span style={{ font: 'var(--type-caption)', color: active ? 'var(--text-inverse)' : 'var(--text-muted)', opacity: active ? 0.9 : 1 }}>
+                <span style={{ font: 'var(--type-caption)', color: active ? 'var(--action-primary-text)' : 'var(--text-muted)', opacity: active ? 0.9 : 1 }}>
                   {n != null ? `${new Intl.NumberFormat('vi-VN').format(n)} biển` : '—'}
                 </span>
               </button>
@@ -392,7 +392,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           ) : null}
           {birthYear && fsData && (
             <button type="button" aria-pressed={fengshuiOnly} onClick={() => setFengshuiOnly((v) => !v)}
-              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: fengshuiOnly ? 'var(--action-primary)' : 'var(--surface-sunken)', color: fengshuiOnly ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: fengshuiOnly ? 'none' : 'var(--shadow-inset-hairline)' }}>
+              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: fengshuiOnly ? 'var(--action-primary)' : 'var(--surface-sunken)', color: fengshuiOnly ? 'var(--action-primary-text)' : 'var(--text-body)', boxShadow: fengshuiOnly ? 'none' : 'var(--shadow-inset-hairline)' }}>
               Chỉ hiện biển hợp mệnh
             </button>
           )}
@@ -430,7 +430,7 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
                   height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-md)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
                   font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                  background: active ? 'var(--action-primary)' : 'transparent', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                  background: active ? 'var(--action-primary)' : 'transparent', color: active ? 'var(--action-primary-text)' : 'var(--text-body)',
                   transition: 'background-color 160ms var(--ease-standard), color 160ms var(--ease-standard)',
                 }}>
                 <Icon size={16} />
@@ -444,14 +444,14 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
         <span style={{ display: 'block', marginBottom: 'var(--space-2)', font: 'var(--type-label)', color: 'var(--text-muted)' }}>Loại biển</span>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
         <button type="button" aria-pressed={filters.cat.length === 0} onClick={() => setFilter({ cat: [] })}
-          style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: filters.cat.length === 0 ? 'var(--fw-bold)' : 'var(--fw-medium)', background: filters.cat.length === 0 ? 'var(--action-primary)' : 'var(--surface-sunken)', color: filters.cat.length === 0 ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: filters.cat.length === 0 ? 'none' : 'var(--shadow-inset-hairline)' }}>
+          style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: filters.cat.length === 0 ? 'var(--fw-bold)' : 'var(--fw-medium)', background: filters.cat.length === 0 ? 'var(--action-primary)' : 'var(--surface-sunken)', color: filters.cat.length === 0 ? 'var(--action-primary-text)' : 'var(--text-body)', boxShadow: filters.cat.length === 0 ? 'none' : 'var(--shadow-inset-hairline)' }}>
           Tất cả
         </button>
         {(plateTypes?.items || []).map((c) => {
           const active = filters.cat.length === 1 && filters.cat[0] === c.id;
           return (
             <button key={c.id} type="button" aria-pressed={active} onClick={() => setFilter({ cat: active ? [] : [c.id] })}
-              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--surface-sunken)', color: active ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)' }}>
+              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--surface-sunken)', color: active ? 'var(--action-primary-text)' : 'var(--text-body)', boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)' }}>
               {c.name}
             </button>
           );

@@ -84,7 +84,7 @@ export default function AdminAuditLog() {
           onClick={() => exportCsv(filterParams)}
           style={{
             marginLeft: 'auto', height: 40, padding: '0 var(--space-4)', borderRadius: 'var(--radius-field)', border: 'none',
-            background: 'var(--action-primary)', color: 'var(--text-inverse)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
+            background: 'var(--action-primary)', color: 'var(--action-primary-text)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
             cursor: exporting ? 'default' : 'pointer', opacity: exporting ? 0.6 : 1,
           }}
         >

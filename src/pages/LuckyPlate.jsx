@@ -421,11 +421,11 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                 <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Top biển hợp mệnh bạn</h2>
                 <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-lg)', padding: 3, gap: 3 }}>
                   <button type="button" aria-pressed={resultView === 'list'} onClick={() => setResultView('list')}
-                    style={{ height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', background: resultView === 'list' ? 'var(--action-primary)' : 'transparent', color: resultView === 'list' ? 'var(--text-inverse)' : 'var(--text-body)' }}>
+                    style={{ height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', background: resultView === 'list' ? 'var(--action-primary)' : 'transparent', color: resultView === 'list' ? 'var(--action-primary-text)' : 'var(--text-body)' }}>
                     <ListIcon size={14} />Danh sách
                   </button>
                   <button type="button" aria-pressed={resultView === 'grid'} onClick={() => setResultView('grid')}
-                    style={{ height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', background: resultView === 'grid' ? 'var(--action-primary)' : 'transparent', color: resultView === 'grid' ? 'var(--text-inverse)' : 'var(--text-body)' }}>
+                    style={{ height: 32, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', background: resultView === 'grid' ? 'var(--action-primary)' : 'transparent', color: resultView === 'grid' ? 'var(--action-primary-text)' : 'var(--text-body)' }}>
                     <LayoutGrid size={14} />Dạng thẻ
                   </button>
                 </div>

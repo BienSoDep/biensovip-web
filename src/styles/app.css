@@ -1,14 +1,15 @@
 /* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity.
-   Đo trực tiếp chữ "DUY ĐINH" trong logo-word.png (2026-10, thử nghiệm tone vàng hơn): #f1961f,
-   hue~0.0947 sat~0.884 — vàng/sáng hơn bản cam trước (#eb7e23/#b25a10, đo từ logo-mark.png).
-   --brand-400 giữ đúng #f1961f (màu logo thật). --brand-500 (action-primary, chữ trắng trên nút)
-   không dùng thẳng #f1961f vì contrast chỉ 2.3 (cần ≥4.5) — cùng hue/sat, hạ xuống #a3610a
-   (contrast 4.92) để vẫn đọc được, nhưng sáng/vàng hơn hẳn bản trước đó. */
+   --brand-500 = #f19720, màu người dùng pick trực tiếp từ chữ "DUY ĐINH" trong logo (gần như
+   trùng khít #f1961f đo từ logo-word.png) — ĐÚNG màu logo, không hạ sáng như 2 lần thử trước.
+   Contrast #f19720 với chữ TRẮNG chỉ 2.3 (dưới chuẩn WCAG AA ≥4.5) nên .btn-primary (dưới) đổi
+   color sang --ink-900 (chữ tối, contrast 7.99) thay vì --text-inverse — đánh đổi có chủ đích,
+   theo đúng yêu cầu "dùng màu logo thật" của người dùng. --brand-600 (hover/press) dùng lại
+   #a3610a — mức đã verify contrast tốt ở lần thử trước — để có 1 ramp liền mạch tăng độ đậm. */
 :root {
   --brand-700: #6a3f06;
-  --brand-600: #7d4a08;
-  --brand-500: #a3610a;
-  --brand-400: #f1961f;
+  --brand-600: #a3610a;
+  --brand-500: #f19720;
+  --brand-400: #f4ab4c;
   --brand-200: #f9d29f;
   --brand-100: #fce9cf;
   --brand-50: #fef4e7;
@@ -19,7 +20,11 @@
   --blue-200: var(--brand-200);
   --blue-100: var(--brand-100);
   --blue-50: var(--brand-50);
-  --shadow-blue: 0 8px 20px rgba(163, 97, 10, 0.26);
+  /* --brand-500 giờ sáng (#f19720) → mọi chữ/icon TRẮNG đặt trên nền action-primary (tab active,
+     pill active, badge...) phải đổi sang tối — xem --action-primary-text ở tokens.css, 9 file dùng
+     cặp action-primary/text-inverse đã đổi sang token này thay vì hardcode trắng. */
+  --action-primary-text: var(--ink-900);
+  --shadow-blue: 0 8px 20px rgba(241, 151, 32, 0.3);
   --surface-hero: linear-gradient(
     135deg,
     #fce9cf 0%,
@@ -164,7 +169,10 @@ textarea,
 .btn-md { height: 44px; }
 .btn-lg { height: 48px; }
 
-.btn-primary { background: var(--action-primary); color: var(--text-inverse); box-shadow: var(--shadow-blue); }
+/* Nền mặc định #f19720 sáng → chữ TỐI (--action-primary-text, contrast 7.99). Hover/active đậm dần
+   theo ramp cũ (brand-600/700) nên chữ chuyển sang trắng ở 2 trạng thái đó — nền càng đậm càng hợp
+   chữ sáng, ngược cơ chế nền sáng. */
+.btn-primary { background: var(--action-primary); color: var(--action-primary-text); box-shadow: var(--shadow-blue); transition: background-color 140ms var(--ease-standard), color 140ms var(--ease-standard); }
 .btn-dark { background: var(--action-dark); color: var(--text-inverse); }
 .btn-outline { background: transparent; color: var(--text-strong); box-shadow: inset 0 0 0 1.5px var(--border-strong); }
 .btn-ghost { background: transparent; color: var(--text-body); }
@@ -172,9 +180,11 @@ textarea,
 
 .btn-primary:not(:disabled):hover {
   background: var(--action-primary-hover);
+  color: var(--text-inverse);
 }
 .btn-primary:not(:disabled):active {
   background: var(--action-primary-press);
+  color: var(--text-inverse);
 }
 .btn-dark:not(:disabled):hover {
   background: var(--action-dark-hover);

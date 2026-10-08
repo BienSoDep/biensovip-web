@@ -36,6 +36,10 @@
 --border-hairline:var(--grey-200);--border-strong:var(--grey-300);--border-focus:var(--blue-500);
 
 --action-primary:var(--blue-500);--action-primary-hover:var(--blue-600);--action-primary-press:var(--blue-700);
+/* Màu chữ/icon đặt TRÊN NỀN --action-primary (tab active, pill active, badge...) — mặc định trắng vì
+   --blue-500 gốc đủ tối. app.css override riêng khi brand ramp đổi sang tông sáng (không đủ tối cho
+   chữ trắng) — đổi 1 chỗ ở app.css thay vì sửa lại 9 file dùng cặp action-primary/text-inverse. */
+--action-primary-text:var(--text-inverse);
 --action-dark:var(--ink-900);--action-dark-hover:var(--ink-800);
 --action-ghost-hover:var(--grey-100);
 
