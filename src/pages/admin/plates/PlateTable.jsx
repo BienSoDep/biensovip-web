@@ -61,6 +61,7 @@ export default function PlateTable({
   sort, toggleSort,
   cell, setCell, commitPrice,
   notify,
+  openPriceReference,
 }) {
   const SortHeader = ({ label, sortKey, style, className }) => (
     <button
@@ -522,9 +523,14 @@ export default function PlateTable({
                     </span>
                   )}
                   {colPrefs.suggestedPrice && (
-                    <span style={{ flex: '1 1 110px', font: 'var(--type-body-sm)', color: p.suggestedPrice ? 'var(--text-default)' : 'var(--text-faint)' }}>
+                    <button
+                      type="button"
+                      onClick={() => openPriceReference(p.id)}
+                      title="Xem nguồn tính giá gợi ý"
+                      style={{ flex: '1 1 110px', font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: p.suggestedPrice ? 'var(--text-default)' : 'var(--text-faint)', textDecoration: 'underline dotted' }}
+                    >
                       {p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}
-                    </span>
+                    </button>
                   )}
                   {colPrefs.salePrice && <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)', color: p.salePrice ? 'var(--status-danger)' : 'var(--text-faint)' }}>{p.salePrice ? fmt(p.salePrice) : '—'}</span>}
                   {colPrefs.gifted && (

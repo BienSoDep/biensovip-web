@@ -16,11 +16,12 @@ import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
-  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv,
+  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference,
 } from '../../../services/adminVpa.js';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { formatDate } from '../../../lib/date.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
+import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 
 const MAX_BULK = 500;
 const COL_KEY = 'bsv.admin.vpaColumns';
@@ -44,6 +45,20 @@ const COLUMNS = [
   { key: 'updatedAt', label: 'Cập nhật', default: false },
 ];
 const FILTER_KEY = 'bsv.admin.vpaFilters';
+// UC49 — "deep link" 1 lần từ popup nguồn giá gợi ý (trang Biển số) sang đây: ghi số biển cần tìm trước khi điều
+// hướng, đọc + xóa ngay khi trang này mở để không ảnh hưởng lần mở sau.
+const DEEPLINK_Q_KEY = 'bsv.admin.vpaDeepLinkQ';
+export function openVpaWithSearch(go, plateNumber) {
+  try { sessionStorage.setItem(DEEPLINK_Q_KEY, plateNumber); } catch { /* ignore */ }
+  go('avpa')();
+}
+const consumeDeepLinkQ = () => {
+  try {
+    const v = sessionStorage.getItem(DEEPLINK_Q_KEY);
+    if (v) sessionStorage.removeItem(DEEPLINK_Q_KEY);
+    return v || '';
+  } catch { return ''; }
+};
 // Loại biển / tỉnh đã chọn được nhớ cho lần mở sau (chỉ trang danh sách, không áp cho hàng đợi duyệt giá).
 const loadSavedFilters = () => {
   try {
@@ -78,7 +93,7 @@ function SortHeader({ sort, toggleSort, label, sortKey, style, tip }) {
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
 export default function VpaAdminList({ queue = false, notify }) {
   const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', from: '', to: '', ...(queue ? { plateTypeIds: [], provinceIds: [] } : loadSavedFilters()) });
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(queue ? '' : consumeDeepLinkQ);
   const [dq] = useDebouncedValue(q, 300);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -93,6 +108,8 @@ export default function VpaAdminList({ queue = false, notify }) {
   const [exporting, setExporting] = useState(false);
   const [integrity, setIntegrity] = useState(false);
   const [quick, setQuick] = useState({ plateNumber: '', vehicle: 'Car', tab: '1', price: '' });
+  const [priceRefId, setPriceRefId] = useState(null); // UC49 — biển đang xem popup nguồn giá gợi ý
+  const priceRefQuery = useVpaPlatePriceReference(priceRefId, !!priceRefId);
 
   const { data: typeData } = useAdminCategories('plate_type');
   const { data: provData } = useAdminCategories('province');
@@ -458,7 +475,16 @@ export default function VpaAdminList({ queue = false, notify }) {
                     </span>
                   )}
                   {cols.startingPrice && <span style={{ flex: '1 1 104px', font: 'var(--type-body-sm)' }}>{money(p.startingPrice)}</span>}
-                  {cols.suggested && <span style={{ flex: '1 1 124px', font: 'var(--type-body-sm)' }}>{p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : `— (${p.sampleCount ?? 0} mẫu)`}</span>}
+                  {cols.suggested && (
+                    <button
+                      type="button"
+                      onClick={() => setPriceRefId(p.id)}
+                      title="Xem nguồn tính giá gợi ý"
+                      style={{ flex: '1 1 124px', font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', textDecoration: 'underline dotted' }}
+                    >
+                      {p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : `— (${p.sampleCount ?? 0} mẫu)`}
+                    </button>
+                  )}
                   {cols.approved && <span style={{ flex: '1 1 110px' }}>{priceCell(p)}</span>}
                   {cols.priceState && <span style={{ flex: '1 1 120px' }}><Badge tone={st.tone}>{st.label}</Badge></span>}
                   {cols.updatedAt && <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>}
@@ -472,6 +498,14 @@ export default function VpaAdminList({ queue = false, notify }) {
       </div>
 
       {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />}
+
+      <PriceReferenceModal
+        open={!!priceRefId}
+        onClose={() => setPriceRefId(null)}
+        data={priceRefQuery.data}
+        isLoading={priceRefQuery.isLoading}
+        onOpenPlate={(plateNumber) => { setPriceRefId(null); setQ(plateNumber); }}
+      />
 
       {sel.size > 0 && (
         <div style={{

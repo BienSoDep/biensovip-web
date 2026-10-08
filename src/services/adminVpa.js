@@ -43,6 +43,15 @@ export function useVpaOverview(options) {
   });
 }
 
+// Minh bạch nguồn giá gợi ý (bấm vào ô Giá gợi ý trong danh sách Biển VPA). Chỉ tải khi modal mở.
+export function useVpaPlatePriceReference(id, enabled) {
+  return useQuery({
+    queryKey: [KEY, 'price-reference', id],
+    queryFn: () => apiClient.get(`/api/admin/vpa/plates/${id}/price-reference`),
+    enabled: enabled && !!id,
+  });
+}
+
 export function useVpaRuns(limit = 30, enabled = true) {
   return useQuery({
     queryKey: [KEY, 'runs', limit],
