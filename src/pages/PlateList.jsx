@@ -661,8 +661,6 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
               {hasActiveFilters && !vpaTab && <Button className="list-toolbar-secondary" variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
-              {!vpaTab && <button type="button" className="list-toolbar-secondary" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm: {infinite ? 'Bật' : 'Tắt'}</button>}
-              {!infinite && <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />}
               <Select value={vpaTab ? (birthYear && filters.sort === 'fengshui' ? 'fengshui' : vpaSort) : (filters.sort === 'fengshui' && !birthYear ? 'newest' : filters.sort)}
                 options={[...(vpaTab ? vpaSorts : SORT_OPTIONS), ...(birthYear ? [FENGSHUI_SORT] : [])]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
             </div>
