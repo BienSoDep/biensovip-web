@@ -15,7 +15,7 @@ import VpaIntegrityPanel from './VpaIntegrityPanel.jsx';
 import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
-  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
+  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useApproveAllVpaSuggested, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
   useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv,
 } from '../../../services/adminVpa.js';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
@@ -105,6 +105,7 @@ export default function VpaAdminList({ queue = false, notify }) {
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
+  const approveAll = useApproveAllVpaSuggested();
   const reject = useRejectVpaPrice();
   const approveGroup = useApproveVpaGroup();
   const hide = useHideVpaPlate();
@@ -352,6 +353,12 @@ export default function VpaAdminList({ queue = false, notify }) {
           <div style={{ flex: 1 }} />
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
           <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
+          {queue && (
+            <Button variant="primary" size="md" loading={approveAll.isPending} onClick={() => {
+              if (!window.confirm(`Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc? Không chỉ trang đang xem.`)) return;
+              run(() => approveAll.mutateAsync({ queue: true, ...f, q: dq }), (r) => `Đã duyệt ${r.affected} biển`);
+            }}>Duyệt tất cả theo bộ lọc</Button>
+          )}
           {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>Thêm biển VPA (đầy đủ)</Button>}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
