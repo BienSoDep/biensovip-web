@@ -713,6 +713,7 @@ export default function App() {
     apolicypages: ['Trang chính sách', 'Chỉnh nội dung điều khoản/bảo mật/hướng dẫn sang tên/FAQ'],
     actvtemplates: ['Mẫu tin nhắn CTV', 'Soạn sẵn mẫu tin nhắn để cộng tác viên copy gửi khách'],
     ainsights: ['Insight khách hàng', 'Tự động rà soát luồng khách, đo lường điểm rơi rớt, sức khỏe tư vấn và cơ hội bán hàng.'],
+    avpamarket: ['Phân tích thị trường VPA', 'So kỳ, xu hướng, dự báo và xếp hạng tăng giá biển đấu giá VPA theo dữ liệu thật.'],
     akanban: ['Quy trình bán hàng', 'Quy trình bán hàng theo dạng thẻ Kanban'],
   }[s] || ['', ''];
 

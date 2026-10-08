@@ -28,6 +28,7 @@ import {
   Sliders,
   Wrench,
   LineChart,
+  TrendingUp,
   CheckCircle2,
   AlertTriangle,
   Lock,
@@ -64,6 +65,7 @@ const ICON_MAP = {
   ashowroom: Sliders,
   afeatureflags: Wrench,
   ainsights: LineChart,
+  avpamarket: TrendingUp,
 };
 
 // Dữ liệu cẩm nang vận hành chi tiết, chuẩn xác 100% với tính năng thực tế trong ứng dụng
@@ -370,6 +372,22 @@ const GUIDE_DETAILS = {
     ],
     tips: 'Kết hợp báo cáo Cung - Cầu với danh sách Biển tồn đọng để giải phóng vốn cho các biển chậm luân chuyển và nhập thêm các dòng biển đang cháy hàng.',
     perm: 'analytics:view',
+  },
+  avpamarket: {
+    summary: 'Phân tích thị trường biển đấu giá VPA dựa trên giá trúng đấu giá thật (vpa_auction_results) — không phải giá gợi ý/giá duyệt nội bộ, vốn đã qua công thức × hệ số nên không phản ánh thị trường thô.',
+    badge: 'Phân tích dữ liệu VPA',
+    badgeType: 'brand',
+    tabs: ['So kỳ 7 ngày', 'Xu hướng & trung bình động', 'Dự báo', 'Xếp hạng tăng giá', 'Lời khuyên', 'So giá VPA vs shop'],
+    workflow: [
+      'So kỳ: xem % tăng/giảm giá trúng trung bình 7 ngày qua so với 7 ngày trước — cần cả hai kỳ có ít nhất vài phiên mới tính % có ý nghĩa.',
+      'Xu hướng & trung bình động: đường giá theo tuần (12 tuần gần nhất) kèm đường trung bình động 4 tuần để bớt nhiễu khi đọc hướng đi chung.',
+      'Dự báo: ước tính giá tuần tới bằng hồi quy tuyến tính đơn giản — chọn tỉnh/loại biển cụ thể để xem dự báo riêng, hoặc để trống xem toàn thị trường. Luôn xem chỉ số R² và số tuần mẫu: R² thấp hoặc mẫu ít nghĩa là chỉ nên tham khảo, không nên coi là chắc chắn.',
+      'Xếp hạng tăng giá: so % tăng/giảm giữa nửa đầu và nửa cuối cửa sổ 12 tuần, xếp theo tỉnh và theo loại biển — chỉ hiện nhóm có đủ mẫu cả hai nửa để tránh kết luận sai do quá ít phiên.',
+      'Lời khuyên: vài câu gợi ý sinh tự động từ các số liệu trên (không phải AI) — đọc nhanh thay vì tự ngồi suy ra từ biểu đồ.',
+      'So giá VPA vs shop: đối chiếu giá trúng đấu giá VPA với giá niêm yết biển của shop theo cùng tỉnh + loại biển. Hai con số KHÁC BẢN CHẤT (giá trúng thật vs giá rao bán) — chỉ dùng để cảm nhận mặt bằng, không phải so sánh trực tiếp lãi/lỗ.',
+    ],
+    tips: 'Dự báo và xu hướng chỉ đáng tin khi có đủ tuần dữ liệu (càng nhiều tuần, R² càng đáng tin) — với nhóm nhỏ (tỉnh ít giao dịch, loại biển hiếm), nên xem toàn thị trường thay vì lọc quá hẹp.',
+    perm: 'vpa_prices:view',
   },
 };
 
