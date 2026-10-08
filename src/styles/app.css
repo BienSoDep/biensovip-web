@@ -1,17 +1,17 @@
 /* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity.
-   Đo trực tiếp từ logo-mark.png (2026-10): 2 tông chủ đạo #f1961f (sáng) và #eb7e23 (đậm).
-   Giữ đúng hue/saturation của logo (~H 0.076, S 0.83) xuyên suốt ramp — khác bản cũ (#d4650a)
-   vốn ngả nâu/đỏ, lệch hue so với logo thật. #eb7e23/#f1961f không đạt WCAG AA cho chữ trắng
-   trên nút (contrast 2.78/2.3, cần ≥4.5) nên --brand-500 (action-primary) hạ lightness xuống
-   #b25a10 (cùng hue/sat, contrast 4.81) — vẫn "đúng chất" cam logo, không ngả nâu, nhưng đọc được. */
+   Đo trực tiếp chữ "DUY ĐINH" trong logo-word.png (2026-10, thử nghiệm tone vàng hơn): #f1961f,
+   hue~0.0947 sat~0.884 — vàng/sáng hơn bản cam trước (#eb7e23/#b25a10, đo từ logo-mark.png).
+   --brand-400 giữ đúng #f1961f (màu logo thật). --brand-500 (action-primary, chữ trắng trên nút)
+   không dùng thẳng #f1961f vì contrast chỉ 2.3 (cần ≥4.5) — cùng hue/sat, hạ xuống #a3610a
+   (contrast 4.92) để vẫn đọc được, nhưng sáng/vàng hơn hẳn bản trước đó. */
 :root {
-  --brand-700: #8c470d;
-  --brand-600: #9f500e;
-  --brand-500: #b25a10;
-  --brand-400: #ec842d;
-  --brand-200: #f6c8a2;
-  --brand-100: #fbe4d0;
-  --brand-50: #fdf1e8;
+  --brand-700: #6a3f06;
+  --brand-600: #7d4a08;
+  --brand-500: #a3610a;
+  --brand-400: #f1961f;
+  --brand-200: #f9d29f;
+  --brand-100: #fce9cf;
+  --brand-50: #fef4e7;
   --blue-700: var(--brand-700);
   --blue-600: var(--brand-600);
   --blue-500: var(--brand-500);
@@ -19,11 +19,11 @@
   --blue-200: var(--brand-200);
   --blue-100: var(--brand-100);
   --blue-50: var(--brand-50);
-  --shadow-blue: 0 8px 20px rgba(178, 90, 16, 0.26);
+  --shadow-blue: 0 8px 20px rgba(163, 97, 10, 0.26);
   --surface-hero: linear-gradient(
     135deg,
-    #fbe4d0 0%,
-    #fdf1e8 42%,
+    #fce9cf 0%,
+    #fef4e7 42%,
     var(--cream-100) 100%
   );
 }
