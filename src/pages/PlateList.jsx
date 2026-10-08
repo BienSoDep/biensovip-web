@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { SlidersHorizontal, X, LayoutGrid, List as ListIcon, Bike, Car } from 'lucide-react';
+import { SlidersHorizontal, X, LayoutGrid, List as ListIcon, Bike, Car, Search } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Select, Checkbox, Radio, Input, Icon, SearchField } from '../components/index.jsx';
+import { Select, Checkbox, Radio, Input, Icon } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import Pagination from '../components/Pagination.jsx';
 import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
@@ -381,35 +381,61 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           })}
         </div>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-        <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+      {/* 1 thanh pill dài duy nhất, chia khúc bằng divider mỏng — trước đây là nhiều ô/pill rời rạc
+          cạnh nhau (search + năm sinh + input + OK), bị phản ánh "khó chịu" về mặt thị giác. */}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', width: 'fit-content', maxWidth: '100%',
+          background: 'var(--white)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)',
+          overflow: 'hidden',
+        }}>
+          <span style={{ position: 'relative', display: 'inline-flex', minWidth: 0 }}>
+            <Search size={16} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', color: 'var(--text-faint)', pointerEvents: 'none' }} />
+            <input
+              type="search" placeholder="Tìm theo số, VD: 68, 51A, 999.99" aria-label="Tìm biển số"
+              value={filters.q} onChange={(e) => setFilter({ q: e.target.value })}
+              style={{ height: 44, width: 'min(320px, 56vw)', minWidth: 0, border: 'none', background: 'transparent', padding: '0 16px 0 40px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }}
+            />
+          </span>
+          <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
           {birthYear ? (
             <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
-              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+              style={{ height: 44, padding: '0 16px', border: 'none', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>
               🍀 {fsData ? `Mệnh ${fsData.element} · ` : ''}sinh {birthYear}
             </button>
           ) : null}
           {birthYear && fsData && (
-            <button type="button" aria-pressed={fengshuiOnly} onClick={() => setFengshuiOnly((v) => !v)}
-              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: fengshuiOnly ? 'var(--action-primary)' : 'var(--surface-sunken)', color: fengshuiOnly ? 'var(--action-primary-text)' : 'var(--text-body)', boxShadow: fengshuiOnly ? 'none' : 'var(--shadow-inset-hairline)' }}>
-              Chỉ hiện biển hợp mệnh
-            </button>
+            <>
+              <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
+              <button type="button" aria-pressed={fengshuiOnly} onClick={() => setFengshuiOnly((v) => !v)}
+                style={{ height: 44, padding: '0 16px', border: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: fengshuiOnly ? 'var(--action-primary)' : 'transparent', color: fengshuiOnly ? 'var(--action-primary-text)' : 'var(--text-body)', whiteSpace: 'nowrap' }}>
+                Chỉ hiện biển hợp mệnh
+              </button>
+            </>
           )}
           {!birthYear && (
             <button type="button" onClick={() => setYearOpen((v) => !v)}
-              style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+              style={{ height: 44, padding: '0 16px', border: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'transparent', color: 'var(--text-body)', whiteSpace: 'nowrap' }}>
               🍀 Nhập năm sinh để xem biển hợp mệnh
             </button>
           )}
           {yearOpen && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <>
+              <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-hairline)', margin: '8px 0' }} />
               <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Năm sinh" value={yearDraft} onChange={(e) => setYearDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
-                style={{ width: 110, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 12px', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)', outline: 'none' }} />
-              <Button variant="primary" size="sm" onClick={submitYear}>OK</Button>
-              {birthYear && !fromProfile && <Button variant="ghost" size="sm" onClick={() => { setYear(null); setYearOpen(false); if (filters.sort === 'fengshui') setFilter({ sort: 'newest' }); }}>Bỏ</Button>}
-            </span>
+                style={{ width: 100, height: 44, border: 'none', background: 'transparent', padding: '0 12px', font: 'var(--type-body-sm)', outline: 'none' }} />
+              <button type="button" onClick={submitYear}
+                style={{ height: 44, padding: '0 20px', border: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--action-primary)', color: 'var(--action-primary-text)' }}>
+                OK
+              </button>
+              {birthYear && !fromProfile && (
+                <button type="button" onClick={() => { setYear(null); setYearOpen(false); if (filters.sort === 'fengshui') setFilter({ sort: 'newest' }); }}
+                  style={{ height: 44, padding: '0 16px', border: 'none', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-muted)', background: 'transparent' }}>
+                  Bỏ
+                </button>
+              )}
+            </>
           )}
         </div>
       </section>
