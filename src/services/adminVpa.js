@@ -64,6 +64,8 @@ export const useSetVpaPrice = () => useVpaMutation(({ id, price }) => apiClient.
 export const useApproveVpaSuggested = () => useVpaMutation((ids) => apiClient.post('/api/admin/vpa/plates/price/approve-suggested', { ids }));
 // Duyệt MỌI biển khớp bộ lọc hiện tại (không giới hạn 500 như approve-suggested) — server tự lặp theo lô tới hết.
 export const useApproveAllVpaSuggested = () => useVpaMutation((params) => apiClient.post(`/api/admin/vpa/plates/price/approve-all?${toQuery(params)}`));
+// Published/Official đi chậm hơn Results — tính lại giá mọi nhóm rồi áp giá gợi ý mới cho biển đã duyệt.
+export const useApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed?overrideManual=${!!overrideManual}`));
 export const useRejectVpaPrice = () => useVpaMutation((ids) => apiClient.post('/api/admin/vpa/plates/price/reject', { ids }));
 export const useApproveVpaGroup = () => useVpaMutation((groupId) => apiClient.post(`/api/admin/vpa/price-groups/${groupId}/approve`));
 export const useHideVpaPlate = () => useVpaMutation(({ id, value }) => apiClient.post(`/api/admin/vpa/plates/${id}/hide`, { value }));
