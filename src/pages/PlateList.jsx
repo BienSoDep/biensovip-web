@@ -352,6 +352,28 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
         <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
+        <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+          {birthYear ? (
+            <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
+              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+              🍀 {fsData ? `Mệnh ${fsData.element} · ` : ''}sinh {birthYear}
+            </button>
+          ) : (
+            <button type="button" onClick={() => setYearOpen((v) => !v)}
+              style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+              🍀 Nhập năm sinh để xem biển hợp mệnh
+            </button>
+          )}
+          {yearOpen && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Năm sinh" value={yearDraft} onChange={(e) => setYearDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
+                style={{ width: 110, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 12px', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)', outline: 'none' }} />
+              <Button variant="primary" size="sm" onClick={submitYear}>OK</Button>
+              {birthYear && !fromProfile && <Button variant="ghost" size="sm" onClick={() => { setYear(null); setYearOpen(false); if (filters.sort === 'fengshui') setFilter({ sort: 'newest' }); }}>Bỏ</Button>}
+            </span>
+          )}
+        </div>
       </section>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)' }}>
         <div role="tablist" aria-label="Nguồn biển số" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(150px,46%),1fr))', gap: 'var(--space-3)' }}>
@@ -621,26 +643,6 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               {hasActiveFilters && !vpaTab && <Button className="list-toolbar-secondary" variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
               {!vpaTab && <button type="button" className="list-toolbar-secondary" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm: {infinite ? 'Bật' : 'Tắt'}</button>}
               {!infinite && <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />}
-              {birthYear ? (
-                <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
-                  style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-                  🍀 {fsData ? `Mệnh ${fsData.element} · ` : ''}sinh {birthYear}
-                </button>
-              ) : (
-                <button type="button" onClick={() => setYearOpen((v) => !v)}
-                  style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-                  🍀 Làm nổi biển hợp mệnh
-                </button>
-              )}
-              {yearOpen && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Năm sinh" value={yearDraft} onChange={(e) => setYearDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
-                    style={{ width: 110, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 12px', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)', outline: 'none' }} />
-                  <Button variant="primary" size="sm" onClick={submitYear}>OK</Button>
-                  {birthYear && !fromProfile && <Button variant="ghost" size="sm" onClick={() => { setYear(null); setYearOpen(false); if (filters.sort === 'fengshui') setFilter({ sort: 'newest' }); }}>Bỏ</Button>}
-                </span>
-              )}
               <Select value={vpaTab ? (birthYear && filters.sort === 'fengshui' ? 'fengshui' : vpaSort) : (filters.sort === 'fengshui' && !birthYear ? 'newest' : filters.sort)}
                 options={[...(vpaTab ? vpaSorts : SORT_OPTIONS), ...(birthYear ? [FENGSHUI_SORT] : [])]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
             </div>
