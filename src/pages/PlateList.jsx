@@ -138,9 +138,13 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     };
   }, [filterOpen]);
 
-  const activeFilterCount = filters.cat.length + filters.city.length + filters.avoidNumbers.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.status ? 1 : 0);
+  // Khoảng giá/Tránh số/Trạng thái chỉ áp dụng cho kho Duy Định (ẩn khỏi UI khi vpaTab, xem 2 khối bộ lọc bên dưới) —
+  // không tính vào count/hasActiveFilters lúc đang ở tab VPA, tránh báo sai "N bộ lọc đang bật" dù UI không hiện field đó.
+  const activeFilterCount = filters.cat.length + filters.city.length + (vpaTab ? 0 : filters.avoidNumbers.length) + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0)
+    + (vpaTab ? 0 : ((filters.priceMin || filters.priceMax) ? 1 : 0)) + (vpaTab ? 0 : (filters.status ? 1 : 0));
 
-  const hasActiveFilters = filters.cat.length > 0 || filters.city.length > 0 || filters.avoidNumbers.length > 0 || !!filters.vehicle || !!filters.q || !!filters.priceMin || !!filters.priceMax || !!filters.status;
+  const hasActiveFilters = filters.cat.length > 0 || filters.city.length > 0 || (!vpaTab && filters.avoidNumbers.length > 0) || !!filters.vehicle || !!filters.q
+    || (!vpaTab && (!!filters.priceMin || !!filters.priceMax)) || (!vpaTab && !!filters.status);
 
   const openSaveModal = () => {
     if (!isLoggedIn) { notify?.('Vui lòng đăng nhập để lưu tìm kiếm.'); go?.('login')(); return; }
@@ -221,12 +225,15 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const { year: birthYear, fromProfile, setYear } = useBirthYear();
   const [yearOpen, setYearOpen] = useState(false);
   const [yearDraft, setYearDraft] = useState('');
+  const [fengshuiOnly, setFengshuiOnly] = useState(false);
   const scoreNumbers = useMemo(() => [...new Set(items.map((p) => p.plateNumber))], [items]);
   const { data: fsData } = useFengShuiNumberScores(birthYear, scoreNumbers);
   const fsScore = (p) => fsData?.scores?.[p.plateNumber];
   const fsFor = (p) => (fsData && fsScore(p) >= fsData.minScore ? { element: fsData.element, score: fsScore(p) } : null);
   const sortByFengShui = !!birthYear && filters.sort === 'fengshui';
-  const shownItems = sortByFengShui && fsData ? [...items].sort((a, b) => (fsScore(b) ?? -1) - (fsScore(a) ?? -1)) : items;
+  const filterByFengShui = !!birthYear && fengshuiOnly && !!fsData;
+  const sortedItems = sortByFengShui && fsData ? [...items].sort((a, b) => (fsScore(b) ?? -1) - (fsScore(a) ?? -1)) : items;
+  const shownItems = filterByFengShui ? sortedItems.filter((p) => fsFor(p)) : sortedItems;
   const submitYear = () => {
     const y = Number(yearDraft);
     if (!Number.isInteger(y) || y < 1900 || y > new Date().getFullYear()) { notify?.('Năm sinh không hợp lệ.'); return; }
@@ -345,36 +352,11 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           ...(activeType ? [{ label: activeType.name }] : []),
         ]} />
       )}
-      <div className="">
-        
-      </div>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
         <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
         <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
-        <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
-        <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
-          {birthYear ? (
-            <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
-              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-              🍀 {fsData ? `Mệnh ${fsData.element} · ` : ''}sinh {birthYear}
-            </button>
-          ) : (
-            <button type="button" onClick={() => setYearOpen((v) => !v)}
-              style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-              🍀 Nhập năm sinh để xem biển hợp mệnh
-            </button>
-          )}
-          {yearOpen && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Năm sinh" value={yearDraft} onChange={(e) => setYearDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
-                style={{ width: 110, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 12px', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)', outline: 'none' }} />
-              <Button variant="primary" size="sm" onClick={submitYear}>OK</Button>
-              {birthYear && !fromProfile && <Button variant="ghost" size="sm" onClick={() => { setYear(null); setYearOpen(false); if (filters.sort === 'fengshui') setFilter({ sort: 'newest' }); }}>Bỏ</Button>}
-            </span>
-          )}
-        </div>
       </section>
+      {/* Chọn nguồn biển trước (Tuần/Tháng/Có sẵn) — quyết định đầu tiên hợp lý hơn tìm kiếm/năm sinh, vốn chỉ thu hẹp trong nguồn đã chọn. */}
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)' }}>
         <div role="tablist" aria-label="Nguồn biển số" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(150px,46%),1fr))', gap: 'var(--space-3)' }}>
           {TABS.map((t) => {
@@ -397,6 +379,38 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               </button>
             );
           })}
+        </div>
+      </section>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
+        <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
+        <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+          {birthYear ? (
+            <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
+              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+              🍀 {fsData ? `Mệnh ${fsData.element} · ` : ''}sinh {birthYear}
+            </button>
+          ) : null}
+          {birthYear && fsData && (
+            <button type="button" aria-pressed={fengshuiOnly} onClick={() => setFengshuiOnly((v) => !v)}
+              style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: fengshuiOnly ? 'var(--action-primary)' : 'var(--surface-sunken)', color: fengshuiOnly ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: fengshuiOnly ? 'none' : 'var(--shadow-inset-hairline)' }}>
+              Chỉ hiện biển hợp mệnh
+            </button>
+          )}
+          {!birthYear && (
+            <button type="button" onClick={() => setYearOpen((v) => !v)}
+              style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+              🍀 Nhập năm sinh để xem biển hợp mệnh
+            </button>
+          )}
+          {yearOpen && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Năm sinh" value={yearDraft} onChange={(e) => setYearDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
+                style={{ width: 110, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 12px', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)', outline: 'none' }} />
+              <Button variant="primary" size="sm" onClick={submitYear}>OK</Button>
+              {birthYear && !fromProfile && <Button variant="ghost" size="sm" onClick={() => { setYear(null); setYearOpen(false); if (filters.sort === 'fengshui') setFilter({ sort: 'newest' }); }}>Bỏ</Button>}
+            </span>
+          )}
         </div>
       </section>
       {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển.
@@ -656,18 +670,18 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
               <span style={{ font: 'var(--type-body)', color: 'var(--status-danger)' }}>Không tải được danh sách biển số.</span>
               <Button variant="outline" size="md" onClick={() => (useInfinite ? inf.refetch() : refetch())}>Thử lại</Button>
             </div>
-          ) : items.length > 0 ? (
+          ) : shownItems.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{total} biển số</span>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{filterByFengShui ? `${shownItems.length} biển hợp mệnh trong trang này` : `${total} biển số`}</span>
               <div className={`plate-grid ${filters.view === 'list' ? 'view-list' : 'view-grid'}`} style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
                 {shownItems.map((p, i) => <PlateCard key={p.id} {...(vpaTab ? vpaCardProps(p) : cardProps(p))} fengShui={fsFor(p)} plateSize={filters.view === 'list' ? 'listLg' : 'md'} layout={filters.view === 'list' ? 'row' : 'grid'} style={stagger(i)} />)}
               </div>
             </div>
           ) : (
             <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
-              <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Không tìm thấy biển số phù hợp</span>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 380 }}>Thử bỏ một vài bộ lọc, hoặc nhập đuôi số khác.</span>
-              <Button variant="dark" size="md" onClick={clearFilters}>Xóa bộ lọc</Button>
+              <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{filterByFengShui ? 'Không có biển hợp mệnh trong trang này' : 'Không tìm thấy biển số phù hợp'}</span>
+              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 380 }}>{filterByFengShui ? 'Thử bỏ lọc hợp mệnh, hoặc xem trang khác — danh sách rất dài, biển hợp mệnh có thể nằm ở trang sau.' : 'Thử bỏ một vài bộ lọc, hoặc nhập đuôi số khác.'}</span>
+              {filterByFengShui ? <Button variant="dark" size="md" onClick={() => setFengshuiOnly(false)}>Bỏ lọc hợp mệnh</Button> : <Button variant="dark" size="md" onClick={clearFilters}>Xóa bộ lọc</Button>}
             </div>
           )}
           {useInfinite && inf.isFetchingNextPage && (
