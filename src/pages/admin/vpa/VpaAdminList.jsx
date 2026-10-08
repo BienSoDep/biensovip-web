@@ -16,13 +16,16 @@ import VpaStatsCharts from './VpaStatsCharts.jsx';
 import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import {
-  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useApproveAllVpaSuggested, useApproveRecomputedVpa, useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
-  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv,
+  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useVpaApproveRun,
+  useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
+  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference,
 } from '../../../services/adminVpa.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { formatDate } from '../../../lib/date.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
+import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
+import Modal from '../../../components/Modal.jsx';
 
 const MAX_BULK = 500;
 const COL_KEY = 'bsv.admin.vpaColumns';
@@ -46,6 +49,20 @@ const COLUMNS = [
   { key: 'updatedAt', label: 'Cập nhật', default: false },
 ];
 const FILTER_KEY = 'bsv.admin.vpaFilters';
+// UC49 — "deep link" 1 lần từ popup nguồn giá gợi ý (trang Biển số) sang đây: ghi số biển cần tìm trước khi điều
+// hướng, đọc + xóa ngay khi trang này mở để không ảnh hưởng lần mở sau.
+const DEEPLINK_Q_KEY = 'bsv.admin.vpaDeepLinkQ';
+export function openVpaWithSearch(go, plateNumber) {
+  try { sessionStorage.setItem(DEEPLINK_Q_KEY, plateNumber); } catch { /* ignore */ }
+  go('avpa')();
+}
+const consumeDeepLinkQ = () => {
+  try {
+    const v = sessionStorage.getItem(DEEPLINK_Q_KEY);
+    if (v) sessionStorage.removeItem(DEEPLINK_Q_KEY);
+    return v || '';
+  } catch { return ''; }
+};
 // Loại biển / tỉnh đã chọn được nhớ cho lần mở sau (chỉ trang danh sách, không áp cho hàng đợi duyệt giá).
 const loadSavedFilters = () => {
   try {
@@ -76,11 +93,46 @@ function SortHeader({ sort, toggleSort, label, sortKey, style, tip }) {
   );
 }
 
+// UC49 — thanh tiến trình cho "Duyệt tất cả theo bộ lọc" / "Duyệt lại giá toàn bộ": run chạy nền, FE polling
+// (useVpaApproveRun) mỗi giây. Chưa có Total (server đếm xong mới biết) → thanh pulse không xác định %.
+function ApproveRunModal({ run, onClose }) {
+  const running = !run || run.status === 'running';
+  const pct = run?.total ? Math.min(100, Math.round((run.done * 100) / run.total)) : null;
+  return (
+    <Modal open title={running ? 'Đang duyệt giá…' : run.status === 'success' ? 'Duyệt giá xong' : 'Duyệt giá lỗi'} maxWidth="440px">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        <div role="progressbar" aria-valuenow={pct ?? undefined} aria-valuemin={0} aria-valuemax={100}
+          style={{ height: 8, borderRadius: 4, background: 'var(--grey-200)', overflow: 'hidden' }}>
+          {pct == null ? (
+            <div style={{
+              width: '40%', height: '100%', background: 'var(--action-primary)', borderRadius: 4,
+              animation: running ? 'vpaApproveIndeterminate 1.1s ease-in-out infinite' : 'none',
+            }} />
+          ) : (
+            <div style={{ width: `${pct}%`, height: '100%', background: run?.status === 'error' ? 'var(--status-danger)' : 'var(--action-primary)', transition: 'width 300ms var(--ease-standard)' }} />
+          )}
+        </div>
+        <style>{'@keyframes vpaApproveIndeterminate { 0% { margin-left: 0%; } 50% { margin-left: 60%; } 100% { margin-left: 0%; } }'}</style>
+        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+          {running
+            ? (run?.total ? `Đã xét ${run.done.toLocaleString('vi-VN')}/${run.total.toLocaleString('vi-VN')} biển, duyệt được ${run.approved.toLocaleString('vi-VN')}…` : 'Đang khởi động…')
+            : run.status === 'success'
+              ? `Đã duyệt ${run.approved.toLocaleString('vi-VN')} biển (xét ${run.done.toLocaleString('vi-VN')}/${run.total.toLocaleString('vi-VN')}).`
+              : run.error || 'Có lỗi xảy ra.'}
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant={running ? 'ghost' : 'primary'} size="md" onClick={onClose}>{running ? 'Chạy nền (đóng)' : 'Đóng'}</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // Danh sách biển VPA cho Admin — cùng bố cục và công cụ với trang Biển số (lọc, cột, sắp xếp, sửa nhanh, hàng loạt, CSV, ngăn kéo).
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
 export default function VpaAdminList({ queue = false, notify }) {
   const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', from: '', to: '', ...(queue ? { plateTypeIds: [], provinceIds: [] } : loadSavedFilters()) });
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(queue ? '' : consumeDeepLinkQ);
   const [dq] = useDebouncedValue(q, 300);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
@@ -95,6 +147,8 @@ export default function VpaAdminList({ queue = false, notify }) {
   const [exporting, setExporting] = useState(false);
   const [integrity, setIntegrity] = useState(false);
   const [quick, setQuick] = useState({ plateNumber: '', vehicle: 'Car', tab: '1', price: '' });
+  const [priceRefId, setPriceRefId] = useState(null); // UC49 — biển đang xem popup nguồn giá gợi ý
+  const priceRefQuery = useVpaPlatePriceReference(priceRefId, !!priceRefId);
 
   const { data: typeData } = useAdminCategories('plate_type');
   const { data: provData } = useAdminCategories('province');
@@ -107,9 +161,11 @@ export default function VpaAdminList({ queue = false, notify }) {
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
-  const approveAll = useApproveAllVpaSuggested();
-  const approveRecomputed = useApproveRecomputedVpa();
+  const startApproveAll = useStartApproveAllVpaSuggested();
+  const startApproveRecomputed = useStartApproveRecomputedVpa();
   const [confirmAction, setConfirmAction] = useState(null); // null | 'all' | 'recomputed' | 'recomputed-override'
+  const [approveRunId, setApproveRunId] = useState(null); // UC49 — lượt duyệt nền đang theo dõi (thanh %)
+  const { data: approveRun } = useVpaApproveRun(approveRunId, !!approveRunId);
   const reject = useRejectVpaPrice();
   const approveGroup = useApproveVpaGroup();
   const hide = useHideVpaPlate();
@@ -480,7 +536,16 @@ export default function VpaAdminList({ queue = false, notify }) {
                     </span>
                   )}
                   {cols.startingPrice && <span style={{ flex: '1 1 104px', font: 'var(--type-body-sm)' }}>{money(p.startingPrice)}</span>}
-                  {cols.suggested && <span style={{ flex: '1 1 124px', font: 'var(--type-body-sm)' }}>{p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : `— (${p.sampleCount ?? 0} mẫu)`}</span>}
+                  {cols.suggested && (
+                    <button
+                      type="button"
+                      onClick={() => setPriceRefId(p.id)}
+                      title="Xem nguồn tính giá gợi ý"
+                      style={{ flex: '1 1 124px', font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', textDecoration: 'underline dotted' }}
+                    >
+                      {p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : `— (${p.sampleCount ?? 0} mẫu)`}
+                    </button>
+                  )}
                   {cols.approved && <span style={{ flex: '1 1 110px' }}>{priceCell(p)}</span>}
                   {cols.priceState && <span style={{ flex: '1 1 120px' }}><Badge tone={st.tone}>{st.label}</Badge></span>}
                   {cols.updatedAt && <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>}
@@ -494,6 +559,14 @@ export default function VpaAdminList({ queue = false, notify }) {
       </div>
 
       {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />}
+
+      <PriceReferenceModal
+        open={!!priceRefId}
+        onClose={() => setPriceRefId(null)}
+        data={priceRefQuery.data}
+        isLoading={priceRefQuery.isLoading}
+        onOpenPlate={(plateNumber) => { setPriceRefId(null); setQ(plateNumber); }}
+      />
 
       {sel.size > 0 && (
         <div style={{
@@ -544,15 +617,27 @@ export default function VpaAdminList({ queue = false, notify }) {
           }
           confirmLabel="Thực hiện"
           danger={confirmAction === 'recomputed-override'}
-          loading={approveAll.isPending || approveRecomputed.isPending}
+          loading={startApproveAll.isPending || startApproveRecomputed.isPending}
           onConfirm={() => {
             const action = confirmAction;
-            const after = (r) => { setConfirmAction(null); notify?.(`Đã duyệt ${r.affected} biển`); };
+            const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); };
+            const onError = (e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); };
             if (action === 'all') {
-              approveAll.mutateAsync({ queue: true, ...f, q: dq }).then(after).catch((e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); });
+              startApproveAll.mutateAsync({ queue: true, ...f, q: dq }).then(onStarted).catch(onError);
             } else {
-              approveRecomputed.mutateAsync(action === 'recomputed-override').then(after).catch((e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); });
+              startApproveRecomputed.mutateAsync(action === 'recomputed-override').then(onStarted).catch(onError);
             }
+          }}
+        />
+      )}
+
+      {approveRunId && (
+        <ApproveRunModal
+          run={approveRun}
+          onClose={() => {
+            setApproveRunId(null);
+            if (approveRun?.status === 'success') { notify?.(`Đã duyệt ${approveRun.approved} biển`); refetch(); }
+            else if (approveRun?.status === 'error') notify?.(approveRun.error || 'Thao tác thất bại');
           }}
         />
       )}
