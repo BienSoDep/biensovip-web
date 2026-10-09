@@ -15,6 +15,7 @@ import VpaIntegrityPanel from './VpaIntegrityPanel.jsx';
 import VpaStatsCharts from './VpaStatsCharts.jsx';
 import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
+import { useVpaCounts } from '../../../services/vpa.js';
 import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
@@ -32,7 +33,19 @@ const COL_KEY = 'bsv.admin.vpaColumns';
 const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)}đ`);
 const PER_PAGE = [{ value: 20, label: '20/trang' }, { value: 50, label: '50/trang' }, { value: 100, label: '100/trang' }];
 const ALL = { value: '', label: 'Tất cả' };
-const TAB_FILTER = [{ value: '', label: 'Mọi tab' }, ...Object.entries(VPA_TAB_LABELS).map(([value, label]) => ({ value, label }))];
+const VPA_FILTER_TABS = [
+  { value: '', label: 'Tất cả biển VPA', note: 'Toàn bộ danh sách', countKey: 'all' },
+  { value: '2', label: 'Biển số tuần', note: 'Biển chính thức', countKey: 'weekly' },
+  { value: '1', label: 'Biển số tháng', note: 'Biển công bố', countKey: 'monthly' },
+  { value: '3', label: 'Biển hết hạn', note: 'Biển hết hạn', countKey: 'expired' },
+];
+const TAB_FILTER = [
+  { value: '', label: 'Mọi tab' },
+  { value: '2', label: 'Biển số tuần (Biển chính thức)' },
+  { value: '1', label: 'Biển số tháng (Biển công bố)' },
+  { value: '3', label: 'Biển hết hạn (Biển hết hạn)' },
+  { value: '4', label: 'Hết hạn nội bộ' },
+];
 const TAB_ROW = Object.entries(VPA_TAB_LABELS).map(([value, label]) => ({ value, label }));
 const VEHICLES = [ALL, { value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const STATE_OPTS = [{ value: '', label: 'Mọi trạng thái giá' }, ...Object.entries(VPA_PRICE_STATES).map(([value, s]) => ({ value, label: s.label }))];
@@ -159,6 +172,7 @@ export default function VpaAdminList({ queue = false, notify }) {
   const { data, isLoading, isError, refetch } = useVpaAdminPlates(params);
   const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: f.tab, page: 1, limit: 1 }); // tổng của tab, không lọc khác
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
+  const { data: vpaCounts } = useVpaCounts(f.vehicle);
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
   const startApproveAll = useStartApproveAllVpaSuggested();
@@ -360,7 +374,110 @@ export default function VpaAdminList({ queue = false, notify }) {
 
       {integrity && !queue && <VpaIntegrityPanel notify={notify} onClose={() => setIntegrity(false)} />}
 
-      <PlateCountSummary matched={data?.total} all={baseData?.total} filtered={filterCount > 0 || !!dq} scope={f.tab ? `trong tab ${VPA_TAB_LABELS[f.tab]}` : queue ? 'đang chờ duyệt' : ''} />
+      {!queue && (
+        <div
+          role="tablist"
+          aria-label="Bộ lọc nguồn biển VPA"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))',
+            gap: 'var(--space-3)',
+          }}
+        >
+          {VPA_FILTER_TABS.map((t) => {
+            const active = f.tab === t.value;
+            let count = null;
+            if (t.countKey === 'weekly') count = vpaCounts?.weekly;
+            else if (t.countKey === 'monthly') count = vpaCounts?.monthly;
+            else if (t.countKey === 'expired') count = vpaCounts?.expired;
+            else if (t.countKey === 'all') {
+              count = (vpaCounts?.weekly != null && vpaCounts?.monthly != null && vpaCounts?.expired != null)
+                ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
+                : (f.tab === '' ? baseData?.total : null);
+            }
+
+            return (
+              <button
+                key={t.value}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setFilter('tab')(t.value)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  gap: 4,
+                  padding: 'var(--space-3) var(--space-4)',
+                  border: active ? '1.5px solid var(--action-primary)' : '1px solid var(--grey-200, #e5e7eb)',
+                  borderRadius: 'var(--radius-card)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  background: active ? 'var(--action-primary)' : 'var(--white)',
+                  color: active ? 'var(--action-primary-text)' : 'var(--text-strong)',
+                  boxShadow: active ? 'var(--shadow-2)' : 'var(--shadow-inset-hairline)',
+                  transition: 'background-color 160ms var(--ease-standard), border-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)',
+                  position: 'relative',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 8 }}>
+                  <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '14px' }}>
+                    {t.label}
+                  </span>
+                  {count != null && (
+                    <span
+                      style={{
+                        font: 'var(--type-caption)',
+                        fontWeight: 'var(--fw-semibold)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-pill)',
+                        background: active ? 'rgba(255,255,255,0.22)' : 'var(--surface-sunken)',
+                        color: active ? 'var(--action-primary-text)' : 'var(--text-muted)',
+                        fontSize: '11px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {new Intl.NumberFormat('vi-VN').format(count)} biển
+                    </span>
+                  )}
+                </div>
+                <span
+                  style={{
+                    font: 'var(--type-caption)',
+                    fontSize: '12px',
+                    color: active ? 'var(--action-primary-text)' : 'var(--action-primary, #C75B00)',
+                    opacity: active ? 0.9 : 1,
+                    fontWeight: active ? 'var(--fw-medium)' : 'var(--fw-semibold)',
+                  }}
+                >
+                  {t.note}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <PlateCountSummary
+        matched={data?.total}
+        all={baseData?.total}
+        filtered={filterCount > 0 || !!dq}
+        scope={
+          f.tab
+            ? `trong ${
+                {
+                  '1': 'Biển số tháng (công bố)',
+                  '2': 'Biển số tuần (chính thức)',
+                  '3': 'Biển hết hạn',
+                  '4': 'Hết hạn nội bộ',
+                }[f.tab] || VPA_TAB_LABELS[f.tab]
+              }`
+            : queue
+            ? 'đang chờ duyệt'
+            : ''
+        }
+      />
 
       <div className="admin-plates-mobile-bar" style={{ flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
