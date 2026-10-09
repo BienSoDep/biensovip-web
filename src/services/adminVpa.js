@@ -105,6 +105,9 @@ export const useApproveAllVpaSuggested = () => useVpaMutation((params) => apiCli
 // Published/Official đi chậm hơn Results — tính lại giá mọi nhóm rồi áp giá gợi ý mới cho biển đã duyệt.
 export const useApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed?overrideManual=${!!overrideManual}`));
 
+// Tính toán lại giá gợi ý cho mọi nhóm và tự động gán vào biển chưa có giá trên hệ thống.
+export const useRecomputeVpaSuggestions = () => useVpaMutation(() => apiClient.post('/api/admin/vpa/plates/price/recompute-suggestions'));
+
 // Bản chạy nền có thanh tiến trình — trả { runId } ngay, không chờ duyệt xong (dùng với useVpaApproveRun để polling).
 export const useStartApproveAllVpaSuggested = () => useVpaMutation((params) => apiClient.post(`/api/admin/vpa/plates/price/approve-all/start?${toQuery(params)}`));
 export const useStartApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed/start?overrideManual=${!!overrideManual}`));

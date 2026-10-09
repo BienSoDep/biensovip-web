@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input, Switch } from '../../../components/index.jsx';
+import { Input, Switch, InfoTip } from '../../../components/index.jsx';
 import Button from '../../../components/Button.jsx';
 import VpaExcelImport from './VpaExcelImport.jsx';
 import VpaSourceCard from './VpaSourceCard.jsx';
@@ -42,10 +42,12 @@ const ALERT_STYLE = {
 
 const caption = { font: 'var(--type-caption)', color: 'var(--text-muted)' };
 
-function SwitchRow({ checked, onChange, label }) {
+function SwitchRow({ checked, onChange, label, info }) {
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
-      <Switch checked={checked} onChange={onChange} label={label} />{label}
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-body-sm)', color: 'var(--text-body)' }} title={info}>
+      <Switch checked={checked} onChange={onChange} label={label} />
+      <span>{label}</span>
+      {info && <InfoTip text={info} />}
     </span>
   );
 }
@@ -220,10 +222,27 @@ function OverviewBody({ data, notify }) {
             Bật khi VPA báo chặn, dữ liệu bất thường hoặc cần bảo trì: dừng mọi lượt, không chạy theo lịch, không cho "Crawl ngay". Không đổi hay xóa dữ liệu đã có.
           </span>
         </div>
-        <SwitchRow checked={paused} onChange={onPause} label={paused ? 'ĐANG DỪNG KHẨN' : 'Crawl hoạt động bình thường'} />
+        <SwitchRow
+          checked={paused}
+          onChange={onPause}
+          label={paused ? 'ĐANG DỪNG KHẨN' : 'Crawl hoạt động bình thường'}
+          info="Dừng ngay lập tức toàn bộ các phiên crawl đang chạy, tạm ngắt scheduler tự động và khóa tính năng Crawl ngay để bảo vệ IP máy chủ."
+        />
       </div>
 
       {/* 3 Nguồn crawl chính */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Server size={18} style={{ color: 'var(--action-primary)' }} />
+          <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
+            3 nguồn crawl biển số VPA
+          </h3>
+        </div>
+        <Button variant="primary" size="sm" loading={save.isPending} onClick={onSave} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Save size={14} />
+          Lưu chu kỳ & cấu hình
+        </Button>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--space-3)' }}>
         {VPA_SOURCES.map((s) => (
           <VpaSourceCard
@@ -273,11 +292,48 @@ function OverviewBody({ data, notify }) {
               Tham số thống kê đầu vào
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-2)' }}>
-              <Input label="Cửa sổ (tháng)" type="number" min="1" value={form.windowMonths} onChange={set('windowMonths')} />
-              <Input label="Số mẫu tối thiểu" type="number" min="1" value={form.minSamples} onChange={set('minSamples')} />
-              <Input label="Hệ số nhân" type="number" min="0" step="0.05" value={form.factor} onChange={set('factor')} />
-              <Input label="Lệch xu hướng (%)" type="number" min="0" value={form.driftPercent} onChange={set('driftPercent')} />
-              <Input label="Bước làm tròn (đ)" type="number" min="1000" step="100000" value={form.roundStep} onChange={set('roundStep')} />
+              <Input
+                label="Cửa sổ (tháng)"
+                info="Khoảng thời gian lịch sử (theo tháng) dùng để gom dữ liệu các phiên trúng đấu giá nhằm tính giá trung bình."
+                type="number"
+                min="1"
+                value={form.windowMonths}
+                onChange={set('windowMonths')}
+              />
+              <Input
+                label="Số mẫu tối thiểu"
+                info="Số lượng kết quả trúng đấu giá tối thiểu cần có trong nhóm (cùng tỉnh + loại xe + loại biển) để công thức tính giá kích hoạt."
+                type="number"
+                min="1"
+                value={form.minSamples}
+                onChange={set('minSamples')}
+              />
+              <Input
+                label="Hệ số nhân"
+                info="Hệ số nhân trên giá trúng trung bình để xác định giá bán gợi ý niêm yết (ví dụ 2.5 = gấp 2.5 lần giá trúng trung bình)."
+                type="number"
+                min="0"
+                step="0.05"
+                value={form.factor}
+                onChange={set('factor')}
+              />
+              <Input
+                label="Lệch xu hướng (%)"
+                info="Tỷ lệ phần trăm điều chỉnh biên độ giá theo xu hướng tăng/giảm của thị trường gần nhất."
+                type="number"
+                min="0"
+                value={form.driftPercent}
+                onChange={set('driftPercent')}
+              />
+              <Input
+                label="Bước làm tròn (đ)"
+                info="Mức làm tròn số tiền của giá gợi ý (ví dụ: bước 100.000đ thì giá sẽ được làm tròn theo bội số 100.000đ)."
+                type="number"
+                min="1000"
+                step="100000"
+                value={form.roundStep}
+                onChange={set('roundStep')}
+              />
             </div>
           </div>
 
@@ -311,6 +367,7 @@ function OverviewBody({ data, notify }) {
                 checked={form.includeFloorPrice}
                 onChange={(v) => setForm((f) => ({ ...f, includeFloorPrice: v }))}
                 label="Tính cả các kết quả chạm mức giá sàn khởi điểm"
+                info="Bao gồm cả các biển trúng với giá bằng đúng mức giá sàn khởi điểm (40 triệu) vào mẫu tính giá trung bình nhóm."
               />
             </div>
           </div>
@@ -358,13 +415,37 @@ function OverviewBody({ data, notify }) {
             </span>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)' }}>
-              <Input label="Nghỉ tối thiểu (ms)" type="number" min="0" step="100" value={form.minDelayMs} onChange={set('minDelayMs')} />
-              <Input label="Nghỉ tối đa (ms)" type="number" min="0" step="100" value={form.maxDelayMs} onChange={set('maxDelayMs')} />
+              <Input
+                label="Nghỉ tối thiểu (ms)"
+                info="Thời gian nghỉ tối thiểu (mili-giây) giữa các request gửi đến VPA để giảm tải mạng và chống bị phát hiện bot chặn IP."
+                type="number"
+                min="0"
+                step="100"
+                value={form.minDelayMs}
+                onChange={set('minDelayMs')}
+              />
+              <Input
+                label="Nghỉ tối đa (ms)"
+                info="Thời gian nghỉ tối đa ngẫu nhiên giữa các request, tạo độ trễ biến thiên tự nhiên như người dùng duyệt web thật."
+                type="number"
+                min="0"
+                step="100"
+                value={form.maxDelayMs}
+                onChange={set('maxDelayMs')}
+              />
             </div>
 
-            <Input label="Timeout mỗi request (giây)" type="number" min="1" value={form.timeoutSeconds} onChange={set('timeoutSeconds')} />
+            <Input
+              label="Timeout mỗi request (giây)"
+              info="Thời gian chờ phản hồi tối đa cho mỗi request HTTP trước khi bị ngắt kết nối do quá hạn."
+              type="number"
+              min="1"
+              value={form.timeoutSeconds}
+              onChange={set('timeoutSeconds')}
+            />
             <Input
               label="Số lần thử lại (lỗi tạm)"
+              info="Số lần tự động gửi lại request khi gặp lỗi mạng tạm thời hoặc timeout (lỗi 403 / 429 luôn lập tức kích hoạt dừng khẩn để bảo vệ IP)."
               type="number"
               min="0"
               value={form.maxRetries}
@@ -413,6 +494,7 @@ function OverviewBody({ data, notify }) {
 
             <Input
               label="Ngưỡng 'giảm đột ngột' (%)"
+              info="Nếu số lượng biển số cào được đột ngột giảm quá X% so với lượt trước, hệ thống sẽ tạm dừng tự động chuyển tab để chống rớt dữ liệu ngoài ý muốn."
               type="number"
               min="1"
               value={form.suddenDropPercent}
@@ -422,6 +504,7 @@ function OverviewBody({ data, notify }) {
 
             <Input
               label="Quét kết quả đầy đủ mỗi (ngày)"
+              info="Chu kỳ (tính theo ngày) để tự động quét vét toàn bộ lịch sử đấu giá từ trước đến nay thay vì chỉ cào các phiên gần nhất."
               type="number"
               min="1"
               value={form.resultsFullEveryDays}
@@ -431,6 +514,7 @@ function OverviewBody({ data, notify }) {
 
             <Input
               label="Giãn cách cảnh báo (phút)"
+              info="Khoảng cách thời gian tối thiểu giữa các email cảnh báo sự cố gửi đến kỹ thuật viên, tránh gửi dồn dập nhiều email liên tục."
               type="number"
               min="1"
               value={form.alertCooldownMinutes}
@@ -500,8 +584,24 @@ function OverviewBody({ data, notify }) {
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                <Input label="Từ giờ" type="number" min="0" max="23" value={form.officialWindowStartHour} onChange={set('officialWindowStartHour')} />
-                <Input label="Đến giờ" type="number" min="0" max="23" value={form.officialWindowEndHour} onChange={set('officialWindowEndHour')} />
+                <Input
+                  label="Từ giờ"
+                  info="Giờ bắt đầu khung thời gian (0-23h giờ VN) cho phép tự động khởi chạy lượt cào Danh sách chính thức."
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={form.officialWindowStartHour}
+                  onChange={set('officialWindowStartHour')}
+                />
+                <Input
+                  label="Đến giờ"
+                  info="Giờ kết thúc khung thời gian. Ngoài khung giờ này scheduler sẽ không tự động kích hoạt lượt mới."
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={form.officialWindowEndHour}
+                  onChange={set('officialWindowEndHour')}
+                />
               </div>
             </div>
 
@@ -516,8 +616,24 @@ function OverviewBody({ data, notify }) {
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                <Input label="Từ giờ" type="number" min="0" max="23" value={form.publishedWindowStartHour} onChange={set('publishedWindowStartHour')} />
-                <Input label="Đến giờ" type="number" min="0" max="23" value={form.publishedWindowEndHour} onChange={set('publishedWindowEndHour')} />
+                <Input
+                  label="Từ giờ"
+                  info="Giờ bắt đầu khung thời gian cho phép tự khởi chạy cào Danh sách công bố (thường đặt vào ban đêm 2h-3h vì dữ liệu nặng)."
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={form.publishedWindowStartHour}
+                  onChange={set('publishedWindowStartHour')}
+                />
+                <Input
+                  label="Đến giờ"
+                  info="Giờ kết thúc khung thời gian cho phép khởi chạy Danh sách công bố."
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={form.publishedWindowEndHour}
+                  onChange={set('publishedWindowEndHour')}
+                />
               </div>
             </div>
 
@@ -532,8 +648,24 @@ function OverviewBody({ data, notify }) {
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                <Input label="Từ giờ" type="number" min="0" max="23" value={form.resultsWindowStartHour} onChange={set('resultsWindowStartHour')} />
-                <Input label="Đến giờ" type="number" min="0" max="23" value={form.resultsWindowEndHour} onChange={set('resultsWindowEndHour')} />
+                <Input
+                  label="Từ giờ"
+                  info="Giờ bắt đầu khung thời gian cho phép tự khởi chạy cào Kết quả đấu giá."
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={form.resultsWindowStartHour}
+                  onChange={set('resultsWindowStartHour')}
+                />
+                <Input
+                  label="Đến giờ"
+                  info="Giờ kết thúc khung thời gian cho phép khởi chạy cào Kết quả đấu giá."
+                  type="number"
+                  min="0"
+                  max="23"
+                  value={form.resultsWindowEndHour}
+                  onChange={set('resultsWindowEndHour')}
+                />
               </div>
             </div>
           </div>

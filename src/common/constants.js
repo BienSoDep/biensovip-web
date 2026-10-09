@@ -17,7 +17,7 @@ export const ADMIN_NAV = [
   // 2026-09 — 3 mục Yêu cầu liên hệ / Quy trình bán hàng / Giao dịch gộp thành 1 mục 'Bán hàng'
   // (3 view bên trong, xem AdminSales.jsx). Slug cũ giữ trong ADMIN_SCREENS/ROUTE_MAP để URL cũ
   // vẫn mở được — AdminShell tự redirect sang 'asales' kèm ?view= tương ứng.
-  { group: 'Bán hàng', items: [['aplates', 'Biển số'], ['avpa', 'Biển VPA'], ['asales', 'Bán hàng'], ['acats', 'Danh mục'], ['acoupons', 'Mã giảm giá'], ['acustomers', 'Khách hàng'], ['ainterestleads', 'Khách quan tâm']] },
+  { group: 'Bán hàng', items: [['aplates', 'Biển số'], ['avpa', 'Biển VPA'], ['avpastats', 'Thống kê Biển VPA'], ['asales', 'Bán hàng'], ['acats', 'Danh mục'], ['acoupons', 'Mã giảm giá'], ['acustomers', 'Khách hàng'], ['ainterestleads', 'Khách quan tâm']] },
   { group: 'Nội dung', items: [['aposts', 'Blog'], ['avideos', 'Video'], ['ameanings', 'Ý nghĩa phong thủy'], ['apolicypages', 'Trang chính sách']] },
   { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
   { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['actvtemplates', 'Mẫu tin nhắn CTV']] },

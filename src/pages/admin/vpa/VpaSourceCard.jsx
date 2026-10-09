@@ -26,21 +26,37 @@ function Progress({ run, now, stuck }) {
   const pct = total ? Math.min(100, Math.round((done * 100) / total)) : 0;
   const elapsed = now - new Date(run.startedAt).getTime();
   const pagesPerSec = elapsed > 5000 ? run.pagesFetched / (elapsed / 1000) : null;
+  const itemsPerSec = elapsed > 5000 && run.itemsSeen ? run.itemsSeen / (elapsed / 1000) : null;
   const eta = done >= 2 && total > done ? (elapsed / done) * (total - done) : null;
   const idle = run.lastActivityAt ? now - new Date(run.lastActivityAt).getTime() : null;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
         <span>{run.vehicle === 1 ? 'Ô tô' : run.vehicle === 2 ? 'Xe máy' : 'Đang chạy'}{run.options ? ` · ${run.options}` : ''}</span>
-        <b>{total ? `${done}/${total} tỉnh` : 'Đang khởi động…'}</b>
+        <b>
+          {total ? `${done}/${total} tỉnh` : 'Đang khởi động…'}
+          {run.itemsSeen > 0 && (
+            <>
+              {' · '}
+              <span style={{ color: 'var(--action-primary, #C75B00)' }}>
+                {formatInt(run.itemsSeen)} biển
+              </span>
+            </>
+          )}
+        </b>
       </div>
       <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} style={{ height: 8, borderRadius: 4, background: 'var(--grey-200)', overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: stuck ? 'var(--status-danger)' : 'var(--action-primary)', transition: 'width 400ms var(--ease-standard)' }} />
       </div>
       <div style={{ ...caption, display: 'flex', flexWrap: 'wrap', gap: '2px 12px' }}>
         {run.currentSlice && <span>Đang cào tỉnh <b>{run.currentSlice}</b></span>}
+        <span>
+          Đã cào: <b style={{ color: 'var(--text-strong)' }}>{formatInt(run.itemsSeen || 0)}</b> biển
+          {run.inserted > 0 && <span style={{ color: 'var(--status-success, #059669)' }}> (+{formatInt(run.inserted)} mới)</span>}
+        </span>
         <span>{formatInt(run.pagesFetched)} trang</span>
         {pagesPerSec != null && <span>{pagesPerSec.toFixed(1)} trang/giây (trung bình)</span>}
+        {itemsPerSec != null && itemsPerSec >= 1 && <span>({itemsPerSec >= 10 ? Math.round(itemsPerSec) : itemsPerSec.toFixed(1)} biển/giây)</span>}
         <span>Đã chạy {formatDuration(elapsed)}</span>
         {eta != null && <span title="Ước tính thô theo thời gian trung bình mỗi tỉnh đã xong; tỉnh lớn có thể lâu hơn nhiều">Còn khoảng {formatDuration(eta)}</span>}
         {idle != null && <span style={{ color: stuck ? 'var(--status-danger)' : undefined }}>Hoạt động cuối {formatDuration(idle)} trước{stuck ? ' — nghi bị treo' : ''}</span>}
@@ -94,7 +110,14 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
         <Switch checked={!!enabled} onChange={(v) => setForm((f) => ({ ...f, [`${src.prefix}Enabled`]: v }))} label={enabled ? 'Đang bật' : 'Đang tắt'} />
         {enabled ? 'Chạy theo lịch' : 'Tắt (chỉ chạy tay)'}
       </span>
-      <Input label="Chu kỳ (phút)" type="number" min="1" value={form[`${src.prefix}IntervalMinutes`]} onChange={set(`${src.prefix}IntervalMinutes`)} />
+      <Input
+        label="Chu kỳ (phút)"
+        info="Khoảng cách thời gian (phút) giữa các phiên tự động crawl theo lịch. Ví dụ: 1440 phút = mỗi ngày cào 1 lần."
+        type="number"
+        min="1"
+        value={form[`${src.prefix}IntervalMinutes`]}
+        onChange={set(`${src.prefix}IntervalMinutes`)}
+      />
 
       <div style={{ ...caption, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span title="Lần chạy gần nhất đủ dữ liệu (không tính chạy thử/riêng một tỉnh)">Dữ liệu đủ gần nhất: <b style={{ color: 'var(--text-strong)' }}>{formatDateTime(status?.lastCompleteAt)}</b></span>
@@ -128,11 +151,36 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
 
       {adv && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', borderTop: '1px solid var(--grey-100)', paddingTop: 'var(--space-3)' }}>
-          <Select label="Loại xe" value={opt.vehicle} options={VEHICLES} onChange={(v) => setOpt((o) => ({ ...o, vehicle: v }))} />
-          {!isResults && <Input label="Chỉ một tỉnh (mã VPA, vd 79)" placeholder="Để trống = tất cả tỉnh" value={opt.province} onChange={(e) => setOpt((o) => ({ ...o, province: e.target.value }))} />}
-          <Checkbox checked={opt.fresh} onChange={(v) => setOpt((o) => ({ ...o, fresh: !!v }))} label="Làm mới: bỏ qua tiến độ lượt dở dang" />
-          <Checkbox checked={opt.flag} onChange={(v) => setOpt((o) => ({ ...o, flag: !!v }))}
-            label={isResults ? 'Quét đầy đủ theo tỉnh (ngoài chu kỳ 7 ngày)' : 'Chạy thử: chỉ cào và đếm, không ghi dữ liệu'} />
+          <Select
+            label="Loại xe"
+            info="Lọc loại phương tiện cần cào: Chọn riêng Ô tô hoặc Xe máy, hoặc để trống để cào cả hai loại xe."
+            value={opt.vehicle}
+            options={VEHICLES}
+            onChange={(v) => setOpt((o) => ({ ...o, vehicle: v }))}
+          />
+          {!isResults && (
+            <Input
+              label="Chỉ một tỉnh (mã VPA, vd 79)"
+              info="Mã số tỉnh thành theo VPA (ví dụ: 79 = TP.HCM, 30 = Hà Nội, 43 = Đà Nẵng). Để trống để cào toàn bộ các tỉnh."
+              placeholder="Để trống = tất cả tỉnh"
+              value={opt.province}
+              onChange={(e) => setOpt((o) => ({ ...o, province: e.target.value }))}
+            />
+          )}
+          <Checkbox
+            checked={opt.fresh}
+            onChange={(v) => setOpt((o) => ({ ...o, fresh: !!v }))}
+            label="Làm mới: bỏ qua tiến độ lượt dở dang"
+            info="Bỏ qua danh sách các tỉnh đã cào thành công của lượt dang dở trước đó và tiến hành cào lại toàn bộ từ đầu."
+          />
+          <Checkbox
+            checked={opt.flag}
+            onChange={(v) => setOpt((o) => ({ ...o, flag: !!v }))}
+            label={isResults ? 'Quét đầy đủ theo tỉnh (ngoài chu kỳ 7 ngày)' : 'Chạy thử: chỉ cào và đếm, không ghi dữ liệu'}
+            info={isResults
+              ? 'Quét vét toàn bộ lịch sử đấu giá của tất cả các tỉnh thành thay vì chỉ cào các phiên đấu giá diễn ra trong 7 ngày gần đây.'
+              : 'Tiến trình chỉ truy vấn VPA và đếm số lượng bản ghi để kiểm tra kết nối và độ trễ, hoàn toàn không ghi đè vào database.'}
+          />
           <span style={caption}>
             {isResults
               ? 'Kết quả đấu giá chỉ hỗ trợ chọn loại xe, làm mới và quét đầy đủ.'
