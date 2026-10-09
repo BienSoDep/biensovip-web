@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp,
+  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -38,13 +39,7 @@ const VPA_FILTER_TABS = [
   { value: '2', label: 'Biển số tuần', note: 'Biển chính thức', countKey: 'weekly' },
   { value: '1', label: 'Biển số tháng', note: 'Biển công bố', countKey: 'monthly' },
   { value: '3', label: 'Biển hết hạn', note: 'Biển hết hạn', countKey: 'expired' },
-];
-const TAB_FILTER = [
-  { value: '', label: 'Mọi tab' },
-  { value: '2', label: 'Biển số tuần (Biển chính thức)' },
-  { value: '1', label: 'Biển số tháng (Biển công bố)' },
-  { value: '3', label: 'Biển hết hạn (Biển hết hạn)' },
-  { value: '4', label: 'Hết hạn nội bộ' },
+  { value: '4', label: 'Hết hạn nội bộ', note: 'Rút khỏi công bố', countKey: null },
 ];
 const TAB_ROW = Object.entries(VPA_TAB_LABELS).map(([value, label]) => ({ value, label }));
 const VEHICLES = [ALL, { value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
@@ -141,6 +136,136 @@ function ApproveRunModal({ run, onClose }) {
   );
 }
 
+const menuItemStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  padding: '6px 10px',
+  borderRadius: 'var(--radius-sm)',
+  border: 'none',
+  background: 'none',
+  cursor: 'pointer',
+  font: 'var(--type-caption)',
+  color: 'var(--text-strong)',
+  textAlign: 'left',
+  width: '100%',
+  transition: 'background-color 120ms var(--ease-standard)',
+};
+
+function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, onTogglePin, onCopy, notify }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        type="button"
+        title="Thao tác khác"
+        aria-label="Thao tác khác"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          ...roundBtn,
+          background: open ? 'var(--surface-sunken)' : 'var(--surface-muted)',
+          color: 'var(--text-body)',
+        }}
+      >
+        <MoreHorizontal size={15} />
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: 4,
+              zIndex: 20,
+              background: 'var(--white)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-4)',
+              padding: 4,
+              minWidth: 175,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            {pending && (
+              <button
+                type="button"
+                onClick={() => { setOpen(false); onReject(); }}
+                style={menuItemStyle}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+              >
+                <X size={14} color="var(--status-danger)" />
+                <span style={{ color: 'var(--status-danger)' }}>Từ chối giá</span>
+              </button>
+            )}
+            {pending && plate.priceGroupId && plate.suggestedPrice && (
+              <button
+                type="button"
+                onClick={() => { setOpen(false); onGroupApprove(); }}
+                style={menuItemStyle}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+              >
+                <Users size={14} />
+                <span>Duyệt cả nhóm</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onToggleHide(); }}
+              style={menuItemStyle}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+            >
+              {plate.isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
+              <span>{plate.isHidden ? 'Hiện biển' : 'Ẩn khỏi khách'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onTogglePin(); }}
+              style={menuItemStyle}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+            >
+              <Pin size={14} color={plate.isPinned ? 'var(--action-primary)' : 'currentColor'} />
+              <span>{plate.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onCopy(); }}
+              style={menuItemStyle}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+            >
+              <Copy size={14} />
+              <span>Sao chép số biển</span>
+            </button>
+            <a
+              href={`/tim-kiem/${encodeURIComponent(plate.plateNumber)}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setOpen(false)}
+              style={{ ...menuItemStyle, textDecoration: 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+            >
+              <ExternalLink size={14} />
+              <span>Xem trang khách</span>
+            </a>
+            <div style={{ height: 1, background: 'var(--grey-100)', margin: '2px 0' }} />
+            <div style={{ padding: '2px 8px' }}>
+              <AuditHistoryButton entityType="vpa_plate" entityId={plate.id} />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // Danh sách biển VPA cho Admin — cùng bố cục và công cụ với trang Biển số (lọc, cột, sắp xếp, sửa nhanh, hàng loạt, CSV, ngăn kéo).
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
 export default function VpaAdminList({ queue = false, notify }) {
@@ -159,9 +284,39 @@ export default function VpaAdminList({ queue = false, notify }) {
   const [cell, setCell] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [integrity, setIntegrity] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ plateNumber: '', vehicle: 'Car', tab: '1', price: '' });
   const [priceRefId, setPriceRefId] = useState(null); // UC49 — biển đang xem popup nguồn giá gợi ý
   const priceRefQuery = useVpaPlatePriceReference(priceRefId, !!priceRefId);
+
+  const copyPlate = (plateNumber) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(plateNumber);
+      notify?.(`Đã sao chép số biển ${plateNumber}`);
+    }
+  };
+
+  const setDatePreset = (preset) => {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+    if (preset === 'today') {
+      const s = fmt(d);
+      setF((x) => ({ ...x, from: s, to: s }));
+    } else if (preset === 'tomorrow') {
+      d.setDate(d.getDate() + 1);
+      const s = fmt(d);
+      setF((x) => ({ ...x, from: s, to: s }));
+    } else if (preset === 'week') {
+      const from = fmt(d);
+      d.setDate(d.getDate() + 7);
+      const to = fmt(d);
+      setF((x) => ({ ...x, from, to }));
+    } else if (preset === 'clear') {
+      setF((x) => ({ ...x, from: '', to: '' }));
+    }
+    setPage(1);
+  };
 
   const { data: typeData } = useAdminCategories('plate_type');
   const { data: provData } = useAdminCategories('province');
@@ -285,30 +440,39 @@ export default function VpaAdminList({ queue = false, notify }) {
   );
 
   const actions = (p) => (
-    <>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
       {pending(p) && p.suggestedPrice && (
-        <button type="button" aria-label="Duyệt giá gợi ý" title="Duyệt giá gợi ý" onClick={() => run(() => approve.mutateAsync([p.id]), 'Đã đồng ý giá gợi ý')}
-          style={{ ...roundBtn, background: 'var(--action-primary)', color: 'var(--white)' }}><Check size={16} /></button>
+        <button
+          type="button"
+          aria-label="Duyệt giá gợi ý"
+          title={`Duyệt giá gợi ý: ${money(p.suggestedPrice)}`}
+          onClick={() => run(() => approve.mutateAsync([p.id]), 'Đã đồng ý giá gợi ý')}
+          style={{ ...roundBtn, background: 'var(--action-primary)', color: 'var(--white)' }}
+        >
+          <Check size={15} />
+        </button>
       )}
-      {pending(p) && (
-        <button type="button" aria-label="Từ chối giá gợi ý" title="Từ chối giá gợi ý" onClick={() => run(() => reject.mutateAsync([p.id]), 'Đã từ chối')}
-          style={{ ...roundBtn, background: 'var(--surface-muted)', color: 'var(--status-danger)' }}><X size={16} /></button>
-      )}
-      {pending(p) && p.priceGroupId && p.suggestedPrice && (
-        <button type="button" aria-label="Duyệt cả nhóm" title="Duyệt cả nhóm biển cùng giá" onClick={() => run(() => approveGroup.mutateAsync(p.priceGroupId), (r) => `Đã đồng ý ${r.affected} biển trong nhóm`)}
-          style={{ ...roundBtn, background: 'var(--surface-muted)', color: 'var(--text-body)' }}><Users size={16} /></button>
-      )}
-      <IconButton name="pencil" label="Sửa" size="sm" onClick={() => setDrawer({ plate: p })} />
-      <button type="button" aria-label={p.isHidden ? 'Hiện biển' : 'Ẩn biển'} title={p.isHidden ? 'Hiện biển' : 'Ẩn khỏi khách'} onClick={() => toggleHide(p)}
-        style={{ ...roundBtn, background: 'var(--surface-muted)', color: 'var(--text-body)' }}>
-        {p.isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+      <IconButton name="pencil" label="Sửa chi tiết" size="sm" onClick={() => setDrawer({ plate: p })} />
+      <button
+        type="button"
+        aria-label={`Sao chép ${p.plateNumber}`}
+        title="Sao chép số biển"
+        onClick={() => copyPlate(p.plateNumber)}
+        style={{ ...roundBtn, background: 'var(--surface-muted)', color: 'var(--text-body)' }}
+      >
+        <Copy size={13} />
       </button>
-      <button type="button" aria-label={p.isPinned ? 'Bỏ ghim' : 'Ghim'} title={p.isPinned ? 'Bỏ ghim' : 'Ghim lên đầu'} onClick={() => togglePin(p)}
-        style={{ ...roundBtn, background: p.isPinned ? 'var(--brand-50)' : 'var(--surface-muted)', color: p.isPinned ? 'var(--action-primary)' : 'var(--text-body)' }}>
-        <Pin size={16} />
-      </button>
-      <AuditHistoryButton entityType="vpa_plate" entityId={p.id} />
-    </>
+      <RowMoreMenu
+        plate={p}
+        pending={pending(p)}
+        onReject={() => run(() => reject.mutateAsync([p.id]), 'Đã từ chối')}
+        onGroupApprove={() => run(() => approveGroup.mutateAsync(p.priceGroupId), (r) => `Đã đồng ý ${r.affected} biển trong nhóm`)}
+        onToggleHide={() => toggleHide(p)}
+        onTogglePin={() => togglePin(p)}
+        onCopy={() => copyPlate(p.plateNumber)}
+        notify={notify}
+      />
+    </div>
   );
 
   const tabSelect = (p) => (
@@ -353,10 +517,23 @@ export default function VpaAdminList({ queue = false, notify }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       {!queue && <VpaStatsCharts />}
-      {!queue && (
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      {!queue && quickOpen && (
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', border: '1px solid var(--grey-200)', animation: 'fadeIn 160ms ease-out' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Plus size={16} color="var(--action-primary)" />
+              Thêm nhanh biển VPA
+            </span>
+            <button
+              type="button"
+              onClick={() => setQuickOpen(false)}
+              aria-label="Đóng thêm nhanh"
+              style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+            >
+              <X size={16} />
+            </button>
+          </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', flex: '0 0 auto' }}>Thêm nhanh</span>
             {[['plateNumber', '30A-567.89', 'text'], ['price', 'Giá (VNĐ) — trống = Giá liên hệ', 'text']].map(([k, ph]) => (
               <input key={k} value={quick[k]} placeholder={ph} onChange={(e) => setQuick((x) => ({ ...x, [k]: e.target.value }))}
                 onKeyDown={(e) => { if (e.key === 'Enter') quickAdd(); }}
@@ -364,10 +541,10 @@ export default function VpaAdminList({ queue = false, notify }) {
             ))}
             <Select value={quick.tab} options={TAB_ROW.slice(0, 3)} onChange={(v) => setQuick((x) => ({ ...x, tab: v }))} />
             <Select value={quick.vehicle} options={VEHICLES.slice(1)} onChange={(v) => setQuick((x) => ({ ...x, vehicle: v }))} />
-            <Button variant="primary" size="md" loading={create.isPending} onClick={quickAdd}>Thêm</Button>
+            <Button variant="primary" size="md" loading={create.isPending} onClick={quickAdd}>Thêm ngay</Button>
           </div>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            Nhập biển số, giá (bỏ trống = Giá liên hệ), chọn tab và loại xe rồi bấm Thêm. Hệ thống tự nhận loại biển và tỉnh từ số biển; crawl không đổi biển thêm tay. Cần chỉnh thêm loại biển/tỉnh/giờ phiên? Bấm &quot;Thêm biển VPA (đầy đủ)&quot;.
+            Nhập biển số, giá (bỏ trống = Giá liên hệ), chọn tab và loại xe rồi bấm Thêm. Hệ thống tự nhận loại biển và tỉnh từ số biển; crawl không đổi biển thêm tay.
           </span>
         </div>
       )}
@@ -501,16 +678,57 @@ export default function VpaAdminList({ queue = false, notify }) {
 
       <div className={`admin-plates-filters ${filtersOpen ? 'admin-filters-mobile-open' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
-          {!queue && <Select label="Tab" value={f.tab} options={TAB_FILTER} onChange={setFilter('tab')} />}
           <SearchField placeholder="Tìm biển số…" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} width={220} />
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            Phiên từ ngày
-            <input type="date" value={f.from} onChange={(e) => setFilter('from')(e.target.value)} style={dateField} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            Đến ngày
-            <input type="date" value={f.to} onChange={(e) => setFilter('to')(e.target.value)} style={dateField} />
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Phiên ngày</span>
+              <div style={{ display: 'inline-flex', gap: 3 }}>
+                {[['Hôm nay', 'today'], ['Ngày mai', 'tomorrow'], ['7 ngày', 'week']].map(([txt, val]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setDatePreset(val)}
+                    style={{
+                      border: 'none',
+                      background: 'var(--surface-sunken)',
+                      color: 'var(--text-body)',
+                      padding: '1px 6px',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      transition: 'background-color 120ms',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--grey-200)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  >
+                    {txt}
+                  </button>
+                ))}
+                {(f.from || f.to) && (
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset('clear')}
+                    title="Xóa lọc ngày"
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      color: 'var(--status-danger)',
+                      padding: '1px 4px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <input type="date" value={f.from} onChange={(e) => setFilter('from')(e.target.value)} style={dateField} title="Phiên từ ngày" />
+              <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>→</span>
+              <input type="date" value={f.to} onChange={(e) => setFilter('to')(e.target.value)} style={dateField} title="Đến ngày" />
+            </div>
+          </div>
           <Select label="Hiển thị" value={limit} options={PER_PAGE} onChange={(v) => { setLimit(Number(v)); setPage(1); }} />
           <div style={{ position: 'relative' }}>
             <Button variant="ghost" size="md" onClick={() => setColMenu((o) => !o)}>Cột hiển thị</Button>
@@ -529,6 +747,17 @@ export default function VpaAdminList({ queue = false, notify }) {
             )}
           </div>
           <div style={{ flex: 1 }} />
+          {!queue && (
+            <Button
+              variant={quickOpen ? 'dark' : 'ghost'}
+              size="md"
+              onClick={() => setQuickOpen((v) => !v)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Plus size={14} />
+              <span>{quickOpen ? 'Đóng thêm nhanh' : 'Thêm nhanh'}</span>
+            </Button>
+          )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
           <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
           {queue && (
@@ -547,7 +776,7 @@ export default function VpaAdminList({ queue = false, notify }) {
               </span>
             </>
           )}
-          {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>Thêm biển VPA (đầy đủ)</Button>}
+          {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>+ Thêm chi tiết</Button>}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
           <MultiFilter label="Loại biển" options={plateTypes} value={f.plateTypeIds} onChange={setFilter('plateTypeIds')} counts={facets?.types} />
@@ -622,7 +851,7 @@ export default function VpaAdminList({ queue = false, notify }) {
               {cols.approved && <SortHeader {...sh} label="Giá duyệt" sortKey="approvedPrice" tip={VPA_HELP.approved} style={{ flex: '1 1 110px' }} />}
               {cols.priceState && <SortHeader {...sh} label="Trạng thái giá" sortKey="priceState" tip={VPA_HELP.priceState} style={{ flex: '1 1 120px' }} />}
               {cols.updatedAt && <SortHeader {...sh} label="Cập nhật" sortKey="updatedAt" style={{ flex: '1 1 90px' }} />}
-              <span style={{ flex: '0 0 296px' }}>Thao tác</span>
+              <span style={{ flex: '0 0 160px' }}>Thao tác</span>
             </div>
 
             {isLoading && <div style={{ padding: 'var(--space-4)' }}><Skeleton variant="table" rows={6} /></div>}
@@ -639,6 +868,16 @@ export default function VpaAdminList({ queue = false, notify }) {
                   <span style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', minWidth: 0 }}>
                     {flags(p, 14)}
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+                    <button
+                      type="button"
+                      onClick={() => copyPlate(p.plateNumber)}
+                      title={`Sao chép ${p.plateNumber}`}
+                      style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', display: 'inline-flex', color: 'var(--text-muted)', flexShrink: 0 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--action-primary)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                    >
+                      <Copy size={13} />
+                    </button>
                     {rowBadges(p)}
                   </span>
                   {cols.plateType && <span style={{ flex: '1 1 88px', minWidth: 0 }}>{catSelect(p, 'plateTypeId', plateTypes, 'Loại biển')}</span>}
@@ -654,19 +893,48 @@ export default function VpaAdminList({ queue = false, notify }) {
                   )}
                   {cols.startingPrice && <span style={{ flex: '1 1 104px', font: 'var(--type-body-sm)' }}>{money(p.startingPrice)}</span>}
                   {cols.suggested && (
-                    <button
-                      type="button"
-                      onClick={() => setPriceRefId(p.id)}
-                      title="Xem nguồn tính giá gợi ý"
-                      style={{ flex: '1 1 124px', font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', textDecoration: 'underline dotted' }}
-                    >
-                      {p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : `— (${p.sampleCount ?? 0} mẫu)`}
-                    </button>
+                    <div style={{ flex: '1 1 130px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <button
+                        type="button"
+                        onClick={() => setPriceRefId(p.id)}
+                        title="Xem nguồn tính giá gợi ý"
+                        style={{ font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', textDecoration: 'underline dotted', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <span>{p.suggestedPrice ? money(p.suggestedPrice) : '—'}</span>
+                        {p.suggestedPrice && p.approvedPrice && p.priceState === 4 && (() => {
+                          const delta = p.suggestedPrice - p.approvedPrice;
+                          const pct = p.approvedPrice > 0 ? Math.round((delta / p.approvedPrice) * 100) : 0;
+                          const isUp = delta > 0;
+                          return (
+                            <span
+                              title={`Lệch so với giá duyệt cũ (${money(p.approvedPrice)})`}
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: 'var(--fw-bold)',
+                                padding: '1px 5px',
+                                borderRadius: 'var(--radius-pill)',
+                                background: isUp ? '#ecfdf5' : '#fff1f2',
+                                color: isUp ? '#059669' : '#e11d48',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 2,
+                              }}
+                            >
+                              {isUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                              {isUp ? `+${pct}%` : `${pct}%`}
+                            </span>
+                          );
+                        })()}
+                      </button>
+                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: (p.sampleCount || 0) > 0 ? 'var(--text-muted)' : 'var(--amber-600, #d97706)' }}>
+                        {(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu kết quả` : 'Chưa có mẫu'}
+                      </span>
+                    </div>
                   )}
                   {cols.approved && <span style={{ flex: '1 1 110px' }}>{priceCell(p)}</span>}
                   {cols.priceState && <span style={{ flex: '1 1 120px' }}><Badge tone={st.tone}>{st.label}</Badge></span>}
                   {cols.updatedAt && <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>}
-                  <span style={{ flex: '0 0 296px', display: 'flex', gap: 'var(--space-1)', alignItems: 'center', flexWrap: 'wrap' }}>{actions(p)}</span>
+                  <span style={{ flex: '0 0 160px', display: 'flex', alignItems: 'center' }}>{actions(p)}</span>
                 </div>
               );
             })}
