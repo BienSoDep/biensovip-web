@@ -41,7 +41,13 @@ const VPA_FILTER_TABS = [
   { value: '3', label: 'Biển hết hạn', note: 'Biển hết hạn', countKey: 'expired' },
   { value: '4', label: 'Hết hạn nội bộ', note: 'Rút khỏi công bố', countKey: null },
 ];
-const TAB_ROW = Object.entries(VPA_TAB_LABELS).map(([value, label]) => ({ value, label }));
+const TAB_FULL_LABELS = {
+  1: 'Biển tháng (công bố)',
+  2: 'Biển tuần (chính thức)',
+  3: 'Biển hết hạn',
+  4: 'Hết hạn nội bộ',
+};
+const TAB_ROW = Object.entries(TAB_FULL_LABELS).map(([value, label]) => ({ value, label }));
 const VEHICLES = [ALL, { value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const STATE_OPTS = [{ value: '', label: 'Mọi trạng thái giá' }, ...Object.entries(VPA_PRICE_STATES).map(([value, s]) => ({ value, label: s.label }))];
 const YES_NO = (yes, no) => [ALL, { value: 'true', label: yes }, { value: 'false', label: no }];
@@ -328,6 +334,10 @@ export default function VpaAdminList({ queue = false, notify }) {
   const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: f.tab, page: 1, limit: 1 }); // tổng của tab, không lọc khác
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const { data: vpaCounts } = useVpaCounts(f.vehicle);
+  // Tổng mỗi tab là CẢ Ô TÔ + XE MÁY cộng lại — hiện rõ breakdown để không nhầm với số trên trang VPA gốc (họ tách
+  // riêng từng loại xe theo tab, ví dụ "Danh sách chính thức" > "Xe mô tô, xe gắn máy" chỉ hiện phần xe máy).
+  const { data: vpaCountsCar } = useVpaCounts('Car');
+  const { data: vpaCountsMoto } = useVpaCounts('MotorBike');
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
   const startApproveAll = useStartApproveAllVpaSuggested();
@@ -564,13 +574,18 @@ export default function VpaAdminList({ queue = false, notify }) {
           {VPA_FILTER_TABS.map((t) => {
             const active = f.tab === t.value;
             let count = null;
-            if (t.countKey === 'weekly') count = vpaCounts?.weekly;
-            else if (t.countKey === 'monthly') count = vpaCounts?.monthly;
-            else if (t.countKey === 'expired') count = vpaCounts?.expired;
+            let carCount = null;
+            let motoCount = null;
+            if (t.countKey === 'weekly') { count = vpaCounts?.weekly; carCount = vpaCountsCar?.weekly; motoCount = vpaCountsMoto?.weekly; }
+            else if (t.countKey === 'monthly') { count = vpaCounts?.monthly; carCount = vpaCountsCar?.monthly; motoCount = vpaCountsMoto?.monthly; }
+            else if (t.countKey === 'expired') { count = vpaCounts?.expired; carCount = vpaCountsCar?.expired; motoCount = vpaCountsMoto?.expired; }
             else if (t.countKey === 'all') {
               count = (vpaCounts?.weekly != null && vpaCounts?.monthly != null && vpaCounts?.expired != null)
                 ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
                 : (f.tab === '' ? baseData?.total : null);
+              const sum3 = (c) => (c?.weekly != null && c?.monthly != null && c?.expired != null ? c.weekly + c.monthly + c.expired : null);
+              carCount = sum3(vpaCountsCar);
+              motoCount = sum3(vpaCountsMoto);
             }
 
             return (
@@ -630,6 +645,17 @@ export default function VpaAdminList({ queue = false, notify }) {
                 >
                   {t.note}
                 </span>
+                {(carCount != null || motoCount != null) && (
+                  <span
+                    style={{
+                      font: 'var(--type-caption)',
+                      fontSize: '11px',
+                      color: active ? 'rgba(255,255,255,0.85)' : 'var(--text-muted)',
+                    }}
+                  >
+                    Ô tô {new Intl.NumberFormat('vi-VN').format(carCount || 0)} · Xe máy {new Intl.NumberFormat('vi-VN').format(motoCount || 0)}
+                  </span>
+                )}
               </button>
             );
           })}

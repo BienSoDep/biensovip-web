@@ -6,7 +6,7 @@ import VpaSourceCard from './VpaSourceCard.jsx';
 import VpaRunsTable from './VpaRunsTable.jsx';
 import VpaQualityPanel from './VpaQualityPanel.jsx';
 import {
-  useVpaOverview, useUpdateVpaSettings, useRunVpaCrawl, useStopVpaCrawl, usePauseVpaCrawl, useVpaAlertTest,
+  useVpaOverview, useUpdateVpaSettings, useRunVpaCrawl, useStopVpaCrawl, useForceStopVpaCrawl, usePauseVpaCrawl, useVpaAlertTest,
 } from '../../../services/adminVpa.js';
 import { VPA_SOURCES } from '../../../lib/vpaFormat.js';
 import {
@@ -86,6 +86,7 @@ function OverviewBody({ data, notify }) {
   const save = useUpdateVpaSettings();
   const crawl = useRunVpaCrawl();
   const stop = useStopVpaCrawl();
+  const forceStop = useForceStopVpaCrawl();
   const pause = usePauseVpaCrawl();
   const alertTest = useVpaAlertTest();
   const [form, setForm] = useState(() => ({ ...data.settings }));
@@ -133,6 +134,21 @@ function OverviewBody({ data, notify }) {
       notify?.(`Đang dừng: ${src.label}`);
     } catch (e) {
       notify?.(e.message || 'Không dừng được');
+    }
+  };
+
+  // Admin bấm Dừng rồi muốn đổi xe/Crawl ngay ngay nhưng lượt cũ chưa kịp dọn xong (đang rollback/đóng kết nối HTTP dở)
+  // nên vẫn báo "đang chạy" — nút này chờ hẳn lượt cũ kết thúc rồi mới trả về (khác Dừng chỉ ra lệnh hủy rồi trả ngay).
+  const onForceStop = async (src) => {
+    if (!window.confirm(`Hủy hẳn lượt "${src.label}" đang chạy? Có thể mất vài giây để dọn dẹp xong.`)) return;
+    setBusySource(src.id);
+    try {
+      await forceStop.mutateAsync(src.key);
+      notify?.(`Đã hủy hẳn: ${src.label}`);
+    } catch (e) {
+      notify?.(e.message || 'Không hủy được');
+    } finally {
+      setBusySource(null);
     }
   };
 
@@ -220,6 +236,7 @@ function OverviewBody({ data, notify }) {
             set={set}
             onRun={onRun}
             onStop={onStop}
+            onForceStop={onForceStop}
             busy={busySource === s.id}
           />
         ))}
@@ -474,9 +491,14 @@ function OverviewBody({ data, notify }) {
 
             {/* Nguồn 1: Danh sách chính thức */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--white)', padding: 10, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-hairline)' }}>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
-                1. Danh sách chính thức:
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                  1. Danh sách chính thức:
+                </span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', fontWeight: 'var(--fw-semibold)', fontSize: '11px' }}>
+                  Biển tuần
+                </span>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 <Input label="Từ giờ" type="number" min="0" max="23" value={form.officialWindowStartHour} onChange={set('officialWindowStartHour')} />
                 <Input label="Đến giờ" type="number" min="0" max="23" value={form.officialWindowEndHour} onChange={set('officialWindowEndHour')} />
@@ -485,9 +507,14 @@ function OverviewBody({ data, notify }) {
 
             {/* Nguồn 2: Danh sách công bố */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--white)', padding: 10, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-hairline)' }}>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
-                2. Danh sách công bố (Nặng ~5-6h):
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                  2. Danh sách công bố (Nặng ~5-6h):
+                </span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', fontWeight: 'var(--fw-semibold)', fontSize: '11px' }}>
+                  Biển tháng
+                </span>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 <Input label="Từ giờ" type="number" min="0" max="23" value={form.publishedWindowStartHour} onChange={set('publishedWindowStartHour')} />
                 <Input label="Đến giờ" type="number" min="0" max="23" value={form.publishedWindowEndHour} onChange={set('publishedWindowEndHour')} />
@@ -496,9 +523,14 @@ function OverviewBody({ data, notify }) {
 
             {/* Nguồn 3: Kết quả đấu giá */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--white)', padding: 10, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-hairline)' }}>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
-                3. Kết quả đấu giá:
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                  3. Kết quả đấu giá:
+                </span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', fontWeight: 'var(--fw-semibold)', fontSize: '11px' }}>
+                  Biển hết hạn
+                </span>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 <Input label="Từ giờ" type="number" min="0" max="23" value={form.resultsWindowStartHour} onChange={set('resultsWindowStartHour')} />
                 <Input label="Đến giờ" type="number" min="0" max="23" value={form.resultsWindowEndHour} onChange={set('resultsWindowEndHour')} />

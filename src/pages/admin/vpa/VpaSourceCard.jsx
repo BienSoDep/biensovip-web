@@ -50,7 +50,7 @@ function Progress({ run, now, stuck }) {
 }
 
 // Thẻ một nguồn crawl: bật/tắt + chu kỳ, độ mới của dữ liệu, tiến độ lượt đang chạy, Crawl ngay / Tiếp tục / Dừng + tùy chọn nâng cao.
-export default function VpaSourceCard({ src, status, settings, form, setForm, set, onRun, onStop, busy }) {
+export default function VpaSourceCard({ src, status, settings, form, setForm, set, onRun, onStop, onForceStop, busy }) {
   const [adv, setAdv] = useState(false);
   const [opt, setOpt] = useState({ vehicle: '', province: '', fresh: false, flag: false });
   const isResults = src.id === 3;
@@ -71,11 +71,19 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
   const stop = () => {
     if (window.confirm(`Dừng lượt "${src.label}" đang chạy? Dữ liệu đã ghi được giữ lại và có thể bấm "Tiếp tục" sau.`)) onStop(src);
   };
+  const forceStop = () => onForceStop(src);
 
   return (
     <div style={CARD}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{src.label}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{src.label}</span>
+          {src.note && (
+            <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', fontWeight: 'var(--fw-semibold)', fontSize: '12px' }}>
+              {src.note}
+            </span>
+          )}
+        </div>
         <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap' }}>
           {running ? <Badge tone={status.stuck ? 'rose' : 'blue'}>{status.stuck ? 'Nghi treo' : 'Đang chạy'}</Badge> : last ? <Badge tone={STATUS_TONE[last] || 'neutral'}>{STATUS_TEXT[last] || last}</Badge> : <Badge tone="neutral">Chưa chạy</Badge>}
           {status?.stale && <Badge tone="amber">Dữ liệu cũ</Badge>}
@@ -103,6 +111,18 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
           {resumable && !opt.fresh ? 'Tiếp tục lượt dở' : opt.flag && !isResults ? 'Chạy thử' : 'Crawl ngay'}
         </Button>
         {running && <Button variant="outline" size="sm" onClick={stop} style={{ color: 'var(--status-danger)' }}>Dừng</Button>}
+        {running && (
+          <Button
+            variant="outline"
+            size="sm"
+            loading={busy}
+            onClick={forceStop}
+            title="Dùng khi đã bấm Dừng nhưng vẫn báo đang chạy (lượt cũ chưa kịp dọn xong) và cần đổi xe/Crawl ngay ngay"
+            style={{ color: 'var(--status-danger)' }}
+          >
+            Hủy hẳn
+          </Button>
+        )}
         <Button variant="ghost" size="sm" onClick={() => setAdv((v) => !v)}>{adv ? 'Ẩn tùy chọn' : 'Tùy chọn nâng cao'}</Button>
       </div>
 

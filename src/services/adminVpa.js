@@ -16,6 +16,16 @@ export function useVpaAdminFacets(params) {
 // Admin UC49: duyệt giá biển VPA, ẩn/ghim, cài đặt + lần chạy (super-admin), giám sát và điều khiển crawl (T19).
 const KEY = 'admin-vpa';
 
+// Kết quả đấu giá đã cào (bảng riêng vpa_auction_results — không chung schema với 4 tab vpa_plates).
+export function useVpaAuctionResults(params) {
+  const qs = toQuery(params);
+  return useQuery({
+    queryKey: [KEY, 'auction-results', qs],
+    queryFn: () => apiClient.get(`/api/admin/vpa/auction-results?${qs}`),
+    placeholderData: (prev) => prev,
+  });
+}
+
 function toQuery(params) {
   const q = new URLSearchParams();
   Object.entries(params || {}).forEach(([k, v]) => { if (v !== '' && v != null) q.set(k, v); });
@@ -142,6 +152,8 @@ export const useRunVpaCrawl = () => useVpaMutation((arg) => {
   return apiClient.post(`/api/admin/vpa/crawl/${source}/run`, options);
 });
 export const useStopVpaCrawl = () => useVpaMutation((source) => apiClient.post(`/api/admin/vpa/crawl/${source}/stop`));
+// Hủy hẳn (chờ dọn xong) — dùng khi Dừng xong vẫn còn "đang chạy" (dọn dẹp dở) nên đổi xe/Crawl ngay bị chặn VPA_ALREADY_RUNNING.
+export const useForceStopVpaCrawl = () => useVpaMutation((source) => apiClient.post(`/api/admin/vpa/crawl/${source}/force-stop`));
 export const usePauseVpaCrawl = () => useVpaMutation((value) => apiClient.post('/api/admin/vpa/crawl/pause', { value }));
 export const useRevertVpaRun = () => useVpaMutation((runId) => apiClient.post(`/api/admin/vpa/crawl/runs/${runId}/revert`));
 export const useApplyVpaVanish = () => useVpaMutation((runId) => apiClient.post(`/api/admin/vpa/crawl/runs/${runId}/apply-vanish`));

@@ -45,9 +45,22 @@ export default function VpaRunDetail({ run, onClose, notify }) {
           {run.options && <Badge tone="blue">{run.options}</Badge>}
           {run.dryRun && <Badge tone="amber">Không ghi dữ liệu</Badge>}
         </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 'var(--space-3)' }}>
-          <KV k="Nguồn" v={src?.label} />
+          <KV
+            k="Nguồn"
+            v={
+              src ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span>{src.label}</span>
+                  {src.note && (
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', fontSize: '11px', fontWeight: 'var(--fw-semibold)' }}>
+                      {src.note}
+                    </span>
+                  )}
+                </div>
+              ) : '—'
+            }
+          />
           <KV k="Loại xe" v={run.vehicle == null ? '—' : isCar(run.vehicle) ? 'Ô tô' : 'Xe máy'} />
           <KV k="Người chạy" v={run.triggeredBy === 'schedule' ? 'Lịch tự động' : run.triggeredBy?.replace('admin:', 'Admin: ')} />
           <KV k="Bắt đầu" v={formatDateTime(run.startedAt)} />
@@ -118,20 +131,22 @@ export default function VpaRunDetail({ run, onClose, notify }) {
               </div>
             )}
 
-            <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr .8fr 1fr 1.6fr', gap: 8, padding: '8px 12px', background: 'var(--surface-sunken)', font: 'var(--type-caption)', textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)' }}>
-                <span>Biển số</span><span>Loại xe</span><span>Tab</span><span>Lý do</span>
-              </div>
-              {isLoading && <div style={{ padding: 16, color: 'var(--text-muted)' }}>Đang tải…</div>}
-              {!isLoading && (changes?.items || []).length === 0 && <div style={{ padding: 16, color: 'var(--text-muted)' }}>Lượt này không đổi tab biển nào.</div>}
-              {(changes?.items || []).map((c, i) => (
-                <div key={`${c.plateId}-${i}`} style={{ display: 'grid', gridTemplateColumns: '1.2fr .8fr 1fr 1.6fr', gap: 8, padding: '8px 12px', borderTop: '1px solid var(--grey-100)', font: 'var(--type-body-sm)' }}>
-                  <b style={{ color: 'var(--text-strong)' }}>{c.plateNumber}</b>
-                  <span>{isCar(c.vehicle) ? 'Ô tô' : 'Xe máy'}</span>
-                  <span>{c.fromTab ? VPA_TAB_LABELS[c.fromTab] : '—'} → {VPA_TAB_LABELS[c.toTab]}</span>
-                  <span style={{ color: 'var(--text-muted)' }}>{VPA_CHANGE_REASONS[c.reason] || c.reason}</span>
+            <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflowX: 'auto' }}>
+              <div style={{ minWidth: 460 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr .8fr 1.2fr 1.6fr', gap: 8, padding: '8px 12px', background: 'var(--surface-sunken)', font: 'var(--type-caption)', textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)' }}>
+                  <span>Biển số</span><span>Loại xe</span><span>Tab</span><span>Lý do</span>
                 </div>
-              ))}
+                {isLoading && <div style={{ padding: 16, color: 'var(--text-muted)' }}>Đang tải…</div>}
+                {!isLoading && (changes?.items || []).length === 0 && <div style={{ padding: 16, color: 'var(--text-muted)' }}>Lượt này không đổi tab biển nào.</div>}
+                {(changes?.items || []).map((c, i) => (
+                  <div key={`${c.plateId}-${i}`} style={{ display: 'grid', gridTemplateColumns: '1.2fr .8fr 1.2fr 1.6fr', gap: 8, padding: '8px 12px', borderTop: '1px solid var(--grey-100)', font: 'var(--type-body-sm)', alignItems: 'center' }}>
+                    <b style={{ color: 'var(--text-strong)' }}>{c.plateNumber}</b>
+                    <span>{isCar(c.vehicle) ? 'Ô tô' : 'Xe máy'}</span>
+                    <span>{c.fromTab ? VPA_TAB_LABELS[c.fromTab] : '—'} → {VPA_TAB_LABELS[c.toTab]}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{VPA_CHANGE_REASONS[c.reason] || c.reason}</span>
+                  </div>
+                ))}
+              </div>
             </div>
             {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />}
           </div>

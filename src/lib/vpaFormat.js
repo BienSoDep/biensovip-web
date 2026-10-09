@@ -35,9 +35,9 @@ export const VPA_PRICE_STATES = {
   4: { label: 'Đề xuất đổi giá', tone: 'blue' },
 };
 export const VPA_SOURCES = [
-  { id: 1, key: 'official', label: 'Danh sách chính thức', prefix: 'official' },
-  { id: 2, key: 'published', label: 'Danh sách công bố', prefix: 'published' },
-  { id: 3, key: 'results', label: 'Kết quả đấu giá', prefix: 'results' },
+  { id: 1, key: 'official', label: 'Danh sách chính thức', note: 'Biển tuần', prefix: 'official' },
+  { id: 2, key: 'published', label: 'Danh sách công bố', note: 'Biển tháng', prefix: 'published' },
+  { id: 3, key: 'results', label: 'Kết quả đấu giá', note: 'Biển hết hạn', prefix: 'results' },
 ];
 export const VPA_RUN_STATUS = { 0: 'Đang chạy', 1: 'Thành công', 2: 'Chưa đủ dữ liệu', 3: 'Lỗi' };
 export const VPA_RUN_STATUS_TONE = { 0: 'blue', 1: 'mint', 2: 'amber', 3: 'rose' };
