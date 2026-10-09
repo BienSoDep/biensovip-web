@@ -49,7 +49,7 @@ export default function AdminInterestLeads({ notify }) {
               style={{
                 display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', border: 'none',
                 borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
+                background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--action-primary-text)' : 'var(--text-body)',
                 boxShadow: 'var(--shadow-inset-hairline)',
               }}>{label}</button>
           );

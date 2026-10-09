@@ -31,12 +31,12 @@ export default function ChatZaloContact({ notify, user }) {
           <circle cx="134" cy="131" r="2" fill="var(--action-primary)" />
         </svg>
         <div className="contact-hero__text">
-          <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Liên hệ tư vấn</h1>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Chọn kênh phù hợp — phản hồi trong 15 phút, kể cả cuối tuần.</p>
+          <h1 style={{ margin: 0, fontSize: 'clamp(36px, 4.2vw, 48px)', fontWeight: 800, lineHeight: 1.15, letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Liên hệ tư vấn</h1>
+          <p style={{ margin: 0, fontSize: 'clamp(16px, 1.6vw, 18px)', lineHeight: 1.6, color: 'var(--text-body)', maxWidth: '620px' }}>Chọn kênh phù hợp — phản hồi trong 15 phút, kể cả cuối tuần.</p>
           <div className="contact-hero__chips">
-            <span className="contact-hero__chip"><Clock size={14} />Phản hồi &lt; 15 phút</span>
-            <span className="contact-hero__chip"><ShieldCheck size={14} />Bảo mật thông tin</span>
-            <span className="contact-hero__chip"><BadgeCheck size={14} />Tư vấn miễn phí</span>
+            <span className="contact-hero__chip"><Clock size={18} />Phản hồi &lt; 15 phút</span>
+            <span className="contact-hero__chip"><ShieldCheck size={18} />Bảo mật thông tin</span>
+            <span className="contact-hero__chip"><BadgeCheck size={18} />Tư vấn miễn phí</span>
           </div>
         </div>
         <div className="contact-hero__media">

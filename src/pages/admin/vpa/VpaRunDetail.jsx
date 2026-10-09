@@ -111,7 +111,7 @@ export default function VpaRunDetail({ run, onClose, notify }) {
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {[['', 'Tất cả'], ...reasons.map(([k, n]) => [k, `${VPA_CHANGE_REASONS[k] || k} (${n})`])].map(([k, label]) => (
                   <button key={k || 'all'} type="button" onClick={() => { setReason(k); setPage(1); }}
-                    style={{ border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', padding: '4px 10px', font: 'var(--type-caption)', background: reason === k ? 'var(--action-primary)' : 'var(--surface-sunken)', color: reason === k ? 'var(--text-inverse)' : 'var(--text-body)' }}>
+                    style={{ border: 'none', cursor: 'pointer', borderRadius: 'var(--radius-pill)', padding: '4px 10px', font: 'var(--type-caption)', background: reason === k ? 'var(--action-primary)' : 'var(--surface-sunken)', color: reason === k ? 'var(--action-primary-text)' : 'var(--text-body)' }}>
                     {label}
                   </button>
                 ))}

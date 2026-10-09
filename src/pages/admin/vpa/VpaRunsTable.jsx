@@ -4,7 +4,7 @@ import Pagination from '../../../components/Pagination.jsx';
 import { Badge, Checkbox, Select } from '../../../components/index.jsx';
 import VpaRunDetail from './VpaRunDetail.jsx';
 import { useVpaRunSearch, exportVpaRunsCsv } from '../../../services/adminVpa.js';
-import { VPA_SOURCES, VPA_RUN_STATUS, VPA_RUN_STATUS_TONE, formatDateTime, formatDuration, formatInt, isCar, vpaRunNote } from '../../../lib/vpaFormat.js';
+import { VPA_SOURCES, VPA_RUN_STATUS, VPA_RUN_STATUS_TONE, formatDateTime, formatDuration, formatInt, isCar, vpaRunNote, vpaScheduleWindowLabel } from '../../../lib/vpaFormat.js';
 
 const PAGE_SIZE = 20;
 const RESUME_WINDOW_MS = 6 * 3600 * 1000; // khớp VpaRunSupport.ResumeWindow ở backend
@@ -16,7 +16,7 @@ const STATUS_OPTS = [ALL, ...Object.entries(VPA_RUN_STATUS).map(([value, label])
 const dateField = { height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' };
 
 // Lịch sử lượt chạy: lọc (nguồn, loại xe, trạng thái, chỉ lỗi, ngày), phân trang, xuất CSV, xem chi tiết/thay đổi, tiếp tục hoặc chạy lại.
-export default function VpaRunsTable({ notify, onRun }) {
+export default function VpaRunsTable({ notify, onRun, settings }) {
   const [f, setF] = useState({ source: '', vehicle: '', status: '', onlyProblems: false, from: '', to: '' });
   const [page, setPage] = useState(1);
   const [detail, setDetail] = useState(null);
@@ -75,11 +75,14 @@ export default function VpaRunsTable({ notify, onRun }) {
             return (
               <div key={r.id} style={{ display: 'grid', gridTemplateColumns: COLS, gap: 8, padding: '10px 16px', borderTop: '1px solid var(--grey-100)', font: 'var(--type-body-sm)', alignItems: 'center' }}>
                 <span>{formatDateTime(r.startedAt)}</span>
-                <span>{src?.label}<br /><span style={{ color: 'var(--text-muted)' }}>{r.vehicle == null ? '—' : isCar(r.vehicle) ? 'Ô tô' : 'Xe máy'}</span></span>
+                <span>
+                  {src?.label}<br /><span style={{ color: 'var(--text-muted)' }}>{r.vehicle == null ? '—' : isCar(r.vehicle) ? 'Ô tô' : 'Xe máy'}</span>
+                  {settings && <><br /><span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{vpaScheduleWindowLabel(settings, r.source)}</span></>}
+                </span>
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
                   <Badge tone={VPA_RUN_STATUS_TONE[r.status] || 'neutral'}>{VPA_RUN_STATUS[r.status]}{r.complete ? ' ✓' : ''}</Badge>
                   {r.options && <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)' }}>{r.options}</span>}
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{r.triggeredBy === 'schedule' ? 'Lịch tự động' : r.triggeredBy?.replace('admin:', 'Admin: ')}</span>
+                  <Badge tone={r.triggeredBy === 'schedule' ? 'blue' : 'orange'}>{r.triggeredBy === 'schedule' ? '⏱ Tự động' : `✋ ${r.triggeredBy?.replace('admin:', '') || 'Admin'}`}</Badge>
                 </span>
                 <span>{r.slicesTotal ? `${r.slicesDone}/${r.slicesTotal}` : '—'}<br /><span style={{ color: 'var(--text-muted)' }}>{formatInt(r.pagesFetched)} trang</span></span>
                 <span>{formatInt(r.itemsSeen)} / {formatInt(r.itemsExpected)}{r.itemsMissing > 0 && <><br /><span style={{ color: 'var(--status-danger)' }}>thiếu {formatInt(r.itemsMissing)}</span></>}</span>

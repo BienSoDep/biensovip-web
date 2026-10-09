@@ -1,113 +1,167 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useDebouncedValue } from '@mantine/hooks';
-import { SlidersHorizontal, X, LayoutGrid, List as ListIcon, Bike, Car } from 'lucide-react';
-import Button from '../components/Button.jsx';
-import { Select, Checkbox, Radio, Input, Icon, SearchField } from '../components/index.jsx';
-import PlateCard from '../components/PlateCard.jsx';
-import Pagination from '../components/Pagination.jsx';
-import PlateCardSkeleton from '../components/skeletons/PlateCardSkeleton.jsx';
-import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
-import { useCategories } from '../services/categories.js';
-import { usePlates, useInfinitePlates } from '../services/plates.js';
-import { useCompareIds } from '../services/compareService.js';
-import { useVpaCounts, useVpaPlates, useVpaProvinces, useVpaFacets, openVpaPlate } from '../services/vpa.js';
-import { vpaBadge, isCar } from '../lib/vpaFormat.js';
-import { useCreateSavedSearch } from '../services/savedSearchService.js';
-import { loadAuth } from '../lib/authStore.js';
-import { useBirthYear } from '../hooks/useBirthYear.js';
-import { useFengShuiNumberScores } from '../services/fengshuiService.js';
-import { routeFor } from '../config/routes.js';
-import { readFiltersFromUrl, writeFiltersToUrl, buildPageUrl } from '../lib/plateListFilters.js';
-import Breadcrumb from '../components/Breadcrumb.jsx';
-import { useSeo } from '../hooks/useSeo.js';
-import { restoreScrollPosition, getScrollPosition } from '../lib/scrollRestoration.js';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDebouncedValue } from "@mantine/hooks";
 import {
-  trackViewItemList, trackSelectItem, trackSearch, trackFilterApply,
-  trackSearchNoResults, trackSelectPricePreset, trackAvoidNumberToggle, trackSaveSearch,
-} from '../services/tracking/events.js';
+  SlidersHorizontal,
+  X,
+  LayoutGrid,
+  List as ListIcon,
+  Bike,
+  Car,
+  Search,
+} from "lucide-react";
+import Button from "../components/Button.jsx";
+import { Select, Checkbox, Radio, Input, Icon } from "../components/index.jsx";
+import PlateCard from "../components/PlateCard.jsx";
+import Pagination from "../components/Pagination.jsx";
+import PlateCardSkeleton from "../components/skeletons/PlateCardSkeleton.jsx";
+import { useStaggeredReveal } from "../hooks/useStaggeredReveal.js";
+import { useCategories } from "../services/categories.js";
+import { usePlates, useInfinitePlates } from "../services/plates.js";
+import { useCompareIds } from "../services/compareService.js";
+import {
+  useVpaCounts,
+  useVpaPlates,
+  useVpaProvinces,
+  useVpaFacets,
+  openVpaPlate,
+} from "../services/vpa.js";
+import { vpaBadge, isCar } from "../lib/vpaFormat.js";
+import { useCreateSavedSearch } from "../services/savedSearchService.js";
+import { loadAuth } from "../lib/authStore.js";
+import { useBirthYear } from "../hooks/useBirthYear.js";
+import { useFengShuiNumberScores } from "../services/fengshuiService.js";
+import { routeFor } from "../config/routes.js";
+import {
+  readFiltersFromUrl,
+  writeFiltersToUrl,
+  buildPageUrl,
+} from "../lib/plateListFilters.js";
+import Breadcrumb from "../components/Breadcrumb.jsx";
+import { useSeo } from "../hooks/useSeo.js";
+import {
+  restoreScrollPosition,
+  getScrollPosition,
+} from "../lib/scrollRestoration.js";
+import {
+  trackViewItemList,
+  trackSelectItem,
+  trackSearch,
+  trackFilterApply,
+  trackSearchNoResults,
+  trackSelectPricePreset,
+  trackAvoidNumberToggle,
+  trackSaveSearch,
+} from "../services/tracking/events.js";
 
 const PER_PAGE_OPTIONS = [
-  { value: '9', label: '9 / trang' },
-  { value: '18', label: '18 / trang' },
-  { value: '0', label: 'Xem tất cả' },
+  { value: "9", label: "9 / trang" },
+  { value: "18", label: "18 / trang" },
+  { value: "0", label: "Xem tất cả" },
 ];
 
 const SORT_OPTIONS = [
-  { value: 'newest', label: 'Mới nhất' },
-  { value: 'hot_first', label: 'Nổi bật trước' },
-  { value: 'most_viewed', label: 'Xem nhiều nhất' },
-  { value: 'plate_number', label: 'Số biển A→Z' },
-  { value: 'price_asc', label: 'Giá thấp → cao' },
-  { value: 'price_desc', label: 'Giá cao → thấp' },
+  { value: "newest", label: "Mới nhất" },
+  { value: "hot_first", label: "Nổi bật trước" },
+  { value: "most_viewed", label: "Xem nhiều nhất" },
+  { value: "plate_number", label: "Số biển A→Z" },
+  { value: "price_asc", label: "Giá thấp → cao" },
+  { value: "price_desc", label: "Giá cao → thấp" },
 ];
 
 // Sắp xếp theo hợp mệnh: chỉ có khi đã biết năm sinh; sắp lại các biển của trang đang xem theo điểm hợp mệnh (backend chưa sắp theo mệnh).
-const FENGSHUI_SORT = { value: 'fengshui', label: '🍀 Hợp mệnh trước' };
+const FENGSHUI_SORT = { value: "fengshui", label: "🍀 Hợp mệnh trước" };
 
 const PRICE_PRESETS = [
-  { label: 'Dưới 200tr', min: '', max: '200000000' },
-  { label: '200tr–500tr', min: '200000000', max: '500000000' },
-  { label: '500tr–1 tỷ', min: '500000000', max: '1000000000' },
-  { label: 'Trên 1 tỷ', min: '1000000000', max: '' },
+  { label: "Dưới 200tr", min: "", max: "200000000" },
+  { label: "200tr–500tr", min: "200000000", max: "500000000" },
+  { label: "500tr–1 tỷ", min: "500000000", max: "1000000000" },
+  { label: "Trên 1 tỷ", min: "1000000000", max: "" },
 ];
 
 // Quan niệm dân gian tránh số xui — lọc loại trừ biển chứa chuỗi số này (không phải bốc thuốc y khoa,
 // chỉ theo quan niệm phổ biến khách hàng hay hỏi).
-const AVOID_NUMBER_PRESETS = ['4', '7', '49', '53', '13'];
+const AVOID_NUMBER_PRESETS = ["4", "7", "49", "53", "13"];
 
 const PROVINCE_VISIBLE_COUNT = 10;
 
 // Sắp xếp của 3 tab VPA. 'Mặc định' = cài đặt thứ tự ưu tiên của Admin (tỉnh ưu tiên, nổi bật, ngày, loại), giống kho Duy Định.
 const VPA_SORTS = {
-  soon: [{ value: 'default', label: 'Mặc định' }, { value: 'soon', label: 'Phiên sắp diễn ra' }, { value: 'number', label: 'Số biển A→Z' }],
-  expired: [{ value: 'default', label: 'Mặc định' }, { value: 'latest', label: 'Mới kết thúc' }, { value: 'number', label: 'Số biển A→Z' }],
+  soon: [
+    { value: "default", label: "Mặc định" },
+    { value: "soon", label: "Phiên sắp diễn ra" },
+    { value: "number", label: "Số biển A→Z" },
+  ],
+  expired: [
+    { value: "default", label: "Mặc định" },
+    { value: "latest", label: "Mới kết thúc" },
+    { value: "number", label: "Số biển A→Z" },
+  ],
 };
 
-// 4 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 3 tab còn lại lấy từ VPA (UC49).
+// 3 tab trong trang Biển số. 'available' = kho Duy Định (nội dung gốc của trang), 2 tab còn lại lấy từ VPA (UC49).
 const TABS = [
-  { key: 'monthly', label: 'Biển tháng' },
-  { key: 'weekly', label: 'Biển tuần' },
-  { key: 'available', label: 'Biển có sẵn' },
-  { key: 'expired', label: 'Biển hết hạn' },
+  { key: "weekly", label: "Biển đẹp VPA tuần" },
+  { key: "monthly", label: "Biển đẹp VPA tháng" },
+  { key: "available", label: "Biển có sẵn" },
 ];
 
-export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go, listNotice, onClearNotice, contact }) {
+export default function PlateList({
+  favs,
+  onFav,
+  openPlate,
+  openBuy,
+  notify,
+  go,
+  listNotice,
+  onClearNotice,
+  contact,
+}) {
   const [filters, setFilters] = useState(readFiltersFromUrl);
   const [provinceExpanded, setProvinceExpanded] = useState(false);
   const vpaTab = filters.tab; // '' = Biển có sẵn
-  const { data: vpaCounts } = useVpaCounts('');
+  const { data: vpaCounts } = useVpaCounts("");
   const { data: stockData } = usePlates({ perPage: 1 }); // chỉ để lấy tổng biển kho Duy Định cho nhãn tab
   const stockTotal = stockData?.total;
-  useEffect(() => { writeFiltersToUrl(filters); }, [filters]);
+  useEffect(() => {
+    writeFiltersToUrl(filters);
+  }, [filters]);
 
   const setFilter = (patch, isPreset = false) => {
     if (patch.q === undefined) trackFilterApply(patch, isPreset);
     setFilters((f) => ({ ...f, ...patch, page: patch.page ?? 1 }));
   };
 
-  const { data: plateTypes } = useCategories('plate_type');
-  const { data: provinces } = useCategories('province');
-  const { data: vehicleTypes } = useCategories('vehicle_type');
+  const { data: plateTypes } = useCategories("plate_type");
+  const { data: provinces } = useCategories("province");
+  const { data: vehicleTypes } = useCategories("vehicle_type");
 
   // SEO — landing "ẩn" cho tổ hợp tỉnh/loại xe qua filter query (ưu tiên Đà Nẵng + xe máy —
   // thị trường chính, đối thủ làm sơ sài mảng này). Ghi đè title/desc base của useSeo(list) khi
   // filter tỉnh/loại xe đang active, để mỗi tổ hợp URL có tiêu đề riêng thay vì dùng chung 1 title.
   useEffect(() => {
     if (!provinces || !vehicleTypes) return;
-    const cityNames = filters.city.map((id) => provinces.items?.find((c) => c.id === id)?.name).filter(Boolean);
-    const vehicleName = vehicleTypes.items?.find((v) => v.id === filters.vehicle)?.name;
+    const cityNames = filters.city
+      .map((id) => provinces.items?.find((c) => c.id === id)?.name)
+      .filter(Boolean);
+    const vehicleName = vehicleTypes.items?.find(
+      (v) => v.id === filters.vehicle,
+    )?.name;
     if (!cityNames.length && !vehicleName) return;
-    const parts = [vehicleName, cityNames.join(', ')].filter(Boolean);
-    const label = parts.join(' tại ');
+    const parts = [vehicleName, cityNames.join(", ")].filter(Boolean);
+    const label = parts.join(" tại ");
     document.title = `Biển số đẹp ${label} | Biensovip — Biển số đẹp Đà Nẵng`;
     const desc = document.head.querySelector('meta[name="description"]');
-    if (desc) desc.setAttribute('content', `Danh sách biển số đẹp ${label} — giá tốt, hồ sơ rõ ràng, tư vấn phong thủy theo mệnh. Cập nhật liên tục.`);
+    if (desc)
+      desc.setAttribute(
+        "content",
+        `Danh sách biển số đẹp ${label} — giá tốt, hồ sơ rõ ràng, tư vấn phong thủy theo mệnh. Cập nhật liên tục.`,
+      );
   }, [filters.city, filters.vehicle, provinces, vehicleTypes]);
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
   const createSavedSearch = useCreateSavedSearch();
   const isLoggedIn = !!loadAuth()?.accessToken;
   const [saveOpen, setSaveOpen] = useState(false);
-  const [saveName, setSaveName] = useState('');
+  const [saveName, setSaveName] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [infinite, setInfinite] = useState(false);
   const filterPanelRef = useRef(null);
@@ -120,68 +174,143 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
     if (!panel) return;
     const trigger = document.activeElement;
     const focusables = () =>
-      Array.from(panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
-        .filter((el) => !el.disabled && el.offsetParent !== null);
+      Array.from(
+        panel.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.disabled && el.offsetParent !== null);
     (focusables()[0] || panel).focus();
     const onKeyDown = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); setFilterOpen(false); return; }
-      if (e.key !== 'Tab') return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setFilterOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
       const els = focusables();
       if (!els.length) return;
-      const f = els[0], l = els[els.length - 1];
-      if (e.shiftKey && document.activeElement === f) { e.preventDefault(); l.focus(); }
-      else if (!e.shiftKey && document.activeElement === l) { e.preventDefault(); f.focus(); }
+      const f = els[0],
+        l = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === f) {
+        e.preventDefault();
+        l.focus();
+      } else if (!e.shiftKey && document.activeElement === l) {
+        e.preventDefault();
+        f.focus();
+      }
     };
-    panel.addEventListener('keydown', onKeyDown);
+    panel.addEventListener("keydown", onKeyDown);
     return () => {
-      panel.removeEventListener('keydown', onKeyDown);
-      if (trigger && typeof trigger.focus === 'function') trigger.focus();
+      panel.removeEventListener("keydown", onKeyDown);
+      if (trigger && typeof trigger.focus === "function") trigger.focus();
     };
   }, [filterOpen]);
 
-  const activeFilterCount = filters.cat.length + filters.city.length + filters.avoidNumbers.length + (filters.vehicle ? 1 : 0) + (filters.q ? 1 : 0) + ((filters.priceMin || filters.priceMax) ? 1 : 0) + (filters.status ? 1 : 0);
+  // Khoảng giá/Tránh số/Trạng thái chỉ áp dụng cho kho Duy Định (ẩn khỏi UI khi vpaTab, xem 2 khối bộ lọc bên dưới) —
+  // không tính vào count/hasActiveFilters lúc đang ở tab VPA, tránh báo sai "N bộ lọc đang bật" dù UI không hiện field đó.
+  const activeFilterCount =
+    filters.cat.length +
+    filters.city.length +
+    (vpaTab ? 0 : filters.avoidNumbers.length) +
+    (filters.vehicle ? 1 : 0) +
+    (filters.q ? 1 : 0) +
+    (vpaTab ? 0 : filters.priceMin || filters.priceMax ? 1 : 0) +
+    (vpaTab ? 0 : filters.status ? 1 : 0);
 
-  const hasActiveFilters = filters.cat.length > 0 || filters.city.length > 0 || filters.avoidNumbers.length > 0 || !!filters.vehicle || !!filters.q || !!filters.priceMin || !!filters.priceMax || !!filters.status;
+  const hasActiveFilters =
+    filters.cat.length > 0 ||
+    filters.city.length > 0 ||
+    (!vpaTab && filters.avoidNumbers.length > 0) ||
+    !!filters.vehicle ||
+    !!filters.q ||
+    (!vpaTab && (!!filters.priceMin || !!filters.priceMax)) ||
+    (!vpaTab && !!filters.status);
 
   const openSaveModal = () => {
-    if (!isLoggedIn) { notify?.('Vui lòng đăng nhập để lưu tìm kiếm.'); go?.('login')(); return; }
-    setSaveName('');
+    if (!isLoggedIn) {
+      notify?.("Vui lòng đăng nhập để lưu tìm kiếm.");
+      go?.("login")();
+      return;
+    }
+    setSaveName("");
     setSaveOpen(true);
   };
 
   const submitSave = async () => {
-    if (!saveName.trim()) { notify?.('Nhập tên cho tiêu chí tìm kiếm.'); return; }
+    if (!saveName.trim()) {
+      notify?.("Nhập tên cho tiêu chí tìm kiếm.");
+      return;
+    }
     try {
-      const savedFilters = { cat: filters.cat, city: filters.city, vehicle: filters.vehicle, q: filters.q, priceMin: filters.priceMin, priceMax: filters.priceMax, status: filters.status };
-      await createSavedSearch.mutateAsync({ name: saveName.trim(), filters: JSON.stringify(savedFilters) });
+      const savedFilters = {
+        cat: filters.cat,
+        city: filters.city,
+        vehicle: filters.vehicle,
+        q: filters.q,
+        priceMin: filters.priceMin,
+        priceMax: filters.priceMax,
+        status: filters.status,
+      };
+      await createSavedSearch.mutateAsync({
+        name: saveName.trim(),
+        filters: JSON.stringify(savedFilters),
+      });
       trackSaveSearch(savedFilters);
       setSaveOpen(false);
-      notify?.('Đã lưu tiêu chí tìm kiếm. Bạn sẽ nhận thông báo khi có biển mới phù hợp.');
+      notify?.(
+        "Đã lưu tiêu chí tìm kiếm. Bạn sẽ nhận thông báo khi có biển mới phù hợp.",
+      );
     } catch (e) {
-      if (e.status === 400 && e.code === 'search_limit_reached') notify?.('Bạn đã đạt giới hạn 10 tiêu chí đã lưu.');
-      else notify?.(e.message || 'Lỗi khi lưu tiêu chí.');
+      if (e.status === 400 && e.code === "search_limit_reached")
+        notify?.("Bạn đã đạt giới hạn 10 tiêu chí đã lưu.");
+      else notify?.(e.message || "Lỗi khi lưu tiêu chí.");
     }
   };
 
   const [qDebounced] = useDebouncedValue(filters.q, 300);
 
-  const apiFilters = useMemo(() => ({
-    cat: filters.cat, city: filters.city, avoidNumbers: filters.avoidNumbers, vehicle: filters.vehicle || undefined,
-    q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
-    status: filters.status || undefined, sort: filters.sort === 'fengshui' ? 'newest' : filters.sort, page: filters.page,
-    perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
-  }), [filters, qDebounced]);
+  const apiFilters = useMemo(
+    () => ({
+      cat: filters.cat,
+      city: filters.city,
+      avoidNumbers: filters.avoidNumbers,
+      vehicle: filters.vehicle || undefined,
+      q: qDebounced || undefined,
+      priceMin: filters.priceMin || undefined,
+      priceMax: filters.priceMax || undefined,
+      status: filters.status || undefined,
+      sort: filters.sort === "fengshui" ? "newest" : filters.sort,
+      page: filters.page,
+      perPage: filters.perPage === 0 ? 100 : filters.perPage, // "Xem tất cả" → dùng trần backend cho phép (100)
+    }),
+    [filters, qDebounced],
+  );
 
-  const { data, isLoading, isError, isFetching, refetch } = usePlates(apiFilters, { enabled: !vpaTab && !infinite && filters.perPage !== 0 });
+  const { data, isLoading, isError, isFetching, refetch } = usePlates(
+    apiFilters,
+    { enabled: !vpaTab && !infinite && filters.perPage !== 0 },
+  );
 
   // Infinite scroll: bật khi toggle bật hoặc chọn "Xem tất cả" (bỏ cap 100).
   const useInfinite = !vpaTab && (infinite || filters.perPage === 0);
-  const infiniteFilters = useMemo(() => ({
-    cat: filters.cat, city: filters.city, avoidNumbers: filters.avoidNumbers, vehicle: filters.vehicle || undefined,
-    q: qDebounced || undefined, priceMin: filters.priceMin || undefined, priceMax: filters.priceMax || undefined,
-    status: filters.status || undefined, sort: filters.sort === 'fengshui' ? 'newest' : filters.sort, perPage: 18,
-  }), [filters, qDebounced]);
-  const inf = useInfinitePlates(infiniteFilters, { enabled: !vpaTab && useInfinite });
+  const infiniteFilters = useMemo(
+    () => ({
+      cat: filters.cat,
+      city: filters.city,
+      avoidNumbers: filters.avoidNumbers,
+      vehicle: filters.vehicle || undefined,
+      q: qDebounced || undefined,
+      priceMin: filters.priceMin || undefined,
+      priceMax: filters.priceMax || undefined,
+      status: filters.status || undefined,
+      sort: filters.sort === "fengshui" ? "newest" : filters.sort,
+      perPage: 18,
+    }),
+    [filters, qDebounced],
+  );
+  const inf = useInfinitePlates(infiniteFilters, {
+    enabled: !vpaTab && useInfinite,
+  });
   const stagger = useStaggeredReveal();
 
   // ---- 3 tab VPA dùng chung bố cục/bộ lọc với kho; chỉ khác nguồn dữ liệu ----
@@ -190,113 +319,244 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const [opening, setOpening] = useState(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (vpaTab !== 'weekly') return undefined;
+    if (vpaTab !== "weekly") return undefined;
     const t = setInterval(() => setNow(Date.now()), 30000); // đếm ngược tab Tuần
     return () => clearInterval(t);
   }, [vpaTab]);
-  const vpaSorts = VPA_SORTS[vpaTab === 'expired' ? 'expired' : 'soon'];
-  const vpaSort = vpaSorts.some((o) => o.value === filters.sort) ? filters.sort : vpaSorts[0].value;
-  const vehicleName = vehicleTypes?.items?.find((v) => v.id === filters.vehicle)?.name;
-  const vpaVehicle = !filters.vehicle ? '' : (vehicleName === 'Xe máy' ? 'MotorBike' : 'Car');
-  const vpaQuery = useVpaPlates({
-    tab: vpaTab || 'monthly', vehicle: vpaVehicle,
-    province: filters.city[0] || '', type: filters.cat[0] || '', q: qDebounced, sort: vpaSort,
-    page: filters.page, pageSize: filters.perPage === 0 ? 100 : filters.perPage,
-  }, { enabled: !!vpaTab });
-  const { data: vpaFacets } = useVpaFacets(vpaTab, vpaVehicle, { enabled: !!vpaTab });
-  const provinceItems = vpaTab ? (vpaProvinces || []).map((p) => ({ id: p.code, name: p.name, plateCount: vpaFacets ? (vpaFacets.provinces?.[p.code] ?? 0) : undefined })) : (provinces?.items || []);
-  const typeItems = vpaTab ? (plateTypes?.items || []).map((t) => ({ ...t, plateCount: vpaFacets ? (vpaFacets.types?.[t.id] ?? 0) : undefined })) : (plateTypes?.items || []);
+  const vpaSorts = VPA_SORTS[vpaTab === "expired" ? "expired" : "soon"];
+  const vpaSort = vpaSorts.some((o) => o.value === filters.sort)
+    ? filters.sort
+    : vpaSorts[0].value;
+  const vehicleName = vehicleTypes?.items?.find(
+    (v) => v.id === filters.vehicle,
+  )?.name;
+  const vpaVehicle = !filters.vehicle
+    ? ""
+    : vehicleName === "Xe máy"
+      ? "MotorBike"
+      : "Car";
+  const vpaQuery = useVpaPlates(
+    {
+      tab: vpaTab || "monthly",
+      vehicle: vpaVehicle,
+      province: filters.city[0] || "",
+      type: filters.cat[0] || "",
+      q: qDebounced,
+      sort: vpaSort,
+      page: filters.page,
+      pageSize: filters.perPage === 0 ? 100 : filters.perPage,
+    },
+    { enabled: !!vpaTab },
+  );
+  const { data: vpaFacets } = useVpaFacets(vpaTab, vpaVehicle, {
+    enabled: !!vpaTab,
+  });
+  const provinceItems = vpaTab
+    ? (vpaProvinces || []).map((p) => ({
+        id: p.code,
+        name: p.name,
+        plateCount: vpaFacets
+          ? (vpaFacets.provinces?.[p.code] ?? 0)
+          : undefined,
+      }))
+    : provinces?.items || [];
+  const typeItems = vpaTab
+    ? (plateTypes?.items || []).map((t) => ({
+        ...t,
+        plateCount: vpaFacets ? (vpaFacets.types?.[t.id] ?? 0) : undefined,
+      }))
+    : plateTypes?.items || [];
 
   useEffect(() => {
     if (!useInfinite) return;
     const onScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 640 && inf.hasNextPage && !inf.isFetchingNextPage) inf.fetchNextPage();
+      if (
+        window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 640 &&
+        inf.hasNextPage &&
+        !inf.isFetchingNextPage
+      )
+        inf.fetchNextPage();
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [useInfinite, inf.hasNextPage, inf.isFetchingNextPage, inf.fetchNextPage]);
 
   const infiniteItems = inf.data?.pages?.flatMap((p) => p.items || []) || [];
   const vpaItems = vpaQuery.data?.items || [];
-  const items = vpaTab ? vpaItems : useInfinite ? infiniteItems : (data?.items || []);
+  const items = vpaTab
+    ? vpaItems
+    : useInfinite
+      ? infiniteItems
+      : data?.items || [];
   const { year: birthYear, fromProfile, setYear } = useBirthYear();
   const [yearOpen, setYearOpen] = useState(false);
-  const [yearDraft, setYearDraft] = useState('');
-  const scoreNumbers = useMemo(() => [...new Set(items.map((p) => p.plateNumber))], [items]);
+  const [yearDraft, setYearDraft] = useState("");
+  const [fengshuiOnly, setFengshuiOnly] = useState(false);
+  const scoreNumbers = useMemo(
+    () => [...new Set(items.map((p) => p.plateNumber))],
+    [items],
+  );
   const { data: fsData } = useFengShuiNumberScores(birthYear, scoreNumbers);
   const fsScore = (p) => fsData?.scores?.[p.plateNumber];
-  const fsFor = (p) => (fsData && fsScore(p) >= fsData.minScore ? { element: fsData.element, score: fsScore(p) } : null);
-  const sortByFengShui = !!birthYear && filters.sort === 'fengshui';
-  const shownItems = sortByFengShui && fsData ? [...items].sort((a, b) => (fsScore(b) ?? -1) - (fsScore(a) ?? -1)) : items;
+  const fsFor = (p) =>
+    fsData && fsScore(p) >= fsData.minScore
+      ? { element: fsData.element, score: fsScore(p) }
+      : null;
+  const sortByFengShui = !!birthYear && filters.sort === "fengshui";
+  const filterByFengShui = !!birthYear && fengshuiOnly && !!fsData;
+  const sortedItems =
+    sortByFengShui && fsData
+      ? [...items].sort((a, b) => (fsScore(b) ?? -1) - (fsScore(a) ?? -1))
+      : items;
+  const shownItems = filterByFengShui
+    ? sortedItems.filter((p) => fsFor(p))
+    : sortedItems;
   const submitYear = () => {
     const y = Number(yearDraft);
-    if (!Number.isInteger(y) || y < 1900 || y > new Date().getFullYear()) { notify?.('Năm sinh không hợp lệ.'); return; }
-    setYear(y); setYearOpen(false); setYearDraft('');
+    if (!Number.isInteger(y) || y < 1900 || y > new Date().getFullYear()) {
+      notify?.("Năm sinh không hợp lệ.");
+      return;
+    }
+    setYear(y);
+    setYearOpen(false);
+    setYearDraft("");
   };
-  const total = vpaTab ? (vpaQuery.data?.total || 0) : useInfinite ? (inf.data?.pages?.[0]?.total || 0) : (data?.total || 0);
-  const totalPages = vpaTab ? Math.max(1, Math.ceil(total / (filters.perPage === 0 ? 100 : filters.perPage))) : useInfinite ? (inf.data?.pages?.[0]?.totalPages || 1) : (data?.totalPages || 1);
-  const page = vpaTab ? filters.page : useInfinite ? 0 : (data?.page || filters.page);
+  const total = vpaTab
+    ? vpaQuery.data?.total || 0
+    : useInfinite
+      ? inf.data?.pages?.[0]?.total || 0
+      : data?.total || 0;
+  const totalPages = vpaTab
+    ? Math.max(
+        1,
+        Math.ceil(total / (filters.perPage === 0 ? 100 : filters.perPage)),
+      )
+    : useInfinite
+      ? inf.data?.pages?.[0]?.totalPages || 1
+      : data?.totalPages || 1;
+  const page = vpaTab
+    ? filters.page
+    : useInfinite
+      ? 0
+      : data?.page || filters.page;
 
   useEffect(() => {
     if (qDebounced) trackSearch(qDebounced);
   }, [qDebounced]);
 
-  const listReady = vpaTab ? !vpaQuery.isLoading : useInfinite ? !inf.isLoading : !isLoading;
+  const listReady = vpaTab
+    ? !vpaQuery.isLoading
+    : useInfinite
+      ? !inf.isLoading
+      : !isLoading;
   useEffect(() => {
     if (!listReady || vpaTab) return;
     if (items.length > 0) {
-      trackViewItemList(filters.q ? 'search_results' : 'danh-sach', items);
+      trackViewItemList(filters.q ? "search_results" : "danh-sach", items);
     } else if (filters.q) {
-      trackSearchNoResults(filters.q, { cat: filters.cat, city: filters.city, vehicle: filters.vehicle, priceMin: filters.priceMin, priceMax: filters.priceMax });
+      trackSearchNoResults(filters.q, {
+        cat: filters.cat,
+        city: filters.city,
+        vehicle: filters.vehicle,
+        priceMin: filters.priceMin,
+        priceMax: filters.priceMax,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listReady, items.length, filters.q]);
 
   // Khôi phục vị trí cuộn đã lưu (quay lại từ trang chi tiết biển) — chỉ chạy 1 lần sau khi có dữ liệu,
   // tránh cuộn hụt trong lúc trang còn đang load skeleton.
-  const loading = vpaTab ? vpaQuery.isLoading : useInfinite ? inf.isLoading : isLoading;
+  const loading = vpaTab
+    ? vpaQuery.isLoading
+    : useInfinite
+      ? inf.isLoading
+      : isLoading;
   useEffect(() => {
     if (loading || !items.length) return;
-    const y = Number(sessionStorage.getItem('bsd_plate_list_scroll') || 0);
+    const y = Number(sessionStorage.getItem("bsd_plate_list_scroll") || 0);
     if (y > 0) {
       restoreScrollPosition(y);
-      sessionStorage.removeItem('bsd_plate_list_scroll');
+      sessionStorage.removeItem("bsd_plate_list_scroll");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, items.length]);
-  const showSkeleton = vpaTab ? vpaQuery.isLoading : useInfinite ? inf.isLoading : (isLoading || isFetching);
-  const showError = vpaTab ? vpaQuery.isError : useInfinite ? inf.isError : isError;
+  const showSkeleton = vpaTab
+    ? vpaQuery.isLoading
+    : useInfinite
+      ? inf.isLoading
+      : isLoading || isFetching;
+  const showError = vpaTab
+    ? vpaQuery.isError
+    : useInfinite
+      ? inf.isError
+      : isError;
 
-  useSeo('list', { items: vpaTab ? [] : items });
+  useSeo("list", { items: vpaTab ? [] : items });
 
   const toggleArrayFilter = (key, id) => {
     const isRemoving = filters[key].includes(id);
-    if (vpaTab && (key === 'cat' || key === 'city')) { setFilter({ [key]: isRemoving ? [] : [id] }); return; } // VPA chỉ lọc 1 giá trị
-    if (key === 'avoidNumbers') trackAvoidNumberToggle(id, isRemoving ? 'remove' : 'add');
-    setFilter({ [key]: isRemoving ? filters[key].filter((x) => x !== id) : [...filters[key], id] });
+    if (vpaTab && (key === "cat" || key === "city")) {
+      setFilter({ [key]: isRemoving ? [] : [id] });
+      return;
+    } // VPA chỉ lọc 1 giá trị
+    if (key === "avoidNumbers")
+      trackAvoidNumberToggle(id, isRemoving ? "remove" : "add");
+    setFilter({
+      [key]: isRemoving
+        ? filters[key].filter((x) => x !== id)
+        : [...filters[key], id],
+    });
   };
 
-  const clearFilters = () => setFilters((f) => ({ cat: [], city: [], avoidNumbers: [], vehicle: '', q: '', priceMin: '', priceMax: '', status: '', sort: 'newest', page: 1, perPage: f.perPage, view: f.view, tab: f.tab }));
+  const clearFilters = () =>
+    setFilters((f) => ({
+      cat: [],
+      city: [],
+      avoidNumbers: [],
+      vehicle: "",
+      q: "",
+      priceMin: "",
+      priceMax: "",
+      status: "",
+      sort: "newest",
+      page: 1,
+      perPage: f.perPage,
+      view: f.view,
+      tab: f.tab,
+    }));
 
   const goToPage = (p) => {
     setFilters((f) => ({ ...f, page: p }));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Lưu vị trí cuộn trước khi vào chi tiết biển — bộ lọc đã tự lưu qua URL (readFiltersFromUrl),
   // chỉ còn vị trí cuộn cần lưu riêng để quay lại không phải lướt tìm lại từ đầu.
   const saveScrollBeforeOpen = () => {
-    try { sessionStorage.setItem('bsd_plate_list_scroll', String(getScrollPosition())); } catch { /* storage blocked */ }
+    try {
+      sessionStorage.setItem(
+        "bsd_plate_list_scroll",
+        String(getScrollPosition()),
+      );
+    } catch {
+      /* storage blocked */
+    }
   };
 
   const cardProps = (p) => ({
     ...p,
     fav: !!favs?.[p.id],
     onFav: onFav ? () => onFav(p.id) : undefined,
-    onCompare: () => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id),
+    onCompare: () => (isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)),
     inCompare: isInList(p.id),
-    onOpen: () => { trackSelectItem(p, 'danh-sach'); saveScrollBeforeOpen(); openPlate(p.id); },
-    href: routeFor('detail', p.slug || p.id),
+    onOpen: () => {
+      trackSelectItem(p, "danh-sach");
+      saveScrollBeforeOpen();
+      openPlate(p.id);
+    },
+    href: routeFor("detail", p.slug || p.id),
     onBuy: () => openBuy?.(p.id),
     contact,
   });
@@ -312,7 +572,9 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
       setPlateIds((m) => ({ ...m, [p.id]: r.plateId }));
       return r.plateId;
     } catch (e) {
-      notify?.(e.message || 'Không thực hiện được với biển này, vui lòng thử lại');
+      notify?.(
+        e.message || "Không thực hiện được với biển này, vui lòng thử lại",
+      );
       return null;
     } finally {
       setOpening(null);
@@ -321,80 +583,470 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
   const vpaCardProps = (p) => {
     const pid = plateIds[p.id] || p.plateId;
     return {
-      plateNumber: p.plateNumber, type: p.plateTypeName, province: p.provinceName, vehicleType: isCar(p.vehicle) ? 'Ô tô' : 'Xe máy',
-      price: p.price, priceOnRequest: p.price == null, contact, isHot: p.isFeatured, badge: vpaBadge(p, now), href: '#',
-      fav: !!(pid && favs?.[pid]), inCompare: !!(pid && isInList(pid)),
-      onOpen: async () => { const id = await ensurePlate(p); if (id) openPlate(id); },
-      onFav: onFav ? async () => { const id = await ensurePlate(p); if (id) onFav(id); } : undefined,
-      onCompare: async () => { const id = await ensurePlate(p); if (!id) return; if (isInList(id)) removeCompare(id); else addCompare(id); },
-      onBuy: async () => { const id = await ensurePlate(p); if (id) openBuy?.(id); },
+      plateNumber: p.plateNumber,
+      type: p.plateTypeName,
+      province: p.provinceName,
+      vehicleType: isCar(p.vehicle) ? "Ô tô" : "Xe máy",
+      price: p.price,
+      priceOnRequest: p.price == null,
+      contact,
+      isHot: p.isFeatured,
+      badge: vpaBadge(p, now),
+      href: "#",
+      fav: !!(pid && favs?.[pid]),
+      inCompare: !!(pid && isInList(pid)),
+      onOpen: async () => {
+        const id = await ensurePlate(p);
+        if (id) openPlate(id);
+      },
+      onFav: onFav
+        ? async () => {
+            const id = await ensurePlate(p);
+            if (id) onFav(id);
+          }
+        : undefined,
+      onCompare: async () => {
+        const id = await ensurePlate(p);
+        if (!id) return;
+        if (isInList(id)) removeCompare(id);
+        else addCompare(id);
+      },
+      onBuy: async () => {
+        const id = await ensurePlate(p);
+        if (id) openBuy?.(id);
+      },
     };
   };
 
   // Breadcrumb bám theo filter tỉnh/loại biển đang chọn (chỉ khi đúng 1 giá trị — nhiều lựa chọn thì
   // không còn 1 "đường dẫn" rõ ràng để hiện, giữ flat "Biển số").
-  const activeProvince = filters.city.length === 1 ? (provinces?.items || []).find((c) => c.id === filters.city[0]) : null;
-  const activeType = filters.cat.length === 1 ? (plateTypes?.items || []).find((c) => c.id === filters.cat[0]) : null;
+  const activeProvince =
+    filters.city.length === 1
+      ? (provinces?.items || []).find((c) => c.id === filters.city[0])
+      : null;
+  const activeType =
+    filters.cat.length === 1
+      ? (plateTypes?.items || []).find((c) => c.id === filters.cat[0])
+      : null;
 
   return (
-    <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
+    <div style={{ animation: "pageIn 180ms var(--ease-out)" }}>
       {go && (
-        <Breadcrumb items={[
-          { label: 'Trang chủ', onClick: go('home') },
-          { label: 'Biển số', onClick: (activeProvince || activeType) ? () => setFilters((f) => ({ ...f, city: [], cat: [] })) : undefined },
-          ...(activeProvince ? [{ label: activeProvince.name }] : []),
-          ...(activeType ? [{ label: activeType.name }] : []),
-        ]} />
+        <Breadcrumb
+          items={[
+            { label: "Trang chủ", onClick: go("home") },
+            {
+              label: "Biển số",
+              onClick:
+                activeProvince || activeType
+                  ? () => setFilters((f) => ({ ...f, city: [], cat: [] }))
+                  : undefined,
+            },
+            ...(activeProvince ? [{ label: activeProvince.name }] : []),
+            ...(activeType ? [{ label: activeType.name }] : []),
+          ]}
+        />
       )}
-      <div className="">
-        
-      </div>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
-        <h1 style={{ margin: 'var(--space-3) 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Kho biển số đẹp</h1>
-        <p style={{ margin: '0 0 var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{total} biển số phù hợp bộ lọc hiện tại</p>
-        <SearchField placeholder="Tìm theo số, VD: 68, 51A, 999.99" value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} width="min(420px, 100%)" ariaLabel="Tìm biển số" />
+      <section
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "var(--space-7) var(--pad-page) var(--space-4)",
+        }}
+      >
+        <h1
+          style={{
+            margin: "var(--space-3) 0 var(--space-2)",
+            font: "var(--type-display-2)",
+            letterSpacing: "var(--ls-display)",
+            color: "var(--text-strong)",
+          }}
+        >
+          Kho biển số đẹp
+        </h1>
+        <p
+          style={{
+            margin: "0 0 var(--space-3)",
+            font: "var(--type-body-sm)",
+            color: "var(--text-muted)",
+          }}
+        >
+          {total} biển số phù hợp bộ lọc hiện tại
+        </p>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-3)' }}>
-        <div role="tablist" aria-label="Nguồn biển số" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(150px,46%),1fr))', gap: 'var(--space-3)' }}>
+      {/* Chọn nguồn biển trước (Tuần/Tháng/Có sẵn) — quyết định đầu tiên hợp lý hơn tìm kiếm/năm sinh, vốn chỉ thu hẹp trong nguồn đã chọn. */}
+      <section
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "0 var(--pad-page) var(--space-3)",
+        }}
+      >
+        <div
+          role="tablist"
+          aria-label="Nguồn biển số"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(min(150px,46%),1fr))",
+            gap: "var(--space-3)",
+          }}
+        >
           {TABS.map((t) => {
-            const key = t.key === 'available' ? '' : t.key;
+            const key = t.key === "available" ? "" : t.key;
             const active = filters.tab === key;
-            const n = t.key === 'available' ? stockTotal : vpaCounts?.[t.key];
+            const n = t.key === "available" ? stockTotal : vpaCounts?.[t.key];
             return (
-              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setFilters((f) => ({ ...f, tab: key, page: 1, city: [] }))}
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() =>
+                  setFilters((f) => ({ ...f, tab: key, page: 1, city: [] }))
+                }
                 style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, padding: 'var(--space-3) var(--space-4)', border: 'none',
-                  borderRadius: 'var(--radius-card)', cursor: 'pointer', textAlign: 'left',
-                  background: active ? 'var(--action-primary)' : 'var(--white)', color: active ? 'var(--text-inverse)' : 'var(--text-strong)',
-                  boxShadow: active ? 'var(--shadow-2)' : 'var(--shadow-inset-hairline)',
-                  transition: 'background-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)',
-                }}>
-                <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)' }}>{t.label}</span>
-                <span style={{ font: 'var(--type-caption)', color: active ? 'var(--text-inverse)' : 'var(--text-muted)', opacity: active ? 0.9 : 1 }}>
-                  {n != null ? `${new Intl.NumberFormat('vi-VN').format(n)} biển` : '—'}
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: 4,
+                  padding: "var(--space-3) var(--space-4)",
+                  border: "none",
+                  borderRadius: "var(--radius-card)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  background: active ? "var(--action-primary)" : "var(--white)",
+                  color: active
+                    ? "var(--action-primary-text)"
+                    : "var(--text-strong)",
+                  boxShadow: active
+                    ? "var(--shadow-2)"
+                    : "var(--shadow-inset-hairline)",
+                  transition:
+                    "background-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-title-3)",
+                    fontWeight: "var(--fw-bold)",
+                  }}
+                >
+                  {t.label}
+                </span>
+                <span
+                  style={{
+                    font: "var(--type-caption)",
+                    color: active
+                      ? "var(--action-primary-text)"
+                      : "var(--text-muted)",
+                    opacity: active ? 0.9 : 1,
+                  }}
+                >
+                  {n != null
+                    ? `${new Intl.NumberFormat("vi-VN").format(n)} biển`
+                    : "—"}
                 </span>
               </button>
             );
           })}
         </div>
       </section>
-      {/* Loại xe (xe máy/ô tô) — bộ lọc quan trọng nhất, luôn hiện đầu trang cả mobile+desktop, trước Loại biển.
-          Track 2 icon bo góc nhẹ thay vì pill tròn rời — build từ vehicleTypes.items nên vẫn không crash
-          nếu admin thêm loại xe thứ 3, chỉ mất hiệu ứng "2 ô cạnh nhau" đẹp. */}
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-2)' }}>
-        <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-lg)', padding: 3, boxShadow: 'var(--shadow-inset-hairline)', gap: 3 }}>
+      {/* Thanh tìm kiếm, năm sinh phong thủy & Loại xe (ô tô/xe máy) nằm chung một hàng gọn gàng */}
+      <section
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "0 var(--pad-page) var(--space-4)",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "var(--space-3)",
+        }}
+      >
+        <div
+          className="plate-search-bar"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "stretch",
+            width: "fit-content",
+            maxWidth: "100%",
+            background: "var(--white)",
+            border: "1px solid var(--border-hairline)",
+            borderRadius: "var(--radius-md)",
+            overflow: "hidden",
+          }}
+        >
+          <span
+            style={{
+              position: "relative",
+              display: "inline-flex",
+              minWidth: 0,
+            }}
+          >
+            <Search
+              size={16}
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: 14,
+                transform: "translateY(-50%)",
+                color: "var(--text-faint)",
+                pointerEvents: "none",
+              }}
+            />
+            <input
+              type="search"
+              placeholder="Tìm theo số, VD: 68, 51A, 999.99"
+              aria-label="Tìm biển số"
+              value={filters.q}
+              onChange={(e) => setFilter({ q: e.target.value })}
+              style={{
+                height: 44,
+                width: "min(280px, 45vw)",
+                minWidth: 0,
+                border: "none",
+                background: "transparent",
+                padding: "0 16px 0 40px",
+                font: "var(--type-body-sm)",
+                color: "var(--text-strong)",
+                outline: "none",
+              }}
+            />
+          </span>
+          <div
+            className="plate-search-divider"
+            style={{
+              width: 1,
+              alignSelf: "stretch",
+              background: "var(--border-hairline)",
+              margin: "8px 0",
+            }}
+          />
+          {birthYear ? (
+            <button
+              type="button"
+              title={
+                fromProfile
+                  ? "Lấy từ ngày sinh trong hồ sơ"
+                  : "Bấm để đổi năm sinh"
+              }
+              onClick={() => {
+                if (!fromProfile) {
+                  setYearDraft(String(birthYear));
+                  setYearOpen((v) => !v);
+                }
+              }}
+              style={{
+                height: 44,
+                padding: "0 16px",
+                border: "none",
+                cursor: fromProfile ? "default" : "pointer",
+                font: "var(--type-body-sm)",
+                fontWeight: "var(--fw-semibold)",
+                background: "var(--mint-100)",
+                color: "var(--text-strong)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              🍀 {fsData ? `Mệnh ${fsData.element} · ` : ""}sinh {birthYear}
+            </button>
+          ) : null}
+          {birthYear && fsData && (
+            <>
+              <div
+                className="plate-search-divider"
+                style={{
+                  width: 1,
+                  alignSelf: "stretch",
+                  background: "var(--border-hairline)",
+                  margin: "8px 0",
+                }}
+              />
+              <button
+                type="button"
+                aria-pressed={fengshuiOnly}
+                onClick={() => setFengshuiOnly((v) => !v)}
+                style={{
+                  height: 44,
+                  padding: "0 16px",
+                  border: "none",
+                  cursor: "pointer",
+                  font: "var(--type-body-sm)",
+                  fontWeight: "var(--fw-semibold)",
+                  background: fengshuiOnly
+                    ? "var(--action-primary)"
+                    : "transparent",
+                  color: fengshuiOnly
+                    ? "var(--action-primary-text)"
+                    : "var(--text-body)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Chỉ hiện biển hợp mệnh
+              </button>
+            </>
+          )}
+          {!birthYear && (
+            <input
+              type="number"
+              inputMode="numeric"
+              min="1900"
+              max={new Date().getFullYear()}
+              placeholder="Nhập năm sinh để tìm biển số phong thủy"
+              value={yearDraft}
+              onChange={(e) => setYearDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitYear();
+              }}
+              aria-label="Năm sinh"
+              style={{
+                height: 44,
+                width: 300,
+                flexShrink: 0,
+                border: "none",
+                background: "transparent",
+                padding: "0 16px",
+                font: "var(--type-body-sm)",
+                color: "var(--text-strong)",
+                outline: "none",
+              }}
+            />
+          )}
+          {!birthYear && yearDraft && (
+            <button
+              type="button"
+              onClick={submitYear}
+              style={{
+                height: 44,
+                padding: "0 20px",
+                border: "none",
+                cursor: "pointer",
+                font: "var(--type-body-sm)",
+                fontWeight: "var(--fw-semibold)",
+                background: "var(--action-primary)",
+                color: "var(--action-primary-text)",
+              }}
+            >
+              🍀 Xem
+            </button>
+          )}
+          {yearOpen && (
+            <>
+              <div
+                className="plate-search-divider"
+                style={{
+                  width: 1,
+                  alignSelf: "stretch",
+                  background: "var(--border-hairline)",
+                  margin: "8px 0",
+                }}
+              />
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1900"
+                max={new Date().getFullYear()}
+                placeholder="Năm sinh"
+                value={yearDraft}
+                onChange={(e) => setYearDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitYear();
+                }}
+                aria-label="Năm sinh"
+                style={{
+                  width: 100,
+                  height: 44,
+                  border: "none",
+                  background: "transparent",
+                  padding: "0 12px",
+                  font: "var(--type-body-sm)",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="button"
+                onClick={submitYear}
+                style={{
+                  height: 44,
+                  padding: "0 20px",
+                  border: "none",
+                  cursor: "pointer",
+                  font: "var(--type-body-sm)",
+                  fontWeight: "var(--fw-semibold)",
+                  background: "var(--action-primary)",
+                  color: "var(--action-primary-text)",
+                }}
+              >
+                OK
+              </button>
+              {birthYear && !fromProfile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setYear(null);
+                    setYearOpen(false);
+                    if (filters.sort === "fengshui")
+                      setFilter({ sort: "newest" });
+                  }}
+                  style={{
+                    height: 44,
+                    padding: "0 16px",
+                    border: "none",
+                    cursor: "pointer",
+                    font: "var(--type-body-sm)",
+                    color: "var(--text-muted)",
+                    background: "transparent",
+                  }}
+                >
+                  Bỏ
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Bộ lọc loại xe (ô tô / xe máy) cùng hàng */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            background: "var(--surface-sunken)",
+            borderRadius: "var(--radius-sm)",
+            padding: 2,
+            boxShadow: "var(--shadow-inset-hairline)",
+            gap: 2,
+            height: 44,
+          }}
+        >
           {(vehicleTypes?.items || []).map((v) => {
             const active = filters.vehicle === v.id;
-            const Icon = v.name === 'Xe máy' ? Bike : Car;
+            const Icon = v.name === "Xe máy" ? Bike : Car;
             return (
-              <button key={v.id} type="button" aria-pressed={active} onClick={() => setFilter({ vehicle: active ? '' : v.id })}
+              <button
+                key={v.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFilter({ vehicle: active ? "" : v.id })}
                 style={{
-                  height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-md)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                  font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                  background: active ? 'var(--action-primary)' : 'transparent', color: active ? 'var(--text-inverse)' : 'var(--text-body)',
-                  transition: 'background-color 160ms var(--ease-standard), color 160ms var(--ease-standard)',
-                }}>
+                  height: 40,
+                  padding: "0 16px",
+                  border: "none",
+                  borderRadius: "var(--radius-xs)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  font: "var(--type-body-sm)",
+                  fontWeight: active ? "var(--fw-bold)" : "var(--fw-medium)",
+                  background: active ? "var(--action-primary)" : "transparent",
+                  color: active
+                    ? "var(--action-primary-text)"
+                    : "var(--text-body)",
+                  transition:
+                    "background-color 160ms var(--ease-standard), color 160ms var(--ease-standard)",
+                }}
+              >
                 <Icon size={16} />
                 {v.name}
               </button>
@@ -402,293 +1054,1351 @@ export default function PlateList({ favs, onFav, openPlate, openBuy, notify, go,
           })}
         </div>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        <button type="button" aria-pressed={filters.cat.length === 0} onClick={() => setFilter({ cat: [] })}
-          style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: filters.cat.length === 0 ? 'var(--fw-bold)' : 'var(--fw-medium)', background: filters.cat.length === 0 ? 'var(--action-primary)' : 'var(--surface-sunken)', color: filters.cat.length === 0 ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: filters.cat.length === 0 ? 'none' : 'var(--shadow-inset-hairline)' }}>
-          Tất cả
-        </button>
-        {(plateTypes?.items || []).map((c) => {
-          const active = filters.cat.length === 1 && filters.cat[0] === c.id;
-          return (
-            <button key={c.id} type="button" aria-pressed={active} onClick={() => setFilter({ cat: active ? [] : [c.id] })}
-              style={{ height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)', background: active ? 'var(--action-primary)' : 'var(--surface-sunken)', color: active ? 'var(--text-inverse)' : 'var(--text-body)', boxShadow: active ? 'none' : 'var(--shadow-inset-hairline)' }}>
-              {c.name}
-            </button>
-          );
-        })}
+      <section
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "var(--space-4) var(--pad-page) var(--space-4)",
+        }}
+      >
+        <span
+          style={{
+            display: "block",
+            marginBottom: "var(--space-2)",
+            font: "var(--type-label)",
+            color: "var(--text-muted)",
+          }}
+        >
+          Loại biển
+        </span>
+        <div
+          style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}
+        >
+          <button
+            type="button"
+            aria-pressed={filters.cat.length === 0}
+            onClick={() => setFilter({ cat: [] })}
+            style={{
+              height: 40,
+              padding: "0 18px",
+              border: "none",
+              borderRadius: "var(--radius-sm)",
+              cursor: "pointer",
+              font: "var(--type-body-sm)",
+              fontWeight:
+                filters.cat.length === 0
+                  ? "var(--fw-bold)"
+                  : "var(--fw-medium)",
+              background:
+                filters.cat.length === 0
+                  ? "var(--action-primary)"
+                  : "var(--surface-sunken)",
+              color:
+                filters.cat.length === 0
+                  ? "var(--action-primary-text)"
+                  : "var(--text-body)",
+              boxShadow:
+                filters.cat.length === 0
+                  ? "none"
+                  : "var(--shadow-inset-hairline)",
+            }}
+          >
+            Tất cả
+          </button>
+          {(plateTypes?.items || []).map((c) => {
+            const active = filters.cat.length === 1 && filters.cat[0] === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFilter({ cat: active ? [] : [c.id] })}
+                style={{
+                  height: 40,
+                  padding: "0 18px",
+                  border: "none",
+                  borderRadius: "var(--radius-sm)",
+                  cursor: "pointer",
+                  font: "var(--type-body-sm)",
+                  fontWeight: active ? "var(--fw-bold)" : "var(--fw-medium)",
+                  background: active
+                    ? "var(--action-primary)"
+                    : "var(--surface-sunken)",
+                  color: active
+                    ? "var(--action-primary-text)"
+                    : "var(--text-body)",
+                  boxShadow: active ? "none" : "var(--shadow-inset-hairline)",
+                }}
+              >
+                {c.name}
+              </button>
+            );
+          })}
+        </div>
       </section>
-      <section className="list-filter-toggle-row" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', display: 'none' }}>
-        <button type="button" onClick={() => setFilterOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 16px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer' }}>
+      <section
+        className="list-filter-toggle-row"
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "0 var(--pad-page)",
+          display: "none",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setFilterOpen(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            height: 44,
+            padding: "0 16px",
+            border: "none",
+            borderRadius: "var(--radius-sm)",
+            background: "var(--surface-sunken)",
+            boxShadow: "var(--shadow-inset-hairline)",
+            font: "var(--type-body-sm)",
+            fontWeight: "var(--fw-semibold)",
+            color: "var(--text-strong)",
+            cursor: "pointer",
+          }}
+        >
           <SlidersHorizontal size={16} />
-          Bộ lọc{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+          Bộ lọc{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
         </button>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-5) var(--pad-page) var(--pad-section-y)', display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
+      <section
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "var(--space-5) var(--pad-page) var(--pad-section-y)",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "var(--gutter-section)",
+          alignItems: "flex-start",
+        }}
+      >
         {filterOpen && (
-          <div className="list-filter-overlay" style={{ position: 'fixed', inset: 0, zIndex: 85 }}>
-            <div aria-hidden="true" onClick={() => setFilterOpen(false)} style={{ position: 'absolute', inset: 0, background: 'var(--overlay-scrim)', animation: 'fadeIn 140ms var(--ease-out)' }} />
-            <div ref={filterPanelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Bộ lọc biển số" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(320px, 88vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', animation: 'modalIn 180ms var(--ease-out)', outline: 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Bộ lọc</span>
-                <button type="button" onClick={() => setFilterOpen(false)} aria-label="Đóng bộ lọc" style={{ width: 44, height: 44, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+          <div
+            className="list-filter-overlay"
+            style={{ position: "fixed", inset: 0, zIndex: 85 }}
+          >
+            <div
+              aria-hidden="true"
+              onClick={() => setFilterOpen(false)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "var(--overlay-scrim)",
+                animation: "fadeIn 140ms var(--ease-out)",
+              }}
+            />
+            <div
+              ref={filterPanelRef}
+              tabIndex={-1}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Bộ lọc biển số"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: "min(320px, 88vw)",
+                background: "var(--white)",
+                boxShadow: "var(--shadow-4)",
+                display: "flex",
+                flexDirection: "column",
+                animation: "modalIn 180ms var(--ease-out)",
+                outline: "none",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "var(--space-4) var(--space-5)",
+                  boxShadow: "inset 0 -1px 0 var(--border-hairline)",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-title-3)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Bộ lọc
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFilterOpen(false)}
+                  aria-label="Đóng bộ lọc"
+                  style={{
+                    width: 44,
+                    height: 44,
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    color: "var(--text-body)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: "var(--gutter-card)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "var(--space-6)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-3)",
+                  }}
+                >
+                  <span
+                    style={{
+                      font: "var(--type-label)",
+                      color: "var(--text-strong)",
+                    }}
+                  >
+                    Loại xe
+                  </span>
                   {(vehicleTypes?.items || []).map((v) => (
-                    <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
+                    <Radio
+                      key={v.id}
+                      label={v.name}
+                      checked={filters.vehicle === v.id}
+                      onChange={() =>
+                        setFilter({
+                          vehicle: filters.vehicle === v.id ? "" : v.id,
+                        })
+                      }
+                    />
                   ))}
                 </div>
-                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
+                <div
+                  style={{ height: 1, background: "var(--border-hairline)" }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-3)",
+                  }}
+                >
+                  <span
+                    style={{
+                      font: "var(--type-label)",
+                      color: "var(--text-strong)",
+                    }}
+                  >
+                    Loại biển
+                  </span>
                   {typeItems.map((c) => (
-                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                      <Checkbox label={c.name} checked={filters.cat.includes(c.id)} onChange={() => toggleArrayFilter('cat', c.id)} style={{ flex: 1 }} />
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+                    <div
+                      key={c.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "var(--space-3)",
+                      }}
+                    >
+                      <Checkbox
+                        label={c.name}
+                        checked={filters.cat.includes(c.id)}
+                        onChange={() => toggleArrayFilter("cat", c.id)}
+                        style={{ flex: 1 }}
+                      />
+                      <span
+                        style={{
+                          font: "var(--type-caption)",
+                          color: "var(--text-faint)",
+                        }}
+                      >
+                        {c.plateCount}
+                      </span>
                     </div>
                   ))}
                 </div>
-                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tỉnh / thành</span>
-                  {(provinceExpanded ? provinceItems : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
-                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                      <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+                <div
+                  style={{ height: 1, background: "var(--border-hairline)" }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-3)",
+                  }}
+                >
+                  <span
+                    style={{
+                      font: "var(--type-label)",
+                      color: "var(--text-strong)",
+                    }}
+                  >
+                    Tỉnh / thành
+                  </span>
+                  {(provinceExpanded
+                    ? provinceItems
+                    : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)
+                  ).map((c) => (
+                    <div
+                      key={c.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "var(--space-3)",
+                      }}
+                    >
+                      <Checkbox
+                        label={c.name}
+                        checked={filters.city.includes(c.id)}
+                        onChange={() => toggleArrayFilter("city", c.id)}
+                        style={{ flex: 1 }}
+                      />
+                      <span
+                        style={{
+                          font: "var(--type-caption)",
+                          color: "var(--text-faint)",
+                        }}
+                      >
+                        {c.plateCount}
+                      </span>
                     </div>
                   ))}
                   {provinceItems.length > PROVINCE_VISIBLE_COUNT && (
-                    <button type="button" onClick={() => setProvinceExpanded((v) => !v)}
-                      style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>
-                      {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinceItems.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
+                    <button
+                      type="button"
+                      onClick={() => setProvinceExpanded((v) => !v)}
+                      style={{
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        padding: 0,
+                        textAlign: "left",
+                        font: "var(--type-body-sm)",
+                        color: "var(--action-primary)",
+                      }}
+                    >
+                      {provinceExpanded
+                        ? "Thu gọn"
+                        : `Xem thêm ${provinceItems.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
                     </button>
                   )}
                 </div>
-                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Từ khóa</span>
-                  <input value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} placeholder="VD: 51A"
-                    style={{ height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
+                <div
+                  style={{ height: 1, background: "var(--border-hairline)" }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-3)",
+                  }}
+                >
+                  <span
+                    style={{
+                      font: "var(--type-label)",
+                      color: "var(--text-strong)",
+                    }}
+                  >
+                    Từ khóa
+                  </span>
+                  <input
+                    value={filters.q}
+                    onChange={(e) => setFilter({ q: e.target.value })}
+                    placeholder="VD: 51A"
+                    style={{
+                      height: 44,
+                      border: "none",
+                      borderRadius: "var(--radius-field)",
+                      background: "var(--surface-sunken)",
+                      boxShadow: "var(--shadow-inset-hairline)",
+                      padding: "0 14px",
+                      font: "var(--type-body)",
+                      color: "var(--text-strong)",
+                      outline: "none",
+                    }}
+                  />
                 </div>
                 {!vpaTab && (
-                <>
-                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {PRICE_PRESETS.map((p) => {
-                      const active = filters.priceMin === p.min && filters.priceMax === p.max;
-                      return (
-                        <button key={p.label} type="button" aria-pressed={active} onClick={() => { if (!active) trackSelectPricePreset(p.label); setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max }, true); }}
-                          style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
-                      );
-                    })}
-                  </div>
-                  <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-                    <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMin} onChange={(e) => setFilter({ priceMin: e.target.value })} placeholder="Từ"
-                      style={{ flex: 1, minWidth: 0, height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
-                    <span style={{ color: 'var(--text-faint)' }}>—</span>
-                    <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMax} onChange={(e) => setFilter({ priceMax: e.target.value })} placeholder="Đến"
-                      style={{ flex: 1, minWidth: 0, height: 44, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
-                  </div>
-                </div>
-                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tránh số</span>
-                  {AVOID_NUMBER_PRESETS.map((n) => (
-                    <Checkbox key={n} label={`Tránh ${n}`} checked={filters.avoidNumbers.includes(n)} onChange={() => toggleArrayFilter('avoidNumbers', n)} />
-                  ))}
-                </div>
-                <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trạng thái</span>
-                  <Checkbox label="Chỉ xem biển đã bán" checked={filters.status === 'sold'} onChange={() => setFilter({ status: filters.status === 'sold' ? '' : 'sold' })} />
-                </div>
-                </>
+                  <>
+                    <div
+                      style={{
+                        height: 1,
+                        background: "var(--border-hairline)",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "var(--space-3)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          font: "var(--type-label)",
+                          color: "var(--text-strong)",
+                        }}
+                      >
+                        Khoảng giá (đồng)
+                      </span>
+                      <div
+                        style={{ display: "flex", flexWrap: "wrap", gap: 6 }}
+                      >
+                        {PRICE_PRESETS.map((p) => {
+                          const active =
+                            filters.priceMin === p.min &&
+                            filters.priceMax === p.max;
+                          return (
+                            <button
+                              key={p.label}
+                              type="button"
+                              aria-pressed={active}
+                              onClick={() => {
+                                if (!active) trackSelectPricePreset(p.label);
+                                setFilter(
+                                  active
+                                    ? { priceMin: "", priceMax: "" }
+                                    : { priceMin: p.min, priceMax: p.max },
+                                  true,
+                                );
+                              }}
+                              style={{
+                                border: "none",
+                                cursor: "pointer",
+                                padding: "6px 12px",
+                                borderRadius: "var(--radius-xs)",
+                                font: "var(--type-caption)",
+                                background: active
+                                  ? "var(--action-primary)"
+                                  : "var(--surface-muted)",
+                                color: active
+                                  ? "var(--white)"
+                                  : "var(--text-body)",
+                              }}
+                            >
+                              {p.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "var(--space-2)",
+                          alignItems: "center",
+                        }}
+                      >
+                        <input
+                          type="number"
+                          min="0"
+                          step="1000000"
+                          inputMode="numeric"
+                          value={filters.priceMin}
+                          onChange={(e) =>
+                            setFilter({ priceMin: e.target.value })
+                          }
+                          placeholder="Từ"
+                          style={{
+                            flex: 1,
+                            minWidth: 0,
+                            height: 44,
+                            border: "none",
+                            borderRadius: "var(--radius-field)",
+                            background: "var(--surface-sunken)",
+                            boxShadow: "var(--shadow-inset-hairline)",
+                            padding: "0 14px",
+                            font: "var(--type-body)",
+                            color: "var(--text-strong)",
+                            outline: "none",
+                          }}
+                        />
+                        <span style={{ color: "var(--text-faint)" }}>—</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1000000"
+                          inputMode="numeric"
+                          value={filters.priceMax}
+                          onChange={(e) =>
+                            setFilter({ priceMax: e.target.value })
+                          }
+                          placeholder="Đến"
+                          style={{
+                            flex: 1,
+                            minWidth: 0,
+                            height: 44,
+                            border: "none",
+                            borderRadius: "var(--radius-field)",
+                            background: "var(--surface-sunken)",
+                            boxShadow: "var(--shadow-inset-hairline)",
+                            padding: "0 14px",
+                            font: "var(--type-body)",
+                            color: "var(--text-strong)",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        height: 1,
+                        background: "var(--border-hairline)",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "var(--space-3)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          font: "var(--type-label)",
+                          color: "var(--text-strong)",
+                        }}
+                      >
+                        Tránh số
+                      </span>
+                      {AVOID_NUMBER_PRESETS.map((n) => (
+                        <Checkbox
+                          key={n}
+                          label={`Tránh ${n}`}
+                          checked={filters.avoidNumbers.includes(n)}
+                          onChange={() => toggleArrayFilter("avoidNumbers", n)}
+                        />
+                      ))}
+                    </div>
+                    <div
+                      style={{
+                        height: 1,
+                        background: "var(--border-hairline)",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "var(--space-3)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          font: "var(--type-label)",
+                          color: "var(--text-strong)",
+                        }}
+                      >
+                        Trạng thái
+                      </span>
+                      <Checkbox
+                        label="Chỉ xem biển đã bán"
+                        checked={filters.status === "sold"}
+                        onChange={() =>
+                          setFilter({
+                            status: filters.status === "sold" ? "" : "sold",
+                          })
+                        }
+                      />
+                    </div>
+                  </>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-4) var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-                <Button variant="outline" size="md" onClick={() => { clearFilters(); }} style={{ flex: 1 }}>Xóa bộ lọc</Button>
-                <Button variant="primary" size="md" onClick={() => setFilterOpen(false)} style={{ flex: 1 }}>Xem kết quả</Button>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "var(--space-2)",
+                  padding: "var(--space-4) var(--space-5)",
+                  boxShadow: "inset 0 1px 0 var(--border-hairline)",
+                }}
+              >
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => {
+                    clearFilters();
+                  }}
+                  style={{ flex: 1 }}
+                >
+                  Xóa bộ lọc
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => setFilterOpen(false)}
+                  style={{ flex: 1 }}
+                >
+                  Xem kết quả
+                </Button>
               </div>
             </div>
           </div>
         )}
-        <aside className="list-filter-aside" style={{ flex: '0 0 272px', minWidth: 250, position: 'sticky', top: 78, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại xe</span>
+        <aside
+          className="list-filter-aside"
+          style={{
+            flex: "0 0 272px",
+            minWidth: 250,
+            position: "sticky",
+            top: 78,
+            background: "var(--surface-sunken)",
+            borderRadius: "var(--radius-card)",
+            padding: "var(--gutter-card)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-6)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-3)",
+            }}
+          >
+            <span
+              style={{ font: "var(--type-label)", color: "var(--text-strong)" }}
+            >
+              Loại xe
+            </span>
             {(vehicleTypes?.items || []).map((v) => (
-              <Radio key={v.id} label={v.name} checked={filters.vehicle === v.id} onChange={() => setFilter({ vehicle: filters.vehicle === v.id ? '' : v.id })} />
+              <Radio
+                key={v.id}
+                label={v.name}
+                checked={filters.vehicle === v.id}
+                onChange={() =>
+                  setFilter({ vehicle: filters.vehicle === v.id ? "" : v.id })
+                }
+              />
             ))}
           </div>
-          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Loại biển</span>
+          <div style={{ height: 1, background: "var(--border-hairline)" }} />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-3)",
+            }}
+          >
+            <span
+              style={{ font: "var(--type-label)", color: "var(--text-strong)" }}
+            >
+              Loại biển
+            </span>
             {typeItems.map((c) => (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <Checkbox label={c.name} checked={filters.cat.includes(c.id)} onChange={() => toggleArrayFilter('cat', c.id)} style={{ flex: 1 }} />
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+              <div
+                key={c.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-3)",
+                }}
+              >
+                <Checkbox
+                  label={c.name}
+                  checked={filters.cat.includes(c.id)}
+                  onChange={() => toggleArrayFilter("cat", c.id)}
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-faint)",
+                  }}
+                >
+                  {c.plateCount}
+                </span>
               </div>
             ))}
           </div>
-          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tỉnh / thành</span>
-            {(provinceExpanded ? provinceItems : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)).map((c) => (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <Checkbox label={c.name} checked={filters.city.includes(c.id)} onChange={() => toggleArrayFilter('city', c.id)} style={{ flex: 1 }} />
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{c.plateCount}</span>
+          <div style={{ height: 1, background: "var(--border-hairline)" }} />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-3)",
+            }}
+          >
+            <span
+              style={{ font: "var(--type-label)", color: "var(--text-strong)" }}
+            >
+              Tỉnh / thành
+            </span>
+            {(provinceExpanded
+              ? provinceItems
+              : provinceItems.slice(0, PROVINCE_VISIBLE_COUNT)
+            ).map((c) => (
+              <div
+                key={c.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-3)",
+                }}
+              >
+                <Checkbox
+                  label={c.name}
+                  checked={filters.city.includes(c.id)}
+                  onChange={() => toggleArrayFilter("city", c.id)}
+                  style={{ flex: 1 }}
+                />
+                <span
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-faint)",
+                  }}
+                >
+                  {c.plateCount}
+                </span>
               </div>
             ))}
             {provinceItems.length > PROVINCE_VISIBLE_COUNT && (
-              <button type="button" onClick={() => setProvinceExpanded((v) => !v)}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', font: 'var(--type-body-sm)', color: 'var(--action-primary)' }}>
-                {provinceExpanded ? 'Thu gọn' : `Xem thêm ${provinceItems.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
+              <button
+                type="button"
+                onClick={() => setProvinceExpanded((v) => !v)}
+                style={{
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  textAlign: "left",
+                  font: "var(--type-body-sm)",
+                  color: "var(--action-primary)",
+                }}
+              >
+                {provinceExpanded
+                  ? "Thu gọn"
+                  : `Xem thêm ${provinceItems.length - PROVINCE_VISIBLE_COUNT} tỉnh`}
               </button>
             )}
           </div>
-          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Từ khóa</span>
-            <input value={filters.q} onChange={(e) => setFilter({ q: e.target.value })} placeholder="VD: 51A"
-              style={{ height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
+          <div style={{ height: 1, background: "var(--border-hairline)" }} />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-3)",
+            }}
+          >
+            <span
+              style={{ font: "var(--type-label)", color: "var(--text-strong)" }}
+            >
+              Từ khóa
+            </span>
+            <input
+              value={filters.q}
+              onChange={(e) => setFilter({ q: e.target.value })}
+              placeholder="VD: 51A"
+              style={{
+                height: 40,
+                border: "none",
+                borderRadius: "var(--radius-field)",
+                background: "var(--white)",
+                boxShadow: "var(--shadow-inset-hairline)",
+                padding: "0 14px",
+                font: "var(--type-body)",
+                color: "var(--text-strong)",
+                outline: "none",
+              }}
+            />
           </div>
           {!vpaTab && (
-          <>
-          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Khoảng giá (đồng)</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {PRICE_PRESETS.map((p) => {
-                const active = filters.priceMin === p.min && filters.priceMax === p.max;
-                return (
-                  <button key={p.label} type="button" aria-pressed={active} onClick={() => { if (!active) trackSelectPricePreset(p.label); setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max }, true); }}
-                    style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
-                );
-              })}
-            </div>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
-              <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMin} onChange={(e) => setFilter({ priceMin: e.target.value })} placeholder="Từ"
-                style={{ flex: 1, minWidth: 0, height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
-              <span style={{ color: 'var(--text-faint)' }}>—</span>
-              <input type="number" min="0" step="1000000" inputMode="numeric" value={filters.priceMax} onChange={(e) => setFilter({ priceMax: e.target.value })} placeholder="Đến"
-                style={{ flex: 1, minWidth: 0, height: 40, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none' }} />
-            </div>
-          </div>
-          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Tránh số</span>
-            {AVOID_NUMBER_PRESETS.map((n) => (
-              <Checkbox key={n} label={`Tránh ${n}`} checked={filters.avoidNumbers.includes(n)} onChange={() => toggleArrayFilter('avoidNumbers', n)} />
-            ))}
-          </div>
-          <div style={{ height: 1, background: 'var(--border-hairline)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trạng thái</span>
-            <Checkbox label="Chỉ xem biển đã bán" checked={filters.status === 'sold'} onChange={() => setFilter({ status: filters.status === 'sold' ? '' : 'sold' })} />
-          </div>
-          </>
+            <>
+              <div
+                style={{ height: 1, background: "var(--border-hairline)" }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "var(--space-3)",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-label)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Khoảng giá (đồng)
+                </span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {PRICE_PRESETS.map((p) => {
+                    const active =
+                      filters.priceMin === p.min && filters.priceMax === p.max;
+                    return (
+                      <button
+                        key={p.label}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => {
+                          if (!active) trackSelectPricePreset(p.label);
+                          setFilter(
+                            active
+                              ? { priceMin: "", priceMax: "" }
+                              : { priceMin: p.min, priceMax: p.max },
+                            true,
+                          );
+                        }}
+                        style={{
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "6px 12px",
+                          borderRadius: "var(--radius-xs)",
+                          font: "var(--type-caption)",
+                          background: active
+                            ? "var(--action-primary)"
+                            : "var(--surface-muted)",
+                          color: active ? "var(--white)" : "var(--text-body)",
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "var(--space-2)",
+                    alignItems: "center",
+                  }}
+                >
+                  <input
+                    type="number"
+                    min="0"
+                    step="1000000"
+                    inputMode="numeric"
+                    value={filters.priceMin}
+                    onChange={(e) => setFilter({ priceMin: e.target.value })}
+                    placeholder="Từ"
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      height: 40,
+                      border: "none",
+                      borderRadius: "var(--radius-field)",
+                      background: "var(--white)",
+                      boxShadow: "var(--shadow-inset-hairline)",
+                      padding: "0 14px",
+                      font: "var(--type-body)",
+                      color: "var(--text-strong)",
+                      outline: "none",
+                    }}
+                  />
+                  <span style={{ color: "var(--text-faint)" }}>—</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1000000"
+                    inputMode="numeric"
+                    value={filters.priceMax}
+                    onChange={(e) => setFilter({ priceMax: e.target.value })}
+                    placeholder="Đến"
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      height: 40,
+                      border: "none",
+                      borderRadius: "var(--radius-field)",
+                      background: "var(--white)",
+                      boxShadow: "var(--shadow-inset-hairline)",
+                      padding: "0 14px",
+                      font: "var(--type-body)",
+                      color: "var(--text-strong)",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+              </div>
+              <div
+                style={{ height: 1, background: "var(--border-hairline)" }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "var(--space-3)",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-label)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Tránh số
+                </span>
+                {AVOID_NUMBER_PRESETS.map((n) => (
+                  <Checkbox
+                    key={n}
+                    label={`Tránh ${n}`}
+                    checked={filters.avoidNumbers.includes(n)}
+                    onChange={() => toggleArrayFilter("avoidNumbers", n)}
+                  />
+                ))}
+              </div>
+              <div
+                style={{ height: 1, background: "var(--border-hairline)" }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "var(--space-3)",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-label)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Trạng thái
+                </span>
+                <Checkbox
+                  label="Chỉ xem biển đã bán"
+                  checked={filters.status === "sold"}
+                  onChange={() =>
+                    setFilter({
+                      status: filters.status === "sold" ? "" : "sold",
+                    })
+                  }
+                />
+              </div>
+            </>
           )}
-          <Button variant="outline" size="sm" fullWidth onClick={clearFilters}>Xóa bộ lọc</Button>
+          <Button variant="outline" size="sm" fullWidth onClick={clearFilters}>
+            Xóa bộ lọc
+          </Button>
         </aside>
-        <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div
+          style={{
+            flex: "1 1 320px",
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-5)",
+          }}
+        >
           {listNotice && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-pill)', padding: '8px 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+                flexWrap: "wrap",
+                background: "var(--surface-tint-cream)",
+                borderRadius: "var(--radius-sm)",
+                padding: "8px 16px",
+                font: "var(--type-body-sm)",
+                color: "var(--text-strong)",
+              }}
+            >
               <Icon name="sparkles" size={16} />
               <span style={{ flex: 1 }}>{listNotice.text}</span>
-              <Button variant="ghost" size="sm" onClick={() => { setFilters((f) => ({ ...f, q: '', page: 1 })); onClearNotice?.(); }}>Bỏ lọc</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilters((f) => ({ ...f, q: "", page: 1 }));
+                  onClearNotice?.();
+                }}
+              >
+                Bỏ lọc
+              </Button>
             </div>
           )}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: "var(--space-3)",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+              }}
+            >
               {activeFilterCount > 0 && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-tint-cream)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    height: 32,
+                    padding: "0 12px",
+                    borderRadius: "var(--radius-xs)",
+                    background: "var(--surface-tint-cream)",
+                    font: "var(--type-caption)",
+                    fontWeight: "var(--fw-semibold)",
+                    color: "var(--action-primary)",
+                  }}
+                >
                   {activeFilterCount} bộ lọc đang bật
                 </span>
               )}
-              <div style={{ display: 'flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: 3, gap: 2 }}>
-                <button type="button" aria-label="Xem dạng lưới" aria-pressed={filters.view !== 'list'} onClick={() => setFilter({ view: 'grid', page: filters.page })}
-                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view !== 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view !== 'list' ? 'var(--shadow-1)' : 'none', color: filters.view !== 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
+              <div
+                style={{
+                  display: "flex",
+                  background: "var(--surface-sunken)",
+                  borderRadius: "var(--radius-xs)",
+                  padding: 3,
+                  gap: 2,
+                }}
+              >
+                <button
+                  type="button"
+                  aria-label="Xem dạng lưới"
+                  aria-pressed={filters.view !== "list"}
+                  onClick={() =>
+                    setFilter({ view: "grid", page: filters.page })
+                  }
+                  style={{
+                    width: 34,
+                    height: 34,
+                    border: "none",
+                    borderRadius: "var(--radius-xs)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    background:
+                      filters.view !== "list" ? "var(--white)" : "transparent",
+                    boxShadow:
+                      filters.view !== "list" ? "var(--shadow-1)" : "none",
+                    color:
+                      filters.view !== "list"
+                        ? "var(--action-primary)"
+                        : "var(--text-muted)",
+                  }}
+                >
                   <LayoutGrid size={16} />
                 </button>
-                <button type="button" aria-label="Xem dạng danh sách" aria-pressed={filters.view === 'list'} onClick={() => setFilter({ view: 'list', page: filters.page })}
-                  style={{ width: 34, height: 34, border: 'none', borderRadius: 'var(--radius-pill)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: filters.view === 'list' ? 'var(--white)' : 'transparent', boxShadow: filters.view === 'list' ? 'var(--shadow-1)' : 'none', color: filters.view === 'list' ? 'var(--action-primary)' : 'var(--text-muted)' }}>
+                <button
+                  type="button"
+                  aria-label="Xem dạng danh sách"
+                  aria-pressed={filters.view === "list"}
+                  onClick={() =>
+                    setFilter({ view: "list", page: filters.page })
+                  }
+                  style={{
+                    width: 34,
+                    height: 34,
+                    border: "none",
+                    borderRadius: "var(--radius-xs)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    background:
+                      filters.view === "list" ? "var(--white)" : "transparent",
+                    boxShadow:
+                      filters.view === "list" ? "var(--shadow-1)" : "none",
+                    color:
+                      filters.view === "list"
+                        ? "var(--action-primary)"
+                        : "var(--text-muted)",
+                  }}
+                >
                   <ListIcon size={16} />
                 </button>
               </div>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-              {hasActiveFilters && !vpaTab && <Button className="list-toolbar-secondary" variant="outline" size="sm" onClick={openSaveModal}>Lưu tìm kiếm này</Button>}
-              {!vpaTab && <button type="button" className="list-toolbar-secondary" aria-pressed={infinite} onClick={() => setInfinite((v) => !v)} style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: infinite ? 'var(--action-primary)' : 'var(--surface-sunken)', color: infinite ? 'var(--white)' : 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>Cuộn tải thêm: {infinite ? 'Bật' : 'Tắt'}</button>}
-              {!infinite && <Select value={String(filters.perPage)} options={PER_PAGE_OPTIONS} onChange={(v) => setFilter({ perPage: Number(v), page: 1 })} variant="pill" />}
-              {birthYear ? (
-                <button type="button" title={fromProfile ? 'Lấy từ ngày sinh trong hồ sơ' : 'Bấm để đổi năm sinh'} onClick={() => { if (!fromProfile) { setYearDraft(String(birthYear)); setYearOpen((v) => !v); } }}
-                  style={{ height: 36, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: fromProfile ? 'default' : 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--mint-100)', color: 'var(--text-strong)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-                  🍀 {fsData ? `Mệnh ${fsData.element} · ` : ''}sinh {birthYear}
-                </button>
-              ) : (
-                <button type="button" onClick={() => setYearOpen((v) => !v)}
-                  style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', background: 'var(--surface-sunken)', color: 'var(--text-body)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-                  🍀 Làm nổi biển hợp mệnh
-                </button>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "var(--space-3)",
+              }}
+            >
+              {hasActiveFilters && !vpaTab && (
+                <Button
+                  className="list-toolbar-secondary"
+                  variant="outline"
+                  size="sm"
+                  onClick={openSaveModal}
+                >
+                  Lưu tìm kiếm này
+                </Button>
               )}
-              {yearOpen && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <input type="number" inputMode="numeric" min="1900" max={new Date().getFullYear()} placeholder="Năm sinh" value={yearDraft} onChange={(e) => setYearDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') submitYear(); }} aria-label="Năm sinh"
-                    style={{ width: 110, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 12px', font: 'var(--type-body-sm)', boxShadow: 'var(--shadow-inset-hairline)', outline: 'none' }} />
-                  <Button variant="primary" size="sm" onClick={submitYear}>OK</Button>
-                  {birthYear && !fromProfile && <Button variant="ghost" size="sm" onClick={() => { setYear(null); setYearOpen(false); if (filters.sort === 'fengshui') setFilter({ sort: 'newest' }); }}>Bỏ</Button>}
-                </span>
-              )}
-              <Select value={vpaTab ? (birthYear && filters.sort === 'fengshui' ? 'fengshui' : vpaSort) : (filters.sort === 'fengshui' && !birthYear ? 'newest' : filters.sort)}
-                options={[...(vpaTab ? vpaSorts : SORT_OPTIONS), ...(birthYear ? [FENGSHUI_SORT] : [])]} onChange={(v) => setFilter({ sort: v })} variant="pill" />
+              <Select
+                value={
+                  vpaTab
+                    ? birthYear && filters.sort === "fengshui"
+                      ? "fengshui"
+                      : vpaSort
+                    : filters.sort === "fengshui" && !birthYear
+                      ? "newest"
+                      : filters.sort
+                }
+                options={[
+                  ...(vpaTab ? vpaSorts : SORT_OPTIONS),
+                  ...(birthYear ? [FENGSHUI_SORT] : []),
+                ]}
+                onChange={(v) => setFilter({ sort: v })}
+                variant="pill"
+              />
             </div>
           </div>
           {showSkeleton ? (
-            <div className={`plate-grid ${filters.view === 'list' ? 'view-list' : 'view-grid'}`} style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-              {Array.from({ length: items.length || 8 }, (_, i) => <PlateCardSkeleton key={i} />)}
+            <div
+              className={`plate-grid ${filters.view === "list" ? "view-list" : "view-grid"}`}
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  filters.view === "list"
+                    ? "1fr"
+                    : "repeat(auto-fill,minmax(min(268px,100%),1fr))",
+                gap: "var(--gutter-section)",
+              }}
+            >
+              {Array.from({ length: items.length || 8 }, (_, i) => (
+                <PlateCardSkeleton key={i} />
+              ))}
             </div>
           ) : showError ? (
-            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
-              <span style={{ font: 'var(--type-body)', color: 'var(--status-danger)' }}>Không tải được danh sách biển số.</span>
-              <Button variant="outline" size="md" onClick={() => (useInfinite ? inf.refetch() : refetch())}>Thử lại</Button>
+            <div
+              style={{
+                background: "var(--surface-sunken)",
+                borderRadius: "var(--radius-card)",
+                padding: "64px var(--space-6)",
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "var(--space-4)",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-body)",
+                  color: "var(--status-danger)",
+                }}
+              >
+                Không tải được danh sách biển số.
+              </span>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => (useInfinite ? inf.refetch() : refetch())}
+              >
+                Thử lại
+              </Button>
             </div>
-          ) : items.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{total} biển số</span>
-              <div className={`plate-grid ${filters.view === 'list' ? 'view-list' : 'view-grid'}`} style={{ display: 'grid', gridTemplateColumns: filters.view === 'list' ? '1fr' : 'repeat(auto-fill,minmax(min(268px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-                {shownItems.map((p, i) => <PlateCard key={p.id} {...(vpaTab ? vpaCardProps(p) : cardProps(p))} fengShui={fsFor(p)} plateSize={filters.view === 'list' ? 'listLg' : 'md'} layout={filters.view === 'list' ? 'row' : 'grid'} style={stagger(i)} />)}
+          ) : shownItems.length > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-3)",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-label)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                {filterByFengShui
+                  ? `${shownItems.length} biển hợp mệnh trong trang này`
+                  : `${total} biển số`}
+              </span>
+              <div
+                className={`plate-grid ${filters.view === "list" ? "view-list" : "view-grid"}`}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    filters.view === "list"
+                      ? "1fr"
+                      : "repeat(auto-fill,minmax(min(268px,100%),1fr))",
+                  gap: "var(--gutter-section)",
+                }}
+              >
+                {shownItems.map((p, i) => (
+                  <PlateCard
+                    key={p.id}
+                    {...(vpaTab ? vpaCardProps(p) : cardProps(p))}
+                    fengShui={fsFor(p)}
+                    plateSize={filters.view === "list" ? "listLg" : "md"}
+                    layout={filters.view === "list" ? "row" : "grid"}
+                    style={stagger(i)}
+                  />
+                ))}
               </div>
             </div>
           ) : (
-            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '64px var(--space-6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
-              <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Không tìm thấy biển số phù hợp</span>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 380 }}>Thử bỏ một vài bộ lọc, hoặc nhập đuôi số khác.</span>
-              <Button variant="dark" size="md" onClick={clearFilters}>Xóa bộ lọc</Button>
+            <div
+              style={{
+                background: "var(--surface-sunken)",
+                borderRadius: "var(--radius-card)",
+                padding: "64px var(--space-6)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "var(--space-3)",
+                textAlign: "center",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-title-2)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                {filterByFengShui
+                  ? "Không có biển hợp mệnh trong trang này"
+                  : "Không tìm thấy biển số phù hợp"}
+              </span>
+              <span
+                style={{
+                  font: "var(--type-body-sm)",
+                  color: "var(--text-muted)",
+                  maxWidth: 380,
+                }}
+              >
+                {filterByFengShui
+                  ? "Thử bỏ lọc hợp mệnh, hoặc xem trang khác — danh sách rất dài, biển hợp mệnh có thể nằm ở trang sau."
+                  : "Thử bỏ một vài bộ lọc, hoặc nhập đuôi số khác."}
+              </span>
+              {filterByFengShui ? (
+                <Button
+                  variant="dark"
+                  size="md"
+                  onClick={() => setFengshuiOnly(false)}
+                >
+                  Bỏ lọc hợp mệnh
+                </Button>
+              ) : (
+                <Button variant="dark" size="md" onClick={clearFilters}>
+                  Xóa bộ lọc
+                </Button>
+              )}
             </div>
           )}
           {useInfinite && inf.isFetchingNextPage && (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-4) 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải thêm…</div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "var(--space-4) 0",
+                font: "var(--type-body-sm)",
+                color: "var(--text-muted)",
+              }}
+            >
+              Đang tải thêm…
+            </div>
           )}
           {!useInfinite && totalPages > 1 && (
-            <Pagination page={page} totalPages={totalPages} onChange={goToPage} getHref={(p) => buildPageUrl(filters, p)} style={{ paddingTop: 'var(--space-3)' }} />
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={goToPage}
+              getHref={(p) => buildPageUrl(filters, p)}
+              style={{ paddingTop: "var(--space-3)" }}
+            />
           )}
         </div>
       </section>
 
       {saveOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay-scrim)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 18px', animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div style={{ width: '100%', maxWidth: 420, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'modalIn 180ms var(--ease-out)' }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 90,
+            background: "var(--overlay-scrim)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "40px 18px",
+            animation: "fadeIn 140ms var(--ease-out)",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              background: "var(--white)",
+              borderRadius: "var(--radius-xl)",
+              boxShadow: "var(--shadow-4)",
+              padding: "var(--space-6)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-4)",
+              animation: "modalIn 180ms var(--ease-out)",
+            }}
+          >
             <div>
-              <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Lưu tìm kiếm này</h2>
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Nhận thông báo khi có biển mới phù hợp bộ lọc hiện tại.</p>
+              <h2
+                style={{
+                  margin: "0 0 var(--space-1)",
+                  font: "var(--type-title-1)",
+                  letterSpacing: "var(--ls-title)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                Lưu tìm kiếm này
+              </h2>
+              <p
+                style={{
+                  margin: 0,
+                  font: "var(--type-body-sm)",
+                  color: "var(--text-muted)",
+                }}
+              >
+                Nhận thông báo khi có biển mới phù hợp bộ lọc hiện tại.
+              </p>
             </div>
-            <Input label="Tên tiêu chí" placeholder="VD: Biển ngũ quý Đà Nẵng" value={saveName} onChange={(e) => setSaveName(e.target.value)} required />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-              <Button variant="ghost" size="md" onClick={() => setSaveOpen(false)}>Hủy</Button>
-              <Button variant="primary" size="md" onClick={submitSave} disabled={createSavedSearch.isPending}>{createSavedSearch.isPending ? 'Đang lưu…' : 'Lưu'}</Button>
+            <Input
+              label="Tên tiêu chí"
+              placeholder="VD: Biển ngũ quý Đà Nẵng"
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+              required
+            />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "var(--space-2)",
+              }}
+            >
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => setSaveOpen(false)}
+              >
+                Hủy
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={submitSave}
+                disabled={createSavedSearch.isPending}
+              >
+                {createSavedSearch.isPending ? "Đang lưu…" : "Lưu"}
+              </Button>
             </div>
           </div>
         </div>

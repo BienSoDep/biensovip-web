@@ -5,7 +5,7 @@ const ASPECT = { short: '330/165', long: '520/110' };
 // Font tỉ lệ % theo CHIỀU CAO khung biển (cqh) — lấy từ kích thước render của màn Detail (size lg) làm mẫu.
 // Nhờ đó mọi size/preview mọi trang giữ đúng 1 tỉ lệ chữ-số/số-khung giống nhau; khung co giãn → chữ scale theo.
 const RATIO = {
-  short: { topFs: '23cqh', numFs: '49cqh' },
+  short: { topFs: '28cqh', numFs: '58cqh' },
   long: { provFs: '55cqh', seriFs: '38cqh', numFs: '96cqh' },
 };
 

@@ -37,7 +37,7 @@ export default function EmailCapture({ source = 'newsletter', style }) {
               placeholder="Email của bạn"
               aria-label="Email nhận thông báo"
               style={{
-                flex: '1 1 180px', height: 44, border: 'none', borderRadius: 'var(--radius-pill)',
+                flex: '1 1 180px', height: 44, border: 'none', borderRadius: 'var(--radius-field)',
                 background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)',
                 padding: '0 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none',
               }}

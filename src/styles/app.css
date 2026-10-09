@@ -1,12 +1,18 @@
-/* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity */
+/* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity.
+   --brand-500 = #f19720, màu người dùng pick trực tiếp từ chữ "DUY ĐINH" trong logo (gần như
+   trùng khít #f1961f đo từ logo-word.png) — ĐÚNG màu logo, không hạ sáng như 2 lần thử trước.
+   Contrast #f19720 với chữ TRẮNG chỉ 2.3 (dưới chuẩn WCAG AA ≥4.5) nên .btn-primary (dưới) đổi
+   color sang --ink-900 (chữ tối, contrast 7.99) thay vì --text-inverse — đánh đổi có chủ đích,
+   theo đúng yêu cầu "dùng màu logo thật" của người dùng. --brand-600 (hover/press) dùng lại
+   #a3610a — mức đã verify contrast tốt ở lần thử trước — để có 1 ramp liền mạch tăng độ đậm. */
 :root {
-  --brand-700: #8a3f00;
-  --brand-600: #b85600;
-  --brand-500: #d4650a;
-  --brand-400: #e8903e;
-  --brand-200: #f4c89e;
-  --brand-100: #f9e2cc;
-  --brand-50: #fcf2e6;
+  --brand-700: #6a3f06;
+  --brand-600: #a3610a;
+  --brand-500: #f19720;
+  --brand-400: #f4ab4c;
+  --brand-200: #f9d29f;
+  --brand-100: #fce9cf;
+  --brand-50: #fef4e7;
   --blue-700: var(--brand-700);
   --blue-600: var(--brand-600);
   --blue-500: var(--brand-500);
@@ -14,11 +20,15 @@
   --blue-200: var(--brand-200);
   --blue-100: var(--brand-100);
   --blue-50: var(--brand-50);
-  --shadow-blue: 0 8px 20px rgba(212, 101, 10, 0.26);
+  /* --brand-500 giờ sáng (#f19720) → mọi chữ/icon TRẮNG đặt trên nền action-primary (tab active,
+     pill active, badge...) phải đổi sang tối — xem --action-primary-text ở tokens.css, 9 file dùng
+     cặp action-primary/text-inverse đã đổi sang token này thay vì hardcode trắng. */
+  --action-primary-text: var(--ink-900);
+  --shadow-blue: 0 8px 20px rgba(241, 151, 32, 0.3);
   --surface-hero: linear-gradient(
     135deg,
-    #f9e2cc 0%,
-    #fcf2e6 42%,
+    #fce9cf 0%,
+    #fef4e7 42%,
     var(--cream-100) 100%
   );
 }
@@ -144,7 +154,7 @@ textarea,
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   padding: 0 20px;
   font: var(--type-body-sm);
   font-weight: var(--fw-semibold);
@@ -159,7 +169,10 @@ textarea,
 .btn-md { height: 44px; }
 .btn-lg { height: 48px; }
 
-.btn-primary { background: var(--action-primary); color: var(--text-inverse); box-shadow: var(--shadow-blue); }
+/* Nền mặc định #f19720 sáng → chữ TỐI (--action-primary-text, contrast 7.99). Hover/active đậm dần
+   theo ramp cũ (brand-600/700) nên chữ chuyển sang trắng ở 2 trạng thái đó — nền càng đậm càng hợp
+   chữ sáng, ngược cơ chế nền sáng. */
+.btn-primary { background: var(--action-primary); color: var(--action-primary-text); box-shadow: var(--shadow-blue); transition: background-color 140ms var(--ease-standard), color 140ms var(--ease-standard); }
 .btn-dark { background: var(--action-dark); color: var(--text-inverse); }
 .btn-outline { background: transparent; color: var(--text-strong); box-shadow: inset 0 0 0 1.5px var(--border-strong); }
 .btn-ghost { background: transparent; color: var(--text-body); }
@@ -167,9 +180,11 @@ textarea,
 
 .btn-primary:not(:disabled):hover {
   background: var(--action-primary-hover);
+  color: var(--text-inverse);
 }
 .btn-primary:not(:disabled):active {
   background: var(--action-primary-press);
+  color: var(--text-inverse);
 }
 .btn-dark:not(:disabled):hover {
   background: var(--action-dark-hover);
@@ -225,6 +240,23 @@ textarea,
 .pill-btn[data-on="false"][data-dark="true"]:active {
   background: rgba(255, 255, 255, 0.24) !important;
 }
+
+/* Triệt tiêu viền outline tách rời / đè ngoài trên các nút pill và thanh menu header */
+.pill-btn,
+.pill-btn:focus,
+.header-nav-pills .pill-btn,
+.header-nav-pills button {
+  outline: none !important;
+}
+.pill-btn:focus-visible,
+.header-nav-pills .pill-btn:focus-visible {
+  outline: none !important;
+}
+.pill-btn[data-on="false"]:focus-visible,
+.header-nav-pills .pill-btn[data-on="false"]:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--action-primary) !important;
+}
+
 @keyframes pageIn {
   from {
     opacity: 0;
@@ -496,7 +528,7 @@ textarea,
   }
   /* Home search bar: stack into clear rows instead of one wrapped pill blob */
   .home-search-bar {
-    border-radius: var(--radius-xl) !important;
+    border-radius: var(--radius-md) !important;
     flex-direction: column;
     align-items: stretch !important;
     padding: 14px !important;
@@ -524,6 +556,34 @@ textarea,
   }
   .list-filter-aside {
     display: none !important;
+  }
+  /* PlateList: thanh pill dài (search + năm sinh) mobile */
+  .plate-search-bar {
+    flex-direction: column !important;
+    width: 100% !important;
+    border-radius: var(--radius-md) !important;
+  }
+  .plate-search-bar > span,
+  .plate-search-bar > input,
+  .plate-search-bar > button,
+  .plate-search-bar > span > input {
+    width: 100% !important;
+  }
+  .plate-search-divider {
+    width: auto !important;
+    height: 1px !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+  }
+  /* Compare (chưa chọn biển nào): mobile xếp 1 cột dọc full-width để input tìm kiếm dễ dùng */
+  .compare-empty-slots {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+  .compare-empty-slot {
+    flex: none !important;
+    max-width: none !important;
+    min-height: 0 !important;
   }
   /* Auth (login/register): hide info panel on mobile — chỉ còn form */
   .auth-info {
@@ -1407,6 +1467,41 @@ textarea,
     0 8px 18px -10px rgba(212, 101, 10, 0.35);
 }
 
+/* Nút liên hệ nhanh Gọi điện & Zalo trên thẻ biển số — hiệu ứng hover nổi bật */
+.plate-btn-phone {
+  background: var(--status-success-ink, #059669) !important;
+  color: #fff !important;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2) !important;
+}
+.plate-btn-phone:hover {
+  background: #047857 !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.42) !important;
+  filter: brightness(1.06) !important;
+}
+.plate-btn-phone:active {
+  transform: translateY(0) scale(0.97) !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2) !important;
+}
+
+.plate-btn-zalo {
+  background: #0068FF !important;
+  color: #fff !important;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease !important;
+  box-shadow: 0 2px 4px rgba(0, 104, 255, 0.2) !important;
+}
+.plate-btn-zalo:hover {
+  background: #0056D6 !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 6px 16px rgba(0, 104, 255, 0.45) !important;
+  filter: brightness(1.06) !important;
+}
+.plate-btn-zalo:active {
+  transform: translateY(0) scale(0.97) !important;
+  box-shadow: 0 2px 4px rgba(0, 104, 255, 0.2) !important;
+}
+
 /* Admin dense tables on tablet/narrow: scroll-shadow gợi ý còn nội dung ẩn 2 bên khi overflow-x auto —
    background-attachment scroll trick (2 gradient bám theo scroll container + 2 shadow cố định theo viewport). */
 .admin-table-scroll {
@@ -1422,10 +1517,17 @@ textarea,
 }
 
 /* Landing intro (tỉnh/loại biển) — nội dung là HTML thô từ DB, cần style h2/p khớp design token */
+.landing-intro {
+  width: 100% !important;
+  max-width: 100% !important;
+}
 .landing-intro h2 {
-  margin: var(--space-6) 0 var(--space-2);
+  margin: var(--space-6) 0 var(--space-3);
   font: var(--type-title-2);
   color: var(--text-strong);
+  letter-spacing: var(--ls-title);
+  border-bottom: 2px solid var(--border-hairline);
+  padding-bottom: 8px;
 }
 .landing-intro h2:first-child {
   margin-top: var(--space-3);
@@ -1437,18 +1539,62 @@ textarea,
 }
 .landing-intro p {
   margin: 0 0 var(--space-3);
-  line-height: 1.65;
+  line-height: 1.75;
+  font-size: 15.5px;
+  color: var(--text-body);
+}
+.landing-intro ul,
+.landing-intro ol {
+  margin: 0 0 var(--space-4) 0;
+  padding-left: 24px;
+  line-height: 1.75;
+  font-size: 15.5px;
+}
+.landing-intro li {
+  margin-bottom: 8px;
+}
+.landing-intro strong {
+  color: var(--text-strong);
+  font-weight: var(--fw-bold);
+}
+.landing-intro table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: var(--space-5) 0;
+  background: var(--white);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-inset-hairline);
+  border: 1px solid var(--border-hairline);
+}
+.landing-intro th,
+.landing-intro td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14.5px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+.landing-intro th {
+  background: var(--surface-sunken);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+.landing-intro tr:last-child td {
+  border-bottom: none;
+}
+.landing-intro figure {
+  margin: var(--space-5) 0;
+  text-align: center;
+  width: 100%;
 }
 .landing-intro img {
+  width: 100%;
   max-width: 100%;
   height: auto;
   border-radius: var(--radius-card);
   display: block;
-  margin: var(--space-4) auto var(--space-2);
-}
-.landing-intro figure {
-  margin: var(--space-4) 0;
-  text-align: center;
+  margin: 0 auto var(--space-2);
 }
 .landing-intro figcaption {
   font: var(--type-caption);
@@ -1664,7 +1810,7 @@ textarea,
 }
 .ctv-tool-chip {
   background: var(--white);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-inset-hairline);
   padding: 8px 14px;
   display: inline-flex;
@@ -1718,7 +1864,7 @@ textarea,
   gap: var(--space-8);
   background: var(--surface-hero);
   border-radius: var(--radius-surface);
-  padding: clamp(20px, 4vw, 48px);
+  padding: clamp(28px, 4.5vw, 56px);
   box-shadow: var(--shadow-inset-hairline);
 }
 .contact-hero__glow {
@@ -1735,11 +1881,11 @@ textarea,
 .contact-hero__text {
   position: relative;
   z-index: 1;
-  flex: 1 1 320px;
+  flex: 1 1 380px;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 .contact-hero__media {
   position: relative;
@@ -1748,7 +1894,7 @@ textarea,
 }
 .contact-hero__img {
   display: block;
-  width: 220px;
+  width: clamp(260px, 28vw, 320px);
   max-width: 100%;
   height: auto;
   border-radius: var(--radius-surface);
@@ -1758,42 +1904,42 @@ textarea,
 .contact-hero__badge {
   position: absolute;
   left: 50%;
-  bottom: -14px;
+  bottom: -16px;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   background: var(--white);
   color: var(--text-strong);
-  font: var(--type-caption);
+  font-size: 15px;
   font-weight: var(--fw-semibold);
-  padding: 7px 14px;
-  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-2);
   white-space: nowrap;
 }
 .contact-hero__badge-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-pill);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
   background: var(--status-success);
   box-shadow: 0 0 0 3px var(--status-success-bg);
 }
 .contact-hero__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-1);
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 .contact-hero__chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   background: var(--white);
-  border-radius: var(--radius-pill);
-  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
   box-shadow: var(--shadow-inset-hairline);
-  font: var(--type-caption);
+  font-size: 15px;
   font-weight: var(--fw-semibold);
   color: var(--text-body);
 }
@@ -1823,7 +1969,7 @@ textarea,
     flex-basis: 100%;
   }
   .contact-hero__media { margin-bottom: var(--space-4); }
-  .contact-hero__img { width: 200px; }
+  .contact-hero__img { width: clamp(220px, 60vw, 280px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .contact-hero__img { animation: none; }
@@ -1837,4 +1983,18 @@ textarea,
   .vpa-row > [data-label] { flex: 1 1 42%; min-width: 0; }
   .vpa-row > [data-label]::before { content: attr(data-label); display: block; font: var(--type-caption); color: var(--text-muted); }
   .vpa-row > .vpa-actions { flex: 1 1 100%; }
+}
+
+/* Compare: 3 ô chia đều 1/3 chiều rộng khung, bằng nhau tuyệt đối */
+.compare-empty-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  width: 100%;
+  align-items: stretch;
+}
+.compare-empty-slot {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
 }

@@ -20,7 +20,7 @@ export default function About({ go }) {
   const FAQ = contentItems('about.faq.items').map((f) => [f.q, f.a]);
   const T = contentGet;
   return (
-    <section style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-9)', animation: 'pageIn 180ms var(--ease-out)' }}>
+    <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-9)', animation: 'pageIn 180ms var(--ease-out)' }}>
 
       {/* Intro + portrait */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'center' }}>

@@ -42,6 +42,19 @@ export const VPA_SOURCES = [
 export const VPA_RUN_STATUS = { 0: 'Đang chạy', 1: 'Thành công', 2: 'Chưa đủ dữ liệu', 3: 'Lỗi' };
 export const VPA_RUN_STATUS_TONE = { 0: 'blue', 1: 'mint', 2: 'amber', 3: 'rose' };
 
+// Khung giờ tự động (giờ Việt Nam) của 1 nguồn, đọc từ vpa_settings — dùng để chú thích "lịch chạy dự kiến" ở bảng lịch sử.
+// Hai mốc bằng nhau = không giới hạn giờ (chạy ngay khi đến hạn chu kỳ, bất kỳ lúc nào).
+export function vpaScheduleWindowLabel(settings, source) {
+  if (!settings) return null;
+  const prefix = VPA_SOURCES.find((s) => s.id === source)?.prefix;
+  if (!prefix) return null;
+  const from = settings[`${prefix}WindowStartHour`];
+  const to = settings[`${prefix}WindowEndHour`];
+  if (from == null || to == null) return null;
+  if (from === to) return 'Không giới hạn giờ';
+  return `Tự động trong khung ${from}h–${to}h`;
+}
+
 // Ghi chú lưu trong lượt chạy (vpa_crawl_runs.note) → câu dễ hiểu cho Admin.
 export function vpaRunNote(note) {
   if (!note) return null;

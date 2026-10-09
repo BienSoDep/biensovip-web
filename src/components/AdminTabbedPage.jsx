@@ -19,7 +19,7 @@ export default function AdminTabbedPage({ tabs, initialTab }) {
                 style={{
                   display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', border: 'none',
                   borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: isActive ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                  background: isActive ? 'var(--action-primary)' : 'var(--white)', color: isActive ? 'var(--text-inverse)' : 'var(--text-body)',
+                  background: isActive ? 'var(--action-primary)' : 'var(--white)', color: isActive ? 'var(--action-primary-text)' : 'var(--text-body)',
                   boxShadow: 'var(--shadow-inset-hairline)',
                 }}>
                 {t.label}

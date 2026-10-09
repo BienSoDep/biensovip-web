@@ -211,7 +211,7 @@ export function SearchField({ placeholder, value, onChange, width, ariaLabel }) 
         value={value ?? ''}
         onChange={onChange}
         style={{
-          height: 44, width: '100%', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)',
+          height: 44, width: '100%', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-field)',
           background: 'var(--white)', padding: '0 16px 0 40px', font: 'var(--type-body-sm)',
           color: 'var(--text-strong)', outline: 'none', minWidth: 0,
         }}
@@ -228,7 +228,7 @@ export function Select({ label, value, options = [], onChange, variant, style, r
       <BaseSelect.Root value={value ?? ''} onValueChange={(v) => onChange(v)} items={options}>
         <BaseSelect.Trigger
           style={{
-            height: 40, border: 'none', borderRadius: variant === 'pill' ? 'var(--radius-pill)' : 'var(--radius-field)',
+            height: 40, border: 'none', borderRadius: 'var(--radius-field)',
             background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)',
             padding: '0 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, cursor: 'pointer', width: '100%',
@@ -317,6 +317,7 @@ const BADGE_TONES = {
   rose: { background: 'var(--rose-100)', color: 'var(--rose-500)' },
   hot: { background: 'var(--amber-500)', color: 'var(--white)' },
   amber: { background: 'var(--amber-100)', color: 'var(--status-warning-ink)' },
+  orange: { background: 'var(--orange-100)', color: 'var(--accent-orange-ink)' },
   mint: { background: 'var(--mint-100)', color: 'var(--status-success-ink)' },
   blue: { background: 'var(--blue-100)', color: 'var(--blue-700)' },
   neutral: { background: 'var(--grey-100)', color: 'var(--text-muted)' },
@@ -326,7 +327,7 @@ export function Badge({ tone = 'neutral', children }) {
   const t = BADGE_TONES[tone] || BADGE_TONES.neutral;
   return (
     <span style={{
-      height: 24, maxWidth: '100%', padding: '0 10px', borderRadius: 'var(--radius-pill)', display: 'inline-flex', alignItems: 'center',
+      height: 24, maxWidth: '100%', padding: '0 8px', borderRadius: 'var(--radius-xs)', display: 'inline-flex', alignItems: 'center',
       overflow: 'hidden', textOverflow: 'ellipsis',
       font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', ...t,
     }}>{children}</span>
