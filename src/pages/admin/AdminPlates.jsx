@@ -39,9 +39,7 @@ import {
   num,
 } from './plates/plateUtils.js';
 import PlateCountSummary from './PlateCountSummary.jsx';
-import { MultiDimensionPlateDistributionMatrix, SupplyDemandComparisonChart } from './dashboard/DashboardAdvancedCharts.jsx';
-import { usePlateDistribution } from '../../services/adminDashboard.js';
-import { useBusinessInsights } from '../../services/analytics.js';
+
 import PlateQuickAddBar from './plates/PlateQuickAddBar.jsx';
 import PlateDrawerForm from './plates/PlateDrawerForm.jsx';
 import PlateBulkModals from './plates/PlateBulkModals.jsx';
@@ -286,33 +284,7 @@ export default function AdminPlates({ go, notify, st }) {
     ), { duration: 5000 });
   };
 
-  // Phân bố kho biển đa chiều & Cân bằng Cung - Cầu
-  const [distTab, setDistTab] = useState('plate_type');
-  const [distChartType, setDistChartType] = useState('bar');
-  const distData = usePlateDistribution(distTab);
-  const fromIso = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
-  }, []);
-  const toIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const businessInsights = useBusinessInsights(fromIso, toIso);
-  const bData = businessInsights?.data;
 
-  const handleDistActionClick = (link, extraParams = {}) => {
-    if (extraParams?.adminQ) {
-      setKeyword(extraParams.adminQ);
-      setPage(1);
-    }
-    if (extraParams?.status) {
-      setStatus(extraParams.status);
-      setPage(1);
-    }
-    const tableEl = document.querySelector('.admin-plates-filters, .admin-plates-table-container');
-    if (tableEl) {
-      tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
 
   // Quick Add State
   const [quickNum, setQuickNum] = useState('');
@@ -864,27 +836,7 @@ export default function AdminPlates({ go, notify, st }) {
         ))}
       </div>
 
-      {/* Phân bố kho biển đa chiều & Cân bằng Cung - Cầu */}
-      <details className="dash-fold" open style={{ width: '100%' }}>
-        <summary style={{ cursor: 'pointer', font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', padding: 'var(--space-1) 0', color: 'var(--text-strong)' }}>
-          Phân bố kho biển đa chiều &amp; Cân bằng Cung - Cầu
-        </summary>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', marginTop: 'var(--space-3)' }}>
-          <MultiDimensionPlateDistributionMatrix
-            distTab={distTab}
-            onTabChange={setDistTab}
-            distData={distData}
-            chartType={distChartType}
-            onChartTypeChange={setDistChartType}
-            onActionClick={handleDistActionClick}
-          />
 
-          <SupplyDemandComparisonChart
-            categorySupplyDemand={bData?.categorySupplyDemand || []}
-            onActionClick={handleDistActionClick}
-          />
-        </div>
-      </details>
 
       <PlateCountSummary matched={data?.total} all={allData?.total} filtered={activeFiltersCount > 0 || !!debouncedKeyword} />
 
