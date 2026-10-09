@@ -107,7 +107,9 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
                   style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', borderBottom: '1px solid var(--surface-sunken)', background: 'none', cursor: 'pointer' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
-                  <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                  <div style={{ width: 72, aspectRatio: '330/165', flexShrink: 0, borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                    <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                  </div>
                   <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
                 </button>
@@ -123,7 +125,9 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
                     style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', borderBottom: '1px solid var(--surface-sunken)', background: 'none', cursor: 'pointer' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
-                    <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                    <div style={{ width: 72, aspectRatio: '330/165', flexShrink: 0, borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                      <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                    </div>
                     <span style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flexShrink: 0 }}>{formatPrice(p.price, p.priceOnRequest)}</span>
                   </button>
@@ -137,9 +141,77 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
   );
 }
 
+// Card gợi ý biển số to rõ, sắc nét, hiển thị đầy đủ biển số dập nổi, giá tiền và nút thêm so sánh
+function PlateSuggestionCard({ plate, onAdd }) {
+  const { data: settings } = useSiteSettings();
+  const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onAdd(plate.id)}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        width: 190,
+        padding: '12px',
+        border: '1px solid var(--border-hairline)',
+        borderRadius: 'var(--radius-card)',
+        background: 'var(--white)',
+        cursor: 'pointer',
+        textAlign: 'left',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: 'var(--shadow-1)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--action-primary)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = 'var(--shadow-3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--border-hairline)';
+        e.currentTarget.style.transform = 'none';
+        e.currentTarget.style.boxShadow = 'var(--shadow-1)';
+      }}
+    >
+      <div style={{ width: '100%', aspectRatio: '330/165', borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
+        {shouldShowGeneratedImage(settings, plate.thumbnailUrl ? [plate.thumbnailUrl] : []) ? (
+          <img src={plate.thumbnailUrl} alt={plate.plateNumber} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <PlateVisual size="listLg" prov={prov} seri={seri} num={num} />
+        )}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {plate.plateNumber}
+          </span>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 'var(--fw-semibold)',
+            color: 'var(--action-primary)',
+            background: 'var(--orange-50)',
+            padding: '2px 6px',
+            borderRadius: 'var(--radius-sm)',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}>
+            + So sánh
+          </span>
+        </div>
+        {plate.price != null && (
+          <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>
+            {formatPrice(plate.price, plate.priceOnRequest)}
+          </span>
+        )}
+      </div>
+    </button>
+  );
+}
+
 // Gợi ý biển đã thích ngay dưới slot — đỡ phải gõ tìm khi biển muốn so sánh đã có sẵn trong Yêu thích.
 function FavSuggestions({ favCards, excludeIds, onAdd }) {
-  const { data: settings } = useSiteSettings();
   const items = (favCards || []).filter((p) => !excludeIds.includes(p.id) && p.status !== 'sold').slice(0, 6);
   if (items.length === 0) return null;
 
@@ -147,20 +219,9 @@ function FavSuggestions({ favCards, excludeIds, onAdd }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-label)', color: 'var(--text-strong)' }}><Heart size={14} style={{ color: 'var(--status-danger)' }} /> Từ biển đã thích của bạn</span>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-        {items.map((p) => {
-          const { prov, seri, num } = splitPlateNumber(p.plateNumber);
-          return (
-            <button key={p.id} type="button" onClick={() => onAdd(p.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)', background: 'var(--white)', cursor: 'pointer' }}>
-              {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
-                <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 72, height: 39, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
-              ) : (
-                <PlateVisual size="md" prov={prov} seri={seri} num={num} />
-              )}
-              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
-            </button>
-          );
-        })}
+        {items.map((p) => (
+          <PlateSuggestionCard key={p.id} plate={p} onAdd={onAdd} />
+        ))}
       </div>
     </div>
   );
@@ -170,7 +231,6 @@ function FavSuggestions({ favCards, excludeIds, onAdd }) {
 // thay vì tự gõ tìm kiếm. Tra id loại/tỉnh qua tên hiển thị trên plate (API compare trả tên, không
 // trả id) rồi query lại /api/plates lọc theo id đó, loại trừ biển đã có trong so sánh + đã bán.
 function SimilarPlateSuggestions({ plate, excludeIds, onAdd }) {
-  const { data: settings } = useSiteSettings();
   const { data: plateTypes } = useCategories('plate_type');
   const { data: provinces } = useCategories('province');
   const typeId = plateTypes?.items?.find((c) => c.name === plate.type)?.id;
@@ -187,20 +247,9 @@ function SimilarPlateSuggestions({ plate, excludeIds, onAdd }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{title}</span>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-        {items.map((p) => {
-          const { prov, seri, num } = splitPlateNumber(p.plateNumber);
-          return (
-            <button key={p.id} type="button" onClick={() => onAdd(p.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px 8px 8px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)', background: 'var(--white)', cursor: 'pointer' }}>
-              {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
-                <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 72, height: 39, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
-              ) : (
-                <PlateVisual size="md" prov={prov} seri={seri} num={num} />
-              )}
-              <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
-            </button>
-          );
-        })}
+        {items.map((p) => (
+          <PlateSuggestionCard key={p.id} plate={p} onAdd={onAdd} />
+        ))}
       </div>
     </div>
   );
@@ -315,9 +364,11 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               <div className="compare-empty-slot" style={{ width: '100%', minWidth: 0, background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', position: 'relative', minHeight: 180 }}>
                 <button onClick={() => remove(filledPlate.id)} aria-label="Bỏ khỏi so sánh" title="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 8, right: 8, border: '1px solid var(--border-hairline)', background: 'var(--white)', boxShadow: 'var(--shadow-1)', borderRadius: '50%', cursor: 'pointer', color: 'var(--text-muted)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                 {shouldShowGeneratedImage(settings, filledPlate.thumbnailUrl ? [filledPlate.thumbnailUrl] : []) ? (
-                  <img src={filledPlate.thumbnailUrl} alt={filledPlate.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                  <img src={filledPlate.thumbnailUrl} alt={filledPlate.plateNumber} style={{ width: 160, height: 80, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                 ) : (
-                  <PlateVisual size="md" prov={prov} seri={seri} num={num} />
+                  <div style={{ width: 160, aspectRatio: '330/165', borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
+                    <PlateVisual size="listLg" prov={prov} seri={seri} num={num} />
+                  </div>
                 )}
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{filledPlate.plateNumber}</span>
               </div>
@@ -467,9 +518,11 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                   <div style={{ padding: 'var(--space-3) var(--space-4)', background: 'var(--orange-50)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', position: 'relative' }}>
                     <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" title="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 6, right: 6, border: '1px solid var(--border-hairline)', background: 'var(--white)', boxShadow: 'var(--shadow-1)', borderRadius: '50%', cursor: 'pointer', color: 'var(--text-muted)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                     {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
-                      <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 96, height: 52, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
+                      <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 104, height: 52, objectFit: 'cover', borderRadius: 'var(--radius-sm)', flexShrink: 0 }} />
                     ) : (
-                      <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
+                      <div style={{ width: 104, aspectRatio: '330/165', borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
+                        <PlateVisual size="md" prov={prov} seri={seri} num={num} />
+                      </div>
                     )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
@@ -526,9 +579,11 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                 <div key={p.id} style={{ padding: 'var(--space-3) clamp(8px,3vw,var(--space-4))', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderBottom: 'none', borderRadius: 'var(--radius-card) var(--radius-card) 0 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
                   <button onClick={() => removePlate(p.id)} aria-label="Bỏ khỏi so sánh" title="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 6, right: 6, zIndex: 1, border: '1px solid var(--border-hairline)', background: 'var(--white)', boxShadow: 'var(--shadow-1)', borderRadius: '50%', cursor: 'pointer', color: 'var(--text-muted)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                   {shouldShowGeneratedImage(settings, p.thumbnailUrl ? [p.thumbnailUrl] : []) ? (
-                    <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
+                    <img src={p.thumbnailUrl} alt={p.plateNumber} style={{ width: 140, height: 70, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
                   ) : (
-                    <PlateVisual size="md" prov={prov} seri={seri} num={num} />
+                    <div style={{ width: 140, aspectRatio: '330/165', borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
+                      <PlateVisual size="listLg" prov={prov} seri={seri} num={num} />
+                    </div>
                   )}
                   <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{p.plateNumber}</span>
                   <button onClick={() => openPlate(p.id)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>Xem chi tiết</button>
