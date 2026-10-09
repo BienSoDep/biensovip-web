@@ -52,10 +52,10 @@ const TAB_ROW = Object.entries(TAB_FULL_LABELS).map(([value, label]) => ({ value
 const VEHICLES = [ALL, { value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const STATE_OPTS = [{ value: '', label: 'Mọi trạng thái giá' }, ...Object.entries(VPA_PRICE_STATES).map(([value, s]) => ({ value, label: s.label }))];
 const QUEUE_STATE_OPTS = [
-  { value: '', label: 'Đang chờ duyệt (Có gợi ý & Đổi giá)' },
-  { value: '0', label: 'Chưa có giá trên hệ thống (Cần sinh giá)' },
-  { value: '1', label: 'Chỉ biển có giá gợi ý' },
-  { value: '4', label: 'Chỉ biển đề xuất đổi giá' },
+  { value: '', label: 'Tất cả biển chưa duyệt giá' },
+  { value: '1', label: 'Có giá gợi ý (sẵn sàng duyệt)' },
+  { value: '4', label: 'Đề xuất đổi giá' },
+  { value: '0', label: 'Chưa có giá gợi ý' },
 ];
 const YES_NO = (yes, no) => [ALL, { value: 'true', label: yes }, { value: 'false', label: no }];
 const COLUMNS = [

@@ -181,7 +181,7 @@ export default function VpaBulkSeedModal({
                 disabled={isRunning}
                 style={{ accentColor: 'var(--action-primary)', width: 16, height: 16 }}
               />
-              <span>🏷️ Nhận diện Loại biển & Phong thủy</span>
+              <span>Nhận diện Loại biển & Phong thủy</span>
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', cursor: 'pointer', color: 'var(--text-body)' }}>
               <input
@@ -191,7 +191,7 @@ export default function VpaBulkSeedModal({
                 disabled={isRunning}
                 style={{ accentColor: 'var(--action-primary)', width: 16, height: 16 }}
               />
-              <span>📍 Nhận diện Tỉnh/thành từ đầu số</span>
+              <span>Nhận diện Tỉnh/thành từ đầu số</span>
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', cursor: 'pointer', color: 'var(--text-body)' }}>
               <input
@@ -201,7 +201,7 @@ export default function VpaBulkSeedModal({
                 disabled={isRunning}
                 style={{ accentColor: 'var(--action-primary)', width: 16, height: 16 }}
               />
-              <span>🔢 Chuẩn hóa định dạng số biển</span>
+              <span>Chuẩn hóa định dạng số biển</span>
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--type-body-sm)', cursor: 'pointer', color: 'var(--text-body)' }}>
               <input
@@ -211,7 +211,7 @@ export default function VpaBulkSeedModal({
                 disabled={isRunning}
                 style={{ accentColor: 'var(--action-primary)', width: 16, height: 16 }}
               />
-              <span>💰 Áp giá duyệt theo Giá gợi ý</span>
+              <span>Áp giá duyệt theo Giá gợi ý</span>
             </label>
           </div>
         </div>
