@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
-import { ChevronDown, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { ChevronDown, Compass, LayoutGrid, List as ListIcon, Sparkles } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox } from '../components/index.jsx';
+import PlateFengShuiAnalyzerTab from './PlateFengShuiAnalyzerTab.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
 import { useSubmitContact } from '../services/contactService.js';
 import { updateProfile } from '../services/authService.js';
@@ -119,7 +120,7 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
 
 const SOURCE_OPTIONS = [{ value: '', label: 'Tất cả' }, { value: 'own', label: 'Biển có sẵn' }, { value: 'vpa', label: 'Biển VPA' }];
 
-export default function LuckyPlate({ go, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
+export default function LuckyPlate({ screen, go, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
   const { data: settings } = useSiteSettings();
   const stored = useRef(loadStoredResult()).current;
   const [form, setForm] = useState(() => stored?.form || {
@@ -135,6 +136,28 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
   const [restoredResult, setRestoredResult] = useState(stored?.result || null);
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const getInitialTab = () => {
+    if (screen === 'luanBien') return 'luan-bien';
+    if (screen === 'lucky') return 'tim-bien';
+    try {
+      const p = window.location.pathname;
+      const q = new URLSearchParams(window.location.search);
+      if (p.includes('luan-bien-so') || q.get('tab') === 'luan-bien') return 'luan-bien';
+    } catch { /* ignore */ }
+    return 'tim-bien';
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  // Đồng bộ tab khi người dùng bấm vào sub-menu từ Header (khi LuckyPlate vẫn đang mount)
+  useEffect(() => {
+    if (screen === 'luanBien') {
+      setActiveTab('luan-bien');
+    } else if (screen === 'lucky') {
+      setActiveTab('tim-bien');
+    }
+  }, [screen]);
+
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [resultView, setResultView] = useState('list'); // 'list' | 'grid' — cách hiển thị Top biển hợp mệnh
   const [filters, setFilters] = useState({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [], source: '' });
@@ -254,16 +277,107 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
     <>
       <Breadcrumb keepOnMobile items={[
         { label: 'Trang chủ', onClick: go('home') },
-        ...(result ? [{ label: 'Tư vấn biển hợp mệnh', onClick: () => { lookup.reset(); } }, { label: 'Kết quả' }] : [{ label: 'Tư vấn biển hợp mệnh' }]),
+        ...(activeTab === 'luan-bien'
+          ? [{ label: 'Luận giải phong thủy biển số & Gợi ý cải vận' }]
+          : result
+          ? [{ label: 'Tư vấn biển hợp mệnh', onClick: () => { lookup.reset(); } }, { label: 'Kết quả' }]
+          : [{ label: 'Tư vấn biển hợp mệnh' }]),
       ]} />
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <Eyebrow tone="blue">Tư vấn theo ngũ hành</Eyebrow>
-        <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Tìm biển số hợp mệnh của bạn</h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 840 }}>Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.</p>
+        <Eyebrow tone="blue">
+          {activeTab === 'luan-bien' ? 'Giải mã 5 chiều phong thủy' : 'Tư vấn theo ngũ hành'}
+        </Eyebrow>
+        <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
+          {activeTab === 'luan-bien' ? 'Luận giải biển số của bạn & Gợi ý cải vận' : 'Tìm biển số hợp mệnh của bạn'}
+        </h1>
+        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 840 }}>
+          {activeTab === 'luan-bien'
+            ? 'Nhập biển số hiện tại để phân tích Ngũ hành Hà Đồ, Tổng nút, Âm Dương, Cặp số may mắn và Quẻ Kinh Dịch Mai Hoa — đồng thời nhận gợi ý biển số bù đắp điểm còn thiếu.'
+            : 'Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.'}
+        </p>
       </div>
 
-      {!result ? (
+      {/* 2 Tab chuyển đổi linh hoạt */}
+      <div
+        style={{
+          display: 'inline-flex',
+          background: 'var(--surface-sunken)',
+          padding: 4,
+          borderRadius: 'var(--radius-pill)',
+          border: '1px solid var(--border-hairline)',
+          alignSelf: 'flex-start',
+          gap: 4,
+          maxWidth: '100%',
+          overflowX: 'auto',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('tim-bien');
+            try {
+              window.history.replaceState(null, '', '/hop-menh');
+              document.title = 'Tra cứu Biển Số Hợp Mệnh Theo Ngũ Hành — Tư Vấn Miễn Phí | Biensovip';
+            } catch { /* ignore */ }
+          }}
+          style={{
+            padding: '8px 18px',
+            borderRadius: 'var(--radius-pill)',
+            border: 'none',
+            cursor: 'pointer',
+            font: 'var(--type-label)',
+            fontSize: '14px',
+            fontWeight: 'var(--fw-bold)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            transition: 'all 160ms ease',
+            whiteSpace: 'nowrap',
+            background: activeTab === 'tim-bien' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'tim-bien' ? 'var(--action-primary)' : 'var(--text-muted)',
+            boxShadow: activeTab === 'tim-bien' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+          }}
+        >
+          <Compass size={16} />
+          Tìm biển số hợp mệnh
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('luan-bien');
+            try {
+              window.history.replaceState(null, '', '/luan-bien-so');
+              document.title = 'Luận Giải Phong Thủy Biển Số Xe — Chấm Điểm 5 Chiều & Gợi Ý Cải Vận 2026 | Biensovip';
+            } catch { /* ignore */ }
+          }}
+          style={{
+            padding: '8px 18px',
+            borderRadius: 'var(--radius-pill)',
+            border: 'none',
+            cursor: 'pointer',
+            font: 'var(--type-label)',
+            fontSize: '14px',
+            fontWeight: 'var(--fw-bold)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            transition: 'all 160ms ease',
+            whiteSpace: 'nowrap',
+            background: activeTab === 'luan-bien' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'luan-bien' ? 'var(--action-primary)' : 'var(--text-muted)',
+            boxShadow: activeTab === 'luan-bien' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+          }}
+        >
+          <Sparkles size={16} />
+          Luận giải biển số của bạn & Gợi ý cải vận
+        </button>
+      </div>
+
+      {activeTab === 'luan-bien' ? (
+        <PlateFengShuiAnalyzerTab go={go} notify={notify} user={user} />
+      ) : !result ? (
         <form onSubmit={(e) => { e.preventDefault(); submit(); }} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)' }}>
         {/* fieldset disabled khóa mọi input trong lúc chờ tra cứu — tránh sửa form/double-submit
             khi mutation đang pending (nút submit tự disable rồi, nhưng input khác vẫn gõ được). */}
@@ -286,7 +400,11 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
             <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'flex', justifyContent: 'space-between' }}>
               <span>Ngân sách</span>
               <span style={{ color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>
-                {form.budgetStep === 0 ? `Dưới ${formatBudget(BUDGET_STEPS[0])}` : `Tối đa ${formatBudget(BUDGET_STEPS[form.budgetStep])}`}
+                {form.budgetStep === 0
+                  ? `Dưới ${formatBudget(BUDGET_STEPS[0])}`
+                  : BUDGET_STEPS[form.budgetStep] == null
+                  ? 'Không giới hạn'
+                  : `Tối đa ${formatBudget(BUDGET_STEPS[form.budgetStep])}`}
               </span>
             </span>
             <input
@@ -445,7 +563,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                       )}
                       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
                       <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}{r.source === 'vpa' && <Badge tone="blue" style={{ marginLeft: 8 }}>Biển VPA</Badge>}</span>
-                      <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{r.priceOnRequest ? 'Giá liên hệ' : `${Number(r.price).toLocaleString('vi-VN')}đ`}</span>
+                      <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{(r.priceOnRequest || !r.price || Number(r.price) <= 0) ? 'Giá liên hệ' : `${Number(r.price).toLocaleString('vi-VN')}đ`}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, minWidth: 150 }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.score}% hợp mệnh</span>
                         <div style={{ width: 140, height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--surface-muted)', overflow: 'hidden' }}>
@@ -474,7 +592,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                     <div key={r.plateId} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                       <PlateCard
                         plateNumber={r.plateNumber} type={r.type} province={r.province} vehicleType={r.vehicleType}
-                        price={r.price} salePrice={r.salePrice} priceOnRequest={r.priceOnRequest} status={r.status}
+                        price={r.price} salePrice={r.salePrice} priceOnRequest={r.priceOnRequest || !r.price || Number(r.price) <= 0} status={r.status}
                         thumbnailUrl={r.thumbnailUrl} isHot={r.isHot} badge={r.badge}
                         href={routeFor('detail', r.slug || r.plateId)}
                         onOpen={() => openPlate(r.slug || r.plateId, 'lucky')} contact={contact} plateSize="md" layout="grid"
