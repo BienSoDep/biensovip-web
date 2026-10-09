@@ -96,7 +96,44 @@ function salesViewFromUrl() {
 const ADMIN_INFO = {
   dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
   aplates: 'Quản lý toàn bộ biển số rao bán. Đổi trạng thái Còn hàng/Đã bán khi có giao dịch, cập nhật giá đúng lúc để khách không thấy giá cũ.',
-  avpa: 'Quản lý biển đấu giá lấy từ VPA bằng cùng công cụ như Biển của shop. Giá khách thấy là "Giá duyệt": chưa duyệt thì khách thấy "Giá liên hệ". Giá gợi ý = trung bình giá trúng của nhóm tương tự × hệ số (số trong ngoặc là số mẫu). Trường bạn sửa tay (loại biển, tỉnh, tab, nổi bật) được khóa, crawl không ghi đè. "Hết hạn nội bộ" = biển biến mất khỏi VPA, chỉ Admin thấy. Ẩn = giấu khỏi khách, dữ liệu vẫn giữ; biển VPA không xóa hẳn vì lần crawl sau sẽ tạo lại. Rê chuột vào biểu tượng (i) ở tiêu đề cột để xem giải thích. Tab "Duyệt giá" có 3 nút mới: "Duyệt tất cả theo bộ lọc" (duyệt hết biển khớp bộ lọc, không chỉ trang đang xem), "Duyệt lại giá toàn bộ" (tính lại giá rồi áp gợi ý mới cho biển đã duyệt — dùng khi nguồn Công bố/Chính thức đi chậm hơn Kết quả nên lúc duyệt lần đầu còn thiếu mẫu), và bản "(ghi đè cả sửa tay)" áp luôn cho biển nghi Admin từng sửa giá tay — dùng cẩn thận. Rê chuột vào từng nút hoặc biểu tượng (i) cạnh nút để xem chi tiết.',
+  avpa: (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', lineHeight: 1.6, fontSize: 'var(--type-body-sm)' }}>
+      <div style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-medium)' }}>
+        Quản lý kho biển đấu giá VPA với đầy đủ công cụ duyệt giá, phân loại và đồng bộ tự động.
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px 24px' }}>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Giá hiển thị:</strong> Khách chỉ thấy <em>"Giá duyệt"</em>. Khi chưa duyệt hiển thị <em>"Giá liên hệ"</em>.
+        </div>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Giá gợi ý:</strong> = Trung bình giá trúng nhóm tương tự × hệ số (số trong ngoặc là số mẫu đấu giá).
+        </div>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Khóa trường sửa tay:</strong> Khi sửa tay (loại biển, tỉnh, tab, nổi bật), hệ thống sẽ khóa để crawl không ghi đè.
+        </div>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Hết hạn / Ẩn:</strong> <em>"Hết hạn nội bộ"</em> là biển biến mất khỏi VPA; <em>"Ẩn"</em> là giấu khỏi khách nhưng vẫn lưu giữ dữ liệu.
+        </div>
+      </div>
+      <div style={{ borderTop: '1px dashed var(--border-hairline)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <strong style={{ color: 'var(--text-strong)' }}>Các thao tác chính trong tab "Duyệt giá":</strong>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '6px 24px', paddingLeft: '8px' }}>
+          <div>
+            ✔ <strong>Duyệt tất cả theo bộ lọc:</strong> Duyệt giá toàn bộ biển có gợi ý khớp bộ lọc đang chọn.
+          </div>
+          <div>
+            ✔ <strong>Duyệt lại giá toàn bộ:</strong> Tính lại giá theo mẫu kết quả mới nhất rồi cập nhật cho biển đã duyệt.
+          </div>
+          <div>
+            ✔ <strong>Duyệt lại (ghi đè sửa tay):</strong> Cập nhật giá mới cho toàn bộ, áp dụng cho cả biển từng sửa tay.
+          </div>
+          <div>
+            ✔ <strong>Tính lại giá gợi ý:</strong> Quét sinh giá gợi ý tự động cho toàn bộ biển mới cào về chưa có giá.
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
   acoupons: 'Tạo và quản lý mã giảm giá — khách nhập mã khi gửi liên hệ/đặt cọc. Tắt mã khi không muốn dùng nữa, không cần xóa.',
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
