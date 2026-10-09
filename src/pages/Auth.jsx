@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame, Check } from 'lucide-react';
+import { ArrowLeft, Heart, Bell, MessageCircle, Star, Flame, Check, ShieldCheck, Sparkles, Award, ChevronRight } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { Input, Checkbox, Eyebrow } from '../components/index.jsx';
@@ -14,9 +14,117 @@ import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
 import { trackFormAbandon } from '../services/tracking/events.js';
 
-const CONTENT_FADE = { duration: 0.3, ease: [0.22, 1, 0.36, 1] };
+const CONTENT_FADE = { duration: 0.35, ease: [0.22, 1, 0.36, 1] };
 
 const LAST_EMAIL_KEY = 'bsd_last_email';
+
+const PROJECT_HIGHLIGHTS = [
+  {
+    id: 'vpa',
+    badge: 'Kho Đấu Giá VPA',
+    badgeColor: '#D97706',
+    badgeBg: 'rgba(217, 119, 6, 0.1)',
+    badgeBorder: 'rgba(217, 119, 6, 0.25)',
+    icon: Flame,
+    title: 'Kho 3.240+ biển số định danh & VPA đấu giá toàn quốc',
+    desc: 'Cập nhật trực tiếp mỗi ngày từ cổng đấu giá VPA và nguồn chính chủ uy tín. Đầy đủ ngũ quý, tứ quý, sảnh tiến, lộc phát từ Hà Nội, Đà Nẵng đến TP.HCM.',
+    metrics: [
+      { label: 'Biển niêm yết', value: '3.240+' },
+      { label: 'Nguồn cấp', value: 'VPA Toàn quốc' },
+      { label: 'Dòng xe', value: 'Ô tô & Xe máy' },
+    ],
+  },
+  {
+    id: 'phap-ly',
+    badge: 'Pháp Lý Chuẩn 100%',
+    badgeColor: '#059669',
+    badgeBg: 'rgba(5, 150, 105, 0.1)',
+    badgeBorder: 'rgba(5, 150, 105, 0.25)',
+    icon: ShieldCheck,
+    title: 'Bảo chứng pháp lý 100% – Sang tên chính chủ chỉ 1–2 ngày',
+    desc: 'Duy Đinh hỗ trợ trọn gói thủ tục sang tên, thu hồi & cấp biển định danh theo Thông tư BCA. Hồ sơ gốc rõ ràng, cam kết pháp lý trọn đời.',
+    metrics: [
+      { label: 'Thời gian sang tên', value: '1–2 ngày' },
+      { label: 'Pháp lý bảo đảm', value: 'Chính chủ 100%' },
+      { label: 'Hỗ trợ lắp biển', value: 'Tận nơi' },
+    ],
+  },
+  {
+    id: 'phong-thuy',
+    badge: 'Phong Thủy Trợ Mệnh',
+    badgeColor: '#7C3AED',
+    badgeBg: 'rgba(124, 58, 237, 0.1)',
+    badgeBorder: 'rgba(124, 58, 237, 0.25)',
+    icon: Sparkles,
+    title: 'Tra cứu phong thủy AI – Rước vượng khí tài lộc về xe',
+    desc: 'Công cụ tính nút, quẻ Kinh Dịch và Ngũ hành bản mệnh tương sinh độc quyền giúp quý khách chọn đúng tấm biển trợ vận hanh thông, vạn dặm bình an.',
+    metrics: [
+      { label: 'Thế số tài lộc', value: '68 · 79 · 88' },
+      { label: 'Tư vấn bản mệnh', value: 'Miễn phí' },
+      { label: 'Độ chuẩn', value: '100% chuyên gia' },
+    ],
+  },
+  {
+    id: 'uy-tin',
+    badge: 'Thương Hiệu Từ 2016',
+    badgeColor: '#2563EB',
+    badgeBg: 'rgba(37, 99, 235, 0.1)',
+    badgeBorder: 'rgba(37, 99, 235, 0.25)',
+    icon: Award,
+    title: 'Hơn 10 năm kinh nghiệm – 5.000+ biển số trao tay',
+    desc: 'Hỗ trợ giao dịch và hoàn tất thủ tục định danh trọn gói toàn quốc. Giá cả niêm yết công khai, không chi phí ẩn, đồng hành cùng khách hàng suốt quá trình sử dụng.',
+    metrics: [
+      { label: 'Biển đã trao tay', value: '5.000+' },
+      { label: 'Đánh giá hài lòng', value: '4.9 / 5 ⭐' },
+      { label: 'Phạm vi hỗ trợ', value: 'Toàn quốc' },
+    ],
+  },
+];
+
+const REGISTER_BENEFIT_SLIDES = [
+  {
+    id: 'favs',
+    badge: 'Lưu & So Sánh Giá',
+    badgeColor: '#E11D48',
+    badgeBg: 'rgba(225, 29, 72, 0.1)',
+    badgeBorder: 'rgba(225, 29, 72, 0.25)',
+    icon: Heart,
+    title: 'Lưu biển số yêu thích & Theo dõi biến động giá',
+    desc: 'Lưu trữ không giới hạn các tấm biển bạn đang quan tâm, so sánh giá trực quan và xem lại lịch sử đấu giá bất cứ lúc nào.',
+    metrics: [
+      { label: 'Kho lưu yêu thích', value: 'Không giới hạn' },
+      { label: 'Cập nhật giá', value: 'Thời gian thực' },
+    ],
+  },
+  {
+    id: 'notify',
+    badge: 'Báo Biển Hợp Mệnh',
+    badgeColor: '#D97706',
+    badgeBg: 'rgba(217, 119, 6, 0.1)',
+    badgeBorder: 'rgba(217, 119, 6, 0.25)',
+    icon: Bell,
+    title: 'Nhận thông báo ngay khi có biển mới hợp tuổi',
+    desc: 'Hệ thống tự động thông báo qua Zalo/Email ngay khi kho có biển số mới thuộc cung mệnh tương sinh hoặc đầu số VIP bạn tìm kiếm.',
+    metrics: [
+      { label: 'Báo biển mới', value: 'Tức thì' },
+      { label: 'Gợi ý cá nhân', value: 'Theo can chi' },
+    ],
+  },
+  {
+    id: 'ctv',
+    badge: 'Mạng Lưới CTV VIP',
+    badgeColor: '#059669',
+    badgeBg: 'rgba(5, 150, 105, 0.1)',
+    badgeBorder: 'rgba(5, 150, 105, 0.25)',
+    icon: Star,
+    title: 'Tham gia mạng lưới CTV – Hoa hồng hấp dẫn',
+    desc: 'Nhận mã giới thiệu riêng, tiếp cận kho biển đẹp toàn quốc và nhận hoa hồng giao dịch minh bạch, chi trả nhanh gọn trong 24 giờ.',
+    metrics: [
+      { label: 'Hoa hồng chiết khấu', value: 'Hấp dẫn & Minh bạch' },
+      { label: 'Thời gian chi trả', value: 'Trong 24h' },
+    ],
+  },
+];
 
 const REGISTER_BENEFITS = [
   { icon: Heart, text: 'Lưu biển số yêu thích, xem lại bất cứ lúc nào' },
@@ -174,49 +282,243 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
   const plate = plates[plateIdx % (plates.length || 1)];
   const goPlateDetail = plate ? (e) => { e.preventDefault(); openPlate?.(plate.id); go('detail')(); } : undefined;
 
+  const activeSlides = s === 'register' ? REGISTER_BENEFIT_SLIDES : PROJECT_HIGHLIGHTS;
+  const [highlightIdx, setHighlightIdx] = useState(0);
+
+  useEffect(() => {
+    setHighlightIdx(0);
+  }, [s]);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setHighlightIdx((i) => (i + 1) % activeSlides.length);
+    }, 4600);
+    return () => clearInterval(t);
+  }, [activeSlides.length]);
+
+  const currentHighlight = activeSlides[highlightIdx % activeSlides.length] || activeSlides[0];
+  const HighlightIcon = currentHighlight.icon;
+
   // Trước đây login/register đổi chỗ 2 cột (order + bo góc lật theo framer-motion layout) — gây khó
   // theo dõi vì cả bố cục trang nhảy sang bên khác mỗi lần đổi form. Giờ info panel cố định bên trái,
   // form cố định bên phải; chỉ nội dung BÊN TRONG mỗi panel đổi (vẫn giữ animation fade/slide cũ).
   return (
     <section style={{ minHeight: '100vh', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ minHeight: '100vh', display: 'flex', flexWrap: 'wrap' }}>
-        <div className="auth-info" style={{ zIndex: 1, position: 'relative', flex: '1 1 420px', background: 'var(--surface-hero)', borderRadius: '0 48px 48px 0', padding: 'clamp(28px,4vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 'var(--space-8)', minHeight: '100vh' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-              <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 38, height: 38, objectFit: 'contain' }} />
-              <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-strong)' }}>Duy Đinh</span>
-            </div>
-            <a href={routeFor('home')} onClick={goHome} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'none' }}>
+        <div className="auth-info" style={{ zIndex: 1, position: 'relative', overflow: 'hidden', flex: '1 1 420px', background: 'var(--surface-hero)', borderRadius: '0 48px 48px 0', padding: 'clamp(28px,4vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 'var(--space-6)', minHeight: '100vh' }}>
+          {/* Lớp trang trí SVG nghệ thuật cao cấp cho panel bên trái */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 520 900"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 0,
+              overflow: 'hidden',
+            }}
+          >
+            <defs>
+              <linearGradient id="authGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#D97706" stopOpacity="0.22" />
+                <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="#D97706" stopOpacity="0.02" />
+              </linearGradient>
+              <linearGradient id="authStrokeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.4" />
+                <stop offset="70%" stopColor="#D97706" stopOpacity="0.1" />
+                <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+              </linearGradient>
+              <radialGradient id="authTopGlow" cx="20%" cy="15%" r="65%">
+                <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.14" />
+                <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="authBottomGlow" cx="85%" cy="85%" r="55%">
+                <stop offset="0%" stopColor="#FBBF24" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#FBBF24" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* Ambient glowing radial lights */}
+            <rect width="100%" height="100%" fill="url(#authTopGlow)" />
+            <rect width="100%" height="100%" fill="url(#authBottomGlow)" />
+
+            {/* Elegant flowing luxury wave lines */}
+            <path
+              d="M-40,240 C140,200 240,360 440,260 C520,220 560,240 600,280"
+              stroke="url(#authStrokeGrad)"
+              strokeWidth="1.5"
+              strokeDasharray="4 6"
+            />
+            <path
+              d="M-60,280 C110,240 220,410 460,300 C540,260 580,280 620,320"
+              stroke="url(#authGoldGrad)"
+              strokeWidth="2.5"
+            />
+            <path
+              d="M-20,720 C160,650 280,800 480,710 C540,680 580,700 620,740"
+              stroke="url(#authStrokeGrad)"
+              strokeWidth="1.5"
+              strokeDasharray="6 8"
+            />
+
+            {/* Watermark Biển Số Dập Nổi Mờ (Luxury Embossed Plate Outline) */}
+            <g transform="translate(260, 520) rotate(-14)" opacity="0.05">
+              <rect x="0" y="0" width="300" height="160" rx="20" stroke="#1E293B" strokeWidth="6" fill="none" />
+              <rect x="8" y="8" width="284" height="144" rx="14" stroke="#1E293B" strokeWidth="2" fill="none" />
+              <circle cx="150" cy="20" r="4.5" fill="#1E293B" />
+              <circle cx="30" cy="80" r="4.5" fill="#1E293B" />
+              <circle cx="270" cy="80" r="4.5" fill="#1E293B" />
+              <text x="150" y="70" textAnchor="middle" fontSize="34" fontFamily="monospace" fontWeight="900" fill="#1E293B" letterSpacing="4">43A - VIP</text>
+              <text x="150" y="125" textAnchor="middle" fontSize="42" fontFamily="monospace" fontWeight="900" fill="#1E293B" letterSpacing="6">999.99</text>
+            </g>
+
+            {/* Sacred Fengshui Sun / Star Compass Motif */}
+            <g transform="translate(440, 110)" opacity="0.055">
+              <circle cx="0" cy="0" r="130" stroke="#D97706" strokeWidth="1.5" strokeDasharray="4 6" />
+              <circle cx="0" cy="0" r="95" stroke="#D97706" strokeWidth="1" />
+              <circle cx="0" cy="0" r="60" stroke="#D97706" strokeWidth="1.5" strokeDasharray="8 8" />
+              <circle cx="0" cy="0" r="28" stroke="#D97706" strokeWidth="1" />
+              <line x1="-140" y1="0" x2="140" y2="0" stroke="#D97706" strokeWidth="1" />
+              <line x1="0" y1="-140" x2="0" y2="140" stroke="#D97706" strokeWidth="1" />
+              <line x1="-100" y1="-100" x2="100" y2="100" stroke="#D97706" strokeWidth="0.8" />
+              <line x1="-100" y1="100" x2="100" y2="-100" stroke="#D97706" strokeWidth="0.8" />
+            </g>
+
+            {/* Sparkle Stars */}
+            <g transform="translate(90, 140)" opacity="0.12">
+              <path d="M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2 Z" fill="#F59E0B" />
+            </g>
+            <g transform="translate(380, 360)" opacity="0.1">
+              <path d="M0,-10 L2.5,-2.5 L10,0 L2.5,2.5 L0,10 L-2.5,2.5 L-10,0 L-2.5,-2.5 Z" fill="#D97706" />
+            </g>
+            <g transform="translate(60, 580)" opacity="0.1">
+              <path d="M0,-7 L2,-2 L7,0 L2,2 L0,7 L-2,2 L-7,0 L-2,-2 Z" fill="#F59E0B" />
+            </g>
+          </svg>
+
+          {/* Header với Logo có thể nhấn để về trang chủ */}
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+            <a
+              href={routeFor('home')}
+              onClick={goHome}
+              className="pressable"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-3)',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                borderRadius: 'var(--radius-pill)',
+                padding: '4px 8px 4px 4px',
+                marginLeft: -4,
+                transition: 'opacity 180ms ease, transform 180ms ease',
+              }}
+              title="Nhấn để quay về trang chủ Duy Đinh"
+            >
+              <div style={{ position: 'relative', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 38, height: 38, objectFit: 'contain' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-extrabold)', letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text-strong)', lineHeight: 1.1 }}>Duy Đinh</span>
+                <span style={{ font: '10px var(--font-sans)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)', letterSpacing: '.06em', textTransform: 'uppercase' }}>Biển Số Đẹp</span>
+              </div>
+            </a>
+
+            <a
+              href={routeFor('home')}
+              onClick={goHome}
+              className="pressable"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-pill)',
+                background: 'rgba(255, 255, 255, 0.75)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(217, 119, 6, 0.25)',
+                font: 'var(--type-caption)',
+                fontWeight: 'var(--fw-semibold)',
+                color: 'var(--action-primary)',
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                transition: 'all 160ms var(--ease-out)',
+              }}
+            >
               <ArrowLeft size={14} /> Trang chủ
             </a>
           </div>
 
+          {/* Biển số thực tế nổi bật dập nổi */}
           {!!plate && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, gap: 'var(--space-4)' }}>
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, gap: 'var(--space-3)', margin: 'var(--space-2) 0' }}>
             <AnimatePresence mode="wait">
-              <motion.a href={routeFor('detail', plate.slug || plate.id)} onClick={goPlateDetail} key={plate.id}
+              <motion.a
+                href={routeFor('detail', plate.slug || plate.id)}
+                onClick={goPlateDetail}
+                key={plate.id}
                 initial={{ opacity: 0, rotateY: -18, scale: 0.94 }}
                 animate={{ opacity: 1, rotateY: 0, scale: 1 }}
                 exit={{ opacity: 0, rotateY: 18, scale: 0.94 }}
                 transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textDecoration: 'none', cursor: 'pointer' }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  width: '100%',
+                  maxWidth: 380,
+                  background: 'rgba(255, 255, 255, 0.55)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.85)',
+                  borderRadius: 24,
+                  padding: '18px 16px 14px',
+                  boxShadow: '0 20px 40px -15px rgba(217, 119, 6, 0.14), 0 4px 12px rgba(0, 0, 0, 0.04)',
+                }}
               >
-                <div style={{ width: 'clamp(260px, 30vw, 340px)', filter: 'drop-shadow(0 18px 32px rgba(0,0,0,.18))' }}>
+                <div style={{ width: 'clamp(250px, 28vw, 320px)', filter: 'drop-shadow(0 16px 28px rgba(0,0,0,.2))' }}>
                   <PlateVisual size="lg" {...splitPlateNumber(plate.plateNumber)} />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, textAlign: 'center', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <span style={{ font: 'var(--type-title-3)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                      {[plate.vehicleType, plate.province].filter(Boolean).join(' · ')}
+                    </span>
                     {plate.isHot && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '1px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)' }}><Flame size={11} fill="currentColor" /> HOT</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', boxShadow: '0 2px 6px rgba(220, 38, 38, 0.3)' }}>
+                        <Flame size={11} fill="currentColor" /> HOT
+                      </span>
                     )}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'rgba(217, 119, 6, 0.12)', color: 'var(--action-primary)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)' }}>
+                      VIP
+                    </span>
                   </div>
-                  <span style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'underline' }}>Xem chi tiết biển này →</span>
+                  <span style={{ font: 'var(--type-body)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>
+                    {formatPrice(plate.price, plate.priceOnRequest)}
+                  </span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    Xem chi tiết biển này <ChevronRight size={13} style={{ color: 'var(--action-primary)' }} />
+                  </span>
                 </div>
-                <div style={{ display: 'flex', gap: 5 }}>
+                <div style={{ display: 'flex', gap: 5, marginTop: 2 }}>
                   {plates.map((_, i) => (
-                    <span key={i} style={{ width: i === plateIdx ? 16 : 5, height: 5, borderRadius: 'var(--radius-pill)', background: i === plateIdx ? 'var(--action-primary)' : 'var(--border-strong)', transition: 'all 250ms var(--ease-out)' }} />
+                    <span
+                      key={i}
+                      style={{
+                        width: i === plateIdx ? 18 : 5,
+                        height: 5,
+                        borderRadius: 'var(--radius-pill)',
+                        background: i === plateIdx ? 'var(--action-primary)' : 'rgba(0, 0, 0, 0.15)',
+                        transition: 'all 250ms var(--ease-out)',
+                      }}
+                    />
                   ))}
                 </div>
               </motion.a>
@@ -224,34 +526,142 @@ export default function Auth({ st, s, patch, onNavigate, go, openPlate, setField
           </div>
           )}
 
-          <AnimatePresence mode="wait">
-            <motion.p key={s === 'register' ? 'register-headline' : 'login-headline'}
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={CONTENT_FADE}
-              style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)', maxWidth: 420 }}>
-              {s === 'register' ? 'Tạo tài khoản để lưu lại những biển số ưng ý.' : lastEmail ? `Chào mừng quay lại, ${lastEmail}` : 'Chào mừng quay lại — 3.240 biển số đang chờ bạn.'}
-            </motion.p>
-          </AnimatePresence>
-
-          <AnimatePresence mode="wait">
-            {s === 'register' ? (
-              <motion.div key="benefits" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={CONTENT_FADE}
-                style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Lợi ích khi có tài khoản</span>
-                {REGISTER_BENEFITS.map(({ icon: Icon, text }, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ ...CONTENT_FADE, delay: 0.08 + i * 0.06 }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                    <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: 'var(--shadow-inset-hairline)' }}>
-                      <Icon size={14} style={{ color: 'var(--action-primary)' }} />
+          {/* Khối nội dung động thực tế trong dự án (chuyển đổi thường xuyên) */}
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${s}-${currentHighlight.id}`}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -14 }}
+                transition={CONTENT_FADE}
+                style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+              >
+                {/* Badge danh mục / đặc quyền */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '4px 12px',
+                      borderRadius: 'var(--radius-pill)',
+                      background: currentHighlight.badgeBg,
+                      border: `1px solid ${currentHighlight.badgeBorder}`,
+                      color: currentHighlight.badgeColor,
+                      font: 'var(--type-caption)',
+                      fontWeight: 'var(--fw-bold)',
+                      fontSize: 'var(--fs-micro)',
+                      letterSpacing: '.04em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    <HighlightIcon size={12} />
+                    {currentHighlight.badge}
+                  </span>
+                  {lastEmail && s === 'login' && (
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                      Chào mừng quay lại, <strong>{lastEmail}</strong>
                     </span>
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{text}</span>
-                  </motion.div>
-                ))}
+                  )}
+                </div>
+
+                {/* Tiêu đề giá trị thực tế */}
+                <h2
+                  style={{
+                    margin: 0,
+                    font: 'var(--type-title-1)',
+                    letterSpacing: 'var(--ls-title)',
+                    color: 'var(--text-strong)',
+                    lineHeight: 1.3,
+                    fontSize: 'clamp(1.15rem, 1.8vw, 1.45rem)',
+                  }}
+                >
+                  {currentHighlight.title}
+                </h2>
+
+                {/* Mô tả chi tiết */}
+                <p
+                  style={{
+                    margin: 0,
+                    font: 'var(--type-body-sm)',
+                    color: 'var(--text-body)',
+                    lineHeight: 1.55,
+                    maxWidth: 440,
+                  }}
+                >
+                  {currentHighlight.desc}
+                </p>
+
+                {/* Thẻ chỉ số thực tế */}
+                {currentHighlight.metrics && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                    {currentHighlight.metrics.map((m, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '4px 10px',
+                          borderRadius: 'var(--radius-control)',
+                          background: 'rgba(255, 255, 255, 0.7)',
+                          border: '1px solid rgba(0, 0, 0, 0.06)',
+                          backdropFilter: 'blur(4px)',
+                        }}
+                      >
+                        <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>
+                          {m.label}:
+                        </span>
+                        <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                          {m.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
-            ) : (
-              <motion.span key="stats" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={CONTENT_FADE}
-                style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>3.240 biển số · Cập nhật mỗi ngày · Đà Nẵng</motion.span>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>
+
+            {/* Thanh điều hướng chuyển đổi slide thường xuyên */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {activeSlides.map((item, idx) => {
+                  const isActive = idx === (highlightIdx % activeSlides.length);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setHighlightIdx(idx)}
+                      aria-label={`Chuyển đến: ${item.badge}`}
+                      style={{
+                        padding: 0,
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'block',
+                          height: 5,
+                          width: isActive ? 24 : 6,
+                          borderRadius: 'var(--radius-pill)',
+                          background: isActive ? 'var(--action-primary)' : 'rgba(0, 0, 0, 0.16)',
+                          transition: 'all 280ms cubic-bezier(0.22, 1, 0.36, 1)',
+                        }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+              <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-faint)' }}>
+                {(highlightIdx % activeSlides.length) + 1} / {activeSlides.length}
+              </span>
+            </div>
+          </div>
         </div>
         <div style={{ flex: '1 1 420px', background: 'var(--white)', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           {/* .auth-info (logo + "Trang chủ") ẩn hoàn toàn dưới 768px — không còn cách nào thoát về

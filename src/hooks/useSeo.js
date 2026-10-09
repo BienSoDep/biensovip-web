@@ -130,10 +130,17 @@ export function useSeo(screen, data) {
     } else if (screen === 'detail') {
       title = 'Biển số xe đẹp phong thủy | ' + BRAND;
       canonical = SITE + '/bien/';
-    } else if (screen === 'lucky') {
-      title = 'Tra cứu Biển Số Hợp Mệnh Theo Ngũ Hành — Tư Vấn Miễn Phí | ' + BRAND;
-      desc = 'Tra cứu biển số hợp mệnh theo ngũ hành Kim Mộc Thủy Hỏa Thổ. Nhập năm sinh để nhận gợi ý biển số phong thủy đẹp hợp tuổi, hợp ngũ hành và phù hợp ngân sách.';
-      canonical = SITE + '/hop-menh';
+    } else if (screen === 'lucky' || screen === 'luanBien') {
+      const isLuanBien = (typeof window !== 'undefined' && window.location.pathname.includes('luan-bien-so')) || screen === 'luanBien';
+      if (isLuanBien) {
+        title = 'Luận Giải Phong Thủy Biển Số Xe — Chấm Điểm 5 Chiều & Gợi Ý Cải Vận 2026 | ' + BRAND;
+        desc = 'Công cụ luận giải phong thủy biển số xe 5 chiều: Ngũ hành Hà Đồ, Tổng nút, Âm Dương, Cặp số may mắn và Quẻ Kinh Dịch. Nhận ngay giải pháp bổ khuyết và gợi ý biển số đẹp cải vận chuẩn 2026.';
+        canonical = SITE + '/luan-bien-so';
+      } else {
+        title = 'Tra cứu Biển Số Hợp Mệnh Theo Ngũ Hành — Tư Vấn Miễn Phí | ' + BRAND;
+        desc = 'Tra cứu biển số hợp mệnh theo ngũ hành Kim Mộc Thủy Hỏa Thổ. Nhập năm sinh để nhận gợi ý biển số phong thủy đẹp hợp tuổi, hợp ngũ hành và phù hợp ngân sách.';
+        canonical = SITE + '/hop-menh';
+      }
       image = SITE + '/assets/logo-mark.png';
     } else if (screen === 'about') {
       title = 'Về Duy Đinh — Shop Biển Số Đẹp Đà Nẵng Uy Tín | ' + BRAND;
@@ -157,12 +164,12 @@ export function useSeo(screen, data) {
             description: 'Người sáng lập Biensovip, chuyên gia hơn 10 năm kinh nghiệm trong lĩnh vực định giá và tư vấn biển số xe đẹp phong thủy tại Đà Nẵng.',
             address: {
               '@type': 'PostalAddress',
-              streetAddress: '106 Hoàng Diệu, P. Phước Ninh, Q. Hải Châu',
               addressLocality: 'Đà Nẵng',
               addressCountry: 'VN',
             },
             telephone: '0815792699',
             sameAs: [
+              'https://www.facebook.com/duydinhbiensodepdanang',
               'https://zalo.me/0815792699',
               'https://www.tiktok.com/@duydinhbiensodepdanang',
             ],
@@ -175,7 +182,6 @@ export function useSeo(screen, data) {
             priceRange: '10.000.000đ - 5.000.000.000đ',
             address: {
               '@type': 'PostalAddress',
-              streetAddress: '106 Hoàng Diệu, P. Phước Ninh, Q. Hải Châu',
               addressLocality: 'Đà Nẵng',
               addressCountry: 'VN',
             },
@@ -434,7 +440,6 @@ export function useSeo(screen, data) {
             priceRange: '10.000.000đ - 5.000.000.000đ',
             address: {
               '@type': 'PostalAddress',
-              streetAddress: '106 Hoàng Diệu, P. Phước Ninh, Q. Hải Châu',
               addressLocality: 'Đà Nẵng',
               addressCountry: 'VN',
             },

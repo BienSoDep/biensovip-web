@@ -1,4 +1,4 @@
-import { Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound, Clock, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound, Clock, ShieldCheck, BadgeCheck, PhoneCall, Mail, Zap, CreditCard } from 'lucide-react';
 import ContactRequestForm from '../components/ContactRequestForm.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import { content } from '../lib/content/index.js';
@@ -12,6 +12,41 @@ export default function ChatZaloContact({ notify, user }) {
   const processContent = processDb ? (() => { try { return JSON.parse(processDb.contentJson); } catch { return null; } })() : null;
   const processDetail = processContent?.detail || content.process.detail;
   const processSteps = processContent?.steps || content.process.steps;
+
+  const extraContactInfo = [
+    {
+      icon: PhoneCall,
+      label: 'Hotline & Zalo tư vấn',
+      value: `${content.info.phone_display || '081 579 2699'} · Hỗ trợ 24/7`,
+      href: `tel:${content.info.phone || '0815792699'}`
+    },
+    {
+      icon: Clock,
+      label: 'Thời gian làm việc',
+      value: content.info.hours || '8:00 – 21:00 · Tất cả các ngày'
+    },
+    {
+      icon: Zap,
+      label: 'Tốc độ phản hồi',
+      value: `${content.info.reply_time || '5 – 15 phút'} · Ưu tiên Zalo OA`
+    },
+    {
+      icon: Mail,
+      label: 'Email liên hệ',
+      value: content.info.email || 'duymc64@gmail.com',
+      href: `mailto:${content.info.email || 'duymc64@gmail.com'}`
+    },
+    {
+      icon: CreditCard,
+      label: 'Tài khoản chính thức',
+      value: `${content.info.bank_name}: ${content.info.bank_account_number} (${content.info.bank_account_holder})`
+    },
+    {
+      icon: ShieldCheck,
+      label: 'Pháp lý & Sang tên',
+      value: 'Cam kết định danh trọn gói, công chứng và nộp thuế toàn quốc 100% hợp pháp'
+    }
+  ];
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -92,13 +127,76 @@ export default function ChatZaloContact({ notify, user }) {
         </div>
       </section>
 
-      <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-6)' }}>
-        {[['Địa chỉ', content.info.address], ['Giờ làm việc', content.info.hours], ['Email', content.info.email]].map(([label, value]) => (
-          <div key={label} style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}</span>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{value}</span>
-          </div>
-        ))}
+      <div
+        style={{
+          background: 'var(--surface-sunken)',
+          borderRadius: 'var(--radius-card)',
+          padding: 'var(--space-6)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: 'var(--space-5)',
+          border: '1px solid var(--border-hairline)'
+        }}
+      >
+        {extraContactInfo.map((item) => {
+          const ItemIcon = item.icon;
+          return (
+            <div
+              key={item.label}
+              style={{
+                display: 'flex',
+                gap: 'var(--space-3)',
+                alignItems: 'flex-start'
+              }}
+            >
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--surface-tint-cream)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2
+                }}
+              >
+                <ItemIcon size={18} style={{ color: 'var(--action-primary)' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', fontWeight: 600 }}>
+                  {item.label}
+                </span>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    style={{
+                      font: 'var(--type-body-sm)',
+                      color: 'var(--action-primary)',
+                      textDecoration: 'none',
+                      wordBreak: 'break-word',
+                      fontWeight: 500
+                    }}
+                  >
+                    {item.value}
+                  </a>
+                ) : (
+                  <span
+                    style={{
+                      font: 'var(--type-body-sm)',
+                      color: 'var(--text-muted)',
+                      wordBreak: 'break-word',
+                      lineHeight: 1.5
+                    }}
+                  >
+                    {item.value}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
