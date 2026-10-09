@@ -8,8 +8,14 @@ import { useUpdateVpaPlate, useCreateVpaPlate, useSetVpaPrice, useUnlockVpaField
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_LOCK_FLAGS, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 
 const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)}đ`);
-const TAB_ADD = [1, 2, 3].map((v) => ({ value: String(v), label: VPA_TAB_LABELS[v] }));
-const TAB_EDIT = [1, 2, 3, 4].map((v) => ({ value: String(v), label: VPA_TAB_LABELS[v] }));
+const TAB_FULL_LABELS = {
+  1: 'Biển số tháng (công bố)',
+  2: 'Biển số tuần (chính thức)',
+  3: 'Biển hết hạn',
+  4: 'Hết hạn nội bộ',
+};
+const TAB_ADD = [1, 2, 3].map((v) => ({ value: String(v), label: TAB_FULL_LABELS[v] || VPA_TAB_LABELS[v] }));
+const TAB_EDIT = [1, 2, 3, 4].map((v) => ({ value: String(v), label: TAB_FULL_LABELS[v] || VPA_TAB_LABELS[v] }));
 const VEHICLES = [{ value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const toLocalInput = (iso) => {
   if (!iso) return '';

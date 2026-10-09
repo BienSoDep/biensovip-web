@@ -107,11 +107,21 @@ export async function trackPageView(screen, url) {
   saveSession({ ...session, pageViewId: data.pageViewId, expiresAt: Date.now() + SESSION_TTL_MS });
 }
 
+let lastScrollTracked = { pageViewId: null, maxPct: 0 };
+
 export function updateScrollDepth(pct) {
   const session = loadSession();
   if (!session?.pageViewId) return;
+
+  const validPct = Math.min(100, Math.max(0, Math.round(pct)));
+  // Chỉ gửi khi đạt mốc cuộn sâu hơn trên cùng 1 pageView
+  if (lastScrollTracked.pageViewId === session.pageViewId && validPct <= lastScrollTracked.maxPct) {
+    return;
+  }
+  lastScrollTracked = { pageViewId: session.pageViewId, maxPct: validPct };
+
   const url = `${BASE_URL}/api/analytics/pageview/${session.pageViewId}/scroll`;
-  const body = JSON.stringify({ pct });
+  const body = JSON.stringify({ pct: validPct });
   // sendBeacon không cho set Content-Type JSON trực tiếp nhưng backend chỉ đọc body — đủ dùng, không cần retry.
   if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
   else fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});

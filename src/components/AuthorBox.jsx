@@ -1,6 +1,7 @@
 import React from 'react';
-import { ShieldCheck, MessageCircle, ExternalLink, Award } from 'lucide-react';
+import { ShieldCheck, MessageCircle, ExternalLink, Award, Phone, Mail, Clock, Globe } from 'lucide-react';
 import Button from './Button.jsx';
+import { content } from '../lib/content/index.js';
 
 export default function AuthorBox({ style }) {
   return (
@@ -123,20 +124,78 @@ export default function AuthorBox({ style }) {
           borderTop: '1px solid rgba(217, 119, 6, 0.15)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption, 13px)', color: 'var(--text-muted, #64748B)' }}>
-          <span>Showroom: <strong>106 Hoàng Diệu, Đà Nẵng</strong></span>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '10px 16px',
+            font: 'var(--type-caption, 13px)',
+            color: 'var(--text-muted, #64748B)',
+          }}
+        >
+          <a
+            href={`tel:${content.info.phone || '0815792699'}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: 'var(--text-strong, #0F172A)',
+              textDecoration: 'none',
+              fontWeight: 600,
+            }}
+          >
+            <Phone size={14} style={{ color: 'var(--action-primary, #D97706)' }} />
+            Hotline: {content.info.phone_display || '081 579 2699'}
+          </a>
+
+          <a
+            href={`mailto:${content.info.email || 'duymc64@gmail.com'}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: 'var(--text-muted, #64748B)',
+              textDecoration: 'none',
+            }}
+          >
+            <Mail size={14} style={{ color: 'var(--action-primary, #D97706)' }} />
+            {content.info.email || 'duymc64@gmail.com'}
+          </a>
+
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Clock size={14} style={{ color: 'var(--action-primary, #D97706)' }} />
+            {content.info.hours || '8:00 – 21:00'}
+          </span>
+
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Globe size={14} style={{ color: 'var(--action-primary, #D97706)' }} />
+            Giao dịch toàn quốc
+          </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2, 8px)' }}>
           <a
-            href="https://zalo.me/0815792699"
+            href={`https://zalo.me/${content.info.zalo || '0815792699'}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{ textDecoration: 'none' }}
           >
             <Button variant="primary" size="sm">
               <MessageCircle size={15} style={{ marginRight: 6 }} />
-              Tư vấn Zalo 0815 792 699
+              Tư vấn Zalo {content.info.phone_display || '0815 792 699'}
             </Button>
           </a>
           <a

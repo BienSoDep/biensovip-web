@@ -791,7 +791,7 @@ export default function App() {
 
             {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
 
-            {s === 'lucky' && <LuckyPlate go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} contact={contact} openPlate={openPlate} onUserUpdate={(u) => patch({ user: u })} />}
+            {(s === 'lucky' || s === 'luanBien') && <LuckyPlate screen={s} go={go} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} contact={contact} openPlate={openPlate} onUserUpdate={(u) => patch({ user: u })} />}
             {s === 'profile' && <Profile go={go} notify={notify} user={st.user} onboarding={!!st.profileOnboarding} onUserUpdate={(u) => patch({ user: u, profileOnboarding: false })} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
             {s === 'about' && <About go={go} />}

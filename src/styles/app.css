@@ -134,17 +134,23 @@ textarea,
 [data-pressable],
 .pressable {
   cursor: pointer;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              filter 160ms ease,
+              border-color 160ms ease;
+  will-change: transform;
 }
 
-/* Elements without a dedicated variant class (plate cards, blog cards, etc.)
-   fall back to a brightness nudge — real color swaps below take priority. */
 [data-pressable]:hover,
 .pressable:hover {
-  filter: brightness(0.97);
+  transform: translateY(-2px);
+  filter: brightness(1.02);
 }
+
 [data-pressable]:active,
 .pressable:active {
-  filter: brightness(0.94);
+  transform: translateY(0.5px) scale(0.985);
+  filter: brightness(0.95);
 }
 
 /* Button — base + sizes (P1: touch targets ≥40px) + variants. Visual styling lives here,
@@ -160,9 +166,15 @@ textarea,
   font-weight: var(--fw-semibold);
   white-space: nowrap;
   cursor: pointer;
-  transition: var(--transition-control);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms var(--ease-standard),
+              color 140ms var(--ease-standard),
+              border-color 140ms var(--ease-standard),
+              filter 140ms ease;
+  will-change: transform;
 }
-.btn:disabled { cursor: not-allowed; background: var(--surface-disabled); color: var(--text-disabled); box-shadow: none; }
+.btn:disabled { cursor: not-allowed; background: var(--surface-disabled); color: var(--text-disabled); box-shadow: none; transform: none !important; }
 .btn-uppercase { letter-spacing: 0.04em; text-transform: uppercase; }
 .btn-block { width: 100%; }
 .btn-sm { height: 36px; }
@@ -172,22 +184,32 @@ textarea,
 /* Nền mặc định #f19720 sáng → chữ TỐI (--action-primary-text, contrast 7.99). Hover/active đậm dần
    theo ramp cũ (brand-600/700) nên chữ chuyển sang trắng ở 2 trạng thái đó — nền càng đậm càng hợp
    chữ sáng, ngược cơ chế nền sáng. */
-.btn-primary { background: var(--action-primary); color: var(--action-primary-text); box-shadow: var(--shadow-blue); transition: background-color 140ms var(--ease-standard), color 140ms var(--ease-standard); }
+.btn-primary { background: var(--action-primary); color: var(--action-primary-text); box-shadow: var(--shadow-blue); }
 .btn-dark { background: var(--action-dark); color: var(--text-inverse); }
 .btn-outline { background: transparent; color: var(--text-strong); box-shadow: inset 0 0 0 1.5px var(--border-strong); }
 .btn-ghost { background: transparent; color: var(--text-body); }
 .btn-danger { background: var(--status-danger); color: var(--white); box-shadow: var(--shadow-blue); }
 
+.btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+.btn:not(:disabled):active {
+  transform: translateY(0.5px) scale(0.98);
+}
+
 .btn-primary:not(:disabled):hover {
   background: var(--action-primary-hover);
   color: var(--text-inverse);
+  box-shadow: 0 8px 20px -2px rgba(217, 119, 6, 0.36), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 .btn-primary:not(:disabled):active {
   background: var(--action-primary-press);
   color: var(--text-inverse);
+  box-shadow: var(--shadow-1);
 }
 .btn-dark:not(:disabled):hover {
   background: var(--action-dark-hover);
+  box-shadow: 0 8px 20px -2px rgba(22, 24, 29, 0.35);
 }
 .btn-dark:not(:disabled):active {
   background: var(--ink-800);
@@ -195,18 +217,22 @@ textarea,
 }
 .btn-outline:not(:disabled):hover {
   background: var(--action-ghost-hover);
+  border-color: var(--action-primary);
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.08), inset 0 0 0 1.5px var(--action-primary);
 }
 .btn-outline:not(:disabled):active {
   background: var(--grey-200);
 }
 .btn-ghost:not(:disabled):hover {
-  background: var(--action-ghost-hover);
+  background: var(--surface-muted);
+  color: var(--action-primary);
 }
 .btn-ghost:not(:disabled):active {
   background: var(--grey-200);
 }
 .btn-danger:not(:disabled):hover {
-  filter: brightness(0.92);
+  filter: brightness(0.94);
+  box-shadow: 0 8px 20px -2px rgba(229, 72, 77, 0.38);
 }
 .btn-danger:not(:disabled):active {
   filter: brightness(0.85);
@@ -215,30 +241,178 @@ textarea,
 /* Pill nav/filter buttons: selected (active bg) state needs a darker press,
    unselected state needs a visible hover tint — not just a global filter. */
 .pill-btn {
+  cursor: pointer;
   transition:
-    background-color 120ms var(--ease-standard),
-    color 120ms var(--ease-standard),
-    transform 120ms var(--ease-standard);
+    background-color 140ms var(--ease-standard),
+    color 140ms var(--ease-standard),
+    transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.pill-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+.pill-btn:active {
+  transform: translateY(0.5px) scale(0.97);
 }
 .pill-btn[data-on="true"]:hover {
   background: var(--action-primary-hover) !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28) !important;
 }
 .pill-btn[data-on="true"]:active {
   background: var(--action-primary-press) !important;
 }
 .pill-btn[data-on="false"]:hover {
-  background: var(--surface-muted) !important;
-  filter: brightness(0.96);
+  background: var(--grey-200) !important;
+  color: var(--text-strong) !important;
 }
 .pill-btn[data-on="false"]:active {
   filter: brightness(0.9);
 }
 .pill-btn[data-on="false"][data-dark="true"]:hover {
-  background: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
   filter: none;
 }
 .pill-btn[data-on="false"][data-dark="true"]:active {
-  background: rgba(255, 255, 255, 0.24) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+}
+
+/* --- Plate Card Interactive Hover Feedback --- */
+.plate-card {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+.plate-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12), 0 0 0 1.5px rgba(217, 119, 6, 0.32) !important;
+}
+.plate-card:active {
+  transform: translateY(-1px) scale(0.995);
+}
+.plate-card .plate-card-stage {
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.plate-card:hover .plate-card-stage {
+  transform: scale(1.02);
+}
+
+/* --- Icon Buttons Hover Feedback --- */
+.icon-btn {
+  cursor: pointer;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              color 140ms ease,
+              box-shadow 140ms ease !important;
+}
+.icon-btn:not(:disabled):hover {
+  transform: scale(1.1) translateY(-1px);
+  background-color: var(--grey-200) !important;
+  color: var(--action-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.icon-btn:not(:disabled):active {
+  transform: scale(0.93);
+}
+
+/* --- Pagination Interactive Hover --- */
+.pagination-btn {
+  cursor: pointer;
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              color 140ms ease,
+              box-shadow 140ms ease !important;
+}
+.pagination-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border-color: var(--action-primary) !important;
+}
+.pagination-btn:active {
+  transform: translateY(0.5px) scale(0.96);
+}
+
+/* --- Interactive General Cards (Category, Blog, Video, Review) --- */
+.category-card,
+article.blog-card,
+.interactive-card {
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.category-card:hover,
+article.blog-card:hover,
+.interactive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(14, 15, 18, 0.1), 0 0 0 1.5px rgba(217, 119, 6, 0.25);
+}
+
+/* --- Links Subtle Color Shift --- */
+a:not(.btn):not(.pressable):not(.plate-card) {
+  transition: color 150ms ease, opacity 150ms ease;
+}
+a:not(.btn):not(.pressable):not(.plate-card):hover {
+  color: var(--action-primary);
+}
+
+/* --- Admin Interactive Hover Affordances --- */
+/* 1. Admin Table Row Highlights */
+table tbody tr {
+  transition: background-color 120ms ease;
+}
+table tbody tr:hover {
+  background-color: rgba(217, 119, 6, 0.035) !important;
+}
+
+/* 2. Admin Action Buttons (Edit, Delete, Refresh, View, Toggle) */
+.admin-action-btn,
+button[aria-label="Chỉnh sửa"],
+button[aria-label="Xóa"],
+button[aria-label="Xem"],
+button[aria-label="Làm mới"] {
+  cursor: pointer;
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              color 140ms ease;
+}
+.admin-action-btn:hover,
+button[aria-label="Chỉnh sửa"]:hover,
+button[aria-label="Xóa"]:hover,
+button[aria-label="Xem"]:hover,
+button[aria-label="Làm mới"]:hover {
+  transform: scale(1.12);
+}
+.admin-action-btn:active,
+button[aria-label="Chỉnh sửa"]:active,
+button[aria-label="Xóa"]:active,
+button[aria-label="Xem"]:active,
+button[aria-label="Làm mới"]:active {
+  transform: scale(0.92);
+}
+
+/* 3. Admin KPI Cards & Summary Tiles */
+div[onClick][style*="borderRadius"]:not([style*="display: none"]),
+.kpi-card {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+div[onClick][style*="borderRadius"]:hover,
+.kpi-card:hover {
+  transform: translateY(-2.5px);
+  box-shadow: 0 10px 24px -4px rgba(14, 15, 18, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+div[onClick][style*="borderRadius"]:active,
+.kpi-card:active {
+  transform: translateY(0.5px) scale(0.985);
+}
+
+/* 4. Admin Sidebar group collapse button */
+button[aria-expanded]:hover {
+  color: var(--text-strong) !important;
 }
 
 /* Triệt tiêu viền outline tách rời / đè ngoài trên các nút pill và thanh menu header */
@@ -990,6 +1164,12 @@ textarea,
     padding: 0 10px !important;
   }
 }
+@media (min-width: 1025px) {
+  /* Cho phép dropdown sub-menu như Hợp mệnh mở ra ngoài header mà không bị cắt */
+  .header-nav-pills {
+    overflow: visible !important;
+  }
+}
 /* Detail: mobile sticky bottom action bar */
 .plate-actions-mobile {
   display: none;
@@ -1450,21 +1630,15 @@ textarea,
   z-index: 1;
 }
 
-/* Plate card stage — warm brand-tinted backdrop; plate itself stays realistic grey/white, only the surrounding frame gets the orange lift */
+/* Plate card stage — đã bỏ khung nền vàng nhạt theo yêu cầu người dùng, để biển số hiển thị to rõ tự nhiên */
 .plate-card-stage {
-  background: linear-gradient(
-    155deg,
-    var(--brand-100) 0%,
-    var(--brand-50) 100%
-  );
-  border: 1px solid var(--brand-200);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 .plate-card-stage:hover {
-  border-color: var(--brand-400);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 8px 18px -10px rgba(212, 101, 10, 0.35);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* Nút liên hệ nhanh Gọi điện & Zalo trên thẻ biển số — hiệu ứng hover nổi bật */

@@ -1,26 +1,27 @@
 import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
-  CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp,
-  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown,
+  CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
+  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown, RefreshCw,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import Skeleton from '../../../components/Skeleton.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
-import { Badge, Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
+import { Badge, Select, IconButton, SearchField, InfoTip, PlateIssueTip } from '../../../components/index.jsx';
 import VpaPlateDrawer from './VpaPlateDrawer.jsx';
 import MultiFilter from './MultiFilter.jsx';
 import VpaIntegrityPanel from './VpaIntegrityPanel.jsx';
 import VpaStatsCharts from './VpaStatsCharts.jsx';
+import VpaBulkSeedModal, { getVpaPlateIssues } from './VpaBulkSeedModal.jsx';
 import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import { useVpaCounts } from '../../../services/vpa.js';
 import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
-  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference,
+  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useRecomputeVpaSuggestions,
 } from '../../../services/adminVpa.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
@@ -41,9 +42,21 @@ const VPA_FILTER_TABS = [
   { value: '3', label: 'Biển hết hạn', note: 'Biển hết hạn', countKey: 'expired' },
   { value: '4', label: 'Hết hạn nội bộ', note: 'Rút khỏi công bố', countKey: null },
 ];
-const TAB_ROW = Object.entries(VPA_TAB_LABELS).map(([value, label]) => ({ value, label }));
+const TAB_FULL_LABELS = {
+  1: 'Biển tháng (công bố)',
+  2: 'Biển tuần (chính thức)',
+  3: 'Biển hết hạn',
+  4: 'Hết hạn nội bộ',
+};
+const TAB_ROW = Object.entries(TAB_FULL_LABELS).map(([value, label]) => ({ value, label }));
 const VEHICLES = [ALL, { value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const STATE_OPTS = [{ value: '', label: 'Mọi trạng thái giá' }, ...Object.entries(VPA_PRICE_STATES).map(([value, s]) => ({ value, label: s.label }))];
+const QUEUE_STATE_OPTS = [
+  { value: '', label: 'Đang chờ duyệt (Có gợi ý & Đổi giá)' },
+  { value: '0', label: 'Chưa có giá trên hệ thống (Cần sinh giá)' },
+  { value: '1', label: 'Chỉ biển có giá gợi ý' },
+  { value: '4', label: 'Chỉ biển đề xuất đổi giá' },
+];
 const YES_NO = (yes, no) => [ALL, { value: 'true', label: yes }, { value: 'false', label: no }];
 const COLUMNS = [
   { key: 'plateType', label: 'Loại biển', default: true },
@@ -284,6 +297,7 @@ export default function VpaAdminList({ queue = false, notify }) {
   const [cell, setCell] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [integrity, setIntegrity] = useState(false);
+  const [bulkSeedOpen, setBulkSeedOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ plateNumber: '', vehicle: 'Car', tab: '1', price: '' });
   const [priceRefId, setPriceRefId] = useState(null); // UC49 — biển đang xem popup nguồn giá gợi ý
@@ -328,6 +342,10 @@ export default function VpaAdminList({ queue = false, notify }) {
   const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: f.tab, page: 1, limit: 1 }); // tổng của tab, không lọc khác
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const { data: vpaCounts } = useVpaCounts(f.vehicle);
+  // Tổng mỗi tab là CẢ Ô TÔ + XE MÁY cộng lại — hiện rõ breakdown để không nhầm với số trên trang VPA gốc (họ tách
+  // riêng từng loại xe theo tab, ví dụ "Danh sách chính thức" > "Xe mô tô, xe gắn máy" chỉ hiện phần xe máy).
+  const { data: vpaCountsCar } = useVpaCounts('Car');
+  const { data: vpaCountsMoto } = useVpaCounts('MotorBike');
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
   const startApproveAll = useStartApproveAllVpaSuggested();
@@ -342,6 +360,25 @@ export default function VpaAdminList({ queue = false, notify }) {
   const update = useUpdateVpaPlate();
   const create = useCreateVpaPlate();
   const bulk = useBulkEditVpa();
+  const recomputeSuggestions = useRecomputeVpaSuggestions();
+  const [recomputing, setRecomputing] = useState(false);
+
+  const handleRecomputeSuggestions = async () => {
+    setRecomputing(true);
+    try {
+      const res = await recomputeSuggestions.mutateAsync();
+      const info = res?.data || {};
+      notify?.(
+        `Đã quét và tính xong giá gợi ý: gán mới cho ${Number(info.platesAssigned || 0).toLocaleString('vi-VN')} biển chưa có giá, cập nhật ${Number(info.platesUpdated || 0).toLocaleString('vi-VN')} biển!`,
+        'success'
+      );
+      refetch();
+    } catch (err) {
+      notify?.(err?.message || 'Có lỗi khi tính lại giá gợi ý.', 'error');
+    } finally {
+      setRecomputing(false);
+    }
+  };
 
   const items = data?.items || [];
   const total = data?.total || 0;
@@ -498,7 +535,48 @@ export default function VpaAdminList({ queue = false, notify }) {
   const emptyBox = !isLoading && !isError && items.length === 0 && (
     <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
       <CarFront size={40} style={{ color: 'var(--text-faint)' }} />
-      {queue ? 'Không có biển nào đang chờ duyệt giá.' : 'Không có biển VPA nào khớp bộ lọc.'}
+      {queue ? (
+        f.priceState === '0' ? (
+          <div>
+            <div style={{ fontWeight: 600, color: 'var(--text-strong)', marginBottom: 4 }}>
+              Không có biển nào chưa có giá trên hệ thống!
+            </div>
+            <div style={{ fontSize: 'var(--type-body-sm)', maxWidth: 480, margin: '0 auto' }}>
+              Toàn bộ biển VPA đều đã có giá duyệt hoặc đã được tính giá gợi ý sẵn sàng trong hàng đợi duyệt.
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontWeight: 600, color: 'var(--text-strong)', marginBottom: 4 }}>
+              Không có biển nào đang chờ duyệt giá.
+            </div>
+            <div style={{ fontSize: 'var(--type-body-sm)', maxWidth: 520, margin: '0 auto 12px auto' }}>
+              Nếu bạn vừa cào danh sách công bố biển mới và chưa thấy giá hiển thị, hãy bấm <b>Tính lại giá gợi ý</b> để hệ thống tự động ghép nhóm và tính giá cho các biển mới.
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={recomputing}
+                onClick={handleRecomputeSuggestions}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <RefreshCw size={13} className={recomputing ? 'animate-spin' : ''} />
+                <span>{recomputing ? 'Đang tính lại…' : 'Tính lại giá gợi ý ngay'}</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFilter('priceState')('0')}
+              >
+                Xem biển chưa có giá
+              </Button>
+            </div>
+          </div>
+        )
+      ) : (
+        'Không có biển VPA nào khớp bộ lọc.'
+      )}
     </div>
   );
   const errorBox = !isLoading && isError && (
@@ -564,13 +642,18 @@ export default function VpaAdminList({ queue = false, notify }) {
           {VPA_FILTER_TABS.map((t) => {
             const active = f.tab === t.value;
             let count = null;
-            if (t.countKey === 'weekly') count = vpaCounts?.weekly;
-            else if (t.countKey === 'monthly') count = vpaCounts?.monthly;
-            else if (t.countKey === 'expired') count = vpaCounts?.expired;
+            let carCount = null;
+            let motoCount = null;
+            if (t.countKey === 'weekly') { count = vpaCounts?.weekly; carCount = vpaCountsCar?.weekly; motoCount = vpaCountsMoto?.weekly; }
+            else if (t.countKey === 'monthly') { count = vpaCounts?.monthly; carCount = vpaCountsCar?.monthly; motoCount = vpaCountsMoto?.monthly; }
+            else if (t.countKey === 'expired') { count = vpaCounts?.expired; carCount = vpaCountsCar?.expired; motoCount = vpaCountsMoto?.expired; }
             else if (t.countKey === 'all') {
               count = (vpaCounts?.weekly != null && vpaCounts?.monthly != null && vpaCounts?.expired != null)
                 ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
                 : (f.tab === '' ? baseData?.total : null);
+              const sum3 = (c) => (c?.weekly != null && c?.monthly != null && c?.expired != null ? c.weekly + c.monthly + c.expired : null);
+              carCount = sum3(vpaCountsCar);
+              motoCount = sum3(vpaCountsMoto);
             }
 
             return (
@@ -630,6 +713,17 @@ export default function VpaAdminList({ queue = false, notify }) {
                 >
                   {t.note}
                 </span>
+                {(carCount != null || motoCount != null) && (
+                  <span
+                    style={{
+                      font: 'var(--type-caption)',
+                      fontSize: '11px',
+                      color: active ? 'rgba(255,255,255,0.85)' : 'var(--text-muted)',
+                    }}
+                  >
+                    Ô tô {new Intl.NumberFormat('vi-VN').format(carCount || 0)} · Xe máy {new Intl.NumberFormat('vi-VN').format(motoCount || 0)}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -758,10 +852,44 @@ export default function VpaAdminList({ queue = false, notify }) {
               <span>{quickOpen ? 'Đóng thêm nhanh' : 'Thêm nhanh'}</span>
             </Button>
           )}
+          {!queue && (
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => setBulkSeedOpen(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              title="Tự động nhận diện loại biển, tỉnh thành, chữ ký phong thủy và duyệt giá gợi ý cho các biển còn thiếu"
+            >
+              <Sparkles size={14} color="var(--amber-500)" />
+              <span>Sinh thông tin hàng loạt</span>
+            </Button>
+          )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
           <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
           {queue && (
             <>
+              <Button
+                variant="dark"
+                size="md"
+                disabled={recomputing}
+                onClick={handleRecomputeSuggestions}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                title="Quét toàn bộ kho biển VPA, tự động tìm nhóm giá tương ứng và sinh giá gợi ý cho các biển mới chưa có giá"
+              >
+                <RefreshCw size={14} className={recomputing ? 'animate-spin' : ''} />
+                <span>{recomputing ? 'Đang tính lại…' : 'Tính lại giá gợi ý'}</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => refetch()}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                title="Tải lại danh sách biển"
+              >
+                <RefreshCw size={14} />
+                <span>Làm mới</span>
+              </Button>
+
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Button variant="primary" size="md" title={VPA_HELP.approveAll} onClick={() => setConfirmAction('all')}>Duyệt tất cả theo bộ lọc</Button>
                 <InfoTip size={13} text={VPA_HELP.approveAll} />
@@ -783,13 +911,34 @@ export default function VpaAdminList({ queue = false, notify }) {
           <Select label="Loại xe" value={f.vehicle} options={VEHICLES} onChange={setFilter('vehicle')} />
           <MultiFilter label="Tỉnh/thành" options={provinces} value={f.provinceIds} onChange={setFilter('provinceIds')} counts={facets?.provinces} searchable />
           <Select label="Nổi bật" value={f.featured} options={YES_NO('Chỉ nổi bật', 'Không nổi bật')} onChange={setFilter('featured')} />
-          {!queue && <Select label="Trạng thái giá" value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />}
+          {queue ? (
+            <Select label="Trạng thái giá" value={f.priceState} options={QUEUE_STATE_OPTS} onChange={setFilter('priceState')} />
+          ) : (
+            <Select label="Trạng thái giá" value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />
+          )}
           {!queue && <Select label="Ẩn/hiện" value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />}
           {!queue && <Select label="Nguồn" value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />}
           {(f.plateTypeIds.length > 0 || f.provinceIds.length > 0) && (
             <Button variant="ghost" size="md" onClick={clearCats}>Xóa lọc loại biển/tỉnh</Button>
           )}
         </div>
+        {queue && f.priceState === '0' && (
+          <div style={{ marginTop: 'var(--space-3)', padding: '10px 14px', background: 'var(--amber-50, #fffbeb)', border: '1px solid var(--amber-200, #fde68a)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 'var(--type-body-sm)', color: 'var(--amber-900, #78350f)' }}>
+              ⚠️ <strong>Đang lọc biển chưa có giá trên hệ thống:</strong> Các biển này vừa cào về nhưng chưa được gán giá gợi ý. Bấm <strong>Tính lại giá gợi ý</strong> để hệ thống tự động nhóm và sinh giá cho các biển này.
+            </div>
+            <Button
+              variant="dark"
+              size="sm"
+              disabled={recomputing}
+              onClick={handleRecomputeSuggestions}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <RefreshCw size={13} className={recomputing ? 'animate-spin' : ''} />
+              <span>{recomputing ? 'Đang tính lại…' : 'Tính lại giá gợi ý ngay'}</span>
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className={`admin-plates-cards-container ${mobileView === 'card' ? 'is-active' : ''}`}>
@@ -808,6 +957,19 @@ export default function VpaAdminList({ queue = false, notify }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {flags(p, 15)}
                       <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+                      {(() => {
+                        const issues = getVpaPlateIssues(p);
+                        if (issues.length === 0) return null;
+                        const hasErr = issues.some((x) => x.severity === 'error');
+                        return (
+                          <PlateIssueTip
+                            issues={issues}
+                            tone={hasErr ? 'danger' : 'warning'}
+                            size={14}
+                            onClick={() => setDrawer({ plate: p })}
+                          />
+                        );
+                      })()}
                     </div>
                     <span style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{rowBadges(p)}</span>
                   </div>
@@ -868,6 +1030,19 @@ export default function VpaAdminList({ queue = false, notify }) {
                   <span style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', gap: 4, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', minWidth: 0 }}>
                     {flags(p, 14)}
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
+                    {(() => {
+                      const issues = getVpaPlateIssues(p);
+                      if (issues.length === 0) return null;
+                      const hasErr = issues.some((x) => x.severity === 'error');
+                      return (
+                        <PlateIssueTip
+                          issues={issues}
+                          tone={hasErr ? 'danger' : 'warning'}
+                          size={14}
+                          onClick={() => setDrawer({ plate: p })}
+                        />
+                      );
+                    })()}
                     <button
                       type="button"
                       onClick={() => copyPlate(p.plateNumber)}
@@ -931,7 +1106,18 @@ export default function VpaAdminList({ queue = false, notify }) {
                       </span>
                     </div>
                   )}
-                  {cols.approved && <span style={{ flex: '1 1 110px' }}>{priceCell(p)}</span>}
+                  {cols.approved && (
+                    <span style={{ flex: '1 1 110px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      {priceCell(p)}
+                      {p.suggestedPrice > 0 && p.approvedPrice > 0 && Math.abs(p.approvedPrice - p.suggestedPrice) > p.suggestedPrice * 0.1 && (
+                        <PlateIssueTip
+                          text={`Giá duyệt lệch ${Math.round(Math.abs(p.approvedPrice - p.suggestedPrice) / p.suggestedPrice * 100)}% so với giá gợi ý VPA (${money(p.suggestedPrice)})`}
+                          tone="warning"
+                          size={13}
+                        />
+                      )}
+                    </span>
+                  )}
                   {cols.priceState && <span style={{ flex: '1 1 120px' }}><Badge tone={st.tone}>{st.label}</Badge></span>}
                   {cols.updatedAt && <span style={{ flex: '1 1 90px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{formatDate(p.updatedAt)}</span>}
                   <span style={{ flex: '0 0 160px', display: 'flex', alignItems: 'center' }}>{actions(p)}</span>
@@ -944,6 +1130,15 @@ export default function VpaAdminList({ queue = false, notify }) {
       </div>
 
       {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />}
+
+      
+      <VpaBulkSeedModal
+        open={bulkSeedOpen}
+        onClose={() => setBulkSeedOpen(false)}
+        plates={items}
+        notify={notify}
+        onSuccess={() => refetch()}
+      />
 
       <PriceReferenceModal
         open={!!priceRefId}

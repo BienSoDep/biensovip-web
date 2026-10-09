@@ -174,7 +174,12 @@ export default function About({ go }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.shop_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.shop_value')}</span></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.phone_label')}</span><a href={`tel:${T('about.contact.phone_value').replace(/[^0-9]/g, '')}`} style={{ font: 'var(--type-title-3)' }}>{T('about.contact.phone_value')}</a></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.zalo_label')}</span><a href={`https://${T('about.contact.zalo_value')}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)' }}>{T('about.contact.zalo_value')}</a></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.address_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.address_value')}</span></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.facebook_label') || 'Fanpage Facebook'}</span>
+          <a href="https://www.facebook.com/duydinhbiensodepdanang" target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--action-primary)', textDecoration: 'none' }}>
+            {T('about.contact.facebook_value') || 'Duy Đinh - Biển Số Đẹp Đà Nẵng'}
+          </a>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.hours_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.hours_value')}</span></div>
       </div>
     </section>

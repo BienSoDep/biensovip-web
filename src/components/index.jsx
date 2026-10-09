@@ -101,14 +101,21 @@ export function ImageUrlInput({ label, value, onChange, placeholder, hint }) {
   );
 }
 
-export function Input({ id, label, placeholder, value, error, onChange, onBlur, type = 'text', hint, disabled, required, min, max }) {
-  const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+export function Input({ id, label, info, placeholder, value, error, onChange, onBlur, type = 'text', hint, disabled, required, min, max, step, title }) {
+  const inputId = id || (label && typeof label === 'string' ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   const errId = error && inputId ? inputId + '-err' : undefined;
   const isPassword = type === 'password';
   const [reveal, setReveal] = useState(false);
+  const tooltip = info || title;
   return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}{required && <span style={{ color: 'var(--status-danger)' }}> *</span>}</span>}
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }} title={tooltip}>
+      {label && (
+        <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          {label}
+          {required && <span style={{ color: 'var(--status-danger)' }}> *</span>}
+          {info && <InfoTip text={info} />}
+        </span>
+      )}
       <span style={{ position: 'relative', display: 'flex' }}>
         <input
           id={inputId}
@@ -121,6 +128,8 @@ export function Input({ id, label, placeholder, value, error, onChange, onBlur, 
           required={required}
           min={min}
           max={max}
+          step={step}
+          title={tooltip}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={errId}
           style={{
@@ -220,11 +229,17 @@ export function SearchField({ placeholder, value, onChange, width, ariaLabel }) 
   );
 }
 
-export function Select({ label, value, options = [], onChange, variant, style, required }) {
+export function Select({ label, info, value, options = [], onChange, variant, style, required }) {
   const selected = options.find((o) => o.value === value);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
-      {label && <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{label}{required && <span style={{ color: 'var(--status-danger)' }}> *</span>}</span>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }} title={info}>
+      {label && (
+        <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          {label}
+          {required && <span style={{ color: 'var(--status-danger)' }}> *</span>}
+          {info && <InfoTip text={info} />}
+        </span>
+      )}
       <BaseSelect.Root value={value ?? ''} onValueChange={(v) => onChange(v)} items={options}>
         <BaseSelect.Trigger
           style={{
@@ -278,11 +293,14 @@ export function Select({ label, value, options = [], onChange, variant, style, r
   );
 }
 
-export function Checkbox({ label, checked, onChange, style }) {
+export function Checkbox({ label, info, checked, onChange, style }) {
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...style }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...style }} title={info}>
       <input type="checkbox" checked={!!checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--action-primary)' }} />
-      <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{label}</span>
+      <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        {label}
+        {info && <InfoTip text={info} />}
+      </span>
     </label>
   );
 }
@@ -323,14 +341,19 @@ const BADGE_TONES = {
   neutral: { background: 'var(--grey-100)', color: 'var(--text-muted)' },
 };
 
-export function Badge({ tone = 'neutral', children }) {
+export function Badge({ tone = 'neutral', children, title, style: customStyle, className }) {
   const t = BADGE_TONES[tone] || BADGE_TONES.neutral;
   return (
-    <span style={{
-      height: 24, maxWidth: '100%', padding: '0 8px', borderRadius: 'var(--radius-xs)', display: 'inline-flex', alignItems: 'center',
-      overflow: 'hidden', textOverflow: 'ellipsis',
-      font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', ...t,
-    }}>{children}</span>
+    <span
+      className={className}
+      title={title}
+      style={{
+        height: 24, maxWidth: '100%', padding: '0 8px', borderRadius: 'var(--radius-xs)', display: 'inline-flex', alignItems: 'center',
+        overflow: 'hidden', textOverflow: 'ellipsis',
+        font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', ...t,
+        ...customStyle,
+      }}
+    >{children}</span>
   );
 }
 
@@ -350,10 +373,11 @@ export function Icon({ name, size = 18 }) {
   return I ? <I size={size} /> : null;
 }
 
-export function IconButton({ name, label, onClick, size = 'md', style, disabled }) {
+export function IconButton({ name, label, onClick, size = 'md', style, disabled, className }) {
   const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 44;
   return (
     <button type="button" aria-label={label} onClick={onClick} disabled={disabled}
+      className={`icon-btn pressable ${className || ''}`}
       style={{
         width: px, height: px, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)',
@@ -364,9 +388,9 @@ export function IconButton({ name, label, onClick, size = 'md', style, disabled 
   );
 }
 
-export function Card({ children, tone, pad, style }) {
+export function Card({ children, tone, pad, style, className }) {
   return (
-    <div style={{ background: tone === 'sunken' ? 'var(--surface-sunken)' : 'var(--white)', borderRadius: 'var(--radius-card)', padding: pad, boxShadow: tone === 'sunken' ? undefined : 'var(--shadow-inset-hairline)', transition: 'var(--transition-card)', ...style }}>
+    <div className={className} style={{ background: tone === 'sunken' ? 'var(--surface-sunken)' : 'var(--white)', borderRadius: 'var(--radius-card)', padding: pad, boxShadow: tone === 'sunken' ? undefined : 'var(--shadow-inset-hairline)', transition: 'var(--transition-card)', ...style }}>
       {children}
     </div>
   );
@@ -382,3 +406,5 @@ export function Avatar({ name, size = 'sm' }) {
     }}>{initial}</span>
   );
 }
+
+export { default as PlateIssueTip } from './PlateIssueTip.jsx';

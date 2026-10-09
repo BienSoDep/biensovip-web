@@ -6,7 +6,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { toast } from 'react-hot-toast';
-import { CreditCard, FileText, Users, BadgeCheck } from 'lucide-react';
+import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3 } from 'lucide-react';
 import { routeFor } from '../../config/routes.js';
 import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
@@ -261,7 +261,7 @@ function fmtPct(n) {
   return `${sign}${n}%`;
 }
 
-export default function Dashboard({ go, st }) {
+export default function Dashboard({ go, st, patch }) {
   const isSuperAdmin = st?.user?.role === 'super-admin';
   const [rangeIdx, setRangeIdx] = useState(1); // default 30 days; null nếu đang dùng custom range
   const [customFrom, setCustomFrom] = useState('');
@@ -606,13 +606,96 @@ export default function Dashboard({ go, st }) {
           {topContent.isLoading ? (
             <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
           ) : topContent.data?.items?.length > 0 ? (
-            topContent.data.items.map((c, i) => (
-              <div key={c.contentId} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < topContent.data.items.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24 }}>{i + 1}</span>
-                <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
-                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{c.views} xem</span>
-              </div>
-            ))
+            topContent.data.items.map((c, i) => {
+              const postUrl = routeFor('post', c.slug || c.contentId);
+              return (
+                <div
+                  key={c.contentId}
+                  style={{
+                    padding: 'var(--space-3) var(--gutter-card)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-3)',
+                    boxShadow: i < topContent.data.items.length - 1 ? 'inset 0 -1px 0 var(--border-hairline, var(--grey-100))' : 'none',
+                  }}
+                >
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24, flexShrink: 0, fontWeight: 'var(--fw-semibold)' }}>
+                    {i + 1}
+                  </span>
+                  <a
+                    href={postUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Mở bài viết: ${c.title}`}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      font: 'var(--type-body-sm)',
+                      fontWeight: 'var(--fw-medium)',
+                      color: 'var(--text-strong)',
+                      textDecoration: 'none',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      transition: 'color 140ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--action-primary, #3b5bff)';
+                      const icon = e.currentTarget.querySelector('.dash-ext-link');
+                      if (icon) icon.style.opacity = '1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-strong)';
+                      const icon = e.currentTarget.querySelector('.dash-ext-link');
+                      if (icon) icon.style.opacity = '0.35';
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {c.title}
+                    </span>
+                    <ExternalLink
+                      className="dash-ext-link"
+                      size={13}
+                      style={{ flexShrink: 0, opacity: 0.35, transition: 'opacity 140ms ease' }}
+                      aria-hidden="true"
+                    />
+                  </a>
+                  {patch && (
+                    <button
+                      type="button"
+                      onClick={() => patch({ screen: 'compose', editPostId: c.contentId })}
+                      title="Chỉnh sửa bài viết trong Admin"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 4,
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        borderRadius: 'var(--radius-sm, 4px)',
+                        transition: 'color 140ms ease, background-color 140ms ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--action-primary, #3b5bff)';
+                        e.currentTarget.style.background = 'var(--surface-subtle, rgba(0,0,0,0.05))';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--text-muted)';
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <Edit3 size={13} aria-hidden="true" />
+                    </button>
+                  )}
+                  <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    {c.views} xem
+                  </span>
+                </div>
+              );
+            })
           ) : (
             <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có dữ liệu bài viết</EmptyBlock></div>
           )}

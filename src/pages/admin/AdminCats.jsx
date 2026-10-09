@@ -40,7 +40,7 @@ const DEFAULT_FAQ_SETS = [
       { question: 'Biển số đẹp có sang tên được không?', answer: 'Có. Tất cả biển số trên Biensovip đều có hồ sơ đầy đủ và sang tên được theo đúng quy định pháp luật. Xem thêm tại trang Hướng dẫn sang tên.' },
       { question: 'Mua biển số trả góp được không?', answer: 'Hiện tại chúng tôi hỗ trợ thanh toán 2 đợt: đặt cọc 30–50% khi ký hợp đồng, phần còn lại sau khi sang tên hoàn tất. Với biển giá trị cao, có thể thương lượng thêm.' },
       { question: 'Tôi ở tỉnh khác, mua biển số Đà Nẵng có được không?', answer: 'Được. Bạn cần có hộ khẩu hoặc tạm trú dài hạn tại Đà Nẵng để đăng ký sang tên. Nếu chưa có, chúng tôi sẽ tư vấn giải pháp phù hợp.' },
-      { question: 'Làm sao biết biển số là thật, không phải lừa đảo?', answer: 'Biensovip hoạt động công khai tại Đà Nẵng, có địa chỉ văn phòng rõ ràng. Mọi giao dịch đều có hợp đồng công chứng. Bạn có thể đến xem giấy tờ gốc trước khi đặt cọc.' },
+      { question: 'Làm sao biết biển số là thật, không phải lừa đảo?', answer: 'Biensovip hoạt động công khai, tư vấn minh bạch qua Fanpage Facebook và Hotline chính thức. Mọi giao dịch đều có hợp đồng công chứng chuyển nhượng và kiểm tra văn bản gốc trước khi đặt cọc.' },
       { question: 'Sau khi mua, tôi có bán lại được không?', answer: 'Có. Biển số sau khi sang tên là tài sản của bạn. Bạn có thể bán lại bất kỳ lúc nào. Liên hệ chúng tôi để được hỗ trợ đăng bán miễn phí.' },
       { question: 'Phí sang tên là bao nhiêu?', answer: 'Phí sang tên do Nhà nước quy định, khoảng 2–4 triệu đồng tùy loại xe và tỉnh thành. Phí này không bao gồm trong giá biển số.' },
       { question: 'Thời gian sang tên mất bao lâu?', answer: 'Thông thường 1–2 ngày làm việc kể từ khi nộp hồ sơ đầy đủ. Trường hợp phức tạp có thể kéo dài 3–5 ngày.' },

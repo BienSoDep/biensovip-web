@@ -5,7 +5,7 @@ import {
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
-import { Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
+import { Select, IconButton, SearchField, InfoTip, PlateIssueTip } from '../../../components/index.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import Skeleton from '../../../components/Skeleton.jsx';
 import { formatDate } from '../../../lib/date.js';
@@ -325,14 +325,12 @@ export default function PlateTable({
                         {p.plateNumber}
                       </span>
                       {dataIssuesByPlateId.has(p.id) && (
-                        <button
-                          type="button"
+                        <PlateIssueTip
+                          issues={dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c)}
+                          tone="danger"
+                          size={15}
                           onClick={() => openEdit(p)}
-                          title={`Dữ liệu thiếu/sai: ${dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c).join(', ')}`}
-                          style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}
-                        >
-                          <TriangleAlert size={15} color="var(--status-danger)" />
-                        </button>
+                        />
                       )}
                     </div>
                     {isNewPlate(p) && (
@@ -496,14 +494,12 @@ export default function PlateTable({
                     </button>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.plateNumber}</span>
                     {dataIssuesByPlateId.has(p.id) && (
-                      <button
-                        type="button"
+                      <PlateIssueTip
+                        issues={dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c)}
+                        tone="danger"
+                        size={14}
                         onClick={() => openEdit(p)}
-                        title={`Dữ liệu thiếu/sai: ${dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c).join(', ')} — bấm để sửa`}
-                        style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}
-                      >
-                        <TriangleAlert size={14} color="var(--status-danger)" />
-                      </button>
+                      />
                     )}
                   </span>
                   {colPrefs.plateType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>}
@@ -514,10 +510,10 @@ export default function PlateTable({
                       {renderCell(p, 'price')}
                       {!p.priceOnRequest && p.suggestedPrice > 0 && p.price > 0
                         && Math.abs(p.price - p.suggestedPrice) > p.suggestedPrice * 0.1 && (
-                        <TriangleAlert
+                        <PlateIssueTip
+                          text={`Giá bán lệch ${Math.round(Math.abs(p.price - p.suggestedPrice) / p.suggestedPrice * 100)}% so với giá gợi ý VPA (${fmt(p.suggestedPrice)})`}
+                          tone="warning"
                           size={14}
-                          style={{ color: 'var(--status-warning-ink)', flexShrink: 0 }}
-                          title={`Lệch ${Math.round(Math.abs(p.price - p.suggestedPrice) / p.suggestedPrice * 100)}% so giá gợi ý VPA (${fmt(p.suggestedPrice)})`}
                         />
                       )}
                     </span>

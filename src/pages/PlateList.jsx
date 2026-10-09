@@ -42,6 +42,26 @@ import {
   restoreScrollPosition,
   getScrollPosition,
 } from "../lib/scrollRestoration.js";
+import { validBirthDate } from "../lib/date.js";
+
+// Chuyển 'dd/mm/yyyy' sang 'yyyy-mm-dd'
+function parseVnDateToIso(vnDateStr) {
+  if (!vnDateStr) return null;
+  const parts = vnDateStr.trim().split('/');
+  if (parts.length !== 3) return null;
+  const [d, m, y] = parts;
+  if (!d || !m || !y || d.length !== 2 || m.length !== 2 || y.length !== 4) return null;
+  return `${y}-${m}-${d}`;
+}
+
+// Chuyển 'yyyy-mm-dd' sang 'dd/mm/yyyy'
+function parseIsoToVnDate(isoStr) {
+  if (!isoStr) return '';
+  const parts = String(isoStr).slice(0, 10).split('-');
+  if (parts.length !== 3) return '';
+  const [y, m, d] = parts;
+  return `${d}/${m}/${y}`;
+}
 import {
   trackViewItemList,
   trackSelectItem,
@@ -125,6 +145,15 @@ export default function PlateList({
   useEffect(() => {
     writeFiltersToUrl(filters);
   }, [filters]);
+
+  // Đồng bộ lại bộ lọc và tab khi URL thay đổi (click submenu trên Header hoặc back/forward trình duyệt)
+  useEffect(() => {
+    const onPop = () => {
+      setFilters(readFiltersFromUrl());
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   const setFilter = (patch, isPreset = false) => {
     if (patch.q === undefined) trackFilterApply(patch, isPreset);
@@ -389,9 +418,8 @@ export default function PlateList({
     : useInfinite
       ? infiniteItems
       : data?.items || [];
-  const { year: birthYear, fromProfile, setYear } = useBirthYear();
-  const [yearOpen, setYearOpen] = useState(false);
-  const [yearDraft, setYearDraft] = useState("");
+  const { year: birthYear, birthDate, fromProfile, setBirthDate, setYear } = useBirthYear();
+  const [birthDateDraft, setBirthDateDraft] = useState("");
   const [fengshuiOnly, setFengshuiOnly] = useState(false);
   const scoreNumbers = useMemo(
     () => [...new Set(items.map((p) => p.plateNumber))],
@@ -412,15 +440,33 @@ export default function PlateList({
   const shownItems = filterByFengShui
     ? sortedItems.filter((p) => fsFor(p))
     : sortedItems;
-  const submitYear = () => {
-    const y = Number(yearDraft);
-    if (!Number.isInteger(y) || y < 1900 || y > new Date().getFullYear()) {
-      notify?.("Năm sinh không hợp lệ.");
+
+  const handleBirthDateChange = (e) => {
+    const val = e.target.value;
+    let digits = val.replace(/\D/g, "").slice(0, 8);
+    // Nếu bấm Backspace ngay sau dấu '/', xóa lùi 1 chữ số
+    if (val.length < birthDateDraft.length && birthDateDraft.endsWith("/")) {
+      digits = digits.slice(0, -1);
+    }
+    let formatted = "";
+    if (digits.length <= 2) {
+      formatted = digits;
+    } else if (digits.length <= 4) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    } else {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    }
+    setBirthDateDraft(formatted);
+  };
+
+  const submitBirthDate = () => {
+    const iso = parseVnDateToIso(birthDateDraft);
+    if (!iso || !validBirthDate(iso)) {
+      notify?.("Vui lòng nhập đúng cấu trúc ngày/tháng/năm sinh (VD: 20/11/2005).");
       return;
     }
-    setYear(y);
-    setYearOpen(false);
-    setYearDraft("");
+    setBirthDate(iso);
+    setBirthDateDraft("");
   };
   const total = vpaTab
     ? vpaQuery.data?.total || 0
@@ -824,24 +870,13 @@ export default function PlateList({
             }}
           />
           {birthYear ? (
-            <button
-              type="button"
-              title={
-                fromProfile
-                  ? "Lấy từ ngày sinh trong hồ sơ"
-                  : "Bấm để đổi năm sinh"
-              }
-              onClick={() => {
-                if (!fromProfile) {
-                  setYearDraft(String(birthYear));
-                  setYearOpen((v) => !v);
-                }
-              }}
+            <div
               style={{
                 height: 44,
-                padding: "0 16px",
-                border: "none",
-                cursor: fromProfile ? "default" : "pointer",
+                padding: "0 14px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
                 font: "var(--type-body-sm)",
                 fontWeight: "var(--fw-semibold)",
                 background: "var(--mint-100)",
@@ -849,8 +884,45 @@ export default function PlateList({
                 whiteSpace: "nowrap",
               }}
             >
-              🍀 {fsData ? `Mệnh ${fsData.element} · ` : ""}sinh {birthYear}
-            </button>
+              <span>🍀 {fsData ? `Mệnh ${fsData.element} · ` : ""}sinh {birthDate ? parseIsoToVnDate(birthDate) : birthYear}</span>
+              {!fromProfile && (
+                <button
+                  type="button"
+                  title="Bỏ lọc theo ngày sinh"
+                  aria-label="Bỏ lọc ngày sinh"
+                  onClick={() => {
+                    setBirthDate(null);
+                    setBirthDateDraft("");
+                    if (filters.sort === "fengshui")
+                      setFilter({ sort: "newest" });
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    border: "none",
+                    background: "rgba(0,0,0,0.08)",
+                    color: "var(--text-body)",
+                    cursor: "pointer",
+                    padding: 0,
+                    transition: "background-color 140ms ease, color 140ms ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--status-danger)";
+                    e.currentTarget.style.color = "var(--white)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(0,0,0,0.08)";
+                    e.currentTarget.style.color = "var(--text-body)";
+                  }}
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           ) : null}
           {birthYear && fsData && (
             <>
@@ -889,20 +961,19 @@ export default function PlateList({
           )}
           {!birthYear && (
             <input
-              type="number"
+              type="text"
               inputMode="numeric"
-              min="1900"
-              max={new Date().getFullYear()}
-              placeholder="Nhập năm sinh để tìm biển số phong thủy"
-              value={yearDraft}
-              onChange={(e) => setYearDraft(e.target.value)}
+              maxLength={10}
+              placeholder="Nhập ngày tháng năm sinh (dd/mm/yyyy)"
+              value={birthDateDraft}
+              onChange={handleBirthDateChange}
               onKeyDown={(e) => {
-                if (e.key === "Enter") submitYear();
+                if (e.key === "Enter") submitBirthDate();
               }}
-              aria-label="Năm sinh"
+              aria-label="Ngày tháng năm sinh"
               style={{
                 height: 44,
-                width: 300,
+                width: 290,
                 flexShrink: 0,
                 border: "none",
                 background: "transparent",
@@ -913,10 +984,10 @@ export default function PlateList({
               }}
             />
           )}
-          {!birthYear && yearDraft && (
+          {!birthYear && birthDateDraft && (
             <button
               type="button"
-              onClick={submitYear}
+              onClick={submitBirthDate}
               style={{
                 height: 44,
                 padding: "0 20px",
@@ -930,79 +1001,6 @@ export default function PlateList({
             >
               🍀 Xem
             </button>
-          )}
-          {yearOpen && (
-            <>
-              <div
-                className="plate-search-divider"
-                style={{
-                  width: 1,
-                  alignSelf: "stretch",
-                  background: "var(--border-hairline)",
-                  margin: "8px 0",
-                }}
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                min="1900"
-                max={new Date().getFullYear()}
-                placeholder="Năm sinh"
-                value={yearDraft}
-                onChange={(e) => setYearDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") submitYear();
-                }}
-                aria-label="Năm sinh"
-                style={{
-                  width: 100,
-                  height: 44,
-                  border: "none",
-                  background: "transparent",
-                  padding: "0 12px",
-                  font: "var(--type-body-sm)",
-                  outline: "none",
-                }}
-              />
-              <button
-                type="button"
-                onClick={submitYear}
-                style={{
-                  height: 44,
-                  padding: "0 20px",
-                  border: "none",
-                  cursor: "pointer",
-                  font: "var(--type-body-sm)",
-                  fontWeight: "var(--fw-semibold)",
-                  background: "var(--action-primary)",
-                  color: "var(--action-primary-text)",
-                }}
-              >
-                OK
-              </button>
-              {birthYear && !fromProfile && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setYear(null);
-                    setYearOpen(false);
-                    if (filters.sort === "fengshui")
-                      setFilter({ sort: "newest" });
-                  }}
-                  style={{
-                    height: 44,
-                    padding: "0 16px",
-                    border: "none",
-                    cursor: "pointer",
-                    font: "var(--type-body-sm)",
-                    color: "var(--text-muted)",
-                    background: "transparent",
-                  }}
-                >
-                  Bỏ
-                </button>
-              )}
-            </>
           )}
         </div>
 
@@ -1054,88 +1052,7 @@ export default function PlateList({
           })}
         </div>
       </section>
-      <section
-        style={{
-          maxWidth: "var(--width-content)",
-          margin: "0 auto",
-          padding: "var(--space-4) var(--pad-page) var(--space-4)",
-        }}
-      >
-        <span
-          style={{
-            display: "block",
-            marginBottom: "var(--space-2)",
-            font: "var(--type-label)",
-            color: "var(--text-muted)",
-          }}
-        >
-          Loại biển
-        </span>
-        <div
-          style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}
-        >
-          <button
-            type="button"
-            aria-pressed={filters.cat.length === 0}
-            onClick={() => setFilter({ cat: [] })}
-            style={{
-              height: 40,
-              padding: "0 18px",
-              border: "none",
-              borderRadius: "var(--radius-sm)",
-              cursor: "pointer",
-              font: "var(--type-body-sm)",
-              fontWeight:
-                filters.cat.length === 0
-                  ? "var(--fw-bold)"
-                  : "var(--fw-medium)",
-              background:
-                filters.cat.length === 0
-                  ? "var(--action-primary)"
-                  : "var(--surface-sunken)",
-              color:
-                filters.cat.length === 0
-                  ? "var(--action-primary-text)"
-                  : "var(--text-body)",
-              boxShadow:
-                filters.cat.length === 0
-                  ? "none"
-                  : "var(--shadow-inset-hairline)",
-            }}
-          >
-            Tất cả
-          </button>
-          {(plateTypes?.items || []).map((c) => {
-            const active = filters.cat.length === 1 && filters.cat[0] === c.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setFilter({ cat: active ? [] : [c.id] })}
-                style={{
-                  height: 40,
-                  padding: "0 18px",
-                  border: "none",
-                  borderRadius: "var(--radius-sm)",
-                  cursor: "pointer",
-                  font: "var(--type-body-sm)",
-                  fontWeight: active ? "var(--fw-bold)" : "var(--fw-medium)",
-                  background: active
-                    ? "var(--action-primary)"
-                    : "var(--surface-sunken)",
-                  color: active
-                    ? "var(--action-primary-text)"
-                    : "var(--text-body)",
-                  boxShadow: active ? "none" : "var(--shadow-inset-hairline)",
-                }}
-              >
-                {c.name}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+
       <section
         className="list-filter-toggle-row"
         style={{

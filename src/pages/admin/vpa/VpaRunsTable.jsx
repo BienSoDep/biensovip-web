@@ -3,6 +3,7 @@ import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import { Badge, Checkbox, Select } from '../../../components/index.jsx';
 import VpaRunDetail from './VpaRunDetail.jsx';
+import VpaCrawlCharts from './VpaCrawlCharts.jsx';
 import { useVpaRunSearch, exportVpaRunsCsv } from '../../../services/adminVpa.js';
 import {
   VPA_SOURCES,
@@ -33,10 +34,20 @@ const PAGE_SIZE = 20;
 const RESUME_WINDOW_MS = 6 * 3600 * 1000; // Khớp VpaRunSupport.ResumeWindow ở backend
 
 // Phân bổ 9 cột cân đối theo tỷ lệ, co giãn tự nhiên trên màn hình rộng
-const COLS = 'minmax(160px, 1.15fr) minmax(180px, 1.35fr) minmax(150px, 1.1fr) minmax(135px, 1fr) minmax(160px, 1.2fr) minmax(150px, 1.1fr) minmax(130px, 0.95fr) minmax(170px, 1.25fr) minmax(130px, 0.9fr)';
+const COLS = 'minmax(160px, 1.15fr) minmax(175px, 1.25fr) minmax(160px, 1.15fr) minmax(140px, 1fr) minmax(155px, 1.1fr) minmax(145px, 1.05fr) minmax(125px, 0.9fr) minmax(165px, 1.2fr) minmax(115px, 0.85fr)';
+
+function formatTriggeredBy(val) {
+  if (!val) return 'Admin';
+  const clean = String(val).replace(/^admin:/i, '').trim();
+  if (clean.includes('@')) {
+    const user = clean.split('@')[0];
+    return user.length > 14 ? `${user.slice(0, 12)}…` : user;
+  }
+  return clean.length > 14 ? `${clean.slice(0, 12)}…` : clean;
+}
 
 const ALL = { value: '', label: 'Tất cả' };
-const SOURCE_OPTS = [ALL, ...VPA_SOURCES.map((s) => ({ value: String(s.id), label: s.label }))];
+const SOURCE_OPTS = [ALL, ...VPA_SOURCES.map((s) => ({ value: String(s.id), label: s.note ? `${s.label} (${s.note})` : s.label }))];
 const VEHICLE_OPTS = [ALL, { value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const STATUS_OPTS = [ALL, ...Object.entries(VPA_RUN_STATUS).map(([value, label]) => ({ value, label }))];
 const dateField = {
@@ -175,6 +186,9 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
         )}
       </div>
 
+      {/* Biểu đồ theo dõi tiến độ và lịch sử crawl data */}
+      <VpaCrawlCharts items={items} onSelectRun={(r) => setDetail(r)} />
+
       {/* Thanh bộ lọc */}
       <div
         style={{
@@ -234,7 +248,7 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
           overflowX: 'auto',
         }}
       >
-        <div style={{ minWidth: 1280 }}>
+        <div style={{ minWidth: 1380 }}>
           {/* Header bảng */}
           <div
             style={{
@@ -252,15 +266,15 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
               alignItems: 'center',
             }}
           >
-            <span>Thời gian & Thời lượng</span>
-            <span>Nguồn & Loại xe</span>
-            <span>Trạng thái & Nguồn gốc</span>
-            <span>Tiến độ cào (Tỉnh · Trang)</span>
-            <span>Quét thấy / Dự kiến</span>
-            <span>Biến động (Mới · Sửa)</span>
-            <span>Tốc độ & Hiệu suất</span>
-            <span>Ghi chú / Báo lỗi</span>
-            <span style={{ textAlign: 'right' }}>Thao tác</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Thời gian & Thời lượng</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Nguồn & Loại xe</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Trạng thái & Nguồn gốc</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tiến độ cào (Tỉnh · Trang)</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Quét thấy / Dự kiến</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Biến động (Mới · Sửa)</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tốc độ & Hiệu suất</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Ghi chú / Báo lỗi</span>
+            <span style={{ textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Thao tác</span>
           </div>
 
           {isLoading && (
@@ -314,10 +328,10 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                 }}
               >
                 {/* Cột 1: Thời gian & Thời lượng */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
                     <Clock size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                    <span>{formatDateTime(r.startedAt)}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formatDateTime(r.startedAt)}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <span
@@ -331,24 +345,30 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                         font: 'var(--type-caption)',
                         fontSize: '11px',
                         color: 'var(--text-strong)',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {dur != null ? formatDuration(dur) : r.status === 0 ? '⚡ Đang chạy…' : '—'}
                     </span>
                     {isFinished && (
-                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-faint)' }}>
-                        Xong lúc {new Date(r.finishedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>
+                        Xong {new Date(r.finishedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     )}
                   </div>
                 </div>
 
                 {/* Cột 2: Nguồn & Loại xe */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <span style={{ fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {src?.label || 'Nguồn khác'}
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {src?.note && (
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', fontSize: '11px', fontWeight: 'var(--fw-semibold)', marginTop: -1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {src.note}
+                    </span>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
                     <span
                       style={{
                         padding: '1px 6px',
@@ -358,12 +378,13 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                         font: 'var(--type-caption)',
                         fontSize: '11px',
                         fontWeight: 'var(--fw-medium)',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {r.vehicle == null ? 'Cả hai loại' : isCar(r.vehicle) ? '🚗 Ô tô' : '🏍️ Xe máy'}
+                      {r.vehicle == null ? 'Cả hai' : isCar(r.vehicle) ? '🚗 Ô tô' : '🏍️ Xe máy'}
                     </span>
                     {settings && (
-                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)' }}>
+                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {vpaScheduleWindowLabel(settings, r.source)}
                       </span>
                     )}
@@ -371,40 +392,75 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                 </div>
 
                 {/* Cột 3: Trạng thái & Khởi tạo */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start', minWidth: 0, overflow: 'hidden' }}>
                   <Badge tone={VPA_RUN_STATUS_TONE[r.status] || 'neutral'}>
                     {VPA_RUN_STATUS[r.status]}
                     {r.complete ? ' ✓ đủ' : ''}
                   </Badge>
-                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <Badge tone={r.triggeredBy === 'schedule' ? 'blue' : 'orange'}>
-                      {r.triggeredBy === 'schedule' ? '⏱ Tự động' : `✋ ${r.triggeredBy?.replace('admin:', '') || 'Admin'}`}
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', maxWidth: '100%', minWidth: 0 }}>
+                    <Badge
+                      tone={r.triggeredBy === 'schedule' ? 'blue' : 'orange'}
+                      title={r.triggeredBy ? `Người chạy: ${r.triggeredBy}` : undefined}
+                      style={{
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {r.triggeredBy === 'schedule' ? '⏱ Tự động' : `✋ ${formatTriggeredBy(r.triggeredBy)}`}
                     </Badge>
                     {r.dryRun && <Badge tone="amber">Thử nghiệm</Badge>}
-                    {r.options && <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--action-primary)' }}>{r.options}</span>}
+                    {r.options && (
+                      <span
+                        title={r.options}
+                        style={{
+                          font: 'var(--type-caption)',
+                          fontSize: '11px',
+                          color: 'var(--action-primary)',
+                          maxWidth: '100%',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {r.options}
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 {/* Cột 4: Tiến độ cào (Tỉnh · Trang) */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                    <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, minWidth: 0 }}>
+                    <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {r.slicesTotal ? `${r.slicesDone}/${r.slicesTotal} tỉnh` : 'Toàn quốc'}
                     </span>
                   </div>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     <strong>{formatInt(r.pagesFetched)}</strong> trang
                   </span>
                   {r.currentSlice && (
-                    <span style={{ font: 'var(--type-caption)', fontSize: '10px', color: 'var(--action-primary)' }}>
+                    <span
+                      title={`Đang: ${r.currentSlice}`}
+                      style={{
+                        font: 'var(--type-caption)',
+                        fontSize: '10px',
+                        color: 'var(--action-primary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%',
+                      }}
+                    >
                       Đang: {r.currentSlice}
                     </span>
                   )}
                 </div>
 
                 {/* Cột 5: Quét thấy / Dự kiến */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, minWidth: 0 }}>
                     <strong style={{ color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums' }}>
                       {formatInt(r.itemsSeen)}
                     </strong>
@@ -433,13 +489,13 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                     />
                   </div>
 
-                  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', minWidth: 0 }}>
                     {r.itemsMissing > 0 ? (
-                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--status-danger)', fontWeight: 'var(--fw-semibold)' }}>
+                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--status-danger)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap' }}>
                         Thiếu {formatInt(r.itemsMissing)} biển
                       </span>
                     ) : (
-                      <span style={{ font: 'var(--type-caption)', fontSize: '10px', color: 'var(--status-success-ink, #16a34a)' }}>
+                      <span style={{ font: 'var(--type-caption)', fontSize: '10px', color: 'var(--status-success-ink, #16a34a)', whiteSpace: 'nowrap' }}>
                         {completionPct}% đạt chuẩn
                       </span>
                     )}
@@ -447,7 +503,7 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                 </div>
 
                 {/* Cột 6: Biến động (Mới · Cập nhật) */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span
                       style={{
@@ -458,13 +514,14 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                         fontWeight: r.inserted > 0 ? 'var(--fw-bold)' : 'var(--fw-normal)',
                         font: 'var(--type-caption)',
                         fontSize: '11px',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       +{formatInt(r.inserted)} mới
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 6, font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)' }}>
+                  <div style={{ display: 'flex', gap: 6, font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     <span>{formatInt(r.updated)} sửa</span>
                     {r.tabChanges > 0 && (
                       <span style={{ color: 'var(--action-primary)', fontWeight: 'var(--fw-medium)' }}>
@@ -474,8 +531,8 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                   </div>
                 </div>
 
-                {/* Cột 7: Tốc độ & Hiệu suất (MỚI THÊM) */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* Cột 7: Tốc độ & Hiệu suất */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                   {itemsPerSec != null ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <Zap size={12} style={{ color: 'var(--action-primary)' }} />
@@ -489,13 +546,13 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                   )}
 
                   {pagesPerMin != null && (
-                    <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)' }}>
+                    <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                       ~{pagesPerMin} trang/phút
                     </span>
                   )}
 
                   {r.rounds > 1 && (
-                    <span style={{ font: 'var(--type-caption)', fontSize: '10px', color: 'var(--text-faint)' }}>
+                    <span style={{ font: 'var(--type-caption)', fontSize: '10px', color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>
                       {r.rounds} vòng tải bù
                     </span>
                   )}
@@ -529,12 +586,12 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                 </div>
 
                 {/* Cột 9: Thao tác */}
-                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap', minWidth: 0 }}>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setDetail(r)}
-                    style={{ height: 30, padding: '0 10px', fontSize: '12px' }}
+                    style={{ height: 30, padding: '0 10px', fontSize: '12px', whiteSpace: 'nowrap' }}
                   >
                     Chi tiết
                   </Button>
@@ -543,7 +600,7 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                       variant={resumable ? 'primary' : 'outline'}
                       size="sm"
                       onClick={() => rerun(r)}
-                      style={{ height: 30, padding: '0 10px', fontSize: '12px' }}
+                      style={{ height: 30, padding: '0 10px', fontSize: '12px', whiteSpace: 'nowrap' }}
                     >
                       {resumable ? 'Tiếp tục' : 'Chạy lại'}
                     </Button>
