@@ -323,14 +323,19 @@ const BADGE_TONES = {
   neutral: { background: 'var(--grey-100)', color: 'var(--text-muted)' },
 };
 
-export function Badge({ tone = 'neutral', children }) {
+export function Badge({ tone = 'neutral', children, title, style: customStyle, className }) {
   const t = BADGE_TONES[tone] || BADGE_TONES.neutral;
   return (
-    <span style={{
-      height: 24, maxWidth: '100%', padding: '0 8px', borderRadius: 'var(--radius-xs)', display: 'inline-flex', alignItems: 'center',
-      overflow: 'hidden', textOverflow: 'ellipsis',
-      font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', ...t,
-    }}>{children}</span>
+    <span
+      className={className}
+      title={title}
+      style={{
+        height: 24, maxWidth: '100%', padding: '0 8px', borderRadius: 'var(--radius-xs)', display: 'inline-flex', alignItems: 'center',
+        overflow: 'hidden', textOverflow: 'ellipsis',
+        font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', ...t,
+        ...customStyle,
+      }}
+    >{children}</span>
   );
 }
 
@@ -350,10 +355,11 @@ export function Icon({ name, size = 18 }) {
   return I ? <I size={size} /> : null;
 }
 
-export function IconButton({ name, label, onClick, size = 'md', style, disabled }) {
+export function IconButton({ name, label, onClick, size = 'md', style, disabled, className }) {
   const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 44;
   return (
     <button type="button" aria-label={label} onClick={onClick} disabled={disabled}
+      className={`icon-btn pressable ${className || ''}`}
       style={{
         width: px, height: px, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)',
@@ -364,9 +370,9 @@ export function IconButton({ name, label, onClick, size = 'md', style, disabled 
   );
 }
 
-export function Card({ children, tone, pad, style }) {
+export function Card({ children, tone, pad, style, className }) {
   return (
-    <div style={{ background: tone === 'sunken' ? 'var(--surface-sunken)' : 'var(--white)', borderRadius: 'var(--radius-card)', padding: pad, boxShadow: tone === 'sunken' ? undefined : 'var(--shadow-inset-hairline)', transition: 'var(--transition-card)', ...style }}>
+    <div className={className} style={{ background: tone === 'sunken' ? 'var(--surface-sunken)' : 'var(--white)', borderRadius: 'var(--radius-card)', padding: pad, boxShadow: tone === 'sunken' ? undefined : 'var(--shadow-inset-hairline)', transition: 'var(--transition-card)', ...style }}>
       {children}
     </div>
   );

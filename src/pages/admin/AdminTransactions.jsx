@@ -1,6 +1,25 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { useAdminTransactions, useCreateTransaction, useConfirmTransactionPayment, useDeleteTransaction, useDeletedTransactions, useRestoreTransaction } from '../../services/adminTransactions.js';
+import {
+  Search,
+  Copy,
+  X,
+  Clock,
+  CheckCircle2,
+  Wallet,
+  Download,
+  Phone,
+  MessageCircle,
+  Plus,
+} from 'lucide-react';
+import {
+  useAdminTransactions,
+  useCreateTransaction,
+  useConfirmTransactionPayment,
+  useDeleteTransaction,
+  useDeletedTransactions,
+  useRestoreTransaction,
+} from '../../services/adminTransactions.js';
 import { usePlates } from '../../services/plates.js';
 import { Select, Input, Badge, ImageUrlInput } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
@@ -9,10 +28,11 @@ import Drawer from '../../components/Drawer.jsx';
 import Button from '../../components/Button.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
-import { formatDateTime } from '../../lib/date.js';
+import { formatDateTime, formatDate } from '../../lib/date.js';
+import { toZaloUrl } from '../../lib/zaloMessage.js';
 
 const STATUS_OPTS = [
-  { value: 'all', label: 'Tất cả' },
+  { value: 'all', label: 'Tất cả trạng thái' },
   { value: 'pending', label: 'Chờ thanh toán' },
   { value: 'payment_confirmed', label: 'Đã xác nhận' },
   { value: 'cancelled', label: 'Đã hủy' },
@@ -22,13 +42,13 @@ const INTENT_LABEL = { deposit_request: 'Đặt cọc', buy: 'Mua đứt' };
 const COMMISSION_STATUS_LABEL = { pending: 'Chờ duyệt', approved: 'Đã duyệt', paid: 'Đã trả', cancelled: 'Đã hủy' };
 const COMMISSION_STATUS_TONE = { pending: 'orange', approved: 'mint', paid: 'mint', cancelled: 'neutral' };
 const money = (n) => (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
-// Đếm ngược số ngày còn lại trước khi TransactionPurgeJob xóa cứng (retention 30 ngày, xem backend).
+
 const daysLeftInTrash = (deletedAt) => {
   if (!deletedAt) return null;
   const elapsedMs = Date.now() - new Date(deletedAt).getTime();
   return Math.max(0, 30 - Math.floor(elapsedMs / 86400000));
 };
-// Tooltip đầy đủ thông tin chuyển khoản CTV — hiện khi hover cột CTV/Hoa hồng để admin đối chiếu lúc duyệt.
+
 const ctvBankInfo = (t) => {
   if (!t.ctvName) return undefined;
   const parts = [t.ctvName];
@@ -38,8 +58,6 @@ const ctvBankInfo = (t) => {
   return parts.join(' — ');
 };
 
-// UC37 — form "Tạo giao dịch", tái dùng cho cả nút tạo tay ở trang này và nút "Tạo giao dịch từ liên hệ này"
-// ở AdminContacts (truyền sẵn prefill).
 export function CreateTransactionForm({ prefill, onDone, notify }) {
   const [plateQuery, setPlateQuery] = useState('');
   const [debouncedQuery] = useDebouncedValue(plateQuery, 300);
@@ -108,12 +126,16 @@ export function CreateTransactionForm({ prefill, onDone, notify }) {
 
 export default function AdminTransactions({ notify, filterContactRequestId }) {
   const [status, setStatus] = useState('all');
+  const [search, setSearch] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [proofUrl, setProofUrl] = useState('');
-  const [detailTx, setDetailTx] = useState(null); // giao dịch đang mở Drawer chi tiết (trượt từ phải)
-  const { data, isLoading, isError, refetch } = useAdminTransactions({ status, page, limit: 20 });
+  const [detailTx, setDetailTx] = useState(null);
+
+  const { data, isLoading, isError, refetch } = useAdminTransactions({ status, page, limit: 50 });
   const confirmPayment = useConfirmTransactionPayment();
   const deleteTransaction = useDeleteTransaction();
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -121,7 +143,50 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const restoreTransaction = useRestoreTransaction();
   const deletedItems = deletedData?.items || [];
 
-  const items = (data?.items || []).filter((t) => !filterContactRequestId || t.contactRequestId === filterContactRequestId);
+  const rawItems = (data?.items || []).filter((t) => !filterContactRequestId || t.contactRequestId === filterContactRequestId);
+
+  // Lọc tìm kiếm & ngày
+  const items = useMemo(() => {
+    let list = rawItems;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((t) =>
+        (t.fullName && t.fullName.toLowerCase().includes(q)) ||
+        (t.phone && t.phone.includes(q)) ||
+        (t.plateNumber && t.plateNumber.toLowerCase().includes(q)) ||
+        (t.ctvName && t.ctvName.toLowerCase().includes(q))
+      );
+    }
+    if (fromDate) {
+      const start = new Date(fromDate).getTime();
+      list = list.filter((t) => new Date(t.createdAt).getTime() >= start);
+    }
+    if (toDate) {
+      const end = new Date(toDate).getTime() + 86400000;
+      list = list.filter((t) => new Date(t.createdAt).getTime() <= end);
+    }
+    return list;
+  }, [rawItems, search, fromDate, toDate]);
+
+  // Thống kê nhanh số tiền
+  const kpis = useMemo(() => {
+    let pendingSum = 0;
+    let pendingCnt = 0;
+    let confirmedSum = 0;
+    let confirmedCnt = 0;
+    rawItems.forEach((t) => {
+      const val = Number(t.amount) || 0;
+      if (t.status === 'pending') {
+        pendingSum += val;
+        pendingCnt++;
+      } else if (t.status === 'payment_confirmed') {
+        confirmedSum += val;
+        confirmedCnt++;
+      }
+    });
+    return { pendingSum, pendingCnt, confirmedSum, confirmedCnt };
+  }, [rawItems]);
+
   const total = data?.total || 0;
   const totalPages = Math.max(1, Math.ceil(total / (data?.limit || 20)));
 
@@ -147,7 +212,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   };
 
   const handleRestore = async (t) => {
-    if (!window.confirm(`Khôi phục giao dịch của ${t.fullName}? Giao dịch sẽ trở lại danh sách và không bị xóa vĩnh viễn nữa.`)) return;
+    if (!window.confirm(`Khôi phục giao dịch của ${t.fullName}? Giao dịch sẽ trở lại danh sách.`)) return;
     try {
       await restoreTransaction.mutateAsync(t.id);
       notify('Đã khôi phục giao dịch');
@@ -156,17 +221,111 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
     }
   };
 
+  const copyText = (e, text, msg) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    notify(msg || `Đã sao chép ${text}`);
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatus('all');
+    setFromDate('');
+    setToDate('');
+  };
+
+  const hasFilter = search.trim() || status !== 'all' || fromDate || toDate;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái:</span>
-          <Select value={status} options={STATUS_OPTS} onChange={(v) => { setStatus(v); setPage(1); }} variant="pill" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      {/* 1. Hàng KPI tổng tiền giao dịch */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 'var(--space-2)' }}>
+        <div style={{ background: 'var(--white)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--brand-50, #fff7ed)', color: 'var(--action-primary, #C75B00)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Clock size={18} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: '11px' }}>Chờ xác nhận tiền ({kpis.pendingCnt})</span>
+            <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '16px', color: 'var(--action-primary, #C75B00)' }}>
+              {money(kpis.pendingSum)}
+            </span>
+          </div>
         </div>
-        <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{total} giao dịch</span>
-        <Button variant="primary" size="md" onClick={() => setCreating(true)}>Tạo giao dịch</Button>
+
+        <div style={{ background: 'var(--white)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--mint-50, #ecfdf5)', color: 'var(--status-success-ink, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={18} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: '11px' }}>Đã xác nhận thanh toán ({kpis.confirmedCnt})</span>
+            <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '16px', color: 'var(--status-success-ink, #059669)' }}>
+              {money(kpis.confirmedSum)}
+            </span>
+          </div>
+        </div>
       </div>
 
+      {/* 2. Thanh tìm kiếm và bộ lọc */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'var(--space-3)',
+          alignItems: 'center',
+          background: 'var(--white)',
+          padding: '10px 14px',
+          borderRadius: 'var(--radius-card)',
+          border: '1px solid var(--border-hairline)',
+          boxShadow: 'var(--shadow-inset-hairline)',
+        }}
+      >
+        <div style={{ position: 'relative', minWidth: 200, flex: '1 1 200px' }}>
+          <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo tên khách, SĐT, biển số, CTV…"
+            style={{
+              width: '100%',
+              boxSizing: 'border-box',
+              height: 36,
+              padding: '0 12px 0 32px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--grey-200)',
+              font: 'var(--type-body-sm)',
+              color: 'var(--text-body)',
+              background: 'var(--white)',
+              outline: 'none',
+            }}
+          />
+        </div>
+
+        <Select value={status} options={STATUS_OPTS} onChange={(v) => { setStatus(v); setPage(1); }} variant="pill" />
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          <span>Từ:</span>
+          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ height: 34, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-sm)', background: 'var(--white)', padding: '0 8px', font: 'var(--type-caption)' }} />
+        </label>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          <span>Đến:</span>
+          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ height: 34, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-sm)', background: 'var(--white)', padding: '0 8px', font: 'var(--type-caption)' }} />
+        </label>
+
+        {hasFilter && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <X size={13} /> Xóa lọc
+          </Button>
+        )}
+
+        <div style={{ flex: 1 }} />
+
+        <Button variant="primary" size="md" onClick={() => setCreating(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Plus size={15} /> Tạo giao dịch
+        </Button>
+      </div>
+
+      {/* 3. Danh sách giao dịch */}
       {isLoading ? (
         <SkeletonTable rows={5} cols={6} />
       ) : isError ? (
@@ -175,68 +334,106 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
           <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
         </div>
       ) : items.length === 0 ? (
-        <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có giao dịch nào.</div>
+        <div style={{ padding: '48px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có giao dịch nào khớp bộ lọc.</div>
       ) : (
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden', border: '1px solid var(--border-hairline)' }}>
           <div className="admin-table-scroll" style={{ overflowX: 'auto' }}>
-            <div className="admin-rows" style={{ minWidth: 780 }}>
+            <div className="admin-rows" style={{ minWidth: 840 }}>
               <div className="admin-head" style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                <span style={{ flex: '1 1 100px' }}>Khách</span>
+                <span style={{ flex: '1 1 120px' }}>Khách hàng</span>
                 <span style={{ flex: '1 1 100px' }}>Biển số</span>
                 <span style={{ flex: '1 1 90px' }}>Số tiền</span>
-                <span style={{ flex: '1 1 80px' }}>Loại</span>
-                <span style={{ flex: '1 1 90px' }}>CTV</span>
+                <span style={{ flex: '1 1 70px' }}>Loại</span>
+                <span style={{ flex: '1 1 100px' }}>Cộng tác viên</span>
                 <span style={{ flex: '1 1 110px' }}>Hoa hồng</span>
-                <span style={{ flex: '1 1 140px' }}>Trạng thái</span>
+                <span style={{ flex: '1 1 150px' }}>Trạng thái</span>
+                <span style={{ flex: '0 0 90px', textAlign: 'right' }}>Thao tác</span>
               </div>
               {items.map((t) => (
-                <div className="admin-row" key={t.id} onClick={() => setDetailTx(t)} role="button" tabIndex={0}
+                <div
+                  className="admin-row"
+                  key={t.id}
+                  onClick={() => setDetailTx(t)}
+                  role="button"
+                  tabIndex={0}
                   onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setDetailTx(t); } }}
-                  title="Xem chi tiết giao dịch" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)', cursor: 'pointer' }}>
-                  <span data-primary data-label="Khách" style={{ flex: '1 1 100px' }}>
-                    <div>{t.fullName}</div>
-                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.phone}</div>
+                  title="Xem chi tiết giao dịch"
+                  style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)', cursor: 'pointer' }}
+                >
+                  <span data-primary data-label="Khách" style={{ flex: '1 1 120px' }}>
+                    <div style={{ fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{t.fullName}</div>
+                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span>{t.phone}</span>
+                      <button type="button" title="Sao chép SĐT" onClick={(e) => copyText(e, t.phone, 'Đã sao chép SĐT')} style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}>
+                        <Copy size={11} />
+                      </button>
+                      <a href={`tel:${t.phone}`} title="Gọi" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--action-primary)' }}><Phone size={12} /></a>
+                      <a href={toZaloUrl(t.phone)} target="_blank" rel="noreferrer" title="Zalo" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--blue-700)' }}><MessageCircle size={12} /></a>
+                    </div>
                   </span>
-                  <span data-label="Biển số" style={{ flex: '1 1 100px' }}>{t.plateNumber || '—'}</span>
-                  <span data-label="Số tiền" style={{ flex: '1 1 90px', fontWeight: 'var(--fw-semibold)' }}>{money(t.amount)}</span>
-                  <span data-label="Loại" style={{ flex: '1 1 80px' }}>{INTENT_LABEL[t.intent] || t.intent}</span>
-                  <span data-label="CTV" style={{ flex: '1 1 90px' }}>
+
+                  <span data-label="Biển số" style={{ flex: '1 1 100px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>{t.plateNumber || '—'}</span>
+                    {t.plateNumber && (
+                      <button type="button" title="Sao chép biển" onClick={(e) => copyText(e, t.plateNumber, 'Đã sao chép số biển')} style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}>
+                        <Copy size={11} />
+                      </button>
+                    )}
+                  </span>
+
+                  <span data-label="Số tiền" style={{ flex: '1 1 90px', fontWeight: 'var(--fw-bold)', color: 'var(--status-success-ink, #059669)' }}>
+                    {money(t.amount)}
+                  </span>
+
+                  <span data-label="Loại" style={{ flex: '1 1 70px' }}>
+                    <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: '11px', background: 'var(--surface-sunken)', color: 'var(--text-body)' }}>
+                      {INTENT_LABEL[t.intent] || t.intent}
+                    </span>
+                  </span>
+
+                  <span data-label="CTV" style={{ flex: '1 1 100px' }}>
                     {t.ctvName ? (
                       <span title={ctvBankInfo(t)} style={{ display: 'block', cursor: 'help' }}>
                         <div style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{t.ctvName}</div>
                         <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.ctvPhone}</div>
                       </span>
                     ) : (
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.referralCodeUsed || '—'}</span>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{t.referralCodeUsed || '—'}</span>
                     )}
                   </span>
+
                   <span data-label="Hoa hồng" style={{ flex: '1 1 110px' }}>
                     {t.commissionAmount != null ? (
                       <span title={ctvBankInfo(t)} style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: t.ctvBankAccount ? 'help' : 'default' }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(t.commissionAmount)}</span>
                         <Badge tone={COMMISSION_STATUS_TONE[t.commissionStatus] || 'neutral'}>{COMMISSION_STATUS_LABEL[t.commissionStatus] || t.commissionStatus}</Badge>
-                        {t.ctvBankAccount && (
-                          <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-faint)' }}>{t.ctvBankAccount}</span>
-                        )}
                       </span>
                     ) : (
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
                     )}
                   </span>
-                  <span data-label="Trạng thái" style={{ flex: '1 1 140px', display: 'flex', alignItems: 'center', gap: 8 }}>
+
+                  <span data-label="Trạng thái" style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <Badge tone={t.status === 'payment_confirmed' ? 'mint' : t.status === 'cancelled' ? 'neutral' : 'orange'}>
                       {STATUS_LABEL[t.status] || t.status}
                     </Badge>
                     {t.status === 'payment_confirmed' && (
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontSize: '11px' }}>
                         {t.paymentConfirmedVia === 'zalopay_webhook' ? 'ZaloPay' : 'Thủ công'}
                       </span>
                     )}
+                  </span>
+
+                  <span data-label="Thao tác" style={{ flex: '0 0 90px', display: 'flex', justifyContent: 'flex-end', gap: 6 }} onClick={(e) => e.stopPropagation()}>
                     {t.status === 'pending' && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); setConfirmTarget(t); setProofUrl(''); }}>Xác nhận đã nhận tiền</Button>
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); }} style={{ color: 'var(--status-danger)' }}>Xóa</Button>
-                      </>
+                      <Button variant="primary" size="sm" onClick={() => { setConfirmTarget(t); setProofUrl(''); }}>
+                        Xác nhận
+                      </Button>
+                    )}
+                    {t.status === 'pending' && (
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(t)} style={{ color: 'var(--status-danger)' }}>
+                        Xóa
+                      </Button>
                     )}
                   </span>
                 </div>

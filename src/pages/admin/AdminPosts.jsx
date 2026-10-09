@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import {
   ChevronLeft, ChevronRight, Search, X, Plus, Pencil, Trash2,
   ExternalLink, AlertTriangle, CheckCircle2, Image, FileText, Tag,
-  HelpCircle, Sparkles, Filter, Info, Layers
+  HelpCircle, Sparkles, Filter, Info, Layers, RotateCw, Clock
 } from 'lucide-react';
 import { Badge, IconButton, Select, InfoTip } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
@@ -265,6 +265,111 @@ export default function AdminPosts({ st, patch, notify }) {
         </div>
       </div>
 
+      {/* 4 Thẻ KPI Thống kê bài viết */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-3)' }}>
+        <div
+          onClick={() => changeStatus('')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: status === '' ? '2px solid var(--action-primary)' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FileText size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tổng bài viết</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--text-strong)' }}>{total}</div>
+          </div>
+        </div>
+
+        <div
+          onClick={() => changeStatus('published')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: status === 'published' ? '2px solid #059669' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã xuất bản</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>
+              {rawItems.filter((p) => p.status === 'published').length}
+            </div>
+          </div>
+        </div>
+
+        <div
+          onClick={() => changeStatus('draft')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: status === 'draft' ? '2px solid #d97706' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Clock size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bản nháp</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#d97706' }}>
+              {rawItems.filter((p) => p.status === 'draft').length}
+            </div>
+          </div>
+        </div>
+
+        <div
+          onClick={() => setQualityFilter('issues')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: qualityFilter === 'issues' ? '2px solid #7c3aed' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đạt chuẩn SEO 100%</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>
+              {qualityStats.perfectCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>/ {itemsWithQuality.length}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 1. Lọc Chuyên Mục (Category Tabs) */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
@@ -362,6 +467,26 @@ export default function AdminPosts({ st, patch, notify }) {
               </button>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            title="Làm mới danh sách"
+            style={{
+              height: 34,
+              width: 34,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--radius-field)',
+              border: '1px solid var(--border-hairline)',
+              background: 'var(--white)',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <RotateCw size={14} />
+          </button>
         </div>
 
         {/* Dropdown sắp xếp */}
@@ -583,8 +708,53 @@ export default function AdminPosts({ st, patch, notify }) {
 
                 {/* Thao tác */}
                 <div style={{ flex: '0 0 88px', display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-                  <IconButton name="pencil" label="Sửa bài viết" size="sm" onClick={() => openEditPost(a)} />
-                  <IconButton name="trash-2" label="Xóa" size="sm" disabled={deletingId === a.id} onClick={() => confirmRemove(a)} />
+                  <button
+                    type="button"
+                    onClick={() => openEditPost(a)}
+                    title="Chỉnh sửa bài viết"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 'var(--radius-field)',
+                      border: 'none',
+                      background: 'var(--surface-sunken)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--text-body)',
+                      transition: 'background 120ms ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-muted)'; e.currentTarget.style.color = 'var(--text-strong)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; e.currentTarget.style.color = 'var(--text-body)'; }}
+                  >
+                    <Pencil size={14} />
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={deletingId === a.id}
+                    onClick={() => confirmRemove(a)}
+                    title="Xóa bài viết"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 'var(--radius-field)',
+                      border: 'none',
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      cursor: deletingId === a.id ? 'default' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#dc2626',
+                      opacity: deletingId === a.id ? 0.5 : 1,
+                      transition: 'background 120ms ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'; }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             ))}

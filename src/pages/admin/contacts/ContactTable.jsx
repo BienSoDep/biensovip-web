@@ -1,4 +1,4 @@
-import { Loader2, MessageCircle, Phone, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, MessageCircle, Phone, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Copy, X, Search } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
@@ -124,24 +124,19 @@ export default function ContactTable({
       </div>
 
       {/* Filter toolbar */}
-      <div className={`admin-contacts-filters ${mobileFiltersOpen ? 'admin-filters-mobile-open' : ''}`} style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
-        <input
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Tìm tên / SĐT..."
-          style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)', color: 'var(--text-body)', background: 'var(--white)', minWidth: 200 }}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Trạng thái:</span>
-          <Select
-            value={status === 'all' ? 'Tất cả' : STATUS_LABEL[status]}
-            options={['Tất cả', ...STATUS_OPTS].map((o) => ({ value: o, label: o }))}
-            onChange={(v) => { setStatus(v === 'Tất cả' ? 'all' : STATUS_VAL[v]); setPage(1); }}
-            variant="pill"
+      <div className={`admin-contacts-filters ${mobileFiltersOpen ? 'admin-filters-mobile-open' : ''}`} style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center', background: 'var(--white)', padding: '10px 14px', borderRadius: 'var(--radius-card)', border: '1px solid var(--border-hairline)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+        <div style={{ position: 'relative', minWidth: 200, flex: '1 1 200px' }}>
+          <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Tìm tên / SĐT / biển số..."
+            style={{ width: '100%', boxSizing: 'border-box', height: 36, padding: '0 12px 0 32px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)', color: 'var(--text-body)', background: 'var(--white)', outline: 'none' }}
           />
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Mục đích:</span>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)', fontSize: '13px' }}>Mục đích:</span>
           <Select
             value={intent === 'all' ? 'Tất cả' : INTENT_LABEL[intent]}
             options={INTENT_OPTS.map((o) => ({ value: o, label: o }))}
@@ -149,16 +144,19 @@ export default function ContactTable({
             variant="pill"
           />
         </div>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-          Từ ngày
-          <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          <span>Từ:</span>
+          <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} style={{ height: 34, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-sm)', background: 'var(--white)', padding: '0 8px', font: 'var(--type-caption)' }} />
         </label>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-          Đến ngày
-          <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          <span>Đến:</span>
+          <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 34, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-sm)', background: 'var(--white)', padding: '0 8px', font: 'var(--type-caption)' }} />
         </label>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Phụ trách:</span>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)', fontSize: '13px' }}>Phụ trách:</span>
           <Select
             value={assignedTo === 'all' ? 'Tất cả' : assignedTo === 'me' ? 'Của tôi' : 'Chưa gán'}
             options={[{ value: 'Tất cả', label: 'Tất cả' }, { value: 'Của tôi', label: 'Của tôi' }, { value: 'Chưa gán', label: 'Chưa gán' }]}
@@ -166,10 +164,31 @@ export default function ContactTable({
             variant="pill"
           />
         </div>
-        <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, intent, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e?.message || 'Xuất CSV thất bại, thử lại.'))}>
+
+        {(search || intent !== 'all' || fromDate || toDate || assignedTo !== 'all') && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSearch('');
+              setIntent('all');
+              setFromDate('');
+              setToDate('');
+              setAssignedTo('all');
+              setPage(1);
+            }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+          >
+            <X size={13} /> Xóa lọc
+          </Button>
+        )}
+
+        <div style={{ flex: 1 }} />
+
+        <Button variant="outline" size="sm" disabled={exporting} onClick={() => exportCsv({ status, intent, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e?.message || 'Xuất CSV thất bại, thử lại.'))} style={{ height: 34 }}>
           {exporting ? 'Đang xuất…' : 'Xuất CSV'}
         </Button>
-        <span style={{ flex: 1, font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'right' }}>{result.total} yêu cầu</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{result.total} yêu cầu</span>
       </div>
 
       {/* Horizontally scrollable status tabs */}
@@ -427,13 +446,35 @@ export default function ContactTable({
                   style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}
                 >
                   <span data-primary data-label="Khách hàng" style={{ flex: '1 1 96px', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{c.fullName}</span>
-                  <span data-label="Điện thoại" style={{ flex: '1 1 88px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                    {c.phone}
-                    <a href={`tel:${c.phone}`} aria-label={`Gọi ${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={14} /></a>
-                    <a href={toZaloUrl(c.phone)} target="_blank" rel="noreferrer" aria-label="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
+                  <span data-label="Điện thoại" style={{ flex: '1 1 100px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+                    <span>{c.phone}</span>
+                    <button
+                      type="button"
+                      title="Sao chép SĐT"
+                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(c.phone); notify?.(`Đã sao chép ${c.phone}`); }}
+                      style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}
+                    >
+                      <Copy size={12} />
+                    </button>
+                    <a href={`tel:${c.phone}`} title={`Gọi ${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={14} /></a>
+                    <a href={toZaloUrl(c.phone)} target="_blank" rel="noreferrer" title="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
                   </span>
-                  <span data-label="Biển quan tâm" style={{ flex: '1 1 100px' }}>
-                    {parsed.num ? <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} /> : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
+                  <span data-label="Biển quan tâm" style={{ flex: '1 1 100px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {parsed.num ? (
+                      <>
+                        <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
+                        {c.plateNumber && (
+                          <button
+                            type="button"
+                            title="Sao chép số biển"
+                            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(c.plateNumber); notify?.(`Đã sao chép ${c.plateNumber}`); }}
+                            style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}
+                          >
+                            <Copy size={12} />
+                          </button>
+                        )}
+                      </>
+                    ) : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
                   </span>
                   <span data-label="Mục đích" style={{ flex: '1 1 72px' }}>
                     <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: `color-mix(in srgb, ${INTENT_COLOR[c.intent] || 'var(--text-muted)'} 16%, transparent)`, color: INTENT_COLOR[c.intent] || 'var(--text-muted)' }}>
