@@ -61,6 +61,8 @@ function OverviewBody({ data, notify }) {
         minDelayMs: num(form.minDelayMs), maxDelayMs: num(form.maxDelayMs), timeoutSeconds: num(form.timeoutSeconds), maxRetries: num(form.maxRetries),
         suddenDropPercent: num(form.suddenDropPercent), resultsFullEveryDays: num(form.resultsFullEveryDays), alertCooldownMinutes: num(form.alertCooldownMinutes),
         publishedWindowStartHour: num(form.publishedWindowStartHour), publishedWindowEndHour: num(form.publishedWindowEndHour),
+        officialWindowStartHour: num(form.officialWindowStartHour), officialWindowEndHour: num(form.officialWindowEndHour),
+        resultsWindowStartHour: num(form.resultsWindowStartHour), resultsWindowEndHour: num(form.resultsWindowEndHour),
       });
       notify?.('Đã lưu cấu hình (tham số vận hành có hiệu lực từ lượt crawl kế tiếp; đổi tham số giá sẽ tính lại toàn bộ nhóm)');
     } catch (e) { notify?.(e.message || 'Lưu thất bại'); }
@@ -141,9 +143,15 @@ function OverviewBody({ data, notify }) {
           <Input label="Ngưỡng 'giảm đột ngột' (%)" type="number" min="1" value={form.suddenDropPercent} onChange={set('suddenDropPercent')} hint="Lượt công bố thấp hơn lượt đủ trước quá X% thì bỏ qua phát hiện biến mất" />
           <Input label="Quét kết quả đầy đủ mỗi (ngày)" type="number" min="1" value={form.resultsFullEveryDays} onChange={set('resultsFullEveryDays')} />
           <Input label="Giãn cách cảnh báo (phút)" type="number" min="1" value={form.alertCooldownMinutes} onChange={set('alertCooldownMinutes')} hint="Tối đa 1 cảnh báo / nguồn / khoảng này" />
+          <Input label="Nguồn chính thức: chạy từ giờ" type="number" min="0" max="23" value={form.officialWindowStartHour} onChange={set('officialWindowStartHour')} hint="Giờ Việt Nam" />
+          <Input label="Nguồn chính thức: chạy đến giờ" type="number" min="0" max="23" value={form.officialWindowEndHour} onChange={set('officialWindowEndHour')}
+            hint={Number(form.officialWindowStartHour) === Number(form.officialWindowEndHour) ? 'Hai giờ bằng nhau = không giới hạn, chạy bất kỳ lúc nào' : `Lịch chỉ khởi chạy trong khung ${form.officialWindowStartHour}h–${form.officialWindowEndHour}h; nút "Crawl ngay" không bị chặn`} />
           <Input label="Nguồn công bố: chạy từ giờ" type="number" min="0" max="23" value={form.publishedWindowStartHour} onChange={set('publishedWindowStartHour')} hint="Giờ Việt Nam. Lượt công bố nặng (5–6 giờ) nên hẹn đêm khuya" />
           <Input label="Nguồn công bố: chạy đến giờ" type="number" min="0" max="23" value={form.publishedWindowEndHour} onChange={set('publishedWindowEndHour')}
             hint={Number(form.publishedWindowStartHour) === Number(form.publishedWindowEndHour) ? 'Hai giờ bằng nhau = không giới hạn, chạy bất kỳ lúc nào' : `Lịch chỉ khởi chạy trong khung ${form.publishedWindowStartHour}h–${form.publishedWindowEndHour}h; nút "Crawl ngay" không bị chặn`} />
+          <Input label="Nguồn kết quả: chạy từ giờ" type="number" min="0" max="23" value={form.resultsWindowStartHour} onChange={set('resultsWindowStartHour')} hint="Giờ Việt Nam" />
+          <Input label="Nguồn kết quả: chạy đến giờ" type="number" min="0" max="23" value={form.resultsWindowEndHour} onChange={set('resultsWindowEndHour')}
+            hint={Number(form.resultsWindowStartHour) === Number(form.resultsWindowEndHour) ? 'Hai giờ bằng nhau = không giới hạn, chạy bất kỳ lúc nào' : `Lịch chỉ khởi chạy trong khung ${form.resultsWindowStartHour}h–${form.resultsWindowEndHour}h; nút "Crawl ngay" không bị chặn`} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <span style={caption}>
@@ -156,7 +164,7 @@ function OverviewBody({ data, notify }) {
 
       <VpaExcelImport notify={notify} />
 
-      <VpaRunsTable notify={notify} onRun={onRun} />
+      <VpaRunsTable notify={notify} onRun={onRun} settings={data.settings} />
     </div>
   );
 }
