@@ -75,11 +75,11 @@
 --control-h-sm:32px;--control-h-md:40px;--control-h-lg:48px;
 }
 :root{
---radius-xs:2px;--radius-sm:4px;--radius-md:5px;--radius-lg:6px;--radius-xl:8px;--radius-2xl:10px;--radius-pill:999px;
---radius-card:var(--radius-lg);      /* product + content cards */
+--radius-xs:2px;--radius-sm:4px;--radius-md:5px;--radius-lg:6px;--radius-xl:6px;--radius-2xl:8px;--radius-pill:999px;
+--radius-card:var(--radius-sm);      /* product + content cards giảm độ bo tròn xuống 4px */
 --radius-control:var(--radius-sm);   /* buttons, chips, nav pills */
 --radius-field:var(--radius-sm);     /* inputs, selects */
---radius-surface:var(--radius-2xl);  /* hero + full-bleed panels */
+--radius-surface:var(--radius-md);  /* hero + full-bleed panels giảm độ bo tròn xuống 5px-6px */
 --border-w:1px;--border-w-strong:1.5px;
 }
 :root{

@@ -28,7 +28,7 @@ export default function BulletPicker({ label, value, onChange, options, size = '
               onClick={() => onChange(allowDeselect && active ? '' : opt)}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8, height: dim.height, padding: dim.padding,
-                border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer',
+                border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                 font: dim.font, fontWeight: active ? 'var(--fw-bold)' : 'var(--fw-medium)',
                 background: active ? 'var(--action-primary)' : 'var(--surface-sunken)',
                 color: active ? 'var(--text-inverse)' : 'var(--text-body)',

@@ -113,7 +113,7 @@ export default function Blog({ patch }) {
         {tag && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang lọc theo:</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 'var(--radius-xs)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)' }}>
               #{tag}
               <button type="button" onClick={() => { setTag(''); history.replaceState(null, '', location.pathname); }} aria-label="Bỏ lọc" style={{ border: 'none', background: 'none', color: 'inherit', cursor: 'pointer', padding: 0, lineHeight: 1 }}>×</button>
             </span>
@@ -141,7 +141,7 @@ export default function Blog({ patch }) {
                     <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 170, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={170} />
                     <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                        <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[p.category] || p.category}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-xs)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[p.category] || p.category}</span>
                         <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}><time dateTime={p.publishedAt} itemProp="datePublished">{formatDate(p.publishedAt)}</time></span>
                       </div>
                       <h2 itemProp="headline" style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{p.title}</h2>

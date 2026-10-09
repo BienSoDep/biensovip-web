@@ -256,11 +256,11 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
         { label: 'Trang chủ', onClick: go('home') },
         ...(result ? [{ label: 'Tư vấn biển hợp mệnh', onClick: () => { lookup.reset(); } }, { label: 'Kết quả' }] : [{ label: 'Tư vấn biển hợp mệnh' }]),
       ]} />
-    <section style={{ maxWidth: 860, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
+    <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <Eyebrow tone="blue">Tư vấn theo ngũ hành</Eyebrow>
         <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Tìm biển số hợp mệnh của bạn</h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.</p>
+        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 840 }}>Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.</p>
       </div>
 
       {!result ? (
@@ -273,9 +273,10 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
               Mẹo: <button type="button" onClick={() => go('profile')()} style={{ border: 'none', background: 'none', padding: 0, font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline', cursor: 'pointer' }}>lưu ngày sinh vào hồ sơ</button> để lần sau vào đây là có kết quả ngay.
             </p>
           )}
-          <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.name} onChange={(e) => set('name')(e.target.value)} />
-
-          <DateInputVN label="Ngày sinh (dương lịch)" value={form.birthDate} error={err} hint="Tính theo dương lịch. Nếu chỉ nhớ ngày âm lịch, hãy quy đổi trước khi nhập." onChange={(e) => set('birthDate')(e.target.value)} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 'var(--space-4)' }}>
+            <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.name} onChange={(e) => set('name')(e.target.value)} />
+            <DateInputVN label="Ngày sinh (dương lịch)" value={form.birthDate} error={err} hint="Tính theo dương lịch. Nếu chỉ nhớ ngày âm lịch, hãy quy đổi trước khi nhập." onChange={(e) => set('birthDate')(e.target.value)} />
+          </div>
 
           <PurposePicker value={form.purpose} onChange={set('purpose')} />
           {form.purpose === 'Kinh doanh' && <IndustryPicker value={form.industry} onChange={set('industry')} />}
@@ -334,7 +335,7 @@ export default function LuckyPlate({ go, notify, onNotice, user, contact, openPl
                       const active = filters.priceMin === p.min && filters.priceMax === p.max;
                       return (
                         <button key={p.label} type="button" onClick={() => setFilter(active ? { priceMin: '', priceMax: '' } : { priceMin: p.min, priceMax: p.max })}
-                          style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
+                          style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-sm)', font: 'var(--type-caption)', background: active ? 'var(--action-primary)' : 'var(--surface-muted)', color: active ? 'var(--white)' : 'var(--text-body)' }}>{p.label}</button>
                       );
                     })}
                   </div>

@@ -5,10 +5,18 @@ export default function PlateCardSkeleton({ style }) {
   return (
     <Card tone="sunken" pad="10px" style={{ height: '100%', ...style }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <SkeletonBase width={64} height={22} radius="var(--radius-pill)" />
-          <div style={{ flex: 1 }} />
-          <SkeletonBase width={28} height={28} radius="var(--radius-pill)" />
+        <div style={{ height: 58, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 28 }}>
+            <SkeletonBase width={64} height={22} radius="var(--radius-xs)" />
+            <div style={{ display: 'flex', gap: 4 }}>
+              <SkeletonBase width={28} height={28} radius="var(--radius-xs)" />
+              <SkeletonBase width={28} height={28} radius="var(--radius-xs)" />
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, height: 24 }}>
+            <SkeletonBase width={80} height={22} radius="var(--radius-xs)" />
+            <SkeletonBase width={60} height={22} radius="var(--radius-xs)" />
+          </div>
         </div>
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-md)', padding: 12 }}>
           <SkeletonBase height={72} radius="var(--radius-sm)" />

@@ -244,7 +244,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
 
   if (isLoading) {
     return (
-      <div style={{ animation: 'pageIn 180ms var(--ease-out)', maxWidth: 760, margin: '0 auto', padding: 'var(--space-10) var(--pad-page)' }}>
+      <div style={{ animation: 'pageIn 180ms var(--ease-out)', maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-10) var(--pad-page)' }}>
         <div style={{ height: 32, width: '60%', background: 'var(--surface-muted)', borderRadius: 'var(--radius-sm)' }} />
       </div>
     );
@@ -299,16 +299,16 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         ...(postProvinceLanding ? [{ label: postProvinceLanding.name, onClick: () => { window.location.href = routeFor('provinceLanding', postProvinceLanding.code); } }] : []),
         { label: post.title },
       ]} />
-      <article style={{ maxWidth: 760, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
+      <article style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
       <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)', justifyContent: 'space-between' }}>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 560 }}>
+        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', flex: '1 1 500px' }}>
           <strong style={{ color: 'var(--text-strong)' }}>Biensovip.com</strong> — sàn giao dịch biển số xe đẹp uy tín, chuyên {(CATEGORY_LABEL[post.category] || 'biển số').toLowerCase()} và các dòng biển hợp mệnh. Bài viết dưới đây giúp bạn hiểu rõ hơn trước khi chọn biển phù hợp.
         </p>
         <Button variant="primary" size="sm" onClick={go('list')}>Xem biển đẹp ngay</Button>
       </div>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[post.category] || post.category}</span>
+          <span style={{ padding: '3px 12px', borderRadius: 'var(--radius-xs)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{CATEGORY_LABEL[post.category] || post.category}</span>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
             <time dateTime={post.publishedAt} itemProp="datePublished">Đăng ngày {formatDate(post.publishedAt)}</time>
           </span>
@@ -437,7 +437,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {post.tags.map((t) => (
             <button key={t} type="button" onClick={() => { history.replaceState(null, '', `${routeFor('blog')}?tag=${encodeURIComponent(t)}`); go('blog')(); }}
-              style={{ border: 'none', cursor: 'pointer', padding: '3px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</button>
+              style={{ border: 'none', cursor: 'pointer', padding: '3px 12px', borderRadius: 'var(--radius-xs)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</button>
           ))}
         </div>
       )}
@@ -533,7 +533,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       )}
 
       <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)', justifyContent: 'space-between' }}>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 560 }}>
+        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', flex: '1 1 500px' }}>
           Bạn đang tìm biển số hợp mệnh, hợp tuổi? <strong style={{ color: 'var(--text-strong)' }}>Biensovip.com</strong> có đội ngũ tư vấn phong thủy giúp chọn đúng biển cho nhu cầu của bạn.
         </p>
         <Button variant="primary" size="sm" onClick={go('lucky')}>Tư vấn hợp mệnh</Button>

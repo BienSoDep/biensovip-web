@@ -9,7 +9,7 @@ export default function CompareBar({ go }) {
   if (ids.length === 0) return null;
 
   return (
-    <div style={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 16, zIndex: 90, width: 'min(92vw, 520px)', background: 'var(--text-strong)', color: 'var(--white)', borderRadius: 'var(--radius-pill)', boxShadow: 'var(--shadow-3)', padding: '10px 10px 10px 20px', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+    <div style={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 16, zIndex: 90, width: 'min(92vw, 520px)', background: 'var(--text-strong)', color: 'var(--white)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-3)', padding: '10px 10px 10px 20px', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
       <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', flex: 1 }}>
         Đã chọn {ids.length}/3 biển để so sánh
       </span>

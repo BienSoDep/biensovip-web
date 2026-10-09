@@ -1,44 +1,87 @@
-import { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, Star, X, ChevronLeft, ChevronRight, Share2, Link2, MessageCircle, Car, Bike, MapPin, FileCheck, Gift, GitCompareArrows, CheckCircle2 } from 'lucide-react';
-import Button from '../components/Button.jsx';
-import { Badge, IconButton, Input, Select, Checkbox, Avatar } from '../components/index.jsx';
-import Modal from '../components/Modal.jsx';
-import PlateVisual from '../components/PlateVisual.jsx';
-import PlateCard from '../components/PlateCard.jsx';
-import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
-import { VPA_EXPIRED_LABELS, formatDateTime } from '../lib/vpaFormat.js';
-import { validatePhone, normalizePhone } from '../lib/phone.js';
-import { prefillFromUser, maybeSavePhoneToProfile } from '../lib/contactPrefill.js';
-import { useSubmitContact } from '../services/contactService.js';
-import { validateCoupon } from '../services/couponService.js';
-import { usePlateDetail, useSimilarPlates, useLogPlateView, useLogPlateContact } from '../services/plateDetail.js';
-import { logZaloClick } from '../services/zaloClicks.js';
-import { trackViewItem, trackGenerateLead, trackShare } from '../services/tracking/events.js';
-import { useCompareIds } from '../services/compareService.js';
-import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
-import Breadcrumb from '../components/Breadcrumb.jsx';
-import { usePlateReviews } from '../services/reviewService.js';
-import { formatDate } from '../lib/date.js';
-import { optimizeImageUrl } from '../lib/cloudinary.js';
-import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
-import { useSiteSettings } from '../services/siteSettings.js';
-import { content } from '../lib/content/index.js';
-import LazyImage from '../components/LazyImage.jsx';
-import TikTokEmbed from '../components/TikTokEmbed.jsx';
-import { maskName } from '../lib/textMask.js';
-import { buildConsultMessage, buildCtvPlateInviteMessage, toZaloUrl } from '../lib/zaloMessage.js';
-import { useCreatePlateLink } from '../services/collaborators.js';
-import { forceScrollToTop } from '../lib/scrollRestoration.js';
-import toast from 'react-hot-toast';
-import SoldPlateFeedback from '../components/SoldPlateFeedback.jsx';
-import PlateDiscussion from '../components/PlateDiscussion.jsx';
-import { generatePlateReviews } from '../lib/plateDiscussionBank.js';
+import { useEffect, useState, useMemo } from "react";
+import {
+  ArrowRight,
+  Star,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Share2,
+  Link2,
+  MessageCircle,
+  Car,
+  Bike,
+  MapPin,
+  FileCheck,
+  Gift,
+  GitCompareArrows,
+  CheckCircle2,
+} from "lucide-react";
+import Button from "../components/Button.jsx";
+import {
+  Badge,
+  IconButton,
+  Input,
+  Select,
+  Checkbox,
+  Avatar,
+} from "../components/index.jsx";
+import Modal from "../components/Modal.jsx";
+import PlateVisual from "../components/PlateVisual.jsx";
+import PlateCard from "../components/PlateCard.jsx";
+import { splitPlateNumber, formatPrice } from "../lib/plateFormat.js";
+import { VPA_EXPIRED_LABELS, formatDateTime } from "../lib/vpaFormat.js";
+import { validatePhone, normalizePhone } from "../lib/phone.js";
+import {
+  prefillFromUser,
+  maybeSavePhoneToProfile,
+} from "../lib/contactPrefill.js";
+import { useSubmitContact } from "../services/contactService.js";
+import { validateCoupon } from "../services/couponService.js";
+import {
+  usePlateDetail,
+  useSimilarPlates,
+  useLogPlateView,
+  useLogPlateContact,
+} from "../services/plateDetail.js";
+import { logZaloClick } from "../services/zaloClicks.js";
+import {
+  trackViewItem,
+  trackGenerateLead,
+  trackShare,
+} from "../services/tracking/events.js";
+import { useCompareIds } from "../services/compareService.js";
+import { routeFor, PROVINCE_LANDINGS } from "../config/routes.js";
+import Breadcrumb from "../components/Breadcrumb.jsx";
+import { usePlateReviews } from "../services/reviewService.js";
+import { formatDate } from "../lib/date.js";
+import { optimizeImageUrl } from "../lib/cloudinary.js";
+import { shouldShowGeneratedImage } from "../lib/plateImageDisplay.js";
+import { useSiteSettings } from "../services/siteSettings.js";
+import { content } from "../lib/content/index.js";
+import LazyImage from "../components/LazyImage.jsx";
+import TikTokEmbed from "../components/TikTokEmbed.jsx";
+import { maskName } from "../lib/textMask.js";
+import {
+  buildConsultMessage,
+  buildCtvPlateInviteMessage,
+  toZaloUrl,
+} from "../lib/zaloMessage.js";
+import { useCreatePlateLink } from "../services/collaborators.js";
+import { forceScrollToTop } from "../lib/scrollRestoration.js";
+import toast from "react-hot-toast";
+import SoldPlateFeedback from "../components/SoldPlateFeedback.jsx";
+import PlateDiscussion from "../components/PlateDiscussion.jsx";
+import { generatePlateReviews } from "../lib/plateDiscussionBank.js";
 
-const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
+const BADGE_TONE = { "Mới lên sàn": "amber", "Đã có khách cọc": "rose" };
 const REVIEWS_PER_PAGE = 5;
 
-const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt'];
-const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy' };
+const INTENT_OPTS = ["Hỏi chung", "Đặt cọc giữ biển", "Mua đứt"];
+const INTENT_VAL = {
+  "Hỏi chung": "inquiry",
+  "Đặt cọc giữ biển": "deposit_request",
+  "Mua đứt": "buy",
+};
 
 // UC40 §3.3 — CTV lấy link giới thiệu riêng cho biển đang xem, kèm copy sẵn tin nhắn mời khách.
 function CtvPlateLinkButton({ plateId, plateNumber }) {
@@ -48,31 +91,57 @@ function CtvPlateLinkButton({ plateId, plateNumber }) {
   const getAndCopy = () => {
     createLink.mutate(plateId, {
       onSuccess: async (res) => {
-        const message = buildCtvPlateInviteMessage({ plateNumber, referralUrl: res.url });
+        const message = buildCtvPlateInviteMessage({
+          plateNumber,
+          referralUrl: res.url,
+        });
         try {
           await navigator.clipboard.writeText(message);
           setCopied(true);
-          toast.success('Đã sao chép tin nhắn kèm link giới thiệu biển này');
+          toast.success("Đã sao chép tin nhắn kèm link giới thiệu biển này");
           setTimeout(() => setCopied(false), 2000);
         } catch {
-          toast.error('Không sao chép được — thử lại');
+          toast.error("Không sao chép được — thử lại");
         }
       },
-      onError: (err) => toast.error(err.message || 'Lấy link thất bại, thử lại'),
+      onError: (err) =>
+        toast.error(err.message || "Lấy link thất bại, thử lại"),
     });
   };
 
   return (
-    <Button variant="outline" size="sm" onClick={getAndCopy} disabled={createLink.isPending} style={{ alignSelf: 'flex-start' }}>
-      {createLink.isPending ? 'Đang lấy link…' : copied ? 'Đã sao chép' : 'Lấy link giới thiệu biển này'}
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={getAndCopy}
+      disabled={createLink.isPending}
+      style={{ alignSelf: "flex-start" }}
+    >
+      {createLink.isPending
+        ? "Đang lấy link…"
+        : copied
+          ? "Đã sao chép"
+          : "Lấy link giới thiệu biển này"}
     </Button>
   );
 }
 
-function LinkButton({ href, target, rel, variant, disabled, onClick, children, style }) {
-  const bg = variant === 'outline' ? 'transparent' : 'var(--action-primary)';
-  const color = variant === 'outline' ? 'var(--text-strong)' : 'var(--white)';
-  const shadow = variant === 'outline' ? 'inset 0 0 0 1.5px var(--border-strong)' : 'var(--shadow-blue)';
+function LinkButton({
+  href,
+  target,
+  rel,
+  variant,
+  disabled,
+  onClick,
+  children,
+  style,
+}) {
+  const bg = variant === "outline" ? "transparent" : "var(--action-primary)";
+  const color = variant === "outline" ? "var(--text-strong)" : "var(--white)";
+  const shadow =
+    variant === "outline"
+      ? "inset 0 0 0 1.5px var(--border-strong)"
+      : "var(--shadow-blue)";
   return (
     <a
       href={disabled ? undefined : href}
@@ -81,11 +150,23 @@ function LinkButton({ href, target, rel, variant, disabled, onClick, children, s
       onClick={disabled ? (e) => e.preventDefault() : onClick}
       aria-disabled={disabled}
       style={{
-        height: 48, padding: '0 20px', border: 'none', borderRadius: 'var(--radius-pill)',
-        font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap',
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
-        cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-        background: bg, color, boxShadow: shadow, ...style,
+        height: 48,
+        padding: "0 20px",
+        border: "none",
+        borderRadius: "var(--radius-sm)",
+        font: "var(--type-body-sm)",
+        fontWeight: "var(--fw-semibold)",
+        whiteSpace: "nowrap",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textDecoration: "none",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        background: bg,
+        color,
+        boxShadow: shadow,
+        ...style,
       }}
     >
       {children}
@@ -93,7 +174,15 @@ function LinkButton({ href, target, rel, variant, disabled, onClick, children, s
   );
 }
 
-function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, removeCompare, notify }) {
+function AutoCarousel({
+  items,
+  openPlate,
+  currentPlateId,
+  isInList,
+  addCompare,
+  removeCompare,
+  notify,
+}) {
   if (!items || items.length === 0) return null;
 
   // Xây dựng dãy cơ sở tối thiểu 14 thẻ để phủ kín màn hình lớn (kể cả 2K / ultrawide).
@@ -107,7 +196,10 @@ function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, 
 
   // Tốc độ trôi thư thái, ổn định đều đặn (~52px/giây) cho mọi số lượng item
   const cardWidthWithGap = 212; // 188px card + 24px gap
-  const duration = Math.max(30, Math.round((baseSequence.length * cardWidthWithGap) / 52));
+  const duration = Math.max(
+    30,
+    Math.round((baseSequence.length * cardWidthWithGap) / 52),
+  );
 
   const renderCard = (p, uniqueKey, isAriaHidden = false) => {
     const sp = splitPlateNumber(p.plateNumber);
@@ -115,60 +207,82 @@ function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, 
     return (
       <a
         key={uniqueKey}
-        href={routeFor('detail', p.slug || p.id)}
-        onClick={(e) => { e.preventDefault(); openPlate(p.slug || p.id); }}
+        href={routeFor("detail", p.slug || p.id)}
+        onClick={(e) => {
+          e.preventDefault();
+          openPlate(p.slug || p.id);
+        }}
         className="pressable plate-marquee__item"
         aria-label={`Xem biển ${p.plateNumber}`}
         tabIndex={isAriaHidden ? -1 : undefined}
         style={{
-          position: 'relative',
+          position: "relative",
           width: 188,
-          textDecoration: 'none',
-          background: 'var(--surface-sunken)',
-          borderRadius: 'var(--radius-md)',
-          padding: '10px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-2)',
-          transition: 'var(--transition-card)',
-          flexShrink: 0
+          textDecoration: "none",
+          background: "var(--surface-sunken)",
+          borderRadius: "var(--radius-md)",
+          padding: "10px 12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--space-2)",
+          transition: "var(--transition-card)",
+          flexShrink: 0,
         }}
       >
         <button
           type="button"
           tabIndex={isAriaHidden ? -1 : undefined}
-          aria-label={inCompare ? `Bỏ ${p.plateNumber} khỏi so sánh` : `So sánh ${p.plateNumber} với biển đang xem`}
-          title={inCompare ? 'Bỏ khỏi so sánh' : 'So sánh với biển đang xem'}
+          aria-label={
+            inCompare
+              ? `Bỏ ${p.plateNumber} khỏi so sánh`
+              : `So sánh ${p.plateNumber} với biển đang xem`
+          }
+          title={inCompare ? "Bỏ khỏi so sánh" : "So sánh với biển đang xem"}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (inCompare) { removeCompare(p.id); notify?.('Đã bỏ khỏi so sánh'); return; }
-            if (currentPlateId && !isInList(currentPlateId)) addCompare(currentPlateId);
+            if (inCompare) {
+              removeCompare(p.id);
+              notify?.("Đã bỏ khỏi so sánh");
+              return;
+            }
+            if (currentPlateId && !isInList(currentPlateId))
+              addCompare(currentPlateId);
             addCompare(p.id);
-            notify?.('Đã thêm vào so sánh');
+            notify?.("Đã thêm vào so sánh");
           }}
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: 6,
             right: 6,
             zIndex: 1,
             width: 28,
             height: 28,
-            borderRadius: '50%',
-            border: 'none',
-            background: inCompare ? 'var(--action-primary)' : 'var(--white)',
-            color: inCompare ? 'var(--white)' : 'var(--text-body)',
-            boxShadow: 'var(--shadow-1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer'
+            borderRadius: "50%",
+            border: "none",
+            background: inCompare ? "var(--action-primary)" : "var(--white)",
+            color: inCompare ? "var(--white)" : "var(--text-body)",
+            boxShadow: "var(--shadow-1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
           }}
         >
-          {inCompare ? <CheckCircle2 size={15} /> : <GitCompareArrows size={15} />}
+          {inCompare ? (
+            <CheckCircle2 size={15} />
+          ) : (
+            <GitCompareArrows size={15} />
+          )}
         </button>
         <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>
+        <span
+          style={{
+            font: "var(--type-caption)",
+            color: "var(--text-strong)",
+            whiteSpace: "nowrap",
+          }}
+        >
           {formatPrice(p.price)}
         </span>
       </a>
@@ -177,7 +291,10 @@ function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, 
 
   return (
     <div className="plate-marquee">
-      <div className="plate-marquee__track plate-marquee__track--grouped" style={{ animationDuration: `${duration}s` }}>
+      <div
+        className="plate-marquee__track plate-marquee__track--grouped"
+        style={{ animationDuration: `${duration}s` }}
+      >
         <div className="plate-marquee__group">
           {baseSequence.map((p, i) => renderCard(p, `g1-${p.id}-${i}`))}
         </div>
@@ -192,12 +309,23 @@ function AutoCarousel({ items, openPlate, currentPlateId, isInList, addCompare, 
 // Nhãn/đích quay lại cho breadcrumb bước giữa — khớp đúng màn đã đưa khách tới đây, thay vì luôn
 // cứng "Biển số" dù khách đến từ Hợp mệnh/So sánh/Trang chủ.
 const FROM_SCREEN_CRUMB = {
-  lucky: { label: 'Hợp mệnh', screen: 'lucky' },
-  compare: { label: 'So sánh', screen: 'compare' },
-  home: { label: 'Trang chủ', screen: 'home' },
+  lucky: { label: "Hợp mệnh", screen: "lucky" },
+  compare: { label: "So sánh", screen: "compare" },
+  home: { label: "Trang chủ", screen: "home" },
 };
 
-export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost, go, notify, user, onUserUpdate, fromScreen }) {
+export default function PlateDetail({
+  plateId,
+  favs,
+  onFav,
+  openPlate,
+  openPost,
+  go,
+  notify,
+  user,
+  onUserUpdate,
+  fromScreen,
+}) {
   const { data: plate, isLoading, isError } = usePlateDetail(plateId);
   const { data: similar } = useSimilarPlates(plateId, 8);
   const { data: settings } = useSiteSettings();
@@ -215,10 +343,17 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   }, [plate]);
 
   // Hooks phải chạy vô điều kiện trước mọi early-return (rules-of-hooks)
-  const [tab, setTab] = useState('info');
+  const [tab, setTab] = useState("info");
   const [reviewPage, setReviewPage] = useState(1);
-  const { data: reviewData, isError: reviewError, refetch: refetchReviews } = usePlateReviews(plateId, { page: reviewPage, perPage: REVIEWS_PER_PAGE });
-  const curatedReviews = useMemo(() => generatePlateReviews(plate), [plate?.id, plate?.plateNumber]);
+  const {
+    data: reviewData,
+    isError: reviewError,
+    refetch: refetchReviews,
+  } = usePlateReviews(plateId, { page: reviewPage, perPage: REVIEWS_PER_PAGE });
+  const curatedReviews = useMemo(
+    () => generatePlateReviews(plate),
+    [plate?.id, plate?.plateNumber],
+  );
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
 
   const submitContact = useSubmitContact();
@@ -226,7 +361,11 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   const [cSent, setCSent] = useState(false);
   const [cForm, setCForm] = useState({
     ...prefillFromUser(user),
-    note: '', intent: 'deposit_request', subscribe: false, honeypot: '', couponCode: '',
+    note: "",
+    intent: "deposit_request",
+    subscribe: false,
+    honeypot: "",
+    couponCode: "",
   });
   const [cErr, setCErr] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -239,12 +378,14 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
   useEffect(() => {
     if (lightbox < 0) return;
     const onKey = (e) => {
-      if (e.key === 'Escape') setLightbox(-1);
-      else if (e.key === 'ArrowRight') setLightbox((i) => (i + 1) % images.length);
-      else if (e.key === 'ArrowLeft') setLightbox((i) => (i - 1 + images.length) % images.length);
+      if (e.key === "Escape") setLightbox(-1);
+      else if (e.key === "ArrowRight")
+        setLightbox((i) => (i + 1) % images.length);
+      else if (e.key === "ArrowLeft")
+        setLightbox((i) => (i - 1 + images.length) % images.length);
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [lightbox, images.length]);
 
   const handleContact = (action) => {
@@ -253,48 +394,122 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
 
   if (isLoading) {
     return (
-      <div style={{ animation: 'pageIn 180ms var(--ease-out)', maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-10) var(--pad-page)' }}>
-        <div style={{ height: 300, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }} />
+      <div
+        style={{
+          animation: "pageIn 180ms var(--ease-out)",
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "var(--space-10) var(--pad-page)",
+        }}
+      >
+        <div
+          style={{
+            height: 300,
+            background: "var(--surface-sunken)",
+            borderRadius: "var(--radius-card)",
+          }}
+        />
       </div>
     );
   }
 
   if (isError || !plate) {
     return (
-      <div style={{ animation: 'pageIn 180ms var(--ease-out)', maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-10) var(--pad-page)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)' }}>
-        <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Biển số không tồn tại</h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Biển số này có thể đã được bán hoặc đường dẫn không chính xác.</p>
-        <Button variant="primary" size="md" onClick={() => go('list')()}>Về kho biển số</Button>
+      <div
+        style={{
+          animation: "pageIn 180ms var(--ease-out)",
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "var(--space-10) var(--pad-page)",
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "var(--space-4)",
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            font: "var(--type-display-2)",
+            letterSpacing: "var(--ls-display)",
+            color: "var(--text-strong)",
+          }}
+        >
+          Biển số không tồn tại
+        </h1>
+        <p
+          style={{
+            margin: 0,
+            font: "var(--type-body)",
+            color: "var(--text-muted)",
+            maxWidth: "var(--width-prose)",
+          }}
+        >
+          Biển số này có thể đã được bán hoặc đường dẫn không chính xác.
+        </p>
+        <Button variant="primary" size="md" onClick={() => go("list")()}>
+          Về kho biển số
+        </Button>
       </div>
     );
   }
 
   const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
-  const sold = plate.status === 'sold';
-  const onSale = !plate.priceOnRequest && plate.salePrice != null && plate.salePrice < plate.price;
+  const sold = plate.status === "sold";
+  const onSale =
+    !plate.priceOnRequest &&
+    plate.salePrice != null &&
+    plate.salePrice < plate.price;
   const isFav = !!favs?.[plate.id];
   const inCompare = isInList(plate.id);
-  const isCar = plate.vehicleType === 'Ô tô';
-  const reviewTotalPages = Math.max(1, Math.ceil((reviewData?.total || 0) / REVIEWS_PER_PAGE));
+  const isCar = plate.vehicleType === "Ô tô";
+  const reviewTotalPages = Math.max(
+    1,
+    Math.ceil((reviewData?.total || 0) / REVIEWS_PER_PAGE),
+  );
 
   const shareUrl = `${location.origin}${location.pathname}#/bien/${plate.slug || plate.id}`;
-  const shareFb = () => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); trackShare('facebook', 'plate', plate.id); handleContact('share'); };
-  const shareZalo = () => { window.open(`https://zalo.me/share?url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener'); trackShare('zalo', 'plate', plate.id); handleContact('share'); };
+  const shareFb = () => {
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      "_blank",
+      "noopener",
+    );
+    trackShare("facebook", "plate", plate.id);
+    handleContact("share");
+  };
+  const shareZalo = () => {
+    window.open(
+      `https://zalo.me/share?url=${encodeURIComponent(shareUrl)}`,
+      "_blank",
+      "noopener",
+    );
+    trackShare("zalo", "plate", plate.id);
+    handleContact("share");
+  };
   const copyLink = async () => {
-    try { await navigator.clipboard.writeText(shareUrl); } catch { /* clipboard blocked */ }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {
+      /* clipboard blocked */
+    }
     setCopied(true);
-    notify('Đã sao chép liên kết');
+    notify("Đã sao chép liên kết");
     setTimeout(() => setCopied(false), 2000);
   };
   const checkCoupon = async () => {
     const code = cForm.couponCode.trim();
-    if (!code) { setCouponStatus(null); return; }
+    if (!code) {
+      setCouponStatus(null);
+      return;
+    }
     setCheckingCoupon(true);
     try {
       const res = await validateCoupon(code);
       setCouponStatus(res);
     } catch {
-      setCouponStatus({ valid: false, error: 'CHECK_FAILED' });
+      setCouponStatus({ valid: false, error: "CHECK_FAILED" });
     } finally {
       setCheckingCoupon(false);
     }
@@ -302,332 +517,1506 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
 
   const handleContactSubmit = (e) => {
     e.preventDefault();
-    if (cForm.honeypot) { setContactOpen(false); return; } // bot trap
-    if (!cForm.fullName.trim()) return setCErr({ field: 'fullName', message: 'Vui lòng nhập họ tên' });
-    if (!validatePhone(cForm.phone)) return setCErr({ field: 'phone', message: 'Số điện thoại không hợp lệ' });
-    if (cForm.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email.trim())) return setCErr({ field: 'email', message: 'Email chưa đúng định dạng' });
+    if (cForm.honeypot) {
+      setContactOpen(false);
+      return;
+    } // bot trap
+    if (!cForm.fullName.trim())
+      return setCErr({ field: "fullName", message: "Vui lòng nhập họ tên" });
+    if (!validatePhone(cForm.phone))
+      return setCErr({ field: "phone", message: "Số điện thoại không hợp lệ" });
+    if (
+      cForm.email.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email.trim())
+    )
+      return setCErr({ field: "email", message: "Email chưa đúng định dạng" });
     setCErr(null);
-    submitContact.mutate({
-      fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
-      email: cForm.email?.trim() || null, plateId: plate.id, plateNumber: plate.plateNumber,
-      note: cForm.note?.trim() || '', source: 'plate-detail', intent: plate.vpa ? 'inquiry' : cForm.intent,
-      subscribeToNotifications: !!cForm.subscribe,
-      honeypot: cForm.honeypot || null,
-      couponCode: couponStatus?.valid ? cForm.couponCode.trim() : null,
-    }, {
-      onSuccess: () => {
-        notify('Đã gửi yêu cầu — admin sẽ liên hệ sớm.');
-        setCSent(true);
-        handleContact('contact');
-        // Lần đầu gõ SĐT (profile chưa có) → tự lưu, lần sau mở form khác đã có sẵn.
-        maybeSavePhoneToProfile(user, cForm.phone, onUserUpdate);
+    submitContact.mutate(
+      {
+        fullName: cForm.fullName.trim(),
+        phone: normalizePhone(cForm.phone),
+        email: cForm.email?.trim() || null,
+        plateId: plate.id,
+        plateNumber: plate.plateNumber,
+        note: cForm.note?.trim() || "",
+        source: "plate-detail",
+        intent: plate.vpa ? "inquiry" : cForm.intent,
+        subscribeToNotifications: !!cForm.subscribe,
+        honeypot: cForm.honeypot || null,
+        couponCode: couponStatus?.valid ? cForm.couponCode.trim() : null,
       },
-      onError: (err) => setCErr({ field: null, message: err.message || 'Gửi thất bại, vui lòng thử lại.' }),
-    });
+      {
+        onSuccess: () => {
+          notify("Đã gửi yêu cầu — admin sẽ liên hệ sớm.");
+          setCSent(true);
+          handleContact("contact");
+          // Lần đầu gõ SĐT (profile chưa có) → tự lưu, lần sau mở form khác đã có sẵn.
+          maybeSavePhoneToProfile(user, cForm.phone, onUserUpdate);
+        },
+        onError: (err) =>
+          setCErr({
+            field: null,
+            message: err.message || "Gửi thất bại, vui lòng thử lại.",
+          }),
+      },
+    );
   };
-  const setCF = (k) => (e) => setCForm((f) => ({ ...f, [k]: e.target?.value ?? e }));
+  const setCF = (k) => (e) =>
+    setCForm((f) => ({ ...f, [k]: e.target?.value ?? e }));
 
   // Tỉnh hiển thị chỉ có tên (không có mã) từ API — khớp tên với PROVINCE_LANDINGS để link được
   // sang trang landing tỉnh thật; không khớp được thì bỏ qua cấp này (không suy đoán sai).
   const plateProvinceLanding = plate?.province
-    ? PROVINCE_LANDINGS.find((p) => p.name.toLowerCase() === plate.province.toLowerCase())
+    ? PROVINCE_LANDINGS.find(
+        (p) => p.name.toLowerCase() === plate.province.toLowerCase(),
+      )
     : null;
 
   // Bước giữa breadcrumb khớp đúng nơi khách bấm vào biển (Hợp mệnh/So sánh) — mặc định "Biển số"
   // nếu đến từ danh sách hoặc không rõ nguồn (fromScreen null/không nằm trong map).
-  const midCrumb = fromScreen && FROM_SCREEN_CRUMB[fromScreen]
-    ? FROM_SCREEN_CRUMB[fromScreen]
-    : { label: 'Biển số', screen: 'list' };
+  const midCrumb =
+    fromScreen && FROM_SCREEN_CRUMB[fromScreen]
+      ? FROM_SCREEN_CRUMB[fromScreen]
+      : { label: "Biển số", screen: "list" };
 
   return (
-    <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
-      <Breadcrumb keepOnMobile items={[
-        { label: 'Trang chủ', onClick: go('home') },
-        { label: midCrumb.label, onClick: go(midCrumb.screen) },
-        // Landing tỉnh chỉ vào được qua URL trực tiếp (không có state provinceCode ở tầng App
-        // để điều hướng SPA từ đây) — dùng full navigation, chấp nhận reload trang.
-        ...(plateProvinceLanding ? [{ label: plateProvinceLanding.name, onClick: () => { window.location.href = routeFor('provinceLanding', plateProvinceLanding.code); } }] : []),
-        { label: plate?.plateNumber || 'Chi tiết biển số' },
-      ]} />
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-4) var(--pad-page) var(--space-8)', display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
-        <div style={{ flex: '1 1 500px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,4vw,52px)', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: '100%', maxWidth: 560, background: 'var(--white)', borderRadius: 'var(--radius-xl)', padding: 24 }}>
+    <div style={{ animation: "pageIn 180ms var(--ease-out)" }}>
+      <Breadcrumb
+        keepOnMobile
+        items={[
+          { label: "Trang chủ", onClick: go("home") },
+          { label: midCrumb.label, onClick: go(midCrumb.screen) },
+          // Landing tỉnh chỉ vào được qua URL trực tiếp (không có state provinceCode ở tầng App
+          // để điều hướng SPA từ đây) — dùng full navigation, chấp nhận reload trang.
+          ...(plateProvinceLanding
+            ? [
+                {
+                  label: plateProvinceLanding.name,
+                  onClick: () => {
+                    window.location.href = routeFor(
+                      "provinceLanding",
+                      plateProvinceLanding.code,
+                    );
+                  },
+                },
+              ]
+            : []),
+          { label: plate?.plateNumber || "Chi tiết biển số" },
+        ]}
+      />
+      <section
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "var(--space-4) var(--pad-page) var(--space-8)",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "var(--gutter-section)",
+          alignItems: "flex-start",
+        }}
+      >
+        <div
+          style={{
+            flex: "1 1 500px",
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-4)",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--surface-sunken)",
+              borderRadius: "var(--radius-card)",
+              padding: "clamp(20px,4vw,52px)",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 560,
+                background: "var(--white)",
+                borderRadius: "var(--radius-xl)",
+                padding: 24,
+              }}
+            >
               {shouldShowGeneratedImage(settings, plate.images) ? (
-                <img src={optimizeImageUrl(plate.images[0])} alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(' tại ')}`} onClick={() => setLightbox(0)} loading="eager" fetchPriority="high" style={{ width: '100%', borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
+                <img
+                  src={optimizeImageUrl(plate.images[0])}
+                  alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(" tại ")}`}
+                  onClick={() => setLightbox(0)}
+                  loading="eager"
+                  fetchPriority="high"
+                  style={{
+                    width: "100%",
+                    borderRadius: "var(--radius-md)",
+                    cursor: "zoom-in",
+                  }}
+                />
               ) : isCar ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 16 }}
+                >
                   <div>
-                    <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Biển ngắn</span>
-                    <PlateVisual size="lg" prov={prov} seri={seri} num={num} shape="short" />
+                    <span
+                      style={{
+                        display: "block",
+                        font: "var(--type-caption)",
+                        color: "var(--text-muted)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Biển ngắn
+                    </span>
+                    <PlateVisual
+                      size="lg"
+                      prov={prov}
+                      seri={seri}
+                      num={num}
+                      shape="short"
+                    />
                   </div>
                   <div>
-                    <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-muted)', marginBottom: 6 }}>Biển dài</span>
-                    <PlateVisual size="lg" prov={prov} seri={seri} num={num} shape="long" />
+                    <span
+                      style={{
+                        display: "block",
+                        font: "var(--type-caption)",
+                        color: "var(--text-muted)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Biển dài
+                    </span>
+                    <PlateVisual
+                      size="lg"
+                      prov={prov}
+                      seri={seri}
+                      num={num}
+                      shape="long"
+                    />
                   </div>
                 </div>
               ) : (
-                <PlateVisual size="lg" prov={prov} seri={seri} num={num} shape="short" />
+                <PlateVisual
+                  size="lg"
+                  prov={prov}
+                  seri={seri}
+                  num={num}
+                  shape="short"
+                />
               )}
             </div>
           </div>
-          {shouldShowGeneratedImage(settings, plate.images) && plate.images.length > 1 && (
-            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              {plate.images.slice(1).map((url, i) => (
-                <div key={i} className={i >= 4 ? 'plate-thumb-extra' : undefined} style={{ position: 'relative' }} onClick={() => setLightbox(i + 1)}>
-                  <LazyImage src={url} alt={`Ảnh ${i + 2} biển số ${plate.plateNumber}`} style={{ width: 64, height: 64, borderRadius: 'var(--radius-md)', cursor: 'zoom-in' }} />
-                  {i === 3 && plate.images.length - 1 > 4 && (
-                    <div className="plate-thumb-more" onClick={() => setLightbox(i + 1)} style={{ position: 'absolute', inset: 0, borderRadius: 'var(--radius-md)', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'none', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'zoom-in' }}>+{plate.images.length - 1 - 4}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          {shouldShowGeneratedImage(settings, plate.images) &&
+            plate.images.length > 1 && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: "var(--space-2)",
+                  flexWrap: "wrap",
+                }}
+              >
+                {plate.images.slice(1).map((url, i) => (
+                  <div
+                    key={i}
+                    className={i >= 4 ? "plate-thumb-extra" : undefined}
+                    style={{ position: "relative" }}
+                    onClick={() => setLightbox(i + 1)}
+                  >
+                    <LazyImage
+                      src={url}
+                      alt={`Ảnh ${i + 2} biển số ${plate.plateNumber}`}
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: "var(--radius-md)",
+                        cursor: "zoom-in",
+                      }}
+                    />
+                    {i === 3 && plate.images.length - 1 > 4 && (
+                      <div
+                        className="plate-thumb-more"
+                        onClick={() => setLightbox(i + 1)}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: "var(--radius-md)",
+                          background: "rgba(0,0,0,.55)",
+                          color: "#fff",
+                          display: "none",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          font: "var(--type-caption)",
+                          fontWeight: "var(--fw-bold)",
+                          cursor: "zoom-in",
+                        }}
+                      >
+                        +{plate.images.length - 1 - 4}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
-        <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+        <div
+          style={{
+            flex: "1 1 320px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-4)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-2)",
+              flexWrap: "wrap",
+            }}
+          >
             {plate.isHot && !sold && <Badge tone="hot">🔥 HOT</Badge>}
             {plate.type && <Badge tone="dark">{plate.type}</Badge>}
-            <Badge tone={sold ? 'rose' : 'mint'}>{sold ? 'Đã bán' : 'Còn hàng'}</Badge>
-            {plate.badge && <Badge tone={BADGE_TONE[plate.badge] || 'neutral'}>{plate.badge}</Badge>}
+            <Badge tone={sold ? "rose" : "mint"}>
+              {sold ? "Đã bán" : "Còn hàng"}
+            </Badge>
+            {plate.badge && (
+              <Badge tone={BADGE_TONE[plate.badge] || "neutral"}>
+                {plate.badge}
+              </Badge>
+            )}
           </div>
-          {plate.giftedPlate && (
-            plate.giftedPlate.id ? (
-              <a href={routeFor('detail', plate.giftedPlate.slug || plate.giftedPlate.id)} onClick={(e) => { e.preventDefault(); openPlate(plate.giftedPlate.slug || plate.giftedPlate.id); }} className="pressable" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--status-warning-ink)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', textDecoration: 'none' }}>
-                <Gift size={14} aria-hidden /> Tặng kèm biển {plate.giftedPlate.plateNumber}
+          {plate.giftedPlate &&
+            (plate.giftedPlate.id ? (
+              <a
+                href={routeFor(
+                  "detail",
+                  plate.giftedPlate.slug || plate.giftedPlate.id,
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  openPlate(plate.giftedPlate.slug || plate.giftedPlate.id);
+                }}
+                className="pressable"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  alignSelf: "flex-start",
+                  padding: "6px 12px",
+                  borderRadius: "var(--radius-xs)",
+                  background: "var(--amber-100)",
+                  color: "var(--status-warning-ink)",
+                  font: "var(--type-caption)",
+                  fontWeight: "var(--fw-semibold)",
+                  textDecoration: "none",
+                }}
+              >
+                <Gift size={14} aria-hidden /> Tặng kèm biển{" "}
+                {plate.giftedPlate.plateNumber}
               </a>
             ) : (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 'var(--radius-pill)', background: 'var(--amber-100)', color: 'var(--status-warning-ink)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
-                <Gift size={14} aria-hidden /> Tặng kèm biển {plate.giftedPlate.plateNumber}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  alignSelf: "flex-start",
+                  padding: "6px 12px",
+                  borderRadius: "var(--radius-xs)",
+                  background: "var(--amber-100)",
+                  color: "var(--status-warning-ink)",
+                  font: "var(--type-caption)",
+                  fontWeight: "var(--fw-semibold)",
+                }}
+              >
+                <Gift size={14} aria-hidden /> Tặng kèm biển{" "}
+                {plate.giftedPlate.plateNumber}
               </span>
-            )
-          )}
+            ))}
           <div>
-            <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{prov}{seri} · {num}</h1>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{[plate.vehicleType, plate.province].filter(Boolean).join(' · ')} · <span style={{ fontVariantNumeric: 'tabular-nums' }}>{plate.displayViewCount ?? plate.viewCount}</span> lượt xem{plate.liveViewerCount != null && (
-              <>
-                {' · '}<span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--status-success-ink)', fontWeight: 'var(--fw-medium)' }}><span className="live-dot" aria-hidden="true" />{plate.liveViewerCount} người đang xem</span>
-              </>
-            )}</p>
+            <h1
+              style={{
+                margin: "0 0 var(--space-2)",
+                font: "var(--type-display-2)",
+                letterSpacing: "var(--ls-display)",
+                color: "var(--text-strong)",
+              }}
+            >
+              {prov}
+              {seri} · {num}
+            </h1>
+            <p
+              style={{
+                margin: 0,
+                font: "var(--type-body-sm)",
+                color: "var(--text-muted)",
+              }}
+            >
+              {[plate.vehicleType, plate.province].filter(Boolean).join(" · ")}{" "}
+              ·{" "}
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                {plate.displayViewCount ?? plate.viewCount}
+              </span>{" "}
+              lượt xem
+              {plate.liveViewerCount != null && (
+                <>
+                  {" · "}
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      color: "var(--status-success-ink)",
+                      fontWeight: "var(--fw-medium)",
+                    }}
+                  >
+                    <span className="live-dot" aria-hidden="true" />
+                    {plate.liveViewerCount} người đang xem
+                  </span>
+                </>
+              )}
+            </p>
             {reviewData?.totalReviews > 0 ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                <div style={{ display: 'flex', gap: 1 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= Math.round(reviewData.averageRating) ? 'var(--action-primary)' : 'none'} style={{ color: n <= Math.round(reviewData.averageRating) ? 'var(--action-primary)' : 'var(--grey-300)' }} />)}</div>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{reviewData.averageRating.toFixed(1)} ({reviewData.totalReviews} đánh giá)</span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginTop: 6,
+                }}
+              >
+                <div style={{ display: "flex", gap: 1 }}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      size={14}
+                      fill={
+                        n <= Math.round(reviewData.averageRating)
+                          ? "var(--action-primary)"
+                          : "none"
+                      }
+                      style={{
+                        color:
+                          n <= Math.round(reviewData.averageRating)
+                            ? "var(--action-primary)"
+                            : "var(--grey-300)",
+                      }}
+                    />
+                  ))}
+                </div>
+                <span
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {reviewData.averageRating.toFixed(1)} (
+                  {reviewData.totalReviews} đánh giá)
+                </span>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                <div style={{ display: 'flex', gap: 1 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill="var(--action-primary)" style={{ color: 'var(--action-primary)' }} />)}</div>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>5.0 ({curatedReviews.length} đánh giá thẩm định)</span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginTop: 6,
+                }}
+              >
+                <div style={{ display: "flex", gap: 1 }}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      size={14}
+                      fill="var(--action-primary)"
+                      style={{ color: "var(--action-primary)" }}
+                    />
+                  ))}
+                </div>
+                <span
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  5.0 ({curatedReviews.length} đánh giá thẩm định)
+                </span>
               </div>
             )}
           </div>
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
+          <div
+            style={{
+              background: "var(--surface-sunken)",
+              borderRadius: "var(--radius-card)",
+              padding: "var(--gutter-card)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-1)",
+            }}
+          >
+            <span
+              style={{
+                font: "var(--type-caption)",
+                color: "var(--text-muted)",
+              }}
+            >
+              Giá bán
+            </span>
             {onSale ? (
-              <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--status-danger)' }}>{formatPrice(plate.salePrice, false)}</span>
-                <span style={{ font: 'var(--type-body)', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(plate.price, false)}</span>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-display-3)",
+                    letterSpacing: "var(--ls-title)",
+                    color: "var(--status-danger)",
+                  }}
+                >
+                  {formatPrice(plate.salePrice, false)}
+                </span>
+                <span
+                  style={{
+                    font: "var(--type-body)",
+                    color: "var(--text-muted)",
+                    textDecoration: "line-through",
+                  }}
+                >
+                  {formatPrice(plate.price, false)}
+                </span>
               </span>
             ) : (
-              <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+              <span
+                style={{
+                  font: "var(--type-display-3)",
+                  letterSpacing: "var(--ls-title)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                {formatPrice(plate.price, plate.priceOnRequest)}
+              </span>
             )}
           </div>
           {plate.vpa && (
-            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển đấu giá VPA{plate.vpa.resultLabel ? ` · ${VPA_EXPIRED_LABELS[plate.vpa.resultLabel] || plate.vpa.resultLabel}` : ''}</span>
-              {plate.vpa.registerEndAt && <span>Hạn đăng ký: {formatDateTime(plate.vpa.registerEndAt)}</span>}
-              {plate.vpa.auctionStartAt && <span>Phiên đấu giá: {formatDateTime(plate.vpa.auctionStartAt)}{plate.vpa.auctionEndAt ? ` → ${formatDateTime(plate.vpa.auctionEndAt)}` : ''}</span>}
-              <span style={{ color: 'var(--text-muted)' }}>Liên hệ để được hướng dẫn đăng ký tham gia đấu giá.</span>
+            <div
+              style={{
+                background: "var(--surface-sunken)",
+                borderRadius: "var(--radius-card)",
+                padding: "var(--space-3)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                font: "var(--type-body-sm)",
+                color: "var(--text-body)",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-label)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                Biển đấu giá VPA
+                {plate.vpa.resultLabel
+                  ? ` · ${VPA_EXPIRED_LABELS[plate.vpa.resultLabel] || plate.vpa.resultLabel}`
+                  : ""}
+              </span>
+              {plate.vpa.registerEndAt && (
+                <span>
+                  Hạn đăng ký: {formatDateTime(plate.vpa.registerEndAt)}
+                </span>
+              )}
+              {plate.vpa.auctionStartAt && (
+                <span>
+                  Phiên đấu giá: {formatDateTime(plate.vpa.auctionStartAt)}
+                  {plate.vpa.auctionEndAt
+                    ? ` → ${formatDateTime(plate.vpa.auctionEndAt)}`
+                    : ""}
+                </span>
+              )}
+              <span style={{ color: "var(--text-muted)" }}>
+                Liên hệ để được hướng dẫn đăng ký tham gia đấu giá.
+              </span>
             </div>
           )}
-          <div className="plate-actions-desktop" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+          <div
+            className="plate-actions-desktop"
+            style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}
+          >
             {!sold && (
-              <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 160px' }}>Chốt biển này</Button>
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => setContactOpen(true)}
+                style={{ flex: "1 1 160px" }}
+              >
+                Chốt biển này
+              </Button>
             )}
             {plate.seller?.phone && (
-              <LinkButton href={`tel:${plate.seller.phone}`} variant="outline" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 120px' }}>Gọi ngay</LinkButton>
+              <LinkButton
+                href={`tel:${plate.seller.phone}`}
+                variant="outline"
+                disabled={sold}
+                onClick={() => handleContact("call")}
+                style={{ flex: "1 1 120px" }}
+              >
+                Gọi ngay
+              </LinkButton>
             )}
             {plate.seller?.zalo && (
-              <LinkButton href={toZaloUrl(plate.seller.zalo)} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { navigator.clipboard?.writeText(buildConsultMessage(plate.plateNumber)).then(() => notify('Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra')).catch(() => {}); logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 120px' }}>Nhắn Zalo</LinkButton>
+              <LinkButton
+                href={toZaloUrl(plate.seller.zalo)}
+                target="_blank"
+                rel="noreferrer"
+                variant="outline"
+                disabled={sold}
+                onClick={() => {
+                  navigator.clipboard
+                    ?.writeText(buildConsultMessage(plate.plateNumber))
+                    .then(() =>
+                      notify(
+                        "Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra",
+                      ),
+                    )
+                    .catch(() => {});
+                  logZaloClick(plate.id, "plate_detail");
+                  trackGenerateLead(
+                    plate.id,
+                    "plate_detail",
+                    plate.priceOnRequest ? undefined : plate.price,
+                  );
+                  handleContact("contact");
+                }}
+                style={{ flex: "1 1 120px" }}
+              >
+                Nhắn Zalo
+              </LinkButton>
             )}
-            <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
-            <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} size="lg" onClick={() => { (inCompare ? removeCompare : addCompare)(plate.id); notify(inCompare ? 'Đã bỏ khỏi so sánh' : 'Đã thêm vào so sánh'); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+            <IconButton
+              name="heart"
+              label="Lưu yêu thích"
+              size="lg"
+              onClick={() => {
+                onFav?.(plate.id);
+                notify(isFav ? "Đã bỏ khỏi yêu thích" : "Đã lưu vào yêu thích");
+              }}
+              style={isFav ? { color: "var(--status-danger)" } : undefined}
+            />
+            <IconButton
+              name={inCompare ? "check-circle" : "scale"}
+              label={inCompare ? "Bỏ khỏi so sánh" : "Thêm vào so sánh"}
+              size="lg"
+              onClick={() => {
+                (inCompare ? removeCompare : addCompare)(plate.id);
+                notify(
+                  inCompare ? "Đã bỏ khỏi so sánh" : "Đã thêm vào so sánh",
+                );
+              }}
+              style={inCompare ? { color: "var(--action-primary)" } : undefined}
+            />
           </div>
-          <div className="plate-share-row" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginRight: 4 }}>Chia sẻ:</span>
-            <IconButton name="share" label="Chia sẻ Facebook" size="lg" onClick={shareFb} />
-            <button type="button" aria-label="Chia sẻ Zalo" onClick={shareZalo} style={{ width: 48, height: 48, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer' }}><MessageCircle size={24} /></button>
-            <IconButton name={copied ? 'check' : 'copy'} label="Sao chép liên kết" size="lg" onClick={copyLink} />
+          <div
+            className="plate-share-row"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-2)",
+            }}
+          >
+            <span
+              style={{
+                font: "var(--type-caption)",
+                color: "var(--text-muted)",
+                marginRight: 4,
+              }}
+            >
+              Chia sẻ:
+            </span>
+            <IconButton
+              name="share"
+              label="Chia sẻ Facebook"
+              size="lg"
+              onClick={shareFb}
+            />
+            <button
+              type="button"
+              aria-label="Chia sẻ Zalo"
+              onClick={shareZalo}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                border: "none",
+                background: "var(--surface-muted)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--text-body)",
+                cursor: "pointer",
+              }}
+            >
+              <MessageCircle size={24} />
+            </button>
+            <IconButton
+              name={copied ? "check" : "copy"}
+              label="Sao chép liên kết"
+              size="lg"
+              onClick={copyLink}
+            />
           </div>
-          {user?.isCollaborator && <CtvPlateLinkButton plateId={plate.id} plateNumber={plate.plateNumber} />}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 'var(--space-3)' }}>
-            <div style={{ background: isCar ? 'var(--brand-50)' : 'var(--status-success-bg)', boxShadow: `inset 0 0 0 1.5px ${isCar ? 'var(--brand-200)' : 'var(--status-success)'}`, borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', background: isCar ? 'var(--brand-500)' : 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--white)', flexShrink: 0 }}>
+          {user?.isCollaborator && (
+            <CtvPlateLinkButton
+              plateId={plate.id}
+              plateNumber={plate.plateNumber}
+            />
+          )}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))",
+              gap: "var(--space-3)",
+            }}
+          >
+            <div
+              style={{
+                background: isCar
+                  ? "var(--brand-50)"
+                  : "var(--status-success-bg)",
+                boxShadow: `inset 0 0 0 1.5px ${isCar ? "var(--brand-200)" : "var(--status-success)"}`,
+                borderRadius: "var(--radius-md)",
+                padding: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "var(--radius-sm)",
+                  background: isCar
+                    ? "var(--brand-500)"
+                    : "var(--status-success)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--white)",
+                  flexShrink: 0,
+                }}
+              >
                 {isCar ? <Car size={20} /> : <Bike size={20} />}
               </div>
-              <div><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Loại xe</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.vehicleType}</div></div>
+              <div>
+                <div
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Loại xe
+                </div>
+                <div
+                  style={{
+                    font: "var(--type-title-3)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  {plate.vehicleType}
+                </div>
+              </div>
             </div>
-            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flexShrink: 0 }}><MapPin size={20} /></div>
-              <div><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tỉnh / thành</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.province}</div></div>
+            <div
+              style={{
+                background: "var(--white)",
+                boxShadow: "var(--shadow-inset-hairline)",
+                borderRadius: "var(--radius-md)",
+                padding: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "var(--radius-sm)",
+                  background: "var(--surface-sunken)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--text-muted)",
+                  flexShrink: 0,
+                }}
+              >
+                <MapPin size={20} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Tỉnh / thành
+                </div>
+                <div
+                  style={{
+                    font: "var(--type-title-3)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  {plate.province}
+                </div>
+              </div>
             </div>
-            <div style={{ gridColumn: '1 / -1', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-md)', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--white)', flexShrink: 0 }}><FileCheck size={20} /></div>
-              <div><div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hồ sơ</div><div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Sang tên ngay · gốc</div></div>
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                background: "var(--white)",
+                boxShadow: "var(--shadow-inset-hairline)",
+                borderRadius: "var(--radius-md)",
+                padding: 14,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "var(--radius-sm)",
+                  background: "var(--status-success)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--white)",
+                  flexShrink: 0,
+                }}
+              >
+                <FileCheck size={20} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Hồ sơ
+                </div>
+                <div
+                  style={{
+                    font: "var(--type-title-3)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Sang tên ngay · gốc
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {sold && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
-          <SoldPlateFeedback plate={plate} onConsultSimilar={() => go('list')()} go={go} notify={notify} />
+        <section
+          style={{
+            maxWidth: "var(--width-content)",
+            margin: "0 auto",
+            padding: "0 var(--pad-page) var(--space-4)",
+          }}
+        >
+          <SoldPlateFeedback
+            plate={plate}
+            onConsultSimilar={() => go("list")()}
+            go={go}
+            notify={notify}
+          />
         </section>
       )}
 
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)' }}>
-        <div role="tablist" aria-label="Nội dung biển số" style={{ display: 'flex', gap: 'var(--space-2)', borderBottom: '1px solid var(--border-hairline)' }}>
-          {[['info', 'Thông tin'], ['reviews', `Đánh giá (${reviewData?.totalReviews || curatedReviews.length})`]].map(([k, label]) => (
-            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 48, padding: '0 20px', border: 'none', borderBottom: tab === k ? '2px solid var(--action-primary)' : '2px solid transparent', background: 'transparent', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: tab === k ? 'var(--fw-semibold)' : 'var(--fw-medium)', color: tab === k ? 'var(--action-primary)' : 'var(--text-muted)' }}>{label}</button>
+      <section
+        style={{
+          maxWidth: "var(--width-content)",
+          margin: "0 auto",
+          padding: "0 var(--pad-page)",
+        }}
+      >
+        <div
+          role="tablist"
+          aria-label="Nội dung biển số"
+          style={{
+            display: "flex",
+            gap: "var(--space-2)",
+            borderBottom: "1px solid var(--border-hairline)",
+          }}
+        >
+          {[
+            ["info", "Thông tin"],
+            [
+              "reviews",
+              `Đánh giá (${reviewData?.totalReviews || curatedReviews.length})`,
+            ],
+          ].map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={tab === k}
+              onClick={() => setTab(k)}
+              style={{
+                height: 48,
+                padding: "0 20px",
+                border: "none",
+                borderBottom:
+                  tab === k
+                    ? "2px solid var(--action-primary)"
+                    : "2px solid transparent",
+                background: "transparent",
+                cursor: "pointer",
+                font: "var(--type-body-sm)",
+                fontWeight:
+                  tab === k ? "var(--fw-semibold)" : "var(--fw-medium)",
+                color:
+                  tab === k ? "var(--action-primary)" : "var(--text-muted)",
+              }}
+            >
+              {label}
+            </button>
           ))}
         </div>
       </section>
 
-      {tab === 'info' && (
-      <>
+      {tab === "info" && (
+        <>
+          {plate.description && (
+            <section
+              style={{
+                maxWidth: "var(--width-content)",
+                margin: "0 auto",
+                padding: "var(--space-6) var(--pad-page) 0",
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-2)",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-label)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                Mô tả
+              </span>
+              <p
+                style={{
+                  margin: 0,
+                  font: "var(--type-body)",
+                  color: "var(--text-body)",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {plate.description}
+              </p>
+            </section>
+          )}
 
-      {plate.description && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mô tả</span>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', whiteSpace: 'pre-line' }}>{plate.description}</p>
-        </section>
-      )}
+          {similar?.sameProvince?.length > 0 && (
+            <section
+              style={{
+                maxWidth: "var(--width-content)",
+                margin: "0 auto",
+                padding: `${plate.description ? "0" : "var(--space-6)"} var(--pad-page) var(--pad-section-y)`,
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-3)",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-label)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                Biển số cùng tỉnh/thành
+              </span>
+              <AutoCarousel
+                items={similar.sameProvince}
+                openPlate={openPlate}
+                currentPlateId={plateId}
+                isInList={isInList}
+                addCompare={addCompare}
+                removeCompare={removeCompare}
+                notify={notify}
+              />
+            </section>
+          )}
 
-      {similar?.sameProvince?.length > 0 && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: `${plate.description ? '0' : 'var(--space-6)'} var(--pad-page) var(--pad-section-y)`, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số cùng tỉnh/thành</span>
-          <AutoCarousel items={similar.sameProvince} openPlate={openPlate} currentPlateId={plateId} isInList={isInList} addCompare={addCompare} removeCompare={removeCompare} notify={notify} />
-        </section>
-      )}
+          {similar?.sameType?.length > 0 && (
+            <section
+              style={{
+                maxWidth: "var(--width-content)",
+                margin: "0 auto",
+                padding: `${plate.description || similar?.sameProvince?.length > 0 ? "0" : "var(--space-6)"} var(--pad-page) var(--pad-section-y)`,
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-3)",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-label)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                Biển số tương tự kiểu
+              </span>
+              <AutoCarousel
+                items={similar.sameType}
+                openPlate={openPlate}
+                currentPlateId={plateId}
+                isInList={isInList}
+                addCompare={addCompare}
+                removeCompare={removeCompare}
+                notify={notify}
+              />
+            </section>
+          )}
 
-      {similar?.sameType?.length > 0 && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: `${plate.description || similar?.sameProvince?.length > 0 ? '0' : 'var(--space-6)'} var(--pad-page) var(--pad-section-y)`, display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số tương tự kiểu</span>
-          <AutoCarousel items={similar.sameType} openPlate={openPlate} currentPlateId={plateId} isInList={isInList} addCompare={addCompare} removeCompare={removeCompare} notify={notify} />
-        </section>
-      )}
-
-      {plate.journeyPost && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-6)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', overflow: 'hidden', padding: 'var(--gutter-card)' }}>
-            {plate.journeyPost.videoUrl ? (
-              <div style={{ flex: '0 0 260px', maxWidth: '100%' }}>
-                <TikTokEmbed videoUrl={plate.journeyPost.videoUrl} title={plate.journeyPost.title} />
-              </div>
-            ) : plate.journeyPost.coverImageUrl && (
-              <div style={{ flex: '0 0 160px', height: 110, borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-                <img src={plate.journeyPost.coverImageUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              </div>
-            )}
-            <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Câu chuyện giao biển</span>
-              <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{plate.journeyPost.title}</span>
-              {(plate.journeyPost.deliveryLocation || plate.journeyPost.deliveryDate) && (
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                  {[plate.journeyPost.deliveryLocation, plate.journeyPost.deliveryDate].filter(Boolean).join(' · ')}
-                </span>
-              )}
-              <a href={routeFor('post', plate.journeyPost.slug)} onClick={(e) => { e.preventDefault(); openPost?.(plate.journeyPost.slug); }}
-                style={{ alignSelf: 'flex-start', marginTop: 4, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem đầy đủ câu chuyện →</a>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {plate.meanings?.length > 0 && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <div>
-            <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Ý nghĩa phong thủy biển {prov}{seri} · {num}</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Phân tích chi tiết theo con số, ngũ hành, vận trình sự nghiệp &amp; tài lộc.</p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {plate.meanings.map((m, mi) => (
-              <div key={m.id} className={mi >= 2 ? 'meanings-extra' : undefined} style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexWrap: 'wrap' }}>
-                {m.imageUrl && (
-                  <div style={{ flex: '1 1 240px', maxWidth: 300, minHeight: 180 }}>
-                    <img src={m.imageUrl} alt={m.title || 'Phong thủy'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          {plate.journeyPost && (
+            <section
+              style={{
+                maxWidth: "var(--width-content)",
+                margin: "0 auto",
+                padding: "0 var(--pad-page) var(--space-6)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "var(--space-4)",
+                  background: "var(--surface-tint-cream)",
+                  borderRadius: "var(--radius-card)",
+                  overflow: "hidden",
+                  padding: "var(--gutter-card)",
+                }}
+              >
+                {plate.journeyPost.videoUrl ? (
+                  <div style={{ flex: "0 0 260px", maxWidth: "100%" }}>
+                    <TikTokEmbed
+                      videoUrl={plate.journeyPost.videoUrl}
+                      title={plate.journeyPost.title}
+                    />
                   </div>
+                ) : (
+                  plate.journeyPost.coverImageUrl && (
+                    <div
+                      style={{
+                        flex: "0 0 160px",
+                        height: 110,
+                        borderRadius: "var(--radius-sm)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <img
+                        src={plate.journeyPost.coverImageUrl}
+                        alt=""
+                        loading="lazy"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    </div>
+                  )
                 )}
-                <div style={{ flex: '2 1 320px', padding: 'clamp(16px,2.5vw,24px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  {m.title && <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{m.title}</h3>}
-                  <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', whiteSpace: 'pre-line' }}>{m.content}</p>
-                  {m.blogSlug ? (
-                    <a href={routeFor('post', m.blogSlug)} onClick={(e) => { e.preventDefault(); openPost?.(m.blogSlug); }} style={{ alignSelf: 'flex-start', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem chi tiết →</a>
-                  ) : m.title && (
-                    // Chưa có bài viết gắn trực tiếp (blogSlug null) — dẫn sang trang Blog lọc theo tiêu đề ý nghĩa,
-                    // vẫn đưa khách tới nội dung liên quan gần nhất thay vì ẩn link hoàn toàn.
-                    <a href={`${routeFor('blog')}?q=${encodeURIComponent(m.title)}`} onClick={(e) => { e.preventDefault(); history.replaceState(null, '', `${routeFor('blog')}?q=${encodeURIComponent(m.title)}`); go('blog')(); }} style={{ alignSelf: 'flex-start', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem chi tiết →</a>
+                <div
+                  style={{
+                    flex: "1 1 240px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      font: "var(--type-label)",
+                      color: "var(--action-primary)",
+                      fontWeight: "var(--fw-semibold)",
+                    }}
+                  >
+                    Câu chuyện giao biển
+                  </span>
+                  <span
+                    style={{
+                      font: "var(--type-title-2)",
+                      color: "var(--text-strong)",
+                    }}
+                  >
+                    {plate.journeyPost.title}
+                  </span>
+                  {(plate.journeyPost.deliveryLocation ||
+                    plate.journeyPost.deliveryDate) && (
+                    <span
+                      style={{
+                        font: "var(--type-body-sm)",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {[
+                        plate.journeyPost.deliveryLocation,
+                        plate.journeyPost.deliveryDate,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
                   )}
+                  <a
+                    href={routeFor("post", plate.journeyPost.slug)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openPost?.(plate.journeyPost.slug);
+                    }}
+                    style={{
+                      alignSelf: "flex-start",
+                      marginTop: 4,
+                      font: "var(--type-body-sm)",
+                      fontWeight: "var(--fw-semibold)",
+                      color: "var(--action-primary)",
+                      textDecoration: "underline",
+                      textUnderlineOffset: 3,
+                    }}
+                  >
+                    Xem đầy đủ câu chuyện →
+                  </a>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          )}
+
+          {plate.meanings?.length > 0 && (
+            <section
+              style={{
+                maxWidth: "var(--width-content)",
+                margin: "0 auto",
+                padding: "0 var(--pad-page) var(--space-8)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-4)",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: "0 0 var(--space-1)",
+                    font: "var(--type-display-3)",
+                    letterSpacing: "var(--ls-title)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Ý nghĩa phong thủy biển {prov}
+                  {seri} · {num}
+                </h2>
+                <p
+                  style={{
+                    margin: 0,
+                    font: "var(--type-body-sm)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Phân tích chi tiết theo con số, ngũ hành, vận trình sự nghiệp
+                  &amp; tài lộc.
+                </p>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "var(--space-3)",
+                }}
+              >
+                {plate.meanings.map((m, mi) => (
+                  <div
+                    key={m.id}
+                    className={mi >= 2 ? "meanings-extra" : undefined}
+                    style={{
+                      background: "var(--surface-tint-cream)",
+                      borderRadius: "var(--radius-card)",
+                      overflow: "hidden",
+                      display: "flex",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {m.imageUrl && (
+                      <div
+                        style={{
+                          flex: "1 1 240px",
+                          maxWidth: 300,
+                          minHeight: 180,
+                        }}
+                      >
+                        <img
+                          src={m.imageUrl}
+                          alt={m.title || "Phong thủy"}
+                          loading="lazy"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        flex: "2 1 320px",
+                        padding: "clamp(16px,2.5vw,24px)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "var(--space-2)",
+                      }}
+                    >
+                      {m.title && (
+                        <h3
+                          style={{
+                            margin: 0,
+                            font: "var(--type-title-2)",
+                            color: "var(--text-strong)",
+                          }}
+                        >
+                          {m.title}
+                        </h3>
+                      )}
+                      <p
+                        style={{
+                          margin: 0,
+                          font: "var(--type-body)",
+                          color: "var(--text-body)",
+                          whiteSpace: "pre-line",
+                        }}
+                      >
+                        {m.content}
+                      </p>
+                      {m.blogSlug ? (
+                        <a
+                          href={routeFor("post", m.blogSlug)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openPost?.(m.blogSlug);
+                          }}
+                          style={{
+                            alignSelf: "flex-start",
+                            font: "var(--type-body-sm)",
+                            fontWeight: "var(--fw-semibold)",
+                            color: "var(--action-primary)",
+                            textDecoration: "underline",
+                            textUnderlineOffset: 3,
+                          }}
+                        >
+                          Xem chi tiết →
+                        </a>
+                      ) : (
+                        m.title && (
+                          // Chưa có bài viết gắn trực tiếp (blogSlug null) — dẫn sang trang Blog lọc theo tiêu đề ý nghĩa,
+                          // vẫn đưa khách tới nội dung liên quan gần nhất thay vì ẩn link hoàn toàn.
+                          <a
+                            href={`${routeFor("blog")}?q=${encodeURIComponent(m.title)}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              history.replaceState(
+                                null,
+                                "",
+                                `${routeFor("blog")}?q=${encodeURIComponent(m.title)}`,
+                              );
+                              go("blog")();
+                            }}
+                            style={{
+                              alignSelf: "flex-start",
+                              font: "var(--type-body-sm)",
+                              fontWeight: "var(--fw-semibold)",
+                              color: "var(--action-primary)",
+                              textDecoration: "underline",
+                              textUnderlineOffset: 3,
+                            }}
+                          >
+                            Xem chi tiết →
+                          </a>
+                        )
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Hỏi đáp & Thảo luận trực tiếp với chuyên gia Duy Đinh */}
+          <section
+            style={{
+              maxWidth: "var(--width-content)",
+              margin: "0 auto",
+              padding: "0 var(--pad-page) var(--space-4)",
+            }}
+          >
+            <PlateDiscussion plate={plate} notify={notify} user={user} />
+          </section>
+
+          <section
+            style={{
+              maxWidth: "var(--width-content)",
+              margin: "0 auto",
+              padding: "0 var(--pad-page) var(--pad-section-y)",
+            }}
+          >
+            <div
+              style={{
+                background: "var(--surface-sunken)",
+                borderRadius: "var(--radius-card)",
+                padding: "var(--gutter-card)",
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "var(--space-4)",
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: "0 0 var(--space-1)",
+                    font: "var(--type-title-1)",
+                    letterSpacing: "var(--ls-title)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  {content.process.teaser.title}
+                </h2>
+                <p
+                  style={{
+                    margin: 0,
+                    font: "var(--type-body-sm)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {content.process.teaser.desc}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => go("chat")()}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+              >
+                {content.process.teaser.cta}
+                <ArrowRight size={16} />
+              </Button>
+            </div>
+          </section>
+        </>
       )}
 
-      {/* Hỏi đáp & Thảo luận trực tiếp với chuyên gia Duy Đinh */}
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-4)' }}>
-        <PlateDiscussion plate={plate} notify={notify} user={user} />
-      </section>
-
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)' }}>
-        <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
-          <div>
-            <h2 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-1)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{content.process.teaser.title}</h2>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{content.process.teaser.desc}</p>
-          </div>
-          <Button variant="outline" size="lg" onClick={() => go('chat')()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            {content.process.teaser.cta}<ArrowRight size={16} />
-          </Button>
-        </div>
-      </section>
-
-      </>
-      )}
-
-      {tab === 'reviews' && (
-        <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {tab === "reviews" && (
+        <section
+          style={{
+            maxWidth: "var(--width-content)",
+            margin: "0 auto",
+            padding: "var(--space-6) var(--pad-page) var(--pad-section-y)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-4)",
+          }}
+        >
           {reviewError ? (
-            <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
-                Lỗi tải đánh giá.{' '}
-                <button type="button" onClick={() => refetchReviews()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
+            <div
+              style={{
+                background: "var(--surface-sunken)",
+                borderRadius: "var(--radius-card)",
+                padding: "48px var(--space-6)",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  font: "var(--type-body-sm)",
+                  color: "var(--status-danger)",
+                }}
+              >
+                Lỗi tải đánh giá.{" "}
+                <button
+                  type="button"
+                  onClick={() => refetchReviews()}
+                  style={{
+                    color: "var(--link)",
+                    cursor: "pointer",
+                    border: "none",
+                    background: "none",
+                    padding: 0,
+                  }}
+                >
+                  Thử lại
+                </button>
               </p>
             </div>
           ) : (
             <>
-              {((reviewData?.items?.length ? reviewData.items : curatedReviews) || []).map((r) => (
-                <div key={r.id} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              {(
+                (reviewData?.items?.length
+                  ? reviewData.items
+                  : curatedReviews) || []
+              ).map((r) => (
+                <div
+                  key={r.id}
+                  style={{
+                    background: "var(--white)",
+                    borderRadius: "var(--radius-card)",
+                    boxShadow: "var(--shadow-inset-hairline)",
+                    padding: "var(--gutter-card)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-3)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--space-3)",
+                    }}
+                  >
                     <Avatar name={r.reviewerName} />
-                    <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{maskName(r.reviewerName)}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{formatDate(r.createdAt)}</span></div>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span
+                        style={{
+                          font: "var(--type-title-3)",
+                          color: "var(--text-strong)",
+                        }}
+                      >
+                        {maskName(r.reviewerName)}
+                      </span>
+                      <span
+                        style={{
+                          font: "var(--type-caption)",
+                          color: "var(--text-faint)",
+                        }}
+                      >
+                        {formatDate(r.createdAt)}
+                      </span>
+                    </div>
                     <div style={{ flex: 1 }} />
-                    <div style={{ display: 'flex', gap: 2 }}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} size={14} fill={n <= r.rating ? 'var(--action-primary)' : 'none'} style={{ color: n <= r.rating ? 'var(--action-primary)' : 'var(--grey-300)' }} />)}</div>
+                    <div style={{ display: "flex", gap: 2 }}>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star
+                          key={n}
+                          size={14}
+                          fill={
+                            n <= r.rating ? "var(--action-primary)" : "none"
+                          }
+                          style={{
+                            color:
+                              n <= r.rating
+                                ? "var(--action-primary)"
+                                : "var(--grey-300)",
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  {r.comment && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.comment}</p>}
+                  {r.comment && (
+                    <p
+                      style={{
+                        margin: 0,
+                        font: "var(--type-body-sm)",
+                        color: "var(--text-body)",
+                      }}
+                    >
+                      {r.comment}
+                    </p>
+                  )}
                   {r.adminReply && (
-                    <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>Phản hồi từ Duy Đinh (Chủ sáng lập)</span>
-                      <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{r.adminReply}</span>
+                    <div
+                      style={{
+                        background: "var(--surface-sunken)",
+                        borderRadius: "var(--radius-field)",
+                        padding: "10px 14px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                      }}
+                    >
+                      <span
+                        style={{
+                          font: "var(--type-caption)",
+                          fontWeight: "var(--fw-semibold)",
+                          color: "var(--action-primary)",
+                        }}
+                      >
+                        Phản hồi từ Duy Đinh (Chủ sáng lập)
+                      </span>
+                      <span
+                        style={{
+                          font: "var(--type-body-sm)",
+                          color: "var(--text-body)",
+                        }}
+                      >
+                        {r.adminReply}
+                      </span>
                     </div>
                   )}
                 </div>
               ))}
               {reviewTotalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)' }}>
-                  <Button variant="outline" size="sm" disabled={reviewPage <= 1} onClick={() => setReviewPage((p) => Math.max(1, p - 1))}>Trước</Button>
-                  <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Trang {reviewPage} / {reviewTotalPages}</span>
-                  <Button variant="outline" size="sm" disabled={reviewPage >= reviewTotalPages} onClick={() => setReviewPage((p) => Math.min(reviewTotalPages, p + 1))}>Sau</Button>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "var(--space-3)",
+                  }}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={reviewPage <= 1}
+                    onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                  >
+                    Trước
+                  </Button>
+                  <span
+                    style={{
+                      font: "var(--type-body-sm)",
+                      color: "var(--text-muted)",
+                    }}
+                  >
+                    Trang {reviewPage} / {reviewTotalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={reviewPage >= reviewTotalPages}
+                    onClick={() =>
+                      setReviewPage((p) => Math.min(reviewTotalPages, p + 1))
+                    }
+                  >
+                    Sau
+                  </Button>
                 </div>
               )}
             </>
@@ -636,110 +2025,487 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
       )}
 
       <div className="plate-actions-mobile">
-        <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giá bán</span>
+        <div
+          style={{
+            flex: "1 1 auto",
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
+          }}
+        >
+          <span
+            style={{ font: "var(--type-caption)", color: "var(--text-muted)" }}
+          >
+            Giá bán
+          </span>
           {onSale ? (
-            <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden' }}>
-              <span style={{ font: 'var(--type-title-2)', color: 'var(--status-danger)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatPrice(plate.salePrice, false)}</span>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(plate.price, false)}</span>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                gap: 6,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+              }}
+            >
+              <span
+                style={{
+                  font: "var(--type-title-2)",
+                  color: "var(--status-danger)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {formatPrice(plate.salePrice, false)}
+              </span>
+              <span
+                style={{
+                  font: "var(--type-caption)",
+                  color: "var(--text-muted)",
+                  textDecoration: "line-through",
+                }}
+              >
+                {formatPrice(plate.price, false)}
+              </span>
             </span>
           ) : (
-            <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{formatPrice(plate.price, plate.priceOnRequest)}</span>
+            <span
+              style={{
+                font: "var(--type-title-2)",
+                color: "var(--text-strong)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {formatPrice(plate.price, plate.priceOnRequest)}
+            </span>
           )}
         </div>
         {plate.seller?.phone && (
-          <LinkButton href={`tel:${plate.seller.phone}`} variant="primary" disabled={sold} onClick={() => handleContact('call')} style={{ flex: '1 1 0' }}>Gọi ngay</LinkButton>
+          <LinkButton
+            href={`tel:${plate.seller.phone}`}
+            variant="primary"
+            disabled={sold}
+            onClick={() => handleContact("call")}
+            style={{ flex: "1 1 0" }}
+          >
+            Gọi ngay
+          </LinkButton>
         )}
         {plate.seller?.zalo && (
-          <LinkButton href={toZaloUrl(plate.seller.zalo)} target="_blank" rel="noreferrer" variant="outline" disabled={sold} onClick={() => { navigator.clipboard?.writeText(buildConsultMessage(plate.plateNumber)).then(() => notify('Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra')).catch(() => {}); logZaloClick(plate.id, 'plate_detail'); trackGenerateLead(plate.id, 'plate_detail', plate.priceOnRequest ? undefined : plate.price); handleContact('contact'); }} style={{ flex: '1 1 0' }}>Zalo</LinkButton>
+          <LinkButton
+            href={toZaloUrl(plate.seller.zalo)}
+            target="_blank"
+            rel="noreferrer"
+            variant="outline"
+            disabled={sold}
+            onClick={() => {
+              navigator.clipboard
+                ?.writeText(buildConsultMessage(plate.plateNumber))
+                .then(() =>
+                  notify(
+                    "Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra",
+                  ),
+                )
+                .catch(() => {});
+              logZaloClick(plate.id, "plate_detail");
+              trackGenerateLead(
+                plate.id,
+                "plate_detail",
+                plate.priceOnRequest ? undefined : plate.price,
+              );
+              handleContact("contact");
+            }}
+            style={{ flex: "1 1 0" }}
+          >
+            Zalo
+          </LinkButton>
         )}
         {!sold && (
-          <Button variant="primary" size="lg" onClick={() => setContactOpen(true)} style={{ flex: '1 1 0' }}>Chốt biển này</Button>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => setContactOpen(true)}
+            style={{ flex: "1 1 0" }}
+          >
+            Chốt biển này
+          </Button>
         )}
-        <IconButton name="heart" label="Lưu yêu thích" size="lg" onClick={() => { onFav?.(plate.id); notify(isFav ? 'Đã bỏ khỏi yêu thích' : 'Đã lưu vào yêu thích'); }} style={isFav ? { color: 'var(--status-danger)' } : undefined} />
+        <IconButton
+          name="heart"
+          label="Lưu yêu thích"
+          size="lg"
+          onClick={() => {
+            onFav?.(plate.id);
+            notify(isFav ? "Đã bỏ khỏi yêu thích" : "Đã lưu vào yêu thích");
+          }}
+          style={isFav ? { color: "var(--status-danger)" } : undefined}
+        />
       </div>
 
       {lightbox >= 0 && images.length > 0 && (
         <div className="detail-lightbox" onClick={() => setLightbox(-1)}>
-          <button type="button" className="lightbox-close" aria-label="Đóng" onClick={() => setLightbox(-1)}><X size={24} /></button>
-          <button type="button" className="lightbox-nav lightbox-prev" aria-label="Ảnh trước" onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + images.length) % images.length); }}><ChevronLeft size={28} /></button>
-          <img src={optimizeImageUrl(images[lightbox])} alt={`Ảnh ${lightbox + 1} biển số ${plate.plateNumber}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)' }} />
-          <button type="button" className="lightbox-nav lightbox-next" aria-label="Ảnh tiếp" onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % images.length); }}><ChevronRight size={28} /></button>
-          <span className="lightbox-counter">{lightbox + 1}/{images.length}</span>
+          <button
+            type="button"
+            className="lightbox-close"
+            aria-label="Đóng"
+            onClick={() => setLightbox(-1)}
+          >
+            <X size={24} />
+          </button>
+          <button
+            type="button"
+            className="lightbox-nav lightbox-prev"
+            aria-label="Ảnh trước"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightbox((lightbox - 1 + images.length) % images.length);
+            }}
+          >
+            <ChevronLeft size={28} />
+          </button>
+          <img
+            src={optimizeImageUrl(images[lightbox])}
+            alt={`Ảnh ${lightbox + 1} biển số ${plate.plateNumber}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "85vh",
+              objectFit: "contain",
+              borderRadius: "var(--radius-md)",
+              boxShadow: "var(--shadow-4)",
+            }}
+          />
+          <button
+            type="button"
+            className="lightbox-nav lightbox-next"
+            aria-label="Ảnh tiếp"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightbox((lightbox + 1) % images.length);
+            }}
+          >
+            <ChevronRight size={28} />
+          </button>
+          <span className="lightbox-counter">
+            {lightbox + 1}/{images.length}
+          </span>
         </div>
       )}
 
-      <Modal open={contactOpen} onClose={() => { setContactOpen(false); setCSent(false); }} title="Chốt biển này" maxWidth="480px">
+      <Modal
+        open={contactOpen}
+        onClose={() => {
+          setContactOpen(false);
+          setCSent(false);
+        }}
+        title="Chốt biển này"
+        maxWidth="480px"
+      >
         {!cSent ? (
-          <form onSubmit={handleContactSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <input type="text" name="company" value={cForm.honeypot} onChange={setCF('honeypot')} tabIndex={-1} autoComplete="off" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} aria-hidden="true" />
+          <form
+            onSubmit={handleContactSubmit}
+            noValidate
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-3)",
+            }}
+          >
+            <input
+              type="text"
+              name="company"
+              value={cForm.honeypot}
+              onChange={setCF("honeypot")}
+              tabIndex={-1}
+              autoComplete="off"
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: 1,
+                height: 1,
+                opacity: 0,
+              }}
+              aria-hidden="true"
+            />
             <div>
-              <Input label="Họ tên" value={cForm.fullName} onChange={setCF('fullName')} placeholder="Tên của bạn" error={cErr?.field === 'fullName' ? cErr.message : undefined} required />
+              <Input
+                label="Họ tên"
+                value={cForm.fullName}
+                onChange={setCF("fullName")}
+                placeholder="Tên của bạn"
+                error={cErr?.field === "fullName" ? cErr.message : undefined}
+                required
+              />
             </div>
             <div>
-              <Input label="Số điện thoại" type="tel" value={cForm.phone} onChange={setCF('phone')} placeholder="0xxxxxxxxx" error={cErr?.field === 'phone' ? cErr.message : undefined} required />
+              <Input
+                label="Số điện thoại"
+                type="tel"
+                value={cForm.phone}
+                onChange={setCF("phone")}
+                placeholder="0xxxxxxxxx"
+                error={cErr?.field === "phone" ? cErr.message : undefined}
+                required
+              />
             </div>
             <div>
-              <Select label="Mục đích" value={plate.vpa ? 'inquiry' : cForm.intent} onChange={(v) => setCForm((f) => ({ ...f, intent: v }))} options={(plate.vpa ? INTENT_OPTS.slice(0, 1) : INTENT_OPTS).map((o) => ({ value: INTENT_VAL[o], label: o }))} />
+              <Select
+                label="Mục đích"
+                value={plate.vpa ? "inquiry" : cForm.intent}
+                onChange={(v) => setCForm((f) => ({ ...f, intent: v }))}
+                options={(plate.vpa
+                  ? INTENT_OPTS.slice(0, 1)
+                  : INTENT_OPTS
+                ).map((o) => ({ value: INTENT_VAL[o], label: o }))}
+              />
             </div>
             <div>
-              <Input label="Biển số" value={plate.plateNumber} onChange={() => {}} disabled />
+              <Input
+                label="Biển số"
+                value={plate.plateNumber}
+                onChange={() => {}}
+                disabled
+              />
             </div>
             <div>
-              <Input label="Mã giảm giá" value={cForm.couponCode} onChange={setCF('couponCode')} onBlur={checkCoupon} placeholder="Nhập mã nếu có" />
-              {checkingCoupon && <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang kiểm tra…</span>}
+              <Input
+                label="Mã giảm giá"
+                value={cForm.couponCode}
+                onChange={setCF("couponCode")}
+                onBlur={checkCoupon}
+                placeholder="Nhập mã nếu có"
+              />
+              {checkingCoupon && (
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 4,
+                    font: "var(--type-caption)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Đang kiểm tra…
+                </span>
+              )}
               {!checkingCoupon && couponStatus?.valid && (
-                <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--status-success-ink)' }}>Áp dụng thành công — giảm {couponStatus.discountPercent}%</span>
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 4,
+                    font: "var(--type-caption)",
+                    color: "var(--status-success-ink)",
+                  }}
+                >
+                  Áp dụng thành công — giảm {couponStatus.discountPercent}%
+                </span>
               )}
               {!checkingCoupon && couponStatus && !couponStatus.valid && (
-                <span style={{ display: 'block', marginTop: 4, font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Mã không hợp lệ hoặc đã hết hạn</span>
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 4,
+                    font: "var(--type-caption)",
+                    color: "var(--status-danger)",
+                  }}
+                >
+                  Mã không hợp lệ hoặc đã hết hạn
+                </span>
               )}
             </div>
             <div>
-              <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />
+              <Input
+                label="Ghi chú"
+                value={cForm.note}
+                onChange={setCF("note")}
+                placeholder="Ví dụ: muốn đặt cọc giữ biển"
+              />
             </div>
             <div>
-              <Input label="Email" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" error={cErr?.field === 'email' ? cErr.message : undefined} />
+              <Input
+                label="Email"
+                type="email"
+                value={cForm.email}
+                onChange={setCF("email")}
+                placeholder="email@example.com"
+                error={cErr?.field === "email" ? cErr.message : undefined}
+              />
             </div>
             <div>
-              <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={cForm.subscribe} onChange={(v) => setCForm((f) => ({ ...f, subscribe: !!v }))} />
+              <Checkbox
+                label="Báo tôi khi có biển tương tự / khuyến mãi"
+                checked={cForm.subscribe}
+                onChange={(v) => setCForm((f) => ({ ...f, subscribe: !!v }))}
+              />
             </div>
             {cErr && !cErr.field && (
-              <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{cErr.message}</span>
+              <span
+                style={{
+                  font: "var(--type-caption)",
+                  color: "var(--status-danger)",
+                }}
+              >
+                {cErr.message}
+              </span>
             )}
-            <Button type="submit" variant="primary" size="lg" disabled={submitContact.isPending}>
-              {submitContact.isPending ? 'Đang gửi…' : 'Gửi yêu cầu'}
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              disabled={submitContact.isPending}
+            >
+              {submitContact.isPending ? "Đang gửi…" : "Gửi yêu cầu"}
             </Button>
           </form>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'fadeIn 140ms var(--ease-out)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-bg)', color: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
-              <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Cảm ơn bạn</span>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Yêu cầu đã được ghi nhận. Chúng tôi gọi lại trong 15 phút.</span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "var(--space-5)",
+              animation: "fadeIn 140ms var(--ease-out)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "var(--space-3)",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: "var(--radius-pill)",
+                  background: "var(--status-success-bg)",
+                  color: "var(--status-success)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                ✓
+              </div>
+              <span
+                style={{
+                  font: "var(--type-title-2)",
+                  letterSpacing: "var(--ls-title)",
+                  color: "var(--text-strong)",
+                }}
+              >
+                Cảm ơn bạn
+              </span>
+              <span
+                style={{
+                  font: "var(--type-body-sm)",
+                  color: "var(--text-muted)",
+                }}
+              >
+                Yêu cầu đã được ghi nhận. Chúng tôi gọi lại trong 15 phút.
+              </span>
             </div>
-            <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-md)', padding: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div
+              style={{
+                background: "var(--surface-tint-cream)",
+                borderRadius: "var(--radius-md)",
+                padding: "var(--space-4)",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-3)",
+              }}
+            >
               <PlateVisual size="sm" prov={prov} seri={seri} num={num} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển số bạn vừa gửi yêu cầu</span>
-                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{plate.plateNumber}</span>
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{plate.province} · {formatPrice(plate.price, plate.priceOnRequest)}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span
+                  style={{
+                    font: "var(--type-caption)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Biển số bạn vừa gửi yêu cầu
+                </span>
+                <span
+                  style={{
+                    font: "var(--type-title-3)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  {plate.plateNumber}
+                </span>
+                <span
+                  style={{
+                    font: "var(--type-body-sm)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {plate.province} ·{" "}
+                  {formatPrice(plate.price, plate.priceOnRequest)}
+                </span>
               </div>
             </div>
-            {(similar?.sameProvince?.length > 0 || similar?.sameType?.length > 0) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Trong lúc chờ, xem thêm biển khác?</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  {(similar?.sameProvince?.length ? similar.sameProvince : similar?.sameType || []).slice(0, 4).map((p) => (
-                    <PlateCard key={p.id} layout="row" plateNumber={p.plateNumber} province={p.province}
-                      price={p.price} thumbnailUrl={p.thumbnailUrl}
-                      href={routeFor('detail', p.slug || p.id)}
-                      onOpen={() => { setContactOpen(false); setCSent(false); openPlate(p.slug || p.id); }} />
-                  ))}
+            {(similar?.sameProvince?.length > 0 ||
+              similar?.sameType?.length > 0) && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "var(--space-2)",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-label)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Trong lúc chờ, xem thêm biển khác?
+                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-2)",
+                  }}
+                >
+                  {(similar?.sameProvince?.length
+                    ? similar.sameProvince
+                    : similar?.sameType || []
+                  )
+                    .slice(0, 4)
+                    .map((p) => (
+                      <PlateCard
+                        key={p.id}
+                        layout="row"
+                        plateNumber={p.plateNumber}
+                        province={p.province}
+                        price={p.price}
+                        thumbnailUrl={p.thumbnailUrl}
+                        href={routeFor("detail", p.slug || p.id)}
+                        onOpen={() => {
+                          setContactOpen(false);
+                          setCSent(false);
+                          openPlate(p.slug || p.id);
+                        }}
+                      />
+                    ))}
                 </div>
               </div>
             )}
-            <Button variant="outline" size="md" fullWidth onClick={() => { setContactOpen(false); setCSent(false); }}>Đóng</Button>
+            <Button
+              variant="outline"
+              size="md"
+              fullWidth
+              onClick={() => {
+                setContactOpen(false);
+                setCSent(false);
+              }}
+            >
+              Đóng
+            </Button>
           </div>
         )}
       </Modal>

@@ -66,7 +66,7 @@ function PlateSlotSearch({ onAdd, excludeIds }) {
   };
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative', flex: '1 1 220px', maxWidth: 320 }}>
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%' }}>
       <div style={{ position: 'relative' }}>
         <Search size={16} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', color: 'var(--text-faint)', pointerEvents: 'none' }} />
         <input
@@ -308,11 +308,11 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
           </div>
           {filledPlate && <Button variant="ghost" size="md" onClick={clear}>Bỏ chọn</Button>}
         </div>
-        <div className="compare-empty-slots" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'stretch' }}>
+        <div className="compare-empty-slots" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-4)', width: '100%', alignItems: 'stretch' }}>
           {filledPlate && (() => {
             const { prov, seri, num } = splitPlateNumber(filledPlate.plateNumber);
             return (
-              <div className="compare-empty-slot" style={{ flex: '1 1 220px', maxWidth: 320, background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)', position: 'relative' }}>
+              <div className="compare-empty-slot" style={{ width: '100%', minWidth: 0, background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', position: 'relative', minHeight: 180 }}>
                 <button onClick={() => remove(filledPlate.id)} aria-label="Bỏ khỏi so sánh" title="Bỏ khỏi so sánh" style={{ position: 'absolute', top: 8, right: 8, border: '1px solid var(--border-hairline)', background: 'var(--white)', boxShadow: 'var(--shadow-1)', borderRadius: '50%', cursor: 'pointer', color: 'var(--text-muted)', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                 {shouldShowGeneratedImage(settings, filledPlate.thumbnailUrl ? [filledPlate.thumbnailUrl] : []) ? (
                   <img src={filledPlate.thumbnailUrl} alt={filledPlate.plateNumber} style={{ width: 120, height: 65, objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />
@@ -324,7 +324,7 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
             );
           })()}
           {Array.from({ length: slotsNeeded }, (_, i) => (
-            <div key={i} className="compare-empty-slot" style={{ flex: '1 1 220px', maxWidth: 320, border: '1.5px dashed var(--border-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', minHeight: 180 }}>
+            <div key={i} className="compare-empty-slot" style={{ width: '100%', minWidth: 0, border: '1.5px dashed var(--border-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', minHeight: 180 }}>
               <GitCompareArrows size={22} style={{ color: 'var(--text-faint)' }} />
               <PlateSlotSearch onAdd={add} excludeIds={ids} />
             </div>
