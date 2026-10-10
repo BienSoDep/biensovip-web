@@ -78,9 +78,14 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
   const resumable = !running && last === 'failed';
 
   const start = () => {
-    const body = { source: src.key, vehicle: opt.vehicle || undefined, fresh: opt.fresh };
+    const body = {
+      source: src.key,
+      vehicle: opt.vehicle || undefined,
+      fresh: opt.fresh,
+      dryRun: opt.flag,
+      resultsFull: isResults,
+    };
     if (opt.province.trim()) body.province = opt.province.trim();
-    if (isResults) body.resultsFull = opt.flag; else body.dryRun = opt.flag;
     if (opt.fresh && !window.confirm('Bắt đầu lượt MỚI sẽ bỏ qua tiến độ của lượt dở dang. Tiếp tục?')) return;
     onRun(body, src);
   };
@@ -162,7 +167,7 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
         <Button variant="outline" size="sm" loading={busy} disabled={running || settings.crawlPaused} onClick={start}>
-          {resumable && !opt.fresh ? 'Tiếp tục lượt dở' : opt.flag && !isResults ? 'Chạy thử' : 'Crawl ngay'}
+          {resumable && !opt.fresh ? 'Tiếp tục lượt dở' : opt.flag ? 'Chạy thử' : 'Crawl ngay'}
         </Button>
         {running && <Button variant="outline" size="sm" onClick={stop} style={{ color: 'var(--status-danger)' }}>Dừng</Button>}
         {running && (
@@ -205,15 +210,11 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
           <Checkbox
             checked={opt.flag}
             onChange={(v) => setOpt((o) => ({ ...o, flag: !!v }))}
-            label={isResults ? 'Quét đầy đủ theo tỉnh (ngoài chu kỳ 7 ngày)' : 'Chạy thử: chỉ cào và đếm, không ghi dữ liệu'}
-            info={isResults
-              ? 'Quét vét toàn bộ lịch sử đấu giá của tất cả các tỉnh thành thay vì chỉ cào các phiên đấu giá diễn ra trong 7 ngày gần đây.'
-              : 'Tiến trình chỉ truy vấn VPA và đếm số lượng bản ghi để kiểm tra kết nối và độ trễ, hoàn toàn không ghi đè vào database.'}
+            label="Chạy thử: chỉ cào và đếm, không ghi dữ liệu"
+            info="Tiến trình chỉ truy vấn VPA và đếm số lượng bản ghi để kiểm tra kết nối và độ trễ, hoàn toàn không ghi đè vào database."
           />
           <span style={caption}>
-            {isResults
-              ? 'Chạy riêng một tỉnh hoặc cào toàn bộ. Để trống tỉnh = cào toàn bộ theo lát cắt các tỉnh VPA.'
-              : 'Chạy riêng một tỉnh hoặc chạy thử không đổi tab và không tính là lượt theo lịch. Để trống tỉnh và không tick chạy thử = như "Crawl ngay" thường.'}
+            Chạy riêng một tỉnh hoặc cào toàn bộ. Để trống tỉnh = cào toàn bộ theo lát cắt 34 tỉnh VPA.
           </span>
         </div>
       )}
