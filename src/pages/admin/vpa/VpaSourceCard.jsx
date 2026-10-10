@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Checkbox, Input, Select, Switch } from '../../../components/index.jsx';
+import { Badge, Checkbox, Input, Select, Switch, InfoTip } from '../../../components/index.jsx';
 import Button from '../../../components/Button.jsx';
 import { formatDateTime, formatDuration, formatInt, vpaRunNote } from '../../../lib/vpaFormat.js';
 
