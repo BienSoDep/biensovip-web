@@ -6,10 +6,11 @@
   "breadcrumb": { "home": "Trang chủ", "aria": "Breadcrumb" },
   "plate": { "call": "Gọi ngay", "zalo": "Nhắn Zalo", "sold": "Đã bán", "sold_overlay": "ĐÃ BÁN", "hot": "Còn 1 số", "new": "Mới", "contact_price": "Giá liên hệ" },
   "footer": {
-    "desc": "Duy Đinh - Biển Số Phong Thuỷ Đà Nẵng — hồ sơ rõ ràng, sang tên nhanh, tư vấn theo mệnh chủ xe.",
+    "desc": "Duy Đinh - Biển Số Đẹp Đà Nẵng — Dịch vụ cung cấp biển số đẹp xe máy, ô tô và hỗ trợ giấy tờ pháp lý liên quan đăng ký xe toàn quốc.",
     "hotline": "Hotline", "zalo_oa": "Zalo", "email": "Email", "facebook": "Fanpage Facebook", "hours": "Giờ làm việc",
+    "address_label": "Địa chỉ", "address_value": "Số 06 An Thượng 30, Ngũ Hành Sơn, Đà Nẵng",
     "facebook_value": "Duy Đinh - Biển Số Đẹp Đà Nẵng", "facebook_url": "https://www.facebook.com/duydinhbiensodepdanang", "hours_value": "8:00 – 21:00",
-    "copyright": "© 2026 Duy Đinh - Biển Số Phong Thuỷ Đà Nẵng — Biensovip.com",
+    "copyright": "© 2026 Duy Đinh - Biển Số Đẹp Đà Nẵng — Biensovip.com",
     "explore_title": "Khám phá",
     "list": "Kho biển số", "lucky": "Hợp mệnh", "chat": "Liên hệ tư vấn", "collab": "Cộng tác viên", "compare": "So sánh biển số", "fav": "Biển số yêu thích", "blog": "Tin phong thủy", "about": "Về chúng tôi",
     "policy_title": "Chính sách & Câu hỏi",

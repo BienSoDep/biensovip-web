@@ -108,3 +108,11 @@ export function useRunAllNotificationTriggers() {
   });
 }
 
+export function useNotificationGuardrails() {
+  return useQuery({
+    queryKey: ['admin', 'notification-guardrails'],
+    queryFn: () => apiClient.get('/api/admin/notifications/guardrails'),
+    staleTime: 5 * 60_000,
+  });
+}
+

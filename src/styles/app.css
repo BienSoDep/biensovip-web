@@ -1154,20 +1154,24 @@ button[aria-expanded]:hover {
     order: -1;
   }
 }
-@media (min-width: 1025px) and (max-width: 1300px) {
-  /* Desktop hẹp: 6 nav-pill + logo 2 dòng + actions vượt quá --width-content (1216px), buộc nav-pills
-     cuộn ngang. Giảm gap/padding để đỡ phải cuộn — cùng hướng xử lý đã áp cho tablet ở trên. */
+@media (min-width: 1025px) {
+  /* Cho phép dropdown sub-menu như Hợp mệnh mở ra ngoài header mà không bị cắt,
+     đồng thời thiết lập gap và padding gọn gàng để 6 pills không bao giờ đè vào chuông thông báo */
+  .header-nav-pills {
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+  .header-nav-pills .pill-btn {
+    padding: 0 11px !important;
+  }
+}
+@media (min-width: 1025px) and (max-width: 1260px) {
+  /* Desktop hẹp (1025-1260px): giảm nhẹ gap/padding để đảm bảo khoảng cách an toàn tuyệt đối với chuông */
   .header-nav-pills {
     gap: 4px !important;
   }
   .header-nav-pills .pill-btn {
-    padding: 0 10px !important;
-  }
-}
-@media (min-width: 1025px) {
-  /* Cho phép dropdown sub-menu như Hợp mệnh mở ra ngoài header mà không bị cắt */
-  .header-nav-pills {
-    overflow: visible !important;
+    padding: 0 9px !important;
   }
 }
 /* Detail: mobile sticky bottom action bar */

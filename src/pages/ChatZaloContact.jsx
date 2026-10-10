@@ -1,4 +1,4 @@
-import { Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound, Clock, ShieldCheck, BadgeCheck, PhoneCall, Mail, Zap, CreditCard } from 'lucide-react';
+import { Send, MessageSquare, ClipboardCheck, HandCoins, FileSignature, KeyRound, Clock, ShieldCheck, BadgeCheck, PhoneCall, Mail, Zap, CreditCard, MapPin } from 'lucide-react';
 import ContactRequestForm from '../components/ContactRequestForm.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import { content } from '../lib/content/index.js';
@@ -35,6 +35,11 @@ export default function ChatZaloContact({ notify, user }) {
       label: 'Email liên hệ',
       value: content.info.email || 'duymc64@gmail.com',
       href: `mailto:${content.info.email || 'duymc64@gmail.com'}`
+    },
+    {
+      icon: MapPin,
+      label: 'Địa chỉ cửa hàng',
+      value: content.info.address || 'Số 06 An Thượng 30, P. Mỹ An, Q. Ngũ Hành Sơn, TP. Đà Nẵng'
     },
     {
       icon: CreditCard,

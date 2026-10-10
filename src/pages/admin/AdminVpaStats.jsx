@@ -1,18 +1,20 @@
 import { useState, useMemo } from 'react';
 import {
-  ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ComposedChart, Area
+  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip
 } from 'recharts';
 import {
-  TrendingUp, TrendingDown, Layers, Database, ShieldCheck, CheckCircle2,
-  AlertTriangle, RefreshCw, ExternalLink, Lightbulb, ArrowUpRight, ArrowDownRight,
-  Car, Bike, Activity, Award, BarChart3, Clock, DollarSign, ArrowRight
+  Layers, Database, ShieldCheck, CheckCircle2,
+  RefreshCw, Award, BarChart3, Clock, DollarSign, ArrowRight,
+  TrendingUp, Activity
 } from 'lucide-react';
 import { Select, InfoTip, Badge } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import Skeleton from '../../components/Skeleton.jsx';
+import AdminTabbedPage from '../../components/AdminTabbedPage.jsx';
+import AdminVpaMarket from './AdminVpaMarket.jsx';
 import {
-  useVpaStats, useVpaMarketAnalysis, useVpaOverview, useVpaAdminPlates
+  useVpaStats, useVpaOverview
 } from '../../services/adminVpa.js';
 import { useVpaCounts } from '../../services/vpa.js';
 import { useAdminCategories } from '../../services/categories.js';
@@ -33,18 +35,6 @@ const STATE_COLORS = {
   Rejected: 'var(--status-danger, #e03131)',
 };
 
-const TAB_NAMES = {
-  1: 'Biển tháng (công bố)',
-  2: 'Biển tuần (chính thức)',
-  3: 'Biển hết hạn',
-  4: 'Hết hạn nội bộ',
-  Monthly: 'Biển tháng (công bố)',
-  Weekly: 'Biển tuần (chính thức)',
-  Expired: 'Biển hết hạn',
-  ExpiredInternal: 'Hết hạn nội bộ'
-};
-
-const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)}đ`);
 const num = (v) => (v == null ? '0' : new Intl.NumberFormat('vi-VN').format(v));
 
 const CARD = {
@@ -96,7 +86,8 @@ function StatCard({ label, value, sub, tone, icon: Icon }) {
   );
 }
 
-export default function AdminVpaStats({ go, patch, st }) {
+// Tab 1: Thống kê Kho & Tiến độ duyệt giá nội bộ
+function VpaInventoryStatsTab({ go, patch }) {
   const [vehicle, setVehicle] = useState(''); // '' | 'Car' | 'MotorBike'
   const [provinceId, setProvinceId] = useState('');
   const [plateTypeId, setPlateTypeId] = useState('');
@@ -107,18 +98,11 @@ export default function AdminVpaStats({ go, patch, st }) {
   // Queries
   const { data: stats, isLoading: loadingStats, refetch: refetchStats } = useVpaStats(true);
   const { data: counts, isLoading: loadingCounts, refetch: refetchCounts } = useVpaCounts(vehicle);
-  const { data: market, isLoading: loadingMarket, refetch: refetchMarket } = useVpaMarketAnalysis({
-    provinceId: provinceId || undefined,
-    plateTypeId: plateTypeId || undefined
-  });
   const { data: overview, refetch: refetchOverview } = useVpaOverview({ enabled: true });
-
-  const isSuperAdmin = st?.user?.role === 'super-admin';
 
   const refreshAll = () => {
     refetchStats();
     refetchCounts();
-    refetchMarket();
     refetchOverview();
   };
 
@@ -137,30 +121,6 @@ export default function AdminVpaStats({ go, patch, st }) {
   const approvedPlates = stats?.approvedCount || stats?.byPriceState?.Approved || 0;
   const approvalRate = totalPlatesInStats > 0 ? Math.round((approvedPlates / totalPlatesInStats) * 100) : 0;
 
-  // Trend Chart Data
-  const trendChartData = useMemo(() => {
-    if (!market?.priceTrend) {
-      if (!stats?.priceTrend) return [];
-      return stats.priceTrend.map((p) => ({
-        ...p,
-        label: new Date(p.weekStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
-      }));
-    }
-    const base = market.priceTrend.map((p) => ({
-      ...p,
-      label: new Date(p.weekStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
-    }));
-    if (market.forecast) {
-      base.push({
-        label: new Date(market.forecast.forecastWeekStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' (Dự báo)',
-        avgPrice: null,
-        movingAvg4w: null,
-        forecastPrice: market.forecast.forecastPrice,
-      });
-    }
-    return base;
-  }, [market?.priceTrend, market?.forecast, stats?.priceTrend]);
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       {/* Top Header & Filter Controls */}
@@ -176,14 +136,14 @@ export default function AdminVpaStats({ go, patch, st }) {
               font: 'var(--type-caption)',
               fontWeight: 'var(--fw-bold)'
             }}>
-              VPA Analytics Engine
+              Kho biển VPA &amp; Vận hành
             </span>
           </div>
-          <h1 style={{ margin: '6px 0 2px', font: 'var(--type-h3)', color: 'var(--text-strong)' }}>
-            Thống kê &amp; Phân tích Biển số VPA
-          </h1>
+          <h2 style={{ margin: '6px 0 2px', font: 'var(--type-h3)', color: 'var(--text-strong)' }}>
+            Thống kê Kho biển &amp; Tiến độ Duyệt giá
+          </h2>
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Báo cáo toàn diện kho biển VPA, tiến độ duyệt giá, cơ cấu chủng loại, xu hướng đấu giá thị trường và giám sát crawler.
+            Báo cáo toàn diện kho biển VPA, vòng đời đấu giá, tiến độ duyệt giá nội bộ và giám sát luồng crawler.
           </p>
         </div>
 
@@ -238,7 +198,7 @@ export default function AdminVpaStats({ go, patch, st }) {
           <StatCard
             label="Biển chính thức (Tuần)"
             value={num(counts?.weekly)}
-            sub="Đang & sắp mở đấu giá"
+            sub="Đang &amp; sắp mở đấu giá"
             icon={Clock}
             tone="var(--action-primary)"
           />
@@ -380,174 +340,11 @@ export default function AdminVpaStats({ go, patch, st }) {
         </div>
       </div>
 
-      {/* 4. Xu hướng Thị trường Đấu giá & Dự báo */}
-      {market && (
-        <div style={CARD}>
-          <SectionTitle icon={TrendingUp} tip="Phân tích trên giá trúng đấu giá thật từ VPA (vpa_auction_results).">
-            4. Xu hướng Thị trường &amp; Dự báo Giá trúng Đấu giá
-          </SectionTitle>
-
-          {/* So kỳ 7 ngày */}
-          {market.periodCompare && (
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 'var(--space-3)',
-              padding: 'var(--space-3)',
-              background: 'var(--surface-sunken)',
-              borderRadius: 'var(--radius-md)'
-            }}>
-              <StatCard
-                label="7 ngày qua — Số phiên trúng"
-                value={num(market.periodCompare.currentCount)}
-                sub="Phiên đấu giá thành công"
-              />
-              <StatCard
-                label="7 ngày qua — Giá trúng TB"
-                value={money(market.periodCompare.currentAvgPrice)}
-                sub="Thực tế thị trường"
-              />
-              <StatCard
-                label="7 ngày trước — Giá trúng TB"
-                value={money(market.periodCompare.previousAvgPrice)}
-                sub="Kỳ so sánh liền trước"
-              />
-              <StatCard
-                label="Biến động giá"
-                value={market.periodCompare.priceChangePercent == null ? '—' : `${market.periodCompare.priceChangePercent >= 0 ? '+' : ''}${market.periodCompare.priceChangePercent}%`}
-                sub="So với kỳ trước"
-                tone={(market.periodCompare.priceChangePercent ?? 0) >= 0 ? 'var(--status-success-ink)' : 'var(--status-danger)'}
-                icon={(market.periodCompare.priceChangePercent ?? 0) >= 0 ? ArrowUpRight : ArrowDownRight}
-              />
-            </div>
-          )}
-
-          {/* Biểu đồ xu hướng và trung bình động */}
-          <div style={{ marginTop: 'var(--space-2)' }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', marginBottom: 8, display: 'block' }}>
-              Diễn biến giá trúng trung bình 12 tuần &amp; MA 4 tuần
-            </span>
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={trendChartData} margin={{ top: 15, right: 20, left: 10, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-100)" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1_000_000).toFixed(0)}tr`} />
-                <Tooltip formatter={(val, name) => [money(val), name === 'avgPrice' ? 'Giá trúng TB' : name === 'movingAvg4w' ? 'MA 4 tuần' : 'Dự báo']} />
-                <Legend />
-                <Line type="monotone" dataKey="avgPrice" name="Giá trúng TB" stroke="#3B5BFF" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="movingAvg4w" name="MA 4 tuần" stroke="#C75B00" strokeWidth={2} strokeDasharray="4 4" dot={false} />
-                {market.forecast && (
-                  <Line type="monotone" dataKey="forecastPrice" name="Dự báo kỳ tới" stroke="#E5484D" strokeWidth={2} dot={{ r: 5, fill: '#E5484D' }} />
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Insights Khuyến nghị tự động */}
-          {market.insights?.length > 0 && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              padding: 'var(--space-3)',
-              background: 'rgba(59,91,255,0.04)',
-              border: '1px solid var(--action-primary-subtle, rgba(59,91,255,0.15))',
-              borderRadius: 'var(--radius-md)'
-            }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>
-                <Lightbulb size={14} /> Nhận định &amp; Khuyến nghị thị trường tự động:
-              </span>
-              <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4, font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
-                {market.insights.map((ins, i) => (
-                  <li key={i}>{ins}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Biến động giá theo tỉnh & theo loại biển */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
-            <div style={{ flex: '1 1 350px' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'block', marginBottom: 8 }}>
-                Top tỉnh biến động giá mạnh nhất
-              </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {(market.growthByProvince || []).slice(0, 5).map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', font: 'var(--type-caption)' }}>
-                    <span><b>{idx + 1}.</b> {item.label}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>{money(item.lateAvgPrice)}</span>
-                      <b style={{ color: item.changePercent >= 0 ? 'var(--status-success-ink)' : 'var(--status-danger)' }}>
-                        {item.changePercent >= 0 ? '+' : ''}{item.changePercent}%
-                      </b>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ flex: '1 1 350px' }}>
-              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'block', marginBottom: 8 }}>
-                Top loại biển biến động giá mạnh nhất
-              </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {(market.growthByPlateType || []).slice(0, 5).map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', font: 'var(--type-caption)' }}>
-                    <span><b>{idx + 1}.</b> {item.label}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>{money(item.lateAvgPrice)}</span>
-                      <b style={{ color: item.changePercent >= 0 ? 'var(--status-success-ink)' : 'var(--status-danger)' }}>
-                        {item.changePercent >= 0 ? '+' : ''}{item.changePercent}%
-                      </b>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 5. So sánh Đối chiếu Giá Shop vs Giá trúng VPA */}
-      {market?.shopCompare?.length > 0 && (
-        <div style={CARD}>
-          <SectionTitle icon={DollarSign} tip="Đối chiếu giá trúng đấu giá thật VPA với giá niêm yết của kho biển shop cùng loại.">
-            5. Đối chiếu Giá Niêm yết Shop vs Giá Trúng VPA
-          </SectionTitle>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
-              <thead>
-                <tr style={{ background: 'var(--surface-sunken)', textAlign: 'left', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                  <th style={{ padding: '8px 12px' }}>Tỉnh/thành</th>
-                  <th style={{ padding: '8px 12px' }}>Loại biển</th>
-                  <th style={{ padding: '8px 12px' }}>Giá trúng VPA TB</th>
-                  <th style={{ padding: '8px 12px' }}>Mẫu VPA</th>
-                  <th style={{ padding: '8px 12px' }}>Giá niêm yết Shop</th>
-                  <th style={{ padding: '8px 12px' }}>Mẫu Shop</th>
-                </tr>
-              </thead>
-              <tbody>
-                {market.shopCompare.slice(0, 10).map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--border-hairline, var(--grey-100))' }}>
-                    <td style={{ padding: '10px 12px', fontWeight: 'var(--fw-medium)' }}>{row.provinceName}</td>
-                    <td style={{ padding: '10px 12px' }}>{row.plateTypeName}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{money(row.vpaAvgPrice)}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{row.vpaSampleCount} mẫu</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--text-strong)', fontWeight: 'var(--fw-semibold)' }}>{money(row.shopAvgPrice)}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{row.shopSampleCount} biển</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* 6. Giám sát Thu thập Dữ liệu (Crawler Monitoring) */}
+      {/* 4. Giám sát Thu thập Dữ liệu (Crawler Monitoring) */}
       {overview && (
         <div style={CARD}>
           <SectionTitle icon={ShieldCheck} tip="Trạng thái các luồng crawler tự động thu thập từ VPA.">
-            6. Giám sát Thu thập Dữ liệu (Crawler &amp; Data Health)
+            4. Giám sát Thu thập Dữ liệu (Crawler &amp; Data Health)
           </SectionTitle>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
             {(overview.sources || []).map((src) => (
@@ -579,6 +376,28 @@ export default function AdminVpaStats({ go, patch, st }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// HUB GỘP 2 TRANG: THỐNG KÊ KHO & PHÂN TÍCH THỊ TRƯỜNG VPA
+export default function AdminVpaStats({ go, patch, st }) {
+  const tabs = [
+    {
+      key: 'stats',
+      label: 'Thống kê Kho & Tiến độ duyệt',
+      render: () => <VpaInventoryStatsTab go={go} patch={patch} st={st} />
+    },
+    {
+      key: 'market',
+      label: 'Phân tích Thị trường & Dự báo',
+      render: () => <AdminVpaMarket />
+    }
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <AdminTabbedPage tabs={tabs} initialTab="stats" />
     </div>
   );
 }

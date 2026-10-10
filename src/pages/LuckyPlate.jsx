@@ -120,7 +120,7 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
 
 const SOURCE_OPTIONS = [{ value: '', label: 'Tất cả' }, { value: 'own', label: 'Biển có sẵn' }, { value: 'vpa', label: 'Biển VPA' }];
 
-export default function LuckyPlate({ screen, go, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
+export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, contact, openPlate, onUserUpdate }) {
   const { data: settings } = useSiteSettings();
   const stored = useRef(loadStoredResult()).current;
   const [form, setForm] = useState(() => stored?.form || {
@@ -376,7 +376,7 @@ export default function LuckyPlate({ screen, go, notify, onNotice, user, contact
       </div>
 
       {activeTab === 'luan-bien' ? (
-        <PlateFengShuiAnalyzerTab go={go} notify={notify} user={user} />
+        <PlateFengShuiAnalyzerTab go={go} patch={patch} notify={notify} user={user} />
       ) : !result ? (
         <form onSubmit={(e) => { e.preventDefault(); submit(); }} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)' }}>
         {/* fieldset disabled khóa mọi input trong lúc chờ tra cứu — tránh sửa form/double-submit
