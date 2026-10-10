@@ -83,6 +83,7 @@ const GROUPED_REDIRECT = {
   amaintenance: 'afeatureflags',
   adbconsole: 'afeatureflags',
   aemailtpl: 'anotifications',
+  avpamarket: 'avpastats',
 };
 
 // View đang chọn của trang Bán hàng — đọc thẳng từ URL thay vì lưu state, để URL cũ có ?view=
@@ -165,8 +166,8 @@ const ADMIN_INFO = {
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
   ainsights: 'Báo cáo chuyên sâu: Phễu chuyển đổi toàn diện, radar phát hiện điểm nghẽn, đối soát cung - cầu kho biển, sức khỏe nguồn lead và danh sách biển số tồn đọng cần kích cầu.',
-  avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật (không phải giá gợi ý/giá duyệt): so kỳ 7 ngày, xu hướng giá theo tuần kèm trung bình động, dự báo tuần tới (ước tính thô, xem R² để biết độ tin cậy), xếp hạng tỉnh/loại biển tăng giá nhanh nhất, lời khuyên tự sinh từ số liệu, và đối chiếu giá trúng VPA với giá niêm yết biển của shop — hai con số khác bản chất, chỉ để tham khảo mặt bằng.',
-  avpastats: 'Báo cáo toàn diện kho biển VPA, tiến độ duyệt giá, cơ cấu chủng loại, xu hướng đấu giá thị trường và giám sát dữ liệu.',
+  avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật — so kỳ 7 ngày, chuỗi xu hướng 12 tuần & MA 4 tuần, xếp hạng biến động và đối chiếu giá shop.',
+  avpastats: 'Báo cáo toàn diện kho biển VPA và phân tích thị trường đấu giá. Chuyển đổi giữa 2 tab: "Thống kê Kho & Tiến độ duyệt" (kho biển, cơ cấu giá, giám sát crawler) và "Phân tích Thị trường & Dự báo" (giá trúng thật, chuỗi xu hướng 12 tuần & MA 4 tuần, biến động tỉnh/loại biển, đối chiếu giá shop).',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -329,8 +330,13 @@ export default function AdminShell({
   // tự chuyển về trang chính (về tab đầu, không giữ tab cũ — đơn giản, không vỡ bookmark cũ).
   const mergedRedirect = GROUPED_REDIRECT[s];
   useEffect(() => {
-    if (mergedRedirect) go(mergedRedirect)();
-  }, [mergedRedirect, go]);
+    if (mergedRedirect) {
+      if (s === 'avpamarket') {
+        window.history.replaceState(null, '', '/admin/thong-ke-bien-vpa?tab=market');
+      }
+      go(mergedRedirect)();
+    }
+  }, [mergedRedirect, s, go]);
 
   // 3 màn cũ của nhóm Bán hàng gộp vào 'asales' — chuyển hướng kèm ?view= để giữ đúng view tương ứng.
   useEffect(() => {

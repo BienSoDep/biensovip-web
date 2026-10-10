@@ -72,8 +72,8 @@ function NotificationBell({ go, openPlate, user }) {
   };
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'flex' }}>
-      <button ref={bellRef} type="button" aria-label="Thông báo" aria-haspopup="menu" aria-expanded={open} aria-controls="notif-panel" onClick={handleToggle} style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
+      <button ref={bellRef} type="button" aria-label="Thông báo" aria-haspopup="menu" aria-expanded={open} aria-controls="notif-panel" onClick={handleToggle} style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-body)', cursor: 'pointer', flexShrink: 0 }}>
         <Bell size={18} />
       </button>
       {unreadCount > 0 && (
@@ -178,7 +178,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   }, [s]);
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 'var(--z-header)', background: 'var(--glass-fill)', backdropFilter: 'var(--glass-blur)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-      <div className="header-row" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '14px var(--pad-page)', display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+      <div className="header-row" style={{ maxWidth: 'min(100%, 1280px)', margin: '0 auto', padding: '12px var(--pad-page)', display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-3)' }}>
         <button onClick={onMenu} style={{ display: 'none', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }} className="mobile-menu-btn"><Menu size={24} /></button>
         <a href="/" onClick={(e) => { e.preventDefault(); go('home')(); }} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', flexShrink: 0 }}>
           <img src="/assets/logo-mark.png" alt="" className="header-logo-mark" style={{ width: 38, height: 38, objectFit: 'contain', display: 'block' }} />
@@ -187,7 +187,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             <span className="header-logo-tagline" style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{T('common.brand.tagline_header')}</span>
           </div>
         </a>
-        <nav ref={navRef} className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', gap: 'var(--space-3)', marginLeft: 'var(--space-6)', overflowX: 'auto', overflowY: 'visible', padding: '4px', scrollbarWidth: 'none', minWidth: 0 }}>
+        <nav ref={navRef} className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', gap: 6, marginLeft: 'var(--space-2)', overflowX: 'auto', overflowY: 'visible', padding: '4px', scrollbarWidth: 'none', minWidth: 0 }}>
           {nav.map(([key, label, Icon]) => {
             if (key === 'list') {
               const isListActive = s === 'list';
@@ -466,13 +466,13 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
                 {Icon && <Icon size={15} style={{ flexShrink: 0 }} />}
                 {label}
                 {key === 'compare' && compareCount > 0 && (
-                  <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
+                  <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 5px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: '11px', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginLeft: 2 }}>{compareCount}</span>
                 )}
               </NavBtn>
             );
           })}
         </nav>
-        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0 }}>
+        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0, marginLeft: 'auto' }}>
           <NotificationBell go={go} openPlate={openPlate} user={user} />
           <div style={{ position: 'relative', display: 'flex' }}>
             <IconButton name="heart" label={T('common.fav.label')} onClick={go('fav')} />

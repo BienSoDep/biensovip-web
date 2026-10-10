@@ -121,11 +121,41 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
     );
   }
 
+  const cleanPrefix = `${prov || ''}${seri || ''}`.replace(/-+$/, '');
+
   return (
     <div style={plateStyle} role="img" aria-label={ariaLabel}>
-      <div aria-hidden style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: s.gap, fontFamily, fontWeight: 700, color: textColor, textShadow, whiteSpace: 'nowrap', lineHeight: 1 }}>
-        <span style={{ fontSize: scaleFontSize(numFs, 0.72) }}>{prov}{seri && seri.length > 1 ? '-' : ''}{seri}-</span>
-        <span style={{ fontSize: numFs, letterSpacing: s.ls }}>{num}</span>
+      <div
+        aria-hidden
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily,
+          fontWeight: 700,
+          color: textColor,
+          textShadow,
+          whiteSpace: 'nowrap',
+          lineHeight: 1,
+        }}
+      >
+        <span style={{ fontSize: scaleFontSize(numFs, 0.9) }}>
+          {cleanPrefix}
+        </span>
+        <span
+          style={{
+            fontSize: scaleFontSize(numFs, 0.75),
+            opacity: 0.85,
+            padding: '0 4px',
+            transform: 'translateY(-1px)',
+          }}
+        >
+          -
+        </span>
+        <span style={{ fontSize: numFs, letterSpacing: s.ls }}>
+          {num}
+        </span>
       </div>
       {screws}
     </div>

@@ -1,21 +1,26 @@
 // Thuật toán luận giải phong thủy biển số toàn diện cho BienSoDep
 // Phân tích 5 chiều: Ngũ hành Hà Đồ, Tổng nút, Âm Dương tương phối, Thế số tài lộc & cảnh báo, Quẻ Kinh Dịch Mai Hoa.
 
-// 1. Map Hà Đồ: Chữ số -> Ngũ hành
+// 1. Map Hà Đồ chuẩn Tiên Thiên Thập Số:
+// "Thiên nhất sinh Thủy, Địa lục thành chi" => 1, 6 thuộc Thủy
+// "Địa nhị sinh Hỏa, Thiên thất thành chi" => 2, 7 thuộc Hỏa
+// "Thiên tam sinh Mộc, Địa bát thành chi" => 3, 8 thuộc Mộc
+// "Địa tứ sinh Kim, Thiên cửu thành chi" => 4, 9 thuộc Kim
+// "Thiên ngũ sinh Thổ, Địa thập thành chi" => 5, 0 (10) thuộc Thổ
 export const DIGIT_ELEMENTS = {
-  1: 'Mộc', 2: 'Mộc',
-  3: 'Hỏa', 4: 'Hỏa',
-  5: 'Thổ', 6: 'Thổ',
-  7: 'Kim', 8: 'Kim',
-  9: 'Thủy', 0: 'Thủy',
+  1: 'Thủy', 6: 'Thủy',
+  2: 'Hỏa',  7: 'Hỏa',
+  3: 'Mộc',  8: 'Mộc',
+  4: 'Kim',  9: 'Kim',
+  5: 'Thổ',  0: 'Thổ',
 };
 
 export const ELEMENT_COLORS = {
-  Kim: { bg: '#f1f5f9', border: '#cbd5e1', text: '#334155', dot: '#94a3b8' },
-  Mộc: { bg: '#ecfdf5', border: '#a7f3d0', text: '#065f46', dot: '#10b981' },
-  Thủy: { bg: '#eff6ff', border: '#bfdbfe', text: '#1e40af', dot: '#3b82f6' },
-  Hỏa: { bg: '#fff1f2', border: '#fecdd3', text: '#9f1239', dot: '#f43f5e' },
-  Thổ: { bg: '#fffbeb', border: '#fde68a', text: '#92400e', dot: '#f59e0b' },
+  Kim: { bg: '#f8fafc', border: '#cbd5e1', text: '#334155', dot: '#94a3b8', badge: '#475569' },
+  Mộc: { bg: '#ecfdf5', border: '#a7f3d0', text: '#065f46', dot: '#10b981', badge: '#059669' },
+  Thủy: { bg: '#eff6ff', border: '#bfdbfe', text: '#1e40af', dot: '#3b82f6', badge: '#2563eb' },
+  Hỏa: { bg: '#fff1f2', border: '#fecdd3', text: '#9f1239', dot: '#f43f5e', badge: '#e11d48' },
+  Thổ: { bg: '#fffbeb', border: '#fde68a', text: '#92400e', dot: '#f59e0b', badge: '#d97706' },
 };
 
 // Vòng tương sinh: A sinh B
@@ -80,7 +85,6 @@ export function parsePlateInput(raw) {
 
   // Trích xuất toàn bộ chữ số
   const digitsOnly = clean.replace(/\D/g, '');
-  // Nếu có mã tỉnh ở đầu và dài hơn 2 số, dãy số chính là các số sau mã tỉnh
   let series = '';
   if (digitsOnly.length > 2 && matchProvince) {
     series = digitsOnly.slice(2);
@@ -104,7 +108,7 @@ export function parsePlateInput(raw) {
     raw: raw.trim(),
     formatted,
     provinceCode,
-    series, // dãy số chính (ví dụ "88888" hoặc "12345")
+    series, // dãy số chính (ví dụ "88888" hoặc "16436")
     digits: series.split('').map(Number),
   };
 }
@@ -119,29 +123,89 @@ export const BAT_QUAI = {
   6: { name: 'Khảm', symbol: '☵', nature: 'Thủy (Nước)', element: 'Thủy', meaning: 'Hiểm trở, linh hoạt, vượt qua thử thách' },
   7: { name: 'Cấn', symbol: '☶', nature: 'Sơn (Núi)', element: 'Thổ', meaning: 'Ngưng nghỉ, vững chắc, định tâm giữ của' },
   8: { name: 'Khôn', symbol: '☷', nature: 'Địa (Đất)', element: 'Thổ', meaning: 'Nhu thuận, bao dung, tích lũy trường tồn' },
-  0: { name: 'Khôn', symbol: '☷', nature: 'Địa (Đất)', element: 'Thổ', meaning: 'Nhu thuận, bao dung, tích lũy trường tồn' },
 };
 
-// 64 Quẻ Kinh Dịch tiêu biểu cho Biển Số Xe
-const QUE_DICHS = {
+// Trọn vẹn 64 Quẻ Kinh Dịch Chuẩn Xác (Thượng quái uNum - Hạ quái lNum)
+export const QUE_DICHS = {
+  // Thượng Càn (1)
   '1-1': { name: 'Thuần Càn', tone: 'dai-cat', desc: 'Rồng bay trên trời. Vận thế cực thịnh, công danh rộng mở, xe đi ngàn dặm bình an thuận lợi.' },
-  '8-8': { name: 'Thuần Khôn', tone: 'dai-cat', desc: 'Đất mẹ chở che. Nhu thuận sinh tài, đi đường an toàn, bền bỉ tích lũy gia tài vững như bàn thạch.' },
-  '8-1': { name: 'Địa Thiên Thái', tone: 'dai-cat', desc: 'Trời đất giao hòa, vạn vật hanh thông. Biển số đại cát, tài lộc dồi dào, xuất hành như ý.' },
-  '1-8': { name: 'Thiên Địa Bĩ', tone: 'hung', desc: 'Bế tắc chưa thông. Khuyên nên thận trọng trong kinh doanh và giữ tốc độ an toàn khi đi xa.' },
-  '3-1': { name: 'Hỏa Thiên Đại Hữu', tone: 'dai-cat', desc: 'Mặt trời giữa trời cao. Tài sản dồi dào, quý nhân phù trợ, biển số mang năng lượng vượng phát bậc nhất.' },
-  '1-3': { name: 'Thiên Hỏa Đồng Nhân', tone: 'dai-cat', desc: 'Cùng chí hướng, bạn hữu tương trợ. Hợp làm ăn lớn, kết nối giao thương rộng rãi.' },
-  '5-4': { name: 'Phong Lôi Ích', tone: 'dai-cat', desc: 'Gió sấm trợ lực. Ngày càng tăng tiến, lợi tức dồi dào, thăng quan tiến chức nhanh chóng.' },
-  '4-5': { name: 'Lôi Phong Hằng', tone: 'cat', desc: 'Bền vững dài lâu. Đạo nghĩa kiên định, xe cộ ít hỏng hóc, sự nghiệp ổn định phát triển.' },
-  '1-6': { name: 'Thiên Thủy Tụng', tone: 'trung-binh', desc: 'Tranh chấp bất hòa. Cần nhường nhịn khi tham gia giao thông và rõ ràng trong hợp đồng.' },
-  '6-1': { name: 'Thủy Thiên Nhu', tone: 'cat', desc: 'Chờ thời cơ chín muồi. Ăn no uống say chờ vận sáng, điềm tĩnh lái xe ắt gặt hái thành công.' },
-  '2-1': { name: 'Trạch Thiên Quải', tone: 'cat', desc: 'Quyết đoán dứt khoát. Khai thông bế tắc, tiến lên phía trước thuận lợi.' },
-  '1-2': { name: 'Thiên Trạch Lý', tone: 'cat', desc: 'Giẫm đuôi cọp mà cọp không cắn. Giữ đúng luật lệ thì mọi nguy hiểm đều hóa an lành.' },
-  '3-8': { name: 'Hỏa Địa Tấn', tone: 'dai-cat', desc: 'Mặt trời mọc trên mặt đất. Tiến bước quang minh, danh tiếng lẫy lừng, phát tài phát lộc.' },
-  '8-3': { name: 'Địa Hỏa Minh Di', tone: 'trung-binh', desc: 'Ánh sáng lặn vào đất. Cần giấu tài chờ thời, lái xe cẩn trọng ban đêm.' },
-  '5-1': { name: 'Phong Thiên Tiểu Súc', tone: 'cat', desc: 'Tích lũy nhỏ thành lớn. Cần kiên nhẫn tích góp, bước đầu thuận lợi.' },
-  '1-5': { name: 'Thiên Phong Cấu', tone: 'cat', desc: 'Gặp gỡ bất ngờ, duyên lành đưa tới. Rất hợp cho người hay đi công tác, mở rộng quan hệ.' },
-  '7-1': { name: 'Sơn Thiên Đại Súc', tone: 'dai-cat', desc: 'Chứa đựng lớn lao, đức dày tài vượng. Hợp gom góp của cải, mua xe tích lũy cơ đồ.' },
-  '1-7': { name: 'Thiên Sơn Độn', tone: 'trung-binh', desc: 'Lùi một bước trời cao biển rộng. Cần bình tĩnh khi gặp trở ngại trên đường đời.' },
+  '1-2': { name: 'Thiên Trạch Lý', tone: 'cat', desc: 'Giẫm đuôi cọp mà không cắn. Đi đường giữ đúng luật lệ thì mọi hiểm nguy đều hóa an lành hanh thông.' },
+  '1-3': { name: 'Thiên Hỏa Đồng Nhân', tone: 'dai-cat', desc: 'Đồng tâm hiệp lực, kết nối bạn hữu. Rất hợp cho kinh doanh giao thương, xe lăn bánh đón quý nhân.' },
+  '1-4': { name: 'Thiên Lôi Vô Vọng', tone: 'trung-binh', desc: 'Chân thành thuận theo lẽ tự nhiên, không vọng tưởng xốc nổi. Lái xe điềm tĩnh ắt giữ trọn phúc khí.' },
+  '1-5': { name: 'Thiên Phong Cấu', tone: 'cat', desc: 'Gặp gỡ cơ duyên tốt lành. Xe cộ đưa đón mối quan hệ mới, mở rộng ngoại giao làm ăn phát đạt.' },
+  '1-6': { name: 'Thiên Thủy Tụng', tone: 'trung-binh', desc: 'Bất hòa tranh chấp cần nhường nhịn. Khi tham gia giao thông nên giữ bình tĩnh dĩ hòa vi quý.' },
+  '1-7': { name: 'Thiên Sơn Độn', tone: 'trung-binh', desc: 'Lùi một bước trời cao biển rộng. Cần cẩn trọng khi xuất hành xa, dưỡng sức chờ cơ hội tốt.' },
+  '1-8': { name: 'Thiên Địa Bĩ', tone: 'hung', desc: 'Khí trời đất bế tắc tạm thời. Nên bảo dưỡng xe cộ cẩn thận, đi lại từ tốn và kiên nhẫn đợi vận hanh thông.' },
+
+  // Thượng Đoài (2)
+  '2-1': { name: 'Trạch Thiên Quải', tone: 'cat', desc: 'Quyết đoán dứt khoát vượt khó khăn. Thúc đẩy công việc hanh thông, xe cộ mở lối thành công.' },
+  '2-2': { name: 'Thuần Đoài', tone: 'cat', desc: 'Vui vẻ hòa nhã, lời nói sinh tài. Đi lại mang lại niềm vui, đối tác tin cậy, vạn sự thuận hòa.' },
+  '2-3': { name: 'Trạch Hỏa Cách', tone: 'cat', desc: 'Cải cách đổi mới, lột xác vươn lên. Rất hợp cho người khởi nghiệp hoặc chuyển hướng kinh doanh mới.' },
+  '2-4': { name: 'Trạch Lôi Tùy', tone: 'cat', desc: 'Thuận thời tùy biến. Lái xe uyển chuyển, công việc gặp cơ hội là nắm bắt thành công.' },
+  '2-5': { name: 'Trạch Phong Đại Quá', tone: 'trung-binh', desc: 'Cột trụ chịu tải lớn. Cần chú ý bảo trì phương tiện định kỳ, không chở quá tải hay hấp tấp.' },
+  '2-6': { name: 'Trạch Thủy Khốn', tone: 'trung-binh', desc: 'Nước cạn đầm lầy. Nhắc nhở người cầm lái rèn luyện ý chí, vượt qua khúc quanh gian truân.' },
+  '2-7': { name: 'Trạch Sơn Hàm', tone: 'dai-cat', desc: 'Cảm ứng tương thông, duyên lành hội tụ. Xe cộ chở niềm vui, gia đạo hạnh phúc, công việc ăn ý.' },
+  '2-8': { name: 'Trạch Địa Tụy', tone: 'dai-cat', desc: 'Tụ họp đông đúc, tài lộc hội tụ. Làm ăn buôn bán đắt hàng, thu hút tiền tài đông đúc.' },
+
+  // Thượng Ly (3)
+  '3-1': { name: 'Hỏa Thiên Đại Hữu', tone: 'dai-cat', desc: 'Mặt trời chiếu sáng giữa trời cao. Tài sản dồi dào, vượng phát tột bậc, vạn nẻo đường quang minh.' },
+  '3-2': { name: 'Hỏa Trạch Khuê', tone: 'trung-binh', desc: 'Trái ý bất đồng nhỏ. Cần hòa nhã với người xung quanh và tập trung quan sát khi điều khiển xe.' },
+  '3-3': { name: 'Thuần Ly', tone: 'cat', desc: 'Ánh sáng rực rỡ, danh tiếng vang xa. Hợp người làm nghệ thuật, truyền thông, kinh doanh tạo dựng uy tín.' },
+  '3-4': { name: 'Hỏa Lôi Phệ Hạp', tone: 'cat', desc: 'Cắn đứt trở ngại, luật lệ nghiêm minh. Mọi rào cản trên hành trình đều được hóa giải sáng tỏ.' },
+  '3-5': { name: 'Hỏa Phong Đỉnh', tone: 'dai-cat', desc: 'Đỉnh vàng vững chãi. Đạt đến đỉnh cao sự nghiệp, xe cộ sang trọng vững vàng tài lộc.' },
+  '3-6': { name: 'Hỏa Thủy Vị Tế', tone: 'trung-binh', desc: 'Chưa hoàn thành trọn vẹn, còn nhiều tiềm năng phát triển phía trước. Kiên trì ắt đến đích.' },
+  '3-7': { name: 'Hỏa Sơn Lữ', tone: 'cat', desc: 'Khách bộ hành trên đường xa. Rất hợp cho người hay đi công tác, du lịch, xe bon bon ngàn dặm.' },
+  '3-8': { name: 'Hỏa Địa Tấn', tone: 'dai-cat', desc: 'Mặt trời mọc trên mặt đất. Thăng quan tiến chức, danh vọng lẫy lừng, phát tài phát lộc.' },
+
+  // Thượng Chấn (4)
+  '4-1': { name: 'Lôi Thiên Đại Tráng', tone: 'dai-cat', desc: 'Sức mạnh sấm sét kinh thiên động địa. Năng lượng dũng mãnh, mở đường công danh sự nghiệp lớn.' },
+  '4-2': { name: 'Lôi Trạch Quy Muội', tone: 'trung-binh', desc: 'Khởi đầu cần cẩn trọng tuân theo quy củ. Đi đường giữ tốc độ vừa phải, tránh vội vàng hấp tấp.' },
+  '4-3': { name: 'Lôi Hỏa Phong', tone: 'dai-cat', desc: 'Sấm chớp rạng rỡ, thịnh vượng đủ đầy. Xe chở tài lộc bội thu, cơ hội làm ăn lớn liên tục gõ cửa.' },
+  '4-4': { name: 'Thuần Chấn', tone: 'cat', desc: 'Sấm vang ngàn dặm, đánh thức tiềm năng. Xe mang năng lượng khởi sắc mạnh mẽ, chủ xe quyết đoán.' },
+  '4-5': { name: 'Lôi Phong Hằng', tone: 'cat', desc: 'Bền vững dài lâu son sắt. Xe cộ ít hỏng hóc, sự nghiệp và gia đạo trường tồn ổn định.' },
+  '4-6': { name: 'Lôi Thủy Giải', tone: 'cat', desc: 'Sấm mưa giải thoát hiểm nghèo. Hóa hung thành cát, vượt qua mọi khó khăn trên cung đường đời.' },
+  '4-7': { name: 'Lôi Sơn Tiểu Quá', tone: 'trung-binh', desc: 'Hơi vượt quá mức cần thiết một chút. Nên khiêm tốn từ tốn, chú ý biển báo tốc độ an toàn.' },
+  '4-8': { name: 'Lôi Địa Dự', tone: 'dai-cat', desc: 'Vui mừng hớn hở, chuẩn bị chu đáo. Xuất hành đón may mắn, vạn sự thuận buồm xuôi gió.' },
+
+  // Thượng Tốn (5)
+  '5-1': { name: 'Phong Thiên Tiểu Súc', tone: 'cat', desc: 'Tích lũy nhỏ thành thành quả lớn. Kiên trì từng bước, chiếc xe tích góp sinh tài cho chủ.' },
+  '5-2': { name: 'Phong Trạch Trung Phu', tone: 'dai-cat', desc: 'Lòng thành tín cảm hóa vạn vật. Rất hợp cho kinh doanh giữ chữ tín, xe đi ngàn dặm bình an.' },
+  '5-3': { name: 'Phong Hỏa Gia Nhân', tone: 'cat', desc: 'Gia đạo êm ấm trong ngoài thuận hòa. Xe cộ che chở cho gia đình, mang lại tổ ấm an khang thịnh vượng.' },
+  '5-4': { name: 'Phong Lôi Ích', tone: 'dai-cat', desc: 'Gió sấm trợ lực tăng tiến không ngừng. Lợi tức dồi dào, thăng tiến sự nghiệp, biển số đại cát.' },
+  '5-5': { name: 'Thuần Tốn', tone: 'cat', desc: 'Gió mềm dẻo thấu triệt muôn nơi. Đi lại linh hoạt, giao thiệp dễ mến, công việc mở rộng hanh thông.' },
+  '5-6': { name: 'Phong Thủy Hoán', tone: 'cat', desc: 'Gió thổi tan mây mờ. Giải tỏa âu lo bế tắc, xuất hành khai thông sinh khí mới mẻ.' },
+  '5-7': { name: 'Phong Sơn Tiệm', tone: 'cat', desc: 'Từng bước tiến lên vững chắc như cây trên núi. Vận thế thăng tiến đều đặn, không lo tụt dốc.' },
+  '5-8': { name: 'Phong Địa Quán', tone: 'cat', desc: 'Chiêm ngưỡng trông rộng nhìn xa. Trí tuệ sáng suốt khi cầm lái, nhìn rõ thời vận kinh doanh.' },
+
+  // Thượng Khảm (6)
+  '6-1': { name: 'Thủy Thiên Nhu', tone: 'cat', desc: 'Chờ thời cơ chín muồi, tích dưỡng nội lực. Điềm tĩnh lái xe ắt gặt hái thành quả vững bền.' },
+  '6-2': { name: 'Thủy Trạch Tiết', tone: 'cat', desc: 'Tiết độ chừng mực, kiểm soát chi tiêu tốt. Xe chạy ổn định, an toàn kỷ luật là mẹ thành công.' },
+  '6-3': { name: 'Thủy Hỏa Ký Tế', tone: 'dai-cat', desc: 'Nước lửa giao hòa thành việc lớn. Vạn sự chu toàn viên mãn, xe bon bon vạn dặm đắc tài đắc lộc.' },
+  '6-4': { name: 'Thủy Lôi Truân', tone: 'trung-binh', desc: 'Khởi đầu nhiều gian nan nhưng càng về sau càng vượng. Cần kiên nhẫn khi mới khởi sự.' },
+  '6-5': { name: 'Thủy Phong Tỉnh', tone: 'cat', desc: 'Giếng nước ngọt nuôi sống muôn người. Nguồn thu nhập ổn định vô tận, không lo cạn kiệt tài chính.' },
+  '6-6': { name: 'Thuần Khảm', tone: 'trung-binh', desc: 'Nước sâu hiểm trở cần linh hoạt. Nhắc nhở người lái luôn tập trung chú ý khi đi đường xa trời mưa.' },
+  '6-7': { name: 'Thủy Sơn Kiển', tone: 'trung-binh', desc: 'Trở ngại trước mắt cần tìm quý nhân giúp sức. Không nên đi cố khi mệt mỏi, giữ sức bền bỉ.' },
+  '6-8': { name: 'Thủy Địa Tỷ', tone: 'dai-cat', desc: 'Thân thiện gắn bó, bạn hữu tương trợ. Đi đến đâu có người giúp đến đó, lữ hành an toàn.' },
+
+  // Thượng Cấn (7)
+  '7-1': { name: 'Sơn Thiên Đại Súc', tone: 'dai-cat', desc: 'Chứa đựng cơ đồ lớn lao, đức dày tài vượng. Hợp gom góp của cải, mua xe tích lũy gia tài.' },
+  '7-2': { name: 'Sơn Trạch Tổn', tone: 'cat', desc: 'Bớt chỗ thừa đắp chỗ thiếu, hy sinh ngắn hạn hưởng lợi dài lâu. Đầu tư sinh lời khôn ngoan.' },
+  '7-3': { name: 'Sơn Hỏa Bí', tone: 'cat', desc: 'Vẻ đẹp văn hóa rạng rỡ. Xe cộ sang trọng bắt mắt, đem lại thể diện và sự tôn trọng từ đối tác.' },
+  '7-4': { name: 'Sơn Lôi Di', tone: 'cat', desc: 'Nuôi dưỡng thể chất và tinh thần. Phương tiện giúp ích cho sức khỏe và đời sống no đủ.' },
+  '7-5': { name: 'Sơn Phong Cổ', tone: 'cat', desc: 'Chấn hưng cải tạo, loại bỏ cái cũ đón vận hội mới. Rất hợp để chấn chỉnh công việc, cải vận bứt phá thành công.' },
+  '7-6': { name: 'Sơn Thủy Mông', tone: 'trung-binh', desc: 'Khai tâm sáng trí, học hỏi kinh nghiệm. Lái xe cẩn trọng, tích lũy dặm trường kinh nghiệm quý.' },
+  '7-7': { name: 'Thuần Cấn', tone: 'cat', desc: 'Vững chắc như dãy Trường Sơn. Định tâm kiên định, xe đi đầm chắc an toàn không gì lay chuyển.' },
+  '7-8': { name: 'Sơn Địa Bác', tone: 'trung-binh', desc: 'Cũ mòn cần tu bổ bảo dưỡng. Nhắc nhở chủ xe kiểm tra xe định kỳ, cẩn trọng giữ gìn tài sản.' },
+
+  // Thượng Khôn (8)
+  '8-1': { name: 'Địa Thiên Thái', tone: 'dai-cat', desc: 'Trời đất giao hòa, vạn vật hanh thông sinh sôi. Biển số đại cát, tài lộc dồi dào, xuất hành như ý.' },
+  '8-2': { name: 'Địa Trạch Lâm', tone: 'dai-cat', desc: 'Thời vận may mắn giáng lâm, cấp trên nâng đỡ. Xe mở lối thăng tiến vượt bậc, kinh doanh thuận buồm.' },
+  '8-3': { name: 'Địa Hỏa Minh Di', tone: 'trung-binh', desc: 'Ánh sáng lặn vào lòng đất. Cần khiêm nhường chờ thời cơ, giữ vững tay lái khi trời tối.' },
+  '8-4': { name: 'Địa Lôi Phục', tone: 'dai-cat', desc: 'Sinh khí hồi sinh mạnh mẽ sau đông dài. Cơ hội kinh doanh quay trở lại, phục hồi tài chính thần tốc.' },
+  '8-5': { name: 'Địa Phong Thăng', tone: 'dai-cat', desc: 'Cây mọc vươn cao khỏi mặt đất. Thăng quan tiến chức, sự nghiệp đi lên từng ngày không gì ngăn cản.' },
+  '8-6': { name: 'Địa Thủy Sư', tone: 'cat', desc: 'Kỷ luật quân đội vững vàng, tướng tài cầm quân. Lái xe an toàn chuẩn mực, công việc có trật tự quy củ.' },
+  '8-7': { name: 'Địa Sơn Khiêm', tone: 'dai-cat', desc: 'Núi cao nằm dưới đất — đức khiêm nhường hưởng phúc dày. Vạn sự êm đẹp, quý nhân luôn song hành.' },
+  '8-8': { name: 'Thuần Khôn', tone: 'dai-cat', desc: 'Đất mẹ bao la chở che. Nhu thuận sinh tài, đi đường an toàn, bền bỉ tích lũy gia tài vững như bàn thạch.' },
 };
 
 export function computeQueDich(series) {
@@ -149,13 +213,16 @@ export function computeQueDich(series) {
     return {
       thuongQue: BAT_QUAI[1],
       haQue: BAT_QUAI[1],
+      queKey: '1-1',
       queName: 'Thuần Càn',
       tone: 'dai-cat',
       desc: 'Dãy số chứa năng lượng tích cực, hanh thông.',
     };
   }
 
-  const mid = Math.floor(series.length / 2);
+  // Tách thượng quái và hạ quái theo Mai Hoa Dịch Số
+  // Biển 5 số: 2 số đầu làm Thượng quái, 3 số sau làm Hạ quái (Thiên thanh Địa trọc, Thượng khinh Hạ trọng)
+  const mid = series.length > 4 ? 2 : Math.floor(series.length / 2);
   const upperPart = series.slice(0, mid);
   const lowerPart = series.slice(mid);
 
@@ -187,7 +254,7 @@ export function computeQueDich(series) {
   };
 }
 
-// Luận giải chi tiết tổng nút
+// Luận giải chi tiết tổng nút (Nước số)
 export function analyzeNut(series) {
   if (!series) return { nut: 0, label: '—', tone: 'neutral', desc: '' };
   const total = series.split('').reduce((a, b) => a + Number(b), 0);
@@ -202,8 +269,8 @@ export function analyzeNut(series) {
     3: { label: 'Tài Lộc Khá', tone: 'primary', desc: '3 nút tượng trưng cho tiền tài đang sinh sôi, vững như kiềng ba chân.' },
     2: { label: 'Cát Vận — Bình An', tone: 'neutral', desc: '2 nút mang lại sự êm đềm, thuận hòa, gia đình êm ấm.' },
     1: { label: 'Khởi Điểm Nhất Quán', tone: 'neutral', desc: '1 nút là khởi đầu mới mẻ, kiên định với mục tiêu.' },
-    0: { label: 'Bình Hòa — Cần Tích Tụ', tone: 'warning', desc: '0 nút (10 hoặc 20, 30) ngụ ý tài lộc đến đỉnh dễ phân tán, cần tích lũy công đức và lái xe từ tốn.' },
-    4: { label: 'Hung Kỵ — Nút "Tử"', tone: 'danger', desc: '4 nút theo âm Hán Việt là "Tử", dân gian kiêng kỵ vì dễ hao tài tốn của. Nên hóa giải hoặc tham khảo đổi biển cải vận.' },
+    0: { label: 'Vẹn Mười — Tích Lũy Bền Vững', tone: 'primary', desc: 'Tổng tròn chục (10, 20, 30 điểm gọi là 10 Nút hoặc Vẹn Mười). Tượng trưng cho sự tích lũy tròn đầy, bảo toàn tiền của, đi đường từ tốn bền bỉ.' },
+    4: { label: 'Hung Kỵ — Nút "Tử"', tone: 'danger', desc: '4 nút theo âm Hán Việt là "Tử", dân gian kiêng kỵ vì dễ hao tài tốn của. Nên hóa giải bằng vật phẩm phong thủy hoặc cân nhắc cải vận.' },
   };
 
   return {
@@ -333,7 +400,7 @@ export function analyzeFullPlateFengShui({ plateInput, birthYear, purpose, indus
   });
 
   const lastDigit = digits[digits.length - 1];
-  const lastElement = DIGIT_ELEMENTS[lastDigit] || 'Thổ';
+  const lastElement = DIGIT_ELEMENTS[lastDigit] || 'Thủy';
 
   // Tìm hành khuyết (bằng 0) và hành vượng (cao nhất)
   const missingElements = Object.entries(elementCounts).filter(([, c]) => c === 0).map(([k]) => k);
@@ -361,9 +428,9 @@ export function analyzeFullPlateFengShui({ plateInput, birthYear, purpose, indus
         type: 'tuong-hoa',
         label: 'Tương Hòa (Cát Lợi)',
         tone: 'success',
-        desc: `Biển số và bản mệnh cùng mang hành ${userEl}. Đồng hành tương trợ, khí chất tương đồng, làm ăn vững chãi.`,
+        desc: `Biển số và bản mệnh cùng mang hành ${userEl}. Đồng hành tương trợ, khí chất tương đồng, làm ăn vững chãi và an tâm di chuyển.`,
       };
-      elementScore = 26;
+      elementScore = 28;
     } else if (KHAC_CYCLE[userEl] === plateEl) {
       elementRelation = {
         type: 'khac-xuat',
@@ -397,8 +464,8 @@ export function analyzeFullPlateFengShui({ plateInput, birthYear, purpose, indus
   if (nutInfo.nut === 9 || nutInfo.nut === 8) nutScore = 24;
   else if (nutInfo.nut === 7 || nutInfo.nut === 6) nutScore = 20;
   else if (nutInfo.nut === 5 || nutInfo.nut === 3) nutScore = 16;
+  else if (nutInfo.nut === 0) nutScore = 16; // 10 Nút trọn vẹn
   else if (nutInfo.nut === 2 || nutInfo.nut === 1) nutScore = 12;
-  else if (nutInfo.nut === 0) nutScore = 10;
   else if (nutInfo.nut === 4) nutScore = 4; // Kỵ nút 4
 
   // 4. Phân tích Âm Dương
@@ -423,8 +490,8 @@ export function analyzeFullPlateFengShui({ plateInput, birthYear, purpose, indus
   // 6. Quẻ Kinh Dịch
   const queDich = computeQueDich(series);
   let queScore = 10;
-  if (queDich.tone === 'dai-cat') queScore = 15;
-  else if (queDich.tone === 'cat') queScore = 12;
+  if (queDich.tone === 'dai-cat') queScore = 16;
+  else if (queDich.tone === 'cat') queScore = 13;
   else if (queDich.tone === 'trung-binh') queScore = 8;
   else queScore = 4;
 
@@ -436,28 +503,36 @@ export function analyzeFullPlateFengShui({ plateInput, birthYear, purpose, indus
   let rank = {
     title: 'Bình Hòa',
     tone: 'warning',
-    color: 'var(--status-warning, #f59e0b)',
+    color: '#d97706',
+    bgColor: '#fffbeb',
+    borderColor: '#fde68a',
     summary: 'Biển số mang năng lượng trung bình, các yếu tố cát hung đan xen. Bạn nên lưu ý các điểm khuyết để gia tăng tài lộc.',
   };
-  if (totalScore >= 85) {
+  if (totalScore >= 80) {
     rank = {
       title: 'Đại Cát — Cực Phẩm',
       tone: 'success',
-      color: 'var(--status-success-ink, #16a34a)',
+      color: '#059669',
+      bgColor: '#ecfdf5',
+      borderColor: '#a7f3d0',
       summary: 'Biển số hội tụ vượng khí dồi dào, âm dương tương phối đắc địa, tương trợ đắc lực cho đường tài vận và bình an của chủ sở hữu.',
     };
-  } else if (totalScore >= 70) {
+  } else if (totalScore >= 65) {
     rank = {
       title: 'Cát Lợi — Hanh Thông',
       tone: 'primary',
       color: 'var(--action-primary, #C75B00)',
+      bgColor: '#fff7ed',
+      borderColor: '#fed7aa',
       summary: 'Biển số có thế tốt, nhiều con số cát khí trợ vận. Phương tiện đồng hành tin cậy, thúc đẩy công việc tiến triển đều đặn.',
     };
-  } else if (totalScore < 55) {
+  } else if (totalScore < 50) {
     rank = {
       title: 'Cần Cải Thiện',
       tone: 'danger',
-      color: 'var(--status-danger, #e11d48)',
+      color: '#e11d48',
+      bgColor: '#fff1f2',
+      borderColor: '#fecdd3',
       summary: 'Biển số có một số yếu tố xung khắc hoặc điểm nút chưa thuận lợi, năng lượng bị phân tán. Khuyên bạn nên tham khảo phương án đổi biển số hợp phong thủy để cải vận.',
     };
   }
@@ -467,17 +542,17 @@ export function analyzeFullPlateFengShui({ plateInput, birthYear, purpose, indus
   if (napAm && elementRelation && (elementRelation.type === 'khac-nhap' || elementRelation.type === 'sinh-xuat')) {
     improvementPoints.push(`Khắc phục thế số ${elementRelation.label} bằng biển số mang hành ${napAm.sinhChoMe} (tương sinh mệnh ${napAm.element}).`);
   }
-  if (nutInfo.nut === 4 || nutInfo.nut === 0) {
-    improvementPoints.push(`Nâng số nút từ ${nutInfo.nut} nút lên 8 hoặc 9 nút Đại Cát để kích hoạt dòng tiền.`);
+  if (nutInfo.nut === 4) {
+    improvementPoints.push(`Nâng số nút từ 4 nút (nút Tử) lên 8 hoặc 9 nút Đại Cát để kích hoạt dòng tiền mạnh mẽ.`);
   }
   if (patterns.warnings.length > 0) {
     improvementPoints.push(`Loại bỏ các con số nhạy cảm (${patterns.warnings.map((w) => w.name).join(', ')}) để yên tâm trên mọi cung đường.`);
   }
   if (patterns.beauties.length === 0) {
-    improvementPoints.push('Bổ sung các cặp số tài lộc mạnh (Lộc Phát 68/86, Thần Tài 39/79) phù hợp cho kinh doanh và thăng tiến.');
+    improvementPoints.push('Bổ sung các cặp số tài lộc mạnh (Lộc Phát 68/86, Thần Tài 39/79, Số Gánh) phù hợp cho kinh doanh và thăng tiến.');
   }
   if (missingElements.length > 0) {
-    improvementPoints.push(`Biển hiện tại khuyết hành ${missingElements.join(', ')}. Cần cân bằng năng lượng ngũ hành.`);
+    improvementPoints.push(`Biển hiện tại khuyết hành ${missingElements.join(', ')}. Cần cân bằng năng lượng ngũ hành bằng biển tương sinh.`);
   }
 
   return {

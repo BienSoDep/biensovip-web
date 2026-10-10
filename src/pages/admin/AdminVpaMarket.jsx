@@ -42,10 +42,25 @@ export default function AdminVpaMarket() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ ...CARD, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
-        <div>
-          <h1 style={{ margin: 0, font: 'var(--type-h3)', color: 'var(--text-strong)' }}>Phân tích thị trường VPA</h1>
-          <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-            Dựa trên giá trúng đấu giá thật — không phải giá gợi ý hay giá đã duyệt.
+        <div style={{ flex: '1 1 300px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span style={{
+              display: 'inline-flex',
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--action-primary-subtle, rgba(59,91,255,0.08))',
+              color: 'var(--action-primary)',
+              font: 'var(--type-caption)',
+              fontWeight: 'var(--fw-bold)'
+            }}>
+              Dữ liệu đấu giá thật &amp; Thị trường
+            </span>
+          </div>
+          <h2 style={{ margin: '6px 0 2px', font: 'var(--type-h3)', color: 'var(--text-strong)' }}>
+            Phân tích Thị trường &amp; Dự báo Giá trúng
+          </h2>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Dựa trên giá trúng đấu giá thật — không phải giá gợi ý hay giá đã duyệt nội bộ.
           </p>
         </div>
         <div style={{ flex: 1 }} />
