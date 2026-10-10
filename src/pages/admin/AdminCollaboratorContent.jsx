@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
 import {
   Columns,
   Edit3,
@@ -12,15 +11,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  Plus,
   HandCoins,
   Wallet,
   UserPlus,
-  ArrowRight,
-  Code2,
   Check,
-  Share2,
-  Link2,
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import CollaboratorIllustration from '../../components/CollaboratorIllustration.jsx';
@@ -28,9 +22,43 @@ import CounterStat from '../../components/CounterStat.jsx';
 import EditableBlock from '../../components/EditableBlock.jsx';
 import { useAdminCollaboratorBenefitContent } from '../../services/adminCollaborators.js';
 import { useCollaboratorBenefitContent } from '../../services/collaborators.js';
-import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
 
+const STATS_DATA = [
+  { icon: UserPlus, value: 50, suffix: '+', label: 'CTV đang hoạt động' },
+  { icon: Wallet, value: 100, suffix: 'tr+', label: 'Đã chi trả hoa hồng' },
+  { icon: HandCoins, value: 10, suffix: '%', label: 'Hoa hồng mặc định' },
+];
 
+const PROCESS_PREVIEW_STEPS = [
+  { n: 1, title: 'Đăng ký & Kích hoạt', desc: 'Bấm kích hoạt CTV và xác thực email trong 30 giây.' },
+  { n: 2, title: 'Chia sẻ liên kết', desc: 'Gửi link biển số hoặc mã QR cho người quen có nhu cầu.' },
+  { n: 3, title: 'Khách chốt cọc', desc: 'Hệ thống tự động ghi nhận hoa hồng ngay khi có đơn cọc.' },
+  { n: 4, title: 'Nhận hoa hồng', desc: 'Rút tiền đối soát định kỳ về tài khoản ngân hàng VietQR.' },
+];
+
+const DEFAULT_SAMPLE_TITLE = 'Trở thành Cộng tác viên Biển Số VIP';
+const DEFAULT_SAMPLE_BODY = `<p>Giới thiệu bạn bè mua biển số đẹp, bạn nhận hoa hồng hấp dẫn trên mỗi giao dịch thành công. Chia sẻ mã giới thiệu, theo dõi hoa hồng và đối soát minh bạch ngay trên bảng điều khiển CTV.</p>
+<ul>
+  <li>Nhận hoa hồng lên đến 10% cho mỗi khách mua thành công</li>
+  <li>Theo dõi lượt click, khách giới thiệu, giao dịch realtime</li>
+  <li>Quản lý hoa hồng chờ chi trả và đã chi trả rõ ràng, minh bạch</li>
+  <li>Bộ công cụ marketing chuyên nghiệp: link giới thiệu cá nhân & mã QR tiện lợi</li>
+</ul>`;
+
+// Kiểm tra tính cân bằng của các thẻ HTML phổ biến
+function validateHtmlTags(html) {
+  if (!html) return [];
+  const tags = ['p', 'ul', 'li', 'strong', 'em', 'span', 'b', 'i', 'mark'];
+  const issues = [];
+  tags.forEach((t) => {
+    const openMatches = html.match(new RegExp(`<${t}(\\s[^>]*)?>`, 'gi')) || [];
+    const closeMatches = html.match(new RegExp(`</${t}>`, 'gi')) || [];
+    if (openMatches.length !== closeMatches.length) {
+      issues.push(`Thẻ <${t}> chưa cân bằng (${openMatches.length} mở, ${closeMatches.length} đóng)`);
+    }
+  });
+  return issues;
+}
 
 // LIVE PREVIEW CHUẨN XÁC 100% THEO GIAO DIỆN TRANG /cong-tac-vien — HỖ TRỢ CHỈNH SỬA 2 CHIỀU TRỰC TIẾP
 function CollaboratorBenefitLivePreview({ titleHtml, bodyHtml, onUpdateTitle, onUpdateBody, deviceMode = 'desktop' }) {
