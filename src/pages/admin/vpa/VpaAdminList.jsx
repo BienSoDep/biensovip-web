@@ -629,6 +629,92 @@ export default function VpaAdminList({ queue = false, notify }) {
 
       {integrity && !queue && <VpaIntegrityPanel notify={notify} onClose={() => setIntegrity(false)} />}
 
+      {queue && (
+        <div
+          role="tablist"
+          aria-label="Bộ lọc hàng đợi duyệt giá"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))',
+            gap: 'var(--space-3)',
+          }}
+        >
+          {[
+            { value: '', label: 'Tất cả chờ duyệt', note: 'Toàn bộ biển trong hàng đợi' },
+            { value: '1', label: 'Có giá gợi ý', note: 'Sẵn sàng duyệt theo gợi ý' },
+            { value: '4', label: 'Đề xuất đổi giá', note: 'Giá gợi ý mới biến động' },
+            { value: '0', label: 'Chưa có giá', note: 'Cần bấm Tính lại giá gợi ý' },
+          ].map((t) => {
+            const active = f.priceState === t.value;
+            const count = t.value === ''
+              ? baseData?.total
+              : facets?.priceStates?.[t.value] != null
+              ? facets.priceStates[t.value]
+              : (active ? data?.total : null);
+
+            return (
+              <button
+                key={t.value}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setFilter('priceState')(t.value)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  gap: 4,
+                  padding: 'var(--space-3) var(--space-4)',
+                  border: active ? '1.5px solid var(--action-primary)' : '1px solid var(--grey-200, #e5e7eb)',
+                  borderRadius: 'var(--radius-card)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  background: active ? 'var(--action-primary)' : 'var(--white)',
+                  color: active ? 'var(--action-primary-text)' : 'var(--text-strong)',
+                  boxShadow: active ? 'var(--shadow-2)' : 'var(--shadow-inset-hairline)',
+                  transition: 'background-color 160ms var(--ease-standard), border-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)',
+                  position: 'relative',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 8 }}>
+                  <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '14px' }}>
+                    {t.label}
+                  </span>
+                  {count != null && (
+                    <span
+                      style={{
+                        font: 'var(--type-caption)',
+                        fontWeight: 'var(--fw-semibold)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-pill)',
+                        background: active ? 'rgba(255,255,255,0.22)' : 'var(--surface-sunken)',
+                        color: active ? 'var(--action-primary-text)' : 'var(--text-muted)',
+                        fontSize: '11px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {new Intl.NumberFormat('vi-VN').format(count)} biển
+                    </span>
+                  )}
+                </div>
+                <span
+                  style={{
+                    font: 'var(--type-caption)',
+                    fontSize: '12px',
+                    color: active ? 'var(--action-primary-text)' : 'var(--action-primary, #C75B00)',
+                    opacity: active ? 0.9 : 1,
+                    fontWeight: active ? 'var(--fw-medium)' : 'var(--fw-semibold)',
+                  }}
+                >
+                  {t.note}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {!queue && (
         <div
           role="tablist"
@@ -840,6 +926,16 @@ export default function VpaAdminList({ queue = false, notify }) {
               </>
             )}
           </div>
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={() => refetch()}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            title="Tải lại danh sách biển"
+          >
+            <RefreshCw size={14} />
+            <span>Làm mới</span>
+          </Button>
           <div style={{ flex: 1 }} />
           {!queue && (
             <Button

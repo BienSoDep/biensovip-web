@@ -1,6 +1,6 @@
 import {
   CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Star, Gift,
-  SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp,
+  SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, RefreshCw,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -63,6 +63,32 @@ export default function PlateTable({
   notify,
   openPriceReference,
 }) {
+  const setDatePreset = (preset) => {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+    if (preset === 'today') {
+      const s = fmt(d);
+      setFromDate(s);
+      setToDate(s);
+    } else if (preset === '7days') {
+      const to = fmt(d);
+      d.setDate(d.getDate() - 7);
+      const from = fmt(d);
+      setFromDate(from);
+      setToDate(to);
+    } else if (preset === '30days') {
+      const to = fmt(d);
+      d.setDate(d.getDate() - 30);
+      const from = fmt(d);
+      setFromDate(from);
+      setToDate(to);
+    } else if (preset === 'clear') {
+      setFromDate('');
+      setToDate('');
+    }
+    setPage(1);
+  };
   const SortHeader = ({ label, sortKey, style, className }) => (
     <button
       type="button"
@@ -207,14 +233,68 @@ export default function PlateTable({
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
           <Select label="Trạng thái" value={status} options={STATUS_OPTIONS} onChange={(v) => { setStatus(v); setPage(1); }} />
           <SearchField placeholder="Tìm biển số…" value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} width={220} />
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            Từ ngày
-            <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            Đến ngày
-            <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thời gian</span>
+              <div style={{ display: 'inline-flex', gap: 3 }}>
+                {[['Hôm nay', 'today'], ['7 ngày', '7days'], ['30 ngày', '30days']].map(([txt, val]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setDatePreset(val)}
+                    style={{
+                      border: 'none',
+                      background: 'var(--surface-sunken)',
+                      color: 'var(--text-body)',
+                      padding: '1px 6px',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      transition: 'background-color 120ms',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--grey-200)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  >
+                    {txt}
+                  </button>
+                ))}
+                {(fromDate || toDate) && (
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset('clear')}
+                    title="Xóa lọc ngày"
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      color: 'var(--status-danger)',
+                      padding: '1px 4px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
+                style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }}
+                title="Từ ngày"
+              />
+              <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>→</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setPage(1); }}
+                style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }}
+                title="Đến ngày"
+              />
+            </div>
+          </div>
           <Select label="Hiển thị" value={perPage} options={PER_PAGE_OPTIONS} onChange={(v) => { setPerPage(Number(v)); setPage(1); }} />
           <div style={{ position: 'relative' }}>
             <Button variant="ghost" size="md" onClick={() => setColMenuOpen((o) => !o)}>Cột hiển thị</Button>
@@ -232,6 +312,16 @@ export default function PlateTable({
               </>
             )}
           </div>
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={() => refetch()}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            title="Tải lại danh sách biển"
+          >
+            <RefreshCw size={14} />
+            <span>Làm mới</span>
+          </Button>
           <div style={{ flex: 1 }} />
           <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
             {exporting ? 'Đang xuất…' : 'Xuất CSV'}
@@ -628,6 +718,13 @@ export default function PlateTable({
             style={{ border: 'none', background: 'var(--status-danger)', color: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'pointer' }}
           >
             Xóa
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleAll({ target: { checked: false } })}
+            style={{ border: 'none', background: 'none', color: 'var(--white)', textDecoration: 'underline', font: 'var(--type-caption)', cursor: 'pointer' }}
+          >
+            Bỏ chọn
           </button>
         </div>
       )}
