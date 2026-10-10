@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, MessageCircle, ExternalLink, Award, Phone, Mail, Clock, Globe } from 'lucide-react';
+import { ShieldCheck, MessageCircle, ExternalLink, Award, Phone, Mail, Clock, Globe, MapPin } from 'lucide-react';
 import Button from './Button.jsx';
 import { content } from '../lib/content/index.js';
 
@@ -172,6 +172,17 @@ export default function AuthorBox({ style }) {
           >
             <Clock size={14} style={{ color: 'var(--action-primary, #D97706)' }} />
             {content.info.hours || '8:00 – 21:00'}
+          </span>
+
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <MapPin size={14} style={{ color: 'var(--action-primary, #D97706)' }} />
+            {content.info.address_short || 'Số 06 An Thượng 30, Đà Nẵng'}
           </span>
 
           <span

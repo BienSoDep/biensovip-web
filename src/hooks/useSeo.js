@@ -164,7 +164,10 @@ export function useSeo(screen, data) {
             description: 'Người sáng lập Biensovip, chuyên gia hơn 10 năm kinh nghiệm trong lĩnh vực định giá và tư vấn biển số xe đẹp phong thủy tại Đà Nẵng.',
             address: {
               '@type': 'PostalAddress',
-              addressLocality: 'Đà Nẵng',
+              streetAddress: 'Số 06 An Thượng 30',
+              addressLocality: 'Ngũ Hành Sơn',
+              addressRegion: 'Đà Nẵng',
+              postalCode: '550000',
               addressCountry: 'VN',
             },
             telephone: '0815792699',
@@ -176,19 +179,22 @@ export function useSeo(screen, data) {
           },
           {
             '@type': 'AutoDealer',
-            name: 'Biensovip — Biển số đẹp Duy Đinh',
+            name: 'Duy Đinh - Biển Số Đẹp Đà Nẵng',
             url: SITE,
             telephone: '0815792699',
             priceRange: '10.000.000đ - 5.000.000.000đ',
             address: {
               '@type': 'PostalAddress',
-              addressLocality: 'Đà Nẵng',
+              streetAddress: 'Số 06 An Thượng 30',
+              addressLocality: 'Ngũ Hành Sơn',
+              addressRegion: 'Đà Nẵng',
+              postalCode: '550000',
               addressCountry: 'VN',
             },
             geo: {
               '@type': 'GeoCoordinates',
-              latitude: 16.0645,
-              longitude: 108.2195,
+              latitude: 16.0520,
+              longitude: 108.2435,
             },
             openingHoursSpecification: {
               '@type': 'OpeningHoursSpecification',
@@ -440,13 +446,16 @@ export function useSeo(screen, data) {
             priceRange: '10.000.000đ - 5.000.000.000đ',
             address: {
               '@type': 'PostalAddress',
-              addressLocality: 'Đà Nẵng',
+              streetAddress: 'Số 06 An Thượng 30',
+              addressLocality: 'Ngũ Hành Sơn',
+              addressRegion: 'Đà Nẵng',
+              postalCode: '550000',
               addressCountry: 'VN',
             },
             geo: {
               '@type': 'GeoCoordinates',
-              latitude: 16.0645,
-              longitude: 108.2195,
+              latitude: 16.0520,
+              longitude: 108.2435,
             },
             openingHoursSpecification: {
               '@type': 'OpeningHoursSpecification',

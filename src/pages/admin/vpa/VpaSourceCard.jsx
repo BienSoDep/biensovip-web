@@ -110,19 +110,50 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
         <Switch checked={!!enabled} onChange={(v) => setForm((f) => ({ ...f, [`${src.prefix}Enabled`]: v }))} label={enabled ? 'Đang bật' : 'Đang tắt'} />
         {enabled ? 'Chạy theo lịch' : 'Tắt (chỉ chạy tay)'}
       </span>
-      <Input
-        label="Chu kỳ (phút)"
-        info="Khoảng cách thời gian (phút) giữa các phiên tự động crawl theo lịch. Ví dụ: 1440 phút = mỗi ngày cào 1 lần."
-        type="number"
-        min="1"
-        value={form[`${src.prefix}IntervalMinutes`]}
-        onChange={set(`${src.prefix}IntervalMinutes`)}
-      />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)' }}>
+        <Input
+          label="Chu kỳ (ngày)"
+          info="Số ngày giữa các phiên tự động crawl theo lịch. Mặc định: 1 ngày = cào hàng ngày; 2 = cách 2 ngày cào một lần."
+          type="number"
+          min="1"
+          value={Math.max(1, Math.round((Number(form[`${src.prefix}IntervalMinutes`]) || 1440) / 1440))}
+          onChange={(e) => {
+            const days = Math.max(1, parseInt(e.target.value, 10) || 1);
+            setForm((f) => ({ ...f, [`${src.prefix}IntervalMinutes`]: days * 1440 }));
+          }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            Khung giờ (giờ VN)
+            <InfoTip text="Khung giờ máy chủ tự động kích hoạt phiên cào mới (mặc định 2h–3h sáng). Ngoài khung giờ này scheduler sẽ không kích hoạt lượt mới. Cào tay ban ngày không làm dời lịch cào tự động ban đêm." />
+          </span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+            <Input
+              type="number"
+              min="0"
+              max="23"
+              placeholder="Từ"
+              value={form[`${src.prefix}WindowStartHour`] ?? 2}
+              onChange={set(`${src.prefix}WindowStartHour`)}
+              title="Giờ bắt đầu (0-23h, mặc định 2h sáng)"
+            />
+            <Input
+              type="number"
+              min="0"
+              max="23"
+              placeholder="Đến"
+              value={form[`${src.prefix}WindowEndHour`] ?? 3}
+              onChange={set(`${src.prefix}WindowEndHour`)}
+              title="Giờ kết thúc (0-23h, mặc định 3h sáng)"
+            />
+          </div>
+        </div>
+      </div>
 
       <div style={{ ...caption, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span title="Lần chạy gần nhất đủ dữ liệu (không tính chạy thử/riêng một tỉnh)">Dữ liệu đủ gần nhất: <b style={{ color: 'var(--text-strong)' }}>{formatDateTime(status?.lastCompleteAt)}</b></span>
         <span>Lần chạy gần nhất: {formatDateTime(settings[`${src.prefix}LastRunAt`])}</span>
-        <span>Chạy kế tiếp: {settings.crawlPaused ? 'đang dừng khẩn' : status?.nextRunAt ? formatDateTime(status.nextRunAt) : enabled ? 'theo lịch máy chủ (Vpa:Enabled tắt?)' : '—'}</span>
+        <span>Chạy kế tiếp: {settings.crawlPaused ? 'đang dừng khẩn' : status?.nextRunAt ? <b style={{ color: 'var(--action-primary, #C75B00)' }}>{formatDateTime(status.nextRunAt)}</b> : enabled ? 'theo lịch máy chủ (Vpa:Enabled tắt?)' : '—'}</span>
       </div>
 
       {running && run && <Progress run={run} now={now} stuck={status.stuck} />}
