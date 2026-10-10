@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input, Switch, InfoTip } from '../../../components/index.jsx';
 import Button from '../../../components/Button.jsx';
 import VpaExcelImport from './VpaExcelImport.jsx';
@@ -21,6 +21,7 @@ import {
   ShieldAlert,
   SlidersHorizontal,
   Zap,
+  PhoneCall,
 } from 'lucide-react';
 
 const CARD = {
@@ -94,6 +95,12 @@ function OverviewBody({ data, notify }) {
   const [form, setForm] = useState(() => ({ ...data.settings }));
   const [busySource, setBusySource] = useState(null);
 
+  useEffect(() => {
+    if (data?.settings) {
+      setForm((prev) => ({ ...prev, ...data.settings }));
+    }
+  }, [data?.settings]);
+
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
   const num = (v) => (v === '' || v == null ? '' : Number(v));
   const statusOf = (src) => (data.sources || []).find((s) => s.source === src.id);
@@ -111,10 +118,38 @@ function OverviewBody({ data, notify }) {
         publishedWindowStartHour: num(form.publishedWindowStartHour), publishedWindowEndHour: num(form.publishedWindowEndHour),
         officialWindowStartHour: num(form.officialWindowStartHour), officialWindowEndHour: num(form.officialWindowEndHour),
         resultsWindowStartHour: num(form.resultsWindowStartHour), resultsWindowEndHour: num(form.resultsWindowEndHour),
+        forcePriceContact: !!form.forcePriceContact,
       });
       notify?.('Đã lưu cấu hình (tham số vận hành có hiệu lực từ lượt crawl kế tiếp; đổi tham số giá sẽ tính lại toàn bộ nhóm)');
     } catch (e) {
       notify?.(e.message || 'Lưu thất bại');
+    }
+  };
+
+  const onToggleForcePriceContact = async (value) => {
+    const msg = value
+      ? 'BẬT CHẾ ĐỘ KHẨN CẤP: Toàn bộ biển số VPA trên trang web công khai sẽ hiển thị là "Giá liên hệ" thay vì giá niêm yết (không thay đổi bất kỳ dữ liệu giá nào trong DB). Bạn có chắc chắn muốn bật?'
+      : 'Tắt chế độ khẩn cấp: Các biển số VPA sẽ hiển thị lại giá niêm yết đã duyệt bình thường. Tiếp tục?';
+    if (!window.confirm(msg)) return;
+    try {
+      const next = { ...form, forcePriceContact: value };
+      setForm(next);
+      await save.mutateAsync({
+        officialEnabled: !!next.officialEnabled, officialIntervalMinutes: num(next.officialIntervalMinutes),
+        publishedEnabled: !!next.publishedEnabled, publishedIntervalMinutes: num(next.publishedIntervalMinutes),
+        resultsEnabled: !!next.resultsEnabled, resultsIntervalMinutes: num(next.resultsIntervalMinutes),
+        windowMonths: num(next.windowMonths), minSamples: num(next.minSamples), factor: num(next.factor),
+        includeFloorPrice: !!next.includeFloorPrice, driftPercent: num(next.driftPercent), roundStep: num(next.roundStep),
+        minDelayMs: num(next.minDelayMs), maxDelayMs: num(next.maxDelayMs), timeoutSeconds: num(next.timeoutSeconds), maxRetries: num(next.maxRetries),
+        suddenDropPercent: num(next.suddenDropPercent), resultsFullEveryDays: num(next.resultsFullEveryDays), alertCooldownMinutes: num(next.alertCooldownMinutes),
+        publishedWindowStartHour: num(next.publishedWindowStartHour), publishedWindowEndHour: num(next.publishedWindowEndHour),
+        officialWindowStartHour: num(next.officialWindowStartHour), officialWindowEndHour: num(next.officialWindowEndHour),
+        resultsWindowStartHour: num(next.resultsWindowStartHour), resultsWindowEndHour: num(next.resultsWindowEndHour),
+        forcePriceContact: value,
+      });
+      notify?.(value ? 'Đã BẬT: Toàn bộ biển VPA đang hiển thị "Giá liên hệ"' : 'Đã TẮT: Đã khôi phục hiển thị giá niêm yết VPA bình thường');
+    } catch (e) {
+      notify?.(e.message || 'Lưu cấu hình thất bại');
     }
   };
 
@@ -227,6 +262,52 @@ function OverviewBody({ data, notify }) {
           onChange={onPause}
           label={paused ? 'ĐANG DỪNG KHẨN' : 'Crawl hoạt động bình thường'}
           info="Dừng ngay lập tức toàn bộ các phiên crawl đang chạy, tạm ngắt scheduler tự động và khóa tính năng Crawl ngay để bảo vệ IP máy chủ."
+        />
+      </div>
+
+      {/* Công tắc khẩn cấp: Toàn bộ biển VPA hiển thị Giá liên hệ */}
+      <div
+        style={{
+          ...CARD,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          background: form.forcePriceContact ? '#FFFBEB' : 'var(--white)',
+          borderColor: form.forcePriceContact ? '#F59E0B' : 'var(--border-hairline)',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <PhoneCall size={18} style={{ color: form.forcePriceContact ? '#D97706' : 'var(--action-primary)' }} />
+            <span style={{ font: 'var(--type-title-3)', color: form.forcePriceContact ? '#B45309' : 'var(--text-strong)' }}>
+              Chế độ khẩn cấp: Hiển thị "Giá liên hệ" cho biển VPA
+            </span>
+            {form.forcePriceContact && (
+              <span
+                style={{
+                  background: '#FEF3C7',
+                  color: '#92400E',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid #FCD34D',
+                }}
+              >
+                ĐANG KÍCH HOẠT
+              </span>
+            )}
+          </div>
+          <span style={caption}>
+            Khi bật, toàn bộ biển VPA trên website công khai (danh sách, tìm kiếm, trang chi tiết) sẽ tạm thời hiển thị là "Giá liên hệ". <strong>Không thay đổi hay mất bất kỳ dữ liệu giá gốc nào trong hệ thống</strong>. Tắt công tắc sẽ hiển thị lại bình thường.
+          </span>
+        </div>
+        <SwitchRow
+          checked={!!form.forcePriceContact}
+          onChange={onToggleForcePriceContact}
+          label={form.forcePriceContact ? 'ĐANG BẬT GIÁ LIÊN HỆ' : 'Hiển thị giá niêm yết chuẩn'}
+          info="Chuyển đổi tức thì trạng thái hiển thị giá của toàn bộ biển số nguồn VPA sang 'Giá liên hệ' mà không cần chạy lại crawler hay cập nhật cơ sở dữ liệu."
         />
       </div>
 

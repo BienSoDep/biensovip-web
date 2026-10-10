@@ -79,7 +79,7 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
 
   const start = () => {
     const body = { source: src.key, vehicle: opt.vehicle || undefined, fresh: opt.fresh };
-    if (!isResults && opt.province.trim()) body.province = opt.province.trim();
+    if (opt.province.trim()) body.province = opt.province.trim();
     if (isResults) body.resultsFull = opt.flag; else body.dryRun = opt.flag;
     if (opt.fresh && !window.confirm('Bắt đầu lượt MỚI sẽ bỏ qua tiến độ của lượt dở dang. Tiếp tục?')) return;
     onRun(body, src);
@@ -189,15 +189,13 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
             options={VEHICLES}
             onChange={(v) => setOpt((o) => ({ ...o, vehicle: v }))}
           />
-          {!isResults && (
-            <Input
-              label="Chỉ một tỉnh (mã VPA, vd 79)"
-              info="Mã số tỉnh thành theo VPA (ví dụ: 79 = TP.HCM, 30 = Hà Nội, 43 = Đà Nẵng). Để trống để cào toàn bộ các tỉnh."
-              placeholder="Để trống = tất cả tỉnh"
-              value={opt.province}
-              onChange={(e) => setOpt((o) => ({ ...o, province: e.target.value }))}
-            />
-          )}
+          <Input
+            label="Chỉ một tỉnh (mã VPA, vd 79)"
+            info="Mã số tỉnh thành theo VPA (ví dụ: 79 = TP.HCM, 01 = Hà Nội, 48 = Đà Nẵng). Để trống để cào toàn bộ các tỉnh."
+            placeholder="Để trống = tất cả tỉnh"
+            value={opt.province}
+            onChange={(e) => setOpt((o) => ({ ...o, province: e.target.value }))}
+          />
           <Checkbox
             checked={opt.fresh}
             onChange={(v) => setOpt((o) => ({ ...o, fresh: !!v }))}
@@ -214,7 +212,7 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
           />
           <span style={caption}>
             {isResults
-              ? 'Kết quả đấu giá chỉ hỗ trợ chọn loại xe, làm mới và quét đầy đủ.'
+              ? 'Chạy riêng một tỉnh hoặc cào toàn bộ. Để trống tỉnh = cào toàn bộ theo lát cắt các tỉnh VPA.'
               : 'Chạy riêng một tỉnh hoặc chạy thử không đổi tab và không tính là lượt theo lịch. Để trống tỉnh và không tick chạy thử = như "Crawl ngay" thường.'}
           </span>
         </div>
