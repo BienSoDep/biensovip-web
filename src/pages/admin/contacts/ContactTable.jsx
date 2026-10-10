@@ -410,17 +410,17 @@ export default function ContactTable({
       {/* Desktop Table View */}
       <div className={`admin-contacts-table-container ${mobileView === 'table' ? 'force-mobile-table' : ''}`} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
         <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div className="admin-rows" style={{ minWidth: 820 }}>
-            <div className="admin-head" style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              <span style={{ flex: '1 1 96px' }}>Khách hàng</span>
-              <span style={{ flex: '1 1 88px' }}>Điện thoại</span>
-              <span style={{ flex: '1 1 100px' }}>Biển quan tâm</span>
-              <span style={{ flex: '1 1 72px' }}>Mục đích</span>
-              <span className="contact-col-note" style={{ flex: '1 1 120px' }}>Ghi chú</span>
-              <span style={{ flex: '1 1 80px' }}>Đặt cọc</span>
-              <span className="contact-col-time" style={{ flex: '1 1 64px' }}>Thời gian</span>
-              <span style={{ flex: '1 1 120px' }}>Phụ trách</span>
-              <span style={{ flex: '1 1 160px' }}>Trạng thái</span>
+          <div className="admin-rows" style={{ minWidth: 1120 }}>
+            <div className="admin-head" style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              <span style={{ flex: '1.4 1 160px', minWidth: 140 }}>Khách hàng</span>
+              <span style={{ flex: '0 0 160px' }}>Điện thoại</span>
+              <span style={{ flex: '0 0 115px' }}>Biển quan tâm</span>
+              <span style={{ flex: '0 0 85px' }}>Mục đích</span>
+              <span className="contact-col-note" style={{ flex: '1.6 1 140px', minWidth: 120 }}>Ghi chú</span>
+              <span style={{ flex: '0 0 80px', textAlign: 'center' }}>Đặt cọc</span>
+              <span className="contact-col-time" style={{ flex: '0 0 90px' }}>Thời gian</span>
+              <span style={{ flex: '0 0 130px' }}>Phụ trách</span>
+              <span style={{ flex: '0 0 170px' }}>Trạng thái</span>
             </div>
 
             {isLoading && <div style={{ padding: 'var(--space-4) var(--gutter-card)' }}><SkeletonTable rows={5} cols={8} /></div>}
@@ -445,9 +445,9 @@ export default function ContactTable({
                   title="Xem chi tiết"
                   style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', cursor: 'pointer' }}
                 >
-                  <span data-primary data-label="Khách hàng" style={{ flex: '1 1 96px', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{c.fullName}</span>
-                  <span data-label="Điện thoại" style={{ flex: '1 1 100px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                    <span>{c.phone}</span>
+                  <span data-primary data-label="Khách hàng" style={{ flex: '1.4 1 160px', minWidth: 140, font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.fullName}>{c.fullName}</span>
+                  <span data-label="Điện thoại" style={{ flex: '0 0 160px', display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontWeight: 'var(--fw-medium)' }}>{c.phone}</span>
                     <button
                       type="button"
                       title="Sao chép SĐT"
@@ -459,7 +459,7 @@ export default function ContactTable({
                     <a href={`tel:${c.phone}`} title={`Gọi ${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--action-primary)' }}><Phone size={14} /></a>
                     <a href={toZaloUrl(c.phone)} target="_blank" rel="noreferrer" title="Chat Zalo" onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', color: 'var(--blue-700)' }}><MessageCircle size={14} /></a>
                   </span>
-                  <span data-label="Biển quan tâm" style={{ flex: '1 1 100px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span data-label="Biển quan tâm" style={{ flex: '0 0 115px', display: 'flex', alignItems: 'center', gap: 6 }}>
                     {parsed.num ? (
                       <>
                         <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
@@ -476,13 +476,13 @@ export default function ContactTable({
                       </>
                     ) : <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>}
                   </span>
-                  <span data-label="Mục đích" style={{ flex: '1 1 72px' }}>
+                  <span data-label="Mục đích" style={{ flex: '0 0 85px' }}>
                     <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: `color-mix(in srgb, ${INTENT_COLOR[c.intent] || 'var(--text-muted)'} 16%, transparent)`, color: INTENT_COLOR[c.intent] || 'var(--text-muted)' }}>
                       {INTENT_LABEL[c.intent] || c.intent}
                     </span>
                   </span>
-                  <span className="contact-col-note" data-label="Ghi chú" style={{ flex: '1 1 120px', font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
-                  <span data-label="Đặt cọc" style={{ flex: '1 1 80px' }}>
+                  <span className="contact-col-note" data-label="Ghi chú" style={{ flex: '1.6 1 140px', minWidth: 120, font: 'var(--type-caption)', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.note}>{c.note || '—'}</span>
+                  <span data-label="Đặt cọc" style={{ flex: '0 0 80px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     {c.transactionId ? (
                       <button type="button" onClick={(e) => { e.stopPropagation(); setViewingTx(c); }}
                         style={{ display: 'inline-block', padding: '2px 8px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', background: 'color-mix(in srgb, var(--status-success) 16%, transparent)', color: 'var(--status-success)', cursor: 'pointer' }}>Đã cọc</button>
@@ -490,10 +490,10 @@ export default function ContactTable({
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
                     )}
                   </span>
-                  <span className="contact-col-time" data-label="Thời gian" style={{ flex: '1 1 64px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                  <span className="contact-col-time" data-label="Thời gian" style={{ flex: '0 0 90px', font: 'var(--type-caption)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                     {formatDate(c.createdAt)}
                   </span>
-                  <span onClick={(e) => e.stopPropagation()} data-label="Phụ trách" style={{ flex: '1 1 120px' }}>
+                  <span onClick={(e) => e.stopPropagation()} data-label="Phụ trách" style={{ flex: '0 0 130px' }}>
                     <Select
                       value={c.assignedStaffId ? (c.assignedStaffName || '—') : 'Chưa gán'}
                       options={[{ value: 'Chưa gán', label: 'Chưa gán' }, ...staffList.map((s) => ({ value: s.fullName, label: s.fullName, _id: s.id }))]}
@@ -507,7 +507,7 @@ export default function ContactTable({
                       style={{ whiteSpace: 'nowrap', color: c.assignedStaffId ? 'var(--text-strong)' : 'var(--text-faint)', boxShadow: 'inset 0 0 0 1px var(--grey-200)' }}
                     />
                   </span>
-                  <span onClick={(e) => e.stopPropagation()} data-label="Trạng thái" style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+                  <span onClick={(e) => e.stopPropagation()} data-label="Trạng thái" style={{ flex: '0 0 170px', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                     <AuditHistoryButton entityType="contact_request" entityId={c.id} />
                     <IconButton name="trash-2" label="Xóa liên hệ" size="sm" onClick={() => setDeleteTarget(c)} />
                     {updatingId === c.id ? (

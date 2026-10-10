@@ -67,3 +67,44 @@ export function useFengShuiQueueStats(enabled = true) {
     refetchInterval: 60_000,
   });
 }
+
+const EMAIL_LOGS_KEY = ['admin', 'email-logs'];
+
+export function useAdminEmailLogs({ page = 1, limit = 20, search = '', status = '', channel = '' } = {}) {
+  return useQuery({
+    queryKey: [...EMAIL_LOGS_KEY, { page, limit, search, status, channel }],
+    queryFn: () => apiClient.get('/api/admin/notifications/email-logs', {
+      params: {
+        page,
+        limit,
+        search: search || undefined,
+        status: status || undefined,
+        channel: channel || undefined,
+      },
+    }),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useRunNotificationTrigger() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (type) => apiClient.post(`/api/admin/notifications/run-trigger/${type}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TYPE_SETTINGS_KEY });
+      qc.invalidateQueries({ queryKey: EMAIL_LOGS_KEY });
+    },
+  });
+}
+
+export function useRunAllNotificationTriggers() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiClient.post('/api/admin/notifications/run-trigger/all'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TYPE_SETTINGS_KEY });
+      qc.invalidateQueries({ queryKey: EMAIL_LOGS_KEY });
+    },
+  });
+}
+
