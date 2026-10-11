@@ -1,4 +1,4 @@
-import { Compass, GitCompare, Eye, MessageSquare, PhoneCall, Bookmark, Share2, ArrowRight } from 'lucide-react';
+import { Compass, GitCompare, Eye, MessageSquare, PhoneCall, Bookmark, Share2, ArrowRight, Flame } from 'lucide-react';
 
 export default function PlateEngagementSection({ plateEngagement, topInteracted = [], formatPrice, onActionClick }) {
   if (!plateEngagement) return null;
@@ -212,8 +212,12 @@ export default function PlateEngagementSection({ plateEngagement, topInteracted 
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
             marginBottom: 'var(--space-3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
           }}>
-            🔥 Top 5 Biển Số Nhận Được Tương Tác Cao Nhất Trong Kỳ (Bấm biển để mở kho điều chỉnh giá)
+            <Flame size={14} color="var(--amber-600)" />
+            <span>Top 5 Biển Số Nhận Được Tương Tác Cao Nhất Trong Kỳ (Bấm biển để mở kho điều chỉnh giá)</span>
           </div>
           <div style={{
             display: 'grid',

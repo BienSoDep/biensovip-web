@@ -315,9 +315,13 @@ Quy trình cấp biển số định danh theo Thông tư 24 | huong-dan | publi
                           </span>
                         )
                       ) : r.isValid ? (
-                        <span style={{ color: 'var(--status-mint)' }}>✓ Hợp lệ</span>
+                        <span style={{ color: 'var(--status-mint)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <CheckCircle2 size={13} /> Hợp lệ
+                        </span>
                       ) : (
-                        <span style={{ color: 'var(--status-danger)' }}>✗ {r.error}</span>
+                        <span style={{ color: 'var(--status-danger)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <AlertTriangle size={13} /> {r.error}
+                        </span>
                       )}
                     </td>
                   </tr>

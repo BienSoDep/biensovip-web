@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import {
   MessageSquareQuote, Plus, Pencil, Trash2, RotateCw,
   Search, X, MessageCircle, Share2, Smartphone, Layers,
-  Copy, Check, Sparkles, Eye, CheckCircle2, AlertCircle
+  Copy, Check, Sparkles, Eye, CheckCircle2, AlertCircle, Lightbulb
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Badge, Input, Checkbox } from '../../components/index.jsx';
@@ -726,8 +726,9 @@ export default function AdminCtvMessageTemplates({ notify }) {
 
                 {/* Description Helper */}
                 {t.description && (
-                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    💡 {t.description}
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Lightbulb size={12} style={{ flexShrink: 0 }} />
+                    <span>{t.description}</span>
                   </div>
                 )}
 

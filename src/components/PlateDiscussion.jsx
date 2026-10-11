@@ -965,9 +965,12 @@ export default function PlateDiscussion({ plate, notify, user }) {
                 font: "var(--type-caption)",
                 color: "var(--action-primary)",
                 fontWeight: "var(--fw-semibold)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
               }}
             >
-              💡 SĐT được bảo mật tuyệt đối 100%
+              <ShieldCheck size={12} /> SĐT được bảo mật tuyệt đối 100%
             </span>
           )}
         </div>

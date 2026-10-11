@@ -149,6 +149,22 @@ export async function exportVpaCsv(params) {
   URL.revokeObjectURL(url);
 }
 
+export async function exportVpaAuctionResultsCsv(params) {
+  const auth = loadAuth();
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/auction-results/export?${toQuery(params)}`, {
+    headers: auth?.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
+  });
+  if (!res.ok) throw new Error(`Xuất file thất bại (${res.status})`);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ket-qua-dau-gia-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export const useUpdateVpaSettings = () => useVpaMutation((body) => apiClient.put('/api/admin/vpa/settings', body));
 // "Crawl ngay": source = key ('official'|'published'|'results'); options = { vehicle, province, fresh, resultsFull, dryRun } (tất cả tùy chọn).
 export const useRunVpaCrawl = () => useVpaMutation((arg) => {

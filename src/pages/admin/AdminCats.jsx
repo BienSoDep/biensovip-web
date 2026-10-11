@@ -781,7 +781,7 @@ export default function AdminCats({ notify, goToMeanings }) {
         <div style={{ flex: '1 1 340px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{CATEGORY_GROUPS.find((g) => g.value === group)?.label}</span>
-            <InfoTip text="Thứ tự hiển thị: danh mục ở trên xuất hiện trước trên trang website. Kéo tay cầm ☰ cạnh số thứ tự (1, 2, 3…) để sắp xếp lại." />
+            <InfoTip text="Thứ tự hiển thị: danh mục ở trên xuất hiện trước trên trang website. Kéo tay cầm (icon 6 chấm) cạnh số thứ tự (1, 2, 3…) để sắp xếp lại." />
           </div>
           {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
           {isError && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>Không tải được danh sách.</div>}
@@ -824,7 +824,11 @@ export default function AdminCats({ notify, goToMeanings }) {
             </>
           )}
           {!editId && (
-            <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Danh mục mới thêm vào cuối danh sách — kéo tay cầm ☰ để đổi thứ tự hiển thị trên website.</p>
+            <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+              <span>Danh mục mới thêm vào cuối danh sách — kéo tay cầm</span>
+              <GripVertical size={13} style={{ verticalAlign: 'middle' }} />
+              <span>để đổi thứ tự hiển thị trên website.</span>
+            </p>
           )}
           {isPriceRange && (
             <>

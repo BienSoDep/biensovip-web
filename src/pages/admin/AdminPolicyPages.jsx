@@ -1331,7 +1331,11 @@ export default function AdminPolicyPages({ notify }) {
               </div>
 
               <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                {form ? '⚠️ Có thay đổi chưa lưu' : 'Đã đồng bộ với CSDL'}
+                {form ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--amber-700)' }}>
+                    <AlertCircle size={13} /> Có thay đổi chưa lưu
+                  </span>
+                ) : 'Đã đồng bộ với CSDL'}
               </div>
             </div>
           </div>

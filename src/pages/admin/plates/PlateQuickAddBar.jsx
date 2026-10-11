@@ -1,4 +1,4 @@
-import { Copy } from 'lucide-react';
+import { Copy, Check, X } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Modal from '../../../components/Modal.jsx';
 import { Select, Checkbox } from '../../../components/index.jsx';
@@ -189,8 +189,8 @@ export default function PlateQuickAddBar({
                             </select>
                             <span style={{ color: 'var(--text-muted)', flex: '1 1 110px' }}>{r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}</span>
                             <span style={{ flex: '1 1 100px', color: r.sold ? 'var(--status-danger)' : 'var(--text-muted)' }}>{r.sold ? 'Đã bán' : 'Còn hàng'}</span>
-                            <span style={{ color: r.ok ? 'var(--status-success-ink)' : 'var(--status-danger)', flex: '0 0 96px', textAlign: 'right', font: 'var(--type-caption)' }}>
-                              {r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
+                            <span style={{ color: r.ok ? 'var(--status-success-ink)' : 'var(--status-danger)', flex: '0 0 96px', textAlign: 'right', font: 'var(--type-caption)', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3 }}>
+                              {r.done ? (r.ok ? <><Check size={12} /> Đã thêm</> : <><X size={12} /> {r.reason}</>) : (r.ok ? 'Sẵn sàng' : r.reason || 'Bỏ trống')}
                             </span>
                           </div>
                         ))}
@@ -233,8 +233,8 @@ export default function PlateQuickAddBar({
                             <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
                               {r.priceOnRequest ? 'Liên hệ' : fmt(r.price)}
                             </span>
-                            <span style={{ font: 'var(--type-caption)', color: r.done ? (r.ok ? 'var(--status-success-ink)' : 'var(--status-danger)') : 'var(--text-muted)' }}>
-                              {r.sold ? 'Đã bán · ' : ''}{r.done ? (r.ok ? '✓ Đã thêm' : `✗ ${r.reason}`) : 'Sẵn sàng'}
+                            <span style={{ font: 'var(--type-caption)', color: r.done ? (r.ok ? 'var(--status-success-ink)' : 'var(--status-danger)') : 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                              {r.sold ? 'Đã bán · ' : ''}{r.done ? (r.ok ? <><Check size={12} /> Đã thêm</> : <><X size={12} /> {r.reason}</>) : 'Sẵn sàng'}
                             </span>
                           </div>
                         </div>

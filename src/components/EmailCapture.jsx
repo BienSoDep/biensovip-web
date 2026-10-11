@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { useSubscribe } from '../services/subscribers.js';
 import Button from './Button.jsx';
 
@@ -26,8 +27,8 @@ export default function EmailCapture({ source = 'newsletter', style }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
       {done ? (
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-success)', fontWeight: 'var(--fw-semibold)' }}>
-          ✓ Cảm ơn bạn đã đăng ký nhận thông báo.
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)', color: 'var(--status-success)', fontWeight: 'var(--fw-semibold)' }}>
+          <CheckCircle2 size={16} /> Cảm ơn bạn đã đăng ký nhận thông báo.
         </span>
       ) : (
         <>

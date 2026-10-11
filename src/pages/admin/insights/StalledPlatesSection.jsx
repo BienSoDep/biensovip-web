@@ -1,4 +1,4 @@
-import { Flame } from 'lucide-react';
+import { Flame, Lightbulb } from 'lucide-react';
 
 export default function StalledPlatesSection({ stalledPlates = [], formatPrice, onActionClick }) {
   return (
@@ -125,7 +125,9 @@ export default function StalledPlatesSection({ stalledPlates = [], formatPrice, 
                     {plate.diagnosis}
                   </td>
                   <td style={{ padding: '12px 14px', font: 'var(--type-caption)', color: 'var(--status-success-ink)', fontWeight: 'var(--fw-medium)' }}>
-                    💡 {plate.suggestedTactic}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <Lightbulb size={12} style={{ flexShrink: 0 }} /> {plate.suggestedTactic}
+                    </span>
                   </td>
                   <td style={{ padding: '12px 14px', textAlign: 'right' }}>
                     <button

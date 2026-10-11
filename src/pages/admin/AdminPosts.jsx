@@ -686,12 +686,14 @@ export default function AdminPosts({ st, patch, notify }) {
 
                   {/* Danh sách cảnh báo ngắn */}
                   {a.quality.issues.length > 0 ? (
-                    <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#dc2626' }}>
-                      ⚠ {a.quality.issues.slice(0, 2).join(' · ')}{a.quality.issues.length > 2 ? ` (+${a.quality.issues.length - 2})` : ''}
+                    <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <AlertTriangle size={11} style={{ flexShrink: 0 }} />
+                      <span>{a.quality.issues.slice(0, 2).join(' · ')}{a.quality.issues.length > 2 ? ` (+${a.quality.issues.length - 2})` : ''}</span>
                     </span>
                   ) : (
-                    <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#16a34a' }}>
-                      ✓ Đủ ảnh, meta SEO & nội dung
+                    <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <CheckCircle2 size={11} style={{ flexShrink: 0 }} />
+                      <span>Đủ ảnh, meta SEO & nội dung</span>
                     </span>
                   )}
                 </div>

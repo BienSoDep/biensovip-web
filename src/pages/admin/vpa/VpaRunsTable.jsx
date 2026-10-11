@@ -28,6 +28,10 @@ import {
   RotateCcw,
   Sparkles,
   Zap,
+  Car,
+  Bike,
+  Check,
+  User,
 } from 'lucide-react';
 
 const PAGE_SIZE = 20;
@@ -348,7 +352,11 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {dur != null ? formatDuration(dur) : r.status === 0 ? '⚡ Đang chạy…' : '—'}
+                      {dur != null ? formatDuration(dur) : r.status === 0 ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                          <Zap size={11} />Đang chạy…
+                        </span>
+                      ) : '—'}
                     </span>
                     {isFinished && (
                       <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>
@@ -379,9 +387,20 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                         fontSize: '11px',
                         fontWeight: 'var(--fw-medium)',
                         whiteSpace: 'nowrap',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
                       }}
                     >
-                      {r.vehicle == null ? 'Cả hai' : isCar(r.vehicle) ? '🚗 Ô tô' : '🏍️ Xe máy'}
+                      {r.vehicle == null ? 'Cả hai' : isCar(r.vehicle) ? (
+                        <>
+                          <Car size={12} /> Ô tô
+                        </>
+                      ) : (
+                        <>
+                          <Bike size={12} /> Xe máy
+                        </>
+                      )}
                     </span>
                     {settings && (
                       <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -394,8 +413,14 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                 {/* Cột 3: Trạng thái & Khởi tạo */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start', minWidth: 0, overflow: 'hidden' }}>
                   <Badge tone={VPA_RUN_STATUS_TONE[r.status] || 'neutral'}>
-                    {VPA_RUN_STATUS[r.status]}
-                    {r.complete ? ' ✓ đủ' : ''}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      {VPA_RUN_STATUS[r.status]}
+                      {r.complete && (
+                        <>
+                          <Check size={11} /> đủ
+                        </>
+                      )}
+                    </span>
                   </Badge>
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', maxWidth: '100%', minWidth: 0 }}>
                     <Badge
@@ -408,7 +433,17 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {r.triggeredBy === 'schedule' ? '⏱ Tự động' : `✋ ${formatTriggeredBy(r.triggeredBy)}`}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        {r.triggeredBy === 'schedule' ? (
+                          <>
+                            <Clock size={11} /> Tự động
+                          </>
+                        ) : (
+                          <>
+                            <User size={11} /> {formatTriggeredBy(r.triggeredBy)}
+                          </>
+                        )}
+                      </span>
                     </Badge>
                     {r.dryRun && <Badge tone="amber">Thử nghiệm</Badge>}
                     {r.options && (

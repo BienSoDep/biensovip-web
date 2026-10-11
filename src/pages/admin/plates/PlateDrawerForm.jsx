@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Drawer from '../../../components/Drawer.jsx';
 import Button from '../../../components/Button.jsx';
 import { Select, InfoTip } from '../../../components/index.jsx';
@@ -305,13 +306,19 @@ export default function PlateDrawerForm({
                 {i === 0 && (
                   <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.55)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 10, textAlign: 'center', padding: '1px 0' }}>Đại diện</span>
                 )}
-                <button type="button" onClick={() => onRemoveImage(url)}
-                  style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,.55)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</button>
+                <button type="button" onClick={() => onRemoveImage(url)} aria-label="Xóa ảnh"
+                  style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,.55)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={12} />
+                </button>
                 <div style={{ position: 'absolute', top: 2, left: 2, display: 'flex', gap: 2 }}>
                   <button type="button" disabled={i === 0} aria-label="Chuyển ảnh lên trước" onClick={() => moveImage(i, -1)}
-                    style={{ width: 18, height: 18, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,.55)', color: 'var(--white)', cursor: i === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, opacity: i === 0 ? 0.4 : 1 }}>‹</button>
+                    style={{ width: 18, height: 18, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,.55)', color: 'var(--white)', cursor: i === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: i === 0 ? 0.4 : 1 }}>
+                    <ChevronLeft size={12} />
+                  </button>
                   <button type="button" disabled={i === (form.images || []).length - 1} aria-label="Chuyển ảnh xuống sau" onClick={() => moveImage(i, 1)}
-                    style={{ width: 18, height: 18, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,.55)', color: 'var(--white)', cursor: i === (form.images || []).length - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, opacity: i === (form.images || []).length - 1 ? 0.4 : 1 }}>›</button>
+                    style={{ width: 18, height: 18, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,.55)', color: 'var(--white)', cursor: i === (form.images || []).length - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: i === (form.images || []).length - 1 ? 0.4 : 1 }}>
+                    <ChevronRight size={12} />
+                  </button>
                 </div>
               </div>
             ))}

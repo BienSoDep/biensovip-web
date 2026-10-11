@@ -89,7 +89,7 @@ const PROJECT_HIGHLIGHTS = [
     desc: 'Hỗ trợ giao dịch và hoàn tất thủ tục định danh trọn gói toàn quốc. Giá cả niêm yết công khai, không chi phí ẩn, đồng hành cùng khách hàng suốt quá trình sử dụng.',
     metrics: [
       { label: 'Biển đã trao tay', value: '5.000+' },
-      { label: 'Đánh giá hài lòng', value: '4.9 / 5 ⭐' },
+      { label: 'Đánh giá hài lòng', value: '4.9 / 5 Sao' },
       { label: 'Phạm vi hỗ trợ', value: 'Toàn quốc' },
     ],
   },

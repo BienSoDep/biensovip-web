@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ShieldCheck, Star, Award, CheckCircle2, PhoneCall, MessageCircle, Clock, Car, MapPin, ChevronRight, ThumbsUp, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Star, Award, CheckCircle2, PhoneCall, MessageCircle, Clock, Car, MapPin, ChevronRight, ThumbsUp, RefreshCw, Check } from 'lucide-react';
 import Button from './Button.jsx';
 import { useSystemReviews } from '../services/reviewService.js';
 import { formatDate } from '../lib/date.js';
@@ -317,7 +317,10 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                         fontWeight: 600,
                       }}
                     >
-                      ✓ {t}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Check size={11} strokeWidth={2.5} />
+                        {t}
+                      </span>
                     </span>
                   ))}
                 </div>

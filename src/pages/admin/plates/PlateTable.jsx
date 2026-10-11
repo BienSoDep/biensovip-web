@@ -1,6 +1,6 @@
 import {
   CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Star, Gift,
-  SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, RefreshCw,
+  SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, RefreshCw, ArrowRight,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -285,7 +285,7 @@ export default function PlateTable({
                 style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }}
                 title="Từ ngày"
               />
-              <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>→</span>
+              <ArrowRight size={11} color="var(--text-muted)" />
               <input
                 type="date"
                 value={toDate}
@@ -435,6 +435,26 @@ export default function PlateTable({
                   <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>
                     {p.priceOnRequest ? 'Giá liên hệ' : (p.price ? fmt(p.price) : '—')}
                   </div>
+                  {p.suggestedPrice ? (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => openPriceReference(p.id)}
+                        title="Xem nguồn và công thức tính giá thị trường tham khảo"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          font: 'var(--type-caption)',
+                          color: 'var(--text-muted)',
+                          textDecoration: 'underline dotted',
+                        }}
+                      >
+                        TT: {fmt(p.suggestedPrice)}
+                      </button>
+                    </div>
+                  ) : null}
                   {p.salePrice ? (
                     <div style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', textDecoration: 'line-through' }}>
                       {fmt(p.salePrice)}
@@ -530,9 +550,9 @@ export default function PlateTable({
               {colPrefs.province && <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.price && <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />}
               {colPrefs.suggestedPrice && (
-                <span style={{ flex: '1 1 110px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <SortHeader label="Giá gợi ý VPA" sortKey="suggestedPrice" />
-                  <InfoTip size={12} text="Giá ước tính từ kết quả đấu giá VPA biển trùng đuôi số (hoặc giá sàn cùng nhóm nếu chưa có mẫu) × hệ số. Chỉ để tham khảo, không tự áp vào Giá bán." />
+                <span style={{ flex: '1 1 125px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Giá TT tham khảo" sortKey="suggestedPrice" />
+                  <InfoTip size={12} text="Giá thị trường tham khảo (gợi ý từ VPA dựa trên kết quả đấu giá các mẫu tương đồng × hệ số). Bấm vào giá để xem chi tiết mẫu và công thức." />
                 </span>
               )}
               {colPrefs.salePrice && <SortHeader label="Giá KM" sortKey="salePrice" style={{ flex: '1 1 96px' }} />}
@@ -612,10 +632,24 @@ export default function PlateTable({
                     <button
                       type="button"
                       onClick={() => openPriceReference(p.id)}
-                      title="Xem nguồn tính giá gợi ý"
-                      style={{ flex: '1 1 110px', font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: p.suggestedPrice ? 'var(--text-default)' : 'var(--text-faint)', textDecoration: 'underline dotted' }}
+                      title="Xem nguồn và công thức tính giá thị trường tham khảo (VPA)"
+                      style={{
+                        flex: '1 1 125px',
+                        font: 'var(--type-body-sm)',
+                        fontWeight: p.suggestedPrice ? 'var(--fw-medium)' : 'normal',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        color: p.suggestedPrice ? 'var(--action-primary, #2563eb)' : 'var(--text-faint)',
+                        textDecoration: 'underline dotted',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
                     >
-                      {p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}
+                      <span>{p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}</span>
                     </button>
                   )}
                   {colPrefs.salePrice && <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)', color: p.salePrice ? 'var(--status-danger)' : 'var(--text-faint)' }}>{p.salePrice ? fmt(p.salePrice) : '—'}</span>}
