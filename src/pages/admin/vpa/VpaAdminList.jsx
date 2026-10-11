@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
-  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown, RefreshCw,
+  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown, RefreshCw, RotateCcw,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -167,6 +167,83 @@ const menuItemStyle = {
   width: '100%',
   transition: 'background-color 120ms var(--ease-standard)',
 };
+
+function ApproveDropdownMenu({ onSelect }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <Button
+        variant="ghost"
+        size="md"
+        onClick={() => setOpen((v) => !v)}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        title="Các tùy chọn duyệt lại giá theo dữ liệu kết quả đấu giá mới nhất"
+      >
+        <RotateCcw size={14} />
+        <span>Duyệt lại giá</span>
+        <ChevronDown size={14} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms var(--ease-standard)' }} />
+      </Button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              marginTop: 4,
+              minWidth: 320,
+              background: 'var(--white)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-4)',
+              border: '1px solid var(--border-subtle)',
+              padding: 6,
+              zIndex: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            <button
+              type="button"
+              style={menuItemStyle}
+              onClick={() => { setOpen(false); onSelect('recomputed'); }}
+            >
+              <RotateCcw size={15} color="var(--primary-600)" style={{ flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-strong)' }}>Duyệt lại giá toàn bộ</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.3 }}>Áp giá mới cho biển chưa sửa tay</span>
+              </div>
+            </button>
+            <button
+              type="button"
+              style={menuItemStyle}
+              onClick={() => { setOpen(false); onSelect('matched-samples'); }}
+            >
+              <Sparkles size={15} color="var(--amber-500)" style={{ flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-strong)' }}>Tìm mẫu cho biển duyệt giá sàn</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.3 }}>Khớp kết quả đấu giá thật mới nhất</span>
+              </div>
+            </button>
+            <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 6px' }} />
+            <button
+              type="button"
+              style={menuItemStyle}
+              onClick={() => { setOpen(false); onSelect('recomputed-override'); }}
+            >
+              <RefreshCw size={15} color="var(--status-danger)" style={{ flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontWeight: 'var(--fw-medium)', color: 'var(--status-danger)' }}>Duyệt lại toàn bộ (ghi đè sửa tay)</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.3 }}>Đồng bộ lại công thức cho mọi biển</span>
+              </div>
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, onTogglePin, onCopy, notify }) {
   const [open, setOpen] = useState(false);
@@ -994,20 +1071,8 @@ export default function VpaAdminList({ queue = false, notify }) {
                 <Button variant="primary" size="md" title={VPA_HELP.approveAll} onClick={() => setConfirmAction('all')}>Duyệt tất cả theo bộ lọc</Button>
                 <InfoTip size={13} text={VPA_HELP.approveAll} />
               </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Button variant="ghost" size="md" title={VPA_HELP.approveRecomputed} onClick={() => setConfirmAction('recomputed')}>Duyệt lại giá toàn bộ</Button>
-                <InfoTip size={13} text={VPA_HELP.approveRecomputed} />
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Button variant="ghost" size="md" title={VPA_HELP.approveRecomputedOverride} onClick={() => setConfirmAction('recomputed-override')}>Duyệt lại giá toàn bộ (ghi đè cả sửa tay)</Button>
-                <InfoTip size={13} text={VPA_HELP.approveRecomputedOverride} />
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Button variant="ghost" size="md" title={VPA_HELP.approveMatchedSamples} onClick={() => setConfirmAction('matched-samples')}>
-                  Tìm mẫu cho biển duyệt giá sàn
-                </Button>
-                <InfoTip size={13} text={VPA_HELP.approveMatchedSamples} />
-              </span>
+
+              <ApproveDropdownMenu onSelect={(action) => setConfirmAction(action)} />
             </>
           )}
           {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>+ Thêm chi tiết</Button>}
