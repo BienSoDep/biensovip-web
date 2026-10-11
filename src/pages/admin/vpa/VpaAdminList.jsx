@@ -1166,7 +1166,7 @@ export default function VpaAdminList({ queue = false, notify }) {
                       gap: 4,
                     }}
                   >
-                    <span>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount || 0} mẫu)` : '—'}</span>
+                    <span>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu cùng tỉnh` : 'Giá khởi điểm'})` : '—'}</span>
                   </button>
                 </div>
               </div>
@@ -1307,16 +1307,30 @@ export default function VpaAdminList({ queue = false, notify }) {
                       <span
                         style={{
                           font: 'var(--type-caption)',
-                          fontSize: '11px',
-                          color: (p.sampleCount || 0) > 0 ? 'var(--action-primary, #2563eb)' : 'var(--amber-600, #d97706)',
+                          fontSize: '10.5px',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 3,
-                          textDecoration: 'underline dotted',
+                          width: 'fit-content',
+                          padding: '1px 5px',
+                          borderRadius: '4px',
+                          fontWeight: 600,
+                          background: (p.sampleCount || 0) > 0 ? '#ecfdf5' : '#fffbeb',
+                          color: (p.sampleCount || 0) > 0 ? '#059669' : '#d97706',
+                          border: (p.sampleCount || 0) > 0 ? '1px solid #a7f3d0' : '1px solid #fde68a',
                         }}
                       >
-                        <Sparkles size={11} />
-                        {(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu kết quả` : 'Chưa có mẫu'}
+                        {(p.sampleCount || 0) > 0 ? (
+                          <>
+                            <CheckCircle2 size={10} />
+                            Cùng tỉnh ({p.sampleCount} mẫu)
+                          </>
+                        ) : (
+                          <>
+                            <Info size={10} />
+                            Giá khởi điểm
+                          </>
+                        )}
                       </span>
                     </div>
                   )}

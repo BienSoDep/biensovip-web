@@ -23,94 +23,64 @@ export default function PriceReferenceModal({
   onOpenPlate,
 }) {
   const items = data?.items || [];
-  const matchType = data?.matchType || (items.length > 0 ? "exact" : data?.usedOwnStartingPrice ? "starting_price" : "none");
+  const isSameProvince = data?.isSameProvince || data?.matchType === "same_province" || data?.matchType === "exact_province" || (items.length > 0 && data?.matchType !== "starting_price");
+  const matchType = data?.matchType || (isSameProvince ? "same_province" : data?.usedOwnStartingPrice ? "starting_price" : "none");
   const factor = data?.factor ?? 2.5;
   const avgPrice = data?.avgPrice ?? (items.length > 0 ? Math.round(items.reduce((s, x) => s + (x.auctionPrice || 0), 0) / items.length) : null);
   const calculatedPrice = avgPrice ? Math.round(avgPrice * factor) : data?.usedOwnStartingPrice && data?.ownStartingPrice ? Math.round(data.ownStartingPrice * factor) : null;
 
   const renderBadge = () => {
-    switch (matchType) {
-      case "exact":
-        return (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "3px 8px",
-            borderRadius: "var(--radius-pill, 9999px)",
-            background: "#ecfdf5",
-            color: "#059669",
-            fontSize: "12px",
-            fontWeight: "var(--fw-semibold, 600)",
-          }}>
-            <CheckCircle2 size={13} /> Trùng đuôi số thực tế
-          </span>
-        );
-      case "province":
-        return (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "3px 8px",
-            borderRadius: "var(--radius-pill, 9999px)",
-            background: "#eff6ff",
-            color: "#2563eb",
-            fontSize: "12px",
-            fontWeight: "var(--fw-semibold, 600)",
-          }}>
-            <Layers size={13} /> Cùng loại biển & cùng tỉnh
-          </span>
-        );
-      case "national":
-        return (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "3px 8px",
-            borderRadius: "var(--radius-pill, 9999px)",
-            background: "#faf5ff",
-            color: "#7e22ce",
-            fontSize: "12px",
-            fontWeight: "var(--fw-semibold, 600)",
-          }}>
-            <Sparkles size={13} /> Toàn quốc (fallback)
-          </span>
-        );
-      case "starting_price":
-        return (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "3px 8px",
-            borderRadius: "var(--radius-pill, 9999px)",
-            background: "#fffbeb",
-            color: "#d97706",
-            fontSize: "12px",
-            fontWeight: "var(--fw-semibold, 600)",
-          }}>
-            <Info size={13} /> Giá khởi điểm gốc
-          </span>
-        );
-      default:
-        return (
-          <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "3px 8px",
-            borderRadius: "var(--radius-pill, 9999px)",
-            background: "var(--surface-sunken)",
-            color: "var(--text-muted)",
-            fontSize: "12px",
-            fontWeight: "var(--fw-semibold, 600)",
-          }}>
-            <AlertCircle size={13} /> Chưa có mẫu
-          </span>
-        );
+    if (isSameProvince || matchType === "same_province" || matchType === "exact_province") {
+      return (
+        <span style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 5,
+          padding: "4px 10px",
+          borderRadius: "var(--radius-pill, 9999px)",
+          background: "#ecfdf5",
+          color: "#059669",
+          border: "1px solid #a7f3d0",
+          fontSize: "12px",
+          fontWeight: "var(--fw-semibold, 600)",
+        }}>
+          <CheckCircle2 size={13} /> Biển tương tự cùng tỉnh
+        </span>
+      );
     }
+    if (matchType === "starting_price" || data?.usedOwnStartingPrice) {
+      return (
+        <span style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 5,
+          padding: "4px 10px",
+          borderRadius: "var(--radius-pill, 9999px)",
+          background: "#fffbeb",
+          color: "#d97706",
+          border: "1px solid #fde68a",
+          fontSize: "12px",
+          fontWeight: "var(--fw-semibold, 600)",
+        }}>
+          <Info size={13} /> Dùng giá khởi điểm × Hệ số
+        </span>
+      );
+    }
+    return (
+      <span style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+        padding: "4px 10px",
+        borderRadius: "var(--radius-pill, 9999px)",
+        background: "var(--surface-sunken)",
+        color: "var(--text-muted)",
+        fontSize: "12px",
+        fontWeight: "var(--fw-semibold, 600)",
+      }}>
+        <AlertCircle size={13} /> Chưa có mẫu
+      </span>
+    );
   };
 
   return (
@@ -190,12 +160,13 @@ export default function PriceReferenceModal({
               </div>
             </div>
 
-            {/* Danh sách các mẫu kết quả */}
+            {/* Danh sách các mẫu kết quả cùng tỉnh hoặc thông báo dùng giá khởi điểm */}
             {items.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ font: "var(--type-caption)", fontWeight: "var(--fw-semibold)", color: "var(--text-strong)" }}>
-                    Danh sách {items.length} mẫu đấu giá được áp dụng:
+                  <span style={{ font: "var(--type-caption)", fontWeight: "var(--fw-semibold)", color: "var(--text-strong)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <CheckCircle2 size={13} style={{ color: "#059669" }} />
+                    Danh sách {items.length} mẫu đấu giá CÙNG TỈNH có đuôi số tương tự:
                   </span>
                   <span style={{ font: "var(--type-caption)", color: "var(--text-muted)" }}>
                     (Tối đa 50 phiên gần nhất)
@@ -242,13 +213,14 @@ export default function PriceReferenceModal({
                           <span
                             style={{
                               fontSize: "11px",
-                              padding: "1px 6px",
+                              padding: "2px 6px",
                               borderRadius: "4px",
-                              background: "var(--surface-sunken)",
-                              color: "var(--text-muted)",
+                              background: "#ecfdf5",
+                              color: "#059669",
+                              fontWeight: "var(--fw-semibold, 600)",
                             }}
                           >
-                            {it.provinceName}
+                            {it.provinceName} (cùng tỉnh)
                           </span>
                         )}
                         {it.plateTypeName && (
@@ -269,7 +241,7 @@ export default function PriceReferenceModal({
                       <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                         <span
                           style={{
-                            fontWeight: "var(--fw-semibold)",
+                            fontWeight: "var(--fw-bold, 700)",
                             color: "var(--action-primary, #059669)",
                           }}
                         >
@@ -316,9 +288,19 @@ export default function PriceReferenceModal({
                   color: "#92400e",
                   fontSize: "13px",
                   lineHeight: 1.5,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "var(--space-1)",
                 }}
               >
-                Chưa có kết quả đấu giá nào trong lịch sử tương đồng với biển này — giá gợi ý được tính suy luận trực tiếp từ <strong>giá khởi điểm của chính biển</strong> ({fmt(data.ownStartingPrice)}) × hệ số {factor}x.
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: "var(--fw-semibold)", color: "#b45309" }}>
+                  <Info size={16} />
+                  Không tìm thấy biển nào cùng tỉnh có đuôi số tương tự
+                </div>
+                <div>
+                  Trong lịch sử đấu giá VPA chưa có kết quả nào cùng tỉnh có dãy số đuôi trùng khớp (khác đầu chữ).
+                  Hệ thống tự động sử dụng: <strong>Giá khởi điểm ({fmt(data.ownStartingPrice)}) × Hệ số ({factor}x)</strong> làm mức giá thị trường tham khảo.
+                </div>
               </div>
             ) : (
               <div
@@ -332,7 +314,7 @@ export default function PriceReferenceModal({
                   lineHeight: 1.5,
                 }}
               >
-                Chưa có kết quả đấu giá tương đồng và chưa có giá khởi điểm làm căn cứ tính giá gợi ý.
+                Chưa có kết quả đấu giá cùng tỉnh và chưa có giá khởi điểm làm căn cứ tính giá gợi ý.
               </div>
             )}
           </>
