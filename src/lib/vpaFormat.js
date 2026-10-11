@@ -99,7 +99,7 @@ export const VPA_LOCK_FLAGS = [
 export const VPA_HELP = {
   tab: 'Tháng = biển sắp đấu giá (công bố trước). Tuần = có phiên trong tuần. Hết hạn = phiên đã qua. Hết hạn nội bộ = biến mất khỏi VPA, chỉ Admin thấy, không hiện cho khách.',
   startingPrice: 'Giá khởi điểm VPA công bố cho biển. Chỉ Admin thấy, không bao giờ hiện cho khách.',
-  suggested: 'Giá gợi ý = trung bình giá trúng của nhóm biển giống nhau (tỉnh + loại xe + loại biển + chữ ký) × hệ số. Số trong ngoặc là số mẫu dùng để tính; ít mẫu thì gợi ý kém tin cậy.',
+  suggested: 'Giá gợi ý = TB giá trúng của các biển đấu giá cùng tỉnh trùng khớp số đuôi × hệ số. Nếu chưa có mẫu đấu giá trùng đuôi, lấy Giá khởi điểm × hệ số.',
   approved: 'Giá khách thấy sau khi bạn duyệt. Chưa duyệt thì khách thấy "Giá liên hệ". Giá này không tự đổi khi crawl.',
   priceState: 'Chưa có gợi ý = nhóm chưa đủ mẫu. Có gợi ý = chờ duyệt. Đã duyệt = đang hiện cho khách. Từ chối = không dùng gợi ý. Đề xuất đổi giá = có gợi ý mới lệch quá % so với giá đã duyệt (giá khách thấy chưa đổi).',
   featured: 'Biển nổi bật (ngũ quý, lộc phát…). Xếp trước trong danh sách khách và được đưa vào sitemap khi đang ở tab Tháng/Tuần.',
@@ -110,3 +110,14 @@ export const VPA_HELP = {
   approveRecomputedOverride: 'Giống "Duyệt lại giá toàn bộ", nhưng áp cho MỌI biển đã duyệt — kể cả biển nghi Admin đã sửa giá tay khác giá gợi ý. Có thể ghi đè mất giá bạn đã cố ý chỉnh (ví dụ theo thỏa thuận riêng với khách). Chỉ dùng khi chắc chắn muốn đồng bộ lại toàn bộ theo công thức.',
   approveMatchedSamples: 'Rà soát các biển đã được duyệt giá dựa trên giá khởi điểm mặc định (chưa có mẫu đấu giá). Hệ thống sẽ tìm trong dữ liệu kết quả đấu giá thực tế vừa cào về; nếu tìm thấy kết quả đấu giá thật, hệ thống sẽ tính lại giá gợi ý chuẩn và tự động cập nhật giá duyệt mới cho biển.',
 };
+
+/**
+ * Nguồn chân lý duy nhất tính giá gợi ý VPA trên Frontend:
+ * Giá gợi ý = Math.round(basePrice * factor / step) * step
+ */
+export function calculateVpaSuggestedPrice(basePrice, factor = 2.5, step = 100000) {
+  if (!basePrice || basePrice <= 0) return 0;
+  const safeStep = Math.max(1, step);
+  return Math.round((basePrice * factor) / safeStep) * safeStep;
+}
+

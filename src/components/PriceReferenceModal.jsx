@@ -2,6 +2,7 @@ import Modal from "./Modal.jsx";
 import Skeleton from "./Skeleton.jsx";
 import Button from "./Button.jsx";
 import { formatDate } from "../lib/date.js";
+import { calculateVpaSuggestedPrice } from "../lib/vpaFormat.js";
 import {
   CheckCircle2,
   Layers,
@@ -27,7 +28,8 @@ export default function PriceReferenceModal({
   const matchType = data?.matchType || (isSameProvince ? "same_province" : data?.usedOwnStartingPrice ? "starting_price" : "none");
   const factor = data?.factor ?? 2.5;
   const avgPrice = data?.avgPrice ?? (items.length > 0 ? Math.round(items.reduce((s, x) => s + (x.auctionPrice || 0), 0) / items.length) : null);
-  const calculatedPrice = avgPrice ? Math.round(avgPrice * factor) : data?.usedOwnStartingPrice && data?.ownStartingPrice ? Math.round(data.ownStartingPrice * factor) : null;
+  const basePrice = avgPrice || (data?.usedOwnStartingPrice ? data?.ownStartingPrice : null);
+  const calculatedPrice = calculateVpaSuggestedPrice(basePrice, factor);
 
   const renderBadge = () => {
     if (isSameProvince || matchType === "same_province" || matchType === "exact_province") {
