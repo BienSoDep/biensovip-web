@@ -436,24 +436,33 @@ export default function PlateTable({
                     {p.priceOnRequest ? 'Giá liên hệ' : (p.price ? fmt(p.price) : '—')}
                   </div>
                   {p.suggestedPrice ? (
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => openPriceReference(p.id)}
-                        title="Xem nguồn và công thức tính giá thị trường tham khảo"
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          padding: 0,
-                          cursor: 'pointer',
-                          font: 'var(--type-caption)',
-                          color: 'var(--text-muted)',
-                          textDecoration: 'underline dotted',
-                        }}
-                      >
-                        TT: {fmt(p.suggestedPrice)}
-                      </button>
-                    </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => openPriceReference(p.id)}
+                          title="Xem nguồn và công thức tính giá thị trường tham khảo"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            font: 'var(--type-caption)',
+                            color: 'var(--text-muted)',
+                            textDecoration: 'underline dotted',
+                          }}
+                        >
+                          TT: {fmt(p.suggestedPrice)}
+                        </button>
+                        {p.sampleCount && p.sampleCount > 0 ? (
+                          <span style={{ fontSize: '10px', color: '#059669', background: '#ecfdf5', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                            Cùng tỉnh
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '10px', color: '#d97706', background: '#fffbeb', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                            Giá khởi điểm
+                          </span>
+                        )}
+                      </div>
                   ) : null}
                   {p.salePrice ? (
                     <div style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', textDecoration: 'line-through' }}>
@@ -629,28 +638,40 @@ export default function PlateTable({
                     </span>
                   )}
                   {colPrefs.suggestedPrice && (
-                    <button
-                      type="button"
-                      onClick={() => openPriceReference(p.id)}
-                      title="Xem nguồn và công thức tính giá thị trường tham khảo (VPA)"
-                      style={{
-                        flex: '1 1 125px',
-                        font: 'var(--type-body-sm)',
-                        fontWeight: p.suggestedPrice ? 'var(--fw-medium)' : 'normal',
-                        background: 'none',
-                        border: 'none',
-                        padding: 0,
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        color: p.suggestedPrice ? 'var(--action-primary, #2563eb)' : 'var(--text-faint)',
-                        textDecoration: 'underline dotted',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      <span>{p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}</span>
-                    </button>
+                    <div style={{ flex: '1 1 135px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <button
+                        type="button"
+                        onClick={() => openPriceReference(p.id)}
+                        title="Xem nguồn và công thức tính giá thị trường tham khảo (VPA)"
+                        style={{
+                          font: 'var(--type-body-sm)',
+                          fontWeight: p.suggestedPrice ? 'var(--fw-medium)' : 'normal',
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          color: p.suggestedPrice ? 'var(--action-primary, #2563eb)' : 'var(--text-faint)',
+                          textDecoration: 'underline dotted',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <span>{p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}</span>
+                      </button>
+                      {p.suggestedPrice ? (
+                        p.sampleCount && p.sampleCount > 0 ? (
+                          <span style={{ fontSize: '10.5px', color: '#059669', background: '#ecfdf5', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, width: 'fit-content', border: '1px solid #a7f3d0' }}>
+                            Cùng tỉnh ({p.sampleCount} mẫu)
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '10.5px', color: '#d97706', background: '#fffbeb', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, width: 'fit-content', border: '1px solid #fde68a' }}>
+                            Giá khởi điểm
+                          </span>
+                        )
+                      ) : null}
+                    </div>
                   )}
                   {colPrefs.salePrice && <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)', color: p.salePrice ? 'var(--status-danger)' : 'var(--text-faint)' }}>{p.salePrice ? fmt(p.salePrice) : '—'}</span>}
                   {colPrefs.gifted && (
