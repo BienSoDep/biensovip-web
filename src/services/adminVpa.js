@@ -111,6 +111,7 @@ export const useRecomputeVpaSuggestions = () => useVpaMutation(() => apiClient.p
 // Bản chạy nền có thanh tiến trình — trả { runId } ngay, không chờ duyệt xong (dùng với useVpaApproveRun để polling).
 export const useStartApproveAllVpaSuggested = () => useVpaMutation((params) => apiClient.post(`/api/admin/vpa/plates/price/approve-all/start?${toQuery(params)}`));
 export const useStartApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed/start?overrideManual=${!!overrideManual}`));
+export const useStartApproveMatchedSamplesVpa = () => useVpaMutation(() => apiClient.post('/api/admin/vpa/plates/price/approve-matched-samples/start'));
 
 // Polling tiến trình 1 lượt duyệt — tự dừng polling khi status khác "running".
 export function useVpaApproveRun(runId, enabled) {
