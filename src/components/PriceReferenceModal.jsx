@@ -44,7 +44,7 @@ export default function PriceReferenceModal({
           fontSize: "12px",
           fontWeight: "var(--fw-semibold, 600)",
         }}>
-          <CheckCircle2 size={13} /> Biển tương tự cùng tỉnh
+          <CheckCircle2 size={13} /> Cùng số đuôi & cùng tỉnh thành
         </span>
       );
     }
@@ -166,7 +166,7 @@ export default function PriceReferenceModal({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ font: "var(--type-caption)", fontWeight: "var(--fw-semibold)", color: "var(--text-strong)", display: "inline-flex", alignItems: "center", gap: 5 }}>
                     <CheckCircle2 size={13} style={{ color: "#059669" }} />
-                    Danh sách {items.length} mẫu đấu giá CÙNG TỈNH có đuôi số tương tự:
+                    Danh sách {items.length} mẫu đấu giá CÙNG TỈNH trùng khớp số đuôi:
                   </span>
                   <span style={{ font: "var(--type-caption)", color: "var(--text-muted)" }}>
                     (Tối đa 50 phiên gần nhất)
