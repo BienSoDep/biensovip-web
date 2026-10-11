@@ -36,6 +36,7 @@ import {
   LayoutGrid,
   List,
   Maximize2,
+  ArrowRight,
 } from 'lucide-react';
 import Modal from '../../components/Modal.jsx';
 import { ADMIN_NAV } from '../../common/constants.js';
@@ -691,7 +692,7 @@ function GuideCard({ item, go, isExpanded, onToggleExpand, onOpenDetail }) {
             boxShadow: 'var(--shadow-inset-hairline)',
           }}
         >
-          Mở trang →
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Mở trang <ArrowRight size={13} /></span>
         </button>
       </div>
     </div>
@@ -827,7 +828,7 @@ function GuideListItem({ item, go, isExpanded, onToggleExpand, onOpenDetail }) {
               cursor: 'pointer',
             }}
           >
-            Mở trang →
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Mở trang <ArrowRight size={13} /></span>
           </button>
         </div>
       </div>
@@ -1485,7 +1486,7 @@ export default function AdminGuide({ isSuperAdmin, canSee, go }) {
                     boxShadow: 'var(--shadow-inset-hairline)',
                   }}
                 >
-                  Truy cập trang này →
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Truy cập trang này <ArrowRight size={13} /></span>
                 </button>
               </div>
             </div>

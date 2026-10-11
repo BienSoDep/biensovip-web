@@ -109,7 +109,7 @@ export const TOGGLEABLE_COLUMNS = [
   { key: 'vehicleType', label: 'Loại xe', default: true },
   { key: 'province', label: 'Tỉnh/thành', default: true },
   { key: 'price', label: 'Giá', default: true },
-  { key: 'suggestedPrice', label: 'Giá gợi ý VPA', default: false },
+  { key: 'suggestedPrice', label: 'Giá thị trường tham khảo', default: true },
   { key: 'gifted', label: 'Biển tặng', default: true },
   { key: 'isNew', label: 'Mới', default: true },
   { key: 'status', label: 'Trạng thái', default: true },
@@ -125,7 +125,14 @@ export const COLUMN_PREFS_KEY = 'bsv.admin.plateColumns';
 export function loadColumnPrefs() {
   try {
     const saved = JSON.parse(localStorage.getItem(COLUMN_PREFS_KEY) || 'null');
-    if (saved && typeof saved === 'object') return { ...Object.fromEntries(TOGGLEABLE_COLUMNS.map((c) => [c.key, c.default])), ...saved };
+    if (saved && typeof saved === 'object') {
+      const defaults = Object.fromEntries(TOGGLEABLE_COLUMNS.map((c) => [c.key, c.default]));
+      const res = { ...defaults, ...saved };
+      if (!saved._v2_marketPrice) {
+        res.suggestedPrice = true;
+      }
+      return res;
+    }
   } catch { /* ignore malformed prefs */ }
   return Object.fromEntries(TOGGLEABLE_COLUMNS.map((c) => [c.key, c.default]));
 }

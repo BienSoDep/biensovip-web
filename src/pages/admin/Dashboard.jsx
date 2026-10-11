@@ -6,7 +6,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { toast } from 'react-hot-toast';
-import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3 } from 'lucide-react';
+import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3, ChevronUp, ChevronDown, ArrowRight } from 'lucide-react';
 import { routeFor } from '../../config/routes.js';
 import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
 import PlateVisual from '../../components/PlateVisual.jsx';
@@ -167,7 +167,17 @@ function SystemHealthWidget() {
               cursor: 'pointer',
             }}
           >
-            {showJobs ? 'Ẩn Background Jobs ▲' : `Xem Jobs ngầm (${jobs.length}) ▼`}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {showJobs ? (
+                <>
+                  Ẩn Background Jobs <ChevronUp size={12} />
+                </>
+              ) : (
+                <>
+                  Xem Jobs ngầm ({jobs.length}) <ChevronDown size={12} />
+                </>
+              )}
+            </span>
           </button>
         </div>
       </div>
@@ -406,7 +416,7 @@ export default function Dashboard({ go, st, patch }) {
           <input type="date" value={customFrom} max={customTo || format(new Date(), 'yyyy-MM-dd')}
             onChange={(e) => applyCustomRange(e.target.value, customTo)}
             style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>→</span>
+          <ArrowRight size={12} color="var(--text-faint)" />
           <input type="date" value={customTo} min={customFrom} max={format(new Date(), 'yyyy-MM-dd')}
             onChange={(e) => applyCustomRange(customFrom, e.target.value)}
             style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
@@ -1103,7 +1113,7 @@ function TopPlatesTable({ items }) {
               onClick={(e) => { e.preventDefault(); history.pushState(null, '', routeFor('detail', p.plateId)); window.dispatchEvent(new PopStateEvent('popstate')); }}
               style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--link)', textDecoration: 'none', flex: '0 0 auto' }}
             >
-              Xem →
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>Xem <ArrowRight size={11} /></span>
             </a>
           </div>
         );

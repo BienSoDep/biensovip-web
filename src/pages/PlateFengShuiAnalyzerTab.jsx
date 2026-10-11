@@ -17,6 +17,9 @@ import {
   Edit3,
   Zap,
   BookOpen,
+  X,
+  Check,
+  Scale,
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Input, Badge, DateInputVN, Checkbox } from '../components/index.jsx';
@@ -503,8 +506,9 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                       cursor: 'pointer',
                       fontSize: '12px',
                     }}
+                    aria-label="Xóa ô nhập biển"
                   >
-                    ✕
+                    <X size={13} />
                   </button>
                 )}
               </div>
@@ -770,8 +774,12 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
               onChange={(v) => setIncludeProfile(!!v)}
               label="Kết hợp ngày sinh & bản mệnh để đối chiếu tương hợp chuyên sâu (Khuyên dùng)"
             />
-            <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>
-              {includeProfile ? '✓ Đang kích hoạt luận giải bản mệnh' : '○ Chỉ luận giải nội tại dãy số'}
+            <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {includeProfile ? (
+                <>
+                  <Check size={12} /> Đang kích hoạt luận giải bản mệnh
+                </>
+              ) : 'Chỉ luận giải nội tại dãy số'}
             </span>
           </div>
 
@@ -1277,16 +1285,19 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                   }}
                 >
                   {analyzedData.totalScore >= 80 ? (
-                    <span>
-                      🌟 <strong>Biển số đại cát:</strong> Dãy số sở hữu cấu trúc vượng khí cao ({analyzedData.totalScore}/100 điểm), rất thuận lợi cho công danh, kinh doanh buôn bán và lộ trình di chuyển bình an. <strong>Khuyến nghị:</strong> Rất đáng giữ gìn và gắn bó lâu dài cùng phương tiện.
+                    <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 6 }}>
+                      <Sparkles size={16} color="var(--amber-500)" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span><strong>Biển số đại cát:</strong> Dãy số sở hữu cấu trúc vượng khí cao ({analyzedData.totalScore}/100 điểm), rất thuận lợi cho công danh, kinh doanh buôn bán và lộ trình di chuyển bình an. <strong>Khuyến nghị:</strong> Rất đáng giữ gìn và gắn bó lâu dài cùng phương tiện.</span>
                     </span>
                   ) : analyzedData.totalScore >= 65 ? (
-                    <span>
-                      ⚖️ <strong>Biển số bình hòa - khá:</strong> Năng lượng dãy số ở mức ổn định ({analyzedData.totalScore}/100 điểm), không phạm đại kỵ. <strong>Khuyến nghị:</strong> Có thể tiếp tục sử dụng an tâm. Nếu muốn bứt phá tài lộc hoặc cầu đại cát, có thể tham khảo thêm các biển số cải vận bổ khuyết bên dưới.
+                    <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 6 }}>
+                      <Scale size={16} color="var(--action-primary)" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span><strong>Biển số bình hòa - khá:</strong> Năng lượng dãy số ở mức ổn định ({analyzedData.totalScore}/100 điểm), không phạm đại kỵ. <strong>Khuyến nghị:</strong> Có thể tiếp tục sử dụng an tâm. Nếu muốn bứt phá tài lộc hoặc cầu đại cát, có thể tham khảo thêm các biển số cải vận bổ khuyết bên dưới.</span>
                     </span>
                   ) : (
-                    <span>
-                      ⚠️ <strong>Biển số cần lưu ý cải vận:</strong> Dãy số có điểm nghẽn về tương khắc ngũ hành hoặc tổng số chưa tương trợ ({analyzedData.totalScore}/100 điểm). <strong>Khuyến nghị:</strong> Nên cân nhắc bổ khuyết bằng vật phẩm phong thủy hoặc đổi sang biển số hợp mệnh để gia tăng cát khí.
+                    <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 6 }}>
+                      <AlertTriangle size={16} color="var(--status-danger)" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span><strong>Biển số cần lưu ý cải vận:</strong> Dãy số có điểm nghẽn về tương khắc ngũ hành hoặc tổng số chưa tương trợ ({analyzedData.totalScore}/100 điểm). <strong>Khuyến nghị:</strong> Nên cân nhắc bổ khuyết bằng vật phẩm phong thủy hoặc đổi sang biển số hợp mệnh để gia tăng cát khí.</span>
                     </span>
                   )}
                 </div>

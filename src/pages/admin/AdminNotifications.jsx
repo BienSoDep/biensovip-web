@@ -601,9 +601,13 @@ export default function AdminNotifications({ notify, st }) {
             )}
             {!isLoading && !isError && data?.total > 20 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)' }}>
-                <button type="button" disabled={sentPage <= 1} onClick={() => setSentPage((p) => Math.max(1, p - 1))} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage <= 1 ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage <= 1 ? 'default' : 'pointer' }}>‹ Trước</button>
+                <button type="button" disabled={sentPage <= 1} onClick={() => setSentPage((p) => Math.max(1, p - 1))} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage <= 1 ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage <= 1 ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                  <ChevronLeft size={13} /> Trước
+                </button>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Trang {sentPage} / {Math.max(1, Math.ceil(data.total / 20))}</span>
-                <button type="button" disabled={sentPage >= Math.ceil(data.total / 20)} onClick={() => setSentPage((p) => p + 1)} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage >= Math.ceil(data.total / 20) ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage >= Math.ceil(data.total / 20) ? 'default' : 'pointer' }}>Sau ›</button>
+                <button type="button" disabled={sentPage >= Math.ceil(data.total / 20)} onClick={() => setSentPage((p) => p + 1)} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage >= Math.ceil(data.total / 20) ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage >= Math.ceil(data.total / 20) ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                  Sau <ChevronRight size={13} />
+                </button>
               </div>
             )}
           </div>
@@ -1220,9 +1224,11 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
         </div>
 
         {!setting.webEnabled && !setting.emailEnabled && (
-          <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontWeight: 'var(--fw-semibold)' }}>⚠ Đã tắt hoàn toàn — không gửi qua bất kỳ kênh nào</span>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <AlertCircle size={13} /> Đã tắt hoàn toàn — không gửi qua bất kỳ kênh nào
+          </span>
         )}
-        <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{editing ? 'Đang sửa ▸' : ''}</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{editing ? 'Đang sửa…' : ''}</span>
       </div>
 
       {!editing && (
@@ -1329,8 +1335,8 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
               </span>
             </label>
           ) : setting.triggerHour !== null ? (
-            <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontStyle: 'italic' }}>
-              ⚠ Loại này không dùng "Giờ gửi" cố định — {setting.type === 'digest' ? 'mỗi user tự chọn giờ riêng trong hồ sơ cá nhân' : 'job chạy cố định 1 lần/ngày, bỏ qua giờ đặt ở đây'}. Ẩn field để tránh admin tưởng chỉnh được.
+            <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <AlertCircle size={13} style={{ flexShrink: 0 }} /> Loại này không dùng "Giờ gửi" cố định — {setting.type === 'digest' ? 'mỗi user tự chọn giờ riêng trong hồ sơ cá nhân' : 'job chạy cố định 1 lần/ngày, bỏ qua giờ đặt ở đây'}. Ẩn field để tránh admin tưởng chỉnh được.
             </span>
           ) : (
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Loại này gửi ngay khi sự kiện xảy ra (real-time), không có giờ cố định để chỉnh.</span>
@@ -1409,8 +1415,8 @@ function EmailLogsSection({ notify }) {
 
   const statusOptions = [
     { value: '', label: 'Tất cả trạng thái' },
-    { value: 'success', label: '✓ Thành công' },
-    { value: 'failed', label: '✗ Thất bại' },
+    { value: 'success', label: 'Thành công' },
+    { value: 'failed', label: 'Thất bại' },
   ];
 
   return (

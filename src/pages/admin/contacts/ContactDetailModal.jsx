@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Phone, MessageSquare, Copy, Check, Trash2, ExternalLink } from 'lucide-react';
+import { Loader2, Phone, MessageSquare, Copy, Check, Trash2, ExternalLink, ArrowRight } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
@@ -214,7 +214,7 @@ export default function ContactDetailModal({
               <div style={{ flex: '1 1 200px' }}>
                 {selected.transactionId ? (
                   <Button variant="secondary" size="sm" style={{ width: '100%' }} onClick={() => setViewingTx(selected)}>
-                    Xem giao dịch liên kết →
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>Xem giao dịch liên kết <ArrowRight size={13} /></span>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" style={{ width: '100%' }} onClick={() => setUpgrading(selected)}>

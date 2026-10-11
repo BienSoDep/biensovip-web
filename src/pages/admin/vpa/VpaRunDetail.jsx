@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Check } from 'lucide-react';
 import Drawer from '../../../components/Drawer.jsx';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -41,7 +42,16 @@ export default function VpaRunDetail({ run, onClose, notify }) {
     <Drawer open onClose={onClose} title="Chi tiết lượt chạy" width="min(60%, 820px)">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Badge tone={VPA_RUN_STATUS_TONE[run.status] || 'neutral'}>{VPA_RUN_STATUS[run.status]}{run.complete ? ' ✓ đủ' : ''}</Badge>
+          <Badge tone={VPA_RUN_STATUS_TONE[run.status] || 'neutral'}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              {VPA_RUN_STATUS[run.status]}
+              {run.complete && (
+                <>
+                  <Check size={11} /> đủ
+                </>
+              )}
+            </span>
+          </Badge>
           {run.options && <Badge tone="blue">{run.options}</Badge>}
           {run.dryRun && <Badge tone="amber">Không ghi dữ liệu</Badge>}
         </div>

@@ -15,6 +15,8 @@ import {
   Gift,
   GitCompareArrows,
   CheckCircle2,
+  Flame,
+  Check,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
 import {
@@ -777,7 +779,13 @@ export default function PlateDetail({
               flexWrap: "wrap",
             }}
           >
-            {plate.isHot && !sold && <Badge tone="hot">🔥 HOT</Badge>}
+            {plate.isHot && !sold && (
+              <Badge tone="hot">
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                  <Flame size={12} fill="currentColor" /> HOT
+                </span>
+              </Badge>
+            )}
             {plate.type && <Badge tone="dark">{plate.type}</Badge>}
             <Badge tone={sold ? "rose" : "mint"}>
               {sold ? "Đã bán" : "Còn hàng"}
@@ -2388,7 +2396,7 @@ export default function PlateDetail({
                   justifyContent: "center",
                 }}
               >
-                ✓
+                <Check size={28} />
               </div>
               <span
                 style={{

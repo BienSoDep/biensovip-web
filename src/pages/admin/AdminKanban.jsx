@@ -21,6 +21,9 @@ import {
   ArrowRight,
   Clock,
   Sparkles,
+  Check,
+  Lightbulb,
+  ExternalLink,
 } from 'lucide-react';
 import { useAdminContacts, useUpdateContactStatus } from '../../services/adminContacts.js';
 import {
@@ -276,7 +279,11 @@ function Card({ item, dragging, onClick, edge, onQuickMove, onConfirm, confirmin
             opacity: confirming ? 0.6 : 1,
           }}
         >
-          {confirming ? 'Đang xác nhận…' : '✓ Xác nhận đã nhận tiền'}
+          {confirming ? 'Đang xác nhận…' : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Check size={13} /> Xác nhận đã nhận tiền
+            </span>
+          )}
         </button>
       )}
     </div>
@@ -380,7 +387,7 @@ function DetailModal({ item, kind, onClose, onQuickMove, nextLabel, updateStatus
         <Row label="Điện thoại">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <a href={`tel:${item.phone}`} style={{ color: 'var(--text-link)', textDecoration: 'none', fontWeight: 'var(--fw-bold)' }}>{item.phone}</a>
-            <a href={toZaloUrl(item.phone)} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#2563eb' }}>Chat Zalo ↗</a>
+            <a href={toZaloUrl(item.phone)} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#2563eb', display: 'inline-flex', alignItems: 'center', gap: 3 }}>Chat Zalo <ExternalLink size={12} /></a>
           </div>
         </Row>
         <Row label={isTx ? 'Biển giao dịch' : 'Biển quan tâm'}>{item.plateNumber || (isTx ? '—' : 'Khách hỏi chung, không có biển cụ thể')}</Row>
@@ -769,8 +776,8 @@ export default function AdminKanban({ notify, go, onOpenContact }) {
         </DndContext>
       )}
 
-      <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-        💡 Kéo thẻ giữa 3 cột đầu để đổi trạng thái. Bấm thẻ để xem chi tiết. Hai cột giao dịch (Chờ thanh toán & Đã xác nhận) được xử lý sau khi xác nhận tiền.
+      <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-faint)', display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+        <Lightbulb size={13} style={{ flexShrink: 0 }} /> Kéo thẻ giữa 3 cột đầu để đổi trạng thái. Bấm thẻ để xem chi tiết. Hai cột giao dịch (Chờ thanh toán & Đã xác nhận) được xử lý sau khi xác nhận tiền.
       </p>
     </div>
   );

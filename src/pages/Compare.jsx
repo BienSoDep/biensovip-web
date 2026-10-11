@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
-import { GitCompareArrows, X, Sparkles, Search, Heart, ChevronDown, ChevronUp, Phone, MessageCircle } from 'lucide-react';
+import { GitCompareArrows, X, Sparkles, Search, Heart, ChevronDown, ChevronUp, Phone, MessageCircle, Check } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
@@ -702,13 +702,13 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Điểm chung:</span>
                 {insights.commonElement && (
-                  <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)' }}>
-                    ✓ Cùng ngũ hành {insights.commonElementLabel}
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <Check size={12} /> Cùng ngũ hành {insights.commonElementLabel}
                   </span>
                 )}
                 {insights.commonPatterns.map((label) => (
-                  <span key={label} style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)' }}>
-                    ✓ Cùng mẫu: {label}
+                  <span key={label} style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <Check size={12} /> Cùng mẫu: {label}
                   </span>
                 ))}
                 {!insights.commonElement && insights.commonPatterns.length === 0 && (

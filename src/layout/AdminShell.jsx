@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
@@ -120,16 +120,20 @@ const ADMIN_INFO = {
         <strong style={{ color: 'var(--text-strong)' }}>Các thao tác chính trong tab "Duyệt giá":</strong>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '6px 24px', paddingLeft: '8px' }}>
           <div>
-            ✔ <strong>Duyệt tất cả theo bộ lọc:</strong> Duyệt giá toàn bộ biển có gợi ý khớp bộ lọc đang chọn.
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Duyệt tất cả theo bộ lọc:</strong> Duyệt giá toàn bộ biển có gợi ý khớp bộ lọc đang chọn.
           </div>
           <div>
-            ✔ <strong>Duyệt lại giá toàn bộ:</strong> Tính lại giá theo mẫu kết quả mới nhất rồi cập nhật cho biển đã duyệt.
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Duyệt lại giá toàn bộ:</strong> Tính lại giá theo mẫu kết quả mới nhất rồi cập nhật cho biển đã duyệt.
           </div>
           <div>
-            ✔ <strong>Duyệt lại (ghi đè sửa tay):</strong> Cập nhật giá mới cho toàn bộ, áp dụng cho cả biển từng sửa tay.
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Duyệt lại (ghi đè sửa tay):</strong> Cập nhật giá mới cho toàn bộ, áp dụng cho cả biển từng sửa tay.
           </div>
           <div>
-            ✔ <strong>Tính lại giá gợi ý:</strong> Quét sinh giá gợi ý tự động cho toàn bộ biển mới cào về chưa có giá.
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Tính lại giá gợi ý:</strong> Quét sinh giá gợi ý tự động cho toàn bộ biển mới cào về chưa có giá.
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   Wallet,
   UserPlus,
   Check,
+  Lightbulb,
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import CollaboratorIllustration from '../../components/CollaboratorIllustration.jsx';
@@ -101,9 +102,11 @@ function CollaboratorBenefitLivePreview({ titleHtml, bodyHtml, onUpdateTitle, on
             padding: '2px 8px',
             borderRadius: 'var(--radius-pill)',
             fontWeight: 'var(--fw-semibold)',
-            fontSize: '0.7rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
           }}>
-            {isMobile ? '📱 Mobile 390px' : '💻 Desktop'}
+            {isMobile ? <><Smartphone size={12} /> Mobile 390px</> : <><Monitor size={12} /> Desktop</>}
           </span>
           <a
             href="/cong-tac-vien"
@@ -890,8 +893,8 @@ export default function AdminCollaboratorContent({ notify }) {
               flexDirection: 'column',
               gap: 4,
             }}>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
-                💡 Mẹo trình bày đẹp:
+              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Lightbulb size={13} /> Mẹo trình bày đẹp:
               </span>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                 • Sử dụng thẻ <code>&lt;ul&gt;&lt;li&gt;</code> để hệ thống tự động gắn biểu tượng tích xanh VIP.<br />

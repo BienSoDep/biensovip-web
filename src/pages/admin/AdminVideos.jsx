@@ -17,7 +17,8 @@ import {
   PlaySquare,
   Sparkles,
   X,
-  ExternalLink
+  ExternalLink,
+  Play,
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, ImageUrlInput, Badge } from '../../components/index.jsx';
@@ -151,7 +152,9 @@ export default function AdminVideos({ notify }) {
               </div>
             )}
             <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
-              <span style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>▶</span>
+              <span style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.9)', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                <Play size={20} fill="currentColor" style={{ marginLeft: 2 }} />
+              </span>
             </span>
           </a>
         )}

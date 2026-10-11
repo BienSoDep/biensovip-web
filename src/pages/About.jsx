@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Play } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, Eyebrow } from '../components/index.jsx';
 import LazyImage from '../components/LazyImage.jsx';
@@ -101,7 +101,9 @@ export default function About({ go }) {
                         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 300, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</span>
                       )}
                       <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>▶</span>
+                        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Play size={22} fill="currentColor" style={{ marginLeft: 3 }} />
+                        </span>
                       </span>
                     </a>
                   )}

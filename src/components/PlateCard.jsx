@@ -1,4 +1,4 @@
-import { Phone, Heart, GitCompareArrows, CheckCircle2 } from 'lucide-react';
+import { Phone, Heart, GitCompareArrows, CheckCircle2, Flame, Sparkles } from 'lucide-react';
 import { Card, Badge, IconButton } from './index.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
@@ -40,7 +40,7 @@ export default function PlateCard({
   const discountPct = onSale ? Math.round((1 - salePrice / price) * 100) : 0;
   // Biển hợp mệnh của khách: viền xanh lá + nhãn 🍀 (biển nổi bật giữ viền hổ phách, vẫn có nhãn hợp mệnh).
   const fsRing = fengShui && !sold && !isHot ? { boxShadow: '0 0 0 2px var(--mint-500), var(--shadow-2)' } : null;
-  const fsBadge = fengShui ? <Badge tone="mint">🍀 Hợp mệnh {fengShui.element} · {fengShui.score}%</Badge> : null;
+  const fsBadge = fengShui ? <Badge tone="mint"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkles size={11} /> Hợp mệnh {fengShui.element} · {fengShui.score}%</span></Badge> : null;
 
   if (layout === 'row') {
     return (
@@ -61,7 +61,13 @@ export default function PlateCard({
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                {isHot && <Badge tone="hot">🔥 HOT</Badge>}
+                {isHot && (
+                  <Badge tone="hot">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <Flame size={11} fill="currentColor" /> HOT
+                    </span>
+                  </Badge>
+                )}
                 {fsBadge}
                 {type && <Badge tone="dark">{type}</Badge>}
                 {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
@@ -130,7 +136,13 @@ export default function PlateCard({
           {/* Hàng 1: Huy hiệu trạng thái chính (HOT, Sale, Phiên) + Nút yêu thích/so sánh */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, height: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, overflow: 'hidden' }}>
-              {isHot && <Badge tone="hot">🔥 HOT</Badge>}
+              {isHot && (
+                <Badge tone="hot">
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <Flame size={11} fill="currentColor" /> HOT
+                  </span>
+                </Badge>
+              )}
               {onSale && !sold && <Badge tone="rose">-{discountPct}%</Badge>}
               {badge && <Badge tone={BADGE_TONE[badge] || 'neutral'}>{badge}</Badge>}
             </div>

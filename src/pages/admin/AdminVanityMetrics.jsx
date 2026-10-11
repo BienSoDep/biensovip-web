@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   Sparkles, CheckCircle2, ShieldCheck, Eye, RotateCw,
-  TrendingUp, Sliders, Info, Zap, AlertCircle
+  TrendingUp, Sliders, Info, Zap, AlertCircle, ArrowRight
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
 import { Input, Switch } from '../../components/index.jsx';
@@ -320,7 +320,9 @@ export default function AdminVanityMetrics({ notify }) {
               {/* Live Preview Calculation */}
               {item.enabled && meta.unit && (
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, fontStyle: 'italic' }}>
-                  <span>Ví dụ: Thực tế có 10 {meta.unit} ➔ Website hiển thị ~{Math.round(10 * currentMultiplier)} {meta.unit}</span>
+                  <span>Ví dụ: Thực tế có 10 {meta.unit}</span>
+                  <ArrowRight size={12} />
+                  <span>Website hiển thị ~{Math.round(10 * currentMultiplier)} {meta.unit}</span>
                 </div>
               )}
 

@@ -1,4 +1,4 @@
-import { Loader2, MessageCircle, Phone, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Copy, X, Search } from 'lucide-react';
+import { Loader2, MessageCircle, Phone, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Copy, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
@@ -543,10 +543,10 @@ export default function ContactTable({
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page <= 1 ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page <= 1 ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}
+            style={{ minWidth: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page <= 1 ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page <= 1 ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}
             aria-label="Trang trước"
           >
-            ‹
+            <ChevronLeft size={16} />
           </button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <button
@@ -568,10 +568,10 @@ export default function ContactTable({
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            style={{ minWidth: 36, height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page >= totalPages ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page >= totalPages ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}
+            style={{ minWidth: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page >= totalPages ? 'var(--text-faint)' : 'var(--text-body)', font: 'var(--type-body-sm)', cursor: page >= totalPages ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}
             aria-label="Trang sau"
           >
-            ›
+            <ChevronRight size={16} />
           </button>
         </div>
       )}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
-  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown, RefreshCw, RotateCcw,
+  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown, RefreshCw, RotateCcw, AlertTriangle, ArrowRight,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -986,7 +986,7 @@ export default function VpaAdminList({ queue = false, notify }) {
             </div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <input type="date" value={f.from} onChange={(e) => setFilter('from')(e.target.value)} style={dateField} title="Phiên từ ngày" />
-              <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>→</span>
+              <ArrowRight size={11} color="var(--text-muted)" />
               <input type="date" value={f.to} onChange={(e) => setFilter('to')(e.target.value)} style={dateField} title="Đến ngày" />
             </div>
           </div>
@@ -1087,16 +1087,17 @@ export default function VpaAdminList({ queue = false, notify }) {
           ) : (
             <Select label="Trạng thái giá" value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />
           )}
-          {!queue && <Select label="Ẩn/hiện" value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />}
-          {!queue && <Select label="Nguồn" value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />}
+          <Select label="Ẩn/hiện" value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />
+          <Select label="Nguồn" value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />
           {(f.plateTypeIds.length > 0 || f.provinceIds.length > 0) && (
             <Button variant="ghost" size="md" onClick={clearCats}>Xóa lọc loại biển/tỉnh</Button>
           )}
         </div>
         {queue && f.priceState === '0' && (
           <div style={{ marginTop: 'var(--space-3)', padding: '10px 14px', background: 'var(--amber-50, #fffbeb)', border: '1px solid var(--amber-200, #fde68a)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 'var(--type-body-sm)', color: 'var(--amber-900, #78350f)' }}>
-              ⚠️ <strong>Đang lọc biển chưa có giá trên hệ thống:</strong> Các biển này vừa cào về nhưng chưa được gán giá gợi ý. Bấm <strong>Tính lại giá gợi ý</strong> để hệ thống tự động nhóm và sinh giá cho các biển này.
+            <div style={{ fontSize: 'var(--type-body-sm)', color: 'var(--amber-900, #78350f)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+              <span><strong>Đang lọc biển chưa có giá trên hệ thống:</strong> Các biển này vừa cào về nhưng chưa được gán giá gợi ý. Bấm <strong>Tính lại giá gợi ý</strong> để hệ thống tự động nhóm và sinh giá cho các biển này.</span>
             </div>
             <Button
               variant="dark"
@@ -1147,7 +1148,26 @@ export default function VpaAdminList({ queue = false, notify }) {
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>{p.approvedPrice ? money(p.approvedPrice) : 'Giá liên hệ'}</div>
-                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount})` : '—'}</div>
+                  <button
+                    type="button"
+                    onClick={() => setPriceRefId(p.id)}
+                    title="Bấm để xem các mẫu và nguồn tính giá gợi ý"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      textAlign: 'right',
+                      font: 'var(--type-caption)',
+                      color: 'var(--text-muted)',
+                      textDecoration: 'underline dotted',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${p.sampleCount || 0} mẫu)` : '—'}</span>
+                  </button>
                 </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
@@ -1239,14 +1259,26 @@ export default function VpaAdminList({ queue = false, notify }) {
                   )}
                   {cols.startingPrice && <span style={{ flex: '1 1 104px', font: 'var(--type-body-sm)' }}>{money(p.startingPrice)}</span>}
                   {cols.suggested && (
-                    <div style={{ flex: '1 1 130px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div
+                      style={{
+                        flex: '1 1 130px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                      onClick={() => setPriceRefId(p.id)}
+                      title="Bấm để xem chi tiết các mẫu và nguồn tính giá gợi ý"
+                    >
                       <button
                         type="button"
-                        onClick={() => setPriceRefId(p.id)}
+                        onClick={(e) => { e.stopPropagation(); setPriceRefId(p.id); }}
                         title="Xem nguồn tính giá gợi ý"
                         style={{ font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', textDecoration: 'underline dotted', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                       >
-                        <span>{p.suggestedPrice ? money(p.suggestedPrice) : '—'}</span>
+                        <span style={{ fontWeight: 'var(--fw-medium)' }}>{p.suggestedPrice ? money(p.suggestedPrice) : '—'}</span>
                         {p.suggestedPrice && p.approvedPrice && p.priceState === 4 && (() => {
                           const delta = p.suggestedPrice - p.approvedPrice;
                           const pct = p.approvedPrice > 0 ? Math.round((delta / p.approvedPrice) * 100) : 0;
@@ -1272,7 +1304,18 @@ export default function VpaAdminList({ queue = false, notify }) {
                           );
                         })()}
                       </button>
-                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: (p.sampleCount || 0) > 0 ? 'var(--text-muted)' : 'var(--amber-600, #d97706)' }}>
+                      <span
+                        style={{
+                          font: 'var(--type-caption)',
+                          fontSize: '11px',
+                          color: (p.sampleCount || 0) > 0 ? 'var(--action-primary, #2563eb)' : 'var(--amber-600, #d97706)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          textDecoration: 'underline dotted',
+                        }}
+                      >
+                        <Sparkles size={11} />
                         {(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu kết quả` : 'Chưa có mẫu'}
                       </span>
                     </div>

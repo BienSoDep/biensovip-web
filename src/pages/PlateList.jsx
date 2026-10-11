@@ -8,6 +8,7 @@ import {
   Bike,
   Car,
   Search,
+  Sparkles,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
 import { Select, Checkbox, Radio, Input, Icon } from "../components/index.jsx";
@@ -89,7 +90,7 @@ const SORT_OPTIONS = [
 ];
 
 // Sắp xếp theo hợp mệnh: chỉ có khi đã biết năm sinh; sắp lại các biển của trang đang xem theo điểm hợp mệnh (backend chưa sắp theo mệnh).
-const FENGSHUI_SORT = { value: "fengshui", label: "🍀 Hợp mệnh trước" };
+const FENGSHUI_SORT = { value: "fengshui", label: "Hợp mệnh trước" };
 
 const PRICE_PRESETS = [
   { label: "Dưới 200tr", min: "", max: "200000000" },
@@ -884,7 +885,10 @@ export default function PlateList({
                 whiteSpace: "nowrap",
               }}
             >
-              <span>🍀 {fsData ? `Mệnh ${fsData.element} · ` : ""}sinh {birthDate ? parseIsoToVnDate(birthDate) : birthYear}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <Sparkles size={13} color="var(--action-primary)" />
+                <span>{fsData ? `Mệnh ${fsData.element} · ` : ""}sinh {birthDate ? parseIsoToVnDate(birthDate) : birthYear}</span>
+              </span>
               {!fromProfile && (
                 <button
                   type="button"
@@ -999,7 +1003,9 @@ export default function PlateList({
                 color: "var(--action-primary-text)",
               }}
             >
-              🍀 Xem
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <Sparkles size={13} /> Xem
+              </span>
             </button>
           )}
         </div>

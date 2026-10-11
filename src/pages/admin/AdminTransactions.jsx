@@ -11,6 +11,8 @@ import {
   Phone,
   MessageCircle,
   Plus,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   useAdminTransactions,
@@ -446,10 +448,10 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-2)', alignItems: 'center' }}>
           <button type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
-            style={{ minWidth: 32, height: 32, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page <= 1 ? 'var(--text-faint)' : 'var(--text-body)', cursor: page <= 1 ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}>‹</button>
+            style={{ minWidth: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page <= 1 ? 'var(--text-faint)' : 'var(--text-body)', cursor: page <= 1 ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}><ChevronLeft size={16} /></button>
           <span style={{ font: 'var(--type-body-sm)' }}>{page}/{totalPages}</span>
           <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            style={{ minWidth: 32, height: 32, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page >= totalPages ? 'var(--text-faint)' : 'var(--text-body)', cursor: page >= totalPages ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}>›</button>
+            style={{ minWidth: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', color: page >= totalPages ? 'var(--text-faint)' : 'var(--text-body)', cursor: page >= totalPages ? 'default' : 'pointer', boxShadow: 'var(--shadow-inset-hairline)' }}><ChevronRight size={16} /></button>
         </div>
       )}
 
