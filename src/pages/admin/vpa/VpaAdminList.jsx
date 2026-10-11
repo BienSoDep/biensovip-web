@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
-  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown, RefreshCw, RotateCcw, AlertTriangle, ArrowRight,
+  Copy, ExternalLink, MoreHorizontal, Plus, Calendar, TrendingUp, TrendingDown, RefreshCw, RotateCcw, AlertTriangle, ArrowRight, CheckCircle2, Info,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
