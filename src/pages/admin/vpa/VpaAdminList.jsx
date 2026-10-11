@@ -207,6 +207,18 @@ function ApproveDropdownMenu({ onSelect }) {
             <button
               type="button"
               style={menuItemStyle}
+              onClick={() => { setOpen(false); onSelect('drifted'); }}
+            >
+              <CheckCircle2 size={15} color="var(--action-primary)" style={{ flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontWeight: 'var(--fw-medium)', color: 'var(--action-primary)' }}>Chấp nhận toàn bộ giá đề xuất đổi mới</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.3 }}>Cập nhật ngay giá mới cho mọi biển bị lệch giá</span>
+              </div>
+            </button>
+            <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 6px' }} />
+            <button
+              type="button"
+              style={menuItemStyle}
               onClick={() => { setOpen(false); onSelect('recomputed'); }}
             >
               <RotateCcw size={15} color="var(--primary-600)" style={{ flexShrink: 0 }} />
@@ -431,7 +443,8 @@ export default function VpaAdminList({ queue = false, notify }) {
   const startApproveAll = useStartApproveAllVpaSuggested();
   const startApproveRecomputed = useStartApproveRecomputedVpa();
   const startApproveMatchedSamples = useStartApproveMatchedSamplesVpa();
-  const [confirmAction, setConfirmAction] = useState(null); // null | 'all' | 'recomputed' | 'recomputed-override' | 'matched-samples'
+  const approveDrifted = useApproveDriftedVpa();
+  const [confirmAction, setConfirmAction] = useState(null); // null | 'all' | 'recomputed' | 'recomputed-override' | 'matched-samples' | 'drifted'
   const [approveRunId, setApproveRunId] = useState(null); // UC49 — lượt duyệt nền đang theo dõi (thanh %)
   const { data: approveRun } = useVpaApproveRun(approveRunId, !!approveRunId);
   const reject = useRejectVpaPrice();
@@ -1420,20 +1433,24 @@ export default function VpaAdminList({ queue = false, notify }) {
               ? 'Duyệt tất cả theo bộ lọc'
               : confirmAction === 'matched-samples'
                 ? 'Tìm mẫu & duyệt lại biển duyệt giá sàn'
-                : 'Duyệt lại giá toàn bộ'
+                : confirmAction === 'drifted'
+                  ? 'Chấp nhận toàn bộ giá đề xuất đổi mới'
+                  : 'Duyệt lại giá toàn bộ'
           }
           message={
             confirmAction === 'all'
               ? `Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc — không chỉ trang đang xem. Có thể mất một lúc với số lượng lớn.`
               : confirmAction === 'matched-samples'
                 ? 'Rà soát các biển đã được duyệt giá dựa trên giá khởi điểm mặc định (chưa có mẫu đấu giá). Hệ thống sẽ tìm trong dữ liệu kết quả đấu giá thực tế vừa cào về; nếu tìm thấy kết quả đấu giá thật, hệ thống sẽ tính lại giá gợi ý chuẩn theo giá trúng thật và tự động cập nhật giá duyệt mới cho biển.'
-                : confirmAction === 'recomputed'
-                  ? 'Tính lại giá mọi nhóm (theo kết quả đấu giá mới nhất) rồi áp giá gợi ý mới cho các biển đã duyệt — CHỈ biển nghi chưa từng sửa giá tay (giá duyệt cũ khớp giá gợi ý cũ). Dùng khi Published/Official đi chậm hơn Results nên lúc duyệt lần đầu còn thiếu mẫu.'
-                  : 'Tính lại giá mọi nhóm rồi áp giá gợi ý mới cho TẤT CẢ biển đã duyệt — kể cả biển nghi đã sửa giá tay. Có thể ghi đè giá Admin đã cố ý chỉnh khác giá gợi ý.'
+                : confirmAction === 'drifted'
+                  ? 'Cập nhật giá duyệt chính thức bằng đúng giá gợi ý mới cho toàn bộ các biển đang ở trạng thái "Đề xuất đổi giá" (Drifted) trên toàn hệ thống. Thao tác này chạy tức thì trong 1 giây.'
+                  : confirmAction === 'recomputed'
+                    ? 'Tính lại giá mọi nhóm (theo kết quả đấu giá mới nhất) rồi áp giá gợi ý mới cho các biển đã duyệt — CHỈ biển nghi chưa từng sửa giá tay (giá duyệt cũ khớp giá gợi ý cũ). Dùng khi Published/Official đi chậm hơn Results nên lúc duyệt lần đầu còn thiếu mẫu.'
+                    : 'Tính lại giá mọi nhóm rồi áp giá gợi ý mới cho TẤT CẢ biển đã duyệt — kể cả biển nghi đã sửa giá tay. Có thể ghi đè giá Admin đã cố ý chỉnh khác giá gợi ý.'
           }
           confirmLabel="Thực hiện"
           danger={confirmAction === 'recomputed-override'}
-          loading={startApproveAll.isPending || startApproveRecomputed.isPending || startApproveMatchedSamples.isPending}
+          loading={startApproveAll.isPending || startApproveRecomputed.isPending || startApproveMatchedSamples.isPending || approveDrifted.isPending}
           onConfirm={() => {
             const action = confirmAction;
             const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); };
@@ -1442,6 +1459,12 @@ export default function VpaAdminList({ queue = false, notify }) {
               startApproveAll.mutateAsync({ queue: true, ...f, q: dq }).then(onStarted).catch(onError);
             } else if (action === 'matched-samples') {
               startApproveMatchedSamples.mutateAsync().then(onStarted).catch(onError);
+            } else if (action === 'drifted') {
+              approveDrifted.mutateAsync().then((res) => {
+                setConfirmAction(null);
+                notify?.(`Đã cập nhật giá mới thành công cho ${Number(res?.affected || 0).toLocaleString('vi-VN')} biển!`, 'success');
+                refetch();
+              }).catch(onError);
             } else {
               startApproveRecomputed.mutateAsync(action === 'recomputed-override').then(onStarted).catch(onError);
             }
