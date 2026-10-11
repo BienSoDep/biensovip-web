@@ -19,7 +19,7 @@ import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import { useVpaCounts } from '../../../services/vpa.js';
 import {
-  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useVpaApproveRun,
+  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
   useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useRecomputeVpaSuggestions,
 } from '../../../services/adminVpa.js';
@@ -118,7 +118,8 @@ function SortHeader({ sort, toggleSort, label, sortKey, style, tip }) {
 // (useVpaApproveRun) mỗi giây. Chưa có Total (server đếm xong mới biết) → thanh pulse không xác định %.
 function ApproveRunModal({ run, onClose }) {
   const running = !run || run.status === 'running';
-  const pct = run?.total ? Math.min(100, Math.round((run.done * 100) / run.total)) : null;
+  const hasTotal = !!(run?.total && run.total > 0);
+  const pct = hasTotal ? Math.min(100, Math.round((run.done * 100) / run.total)) : null;
   return (
     <Modal open title={running ? 'Đang duyệt giá…' : run.status === 'success' ? 'Duyệt giá xong' : 'Duyệt giá lỗi'} maxWidth="440px">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -136,9 +137,11 @@ function ApproveRunModal({ run, onClose }) {
         <style>{'@keyframes vpaApproveIndeterminate { 0% { margin-left: 0%; } 50% { margin-left: 60%; } 100% { margin-left: 0%; } }'}</style>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           {running
-            ? (run?.total ? `Đã xét ${run.done.toLocaleString('vi-VN')}/${run.total.toLocaleString('vi-VN')} biển, duyệt được ${run.approved.toLocaleString('vi-VN')}…` : 'Đang khởi động…')
+            ? (hasTotal
+                ? `Đã xét ${run.done.toLocaleString('vi-VN')}/${run.total.toLocaleString('vi-VN')} biển, duyệt được ${run.approved.toLocaleString('vi-VN')}…`
+                : 'Đang phân tích dữ liệu & tính toán công thức giá gợi ý…')
             : run.status === 'success'
-              ? `Đã duyệt ${run.approved.toLocaleString('vi-VN')} biển (xét ${run.done.toLocaleString('vi-VN')}/${run.total.toLocaleString('vi-VN')}).`
+              ? `Đã hoàn thành: cập nhật ${run.approved.toLocaleString('vi-VN')} biển (xét ${run.done.toLocaleString('vi-VN')}/${(run.total || run.done).toLocaleString('vi-VN')}).`
               : run.error || 'Có lỗi xảy ra.'}
         </p>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -350,7 +353,8 @@ export default function VpaAdminList({ queue = false, notify }) {
   const approve = useApproveVpaSuggested();
   const startApproveAll = useStartApproveAllVpaSuggested();
   const startApproveRecomputed = useStartApproveRecomputedVpa();
-  const [confirmAction, setConfirmAction] = useState(null); // null | 'all' | 'recomputed' | 'recomputed-override'
+  const startApproveMatchedSamples = useStartApproveMatchedSamplesVpa();
+  const [confirmAction, setConfirmAction] = useState(null); // null | 'all' | 'recomputed' | 'recomputed-override' | 'matched-samples'
   const [approveRunId, setApproveRunId] = useState(null); // UC49 — lượt duyệt nền đang theo dõi (thanh %)
   const { data: approveRun } = useVpaApproveRun(approveRunId, !!approveRunId);
   const reject = useRejectVpaPrice();
@@ -998,6 +1002,12 @@ export default function VpaAdminList({ queue = false, notify }) {
                 <Button variant="ghost" size="md" title={VPA_HELP.approveRecomputedOverride} onClick={() => setConfirmAction('recomputed-override')}>Duyệt lại giá toàn bộ (ghi đè cả sửa tay)</Button>
                 <InfoTip size={13} text={VPA_HELP.approveRecomputedOverride} />
               </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Button variant="ghost" size="md" title={VPA_HELP.approveMatchedSamples} onClick={() => setConfirmAction('matched-samples')}>
+                  Tìm mẫu cho biển duyệt giá sàn
+                </Button>
+                <InfoTip size={13} text={VPA_HELP.approveMatchedSamples} />
+              </span>
             </>
           )}
           {!queue && <Button variant="primary" size="md" onClick={() => setDrawer({})}>+ Thêm chi tiết</Button>}
@@ -1283,23 +1293,33 @@ export default function VpaAdminList({ queue = false, notify }) {
         <ConfirmModal
           open
           onClose={() => setConfirmAction(null)}
-          title={confirmAction === 'all' ? 'Duyệt tất cả theo bộ lọc' : 'Duyệt lại giá toàn bộ'}
+          title={
+            confirmAction === 'all'
+              ? 'Duyệt tất cả theo bộ lọc'
+              : confirmAction === 'matched-samples'
+                ? 'Tìm mẫu & duyệt lại biển duyệt giá sàn'
+                : 'Duyệt lại giá toàn bộ'
+          }
           message={
             confirmAction === 'all'
               ? `Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc — không chỉ trang đang xem. Có thể mất một lúc với số lượng lớn.`
-              : confirmAction === 'recomputed'
-                ? 'Tính lại giá mọi nhóm (theo kết quả đấu giá mới nhất) rồi áp giá gợi ý mới cho các biển đã duyệt — CHỈ biển nghi chưa từng sửa giá tay (giá duyệt cũ khớp giá gợi ý cũ). Dùng khi Published/Official đi chậm hơn Results nên lúc duyệt lần đầu còn thiếu mẫu.'
-                : 'Tính lại giá mọi nhóm rồi áp giá gợi ý mới cho TẤT CẢ biển đã duyệt — kể cả biển nghi đã sửa giá tay. Có thể ghi đè giá Admin đã cố ý chỉnh khác giá gợi ý.'
+              : confirmAction === 'matched-samples'
+                ? 'Rà soát các biển đã được duyệt giá dựa trên giá khởi điểm mặc định (chưa có mẫu đấu giá). Hệ thống sẽ tìm trong dữ liệu kết quả đấu giá thực tế vừa cào về; nếu tìm thấy kết quả đấu giá thật, hệ thống sẽ tính lại giá gợi ý chuẩn theo giá trúng thật và tự động cập nhật giá duyệt mới cho biển.'
+                : confirmAction === 'recomputed'
+                  ? 'Tính lại giá mọi nhóm (theo kết quả đấu giá mới nhất) rồi áp giá gợi ý mới cho các biển đã duyệt — CHỈ biển nghi chưa từng sửa giá tay (giá duyệt cũ khớp giá gợi ý cũ). Dùng khi Published/Official đi chậm hơn Results nên lúc duyệt lần đầu còn thiếu mẫu.'
+                  : 'Tính lại giá mọi nhóm rồi áp giá gợi ý mới cho TẤT CẢ biển đã duyệt — kể cả biển nghi đã sửa giá tay. Có thể ghi đè giá Admin đã cố ý chỉnh khác giá gợi ý.'
           }
           confirmLabel="Thực hiện"
           danger={confirmAction === 'recomputed-override'}
-          loading={startApproveAll.isPending || startApproveRecomputed.isPending}
+          loading={startApproveAll.isPending || startApproveRecomputed.isPending || startApproveMatchedSamples.isPending}
           onConfirm={() => {
             const action = confirmAction;
             const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); };
             const onError = (e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); };
             if (action === 'all') {
               startApproveAll.mutateAsync({ queue: true, ...f, q: dq }).then(onStarted).catch(onError);
+            } else if (action === 'matched-samples') {
+              startApproveMatchedSamples.mutateAsync().then(onStarted).catch(onError);
             } else {
               startApproveRecomputed.mutateAsync(action === 'recomputed-override').then(onStarted).catch(onError);
             }
