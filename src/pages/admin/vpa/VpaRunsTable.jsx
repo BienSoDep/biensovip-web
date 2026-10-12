@@ -7,6 +7,8 @@ import VpaCrawlCharts from './VpaCrawlCharts.jsx';
 import { useVpaRunSearch, exportVpaRunsCsv } from '../../../services/adminVpa.js';
 import {
   VPA_SOURCES,
+  VPA_SOURCE_CONFIG,
+  getVpaSourceConfig,
   VPA_RUN_STATUS,
   VPA_RUN_STATUS_TONE,
   formatDateTime,
@@ -32,6 +34,8 @@ import {
   Bike,
   Check,
   User,
+  CalendarDays,
+  Gavel,
 } from 'lucide-react';
 
 const PAGE_SIZE = 20;
@@ -367,48 +371,100 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                 </div>
 
                 {/* Cột 2: Nguồn & Loại xe */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                  <span style={{ fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {src?.label || 'Nguồn khác'}
-                  </span>
-                  {src?.note && (
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', fontSize: '11px', fontWeight: 'var(--fw-semibold)', marginTop: -1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {src.note}
-                    </span>
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
-                    <span
-                      style={{
-                        padding: '1px 6px',
-                        borderRadius: 4,
-                        background: isCar(r.vehicle) ? 'var(--blue-50, #eff6ff)' : 'var(--mint-50, #ecfdf5)',
-                        color: isCar(r.vehicle) ? 'var(--blue-700, #1d4ed8)' : 'var(--status-success-ink, #065f46)',
-                        font: 'var(--type-caption)',
-                        fontSize: '11px',
-                        fontWeight: 'var(--fw-medium)',
-                        whiteSpace: 'nowrap',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      {r.vehicle == null ? 'Cả hai' : isCar(r.vehicle) ? (
-                        <>
-                          <Car size={12} /> Ô tô
-                        </>
-                      ) : (
-                        <>
-                          <Bike size={12} /> Xe máy
-                        </>
+                {(() => {
+                  const srcCfg = getVpaSourceConfig(r.source);
+                  const SrcIcon = r.source === 1 ? CalendarDays : r.source === 2 ? Layers : r.source === 3 ? Gavel : Layers;
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                        {/* Kí hiệu đặc biệt 3 màu pastel phía trước */}
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 3.5,
+                            padding: '2px 7px',
+                            borderRadius: 'var(--radius-pill)',
+                            background: srcCfg.bg,
+                            border: `1px solid ${srcCfg.border}`,
+                            color: srcCfg.color,
+                            font: 'var(--type-caption)',
+                            fontSize: '11px',
+                            fontWeight: 'var(--fw-bold)',
+                            lineHeight: 1.2,
+                            flexShrink: 0,
+                            letterSpacing: '0.02em',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                          }}
+                          title={`${srcCfg.label} (${srcCfg.note}) — ${srcCfg.desc}`}
+                        >
+                          <SrcIcon size={12} strokeWidth={2.4} />
+                          <span>{srcCfg.tag}</span>
+                        </span>
+                        <span
+                          style={{
+                            fontWeight: 'var(--fw-bold)',
+                            color: 'var(--text-strong)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {src?.label || 'Nguồn khác'}
+                        </span>
+                      </div>
+                      {src?.note && (
+                        <span
+                          style={{
+                            font: 'var(--type-caption)',
+                            color: srcCfg.color,
+                            fontSize: '11px',
+                            fontWeight: 'var(--fw-semibold)',
+                            marginTop: -1,
+                            paddingLeft: 2,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {src.note}
+                        </span>
                       )}
-                    </span>
-                    {settings && (
-                      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {vpaScheduleWindowLabel(settings, r.source)}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 1 }}>
+                        <span
+                          style={{
+                            padding: '1px 6px',
+                            borderRadius: 4,
+                            background: isCar(r.vehicle) ? 'var(--blue-50, #eff6ff)' : 'var(--mint-50, #ecfdf5)',
+                            color: isCar(r.vehicle) ? 'var(--blue-700, #1d4ed8)' : 'var(--status-success-ink, #065f46)',
+                            font: 'var(--type-caption)',
+                            fontSize: '11px',
+                            fontWeight: 'var(--fw-medium)',
+                            whiteSpace: 'nowrap',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          {r.vehicle == null ? 'Cả hai' : isCar(r.vehicle) ? (
+                            <>
+                              <Car size={12} /> Ô tô
+                            </>
+                          ) : (
+                            <>
+                              <Bike size={12} /> Xe máy
+                            </>
+                          )}
+                        </span>
+                        {settings && (
+                          <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {vpaScheduleWindowLabel(settings, r.source)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Cột 3: Trạng thái & Khởi tạo */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start', minWidth: 0, overflow: 'hidden' }}>
@@ -648,7 +704,7 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
       </div>
 
       {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} size="sm" />}
-      {detail && <VpaRunDetail run={detail} onClose={() => setDetail(null)} notify={notify} />}
+      {detail && <VpaRunDetail run={detail} onClose={() => setDetail(null)} notify={notify} settings={settings} />}
     </div>
   );
 }
