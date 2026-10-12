@@ -550,7 +550,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
       {/* Danh sách Khách hàng */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
         <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div style={{ minWidth: 880 }}>
+          <div style={{ minWidth: 990 }}>
             {/* Table Header với SortHeader */}
             <div style={{
               display: 'flex',
@@ -595,7 +595,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
                 </span>
               )}
               {isVisible('actions') && (
-                <span style={{ flex: '0 0 220px', textAlign: 'right' }}>Hành động</span>
+                <span style={{ flex: '0 0 270px', textAlign: 'right' }}>Hành động</span>
               )}
             </div>
 
@@ -782,7 +782,14 @@ export default function AdminCustomers({ st, setSt, notify }) {
                   {/* Cột Hành động */}
                   {isVisible('actions') && (
                     <div
-                      style={{ flex: '0 0 220px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}
+                      style={{
+                        flex: '0 0 270px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        gap: 6,
+                        flexShrink: 0,
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Nút Xem chi tiết */}
@@ -794,21 +801,28 @@ export default function AdminCustomers({ st, setSt, notify }) {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
-                          padding: '5px 8px',
+                          height: 28,
+                          padding: '0 8px',
                           borderRadius: 'var(--radius-field)',
                           border: '1px solid var(--border-hairline)',
                           background: 'var(--white)',
                           color: 'var(--text-strong)',
                           font: 'var(--type-caption)',
-                          cursor: 'pointer'
+                          fontSize: 12,
+                          fontWeight: 'var(--fw-medium)',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          cursor: 'pointer',
                         }}
                       >
-                        <Eye size={13} /> Chi tiết
+                        <Eye size={13} style={{ flexShrink: 0 }} /> Chi tiết
                       </button>
 
                       {/* Nút Khóa / Mở khóa */}
                       {updatingId === c.id ? (
-                        <Loader2 size={16} className="bsd-spin" style={{ color: 'var(--text-muted)', margin: '0 8px' }} />
+                        <div style={{ width: 56, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+                          <Loader2 size={16} className="bsd-spin" style={{ color: 'var(--text-muted)' }} />
+                        </div>
                       ) : (
                         <button
                           type="button"
@@ -818,16 +832,21 @@ export default function AdminCustomers({ st, setSt, notify }) {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 4,
-                            padding: '5px 8px',
+                            height: 28,
+                            padding: '0 8px',
                             borderRadius: 'var(--radius-field)',
                             border: '1px solid var(--border-hairline)',
                             background: 'var(--white)',
                             color: c.status === 'locked' ? 'var(--intent-success)' : 'var(--text-strong)',
                             font: 'var(--type-caption)',
-                            cursor: 'pointer'
+                            fontSize: 12,
+                            fontWeight: 'var(--fw-medium)',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            cursor: 'pointer',
                           }}
                         >
-                          {c.status === 'locked' ? <Unlock size={13} /> : <Lock size={13} />}
+                          {c.status === 'locked' ? <Unlock size={13} style={{ flexShrink: 0 }} /> : <Lock size={13} style={{ flexShrink: 0 }} />}
                           {c.status === 'locked' ? 'Mở' : 'Khóa'}
                         </button>
                       )}
@@ -841,16 +860,21 @@ export default function AdminCustomers({ st, setSt, notify }) {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
-                          padding: '5px 8px',
+                          height: 28,
+                          padding: '0 8px',
                           borderRadius: 'var(--radius-field)',
                           border: '1px solid var(--border-hairline)',
                           background: 'var(--white)',
                           color: 'var(--text-strong)',
                           font: 'var(--type-caption)',
-                          cursor: 'pointer'
+                          fontSize: 12,
+                          fontWeight: 'var(--fw-medium)',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          cursor: 'pointer',
                         }}
                       >
-                        <KeyRound size={13} /> Đổi MK
+                        <KeyRound size={13} style={{ flexShrink: 0 }} /> Đổi MK
                       </button>
 
                       {/* Nút Xóa (Super admin) */}
@@ -862,16 +886,19 @@ export default function AdminCustomers({ st, setSt, notify }) {
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            padding: '5px 7px',
+                            justifyContent: 'center',
+                            height: 28,
+                            width: 28,
+                            padding: 0,
                             borderRadius: 'var(--radius-field)',
                             border: '1px solid rgba(239, 68, 68, 0.2)',
                             background: 'rgba(239, 68, 68, 0.06)',
                             color: 'var(--intent-danger)',
-                            font: 'var(--type-caption)',
-                            cursor: 'pointer'
+                            flexShrink: 0,
+                            cursor: 'pointer',
                           }}
                         >
-                          <Trash2 size={13} />
+                          <Trash2 size={13} style={{ flexShrink: 0 }} />
                         </button>
                       )}
                     </div>
