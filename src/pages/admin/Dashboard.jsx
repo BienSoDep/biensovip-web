@@ -23,6 +23,10 @@ import {
 } from './dashboard/DashboardAdvancedCharts.jsx';
 import SystemHealthWidget from './dashboard/SystemHealthWidget.jsx';
 import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
+import {
+  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+} from 'recharts';
 import KpiCard from './dashboard/DashboardKpiCard.jsx';
 import {
   PIE_COLORS, TrafficSourcesPie, TopPlatesTable,
