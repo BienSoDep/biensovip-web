@@ -33,30 +33,73 @@ const ROLE_OPTS = [
 const ROLE_LABEL = { 'super-admin': 'Quản trị viên', staff: 'Nhân viên' };
 
 // Nhóm theo loại nghiệp vụ — cho phép chọn nhanh cả nhóm
+// Nhóm theo loại nghiệp vụ — đầy đủ toàn bộ các phân hệ và trang trong Admin
 const PERM_GROUPS = [
-  ['Kinh doanh & Bán hàng', [
-    ['plates', 'Biển số'], ['categories', 'Danh mục'], ['transactions', 'Giao dịch'],
-    ['contacts', 'Yêu cầu liên hệ'], ['customers', 'Khách hàng'], ['collaborators', 'Cộng tác viên'],
-    ['ctv_message_templates', 'Mẫu tin nhắn CTV'], ['reviews', 'Đánh giá'],
+  ['Kho biển số & Đấu giá VPA', [
+    ['plates', 'Biển số (Kho Shop)'],
+    ['vpa_prices', 'Biển đấu giá VPA & Thống kê VPA'],
+    ['categories', 'Danh mục (Tỉnh & Loại biển)'],
+  ]],
+  ['Bán hàng & Khách hàng', [
+    ['contacts', 'Yêu cầu liên hệ & Bán hàng'],
+    ['interest-leads', 'Khách quan tâm (Interest Leads)'],
+    ['customers', 'Khách hàng'],
+    ['transactions', 'Giao dịch & Báo cáo chốt deal'],
+    ['coupons', 'Mã giảm giá'],
+    ['payment_links', 'Link thanh toán'],
+  ]],
+  ['Phân tích & Tương tác', [
+    ['analytics', 'Insight & Phân tích khách hàng'],
+    ['reviews', 'Đánh giá khách hàng'],
+    ['notifications', 'Thông báo nội bộ & đẩy'],
+    ['chatbot', 'Trợ lý AI'],
+  ]],
+  ['Cộng tác viên (CTV)', [
+    ['collaborators', 'Cộng tác viên & Nội dung CTV'],
+    ['ctv_message_templates', 'Mẫu tin nhắn CTV'],
+    ['risk_events', 'Rủi ro & Gian lận CTV'],
   ]],
   ['Nội dung & Marketing', [
-    ['posts', 'Bài viết'], ['videos', 'Video'], ['meanings', 'Ý nghĩa phong thủy'],
-    ['notifications', 'Thông báo'], ['email_templates', 'Mẫu email'], ['subscribers', 'Người đăng ký nhận tin'],
-    ['policy_pages', 'Trang chính sách'], ['chatbot', 'Trợ lý AI'],
+    ['posts', 'Blog & Bài viết'],
+    ['videos', 'Video quảng bá'],
+    ['meanings', 'Ý nghĩa phong thủy'],
+    ['policy_pages', 'Trang chính sách & Điều khoản'],
+    ['email_templates', 'Mẫu email hệ thống'],
+    ['subscribers', 'Người đăng ký nhận tin'],
   ]],
   ['Kỹ thuật & Hệ thống', [
-    ['maintenance', 'Bảo trì hệ thống'], ['vanity_metrics', 'Số liệu hiển thị'],
-    ['audit_logs', 'Nhật ký audit'], ['error_logs', 'Nhật ký lỗi hệ thống'],
-    ['db_console', 'DB console (chỉ xem)'], ['feature_flags', 'Feature flags'],
+    ['settings', 'Thứ tự hiển thị & Cài đặt'],
+    ['vanity_metrics', 'Số liệu hiển thị trang Public'],
+    ['maintenance', 'Bảo trì hệ thống'],
+    ['feature_flags', 'Feature flags & Công cụ vận hành'],
+    ['audit_logs', 'Nhật ký hệ thống (Audit log)'],
+    ['error_logs', 'Nhật ký lỗi hệ thống'],
+    ['db_console', 'DB Console (chỉ xem)'],
   ]],
 ];
 const PERM_RESOURCES = PERM_GROUPS.flatMap(([, items]) => items);
 const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
-const RECOMMENDED = PERM_RESOURCES.flatMap(([r]) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+// Preset Dev: Xem toàn bộ tất cả các trang + quyền bật/tắt Feature flags
 const DEV_PRESET = [
-  ...PERM_RESOURCES.filter(([r]) => r !== 'feature_flags').map(([r]) => `${r}:view`),
-  'feature_flags:view', 'feature_flags:update',
+  ...PERM_RESOURCES.map(([r]) => `${r}:view`),
+  'feature_flags:update',
 ];
+
+// Preset Nhân viên vận hành (Staff nghiệp vụ): Xem + Thêm + Sửa cho toàn bộ kinh doanh, VPA, CTV, nội dung
+const OPERATOR_RESOURCES = [
+  'plates', 'vpa_prices', 'categories', 'contacts', 'interest-leads', 'customers',
+  'transactions', 'coupons', 'payment_links', 'analytics', 'reviews', 'notifications',
+  'chatbot', 'collaborators', 'ctv_message_templates', 'posts', 'videos', 'meanings',
+  'policy_pages', 'email_templates', 'subscribers'
+];
+const OPERATOR_PRESET = OPERATOR_RESOURCES.flatMap((r) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+// Mặc định: Xem + Thêm + Sửa trên tất cả các phân hệ
+const RECOMMENDED = PERM_RESOURCES.flatMap(([r]) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+// Chọn hết toàn bộ quyền (Xem, Thêm, Sửa, Xóa)
+const ALL_PERMS = PERM_RESOURCES.flatMap(([r]) => PERM_ACTIONS.map(([a]) => `${r}:${a}`));
 
 const slugify = (s) => (s || '').toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 
@@ -833,18 +876,52 @@ export default function AdminStaff({ notify }) {
                 <span style={{ font: 'var(--type-label)', fontWeight: 700, color: 'var(--text-strong)' }}>
                   Ma trận phân quyền chức năng
                 </span>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <button type="button" onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>
-                    Mặc định (Xem + Sửa)
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, permissions: DEV_PRESET }))}
+                    title="Cấp quyền xem tất cả các trang/phân hệ cho Dev/Tester (kèm bật/tắt Feature flags)"
+                    style={{ font: 'var(--type-caption)', color: '#0284c7', background: 'rgba(2, 132, 199, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(2, 132, 199, 0.25)', fontWeight: 600 }}
+                  >
+                    Preset Dev (Chỉ xem)
                   </button>
-                  <button type="button" onClick={() => setForm((f) => ({ ...f, permissions: DEV_PRESET }))} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>
-                    Chỉ xem (Dev)
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, permissions: OPERATOR_PRESET }))}
+                    title="Cấp quyền Xem + Thêm + Sửa cho các trang nghiệp vụ (Biển số, VPA, Bán hàng, Khách hàng, CTV, Nội dung...)"
+                    style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', background: 'rgba(199, 91, 0, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(199, 91, 0, 0.25)', fontWeight: 600 }}
+                  >
+                    Nhân viên vận hành
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))}
+                    title="Cấp quyền Xem + Thêm + Sửa cho tất cả các phân hệ"
+                    style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', background: 'var(--surface-sunken)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border-hairline)' }}
+                  >
+                    Tất cả (Xem + Sửa)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, permissions: ALL_PERMS }))}
+                    title="Chọn toàn bộ quyền (Xem, Thêm, Sửa, Xóa)"
+                    style={{ font: 'var(--type-caption)', color: '#059669', background: 'rgba(5, 150, 105, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(5, 150, 105, 0.25)' }}
+                  >
+                    Chọn hết
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, permissions: [] }))}
+                    title="Bỏ chọn toàn bộ quyền"
+                    style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', background: 'none', padding: '3px 6px', cursor: 'pointer', border: 'none' }}
+                  >
+                    Bỏ chọn
                   </button>
                 </div>
               </div>
 
-              <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 52px)', background: 'var(--surface-sunken)', padding: '10px 14px', font: 'var(--type-caption)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden', maxHeight: '52vh', overflowY: 'auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 52px)', background: 'var(--surface-sunken)', padding: '10px 14px', font: 'var(--type-caption)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', position: 'sticky', top: 0, zIndex: 2 }}>
                   <span>Phân hệ</span>
                   {PERM_ACTIONS.map(([, l]) => <span key={l} style={{ textAlign: 'center' }}>{l}</span>)}
                 </div>

@@ -53,12 +53,12 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
 const NAV_PERM = {
-  aplates: 'plates:view', avpa: 'vpa_prices:view', acoupons: 'plates:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
+  aplates: 'plates:view', avpa: 'vpa_prices:view', acoupons: 'coupons:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
   achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view', asortsettings: 'settings:view',
-  aauditlog: 'audit_logs:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
+  aauditlog: 'audit_logs:view', arisklog: 'risk_events:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
   apolicypages: 'policy_pages:view',
   actvtemplates: 'ctv_message_templates:view',
   ainsights: 'analytics:view',
@@ -68,10 +68,10 @@ const NAV_PERM = {
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
 // Mục menu nào vai trò hiện tại được thấy. Sidebar lọc bằng hàm này; AdminGuide suy thẳng từ đây
-// nên hướng dẫn không thể lệch khỏi menu thật (trước đây AdminGuide tự chép tay danh sách mục →
-// đã lệch: còn nhắc 'Mẫu email'/'Rủi ro CTV' đã gộp thành tab, thiếu 16 mục đang có).
+// nên hướng dẫn không thể lệch khỏi menu thật.
 export const canSeeNav = (st, navKey) => {
-  if (navKey === 'astaff' || navKey === 'arisklog') return st.user?.role === 'super-admin';
+  if (navKey === 'astaff') return st.user?.role === 'super-admin';
+  if (navKey === 'arisklog') return st.user?.role === 'super-admin' || canPerm(st, 'risk_events:view');
   const perm = NAV_PERM[navKey];
   return !perm || canPerm(st, perm);
 };
