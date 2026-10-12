@@ -68,11 +68,13 @@ export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChan
                 key={t.key}
                 type="button"
                 role="tab"
+                title={t.title || t.note || t.tip || `Chuyển sang tab ${t.label}`}
                 aria-selected={isActive}
                 onClick={() => handleSelect(t.key)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  gap: 6,
                   height: 36,
                   padding: '0 16px',
                   border: 'none',
@@ -86,7 +88,21 @@ export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChan
                   transition: 'all 140ms ease',
                 }}
               >
-                {t.label}
+                <span>{t.label}</span>
+                {t.count != null && (
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      padding: '1px 6px',
+                      borderRadius: 'var(--radius-pill)',
+                      background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--surface-sunken)',
+                      color: isActive ? '#ffffff' : 'var(--text-muted)',
+                      fontWeight: 'var(--fw-semibold)',
+                    }}
+                  >
+                    {t.count}
+                  </span>
+                )}
               </button>
             );
           })}

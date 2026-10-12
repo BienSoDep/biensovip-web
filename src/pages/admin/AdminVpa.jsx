@@ -17,11 +17,11 @@ export default function AdminVpa({ notify, isSuperAdmin, go }) {
   });
 
   const tabs = [
-    { key: 'plates', label: 'Danh sách biển VPA', render: () => <VpaAdminList key="plates" notify={notify} onOpenGuide={() => setTabKey('guide')} /> },
-    { key: 'queue', label: 'Duyệt giá', render: () => <VpaAdminList key="queue" queue notify={notify} onOpenGuide={() => setTabKey('guide')} /> },
-    { key: 'auction-results', label: 'Kết quả đấu giá', render: () => <VpaAuctionResults /> },
-    { key: 'sync', label: 'Đồng bộ & cấu hình', render: () => <VpaOverview notify={notify} isSuperAdmin={isSuperAdmin} /> },
-    { key: 'guide', label: 'Hướng dẫn quy trình & nút bấm', render: () => <VpaWorkflowGuide onNavigateTab={(k) => setTabKey(k)} /> },
+    { key: 'plates', label: 'Danh sách biển VPA', title: 'Quản lý toàn bộ danh sách biển đấu giá VPA (công bố, chính thức, hết hạn)', render: () => <VpaAdminList key="plates" notify={notify} onOpenGuide={() => setTabKey('guide')} /> },
+    { key: 'queue', label: 'Duyệt giá', title: 'Hàng đợi các biển số có giá gợi ý đang chờ admin phê duyệt trước khi công khai cho khách', render: () => <VpaAdminList key="queue" queue notify={notify} onOpenGuide={() => setTabKey('guide')} /> },
+    { key: 'auction-results', label: 'Kết quả đấu giá', title: 'Kho dữ liệu kết quả các phiên đấu giá đã kết thúc, dùng làm mẫu tính giá gợi ý', render: () => <VpaAuctionResults /> },
+    { key: 'sync', label: 'Đồng bộ & cấu hình', title: 'Cấu hình lịch trình tự động cào, nguồn dữ liệu và kiểm tra liêm chính dữ liệu', render: () => <VpaOverview notify={notify} isSuperAdmin={isSuperAdmin} /> },
+    { key: 'guide', label: 'Hướng dẫn quy trình & nút bấm', title: 'Cẩm nang hướng dẫn chi tiết quy trình duyệt giá, mã màu trạng thái và chức năng nút bấm', render: () => <VpaWorkflowGuide onNavigateTab={(k) => setTabKey(k)} /> },
   ];
 
   return (

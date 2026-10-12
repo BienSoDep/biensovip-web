@@ -103,12 +103,19 @@ const quickSelectBtn = { border: 'none', background: 'none', padding: '6px 10px'
 const roundBtn = { width: 36, height: 36, borderRadius: '50%', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
 
 function SortHeader({ sort, toggleSort, label, sortKey, style, tip }) {
+  const isSorted = sort?.key === sortKey;
+  const dirLabel = isSorted ? (sort.dir === 'asc' ? 'đang tăng dần — bấm để giảm dần' : 'đang giảm dần — bấm để tăng dần') : 'bấm để sắp xếp';
   return (
     <span style={{ ...style, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-      <button type="button" onClick={() => toggleSort(sortKey)} aria-sort={sort?.key === sortKey ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit' }}>
+      <button
+        type="button"
+        onClick={() => toggleSort(sortKey)}
+        aria-sort={isSorted ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
+        title={tip ? `${label}: ${tip} (${dirLabel})` : `Sắp xếp theo ${label} (${dirLabel})`}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit' }}
+      >
         {label}
-        {sort?.key === sortKey ? (sort.dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
+        {isSorted ? (sort.dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
       </button>
       {tip && <InfoTip size={12} text={tip} />}
     </span>
@@ -264,7 +271,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
     <div style={{ position: 'relative' }}>
       <button
         type="button"
-        title="Thao tác khác"
+        title="Thao tác khác (Từ chối giá, Duyệt cả nhóm, Ẩn/Hiện, Ghim, Sao chép, Xem trang khách)"
         aria-label="Thao tác khác"
         onClick={() => setOpen((v) => !v)}
         style={{
@@ -289,7 +296,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-4)',
               padding: 4,
-              minWidth: 175,
+              minWidth: 185,
               display: 'flex',
               flexDirection: 'column',
               gap: 2,
@@ -299,6 +306,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               <button
                 type="button"
                 onClick={() => { setOpen(false); onReject(); }}
+                title="Từ chối giá gợi ý — chuyển trạng thái về Đã từ chối"
                 style={menuItemStyle}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -311,6 +319,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               <button
                 type="button"
                 onClick={() => { setOpen(false); onGroupApprove(); }}
+                title="Duyệt giá gợi ý cho toàn bộ biển trong cùng nhóm tương đồng"
                 style={menuItemStyle}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -322,16 +331,20 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
             <button
               type="button"
               onClick={() => { setOpen(false); onToggleHide(); }}
+              title={plate.isHidden ? 'Bỏ ẩn — Cho phép khách hàng nhìn thấy biển này trên web' : 'Ẩn khỏi khách — Khách truy cập web sẽ không nhìn thấy biển này'}
               style={menuItemStyle}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
             >
-              {plate.isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
-              <span>{plate.isHidden ? 'Hiện biển' : 'Ẩn khỏi khách'}</span>
+              {plate.isHidden ? <Eye size={14} color="#059669" /> : <EyeOff size={14} />}
+              <span style={plate.isHidden ? { color: '#059669', fontWeight: 600 } : undefined}>
+                {plate.isHidden ? 'Bỏ ẩn (Hiện lại)' : 'Ẩn khỏi khách'}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => { setOpen(false); onTogglePin(); }}
+              title={plate.isPinned ? 'Bỏ ghim khỏi đầu danh sách' : 'Ghim biển số lên đầu danh sách quản trị'}
               style={menuItemStyle}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -342,6 +355,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
             <button
               type="button"
               onClick={() => { setOpen(false); onCopy(); }}
+              title="Sao chép số biển vào bộ nhớ tạm"
               style={menuItemStyle}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -354,6 +368,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               target="_blank"
               rel="noreferrer"
               onClick={() => setOpen(false)}
+              title="Xem trang công khai của biển số này trên website"
               style={{ ...menuItemStyle, textDecoration: 'none' }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -588,7 +603,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
   };
   const changeTab = (p, tab) => run(() => update.mutateAsync({ id: p.id, body: { tab: Number(tab) } }), 'Đã đổi tab (khóa, crawl không ghi đè)');
   const toggleFeatured = (p) => run(() => update.mutateAsync({ id: p.id, body: { isFeatured: !p.isFeatured } }), p.isFeatured ? 'Đã bỏ nổi bật' : 'Đã đánh dấu nổi bật');
-  const toggleHide = (p) => run(() => hide.mutateAsync({ id: p.id, value: !p.isHidden }), p.isHidden ? 'Đã hiện biển' : 'Đã ẩn biển');
+  const toggleHide = (p) => run(() => hide.mutateAsync({ id: p.id, value: !p.isHidden }), p.isHidden ? 'Đã bỏ ẩn (biển đã hiển thị lại ngoài website)' : 'Đã ẩn biển khỏi khách hàng');
   const togglePin = (p) => run(() => pin.mutateAsync({ id: p.id, value: !p.isPinned }), p.isPinned ? 'Đã bỏ ghim' : 'Đã ghim lên đầu');
   const pending = (p) => p.priceState === 1 || p.priceState === 4;
 
@@ -612,10 +627,10 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
 
   const flags = (p, size) => (
     <>
-      <button type="button" onClick={() => toggleFeatured(p)} title={p.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}>
+      <button type="button" onClick={() => toggleFeatured(p)} title={p.isFeatured ? 'Bỏ nổi bật (hiện đang là biển nổi bật)' : 'Đánh dấu nổi bật để ưu tiên hiển thị'} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}>
         <Star size={size} fill={p.isFeatured ? 'var(--amber-500)' : 'none'} color={p.isFeatured ? 'var(--amber-500)' : 'var(--grey-300)'} />
       </button>
-      {p.isPinned && <Pin size={size} color="var(--action-primary)" aria-label="Đã ghim" />}
+      {p.isPinned && <span title="Biển được ghim lên đầu danh sách quản trị" style={{ display: 'inline-flex' }}><Pin size={size} color="var(--action-primary)" aria-label="Đã ghim" /></span>}
       {p.lockedFields > 0 && <span title={VPA_HELP.lock} style={{ display: 'inline-flex' }}><Lock size={size - 1} color="var(--text-muted)" /></span>}
     </>
   );

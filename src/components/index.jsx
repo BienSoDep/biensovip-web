@@ -373,10 +373,10 @@ export function Icon({ name, size = 18 }) {
   return I ? <I size={size} /> : null;
 }
 
-export function IconButton({ name, label, onClick, size = 'md', style, disabled, className }) {
+export function IconButton({ name, label, title, onClick, size = 'md', style, disabled, className }) {
   const px = size === 'lg' ? 48 : size === 'sm' ? 36 : 44;
   return (
-    <button type="button" aria-label={label} onClick={onClick} disabled={disabled}
+    <button type="button" aria-label={label} title={title || label} onClick={onClick} disabled={disabled}
       className={`icon-btn pressable ${className || ''}`}
       style={{
         width: px, height: px, borderRadius: '50%', border: 'none', background: 'var(--surface-muted)',

@@ -163,11 +163,16 @@ export const VPA_LOCK_FLAGS = [
 
 // Giải thích hiển thị ở tiêu đề cột / khung "Về trang này".
 export const VPA_HELP = {
+  plateNumber: 'Số biển đăng ký đấu giá theo định dạng phôi chuẩn Bộ Công An.',
+  plateType: 'Phân loại biển số đẹp (Ngũ quý, Tứ quý, Thần tài, Tam hoa, Lộc phát, Tiến lên...).',
+  vehicle: 'Phương tiện đăng ký biển số (Ô tô hoặc Xe máy).',
+  province: 'Tỉnh hoặc thành phố trực thuộc Trung ương nơi cấp biển số.',
   tab: 'Tháng = biển sắp đấu giá (công bố trước). Tuần = có phiên trong tuần. Hết hạn = phiên đã qua. Hết hạn nội bộ = biến mất khỏi VPA, chỉ Admin thấy, không hiện cho khách.',
   startingPrice: 'Giá khởi điểm VPA công bố cho biển. Chỉ Admin thấy, không bao giờ hiện cho khách.',
   suggested: 'Giá gợi ý = TB giá trúng của các biển đấu giá cùng tỉnh trùng khớp số đuôi × hệ số. Nếu chưa có mẫu đấu giá trùng đuôi, lấy Giá khởi điểm × hệ số.',
   approved: 'Giá khách thấy sau khi bạn duyệt. Chưa duyệt thì khách thấy "Giá liên hệ". Giá này không tự đổi khi crawl.',
   priceState: 'Chưa có gợi ý = nhóm chưa đủ mẫu. Có gợi ý = chờ duyệt. Đã duyệt = đang hiện cho khách. Từ chối = không dùng gợi ý. Đề xuất đổi giá = có gợi ý mới lệch quá % so với giá đã duyệt (giá khách thấy chưa đổi).',
+  updatedAt: 'Thời gian cập nhật dữ liệu gần nhất từ lượt cào VPA hoặc do Admin chỉnh sửa.',
   featured: 'Biển nổi bật (ngũ quý, lộc phát…). Xếp trước trong danh sách khách và được đưa vào sitemap khi đang ở tab Tháng/Tuần.',
   manual: 'Biển Admin thêm tay, không có trong dữ liệu VPA. Crawl không đổi tab hay đánh dấu biến mất.',
   lock: 'Trường bạn đã sửa tay được khóa: crawl VPA sẽ không ghi đè. Bấm "Trả về theo VPA" để bỏ khóa.',
@@ -175,6 +180,9 @@ export const VPA_HELP = {
   approveRecomputed: 'Nguồn Công bố/Chính thức thường đi chậm hơn Kết quả đấu giá — lúc duyệt lần đầu, nhóm giá có thể chưa đủ mẫu nên giá gợi ý còn thiếu hoặc kém chính xác. Nút này tính lại giá mọi nhóm theo dữ liệu mới nhất, rồi áp giá gợi ý mới cho các biển đã duyệt — CHỈ với biển nghi chưa từng bị sửa giá tay (giá đã duyệt trùng giá gợi ý tại thời điểm đó). Biển Admin đã tự sửa giá khác giá gợi ý sẽ được giữ nguyên, không đổi.',
   approveRecomputedOverride: 'Giống "Duyệt lại giá toàn bộ", nhưng áp cho MỌI biển đã duyệt — kể cả biển nghi Admin đã sửa giá tay khác giá gợi ý. Có thể ghi đè mất giá bạn đã cố ý chỉnh (ví dụ theo thỏa thuận riêng với khách). Chỉ dùng khi chắc chắn muốn đồng bộ lại toàn bộ theo công thức.',
   approveMatchedSamples: 'Rà soát các biển đã được duyệt giá dựa trên giá khởi điểm mặc định (chưa có mẫu đấu giá). Hệ thống sẽ tìm trong dữ liệu kết quả đấu giá thực tế vừa cào về; nếu tìm thấy kết quả đấu giá thật, hệ thống sẽ tính lại giá gợi ý chuẩn và tự động cập nhật giá duyệt mới cho biển.',
+  hidden: 'Biển đang ẩn khỏi khách hàng trên sàn (admin có thể bấm Bỏ ẩn để khách thấy).',
+  dupShop: 'Tự động ẩn do trùng số với biển số trong kho shop (tránh hiển thị trùng lặp trên sàn).',
+  dupRows: 'Tự động ẩn do trùng lặp bản ghi trong dữ liệu cào VPA.',
 };
 
 /**
