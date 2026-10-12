@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 // Trang admin gộp nhiều trang con thành tab ngang — dùng cho các nhóm chức năng liên quan chặt
 // (VD Blog+Bình luận, Nhật ký hệ thống/lỗi/rủi ro CTV, Báo cáo & Phân tích VPA).
@@ -18,7 +18,6 @@ export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChan
   };
 
   const [active, setActive] = useState(getInitialActive);
-  const tabKeys = useMemo(() => tabs.map((t) => t.key).join(','), [tabs]);
 
   // Lắng nghe popstate (Back/Forward trình duyệt) để đồng bộ tab theo URL
   useEffect(() => {
@@ -39,26 +38,7 @@ export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChan
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [subtabParam, onTabChange, tabKeys, initialTab]);
-
-  // Đồng bộ khi initialTab thay đổi giá trị cụ thể từ parent (dùng ref để tránh reset khi re-render)
-  const prevInitialRef = useRef(initialTab);
-  useEffect(() => {
-    if (initialTab && initialTab !== prevInitialRef.current) {
-      prevInitialRef.current = initialTab;
-      if (tabs.some((t) => t.key === initialTab)) {
-        setActive(initialTab);
-      }
-    }
-  }, [initialTab, tabKeys]);
-
-  // Fallback nếu tab hiện tại không còn tồn tại trong danh sách tabs
-  useEffect(() => {
-    const currentActive = activeTab || active;
-    if (!tabs.some((t) => t.key === currentActive)) {
-      setActive(initialTab || tabs[0]?.key);
-    }
-  }, [tabKeys, activeTab, active, initialTab]);
+  }, [tabs, subtabParam, initialTab, onTabChange]);
 
   const handleSelect = (key) => {
     setActive(key);
@@ -72,8 +52,10 @@ export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChan
     }
   };
 
-  const effectiveKey = activeTab || active;
-  const current = tabs.find((t) => t.key === effectiveKey) || tabs[0];
+  // Xác định tab thực tế ngay trong render: ưu tiên activeTab (nếu controlled) hoặc active (uncontrolled),
+  // fallback an toàn về initialTab hoặc tab đầu tiên mà không gây cascading render.
+  const rawKey = activeTab || active;
+  const current = tabs.find((t) => t.key === rawKey) || (initialTab && tabs.find((t) => t.key === initialTab)) || tabs[0];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
