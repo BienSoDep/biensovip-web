@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
-import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3 } from 'lucide-react';
+import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3, ArrowRight } from 'lucide-react';
 import { routeFor } from '../../config/routes.js';
 import { InfoTip } from '../../components/index.jsx';
 import {
