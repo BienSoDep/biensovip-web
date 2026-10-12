@@ -17,20 +17,34 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
 
   const [active, setActive] = useState(getInitialActive);
 
-  // Sync if tabs or initialTab change dynamically
+  // Lắng nghe popstate (Back/Forward trình duyệt) để đồng bộ tab theo URL
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const qTab = params.get(subtabParam) || params.get('subtab');
       if (qTab && tabs.some((t) => t.key === qTab)) {
         setActive(qTab);
-        return;
+        onTabChange?.(qTab);
       }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [tabs, subtabParam, onTabChange]);
+
+  // Đồng bộ khi initialTab thay đổi từ parent component
+  useEffect(() => {
+    if (initialTab && tabs.some((t) => t.key === initialTab)) {
+      setActive(initialTab);
     }
+  }, [initialTab, tabs]);
+
+  // Fallback nếu tab hiện tại không còn tồn tại trong danh sách tabs
+  useEffect(() => {
     if (!tabs.some((t) => t.key === active)) {
       setActive(initialTab || tabs[0]?.key);
     }
-  }, [tabs, initialTab]);
+  }, [tabs, active, initialTab]);
 
   const handleSelect = (key) => {
     setActive(key);
@@ -38,7 +52,7 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
     if (typeof window !== 'undefined') {
       try {
         const url = new URL(window.location.href);
-        url.searchParams.set('tab', key);
+        url.searchParams.set(subtabParam, key);
         window.history.replaceState(null, '', url.toString());
       } catch { /* ignore */ }
     }
