@@ -22,6 +22,7 @@ import {
   LeadPipelineHealthCard,
 } from './dashboard/DashboardAdvancedCharts.jsx';
 import SystemHealthWidget from './dashboard/SystemHealthWidget.jsx';
+import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
 import KpiCard from './dashboard/DashboardKpiCard.jsx';
 import {
   PIE_COLORS, TrafficSourcesPie, TopPlatesTable,
