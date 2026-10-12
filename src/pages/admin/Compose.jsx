@@ -614,8 +614,31 @@ export default function Compose({ st, patch, notify }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ flex: '2 1 520px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+    <div
+      className="compose-split-layout"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1.45fr) minmax(360px, 1fr)',
+        gap: 'var(--gutter-section, 24px)',
+        alignItems: 'stretch',
+        flex: '1 1 auto',
+        minHeight: 0,
+        height: '100%',
+        animation: 'pageIn 180ms var(--ease-out)',
+      }}
+    >
+      {/* Cột trái: Soạn thảo — cuộn độc lập */}
+      <div
+        className="compose-column-left"
+        style={{
+          height: '100%',
+          overflowY: 'auto',
+          paddingRight: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-4)',
+        }}
+      >
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <Input label="Tiêu đề" placeholder="VD: Ngũ quý 99999 — vì sao đắt nhất?" value={title} error={err?.field === 'title' ? err.message : undefined} onChange={onTitleChange} required />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -854,8 +877,18 @@ export default function Compose({ st, patch, notify }) {
         </div>
       </div>
 
-      {/* Cột preview — sticky, cuộn riêng khi form dài hơn viewport */}
-      <div style={{ flex: '1 1 380px', minWidth: 0, position: 'sticky', top: 'var(--space-4)', maxHeight: 'calc(100vh - var(--space-8))', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {/* Cột phải: Đánh giá SEO & Xem trước — cuộn độc lập */}
+      <div
+        className="compose-column-right"
+        style={{
+          height: '100%',
+          overflowY: 'auto',
+          paddingRight: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-4)',
+        }}
+      >
         {/* Thẻ Đánh giá chất lượng & Chuẩn SEO */}
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>

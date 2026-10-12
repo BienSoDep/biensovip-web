@@ -408,3 +408,4 @@ export function Avatar({ name, size = 'sm' }) {
 }
 
 export { default as PlateIssueTip } from './PlateIssueTip.jsx';
+export { TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from './table/TableColumnMenu.jsx';

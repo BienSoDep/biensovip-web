@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
 // Style pill-tab copy từ AdminContacts.jsx.
 // `tabs`: [{ key, label, render: () => ReactNode }] — ẩn tab nào không truyền (VD thiếu quyền).
 // `initialTab`: key tab mặc định khi vào trang lần đầu hoặc key đó không còn trong danh sách hiện tại.
-export default function AdminTabbedPage({ tabs, initialTab, onTabChange }) {
+export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabParam = 'tab' }) {
   const getInitialActive = () => {
     if (typeof window !== 'undefined') {
-      const qTab = new URLSearchParams(window.location.search).get('tab');
+      const params = new URLSearchParams(window.location.search);
+      const qTab = params.get(subtabParam) || params.get('subtab');
       if (qTab && tabs.some((t) => t.key === qTab)) return qTab;
     }
     return initialTab || tabs[0]?.key;
@@ -19,7 +20,8 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange }) {
   // Sync if tabs or initialTab change dynamically
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const qTab = new URLSearchParams(window.location.search).get('tab');
+      const params = new URLSearchParams(window.location.search);
+      const qTab = params.get(subtabParam) || params.get('subtab');
       if (qTab && tabs.some((t) => t.key === qTab)) {
         setActive(qTab);
         return;

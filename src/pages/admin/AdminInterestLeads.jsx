@@ -15,7 +15,6 @@ import {
   Copy,
   Check,
   ExternalLink,
-  ShieldAlert,
   Sparkles,
   Users
 } from 'lucide-react';
@@ -27,12 +26,20 @@ import {
   useMarkInterestLeadContacted
 } from '../../services/adminInterestLeads.js';
 import { timeAgo, formatDateTime } from '../../lib/date.js';
-import { Badge } from '../../components/index.jsx';
+import { Badge, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Button from '../../components/Button.jsx';
 import Pagination from '../../components/Pagination.jsx';
 import { loadAuth } from '../../lib/authStore.js';
 import { toZaloUrl } from '../../lib/zaloMessage.js';
+
+export const LEAD_COLUMNS = [
+  { key: 'customer', label: 'Khách hàng tiềm năng', default: true },
+  { key: 'plate', label: 'Biển số quan tâm', default: true },
+  { key: 'signal', label: 'Tín hiệu hành vi', default: true },
+  { key: 'time', label: 'Thời gian tương tác', default: true },
+  { key: 'actions', label: 'Xử lý tư vấn', default: true },
+];
 
 const STATUS_TABS = [
   { val: 'all', label: 'Tất cả' },
@@ -65,9 +72,15 @@ export default function AdminInterestLeads({ notify }) {
   const [status, setStatus] = useState('all');
   const [signal, setSignal] = useState('all');
   const [searchQ, setSearchQ] = useState('');
+  const [sort, setSort] = useState({ key: 'time', dir: 'desc' });
   const [page, setPage] = useState(1);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+
+  const { isVisible, colMenuProps } = useTableColumns({
+    storageKey: 'bsv.admin.leadCols',
+    columns: LEAD_COLUMNS,
+  });
 
   const currentUserId = loadAuth()?.user?.id;
   const isSuperAdmin = loadAuth()?.user?.role === 'super-admin';
@@ -96,6 +109,17 @@ export default function AdminInterestLeads({ notify }) {
       (item.plateNumber && item.plateNumber.toLowerCase().includes(q))
     );
   }, [result.items, searchQ]);
+
+  // Sắp xếp thông minh
+  const sortedItems = useMemo(() => {
+    return sortTableItems(filteredItems, sort.key, sort.dir, {
+      customer: (item) => item.userFullName || '',
+      plate: (item) => item.plateNumber || '',
+      signal: (item) => (item.signal === 'favorited' ? 'favorited' : item.viewCount || 0),
+      time: (item) => item.lastActivityAt || '',
+      actions: (item) => (item.contacted ? 2 : item.assignedStaffId ? 1 : 0),
+    });
+  }, [filteredItems, sort]);
 
   // Thống kê nhanh
   const stats = useMemo(() => {
@@ -408,6 +432,8 @@ export default function AdminInterestLeads({ notify }) {
 
         <div style={{ flex: 1 }} />
 
+        <TableColumnMenu {...colMenuProps} />
+
         {/* Nút Làm mới */}
         <Button
           variant="outline"
@@ -443,11 +469,51 @@ export default function AdminInterestLeads({ notify }) {
               color: 'var(--text-muted)',
               borderBottom: '1px solid var(--border-hairline)'
             }}>
-              <span style={{ flex: '1 1 200px' }}>Khách hàng tiềm năng</span>
-              <span style={{ flex: '1 1 140px' }}>Biển số quan tâm</span>
-              <span style={{ flex: '0 0 150px' }}>Tín hiệu hành vi</span>
-              <span style={{ flex: '0 0 130px' }}>Thời gian tương tác</span>
-              <span style={{ flex: '0 0 240px', textAlign: 'right' }}>Xử lý tư vấn</span>
+              {isVisible('customer') && (
+                <TableSortHeader
+                  label="Khách hàng tiềm năng"
+                  sortKey="customer"
+                  currentSort={sort}
+                  onSort={setSort}
+                  style={{ flex: '1 1 200px' }}
+                />
+              )}
+              {isVisible('plate') && (
+                <TableSortHeader
+                  label="Biển số quan tâm"
+                  sortKey="plate"
+                  currentSort={sort}
+                  onSort={setSort}
+                  style={{ flex: '1 1 140px' }}
+                />
+              )}
+              {isVisible('signal') && (
+                <TableSortHeader
+                  label="Tín hiệu hành vi"
+                  sortKey="signal"
+                  currentSort={sort}
+                  onSort={setSort}
+                  style={{ flex: '0 0 150px' }}
+                />
+              )}
+              {isVisible('time') && (
+                <TableSortHeader
+                  label="Thời gian tương tác"
+                  sortKey="time"
+                  currentSort={sort}
+                  onSort={setSort}
+                  style={{ flex: '0 0 130px' }}
+                />
+              )}
+              {isVisible('actions') && (
+                <TableSortHeader
+                  label="Xử lý tư vấn"
+                  sortKey="actions"
+                  currentSort={sort}
+                  onSort={setSort}
+                  style={{ flex: '0 0 240px', justifyContent: 'flex-end' }}
+                />
+              )}
             </div>
 
             {/* Skeleton Loading */}
@@ -462,7 +528,7 @@ export default function AdminInterestLeads({ notify }) {
             )}
 
             {/* Danh sách Items */}
-            {!isLoading && !isError && filteredItems.map((lead) => {
+            {!isLoading && !isError && sortedItems.map((lead) => {
               const mine = lead.assignedStaffId === currentUserId;
               const firstLetter = (lead.userFullName?.[0] || 'K').toUpperCase();
               const avatarBg = getAvatarBg(lead.userFullName || lead.userPhone || String(lead.id));
@@ -483,134 +549,143 @@ export default function AdminInterestLeads({ notify }) {
                   }}
                 >
                   {/* Khách hàng with Avatar & Phone actions */}
-                  <div style={{ flex: '1 1 200px', minWidth: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: '50%',
-                      background: avatarBg,
-                      color: '#fff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: 14,
-                      flexShrink: 0,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}>
-                      {firstLetter}
-                    </div>
-                    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ font: 'var(--type-body-strong)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {lead.userFullName || 'Khách vãng lai'}
-                      </span>
-                      {lead.userPhone ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', letterSpacing: '0.02em', fontWeight: 500 }}>
-                            {lead.userPhone}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => copyPhone(e, lead.userPhone, lead.id)}
-                            title="Sao chép SĐT"
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              padding: 2,
-                              cursor: 'pointer',
-                              color: copiedId === lead.id ? 'var(--intent-success)' : 'var(--text-muted)'
-                            }}
-                          >
-                            {copiedId === lead.id ? <Check size={12} /> : <Copy size={12} />}
-                          </button>
-                          <a
-                            href={`tel:${lead.userPhone}`}
-                            title={`Gọi điện ${lead.userPhone}`}
-                            style={{ color: 'var(--action-primary)', display: 'inline-flex', padding: 2 }}
-                          >
-                            <Phone size={12} />
-                          </a>
-                          {zaloUrl && (
-                            <a
-                              href={zaloUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              title="Chat Zalo"
-                              style={{ color: '#0068ff', display: 'inline-flex', padding: 2 }}
+                  {isVisible('customer') && (
+                    <div style={{ flex: '1 1 200px', minWidth: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: '50%',
+                        background: avatarBg,
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        flexShrink: 0,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}>
+                        {firstLetter}
+                      </div>
+                      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ font: 'var(--type-body-strong)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {lead.userFullName || 'Khách vãng lai'}
+                        </span>
+                        {lead.userPhone ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', letterSpacing: '0.02em', fontWeight: 500 }}>
+                              {lead.userPhone}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => copyPhone(e, lead.userPhone, lead.id)}
+                              title="Sao chép SĐT"
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: 2,
+                                cursor: 'pointer',
+                                color: copiedId === lead.id ? 'var(--intent-success)' : 'var(--text-muted)'
+                              }}
                             >
-                              <MessageCircle size={12} />
+                              {copiedId === lead.id ? <Check size={12} /> : <Copy size={12} />}
+                            </button>
+                            <a
+                              href={`tel:${lead.userPhone}`}
+                              title={`Gọi điện ${lead.userPhone}`}
+                              style={{ color: 'var(--action-primary)', display: 'inline-flex', padding: 2 }}
+                            >
+                              <Phone size={12} />
                             </a>
-                          )}
-                        </div>
-                      ) : (
-                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Chưa cập nhật SĐT</span>
-                      )}
+                            {zaloUrl && (
+                              <a
+                                href={zaloUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Chat Zalo"
+                                style={{ color: '#0068ff', display: 'inline-flex', padding: 2 }}
+                              >
+                                <MessageCircle size={12} />
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Chưa cập nhật SĐT</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Biển số quan tâm */}
-                  <div style={{ flex: '1 1 140px', minWidth: 0 }}>
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '4px 8px',
-                      background: 'var(--surface-sunken)',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-hairline)'
-                    }}>
-                      <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', fontWeight: 700, letterSpacing: '0.04em' }}>
-                        {lead.plateNumber}
-                      </span>
-                      <a
-                        href={`/danh-sach-bien-so?q=${encodeURIComponent(lead.plateNumber)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Xem biển số trên web"
-                        style={{ color: 'var(--text-muted)', display: 'inline-flex' }}
-                      >
-                        <ExternalLink size={12} />
-                      </a>
+                  {isVisible('plate') && (
+                    <div style={{ flex: '1 1 140px', minWidth: 0 }}>
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '4px 8px',
+                        background: 'var(--surface-sunken)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-hairline)'
+                      }}>
+                        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', fontWeight: 700, letterSpacing: '0.04em' }}>
+                          {lead.plateNumber}
+                        </span>
+                        <a
+                          href={`/danh-sach-bien-so?q=${encodeURIComponent(lead.plateNumber)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Xem biển số trên web"
+                          style={{ color: 'var(--text-muted)', display: 'inline-flex' }}
+                        >
+                          <ExternalLink size={12} />
+                        </a>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Tín hiệu hành vi */}
-                  <div style={{ flex: '0 0 150px' }}>
-                    {lead.signal === 'favorited' ? (
-                      <Badge tone="rose">
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <Heart size={12} style={{ fill: '#ef4444' }} /> Thả tim quan tâm
-                        </span>
-                      </Badge>
-                    ) : (
-                      <Badge tone="blue">
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <Eye size={12} /> Xem lặp lại ({lead.viewCount} lượt)
-                        </span>
-                      </Badge>
-                    )}
-                  </div>
+                  {isVisible('signal') && (
+                    <div style={{ flex: '0 0 150px' }}>
+                      {lead.signal === 'favorited' ? (
+                        <Badge tone="rose">
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <Heart size={12} style={{ fill: '#ef4444' }} /> Thả tim quan tâm
+                          </span>
+                        </Badge>
+                      ) : (
+                        <Badge tone="blue">
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <Eye size={12} /> Xem lặp lại ({lead.viewCount} lượt)
+                          </span>
+                        </Badge>
+                      )}
+                    </div>
+                  )}
 
                   {/* Thời gian tương tác */}
-                  <div style={{ flex: '0 0 130px', display: 'flex', flexDirection: 'column' }}>
-                    <span style={{
-                      font: 'var(--type-caption)',
-                      color: 'var(--text-strong)',
-                      fontWeight: 600,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4
-                    }}>
-                      <Clock size={12} style={{ color: 'var(--text-muted)' }} />
-                      {timeAgo(lead.lastActivityAt)}
-                    </span>
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: 11 }}>
-                      {formatDateTime(lead.lastActivityAt)}
-                    </span>
-                  </div>
+                  {isVisible('time') && (
+                    <div style={{ flex: '0 0 130px', display: 'flex', flexDirection: 'column' }}>
+                      <span style={{
+                        font: 'var(--type-caption)',
+                        color: 'var(--text-strong)',
+                        fontWeight: 600,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}>
+                        <Clock size={12} style={{ color: 'var(--text-muted)' }} />
+                        {timeAgo(lead.lastActivityAt)}
+                      </span>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: 11 }}>
+                        {formatDateTime(lead.lastActivityAt)}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Xử lý tư vấn (Claim, Unclaim, Contacted) */}
-                  <div style={{ flex: '0 0 240px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
+                  {isVisible('actions') && (
+                    <div style={{ flex: '0 0 240px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
                     {lead.contacted ? (
                       <span style={{
                         display: 'inline-flex',
@@ -715,8 +790,9 @@ export default function AdminInterestLeads({ notify }) {
                       </div>
                     )}
                   </div>
-                </div>
-              );
+                )}
+              </div>
+            );
             })}
           </div>
         </div>

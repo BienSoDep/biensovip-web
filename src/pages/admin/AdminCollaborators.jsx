@@ -1,12 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
   Users, UserCheck, UserX, Coins, Wallet, FileCheck,
-  Search, X, RotateCw, Download, Phone, Copy, Check,
-  Edit2, Eye, ShieldAlert, ArrowUpRight, MessageCircle,
-  ExternalLink, CheckCircle2, AlertTriangle, ChevronRight
+  Search, X, RotateCw, Download, Copy, Check,
+  Edit2, ShieldAlert, MessageCircle, CheckCircle2
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
-import { Select, Badge } from '../../components/index.jsx';
+import { Select, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from '../../components/index.jsx';
 import Modal from '../../components/Modal.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
 import CollaboratorCommissionsModal from '../../components/CollaboratorCommissionsModal.jsx';
@@ -17,6 +16,28 @@ import {
 import { useZaloClickStats } from '../../services/zaloClicks.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
+
+export const COLLAB_COLUMNS = [
+  { key: 'collaborator', label: 'Cộng tác viên', default: true },
+  { key: 'contact', label: 'Liên hệ', default: true },
+  { key: 'refCode', label: 'Mã giới thiệu', default: true },
+  { key: 'commission', label: 'Hoa hồng', default: true },
+  { key: 'rate', label: 'Hệ số %', default: true },
+  { key: 'status', label: 'Trạng thái', default: true },
+  { key: 'actions', label: 'Thao tác', default: true },
+];
+
+export const BALANCE_FILTER_OPTS = [
+  { value: 'all', label: 'Mọi số dư hoa hồng' },
+  { value: 'has_pending', label: 'Có hoa hồng chờ chi trả' },
+  { value: 'has_earned', label: 'Đã tích lũy hoa hồng (>0đ)' },
+];
+
+export const BANK_FILTER_OPTS = [
+  { value: 'all', label: 'Mọi thông tin ngân hàng' },
+  { value: 'has_bank', label: 'Đã cập nhật STK' },
+  { value: 'no_bank', label: 'Chưa cập nhật STK' },
+];
 
 const STATUS_OPTS = [
   { value: 'all', label: 'Tất cả trạng thái' },
@@ -237,7 +258,15 @@ export default function AdminCollaborators({ st, patch, notify }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // all | active | locked
+  const [balanceFilter, setBalanceFilter] = useState('all');
+  const [bankFilter, setBankFilter] = useState('all');
+  const [sort, setSort] = useState({ key: 'collaborator', dir: 'asc' });
   const [copiedCode, setCopiedCode] = useState(null);
+
+  const { isVisible, colMenuProps } = useTableColumns({
+    storageKey: 'bsv.admin.collabCols',
+    columns: COLLAB_COLUMNS,
+  });
 
   // Debounce search
   useEffect(() => {
@@ -252,11 +281,45 @@ export default function AdminCollaborators({ st, patch, notify }) {
 
   const collabs = data?.items || [];
 
-  // Lọc theo trạng thái
-  const list = useMemo(() => {
-    if (statusFilter === 'all') return collabs;
-    return collabs.filter((c) => c.status === statusFilter);
-  }, [collabs, statusFilter]);
+  // Lọc và sắp xếp thông minh
+  const processedList = useMemo(() => {
+    let res = collabs;
+    if (statusFilter !== 'all') {
+      res = res.filter((c) => c.status === statusFilter);
+    }
+    if (balanceFilter === 'has_pending') {
+      res = res.filter((c) => Number(c.commissionPending) > 0);
+    } else if (balanceFilter === 'has_earned') {
+      res = res.filter((c) => Number(c.commissionEarned) > 0);
+    }
+    if (bankFilter === 'has_bank') {
+      res = res.filter((c) => !!c.bankAccountNumber);
+    } else if (bankFilter === 'no_bank') {
+      res = res.filter((c) => !c.bankAccountNumber);
+    }
+    return sortTableItems(res, sort.key, sort.dir, {
+      collaborator: (c) => c.fullName || '',
+      contact: (c) => c.phone || '',
+      refCode: (c) => c.referralCode || '',
+      commission: (c) => Number(c.commissionEarned) || 0,
+      rate: (c) => Number(c.commissionRate) || 0,
+      status: (c) => c.status || '',
+    });
+  }, [collabs, statusFilter, balanceFilter, bankFilter, sort]);
+
+  // CSS Grid Template động theo cột hiển thị
+  const gridTemplate = useMemo(() => {
+    const cols = [
+      isVisible('collaborator') && 'minmax(220px, 2fr)',
+      isVisible('contact') && 'minmax(130px, 1.2fr)',
+      isVisible('refCode') && 'minmax(120px, 1.1fr)',
+      isVisible('commission') && 'minmax(150px, 1.3fr)',
+      isVisible('rate') && 'minmax(120px, 1fr)',
+      isVisible('status') && 'minmax(100px, 0.9fr)',
+      isVisible('actions') && '140px',
+    ].filter(Boolean);
+    return cols.length > 0 ? cols.join(' ') : '1fr';
+  }, [isVisible]);
 
   // Thống kê nhanh
   const stats = useMemo(() => {
@@ -490,7 +553,25 @@ export default function AdminCollaborators({ st, patch, notify }) {
 
         {/* Tìm kiếm & Công cụ */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', width: 280 }}>
+          <div style={{ width: 170 }}>
+            <Select
+              value={balanceFilter}
+              onChange={(e) => setBalanceFilter(e.target.value)}
+              options={BALANCE_FILTER_OPTS}
+              size="sm"
+            />
+          </div>
+
+          <div style={{ width: 175 }}>
+            <Select
+              value={bankFilter}
+              onChange={(e) => setBankFilter(e.target.value)}
+              options={BANK_FILTER_OPTS}
+              size="sm"
+            />
+          </div>
+
+          <div style={{ position: 'relative', width: 240 }}>
             <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               type="text"
@@ -520,6 +601,8 @@ export default function AdminCollaborators({ st, patch, notify }) {
               </button>
             )}
           </div>
+
+          <TableColumnMenu {...colMenuProps} />
 
           <Button
             variant="ghost"
@@ -563,14 +646,14 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <span>Lỗi tải danh sách cộng tác viên.</span>
             <Button variant="ghost" size="sm" onClick={() => refetch()}>Thử lại</Button>
           </div>
-        ) : list.length === 0 ? (
+        ) : processedList.length === 0 ? (
           <div style={{ padding: '56px var(--gutter-card)', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
             <Users size={36} style={{ color: 'var(--text-faint)' }} />
             <div style={{ font: 'var(--type-body)', fontWeight: 600, color: 'var(--text-strong)' }}>
               Không tìm thấy cộng tác viên
             </div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-              {searchTerm ? 'Không có CTV nào khớp với từ khóa tìm kiếm.' : 'Chưa có cộng tác viên nào trong danh mục này.'}
+              {searchTerm || balanceFilter !== 'all' || bankFilter !== 'all' ? 'Không có CTV nào khớp với bộ lọc tìm kiếm.' : 'Chưa có cộng tác viên nào trong danh mục này.'}
             </div>
           </div>
         ) : (
@@ -579,7 +662,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
               {/* Table Header */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(220px, 2fr) minmax(130px, 1.2fr) minmax(120px, 1.1fr) minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(100px, 0.9fr) 140px',
+                gridTemplateColumns: gridTemplate,
                 padding: '12px 20px',
                 background: 'var(--surface-sunken)',
                 font: 'var(--type-caption)',
@@ -590,17 +673,61 @@ export default function AdminCollaborators({ st, patch, notify }) {
                 fontWeight: 700,
                 alignItems: 'center',
               }}>
-                <span>Cộng tác viên</span>
-                <span>Liên hệ</span>
-                <span>Mã giới thiệu</span>
-                <span>Hoa hồng</span>
-                <span>Hệ số %</span>
-                <span>Trạng thái</span>
-                <span style={{ textAlign: 'right' }}>Thao tác</span>
+                {isVisible('collaborator') && (
+                  <TableSortHeader
+                    label="Cộng tác viên"
+                    sortKey="collaborator"
+                    currentSort={sort}
+                    onSort={setSort}
+                  />
+                )}
+                {isVisible('contact') && (
+                  <TableSortHeader
+                    label="Liên hệ"
+                    sortKey="contact"
+                    currentSort={sort}
+                    onSort={setSort}
+                  />
+                )}
+                {isVisible('refCode') && (
+                  <TableSortHeader
+                    label="Mã giới thiệu"
+                    sortKey="refCode"
+                    currentSort={sort}
+                    onSort={setSort}
+                  />
+                )}
+                {isVisible('commission') && (
+                  <TableSortHeader
+                    label="Hoa hồng"
+                    sortKey="commission"
+                    currentSort={sort}
+                    onSort={setSort}
+                  />
+                )}
+                {isVisible('rate') && (
+                  <TableSortHeader
+                    label="Hệ số %"
+                    sortKey="rate"
+                    currentSort={sort}
+                    onSort={setSort}
+                  />
+                )}
+                {isVisible('status') && (
+                  <TableSortHeader
+                    label="Trạng thái"
+                    sortKey="status"
+                    currentSort={sort}
+                    onSort={setSort}
+                  />
+                )}
+                {isVisible('actions') && (
+                  <span style={{ textAlign: 'right' }}>Thao tác</span>
+                )}
               </div>
 
               {/* Table Body */}
-              {list.map((c, idx) => {
+              {processedList.map((c, idx) => {
                 const initial = getAvatarInitial(c.fullName);
                 const isEditingRate = editingRateId === c.id;
                 const ratePct = c.commissionRate != null ? (c.commissionRate * 100) : 10;
@@ -610,10 +737,10 @@ export default function AdminCollaborators({ st, patch, notify }) {
                     key={c.id}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'minmax(220px, 2fr) minmax(130px, 1.2fr) minmax(120px, 1.1fr) minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(100px, 0.9fr) 140px',
+                      gridTemplateColumns: gridTemplate,
                       padding: '14px 20px',
                       alignItems: 'center',
-                      borderBottom: idx < list.length - 1 ? '1px solid var(--border-hairline)' : 'none',
+                      borderBottom: idx < processedList.length - 1 ? '1px solid var(--border-hairline)' : 'none',
                       transition: 'background 120ms ease',
                       background: c.status === 'locked' ? 'rgba(239, 68, 68, 0.02)' : 'transparent',
                     }}
@@ -621,231 +748,244 @@ export default function AdminCollaborators({ st, patch, notify }) {
                     onMouseLeave={(e) => e.currentTarget.style.background = c.status === 'locked' ? 'rgba(239, 68, 68, 0.02)' : 'transparent'}
                   >
                     {/* CTV Name & Avatar */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: '50%',
-                        background: c.status === 'locked' ? 'linear-gradient(135deg, #9ca3af, #6b7280)' : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                        color: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: 14,
-                        flexShrink: 0,
-                      }}>
-                        {initial}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ font: 'var(--type-body)', fontWeight: 600, color: 'var(--text-strong)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          {c.fullName}
+                    {isVisible('collaborator') && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: '50%',
+                          background: c.status === 'locked' ? 'linear-gradient(135deg, #9ca3af, #6b7280)' : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 700,
+                          fontSize: 14,
+                          flexShrink: 0,
+                        }}>
+                          {initial}
                         </div>
-                        {c.email && (
-                          <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            {c.email}
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ font: 'var(--type-body)', fontWeight: 600, color: 'var(--text-strong)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            {c.fullName}
+                          </div>
+                          {c.email && (
+                            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                              {c.email}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Phone & Zalo */}
+                    {isVisible('contact') && (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ font: 'var(--type-body-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>
+                            {c.phone || '—'}
+                          </span>
+                          {c.phone && (
+                            <a
+                              href={`https://zalo.me/${c.phone}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Nhắn Zalo"
+                              style={{ color: '#0284c7', display: 'flex', alignItems: 'center' }}
+                            >
+                              <MessageCircle size={13} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Referral Code with Copy */}
+                    {isVisible('refCode') && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => copyReferralCode(c.referralCode)}
+                          title="Bấm để copy mã giới thiệu"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            padding: '3px 8px',
+                            borderRadius: 6,
+                            background: 'rgba(59, 130, 246, 0.08)',
+                            border: '1px solid rgba(59, 130, 246, 0.2)',
+                            color: '#2563eb',
+                            fontFamily: 'monospace',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <span>{c.referralCode || '—'}</span>
+                          {copiedCode === c.referralCode ? <Check size={12} color="#059669" /> : <Copy size={12} />}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Commissions (Earned & Pending) */}
+                    {isVisible('commission') && (
+                      <div>
+                        <div style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: '#059669' }}>
+                          {money(c.commissionEarned)}
+                        </div>
+                        {Number(c.commissionPending) > 0 && (
+                          <div style={{ font: 'var(--type-caption)', color: '#d97706', fontSize: 11 }}>
+                            Chờ trả: {money(c.commissionPending)}
                           </div>
                         )}
                       </div>
-                    </div>
-
-                    {/* Phone & Zalo */}
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ font: 'var(--type-body-sm)', fontWeight: 500, color: 'var(--text-strong)' }}>
-                          {c.phone || '—'}
-                        </span>
-                        {c.phone && (
-                          <a
-                            href={`https://zalo.me/${c.phone}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            title="Nhắn Zalo"
-                            style={{ color: '#0284c7', display: 'flex', alignItems: 'center' }}
-                          >
-                            <MessageCircle size={13} />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Referral Code with Copy */}
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => copyReferralCode(c.referralCode)}
-                        title="Bấm để copy mã giới thiệu"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          padding: '3px 8px',
-                          borderRadius: 6,
-                          background: 'rgba(59, 130, 246, 0.08)',
-                          border: '1px solid rgba(59, 130, 246, 0.2)',
-                          color: '#2563eb',
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <span>{c.referralCode || '—'}</span>
-                        {copiedCode === c.referralCode ? <Check size={12} color="#059669" /> : <Copy size={12} />}
-                      </button>
-                    </div>
-
-                    {/* Commissions (Earned & Pending) */}
-                    <div>
-                      <div style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: '#059669' }}>
-                        {money(c.commissionEarned)}
-                      </div>
-                      {Number(c.commissionPending) > 0 && (
-                        <div style={{ font: 'var(--type-caption)', color: '#d97706', fontSize: 11 }}>
-                          Chờ trả: {money(c.commissionPending)}
-                        </div>
-                      )}
-                    </div>
+                    )}
 
                     {/* Commission Rate (%) with Inline Editor */}
-                    <div>
-                      {isEditingRate ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <input
-                            type="number"
-                            min="10"
-                            max="100"
-                            step="0.5"
-                            value={editingRateValue}
-                            onChange={(e) => setEditingRateValue(e.target.value)}
-                            style={{
-                              width: 48,
-                              height: 30,
-                              padding: '2px 6px',
-                              borderRadius: 4,
-                              border: '1.5px solid var(--action-primary)',
+                    {isVisible('rate') && (
+                      <div>
+                        {isEditingRate ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <input
+                              type="number"
+                              min="10"
+                              max="100"
+                              step="0.5"
+                              value={editingRateValue}
+                              onChange={(e) => setEditingRateValue(e.target.value)}
+                              style={{
+                                width: 48,
+                                height: 30,
+                                padding: '2px 6px',
+                                borderRadius: 4,
+                                border: '1.5px solid var(--action-primary)',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                outline: 'none',
+                              }}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => saveRate(c)}
+                              disabled={updatingId === c.id}
+                              title="Lưu"
+                              style={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: 4,
+                                background: '#059669',
+                                color: '#fff',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingRateId(null)}
+                              title="Hủy"
+                              style={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: 4,
+                                background: 'var(--surface-sunken)',
+                                color: 'var(--text-muted)',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-pill)',
                               fontSize: 12,
-                              fontWeight: 600,
-                              outline: 'none',
-                            }}
-                            autoFocus
-                          />
-                          <button
-                            type="button"
-                            onClick={() => saveRate(c)}
-                            disabled={updatingId === c.id}
-                            title="Lưu"
-                            style={{
-                              width: 26,
-                              height: 26,
-                              borderRadius: 4,
-                              background: '#059669',
-                              color: '#fff',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Check size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingRateId(null)}
-                            title="Hủy"
-                            style={{
-                              width: 26,
-                              height: 26,
-                              borderRadius: 4,
-                              background: 'var(--surface-sunken)',
-                              color: 'var(--text-muted)',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{
-                            padding: '2px 8px',
-                            borderRadius: 'var(--radius-pill)',
-                            fontSize: 12,
-                            fontWeight: 700,
-                            background: c.commissionRate != null ? 'rgba(139, 92, 246, 0.1)' : 'var(--surface-sunken)',
-                            color: c.commissionRate != null ? '#7c3aed' : 'var(--text-body)',
-                            border: '1px solid var(--border-hairline)',
-                          }}>
-                            {ratePct}%
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => { setEditingRateId(c.id); setEditingRateValue(String(ratePct)); }}
-                            title="Chỉnh sửa hệ số hoa hồng"
-                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, display: 'flex' }}
-                          >
-                            <Edit2 size={13} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                              fontWeight: 700,
+                              background: c.commissionRate != null ? 'rgba(139, 92, 246, 0.1)' : 'var(--surface-sunken)',
+                              color: c.commissionRate != null ? '#7c3aed' : 'var(--text-body)',
+                              border: '1px solid var(--border-hairline)',
+                            }}>
+                              {ratePct}%
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => { setEditingRateId(c.id); setEditingRateValue(String(ratePct)); }}
+                              title="Chỉnh sửa hệ số hoa hồng"
+                              style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2, display: 'flex' }}
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Status Badge & Toggle Action */}
-                    <div>
-                      {c.status === 'active' ? (
-                        <button
-                          type="button"
-                          onClick={() => setConfirm({ id: c.id, to: 'locked', hasEmail: !!c.email, collabName: c.fullName })}
-                          title="Nhấp để khóa tài khoản CTV"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            padding: '3px 8px',
-                            borderRadius: 'var(--radius-pill)',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            color: '#059669',
-                            border: '1px solid rgba(16, 185, 129, 0.25)',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <CheckCircle2 size={12} />
-                          <span>Hoạt động</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setConfirm({ id: c.id, to: 'active', hasEmail: !!c.email, collabName: c.fullName })}
-                          title="Nhấp để mở khóa tài khoản CTV"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            padding: '3px 8px',
-                            borderRadius: 'var(--radius-pill)',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            color: '#dc2626',
-                            border: '1px solid rgba(239, 68, 68, 0.25)',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          <ShieldAlert size={12} />
-                          <span>Bị khóa</span>
-                        </button>
-                      )}
-                    </div>
+                    {isVisible('status') && (
+                      <div>
+                        {c.status === 'active' ? (
+                          <button
+                            type="button"
+                            onClick={() => setConfirm({ id: c.id, to: 'locked', hasEmail: !!c.email, collabName: c.fullName })}
+                            title="Nhấp để khóa tài khoản CTV"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              padding: '3px 8px',
+                              borderRadius: 'var(--radius-pill)',
+                              fontSize: 12,
+                              fontWeight: 600,
+                              background: 'rgba(16, 185, 129, 0.1)',
+                              color: '#059669',
+                              border: '1px solid rgba(16, 185, 129, 0.25)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <CheckCircle2 size={12} />
+                            <span>Hoạt động</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirm({ id: c.id, to: 'active', hasEmail: !!c.email, collabName: c.fullName })}
+                            title="Nhấp để mở khóa tài khoản CTV"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              padding: '3px 8px',
+                              borderRadius: 'var(--radius-pill)',
+                              fontSize: 12,
+                              fontWeight: 600,
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              color: '#dc2626',
+                              border: '1px solid rgba(239, 68, 68, 0.25)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <ShieldAlert size={12} />
+                            <span>Bị khóa</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {/* Action Buttons */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                    {isVisible('actions') && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
                       <button
                         type="button"
                         onClick={() => setDetailCollab(c)}
@@ -873,8 +1013,9 @@ export default function AdminCollaborators({ st, patch, notify }) {
 
                       <AuditHistoryButton entityType="collaborator" entityId={c.id} />
                     </div>
-                  </div>
-                );
+                  )}
+                </div>
+              );
               })}
             </div>
           </div>

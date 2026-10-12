@@ -1,21 +1,30 @@
 import { useState, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import {
-  Users, ShieldCheck, UserCheck, UserX, Search,
-  X, RotateCw, Plus, Pencil, KeyRound, Trash2,
-  Lock, Unlock, Shield, AlertTriangle, Check
+  Users, ShieldCheck, UserCheck, Search,
+  X, RotateCw, Plus, Pencil, KeyRound, Trash2, AlertTriangle
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
-import { Input, Select, Switch, Avatar, InfoTip } from '../../components/index.jsx';
+import { Input, Select, Switch, Avatar, InfoTip, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from '../../components/index.jsx';
 import {
   useAdminStaff, useCreateStaff, useUpdateStaff,
   useDeleteStaff, useResetStaffPassword
 } from '../../services/adminStaff.js';
-import { loadAuth, clearAuth } from '../../lib/authStore.js';
+import { loadAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import { formatDate } from '../../lib/date.js';
+
+const STAFF_COLUMNS = [
+  { key: 'staff', label: 'Nhân sự', default: true },
+  { key: 'phone', label: 'Số điện thoại', default: true },
+  { key: 'role', label: 'Vai trò', default: true },
+  { key: 'permissions', label: 'Quyền hạn', default: true },
+  { key: 'lastLogin', label: 'Đăng nhập cuối', default: true },
+  { key: 'status', label: 'Trạng thái', default: true },
+  { key: 'actions', label: 'Thao tác', default: true, lock: true },
+];
 
 const ROLE_OPTS = [
   { value: 'staff', label: 'Nhân viên vận hành' },
@@ -74,6 +83,12 @@ export default function AdminStaff({ notify }) {
   // Bộ lọc
   const [q, setQ] = useState('');
   const [roleFilter, setRoleFilter] = useState('all'); // all | super-admin | staff | active | inactive
+  const [sort, setSort] = useState({ key: 'staff', dir: 'asc' });
+
+  const { isVisible, colMenuProps } = useTableColumns({
+    storageKey: 'bsv.admin.staffCols',
+    columns: STAFF_COLUMNS,
+  });
 
   const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
   const [err, setErr] = useState({});
@@ -99,6 +114,30 @@ export default function AdminStaff({ notify }) {
     }
     return result;
   }, [items, roleFilter, q]);
+
+  // Sắp xếp các hàng
+  const sortedRows = useMemo(() => {
+    return sortTableItems(rows, sort.key, sort.dir, {
+      staff: (x) => (x.fullName || x.email || '').toLowerCase(),
+      phone: (x) => x.phone || '',
+      role: (x) => x.role || '',
+      lastLogin: (x) => (x.lastLoginAt ? new Date(x.lastLoginAt).getTime() : 0),
+      status: (x) => (x.active ? 1 : 0),
+    });
+  }, [rows, sort]);
+
+  // Dynamic grid template dựa trên các cột hiển thị
+  const gridTemplate = useMemo(() => {
+    const parts = [];
+    if (isVisible('staff')) parts.push('minmax(240px, 2.2fr)');
+    if (isVisible('phone')) parts.push('minmax(130px, 1.2fr)');
+    if (isVisible('role')) parts.push('minmax(130px, 1.2fr)');
+    if (isVisible('permissions')) parts.push('minmax(110px, 1fr)');
+    if (isVisible('lastLogin')) parts.push('minmax(140px, 1.2fr)');
+    if (isVisible('status')) parts.push('90px');
+    if (isVisible('actions')) parts.push('140px');
+    return parts.length ? parts.join(' ') : '1fr';
+  }, [isVisible]);
 
   // Thống kê nhanh
   const stats = useMemo(() => {
@@ -477,6 +516,8 @@ export default function AdminStaff({ notify }) {
             <RotateCw size={14} />
           </button>
 
+          <TableColumnMenu {...colMenuProps} />
+
           <Button
             variant="primary"
             size="md"
@@ -498,7 +539,7 @@ export default function AdminStaff({ notify }) {
             <span>Lỗi tải danh sách nhân viên.</span>
             <Button variant="ghost" size="sm" onClick={() => refetch()}>Thử lại</Button>
           </div>
-        ) : rows.length === 0 ? (
+        ) : sortedRows.length === 0 ? (
           <div style={{ padding: 56, textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
             <Users size={36} style={{ color: 'var(--text-faint)' }} />
             <div style={{ font: 'var(--type-body)', fontWeight: 600, color: 'var(--text-strong)' }}>
@@ -514,7 +555,7 @@ export default function AdminStaff({ notify }) {
               {/* Header */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(240px, 2.2fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(110px, 1fr) minmax(140px, 1.2fr) 90px 140px',
+                gridTemplateColumns: gridTemplate,
                 padding: '12px 20px',
                 background: 'var(--surface-sunken)',
                 font: 'var(--type-caption)',
@@ -525,17 +566,27 @@ export default function AdminStaff({ notify }) {
                 fontWeight: 700,
                 alignItems: 'center',
               }}>
-                <span>Nhân sự</span>
-                <span>Số điện thoại</span>
-                <span>Vai trò</span>
-                <span>Quyền hạn</span>
-                <span>Đăng nhập cuối</span>
-                <span>Trạng thái</span>
-                <span style={{ textAlign: 'right' }}>Thao tác</span>
+                {isVisible('staff') && (
+                  <TableSortHeader label="Nhân sự" sortKey="staff" currentSort={sort} onSort={(k, d) => setSort({ key: k, dir: d })} />
+                )}
+                {isVisible('phone') && (
+                  <TableSortHeader label="Số điện thoại" sortKey="phone" currentSort={sort} onSort={(k, d) => setSort({ key: k, dir: d })} />
+                )}
+                {isVisible('role') && (
+                  <TableSortHeader label="Vai trò" sortKey="role" currentSort={sort} onSort={(k, d) => setSort({ key: k, dir: d })} />
+                )}
+                {isVisible('permissions') && <span>Quyền hạn</span>}
+                {isVisible('lastLogin') && (
+                  <TableSortHeader label="Đăng nhập cuối" sortKey="lastLogin" currentSort={sort} onSort={(k, d) => setSort({ key: k, dir: d })} />
+                )}
+                {isVisible('status') && (
+                  <TableSortHeader label="Trạng thái" sortKey="status" currentSort={sort} onSort={(k, d) => setSort({ key: k, dir: d })} />
+                )}
+                {isVisible('actions') && <span style={{ textAlign: 'right' }}>Thao tác</span>}
               </div>
 
               {/* Rows */}
-              {rows.map((x, idx) => {
+              {sortedRows.map((x, idx) => {
                 const self = isSelf(x);
                 const isSuper = x.role === 'super-admin';
 
@@ -544,10 +595,10 @@ export default function AdminStaff({ notify }) {
                     key={x.id}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'minmax(240px, 2.2fr) minmax(130px, 1.2fr) minmax(130px, 1.2fr) minmax(110px, 1fr) minmax(140px, 1.2fr) 90px 140px',
+                      gridTemplateColumns: gridTemplate,
                       padding: '14px 20px',
                       alignItems: 'center',
-                      borderBottom: idx < rows.length - 1 ? '1px solid var(--border-hairline)' : 'none',
+                      borderBottom: idx < sortedRows.length - 1 ? '1px solid var(--border-hairline)' : 'none',
                       transition: 'background 120ms ease',
                       background: !x.active ? 'rgba(239, 68, 68, 0.02)' : 'transparent',
                     }}
@@ -555,151 +606,165 @@ export default function AdminStaff({ notify }) {
                     onMouseLeave={(e) => e.currentTarget.style.background = !x.active ? 'rgba(239, 68, 68, 0.02)' : 'transparent'}
                   >
                     {/* Name & Avatar */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Avatar name={x.fullName || x.email} size="sm" />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ font: 'var(--type-body)', fontWeight: 600, color: 'var(--text-strong)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                            {x.fullName || '—'}
-                          </span>
-                          {self && (
-                            <span style={{
-                              padding: '1px 6px',
-                              borderRadius: 'var(--radius-pill)',
-                              background: 'var(--action-primary)',
-                              color: '#fff',
-                              fontSize: 10,
-                              fontWeight: 700,
-                            }}>
-                              Bạn
+                    {isVisible('staff') && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <Avatar name={x.fullName || x.email} size="sm" />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ font: 'var(--type-body)', fontWeight: 600, color: 'var(--text-strong)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                              {x.fullName || '—'}
                             </span>
-                          )}
-                        </div>
-                        <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          {x.email}
+                            {self && (
+                              <span style={{
+                                padding: '1px 6px',
+                                borderRadius: 'var(--radius-pill)',
+                                background: 'var(--action-primary)',
+                                color: '#fff',
+                                fontSize: 10,
+                                fontWeight: 700,
+                              }}>
+                                Bạn
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                            {x.email}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Phone */}
-                    <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
-                      {x.phone || '—'}
-                    </div>
+                    {isVisible('phone') && (
+                      <div style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
+                        {x.phone || '—'}
+                      </div>
+                    )}
 
                     {/* Role Badge */}
-                    <div>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        padding: '3px 9px',
-                        borderRadius: 'var(--radius-pill)',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        background: isSuper ? 'rgba(124, 58, 237, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                        color: isSuper ? '#7c3aed' : '#2563eb',
-                        border: isSuper ? '1px solid rgba(124, 58, 237, 0.25)' : '1px solid rgba(59, 130, 246, 0.25)',
-                      }}>
-                        {isSuper ? <ShieldCheck size={12} /> : <Users size={12} />}
-                        {ROLE_LABEL[x.role] || x.role}
-                      </span>
-                    </div>
+                    {isVisible('role') && (
+                      <div>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          padding: '3px 9px',
+                          borderRadius: 'var(--radius-pill)',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          background: isSuper ? 'rgba(124, 58, 237, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                          color: isSuper ? '#7c3aed' : '#2563eb',
+                          border: isSuper ? '1px solid rgba(124, 58, 237, 0.25)' : '1px solid rgba(59, 130, 246, 0.25)',
+                        }}>
+                          {isSuper ? <ShieldCheck size={12} /> : <Users size={12} />}
+                          {ROLE_LABEL[x.role] || x.role}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Permission count */}
-                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                      {isSuper ? (
-                        <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>Toàn quyền</span>
-                      ) : (
-                        <span>{x.permissions?.length || 0} quyền hạn</span>
-                      )}
-                    </div>
+                    {isVisible('permissions') && (
+                      <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                        {isSuper ? (
+                          <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>Toàn quyền</span>
+                        ) : (
+                          <span>{x.permissions?.length || 0} quyền hạn</span>
+                        )}
+                      </div>
+                    )}
 
                     {/* Last login */}
-                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                      {x.lastLoginAt ? formatDate(x.lastLoginAt) : 'Chưa đăng nhập'}
-                    </div>
+                    {isVisible('lastLogin') && (
+                      <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                        {x.lastLoginAt ? formatDate(x.lastLoginAt) : 'Chưa đăng nhập'}
+                      </div>
+                    )}
 
                     {/* Active Switch */}
-                    <div>
-                      <Switch
-                        checked={x.active}
-                        disabled={busy}
-                        onChange={() => handleToggleActive(x)}
-                      />
-                    </div>
+                    {isVisible('status') && (
+                      <div>
+                        <Switch
+                          checked={x.active}
+                          disabled={busy}
+                          onChange={() => handleToggleActive(x)}
+                        />
+                      </div>
+                    )}
 
                     {/* Actions */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-                      <button
-                        type="button"
-                        onClick={() => openEdit(x)}
-                        title="Chỉnh sửa thông tin & phân quyền"
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 'var(--radius-field)',
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'var(--text-body)',
-                          transition: 'background 120ms ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <Pencil size={14} />
-                      </button>
+                    {isVisible('actions') && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                        <button
+                          type="button"
+                          onClick={() => openEdit(x)}
+                          title="Chỉnh sửa thông tin & phân quyền"
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 'var(--radius-field)',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--text-body)',
+                            transition: 'background 120ms ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <Pencil size={14} />
+                        </button>
 
-                      <button
-                        type="button"
-                        onClick={() => openResetPassword(x)}
-                        title="Cấp lại mật khẩu"
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 'var(--radius-field)',
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#d97706',
-                          transition: 'background 120ms ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <KeyRound size={14} />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => openResetPassword(x)}
+                          title="Cấp lại mật khẩu"
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 'var(--radius-field)',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#d97706',
+                            transition: 'background 120ms ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.1)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <KeyRound size={14} />
+                        </button>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(x)}
-                        disabled={busy}
-                        title="Vô hiệu hóa tài khoản"
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 'var(--radius-field)',
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#dc2626',
-                          transition: 'background 120ms ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(x)}
+                          disabled={busy}
+                          title="Vô hiệu hóa tài khoản"
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 'var(--radius-field)',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#dc2626',
+                            transition: 'background 120ms ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

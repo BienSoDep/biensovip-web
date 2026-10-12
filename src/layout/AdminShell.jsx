@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, ChevronDown, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import {
+  CheckCircle2, ChevronDown, Menu, PanelLeftClose, PanelLeftOpen, X,
+  LayoutDashboard, LineChart, BookOpen, Car, Gavel, BarChart3, FolderTree,
+  ShoppingBag, Flame, Users, TicketPercent, FileText, Video, Compass,
+  ShieldCheck, Bell, Star, Bot, Handshake, FileCode, MessageSquareShare,
+  UserCog, History, Eye, SlidersHorizontal,
+} from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
@@ -165,7 +171,7 @@ const ADMIN_INFO = {
   ashowroom: 'Tab Số liệu: khuếch đại/tạo thêm con số hiển thị công khai, không đổi dữ liệu giao dịch/hoa hồng nội bộ. Tab Thứ tự sắp xếp: kéo-thả đổi ưu tiên sắp xếp mặc định danh sách biển.',
   asortsettings: 'Thứ tự ưu tiên sắp xếp mặc định danh sách biển công khai — kéo-thả đổi thứ tự 4 tiêu chí (Tỉnh ưu tiên/Hot/Ngày đăng/Loại biển), chỉ áp dụng khi khách không chủ động chọn sắp xếp khác.',
   aerrorlogs: 'Nhật ký lỗi hệ thống (Warning trở lên) ghi từ Serilog — tra cứu lỗi 500/exception gần đây mà không cần SSH đọc log VPS. Tự xóa log cũ hơn 30 ngày.',
-  afeatureflags: 'Tab Feature flags: bật/tắt nhanh tính năng không cần deploy lại. Tab Bảo trì: bật/tắt bảo trì từng trang public. Tab DB console: xem nhanh dữ liệu 7 bảng cố định.',
+  afeatureflags: 'Tab Máy chủ & Hạ tầng: giám sát hiệu năng VPS chính (RAM/Disk/DB/Uptime) và tình trạng Proxy cào VPA theo thời gian thực. Tab Feature flags: bật/tắt nhanh tính năng không cần deploy lại. Tab Bảo trì: bật/tắt bảo trì từng trang public. Tab DB console: xem nhanh dữ liệu 7 bảng cố định.',
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
@@ -186,14 +192,96 @@ const BADGE_NAV = {
 };
 const LAST_SEEN_KEY = 'bsd_admin_last_seen';
 
-const NAV_COLLAPSED_KEY = 'bsd_admin_nav_collapsed_groups';
+const NAV_ICONS = {
+  dash: LayoutDashboard,
+  ainsights: LineChart,
+  aguide: BookOpen,
+  aplates: Car,
+  avpa: Gavel,
+  avpastats: BarChart3,
+  acats: FolderTree,
+  asales: ShoppingBag,
+  ainterestleads: Flame,
+  acustomers: Users,
+  acoupons: TicketPercent,
+  aposts: FileText,
+  avideos: Video,
+  ameanings: Compass,
+  apolicypages: ShieldCheck,
+  anotifications: Bell,
+  areviews: Star,
+  achatbot: Bot,
+  acollabs: Handshake,
+  acollabcontent: FileCode,
+  actvtemplates: MessageSquareShare,
+  astaff: UserCog,
+  aauditlog: History,
+  ashowroom: Eye,
+  afeatureflags: SlidersHorizontal,
+};
 
 function NavItemButton({ navKey, label, on, badgeCount, onClick }) {
+  const IconComponent = NAV_ICONS[navKey];
   return (
-    <button type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>
-      <span style={{ flex: 1 }}>{label}</span>
+    <button
+      type="button"
+      className="pill-btn"
+      data-on={String(on)}
+      data-dark="false"
+      aria-current={on ? 'page' : undefined}
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        textAlign: 'left',
+        padding: '9px 12px',
+        border: 'none',
+        borderRadius: 'var(--radius-pill)',
+        font: 'var(--type-body-sm)',
+        fontWeight: on ? 'var(--fw-bold)' : 'var(--fw-medium)',
+        fontSize: '13px',
+        cursor: 'pointer',
+        transition: 'var(--transition-control)',
+        background: pill(on).background,
+        color: pill(on).color,
+      }}
+    >
+      {IconComponent && (
+        <IconComponent
+          size={16}
+          strokeWidth={on ? 2.4 : 1.9}
+          style={{
+            flexShrink: 0,
+            opacity: on ? 1 : 0.75,
+            color: 'currentColor',
+          }}
+        />
+      )}
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
       {badgeCount > 0 && (
-        <span aria-label={`${badgeCount} mới`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: on ? 'rgba(255,255,255,.28)' : 'var(--status-danger)', color: on ? 'var(--text-inverse)' : '#fff', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{badgeCount > 99 ? '99+' : badgeCount}</span>
+        <span
+          aria-label={`${badgeCount} mới`}
+          style={{
+            minWidth: 18,
+            height: 18,
+            padding: '0 5px',
+            borderRadius: 'var(--radius-pill)',
+            background: on ? 'rgba(255,255,255,.28)' : 'var(--status-danger)',
+            color: on ? 'var(--text-inverse)' : '#fff',
+            font: 'var(--type-caption)',
+            fontSize: 'var(--fs-micro)',
+            fontWeight: 'var(--fw-bold)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {badgeCount > 99 ? '99+' : badgeCount}
+        </span>
       )}
     </button>
   );
@@ -410,7 +498,21 @@ export default function AdminShell({
           </div>
         </aside>
       )}
-      <main className="admin-main" aria-hidden={drawerOpen ? true : undefined} inert={drawerOpen ? '' : undefined} style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <main
+        className={`admin-main ${s === 'compose' ? 'admin-main--compose' : ''}`}
+        aria-hidden={drawerOpen ? true : undefined}
+        inert={drawerOpen ? '' : undefined}
+        style={{
+          flex: '1 1 560px',
+          minWidth: 0,
+          padding: s === 'compose' ? 'var(--space-4) clamp(16px,2.5vw,28px) var(--space-3)' : 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: s === 'compose' ? 'var(--space-3)' : 'var(--space-5)',
+          height: s === 'compose' ? 'calc(100vh - 42px)' : undefined,
+          overflow: s === 'compose' ? 'hidden' : undefined,
+        }}
+      >
         {collapsed && (
           <button type="button" onClick={toggleCollapsed} aria-label="Hiện menu" title="Hiện menu" style={{ alignSelf: 'flex-start', width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <PanelLeftOpen size={18} />

@@ -39,6 +39,72 @@ export const VPA_SOURCES = [
   { id: 2, key: 'published', label: 'Danh sách công bố', note: 'Biển tháng', prefix: 'published' },
   { id: 3, key: 'results', label: 'Kết quả đấu giá', note: 'Biển hết hạn', prefix: 'results' },
 ];
+
+// Cấu hình ký hiệu đặc biệt 3 màu pastel cho 3 kiểu cào (dùng icon chuẩn Lucide)
+export const VPA_SOURCE_CONFIG = {
+  1: {
+    id: 1,
+    key: 'official',
+    label: 'Danh sách chính thức',
+    note: 'Biển tuần',
+    tag: 'Tuần',
+    iconName: 'CalendarDays',
+    // Pastel Cam Hổ Phách dịu mắt
+    bg: '#FFF7ED',
+    border: '#FED7AA',
+    color: '#C2410C',
+    pillBg: '#FFEDD5',
+    accent: '#FB923C',
+    desc: 'Phiên chuẩn bị đấu giá hàng tuần (chính thức)',
+  },
+  2: {
+    id: 2,
+    key: 'published',
+    label: 'Danh sách công bố',
+    note: 'Biển tháng',
+    tag: 'Tháng',
+    iconName: 'Layers',
+    // Pastel Xanh Lam Phấn dịu mắt
+    bg: '#F0F9FF',
+    border: '#BAE6FD',
+    color: '#0369A1',
+    pillBg: '#E0F2FE',
+    accent: '#38BDF8',
+    desc: 'Kho niêm yết công bố hàng tháng',
+  },
+  3: {
+    id: 3,
+    key: 'results',
+    label: 'Kết quả đấu giá',
+    note: 'Biển hết hạn',
+    tag: 'Đấu giá',
+    iconName: 'Gavel',
+    // Pastel Tím Oải Hương (Lavender) dịu mắt
+    bg: '#F5F3FF',
+    border: '#DDD6FE',
+    color: '#6D28D9',
+    pillBg: '#EDE9FE',
+    accent: '#8B5CF6',
+    desc: 'Kết quả phiên đấu giá đã chốt / Hết hạn',
+  },
+};
+
+export function getVpaSourceConfig(sourceId) {
+  return VPA_SOURCE_CONFIG[sourceId] || {
+    id: sourceId,
+    key: 'unknown',
+    label: 'Nguồn khác',
+    note: '',
+    tag: 'Khác',
+    iconName: 'Layers',
+    bg: '#F3F4F6',
+    border: '#E5E7EB',
+    color: '#4B5563',
+    pillBg: '#F3F4F6',
+    accent: '#9CA3AF',
+    desc: 'Nguồn dữ liệu khác',
+  };
+}
 export const VPA_RUN_STATUS = { 0: 'Đang chạy', 1: 'Thành công', 2: 'Chưa đủ dữ liệu', 3: 'Lỗi' };
 export const VPA_RUN_STATUS_TONE = { 0: 'blue', 1: 'mint', 2: 'amber', 3: 'rose' };
 
