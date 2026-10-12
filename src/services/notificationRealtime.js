@@ -18,8 +18,14 @@ export function useNotificationRealtime(user) {
 
     const base = import.meta.env.VITE_API_URL || '';
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl(`${base}/hubs/notifications`, { accessTokenFactory: () => token })
+      .withUrl(`${base}/hubs/notifications`, {
+        accessTokenFactory: async () => {
+          const a = loadAuth();
+          return a?.accessToken || '';
+        },
+      })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+      .configureLogging(signalR.LogLevel.None) // Tắt log đỏ ầm ĩ của SignalR khi server restart / reconnect
       .build();
     connRef.current = conn;
 

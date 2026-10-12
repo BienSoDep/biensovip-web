@@ -15,6 +15,7 @@ export function usePlateRealtime() {
     const conn = new signalR.HubConnectionBuilder()
       .withUrl(`${base}/hubs/plates`)
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+      .configureLogging(signalR.LogLevel.None) // Tắt log ngắt kết nối tự nhiên khi server restart
       .build();
     connRef.current = conn;
 
