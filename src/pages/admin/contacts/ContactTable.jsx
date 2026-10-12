@@ -283,11 +283,11 @@ export default function ContactTable({
           </div>
         )}
 
-        {!isLoading && !isError && result.items.length === 0 && (
+        {!isLoading && !isError && (result?.items?.length ?? 0) === 0 && (
           <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có yêu cầu nào.</div>
         )}
 
-        {!isLoading && !isError && result.items.map((c) => {
+        {!isLoading && !isError && (result?.items || []).map((c) => {
           const parsed = parsePlateNumber(c.plateNumber);
           return (
             <div
