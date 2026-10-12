@@ -288,14 +288,14 @@ export default function AdminReviews({ notify }) {
                 <>
                   {r.status === 'pending' && (
                     <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
-                      <Button variant="primary" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'approved')}>{pendingId === r.id ? 'Đang…' : 'Duyệt'}</Button>
-                      <Button variant="ghost" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'rejected')}>Từ chối</Button>
+                      <Button variant="primary" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'approved')} title="Duyệt và hiển thị đánh giá này">{pendingId === r.id ? 'Đang…' : 'Duyệt'}</Button>
+                      <Button variant="ghost" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'rejected')} title="Từ chối đánh giá này">Từ chối</Button>
                     </div>
                   )}
                   {r.status === 'approved' && <ReplyBlock review={r} replyReview={replyReview} notify={notify} />}
                   {r.status === 'rejected' && (
                     <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 4 }}>
-                      <Button variant="outline" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'approved')}>Duyệt lại</Button>
+                      <Button variant="outline" size="sm" disabled={pendingId === r.id} onClick={() => act(r.id, 'approved')} title="Duyệt lại đánh giá đã từ chối">Duyệt lại</Button>
                     </div>
                   )}
                 </>

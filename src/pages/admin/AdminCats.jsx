@@ -754,6 +754,7 @@ export default function AdminCats({ notify, goToMeanings }) {
       <div className="admin-tablist">
         {MAIN_TABS.map((t) => (
           <button key={t.value} type="button" onClick={() => setMainTab(t.value)}
+            title={`Chuyển sang tab: ${t.label}`}
             style={{
               height: 36, padding: '0 16px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
               background: mainTab === t.value ? 'var(--action-primary)' : 'var(--surface-sunken)',
@@ -769,6 +770,7 @@ export default function AdminCats({ notify, goToMeanings }) {
       <div className="admin-tablist">
         {CATEGORY_GROUPS.map((g) => (
           <button key={g.value} type="button" onClick={() => setGroup(g.value)}
+            title={`Xem danh mục nhóm: ${g.label}`}
             style={{
               height: 36, padding: '0 16px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
               background: group === g.value ? 'var(--action-dark)' : 'var(--surface-muted)',
