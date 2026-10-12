@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 // Trang admin gộp nhiều trang con thành tab ngang — dùng cho các nhóm chức năng liên quan chặt
 // (VD Blog+Bình luận, Nhật ký hệ thống/lỗi/rủi ro CTV, Báo cáo & Phân tích VPA).
 // Style pill-tab copy từ AdminContacts.jsx.
 // `tabs`: [{ key, label, render: () => ReactNode }] — ẩn tab nào không truyền (VD thiếu quyền).
 // `initialTab`: key tab mặc định khi vào trang lần đầu hoặc key đó không còn trong danh sách hiện tại.
-export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabParam = 'tab' }) {
+// `activeTab`: (tùy chọn) điều khiển tab từ bên ngoài (controlled mode).
+export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChange, subtabParam = 'tab' }) {
   const getInitialActive = () => {
+    if (activeTab) return activeTab;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const qTab = params.get(subtabParam) || params.get('subtab');
@@ -16,6 +18,7 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
   };
 
   const [active, setActive] = useState(getInitialActive);
+  const tabKeys = useMemo(() => tabs.map((t) => t.key).join(','), [tabs]);
 
   // Lắng nghe popstate (Back/Forward trình duyệt) để đồng bộ tab theo URL
   useEffect(() => {
@@ -26,25 +29,36 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
       if (qTab && tabs.some((t) => t.key === qTab)) {
         setActive(qTab);
         onTabChange?.(qTab);
+      } else {
+        const fallback = initialTab || tabs[0]?.key;
+        if (fallback) {
+          setActive(fallback);
+          onTabChange?.(fallback);
+        }
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [tabs, subtabParam, onTabChange]);
+  }, [subtabParam, onTabChange, tabKeys, initialTab]);
 
-  // Đồng bộ khi initialTab thay đổi từ parent component
+  // Đồng bộ khi initialTab thay đổi giá trị cụ thể từ parent (dùng ref để tránh reset khi re-render)
+  const prevInitialRef = useRef(initialTab);
   useEffect(() => {
-    if (initialTab && tabs.some((t) => t.key === initialTab)) {
-      setActive(initialTab);
+    if (initialTab && initialTab !== prevInitialRef.current) {
+      prevInitialRef.current = initialTab;
+      if (tabs.some((t) => t.key === initialTab)) {
+        setActive(initialTab);
+      }
     }
-  }, [initialTab, tabs]);
+  }, [initialTab, tabKeys]);
 
   // Fallback nếu tab hiện tại không còn tồn tại trong danh sách tabs
   useEffect(() => {
-    if (!tabs.some((t) => t.key === active)) {
+    const currentActive = activeTab || active;
+    if (!tabs.some((t) => t.key === currentActive)) {
       setActive(initialTab || tabs[0]?.key);
     }
-  }, [tabs, active, initialTab]);
+  }, [tabKeys, activeTab, active, initialTab]);
 
   const handleSelect = (key) => {
     setActive(key);
@@ -58,7 +72,8 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
     }
   };
 
-  const current = tabs.find((t) => t.key === active) || tabs[0];
+  const effectiveKey = activeTab || active;
+  const current = tabs.find((t) => t.key === effectiveKey) || tabs[0];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

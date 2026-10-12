@@ -26,7 +26,7 @@ export default function AdminVpa({ notify, isSuperAdmin, go }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <AdminTabbedPage key={tabKey} tabs={tabs} initialTab={tabKey} onTabChange={setTabKey} />
+      <AdminTabbedPage activeTab={tabKey} tabs={tabs} onTabChange={setTabKey} />
     </div>
   );
 }
