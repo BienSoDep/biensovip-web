@@ -6,8 +6,6 @@ import {
   X,
   Clock,
   CheckCircle2,
-  Wallet,
-  Download,
   Phone,
   MessageCircle,
   Plus,
@@ -23,7 +21,7 @@ import {
   useRestoreTransaction,
 } from '../../services/adminTransactions.js';
 import { usePlates } from '../../services/plates.js';
-import { Select, Input, Badge, ImageUrlInput } from '../../components/index.jsx';
+import { Select, Input, Badge, ImageUrlInput, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from '../../components/index.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
@@ -32,6 +30,24 @@ import PlateVisual from '../../components/PlateVisual.jsx';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { formatDateTime, formatDate } from '../../lib/date.js';
 import { toZaloUrl } from '../../lib/zaloMessage.js';
+
+export const TRANSACTION_COLUMNS = [
+  { key: 'customer', label: 'Khách hàng', default: true },
+  { key: 'plate', label: 'Biển số', default: true },
+  { key: 'amount', label: 'Số tiền', default: true },
+  { key: 'intent', label: 'Loại GD', default: true },
+  { key: 'ctv', label: 'Cộng tác viên', default: true },
+  { key: 'commission', label: 'Hoa hồng', default: true },
+  { key: 'status', label: 'Trạng thái', default: true },
+  { key: 'createdAt', label: 'Ngày tạo', default: false },
+  { key: 'actions', label: 'Thao tác', default: true },
+];
+
+export const INTENT_FILTER_OPTS = [
+  { value: 'all', label: 'Tất cả loại GD' },
+  { value: 'deposit_request', label: 'Đặt cọc' },
+  { value: 'buy', label: 'Mua đứt' },
+];
 
 const STATUS_OPTS = [
   { value: 'all', label: 'Tất cả trạng thái' },
@@ -128,6 +144,8 @@ export function CreateTransactionForm({ prefill, onDone, notify }) {
 
 export default function AdminTransactions({ notify, filterContactRequestId }) {
   const [status, setStatus] = useState('all');
+  const [intentFilter, setIntentFilter] = useState('all');
+  const [sort, setSort] = useState({ key: 'createdAt', dir: 'desc' });
   const [search, setSearch] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -136,6 +154,11 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [proofUrl, setProofUrl] = useState('');
   const [detailTx, setDetailTx] = useState(null);
+
+  const { isVisible, colMenuProps } = useTableColumns({
+    storageKey: 'bsv.admin.txCols',
+    columns: TRANSACTION_COLUMNS,
+  });
 
   const { data, isLoading, isError, refetch } = useAdminTransactions({ status, page, limit: 50 });
   const confirmPayment = useConfirmTransactionPayment();
@@ -147,7 +170,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
 
   const rawItems = (data?.items || []).filter((t) => !filterContactRequestId || t.contactRequestId === filterContactRequestId);
 
-  // Lọc tìm kiếm & ngày
+  // Lọc tìm kiếm, ngày, loại GD và sắp xếp thông minh
   const items = useMemo(() => {
     let list = rawItems;
     if (search.trim()) {
@@ -159,6 +182,9 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
         (t.ctvName && t.ctvName.toLowerCase().includes(q))
       );
     }
+    if (intentFilter !== 'all') {
+      list = list.filter((t) => t.intent === intentFilter);
+    }
     if (fromDate) {
       const start = new Date(fromDate).getTime();
       list = list.filter((t) => new Date(t.createdAt).getTime() >= start);
@@ -167,8 +193,17 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
       const end = new Date(toDate).getTime() + 86400000;
       list = list.filter((t) => new Date(t.createdAt).getTime() <= end);
     }
-    return list;
-  }, [rawItems, search, fromDate, toDate]);
+    return sortTableItems(list, sort.key, sort.dir, {
+      customer: (t) => t.fullName || '',
+      plate: (t) => t.plateNumber || '',
+      amount: (t) => Number(t.amount) || 0,
+      intent: (t) => t.intent || '',
+      ctv: (t) => t.ctvName || '',
+      commission: (t) => Number(t.commissionAmount) || 0,
+      status: (t) => t.status || '',
+      createdAt: (t) => t.createdAt || '',
+    });
+  }, [rawItems, search, intentFilter, fromDate, toDate, sort]);
 
   // Thống kê nhanh số tiền
   const kpis = useMemo(() => {
@@ -232,11 +267,12 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
   const clearFilters = () => {
     setSearch('');
     setStatus('all');
+    setIntentFilter('all');
     setFromDate('');
     setToDate('');
   };
 
-  const hasFilter = search.trim() || status !== 'all' || fromDate || toDate;
+  const hasFilter = search.trim() || status !== 'all' || intentFilter !== 'all' || fromDate || toDate;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -303,6 +339,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
         </div>
 
         <Select value={status} options={STATUS_OPTS} onChange={(v) => { setStatus(v); setPage(1); }} variant="pill" />
+        <Select value={intentFilter} options={INTENT_FILTER_OPTS} onChange={(v) => setIntentFilter(v)} variant="pill" />
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
           <span>Từ:</span>
@@ -313,6 +350,8 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
           <span>Đến:</span>
           <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ height: 34, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-sm)', background: 'var(--white)', padding: '0 8px', font: 'var(--type-caption)' }} />
         </label>
+
+        <TableColumnMenu {...colMenuProps} />
 
         {hasFilter && (
           <Button variant="ghost" size="sm" onClick={clearFilters} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -342,14 +381,81 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
           <div className="admin-table-scroll" style={{ overflowX: 'auto' }}>
             <div className="admin-rows" style={{ minWidth: 840 }}>
               <div className="admin-head" style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                <span style={{ flex: '1 1 120px' }}>Khách hàng</span>
-                <span style={{ flex: '1 1 100px' }}>Biển số</span>
-                <span style={{ flex: '1 1 90px' }}>Số tiền</span>
-                <span style={{ flex: '1 1 70px' }}>Loại</span>
-                <span style={{ flex: '1 1 100px' }}>Cộng tác viên</span>
-                <span style={{ flex: '1 1 110px' }}>Hoa hồng</span>
-                <span style={{ flex: '1 1 150px' }}>Trạng thái</span>
-                <span style={{ flex: '0 0 90px', textAlign: 'right' }}>Thao tác</span>
+                {isVisible('customer') && (
+                  <TableSortHeader
+                    label="Khách hàng"
+                    sortKey="customer"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 120px' }}
+                  />
+                )}
+                {isVisible('plate') && (
+                  <TableSortHeader
+                    label="Biển số"
+                    sortKey="plate"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 100px' }}
+                  />
+                )}
+                {isVisible('amount') && (
+                  <TableSortHeader
+                    label="Số tiền"
+                    sortKey="amount"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 90px' }}
+                  />
+                )}
+                {isVisible('intent') && (
+                  <TableSortHeader
+                    label="Loại"
+                    sortKey="intent"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 70px' }}
+                  />
+                )}
+                {isVisible('ctv') && (
+                  <TableSortHeader
+                    label="Cộng tác viên"
+                    sortKey="ctv"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 100px' }}
+                  />
+                )}
+                {isVisible('commission') && (
+                  <TableSortHeader
+                    label="Hoa hồng"
+                    sortKey="commission"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 110px' }}
+                  />
+                )}
+                {isVisible('status') && (
+                  <TableSortHeader
+                    label="Trạng thái"
+                    sortKey="status"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 150px' }}
+                  />
+                )}
+                {isVisible('createdAt') && (
+                  <TableSortHeader
+                    label="Ngày tạo"
+                    sortKey="createdAt"
+                    currentSort={sort}
+                    onSort={setSort}
+                    style={{ flex: '1 1 110px' }}
+                  />
+                )}
+                {isVisible('actions') && (
+                  <span style={{ flex: '0 0 90px', textAlign: 'right' }}>Thao tác</span>
+                )}
               </div>
               {items.map((t) => (
                 <div
@@ -362,82 +468,104 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                   title="Xem chi tiết giao dịch"
                   style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center', padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)', font: 'var(--type-body-sm)', cursor: 'pointer' }}
                 >
-                  <span data-primary data-label="Khách" style={{ flex: '1 1 120px' }}>
-                    <div style={{ fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{t.fullName}</div>
-                    <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span>{t.phone}</span>
-                      <button type="button" title="Sao chép SĐT" onClick={(e) => copyText(e, t.phone, 'Đã sao chép SĐT')} style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}>
-                        <Copy size={11} />
-                      </button>
-                      <a href={`tel:${t.phone}`} title="Gọi" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--action-primary)' }}><Phone size={12} /></a>
-                      <a href={toZaloUrl(t.phone)} target="_blank" rel="noreferrer" title="Zalo" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--blue-700)' }}><MessageCircle size={12} /></a>
-                    </div>
-                  </span>
-
-                  <span data-label="Biển số" style={{ flex: '1 1 100px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>{t.plateNumber || '—'}</span>
-                    {t.plateNumber && (
-                      <button type="button" title="Sao chép biển" onClick={(e) => copyText(e, t.plateNumber, 'Đã sao chép số biển')} style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}>
-                        <Copy size={11} />
-                      </button>
-                    )}
-                  </span>
-
-                  <span data-label="Số tiền" style={{ flex: '1 1 90px', fontWeight: 'var(--fw-bold)', color: 'var(--status-success-ink, #059669)' }}>
-                    {money(t.amount)}
-                  </span>
-
-                  <span data-label="Loại" style={{ flex: '1 1 70px' }}>
-                    <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: '11px', background: 'var(--surface-sunken)', color: 'var(--text-body)' }}>
-                      {INTENT_LABEL[t.intent] || t.intent}
+                  {isVisible('customer') && (
+                    <span data-primary data-label="Khách" style={{ flex: '1 1 120px' }}>
+                      <div style={{ fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{t.fullName}</div>
+                      <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>{t.phone}</span>
+                        <button type="button" title="Sao chép SĐT" onClick={(e) => copyText(e, t.phone, 'Đã sao chép SĐT')} style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}>
+                          <Copy size={11} />
+                        </button>
+                        <a href={`tel:${t.phone}`} title="Gọi" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--action-primary)' }}><Phone size={12} /></a>
+                        <a href={toZaloUrl(t.phone)} target="_blank" rel="noreferrer" title="Zalo" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--blue-700)' }}><MessageCircle size={12} /></a>
+                      </div>
                     </span>
-                  </span>
+                  )}
 
-                  <span data-label="CTV" style={{ flex: '1 1 100px' }}>
-                    {t.ctvName ? (
-                      <span title={ctvBankInfo(t)} style={{ display: 'block', cursor: 'help' }}>
-                        <div style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{t.ctvName}</div>
-                        <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.ctvPhone}</div>
+                  {isVisible('plate') && (
+                    <span data-label="Biển số" style={{ flex: '1 1 100px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>{t.plateNumber || '—'}</span>
+                      {t.plateNumber && (
+                        <button type="button" title="Sao chép biển" onClick={(e) => copyText(e, t.plateNumber, 'Đã sao chép số biển')} style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-muted)' }}>
+                          <Copy size={11} />
+                        </button>
+                      )}
+                    </span>
+                  )}
+
+                  {isVisible('amount') && (
+                    <span data-label="Số tiền" style={{ flex: '1 1 90px', fontWeight: 'var(--fw-bold)', color: 'var(--status-success-ink, #059669)' }}>
+                      {money(t.amount)}
+                    </span>
+                  )}
+
+                  {isVisible('intent') && (
+                    <span data-label="Loại" style={{ flex: '1 1 70px' }}>
+                      <span style={{ display: 'inline-block', padding: '1px 6px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontSize: '11px', background: 'var(--surface-sunken)', color: 'var(--text-body)' }}>
+                        {INTENT_LABEL[t.intent] || t.intent}
                       </span>
-                    ) : (
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{t.referralCodeUsed || '—'}</span>
-                    )}
-                  </span>
+                    </span>
+                  )}
 
-                  <span data-label="Hoa hồng" style={{ flex: '1 1 110px' }}>
-                    {t.commissionAmount != null ? (
-                      <span title={ctvBankInfo(t)} style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: t.ctvBankAccount ? 'help' : 'default' }}>
-                        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(t.commissionAmount)}</span>
-                        <Badge tone={COMMISSION_STATUS_TONE[t.commissionStatus] || 'neutral'}>{COMMISSION_STATUS_LABEL[t.commissionStatus] || t.commissionStatus}</Badge>
-                      </span>
-                    ) : (
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
-                    )}
-                  </span>
+                  {isVisible('ctv') && (
+                    <span data-label="CTV" style={{ flex: '1 1 100px' }}>
+                      {t.ctvName ? (
+                        <span title={ctvBankInfo(t)} style={{ display: 'block', cursor: 'help' }}>
+                          <div style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{t.ctvName}</div>
+                          <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.ctvPhone}</div>
+                        </span>
+                      ) : (
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{t.referralCodeUsed || '—'}</span>
+                      )}
+                    </span>
+                  )}
 
-                  <span data-label="Trạng thái" style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Badge tone={t.status === 'payment_confirmed' ? 'mint' : t.status === 'cancelled' ? 'neutral' : 'orange'}>
-                      {STATUS_LABEL[t.status] || t.status}
-                    </Badge>
-                    {t.status === 'payment_confirmed' && (
-                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontSize: '11px' }}>
-                        {t.paymentConfirmedVia === 'zalopay_webhook' ? 'ZaloPay' : 'Thủ công'}
-                      </span>
-                    )}
-                  </span>
+                  {isVisible('commission') && (
+                    <span data-label="Hoa hồng" style={{ flex: '1 1 110px' }}>
+                      {t.commissionAmount != null ? (
+                        <span title={ctvBankInfo(t)} style={{ display: 'flex', flexDirection: 'column', gap: 2, cursor: t.ctvBankAccount ? 'help' : 'default' }}>
+                          <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{money(t.commissionAmount)}</span>
+                          <Badge tone={COMMISSION_STATUS_TONE[t.commissionStatus] || 'neutral'}>{COMMISSION_STATUS_LABEL[t.commissionStatus] || t.commissionStatus}</Badge>
+                        </span>
+                      ) : (
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>—</span>
+                      )}
+                    </span>
+                  )}
 
-                  <span data-label="Thao tác" style={{ flex: '0 0 90px', display: 'flex', justifyContent: 'flex-end', gap: 6 }} onClick={(e) => e.stopPropagation()}>
-                    {t.status === 'pending' && (
-                      <Button variant="primary" size="sm" onClick={() => { setConfirmTarget(t); setProofUrl(''); }}>
-                        Xác nhận
-                      </Button>
-                    )}
-                    {t.status === 'pending' && (
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(t)} style={{ color: 'var(--status-danger)' }}>
-                        Xóa
-                      </Button>
-                    )}
-                  </span>
+                  {isVisible('status') && (
+                    <span data-label="Trạng thái" style={{ flex: '1 1 150px', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <Badge tone={t.status === 'payment_confirmed' ? 'mint' : t.status === 'cancelled' ? 'neutral' : 'orange'}>
+                        {STATUS_LABEL[t.status] || t.status}
+                      </Badge>
+                      {t.status === 'payment_confirmed' && (
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontSize: '11px' }}>
+                          {t.paymentConfirmedVia === 'zalopay_webhook' ? 'ZaloPay' : 'Thủ công'}
+                        </span>
+                      )}
+                    </span>
+                  )}
+
+                  {isVisible('createdAt') && (
+                    <span data-label="Ngày tạo" style={{ flex: '1 1 110px', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                      {formatDate(t.createdAt)}
+                    </span>
+                  )}
+
+                  {isVisible('actions') && (
+                    <span data-label="Thao tác" style={{ flex: '0 0 90px', display: 'flex', justifyContent: 'flex-end', gap: 6 }} onClick={(e) => e.stopPropagation()}>
+                      {t.status === 'pending' && (
+                        <Button variant="primary" size="sm" onClick={() => { setConfirmTarget(t); setProofUrl(''); }}>
+                          Xác nhận
+                        </Button>
+                      )}
+                      {t.status === 'pending' && (
+                        <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(t)} style={{ color: 'var(--status-danger)' }}>
+                          Xóa
+                        </Button>
+                      )}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
