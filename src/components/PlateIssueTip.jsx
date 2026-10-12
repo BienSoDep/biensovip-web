@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlert, ArrowRight } from 'lucide-react';
 
 /**
  * PlateIssueTip - Tooltip nổi bật hiển thị nguyên nhân cảnh báo dữ liệu biển số khi hover/focus
@@ -130,12 +130,15 @@ export default function PlateIssueTip({
               style={{
                 marginTop: 6,
                 fontSize: '11px',
-                color: 'rgba(255,255,255,0.65)',
+                color: 'rgba(255,255,255,0.75)',
                 borderTop: '1px solid rgba(255,255,255,0.15)',
                 paddingTop: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
               }}
             >
-              👉 Bấm vào để chỉnh sửa ngay
+              <ArrowRight size={11} /> Bấm vào để chỉnh sửa ngay
             </div>
           )}
         </span>

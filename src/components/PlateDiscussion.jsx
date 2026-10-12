@@ -17,6 +17,7 @@ import {
   Flame,
   Diamond,
   MessageSquarePlus,
+  Clock,
 } from "lucide-react";
 import Button from "./Button.jsx";
 import { useSubmitContact } from "../services/contactService.js";
@@ -1254,9 +1255,12 @@ export default function PlateDiscussion({ plate, notify, user }) {
                             fontWeight: "var(--fw-semibold)",
                             padding: "1px 8px",
                             borderRadius: "var(--radius-pill)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
                           }}
                         >
-                          ⏳ Đang chờ phản hồi
+                          <Clock size={11} /> Đang chờ phản hồi
                         </span>
                       )}
                     </div>
@@ -1537,9 +1541,12 @@ export default function PlateDiscussion({ plate, notify, user }) {
                         font: "var(--type-caption)",
                         fontWeight: "var(--fw-bold)",
                         color: "var(--action-primary)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
                       }}
                     >
-                      💬 Đang phản hồi tới {replyTarget.replyToName}
+                      <MessageSquare size={13} /> Đang phản hồi tới {replyTarget.replyToName}
                     </span>
                     <button
                       type="button"

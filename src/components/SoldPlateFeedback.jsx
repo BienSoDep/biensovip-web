@@ -364,8 +364,8 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--text-strong, #0F172A)', fontWeight: 600 }}>
-              🛡️ Cam kết dịch vụ Biensovip:
+            <span style={{ fontSize: 13, color: 'var(--text-strong, #0F172A)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <ShieldCheck size={16} style={{ color: 'var(--action-primary, #C75B00)' }} /> Cam kết dịch vụ Biensovip:
             </span>
             <span style={{ fontSize: 12.5, color: 'var(--text-muted, #475569)' }}>
               100% Biển sạch nguồn gốc · Hợp đồng pháp lý công chứng · Đền bù 200% nếu sai lệch
