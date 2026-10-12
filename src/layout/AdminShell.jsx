@@ -498,7 +498,21 @@ export default function AdminShell({
           </div>
         </aside>
       )}
-      <main className="admin-main" aria-hidden={drawerOpen ? true : undefined} inert={drawerOpen ? '' : undefined} style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <main
+        className={`admin-main ${s === 'compose' ? 'admin-main--compose' : ''}`}
+        aria-hidden={drawerOpen ? true : undefined}
+        inert={drawerOpen ? '' : undefined}
+        style={{
+          flex: '1 1 560px',
+          minWidth: 0,
+          padding: s === 'compose' ? 'var(--space-4) clamp(16px,2.5vw,28px) var(--space-3)' : 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: s === 'compose' ? 'var(--space-3)' : 'var(--space-5)',
+          height: s === 'compose' ? 'calc(100vh - 42px)' : undefined,
+          overflow: s === 'compose' ? 'hidden' : undefined,
+        }}
+      >
         {collapsed && (
           <button type="button" onClick={toggleCollapsed} aria-label="Hiện menu" title="Hiện menu" style={{ alignSelf: 'flex-start', width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <PanelLeftOpen size={18} />

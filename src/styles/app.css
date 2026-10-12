@@ -2176,3 +2176,67 @@ button[aria-expanded]:hover {
   min-width: 0;
   max-width: none;
 }
+
+/* Compose: Tách độc lập 2 scroll riêng biệt (Soạn bài & Xem trước SEO) */
+@media (min-width: 1024px) {
+  .admin-main--compose {
+    height: calc(100vh - 42px) !important;
+    overflow: hidden !important;
+  }
+  .compose-split-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.45fr) minmax(360px, 1fr) !important;
+    gap: var(--gutter-section, 24px) !important;
+    align-items: stretch !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+  .compose-column-left {
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding-right: 8px !important;
+  }
+  .compose-column-right {
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding-right: 8px !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-main--compose {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .compose-split-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .compose-column-left,
+  .compose-column-right {
+    height: auto !important;
+    overflow-y: visible !important;
+  }
+}
+
+/* Thanh cuộn mảnh, mượt mà cho 2 cột Compose */
+.compose-column-left::-webkit-scrollbar,
+.compose-column-right::-webkit-scrollbar {
+  width: 6px;
+}
+.compose-column-left::-webkit-scrollbar-track,
+.compose-column-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+.compose-column-left::-webkit-scrollbar-thumb,
+.compose-column-right::-webkit-scrollbar-thumb {
+  background: var(--grey-300, #d1d5db);
+  border-radius: 999px;
+}
+.compose-column-left::-webkit-scrollbar-thumb:hover,
+.compose-column-right::-webkit-scrollbar-thumb:hover {
+  background: var(--grey-400, #9ca3af);
+}
