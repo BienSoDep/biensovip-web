@@ -101,14 +101,15 @@ export default function AdminInterestLeads({ notify }) {
 
   // Lọc client-side theo từ khóa tìm kiếm (Tên, SĐT, Biển số)
   const filteredItems = useMemo(() => {
-    if (!searchQ.trim()) return result.items;
+    const rawItems = result?.items || [];
+    if (!searchQ.trim()) return rawItems;
     const q = searchQ.trim().toLowerCase();
-    return result.items.filter((item) =>
+    return rawItems.filter((item) =>
       (item.userFullName && item.userFullName.toLowerCase().includes(q)) ||
       (item.userPhone && item.userPhone.includes(q)) ||
       (item.plateNumber && item.plateNumber.toLowerCase().includes(q))
     );
-  }, [result.items, searchQ]);
+  }, [result?.items, searchQ]);
 
   // Sắp xếp thông minh
   const sortedItems = useMemo(() => {

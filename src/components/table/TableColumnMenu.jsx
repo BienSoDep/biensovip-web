@@ -4,9 +4,10 @@ import { Columns3, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-rea
 /**
  * Hook quản lý trạng thái hiển thị cột (bật/tắt) và lưu vào localStorage.
  */
-export function useTableColumns({ storageKey, columns }) {
+export function useTableColumns({ storageKey, columns = [] }) {
+  const safeColumns = Array.isArray(columns) ? columns : [];
   const [cols, setCols] = useState(() => {
-    const base = Object.fromEntries(columns.map((c) => [c.key, c.default !== false]));
+    const base = Object.fromEntries(safeColumns.map((c) => [c.key, c.default !== false]));
     if (!storageKey) return base;
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -28,7 +29,7 @@ export function useTableColumns({ storageKey, columns }) {
   };
 
   const selectAll = () => {
-    const next = Object.fromEntries(columns.map((c) => [c.key, true]));
+    const next = Object.fromEntries(safeColumns.map((c) => [c.key, true]));
     setCols(next);
     if (storageKey) {
       try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* ignore */ }
@@ -37,7 +38,7 @@ export function useTableColumns({ storageKey, columns }) {
 
   const deselectAll = () => {
     // Giữ ít nhất 1 cột quan trọng đầu tiên hoặc cho phép bỏ hết
-    const next = Object.fromEntries(columns.map((c) => [c.key, false]));
+    const next = Object.fromEntries(safeColumns.map((c) => [c.key, false]));
     setCols(next);
     if (storageKey) {
       try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* ignore */ }
@@ -45,11 +46,20 @@ export function useTableColumns({ storageKey, columns }) {
   };
 
   const resetDefault = () => {
-    const base = Object.fromEntries(columns.map((c) => [c.key, c.default !== false]));
+    const base = Object.fromEntries(safeColumns.map((c) => [c.key, c.default !== false]));
     setCols(base);
     if (storageKey) {
       try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
     }
+  };
+
+  const colMenuProps = {
+    columns: safeColumns,
+    cols,
+    toggleCol,
+    selectAll,
+    deselectAll,
+    resetDefault,
   };
 
   return {
@@ -58,16 +68,26 @@ export function useTableColumns({ storageKey, columns }) {
     selectAll,
     deselectAll,
     resetDefault,
-    isVisible: (key) => cols[key] !== false,
+    isVisible: (key) => cols?.[key] !== false,
+    colMenuProps,
   };
 }
 
 /**
  * Nút dropdown chọn ẩn / hiện cột trên bảng dữ liệu.
  */
-export function TableColumnMenu({ columns, cols, toggleCol, selectAll, deselectAll, resetDefault }) {
+export function TableColumnMenu({
+  columns = [],
+  cols = {},
+  toggleCol = () => {},
+  selectAll = () => {},
+  deselectAll = () => {},
+  resetDefault = () => {},
+}) {
   const [open, setOpen] = useState(false);
-  const visibleCount = columns.filter((c) => cols[c.key] !== false).length;
+  const safeColumns = Array.isArray(columns) ? columns : [];
+  const safeCols = cols || {};
+  const visibleCount = safeColumns.filter((c) => safeCols[c.key] !== false).length;
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -93,7 +113,7 @@ export function TableColumnMenu({ columns, cols, toggleCol, selectAll, deselectA
         }}
       >
         <Columns3 size={14} style={{ color: 'var(--action-primary)' }} />
-        <span>Cột hiển thị ({visibleCount}/{columns.length})</span>
+        <span>Cột hiển thị ({visibleCount}/{safeColumns.length})</span>
       </button>
 
       {open && (
@@ -145,8 +165,8 @@ export function TableColumnMenu({ columns, cols, toggleCol, selectAll, deselectA
             </div>
 
             {/* Danh sách các cột có checkbox */}
-            {columns.map((c) => {
-              const checked = cols[c.key] !== false;
+            {safeColumns.map((c) => {
+              const checked = safeCols[c.key] !== false;
               return (
                 <label
                   key={c.key}
