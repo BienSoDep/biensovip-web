@@ -171,7 +171,7 @@ const ADMIN_INFO = {
   ashowroom: 'Tab Số liệu: khuếch đại/tạo thêm con số hiển thị công khai, không đổi dữ liệu giao dịch/hoa hồng nội bộ. Tab Thứ tự sắp xếp: kéo-thả đổi ưu tiên sắp xếp mặc định danh sách biển.',
   asortsettings: 'Thứ tự ưu tiên sắp xếp mặc định danh sách biển công khai — kéo-thả đổi thứ tự 4 tiêu chí (Tỉnh ưu tiên/Hot/Ngày đăng/Loại biển), chỉ áp dụng khi khách không chủ động chọn sắp xếp khác.',
   aerrorlogs: 'Nhật ký lỗi hệ thống (Warning trở lên) ghi từ Serilog — tra cứu lỗi 500/exception gần đây mà không cần SSH đọc log VPS. Tự xóa log cũ hơn 30 ngày.',
-  afeatureflags: 'Tab Feature flags: bật/tắt nhanh tính năng không cần deploy lại. Tab Bảo trì: bật/tắt bảo trì từng trang public. Tab DB console: xem nhanh dữ liệu 7 bảng cố định.',
+  afeatureflags: 'Tab Máy chủ & Hạ tầng: giám sát hiệu năng VPS chính (RAM/Disk/DB/Uptime) và tình trạng Proxy cào VPA theo thời gian thực. Tab Feature flags: bật/tắt nhanh tính năng không cần deploy lại. Tab Bảo trì: bật/tắt bảo trì từng trang public. Tab DB console: xem nhanh dữ liệu 7 bảng cố định.',
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
