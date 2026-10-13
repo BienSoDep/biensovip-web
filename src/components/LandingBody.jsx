@@ -98,7 +98,7 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
           {title || 'Kho Biển Số Đẹp'}
         </h1>
         {intro && (
-          <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
+          <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-body)', width: '100%' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
         )}
         {blogPost && (
           <div style={{ marginTop: 'var(--space-6)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'center' }}>

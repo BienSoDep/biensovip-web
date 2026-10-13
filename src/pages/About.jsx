@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Play } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Badge, Eyebrow } from '../components/index.jsx';
 import LazyImage from '../components/LazyImage.jsx';
@@ -20,7 +20,7 @@ export default function About({ go }) {
   const FAQ = contentItems('about.faq.items').map((f) => [f.q, f.a]);
   const T = contentGet;
   return (
-    <section style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-9)', animation: 'pageIn 180ms var(--ease-out)' }}>
+    <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-9)', animation: 'pageIn 180ms var(--ease-out)' }}>
 
       {/* Intro + portrait */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'center' }}>
@@ -101,7 +101,9 @@ export default function About({ go }) {
                         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 300, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</span>
                       )}
                       <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>▶</span>
+                        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Play size={22} fill="currentColor" style={{ marginLeft: 3 }} />
+                        </span>
                       </span>
                     </a>
                   )}
@@ -174,7 +176,14 @@ export default function About({ go }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.shop_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.shop_value')}</span></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.phone_label')}</span><a href={`tel:${T('about.contact.phone_value').replace(/[^0-9]/g, '')}`} style={{ font: 'var(--type-title-3)' }}>{T('about.contact.phone_value')}</a></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.zalo_label')}</span><a href={`https://${T('about.contact.zalo_value')}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)' }}>{T('about.contact.zalo_value')}</a></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.address_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.address_value')}</span></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Email</span><a href={`mailto:${T('about.contact.email_value') || 'duymc64@gmail.com'}`} style={{ font: 'var(--type-title-3)', color: 'var(--action-primary)', textDecoration: 'none' }}>{T('about.contact.email_value') || 'duymc64@gmail.com'}</a></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.address_label') || 'Địa chỉ cơ sở'}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.address_value') || 'Số 06 An Thượng 30, Ngũ Hành Sơn, Đà Nẵng'}</span></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.facebook_label') || 'Fanpage Facebook'}</span>
+          <a href="https://www.facebook.com/duydinhbiensodepdanang" target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--action-primary)', textDecoration: 'none' }}>
+            {T('about.contact.facebook_value') || 'Duy Đinh - Biển Số Đẹp Đà Nẵng'}
+          </a>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.hours_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.hours_value')}</span></div>
       </div>
     </section>

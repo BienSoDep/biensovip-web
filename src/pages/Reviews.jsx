@@ -75,7 +75,9 @@ export default function Reviews({ notify, go }) {
             <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {dist.map((d) => (
                 <div key={d.stars} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', width: 28 }}>{d.stars}★</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', width: 28, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                    {d.stars}<Star size={11} fill="currentColor" />
+                  </span>
                   <div style={{ flex: 1, height: 6, borderRadius: 'var(--radius-xs)', background: 'var(--grey-100)', overflow: 'hidden' }}><div style={{ height: '100%', borderRadius: 'var(--radius-xs)', background: 'var(--action-primary)', width: d.pct + '%', transition: 'width 300ms var(--ease-out)' }} /></div>
                   <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', width: 28, textAlign: 'right' }}>{d.count}</span>
                 </div>

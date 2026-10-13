@@ -39,6 +39,8 @@ import {
   MapPin,
   Truck,
   Flame,
+  Star,
+  Check,
 } from 'lucide-react';
 import { InfoTip } from '../../../components/index.jsx';
 import SkeletonBase from '../../../components/skeletons/SkeletonBase.jsx';
@@ -101,8 +103,16 @@ export function ExecutiveSummaryBanner({ summary, leadHealth, isSuperAdmin }) {
 
         {leadHealth && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', font: 'var(--type-caption)' }}>
-            <span style={{ color: leadHealth.newLeadsWaiting > 0 ? 'var(--status-danger-ink)' : 'var(--status-success-ink)', fontWeight: 'var(--fw-semibold)' }}>
-              {leadHealth.newLeadsWaiting > 0 ? `⚠️ ${leadHealth.newLeadsWaiting} lead chờ gọi` : '✓ Lead đã tiếp nhận'}
+            <span style={{ color: leadHealth.newLeadsWaiting > 0 ? 'var(--status-danger-ink)' : 'var(--status-success-ink)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {leadHealth.newLeadsWaiting > 0 ? (
+                <>
+                  <AlertTriangle size={13} /> {leadHealth.newLeadsWaiting} lead chờ gọi
+                </>
+              ) : (
+                <>
+                  <Check size={13} /> Lead đã tiếp nhận
+                </>
+              )}
             </span>
             <span style={{ color: 'var(--text-faint)' }}>•</span>
             <span style={{ color: 'var(--text-muted)' }}>Tỷ lệ chốt: <b style={{ color: 'var(--text-strong)' }}>{leadHealth.closingRatePct}%</b></span>
@@ -533,8 +543,8 @@ export function MultiDimensionPlateDistributionMatrix({
               justifyContent: 'space-between',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ font: 'var(--type-title-2)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
-                  ★ {ratingsData.data.average}
+                <span style={{ font: 'var(--type-title-2)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Star size={16} fill="var(--amber-500)" color="var(--amber-500)" /> {ratingsData.data.average}
                 </span>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                   ({ratingsData.data.total} đánh giá của khách)

@@ -27,7 +27,7 @@ export function parsePlateNumber(raw) {
 }
 
 export function formatPrice(price, priceOnRequest) {
-  if (priceOnRequest) return 'Giá liên hệ';
+  if (priceOnRequest || !price || Number(price) <= 0) return 'Giá liên hệ';
   return new Intl.NumberFormat('vi-VN').format(price) + ' đ';
 }
 

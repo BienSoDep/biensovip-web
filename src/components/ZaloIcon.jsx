@@ -1,8 +1,31 @@
-// Logo Zalo (chữ "Zalo" vẽ bằng text SVG) — dùng chung cho ContactFab + PlateCard, tránh copy-paste.
-export default function ZaloIcon(props) {
+export default function ZaloIcon({
+  width,
+  height,
+  size,
+  style,
+  fontSize,
+  ...props
+}) {
+  const h = height || size;
   return (
-    <svg viewBox="0 0 48 48" width={22} height={22} {...props}>
-      <text x="24" y="31" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="20" fill="currentColor">Zalo</text>
-    </svg>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily:
+          "'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif",
+        fontWeight: 700,
+        fontSize: fontSize || (h ? Math.max(13, Math.round(h * 0.75)) : 16),
+        lineHeight: 1,
+        letterSpacing: "-0.2px",
+        color: "currentColor",
+        userSelect: "none",
+        ...style,
+      }}
+      {...props}
+    >
+      Zalo
+    </span>
   );
 }

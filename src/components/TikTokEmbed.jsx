@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Play } from 'lucide-react';
 
 // TikTok video tile — poster + link (no embed iframe).
 // TikTok's /embed/v2 service returns 503 "overload-protect" from non-whitelisted origins
@@ -28,7 +29,7 @@ export default function TikTokEmbed({ videoUrl, title }) {
     return (
       <a href={videoUrl} target="_blank" rel="noopener noreferrer"
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', gap: 6, textAlign: 'center', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>
-        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-body)' }}>▶</span>
+        <Play size={24} fill="currentColor" style={{ color: 'var(--text-body)' }} />
         <span>{title || 'Xem trên TikTok'}</span>
       </a>
     );
@@ -41,12 +42,14 @@ export default function TikTokEmbed({ videoUrl, title }) {
         <img src={thumb} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       ) : (
         <span style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, textAlign: 'center', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>
-          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-body)' }}>▶</span>
+          <Play size={24} fill="currentColor" style={{ color: 'var(--text-body)' }} />
           <span>{title || 'Xem trên TikTok'}</span>
         </span>
       )}
       <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>▶</span>
+        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Play size={22} fill="currentColor" style={{ marginLeft: 2 }} />
+        </span>
       </span>
     </a>
   );

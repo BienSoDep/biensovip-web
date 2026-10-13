@@ -40,7 +40,10 @@ function SortableCriterionRow({ token, idx, provinceOptions, priorityProvinceId,
         </button>
         <span style={{ width: 22, textAlign: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: '2px 0' }}>{idx + 1}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{CRITERIA_LABEL[token] || token}</div>
+          <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {CRITERIA_LABEL[token] || token}
+            <InfoTip text={CRITERIA_DESC[token]} size={13} />
+          </div>
           <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{CRITERIA_DESC[token]}</div>
         </div>
       </div>
@@ -101,7 +104,7 @@ export default function AdminPlateSortSettings({ notify }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-        Áp dụng cho danh sách biển công khai khi khách KHÔNG chọn sắp xếp nào (mặc định "Mới nhất"). Kéo tay cầm ☰ để đổi thứ tự ưu tiên — tiêu chí ở trên quyết định chính, tiêu chí bên dưới chỉ dùng để phân định khi tiêu chí trên bằng nhau.
+        Áp dụng cho danh sách biển công khai khi khách KHÔNG chọn sắp xếp nào (mặc định "Mới nhất"). Kéo tay cầm <GripVertical size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> để đổi thứ tự ưu tiên — tiêu chí ở trên quyết định chính, tiêu chí bên dưới chỉ dùng để phân định khi tiêu chí trên bằng nhau.
         <InfoTip text='Các lựa chọn sắp xếp chủ động khác (Giá, Lượt xem, Nổi bật trước, Số biển A→Z) không bị ảnh hưởng — chỉ mục sắp xếp mặc định mới dùng thứ tự ưu tiên này.' />
       </p>
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>

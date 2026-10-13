@@ -33,6 +33,7 @@ export default function Pagination({ page, totalPages, onChange, getHref, size =
         <a
           key={n}
           href={href}
+          className="pagination-btn pressable"
           onClick={(e) => {
             if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
               e.preventDefault();
@@ -47,7 +48,7 @@ export default function Pagination({ page, totalPages, onChange, getHref, size =
             minWidth: 32,
             height: 32,
             padding: '0 10px',
-            borderRadius: 'var(--radius-pill)',
+            borderRadius: 'var(--radius-sm)',
             font: 'var(--type-caption)',
             fontWeight: isCurrent ? 'var(--fw-bold)' : 'var(--fw-medium)',
             textDecoration: 'none',
@@ -73,6 +74,7 @@ export default function Pagination({ page, totalPages, onChange, getHref, size =
       {getHref && page > 1 ? (
         <a
           href={getHref(page - 1)}
+          className="pagination-btn pressable"
           onClick={(e) => {
             if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
               e.preventDefault();
@@ -85,7 +87,7 @@ export default function Pagination({ page, totalPages, onChange, getHref, size =
             justifyContent: 'center',
             height: 32,
             padding: '0 14px',
-            borderRadius: 'var(--radius-pill)',
+            borderRadius: 'var(--radius-sm)',
             font: 'var(--type-caption)',
             textDecoration: 'none',
             border: '1px solid var(--border-hairline)',
@@ -118,6 +120,7 @@ export default function Pagination({ page, totalPages, onChange, getHref, size =
       {getHref && page < totalPages ? (
         <a
           href={getHref(page + 1)}
+          className="pagination-btn pressable"
           onClick={(e) => {
             if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
               e.preventDefault();
@@ -130,7 +133,7 @@ export default function Pagination({ page, totalPages, onChange, getHref, size =
             justifyContent: 'center',
             height: 32,
             padding: '0 14px',
-            borderRadius: 'var(--radius-pill)',
+            borderRadius: 'var(--radius-sm)',
             font: 'var(--type-caption)',
             textDecoration: 'none',
             border: '1px solid var(--border-hairline)',

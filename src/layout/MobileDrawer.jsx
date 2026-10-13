@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings } from 'lucide-react';
+import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings, Sparkles, ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { pill } from '../components/NavBtn.jsx';
+import { useVpaCounts } from '../services/vpa.js';
+import { usePlates } from '../services/plates.js';
 
 const MAIN_NAV = [
   ['list', 'Biển số', Car],
@@ -16,6 +18,25 @@ const MAIN_NAV = [
 export default function MobileDrawer({ open, onClose, s, go, user, onLogout, favCount = 0, compareCount = 0 }) {
   const panelRef = useRef(null);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [luckyExpanded, setLuckyExpanded] = useState(s === 'lucky' || s === 'luanBien');
+  const [platesExpanded, setPlatesExpanded] = useState(s === 'list');
+  const { data: vpaCounts } = useVpaCounts('');
+  const { data: stockData } = usePlates({ perPage: 1 });
+  const stockTotal = stockData?.total;
+  const tuanCount = vpaCounts?.tuan;
+  const thangCount = vpaCounts?.thang;
+
+  const navigateToPlatesTab = (tabParam) => {
+    onClose();
+    const targetUrl = tabParam ? `/danh-sach?tab=${tabParam}` : '/danh-sach';
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', targetUrl);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      if (s !== 'list') {
+        go('list')();
+      }
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -53,15 +74,187 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout, fav
           <button type="button" aria-label="Đóng menu" onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }}><X size={22} /></button>
         </div>
         <nav style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4, padding: 'var(--space-3)' }}>
-          {MAIN_NAV.map(([key, label, Icon]) => (
-            <button key={key} onClick={() => { go(key)(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === key) }}>
-              <Icon size={18} style={{ flexShrink: 0 }} />
-              <span style={{ flex: 1 }}>{label}</span>
-              {key === 'compare' && compareCount > 0 && (
-                <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
-              )}
-            </button>
-          ))}
+          {MAIN_NAV.map(([key, label, Icon]) => {
+            if (key === 'list') {
+              const isListActive = s === 'list';
+              return (
+                <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <button
+                    type="button"
+                    onClick={() => setPlatesExpanded((v) => !v)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-3)',
+                      textAlign: 'left',
+                      padding: '12px 16px',
+                      border: 'none',
+                      borderRadius: 'var(--radius-pill)',
+                      font: 'var(--type-body-sm)',
+                      fontWeight: 'var(--fw-semibold)',
+                      cursor: 'pointer',
+                      ...pill(isListActive),
+                    }}
+                  >
+                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{label}</span>
+                    <ChevronDown
+                      size={16}
+                      style={{
+                        transform: platesExpanded ? 'rotate(180deg)' : 'none',
+                        transition: 'transform 180ms ease',
+                        opacity: 0.8,
+                      }}
+                    />
+                  </button>
+
+                  {platesExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, paddingLeft: 16, paddingTop: 4, paddingBottom: 6 }}>
+                      {[
+                        { key: 'tuan', title: 'Biển đẹp VPA tuần', count: tuanCount },
+                        { key: 'thang', title: 'Biển đẹp VPA tháng', count: thangCount },
+                        { key: '', title: 'Biển có sẵn', count: stockTotal },
+                      ].map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => navigateToPlatesTab(item.key)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                            textAlign: 'left',
+                            padding: '9px 12px',
+                            border: 'none',
+                            borderRadius: 'var(--radius-sm, 8px)',
+                            font: 'var(--type-body-sm)',
+                            cursor: 'pointer',
+                            background: 'transparent',
+                            color: 'var(--text-strong)',
+                            fontWeight: 'var(--fw-medium, 500)',
+                            transition: 'background 120ms ease',
+                          }}
+                        >
+                          <span style={{ flex: 1, lineHeight: 1.3 }}>{item.title}</span>
+                          <span
+                            style={{
+                              flexShrink: 0,
+                              background: '#FEF3C7',
+                              color: '#B45309',
+                              border: '1px solid #FDE68A',
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-pill, 999px)',
+                              font: 'var(--type-caption)',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {item.count != null ? `${new Intl.NumberFormat('vi-VN').format(item.count)} biển` : '—'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            if (key === 'lucky') {
+              const isLuckyActive = s === 'lucky' || s === 'luanBien';
+              return (
+                <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <button
+                    type="button"
+                    onClick={() => setLuckyExpanded((v) => !v)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-3)',
+                      textAlign: 'left',
+                      padding: '12px 16px',
+                      border: 'none',
+                      borderRadius: 'var(--radius-pill)',
+                      font: 'var(--type-body-sm)',
+                      fontWeight: 'var(--fw-semibold)',
+                      cursor: 'pointer',
+                      ...pill(isLuckyActive),
+                    }}
+                  >
+                    <Icon size={18} style={{ flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{label}</span>
+                    <ChevronDown
+                      size={16}
+                      style={{
+                        transform: luckyExpanded ? 'rotate(180deg)' : 'none',
+                        transition: 'transform 180ms ease',
+                        opacity: 0.8,
+                      }}
+                    />
+                  </button>
+
+                  {luckyExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingLeft: 16, paddingTop: 2, paddingBottom: 4 }}>
+                      <button
+                        type="button"
+                        onClick={() => { go('lucky')(); onClose(); }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          textAlign: 'left',
+                          padding: '9px 14px',
+                          border: 'none',
+                          borderRadius: 'var(--radius-pill)',
+                          font: 'var(--type-body-sm)',
+                          cursor: 'pointer',
+                          background: s === 'lucky' ? 'var(--surface-sunken)' : 'transparent',
+                          color: s === 'lucky' ? 'var(--action-primary)' : 'var(--text-body)',
+                          fontWeight: s === 'lucky' ? 'var(--fw-bold)' : 'var(--fw-regular)',
+                        }}
+                      >
+                        <Compass size={15} style={{ flexShrink: 0, color: 'var(--action-primary)' }} />
+                        <span style={{ flex: 1 }}>Tìm biển số hợp mệnh</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => { go('luanBien')(); onClose(); }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          textAlign: 'left',
+                          padding: '9px 14px',
+                          border: 'none',
+                          borderRadius: 'var(--radius-pill)',
+                          font: 'var(--type-body-sm)',
+                          cursor: 'pointer',
+                          background: s === 'luanBien' ? 'var(--surface-sunken)' : 'transparent',
+                          color: s === 'luanBien' ? 'var(--action-primary)' : 'var(--text-body)',
+                          fontWeight: s === 'luanBien' ? 'var(--fw-bold)' : 'var(--fw-regular)',
+                        }}
+                      >
+                        <Sparkles size={15} style={{ flexShrink: 0, color: '#d97706' }} />
+                        <span style={{ flex: 1 }}>Luận giải biển số xe</span>
+                        <span style={{ padding: '1px 5px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: 'var(--white)', fontSize: '10px', fontWeight: 'var(--fw-bold)' }}>Mới</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <button key={key} onClick={() => { go(key)(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === key) }}>
+                <Icon size={18} style={{ flexShrink: 0 }} />
+                <span style={{ flex: 1 }}>{label}</span>
+                {key === 'compare' && compareCount > 0 && (
+                  <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{compareCount}</span>
+                )}
+              </button>
+            );
+          })}
           <div style={{ height: 1, background: 'var(--border-hairline)', margin: '8px 4px' }} />
           <button onClick={() => { go('fav')(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === 'fav') }}>
             <Heart size={18} style={{ flexShrink: 0 }} />

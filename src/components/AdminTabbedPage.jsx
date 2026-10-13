@@ -1,12 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { InfoTip } from './index.jsx';
 
 // Trang admin gộp nhiều trang con thành tab ngang — dùng cho các nhóm chức năng liên quan chặt
-// (VD Blog+Bình luận, Nhật ký hệ thống/lỗi/rủi ro CTV). Style pill-tab copy từ AdminContacts.jsx.
+// (VD Blog+Bình luận, Nhật ký hệ thống/lỗi/rủi ro CTV, Báo cáo & Phân tích VPA).
+// Style pill-tab copy từ AdminContacts.jsx.
 // `tabs`: [{ key, label, render: () => ReactNode }] — ẩn tab nào không truyền (VD thiếu quyền).
 // `initialTab`: key tab mặc định khi vào trang lần đầu hoặc key đó không còn trong danh sách hiện tại.
-export default function AdminTabbedPage({ tabs, initialTab }) {
-  const [active, setActive] = useState(initialTab || tabs[0]?.key);
-  const current = tabs.find((t) => t.key === active) || tabs[0];
+// `activeTab`: (tùy chọn) điều khiển tab từ bên ngoài (controlled mode).
+export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChange, subtabParam = 'tab' }) {
+  const getInitialActive = () => {
+    if (activeTab) return activeTab;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const qTab = params.get(subtabParam) || params.get('subtab');
+      if (qTab && tabs.some((t) => t.key === qTab)) return qTab;
+    }
+    return initialTab || tabs[0]?.key;
+  };
+
+  const [active, setActive] = useState(getInitialActive);
+
+  // Lắng nghe popstate (Back/Forward trình duyệt) để đồng bộ tab theo URL
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const qTab = params.get(subtabParam) || params.get('subtab');
+      if (qTab && tabs.some((t) => t.key === qTab)) {
+        setActive(qTab);
+        onTabChange?.(qTab);
+      } else {
+        const fallback = initialTab || tabs[0]?.key;
+        if (fallback) {
+          setActive(fallback);
+          onTabChange?.(fallback);
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [tabs, subtabParam, initialTab, onTabChange]);
+
+  const handleSelect = (key) => {
+    setActive(key);
+    onTabChange?.(key);
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set(subtabParam, key);
+        window.history.replaceState(null, '', url.toString());
+      } catch { /* ignore */ }
+    }
+  };
+
+  // Xác định tab thực tế ngay trong render: ưu tiên activeTab (nếu controlled) hoặc active (uncontrolled),
+  // fallback an toàn về initialTab hoặc tab đầu tiên mà không gây cascading render.
+  const rawKey = activeTab || active;
+  const current = tabs.find((t) => t.key === rawKey) || (initialTab && tabs.find((t) => t.key === initialTab)) || tabs[0];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -15,14 +65,50 @@ export default function AdminTabbedPage({ tabs, initialTab }) {
           {tabs.map((t) => {
             const isActive = t.key === current?.key;
             return (
-              <button key={t.key} type="button" role="tab" aria-selected={isActive} onClick={() => setActive(t.key)}
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                title={t.title || t.note || t.tip || `Chuyển sang tab ${t.label}`}
+                aria-selected={isActive}
+                onClick={() => handleSelect(t.key)}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px', border: 'none',
-                  borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: isActive ? 'var(--fw-bold)' : 'var(--fw-medium)',
-                  background: isActive ? 'var(--action-primary)' : 'var(--white)', color: isActive ? 'var(--text-inverse)' : 'var(--text-body)',
-                  boxShadow: 'var(--shadow-inset-hairline)',
-                }}>
-                {t.label}
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  height: 36,
+                  padding: '0 16px',
+                  border: 'none',
+                  borderRadius: 'var(--radius-pill)',
+                  cursor: 'pointer',
+                  font: 'var(--type-body-sm)',
+                  fontWeight: isActive ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                  background: isActive ? 'var(--action-primary)' : 'var(--white)',
+                  color: isActive ? 'var(--action-primary-text, #ffffff)' : 'var(--text-body)',
+                  boxShadow: isActive ? '0 2px 6px rgba(199,91,0,0.2)' : 'var(--shadow-inset-hairline)',
+                  transition: 'all 140ms ease',
+                }}
+              >
+                <span>{t.label}</span>
+                {t.info && (
+                  <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <InfoTip text={t.info} size={13} style={{ color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
+                  </span>
+                )}
+                {t.count != null && (
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      padding: '1px 6px',
+                      borderRadius: 'var(--radius-pill)',
+                      background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--surface-sunken)',
+                      color: isActive ? '#ffffff' : 'var(--text-muted)',
+                      fontWeight: 'var(--fw-semibold)',
+                    }}
+                  >
+                    {t.count}
+                  </span>
+                )}
               </button>
             );
           })}

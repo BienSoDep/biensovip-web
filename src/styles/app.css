@@ -1,12 +1,18 @@
-/* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity */
+/* Brand ramp: warm orange — overrides tokens.css blue ramp for Biensovip identity.
+   --brand-500 = #f19720, màu người dùng pick trực tiếp từ chữ "DUY ĐINH" trong logo (gần như
+   trùng khít #f1961f đo từ logo-word.png) — ĐÚNG màu logo, không hạ sáng như 2 lần thử trước.
+   Contrast #f19720 với chữ TRẮNG chỉ 2.3 (dưới chuẩn WCAG AA ≥4.5) nên .btn-primary (dưới) đổi
+   color sang --ink-900 (chữ tối, contrast 7.99) thay vì --text-inverse — đánh đổi có chủ đích,
+   theo đúng yêu cầu "dùng màu logo thật" của người dùng. --brand-600 (hover/press) dùng lại
+   #a3610a — mức đã verify contrast tốt ở lần thử trước — để có 1 ramp liền mạch tăng độ đậm. */
 :root {
-  --brand-700: #8a3f00;
-  --brand-600: #b85600;
-  --brand-500: #d4650a;
-  --brand-400: #e8903e;
-  --brand-200: #f4c89e;
-  --brand-100: #f9e2cc;
-  --brand-50: #fcf2e6;
+  --brand-700: #6a3f06;
+  --brand-600: #a3610a;
+  --brand-500: #f19720;
+  --brand-400: #f4ab4c;
+  --brand-200: #f9d29f;
+  --brand-100: #fce9cf;
+  --brand-50: #fef4e7;
   --blue-700: var(--brand-700);
   --blue-600: var(--brand-600);
   --blue-500: var(--brand-500);
@@ -14,11 +20,15 @@
   --blue-200: var(--brand-200);
   --blue-100: var(--brand-100);
   --blue-50: var(--brand-50);
-  --shadow-blue: 0 8px 20px rgba(212, 101, 10, 0.26);
+  /* --brand-500 giờ sáng (#f19720) → mọi chữ/icon TRẮNG đặt trên nền action-primary (tab active,
+     pill active, badge...) phải đổi sang tối — xem --action-primary-text ở tokens.css, 9 file dùng
+     cặp action-primary/text-inverse đã đổi sang token này thay vì hardcode trắng. */
+  --action-primary-text: var(--ink-900);
+  --shadow-blue: 0 8px 20px rgba(241, 151, 32, 0.3);
   --surface-hero: linear-gradient(
     135deg,
-    #f9e2cc 0%,
-    #fcf2e6 42%,
+    #fce9cf 0%,
+    #fef4e7 42%,
     var(--cream-100) 100%
   );
 }
@@ -125,17 +135,23 @@ textarea,
 [data-pressable],
 .pressable {
   cursor: pointer;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              filter 160ms ease,
+              border-color 160ms ease;
+  will-change: transform;
 }
 
-/* Elements without a dedicated variant class (plate cards, blog cards, etc.)
-   fall back to a brightness nudge — real color swaps below take priority. */
 [data-pressable]:hover,
 .pressable:hover {
-  filter: brightness(0.97);
+  transform: translateY(-2px);
+  filter: brightness(1.02);
 }
+
 [data-pressable]:active,
 .pressable:active {
-  filter: brightness(0.94);
+  transform: translateY(0.5px) scale(0.985);
+  filter: brightness(0.95);
 }
 
 /* Button — base + sizes (P1: touch targets ≥40px) + variants. Visual styling lives here,
@@ -145,35 +161,56 @@ textarea,
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   padding: 0 20px;
   font: var(--type-body-sm);
   font-weight: var(--fw-semibold);
   white-space: nowrap;
   cursor: pointer;
-  transition: var(--transition-control);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms var(--ease-standard),
+              color 140ms var(--ease-standard),
+              border-color 140ms var(--ease-standard),
+              filter 140ms ease;
+  will-change: transform;
 }
-.btn:disabled { cursor: not-allowed; background: var(--surface-disabled); color: var(--text-disabled); box-shadow: none; }
+.btn:disabled { cursor: not-allowed; background: var(--surface-disabled); color: var(--text-disabled); box-shadow: none; transform: none !important; }
 .btn-uppercase { letter-spacing: 0.04em; text-transform: uppercase; }
 .btn-block { width: 100%; }
 .btn-sm { height: 36px; }
 .btn-md { height: 44px; }
 .btn-lg { height: 48px; }
 
-.btn-primary { background: var(--action-primary); color: var(--text-inverse); box-shadow: var(--shadow-blue); }
+/* Nền mặc định #f19720 sáng → chữ TỐI (--action-primary-text, contrast 7.99). Hover/active đậm dần
+   theo ramp cũ (brand-600/700) nên chữ chuyển sang trắng ở 2 trạng thái đó — nền càng đậm càng hợp
+   chữ sáng, ngược cơ chế nền sáng. */
+.btn-primary { background: var(--action-primary); color: var(--action-primary-text); box-shadow: var(--shadow-blue); }
 .btn-dark { background: var(--action-dark); color: var(--text-inverse); }
 .btn-outline { background: transparent; color: var(--text-strong); box-shadow: inset 0 0 0 1.5px var(--border-strong); }
 .btn-ghost { background: transparent; color: var(--text-body); }
 .btn-danger { background: var(--status-danger); color: var(--white); box-shadow: var(--shadow-blue); }
 
+.btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+.btn:not(:disabled):active {
+  transform: translateY(0.5px) scale(0.98);
+}
+
 .btn-primary:not(:disabled):hover {
   background: var(--action-primary-hover);
+  color: var(--text-inverse);
+  box-shadow: 0 8px 20px -2px rgba(217, 119, 6, 0.36), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 .btn-primary:not(:disabled):active {
   background: var(--action-primary-press);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-1);
 }
 .btn-dark:not(:disabled):hover {
   background: var(--action-dark-hover);
+  box-shadow: 0 8px 20px -2px rgba(22, 24, 29, 0.35);
 }
 .btn-dark:not(:disabled):active {
   background: var(--ink-800);
@@ -181,18 +218,22 @@ textarea,
 }
 .btn-outline:not(:disabled):hover {
   background: var(--action-ghost-hover);
+  border-color: var(--action-primary);
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.08), inset 0 0 0 1.5px var(--action-primary);
 }
 .btn-outline:not(:disabled):active {
   background: var(--grey-200);
 }
 .btn-ghost:not(:disabled):hover {
-  background: var(--action-ghost-hover);
+  background: var(--surface-muted);
+  color: var(--action-primary);
 }
 .btn-ghost:not(:disabled):active {
   background: var(--grey-200);
 }
 .btn-danger:not(:disabled):hover {
-  filter: brightness(0.92);
+  filter: brightness(0.94);
+  box-shadow: 0 8px 20px -2px rgba(229, 72, 77, 0.38);
 }
 .btn-danger:not(:disabled):active {
   filter: brightness(0.85);
@@ -201,31 +242,196 @@ textarea,
 /* Pill nav/filter buttons: selected (active bg) state needs a darker press,
    unselected state needs a visible hover tint — not just a global filter. */
 .pill-btn {
+  cursor: pointer;
   transition:
-    background-color 120ms var(--ease-standard),
-    color 120ms var(--ease-standard),
-    transform 120ms var(--ease-standard);
+    background-color 140ms var(--ease-standard),
+    color 140ms var(--ease-standard),
+    transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.pill-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+.pill-btn:active {
+  transform: translateY(0.5px) scale(0.97);
 }
 .pill-btn[data-on="true"]:hover {
   background: var(--action-primary-hover) !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.28) !important;
 }
 .pill-btn[data-on="true"]:active {
   background: var(--action-primary-press) !important;
 }
 .pill-btn[data-on="false"]:hover {
-  background: var(--surface-muted) !important;
-  filter: brightness(0.96);
+  background: var(--grey-200) !important;
+  color: var(--text-strong) !important;
 }
 .pill-btn[data-on="false"]:active {
   filter: brightness(0.9);
 }
 .pill-btn[data-on="false"][data-dark="true"]:hover {
-  background: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
   filter: none;
 }
 .pill-btn[data-on="false"][data-dark="true"]:active {
-  background: rgba(255, 255, 255, 0.24) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
 }
+
+/* --- Plate Card Interactive Hover Feedback --- */
+.plate-card {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+.plate-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12), 0 0 0 1.5px rgba(217, 119, 6, 0.32) !important;
+}
+.plate-card:active {
+  transform: translateY(-1px) scale(0.995);
+}
+.plate-card .plate-card-stage {
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.plate-card:hover .plate-card-stage {
+  transform: scale(1.02);
+}
+
+/* --- Icon Buttons Hover Feedback --- */
+.icon-btn {
+  cursor: pointer;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              color 140ms ease,
+              box-shadow 140ms ease !important;
+}
+.icon-btn:not(:disabled):hover {
+  transform: scale(1.1) translateY(-1px);
+  background-color: var(--grey-200) !important;
+  color: var(--action-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.icon-btn:not(:disabled):active {
+  transform: scale(0.93);
+}
+
+/* --- Pagination Interactive Hover --- */
+.pagination-btn {
+  cursor: pointer;
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              color 140ms ease,
+              box-shadow 140ms ease !important;
+}
+.pagination-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border-color: var(--action-primary) !important;
+}
+.pagination-btn:active {
+  transform: translateY(0.5px) scale(0.96);
+}
+
+/* --- Interactive General Cards (Category, Blog, Video, Review) --- */
+.category-card,
+article.blog-card,
+.interactive-card {
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.category-card:hover,
+article.blog-card:hover,
+.interactive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(14, 15, 18, 0.1), 0 0 0 1.5px rgba(217, 119, 6, 0.25);
+}
+
+/* --- Links Subtle Color Shift --- */
+a:not(.btn):not(.pressable):not(.plate-card) {
+  transition: color 150ms ease, opacity 150ms ease;
+}
+a:not(.btn):not(.pressable):not(.plate-card):hover {
+  color: var(--action-primary);
+}
+
+/* --- Admin Interactive Hover Affordances --- */
+/* 1. Admin Table Row Highlights */
+table tbody tr {
+  transition: background-color 120ms ease;
+}
+table tbody tr:hover {
+  background-color: rgba(217, 119, 6, 0.035) !important;
+}
+
+/* 2. Admin Action Buttons (Edit, Delete, Refresh, View, Toggle) */
+.admin-action-btn,
+button[aria-label="Chỉnh sửa"],
+button[aria-label="Xóa"],
+button[aria-label="Xem"],
+button[aria-label="Làm mới"] {
+  cursor: pointer;
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              color 140ms ease;
+}
+.admin-action-btn:hover,
+button[aria-label="Chỉnh sửa"]:hover,
+button[aria-label="Xóa"]:hover,
+button[aria-label="Xem"]:hover,
+button[aria-label="Làm mới"]:hover {
+  transform: scale(1.12);
+}
+.admin-action-btn:active,
+button[aria-label="Chỉnh sửa"]:active,
+button[aria-label="Xóa"]:active,
+button[aria-label="Xem"]:active,
+button[aria-label="Làm mới"]:active {
+  transform: scale(0.92);
+}
+
+/* 3. Admin KPI Cards & Summary Tiles */
+div[onClick][style*="borderRadius"]:not([style*="display: none"]),
+.kpi-card {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+div[onClick][style*="borderRadius"]:hover,
+.kpi-card:hover {
+  transform: translateY(-2.5px);
+  box-shadow: 0 10px 24px -4px rgba(14, 15, 18, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+div[onClick][style*="borderRadius"]:active,
+.kpi-card:active {
+  transform: translateY(0.5px) scale(0.985);
+}
+
+/* 4. Admin Sidebar group collapse button */
+button[aria-expanded]:hover {
+  color: var(--text-strong) !important;
+}
+
+/* Triệt tiêu viền outline tách rời / đè ngoài trên các nút pill và thanh menu header */
+.pill-btn,
+.pill-btn:focus,
+.header-nav-pills .pill-btn,
+.header-nav-pills button {
+  outline: none !important;
+}
+.pill-btn:focus-visible,
+.header-nav-pills .pill-btn:focus-visible {
+  outline: none !important;
+}
+.pill-btn[data-on="false"]:focus-visible,
+.header-nav-pills .pill-btn[data-on="false"]:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--action-primary) !important;
+}
+
 @keyframes pageIn {
   from {
     opacity: 0;
@@ -497,7 +703,7 @@ textarea,
   }
   /* Home search bar: stack into clear rows instead of one wrapped pill blob */
   .home-search-bar {
-    border-radius: var(--radius-xl) !important;
+    border-radius: var(--radius-md) !important;
     flex-direction: column;
     align-items: stretch !important;
     padding: 14px !important;
@@ -525,6 +731,34 @@ textarea,
   }
   .list-filter-aside {
     display: none !important;
+  }
+  /* PlateList: thanh pill dài (search + năm sinh) mobile */
+  .plate-search-bar {
+    flex-direction: column !important;
+    width: 100% !important;
+    border-radius: var(--radius-md) !important;
+  }
+  .plate-search-bar > span,
+  .plate-search-bar > input,
+  .plate-search-bar > button,
+  .plate-search-bar > span > input {
+    width: 100% !important;
+  }
+  .plate-search-divider {
+    width: auto !important;
+    height: 1px !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+  }
+  /* Compare (chưa chọn biển nào): mobile xếp 1 cột dọc full-width để input tìm kiếm dễ dùng */
+  .compare-empty-slots {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+  .compare-empty-slot {
+    flex: none !important;
+    max-width: none !important;
+    min-height: 0 !important;
   }
   /* Auth (login/register): hide info panel on mobile — chỉ còn form */
   .auth-info {
@@ -921,14 +1155,24 @@ textarea,
     order: -1;
   }
 }
-@media (min-width: 1025px) and (max-width: 1300px) {
-  /* Desktop hẹp: 6 nav-pill + logo 2 dòng + actions vượt quá --width-content (1216px), buộc nav-pills
-     cuộn ngang. Giảm gap/padding để đỡ phải cuộn — cùng hướng xử lý đã áp cho tablet ở trên. */
+@media (min-width: 1025px) {
+  /* Cho phép dropdown sub-menu như Hợp mệnh mở ra ngoài header mà không bị cắt,
+     đồng thời thiết lập gap và padding gọn gàng để 6 pills không bao giờ đè vào chuông thông báo */
+  .header-nav-pills {
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+  .header-nav-pills .pill-btn {
+    padding: 0 11px !important;
+  }
+}
+@media (min-width: 1025px) and (max-width: 1260px) {
+  /* Desktop hẹp (1025-1260px): giảm nhẹ gap/padding để đảm bảo khoảng cách an toàn tuyệt đối với chuông */
   .header-nav-pills {
     gap: 4px !important;
   }
   .header-nav-pills .pill-btn {
-    padding: 0 10px !important;
+    padding: 0 9px !important;
   }
 }
 /* Detail: mobile sticky bottom action bar */
@@ -1391,21 +1635,50 @@ textarea,
   z-index: 1;
 }
 
-/* Plate card stage — warm brand-tinted backdrop; plate itself stays realistic grey/white, only the surrounding frame gets the orange lift */
+/* Plate card stage — đã bỏ khung nền vàng nhạt theo yêu cầu người dùng, để biển số hiển thị to rõ tự nhiên */
 .plate-card-stage {
-  background: linear-gradient(
-    155deg,
-    var(--brand-100) 0%,
-    var(--brand-50) 100%
-  );
-  border: 1px solid var(--brand-200);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 .plate-card-stage:hover {
-  border-color: var(--brand-400);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 8px 18px -10px rgba(212, 101, 10, 0.35);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Nút liên hệ nhanh Gọi điện & Zalo trên thẻ biển số — hiệu ứng hover nổi bật */
+.plate-btn-phone {
+  background: var(--status-success-ink, #059669) !important;
+  color: #fff !important;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2) !important;
+}
+.plate-btn-phone:hover {
+  background: #047857 !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.42) !important;
+  filter: brightness(1.06) !important;
+}
+.plate-btn-phone:active {
+  transform: translateY(0) scale(0.97) !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2) !important;
+}
+
+.plate-btn-zalo {
+  background: #0068FF !important;
+  color: #fff !important;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease !important;
+  box-shadow: 0 2px 4px rgba(0, 104, 255, 0.2) !important;
+}
+.plate-btn-zalo:hover {
+  background: #0056D6 !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 6px 16px rgba(0, 104, 255, 0.45) !important;
+  filter: brightness(1.06) !important;
+}
+.plate-btn-zalo:active {
+  transform: translateY(0) scale(0.97) !important;
+  box-shadow: 0 2px 4px rgba(0, 104, 255, 0.2) !important;
 }
 
 /* Admin dense tables on tablet/narrow: scroll-shadow gợi ý còn nội dung ẩn 2 bên khi overflow-x auto —
@@ -1423,10 +1696,17 @@ textarea,
 }
 
 /* Landing intro (tỉnh/loại biển) — nội dung là HTML thô từ DB, cần style h2/p khớp design token */
+.landing-intro {
+  width: 100% !important;
+  max-width: 100% !important;
+}
 .landing-intro h2 {
-  margin: var(--space-6) 0 var(--space-2);
+  margin: var(--space-6) 0 var(--space-3);
   font: var(--type-title-2);
   color: var(--text-strong);
+  letter-spacing: var(--ls-title);
+  border-bottom: 2px solid var(--border-hairline);
+  padding-bottom: 8px;
 }
 .landing-intro h2:first-child {
   margin-top: var(--space-3);
@@ -1438,18 +1718,62 @@ textarea,
 }
 .landing-intro p {
   margin: 0 0 var(--space-3);
-  line-height: 1.65;
+  line-height: 1.75;
+  font-size: 15.5px;
+  color: var(--text-body);
+}
+.landing-intro ul,
+.landing-intro ol {
+  margin: 0 0 var(--space-4) 0;
+  padding-left: 24px;
+  line-height: 1.75;
+  font-size: 15.5px;
+}
+.landing-intro li {
+  margin-bottom: 8px;
+}
+.landing-intro strong {
+  color: var(--text-strong);
+  font-weight: var(--fw-bold);
+}
+.landing-intro table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: var(--space-5) 0;
+  background: var(--white);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-inset-hairline);
+  border: 1px solid var(--border-hairline);
+}
+.landing-intro th,
+.landing-intro td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14.5px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+.landing-intro th {
+  background: var(--surface-sunken);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+.landing-intro tr:last-child td {
+  border-bottom: none;
+}
+.landing-intro figure {
+  margin: var(--space-5) 0;
+  text-align: center;
+  width: 100%;
 }
 .landing-intro img {
+  width: 100%;
   max-width: 100%;
   height: auto;
   border-radius: var(--radius-card);
   display: block;
-  margin: var(--space-4) auto var(--space-2);
-}
-.landing-intro figure {
-  margin: var(--space-4) 0;
-  text-align: center;
+  margin: 0 auto var(--space-2);
 }
 .landing-intro figcaption {
   font: var(--type-caption);
@@ -1665,7 +1989,7 @@ textarea,
 }
 .ctv-tool-chip {
   background: var(--white);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-inset-hairline);
   padding: 8px 14px;
   display: inline-flex;
@@ -1719,7 +2043,7 @@ textarea,
   gap: var(--space-8);
   background: var(--surface-hero);
   border-radius: var(--radius-surface);
-  padding: clamp(20px, 4vw, 48px);
+  padding: clamp(28px, 4.5vw, 56px);
   box-shadow: var(--shadow-inset-hairline);
 }
 .contact-hero__glow {
@@ -1736,11 +2060,11 @@ textarea,
 .contact-hero__text {
   position: relative;
   z-index: 1;
-  flex: 1 1 320px;
+  flex: 1 1 380px;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 .contact-hero__media {
   position: relative;
@@ -1749,7 +2073,7 @@ textarea,
 }
 .contact-hero__img {
   display: block;
-  width: 220px;
+  width: clamp(260px, 28vw, 320px);
   max-width: 100%;
   height: auto;
   border-radius: var(--radius-surface);
@@ -1759,42 +2083,42 @@ textarea,
 .contact-hero__badge {
   position: absolute;
   left: 50%;
-  bottom: -14px;
+  bottom: -16px;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   background: var(--white);
   color: var(--text-strong);
-  font: var(--type-caption);
+  font-size: 15px;
   font-weight: var(--fw-semibold);
-  padding: 7px 14px;
-  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-2);
   white-space: nowrap;
 }
 .contact-hero__badge-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-pill);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
   background: var(--status-success);
   box-shadow: 0 0 0 3px var(--status-success-bg);
 }
 .contact-hero__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-1);
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 .contact-hero__chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   background: var(--white);
-  border-radius: var(--radius-pill);
-  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
   box-shadow: var(--shadow-inset-hairline);
-  font: var(--type-caption);
+  font-size: 15px;
   font-weight: var(--fw-semibold);
   color: var(--text-body);
 }
@@ -1824,7 +2148,7 @@ textarea,
     flex-basis: 100%;
   }
   .contact-hero__media { margin-bottom: var(--space-4); }
-  .contact-hero__img { width: 200px; }
+  .contact-hero__img { width: clamp(220px, 60vw, 280px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .contact-hero__img { animation: none; }
@@ -1838,4 +2162,82 @@ textarea,
   .vpa-row > [data-label] { flex: 1 1 42%; min-width: 0; }
   .vpa-row > [data-label]::before { content: attr(data-label); display: block; font: var(--type-caption); color: var(--text-muted); }
   .vpa-row > .vpa-actions { flex: 1 1 100%; }
+}
+
+/* Compare: 3 ô chia đều 1/3 chiều rộng khung, bằng nhau tuyệt đối */
+.compare-empty-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  width: 100%;
+  align-items: stretch;
+}
+.compare-empty-slot {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Compose: Tách độc lập 2 scroll riêng biệt (Soạn bài & Xem trước SEO) */
+@media (min-width: 1024px) {
+  .admin-main--compose {
+    height: calc(100vh - 42px) !important;
+    overflow: hidden !important;
+  }
+  .compose-split-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.45fr) minmax(360px, 1fr) !important;
+    gap: var(--gutter-section, 24px) !important;
+    align-items: stretch !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+  .compose-column-left {
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding-right: 8px !important;
+  }
+  .compose-column-right {
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding-right: 8px !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-main--compose {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .compose-split-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .compose-column-left,
+  .compose-column-right {
+    height: auto !important;
+    overflow-y: visible !important;
+  }
+}
+
+/* Thanh cuộn mảnh, mượt mà cho 2 cột Compose */
+.compose-column-left::-webkit-scrollbar,
+.compose-column-right::-webkit-scrollbar {
+  width: 6px;
+}
+.compose-column-left::-webkit-scrollbar-track,
+.compose-column-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+.compose-column-left::-webkit-scrollbar-thumb,
+.compose-column-right::-webkit-scrollbar-thumb {
+  background: var(--grey-300, #d1d5db);
+  border-radius: 999px;
+}
+.compose-column-left::-webkit-scrollbar-thumb:hover,
+.compose-column-right::-webkit-scrollbar-thumb:hover {
+  background: var(--grey-400, #9ca3af);
 }

@@ -1,192 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
-import { Phone, MessageCircle } from 'lucide-react';
-import { useDebouncedValue } from '@mantine/hooks';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../../components/Button.jsx';
-import ConfirmModal from '../../components/ConfirmModal.jsx';
 import { Input, Select } from '../../components/index.jsx';
-import { useAdminBroadcasts, useSendBroadcast, useNotificationTypeSettings, useUpdateNotificationTypeSetting, useSendTestEmail, usePreviewEmail, useNotificationRecipientCount, useFengShuiQueueStats } from '../../services/adminNotificationService.js';
-import { useAdminCustomers } from '../../services/adminCustomers.js';
-import { useAdminSubscribers, useSubscriberActiveCount, useRemoveSubscriber, useAdminBlasts } from '../../services/subscribers.js';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import { canPerm } from '../../layout/AdminShell.jsx';
-import { useAdminEmailTemplates, useUpdateEmailTemplate, usePreviewEmailTemplate } from '../../services/emailTemplates.js';
-import { formatDate } from '../../lib/date.js';
-import { sanitizeHtml } from '../../lib/sanitizeHtml.js';
-
-const TYPE_LABEL = {
-  plate_match: 'Biển mới khớp tìm kiếm đã lưu', hot_alert: 'Biển yêu thích đang HOT', re_engage: 'Nhắc quay lại (không hoạt động)',
-  price_drop: 'Biển yêu thích giảm giá', ai_pick: 'Gợi ý AI', digest: 'Email tổng hợp hàng ngày',
-  plate_sold: 'Biển yêu thích đã bán',
-  fengshui_match: 'Biển mới hợp mệnh', contact_status: 'Cập nhật yêu cầu liên hệ', new_review: 'Đánh giá mới trên biển đang theo dõi',
-  search_stale: 'Tìm kiếm đã lưu chưa có kết quả', viewed_price_drop: 'Giảm giá biển đã xem', compare_price_drop: 'Giảm giá biển đang so sánh',
-  profile_incomplete: 'Nhắc hoàn thiện hồ sơ', collaborator_commission: 'Hoa hồng CTV đã thanh toán (email)',
-  guest_contact_received: 'Xác nhận tiếp nhận yêu cầu (Khách để lại thông tin)',
-  guest_contact_status: 'Cập nhật tiến độ tư vấn (Khách để lại thông tin)',
-  subscriber_welcome: 'Chào mừng đăng ký nhận tin (Newsletter)',
-  guest_account_invite: 'Mời khách để lại thông tin tạo tài khoản VIP',
-  lead_plate_reminder: 'Nhắc nhở biển số đẹp khách từng quan tâm',
-};
-
-// Mô tả điều kiện kích hoạt thật — lấy trực tiếp từ logic job/service backend, không phải suy đoán.
-const TYPE_DESC = {
-  plate_match: 'Gửi khi có biển mới đăng (15 phút gần nhất) khớp bộ lọc tìm kiếm đã lưu của người dùng.',
-  hot_alert: 'Gửi khi biển đã yêu thích vừa được đánh dấu HOT trong 1 giờ gần nhất.',
-  re_engage: 'Gửi cho user không hoạt động quá lâu, hoặc tài khoản mới 2-5 ngày chưa lưu biển nào.',
-  price_drop: 'Gửi khi biển đã yêu thích giảm giá vượt ngưỡng cấu hình so với lúc lưu.',
-  ai_pick: 'Gửi gợi ý biển cùng tỉnh/loại xe với biển đã lưu, xếp theo lượt xem — tối đa 3 gợi ý/ngày.',
-  digest: 'Gửi email gộp mọi thông báo web trong 24h qua, vào đúng giờ mỗi user tự chọn trong hồ sơ cá nhân — không phải giờ admin đặt ở đây.',
-  plate_sold: 'Gửi ngay khi biển đã yêu thích chuyển sang trạng thái Đã bán.',
-  fengshui_match: 'Gửi khi có biển mới đăng có số cuối hợp mệnh theo năm sinh của người dùng.',
-  contact_status: 'Gửi ngay khi admin đổi trạng thái yêu cầu liên hệ của người dùng.',
-  new_review: 'Gửi ngay khi 1 đánh giá về biển được admin duyệt lần đầu — báo cho ai đã yêu thích biển đó.',
-  search_stale: 'Gửi khi 1 tìm kiếm đã lưu quá 30 ngày không có kết quả mới — nhắc user nới bộ lọc.',
-  viewed_price_drop: 'Gửi khi biển đã xem (không cần yêu thích) giảm giá vượt ngưỡng so với lúc xem.',
-  compare_price_drop: 'Gửi khi biển trong danh sách so sánh giảm giá vượt ngưỡng so với lúc mở so sánh.',
-  profile_incomplete: 'Gửi cho user đăng ký ≥2 ngày còn thiếu họ tên/ngày sinh/giới tính, đúng giờ admin đặt bên dưới.',
-  collaborator_commission: 'Gửi tới email CTV khi hoa hồng của họ chuyển sang trạng thái Đã thanh toán.',
-  guest_contact_received: 'Tự động gửi email xác nhận ngay khi khách để lại thông tin liên hệ / đặt cọc / mua biển trên website.',
-  guest_contact_status: 'Tự động gửi email thông báo khi chuyên viên/admin cập nhật trạng thái yêu cầu tư vấn của khách vãng lai.',
-  subscriber_welcome: 'Tự động gửi email chào mừng và gửi mã ưu đãi ngay khi người dùng đăng ký nhận tin ở chân trang / popup.',
-  guest_account_invite: 'Tự động gửi email mời khách hàng đã để lại thông tin tạo tài khoản thành viên để nhận ưu đãi và lưu biển.',
-  lead_plate_reminder: 'Tự động nhắc nhở khách về biển số đẹp họ từng quan tâm nhưng chưa chốt giao dịch.',
-};
-
-// Nhóm các loại thông báo dành riêng cho khách chưa đăng ký / người để lại thông tin
-const GUEST_TYPES = new Set([
-  'guest_contact_received',
-  'guest_contact_status',
-  'subscriber_welcome',
-  'guest_account_invite',
-  'lead_plate_reminder',
-]);
-
-// Job backend THẬT SỰ đọc field TriggerHour để quyết định giờ gửi — chỉ loại này sửa "Giờ gửi" mới có
-// tác dụng. digest dùng giờ user tự chọn (không phải TriggerHour); search_stale có seed TriggerHour
-// nhưng job bỏ qua field này (chạy cố định 1 lần/ngày) — sửa giờ 2 loại này KHÔNG có tác dụng thật.
-const HOUR_HAS_EFFECT = new Set(['profile_incomplete']);
-
-const TARGETS = [
-  { value: 'all', label: 'Tất cả người dùng' },
-  { value: 'subscribed', label: 'Đã đăng ký nhận thông báo' },
-  { value: 'subscribers', label: 'Email đăng ký nhận tin (footer/banner)' },
-  { value: 'specific', label: 'Chọn người dùng cụ thể' },
-];
-const CHANNELS = [
-  { value: 'web', label: 'Chỉ chuông web' },
-  { value: 'email', label: 'Chỉ email' },
-  { value: 'zalo', label: 'Chỉ Zalo' },
-  { value: 'email_zalo', label: 'Chuông web + Email' },
-];
-const CHANNEL_LABEL = { web: 'Chuông web', email: 'Email', zalo: 'Zalo', email_zalo: 'Chuông web + Email' };
-
-// Content giờ có thể là HTML (soạn bằng rich text editor) — tóm tắt thuần text cho danh sách "Đã gửi".
-function stripHtml(html) {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-// Textarea nhập plain text (RichTextEditor/Tiptap crash trên trang này — xem RichTextEditor.jsx) —
-// escape rồi wrap từng dòng trống-cách-nhau thành <p>, giữ tương thích với content HTML backend đã dùng.
-function plainTextToHtml(text) {
-  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return text.split(/\n{2,}/).map((p) => `<p>${esc(p).replace(/\n/g, '<br/>')}</p>`).join('');
-}
-
-// Xem trước email gần đúng template EmailTemplate.Wrap (logo, thanh cam, tiêu đề, nội dung, liên hệ) — admin thấy email sẽ gửi ra sao trước khi gửi thật.
-function EmailPreview({ title, body }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Xem trước email</span>
-      <div style={{ maxWidth: 520, background: '#f6f7f9', borderRadius: 'var(--radius-md)', overflow: 'hidden', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 20px', background: '#ffffff', borderBottom: '3px solid #F97316' }}>
-          <span style={{ width: 26, height: 26, borderRadius: 'var(--radius-sm)', background: '#F97316', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>B</span>
-          <span style={{ fontWeight: 700, color: '#111827' }}>Biensovip</span>
-        </div>
-        <div style={{ padding: '18px 20px', background: '#ffffff' }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{title || '—'}</div>
-          <div style={{ color: '#374151', lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: body ? sanitizeHtml(body) : '<p style="color:#9CA3AF">—</p>' }} />
-        </div>
-        <div style={{ padding: '12px 20px', background: '#fff7ed', color: '#9a3412', fontSize: 12, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Phone size={12} /> 081 579 2699</span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MessageCircle size={12} /> Zalo: biensovip</span>
-        </div>
-        <div style={{ padding: '10px 20px', background: '#f1f2f4', color: '#6b7280', fontSize: 11, textAlign: 'center' }}>
-          Biensovip.com — mua bán biển số xe đẹp
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Xem trước render thật của template drag-drop đã chọn (POST /admin/email-templates/{id}/preview) —
-// khác EmailPreview ở trên: đây là đúng HTML sẽ gửi, không phải mock Wrap tĩnh.
-function TemplatePreview({ templateId }) {
-  const preview = usePreviewEmailTemplate();
-  const [html, setHtml] = useState('');
-  useEffect(() => {
-    if (!templateId) { setHtml(''); return; }
-    let cancelled = false;
-    preview.mutateAsync({ id: templateId }).then((r) => { if (!cancelled) setHtml(r.html); }).catch(() => {});
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [templateId]);
-  if (!templateId) return null;
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Xem trước layout template</span>
-      <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-2)' }}>
-        {html ? (
-          <iframe title="Template preview" srcDoc={html} style={{ width: '100%', height: 480, border: 'none', borderRadius: 'var(--radius-md)', background: '#ffffff' }} />
-        ) : (
-          <div style={{ height: 480, display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải preview…</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function UserPicker({ selected, onChange }) {
-  const [q, setQ] = useState('');
-  const { data, isLoading } = useAdminCustomers({ q, page: 1, perPage: 20 });
-  const results = data?.items || [];
-
-  const toggle = (u) => {
-    const exists = selected.some((s) => s.id === u.id);
-    onChange(exists ? selected.filter((s) => s.id !== u.id) : [...selected, { id: u.id, label: u.fullName || u.email || u.phone }]);
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <Input label="Tìm người dùng (email, tên)" placeholder="Nhập để tìm…" value={q} onChange={(e) => setQ(e.target.value)} />
-      {selected.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {selected.map((s) => (
-            <span key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-pill)', padding: '4px 10px', font: 'var(--type-caption)', color: 'var(--text-strong)' }}>
-              {s.label}
-              <button type="button" onClick={() => onChange(selected.filter((x) => x.id !== s.id))} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', font: 'var(--type-caption)' }}>×</button>
-            </span>
-          ))}
-        </div>
-      )}
-      {q && (
-        <div style={{ maxHeight: 180, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-2)' }}>
-          {isLoading ? (
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang tìm…</span>
-          ) : results.length === 0 ? (
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Không tìm thấy</span>
-          ) : (
-            results.map((u) => (
-              <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
-                <input type="checkbox" checked={selected.some((s) => s.id === u.id)} onChange={() => toggle(u)} />
-                {u.fullName || '(chưa có tên)'} — {u.email || u.phone}
-              </label>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import {
+  useAdminBroadcasts,
+  useSendBroadcast,
+  useNotificationRecipientCount,
+} from '../../services/adminNotificationService.js';
+import { useAdminCustomers } from '../../services/adminCustomers.js';
+import { useSubscriberActiveCount } from '../../services/subscribers.js';
+import { useAdminEmailTemplates } from '../../services/emailTemplates.js';
+import {
+  TARGETS, CHANNELS, CHANNEL_LABEL, stripHtml, plainTextToHtml
+} from './notifications/notificationConstants.js';
+import {
+  EmailPreview, TemplatePreview, UserPicker
+} from './notifications/NotificationPreviews.jsx';
+import SubscriberSection from './notifications/SubscriberSection.jsx';
+import TypeSettingsSection from './notifications/TypeSettingsSection.jsx';
+import EmailLogsSection from './notifications/EmailLogsSection.jsx';
 
 export default function AdminNotifications({ notify, st }) {
   const [sentPage, setSentPage] = useState(1);
@@ -206,14 +40,13 @@ export default function AdminNotifications({ notify, st }) {
   const [err, setErr] = useState('');
   const [sending, setSending] = useState(false);
 
-  // UC27 — "Layout email" cho broadcast thủ công: chọn template drag-drop đã tạo (áp dụng type "broadcast")
-  // để gửi kèm thay vì dùng EmailTemplate.Wrap mặc định. Rỗng = mặc định hệ thống.
+  // UC27 — "Layout email" cho broadcast thủ công: chọn template drag-drop đã tạo
   const { data: templatesData } = useAdminEmailTemplates();
   const templates = templatesData?.items || templatesData || [];
   const broadcastTemplates = templates.filter((t) => (t.appliesTo || []).includes('broadcast'));
   const [templateId, setTemplateId] = useState('');
 
-  // Ước lượng số người nhận theo đối tượng hiện tại — cập nhật mỗi khi target/channel/user thay đổi.
+  // Ước lượng số người nhận theo đối tượng hiện tại
   let recipientEstimate = null;
   if (target === 'subscribers') recipientEstimate = subCount.data?.count;
   else if (target === 'specific') recipientEstimate = selectedUsers.length;
@@ -226,6 +59,7 @@ export default function AdminNotifications({ notify, st }) {
     { key: 'send', label: 'Gửi thông báo', desc: 'Soạn & gửi tới user hoặc email đăng ký' },
     ...(canSubscribers ? [{ key: 'subscribers', label: 'Email đăng ký', desc: 'Danh sách nhận tin & lịch sử gửi' }] : []),
     { key: 'automation', label: 'Tự động hóa', desc: 'Kênh, nội dung & lịch cho email tự động' },
+    { key: 'logs', label: 'Lịch sử & Logs email', desc: 'Nhật ký gửi email hệ thống & tự động hóa' },
   ];
 
   const send = async () => {
@@ -286,12 +120,12 @@ export default function AdminNotifications({ notify, st }) {
                   style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }}
                 />
               </div>
-              <Select label="Đối tượng" value={target} options={TARGETS} onChange={setTarget} />
+              <Select label="Đối tượng" info="Chọn gửi cho toàn bộ user, chỉ user đã đăng ký nhận email tổng hợp, hay chọn đích danh từng người." value={target} options={TARGETS} onChange={setTarget} />
               {target === 'specific' && <UserPicker selected={selectedUsers} onChange={setSelectedUsers} />}
-              {target !== 'subscribers' && <Select label="Kênh gửi" value={channel} options={CHANNELS} onChange={setChannel} />}
+              {target !== 'subscribers' && <Select label="Kênh gửi" info="Chọn gửi qua thông báo trong app, email, hay cả hai." value={channel} options={CHANNELS} onChange={setChannel} />}
               {target !== 'subscribers' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-                  <Select label="Layout email" value={templateId} onChange={setTemplateId}
+                  <Select label="Layout email" info="Giao diện email sẽ dùng khi gửi — chọn 'Mặc định hệ thống' nếu không cần layout riêng." value={templateId} onChange={setTemplateId}
                     options={[{ value: '', label: 'Mặc định hệ thống' }, ...broadcastTemplates.map((t) => ({ value: t.id, label: t.name }))]} />
                   {broadcastTemplates.length === 0 && (
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có template áp dụng cho "broadcast" — tạo ở tab "Mẫu email".</span>
@@ -352,9 +186,13 @@ export default function AdminNotifications({ notify, st }) {
             )}
             {!isLoading && !isError && data?.total > 20 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)' }}>
-                <button type="button" disabled={sentPage <= 1} onClick={() => setSentPage((p) => Math.max(1, p - 1))} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage <= 1 ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage <= 1 ? 'default' : 'pointer' }}>‹ Trước</button>
+                <button type="button" disabled={sentPage <= 1} onClick={() => setSentPage((p) => Math.max(1, p - 1))} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage <= 1 ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage <= 1 ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                  <ChevronLeft size={13} /> Trước
+                </button>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Trang {sentPage} / {Math.max(1, Math.ceil(data.total / 20))}</span>
-                <button type="button" disabled={sentPage >= Math.ceil(data.total / 20)} onClick={() => setSentPage((p) => p + 1)} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage >= Math.ceil(data.total / 20) ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage >= Math.ceil(data.total / 20) ? 'default' : 'pointer' }}>Sau ›</button>
+                <button type="button" disabled={sentPage >= Math.ceil(data.total / 20)} onClick={() => setSentPage((p) => p + 1)} style={{ border: 'none', background: 'none', font: 'var(--type-caption)', color: sentPage >= Math.ceil(data.total / 20) ? 'var(--text-faint)' : 'var(--link)', cursor: sentPage >= Math.ceil(data.total / 20) ? 'default' : 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                  Sau <ChevronRight size={13} />
+                </button>
               </div>
             )}
           </div>
@@ -364,451 +202,7 @@ export default function AdminNotifications({ notify, st }) {
 
       {tab === 'subscribers' && <SubscriberSection notify={notify} />}
       {tab === 'automation' && <TypeSettingsSection notify={notify} />}
-    </div>
-  );
-}
-
-// Danh sách email đăng ký nhận tin (footer/banner) + lịch sử blast đã gửi tới subscriber.
-function SubscriberSection({ notify }) {
-  const [q, setQ] = useState('');
-  const [page, setPage] = useState(1);
-  const [confirmTarget, setConfirmTarget] = useState(null);
-  const PER = 15;
-  const { data, isLoading, isError, refetch } = useAdminSubscribers({ q, page, perPage: PER });
-  const count = useSubscriberActiveCount();
-  const remove = useRemoveSubscriber();
-  const blasts = useAdminBlasts({ page: 1, perPage: 10 });
-
-  const items = data?.items || [];
-  const total = data?.total || 0;
-  const doRemove = async () => {
-    if (!confirmTarget) return;
-    try { await remove.mutateAsync(confirmTarget.id); notify('Đã hủy đăng ký'); }
-    catch (e) { notify(e.message || 'Lỗi'); }
-    finally { setConfirmTarget(null); }
-  };
-
-  return (
-    <div style={{ flex: '1 1 100%', minWidth: 0, display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'flex-start' }}>
-      <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span style={{ flex: 1, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Email đăng ký nhận tin</span>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{count.data?.count ?? '–'} đang hoạt động</span>
-          <Input label="" placeholder="Tìm email / tên" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-        </div>
-        {isLoading ? (
-          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
-        ) : isError ? (
-          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
-            Lỗi tải danh sách email.{' '}
-            <button type="button" onClick={() => refetch()} style={{ color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>Thử lại</button>
-          </div>
-        ) : items.length === 0 ? (
-          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có email nào đăng ký.</div>
-        ) : (
-          items.map((s) => (
-            <div key={s.id} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.email}</div>
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-                  {s.source} · {formatDate(s.createdAt)}{s.unsubscribedAt ? ' · đã hủy' : ''}
-                </div>
-              </div>
-              <button type="button" onClick={() => setConfirmTarget({ id: s.id, email: s.email })} disabled={remove.isPending}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Hủy</button>
-            </div>
-          ))
-        )}
-        {total > PER && (
-          <div style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', justifyContent: 'center', gap: 'var(--space-2)' }}>
-            <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Trước</button>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{page} / {Math.ceil(total / PER)}</span>
-            <button type="button" onClick={() => setPage((p) => p + 1)} disabled={page * PER >= total} style={{ border: 'none', background: 'none', cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>Sau</button>
-          </div>
-        )}
-      </div>
-
-      <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đợt gửi tới subscriber</span>
-        </div>
-        {blasts.isLoading ? (
-          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
-        ) : (blasts.data?.items || []).length === 0 ? (
-          <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa gửi đợt nào tới subscriber.</div>
-        ) : (
-          (blasts.data?.items || []).map((b) => (
-            <div key={b.id} style={{ padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-              <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{b.title}</div>
-              <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{b.sentCount}/{b.totalCount} đã gửi · {formatDate(b.createdAt)}</div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <ConfirmModal
-        open={!!confirmTarget}
-        onClose={() => setConfirmTarget(null)}
-        title="Hủy đăng ký"
-        message={`Hủy đăng ký nhận tin của ${confirmTarget?.email}?`}
-        confirmLabel="Hủy đăng ký"
-        danger
-        loading={remove.isPending}
-        onConfirm={doRemove}
-      />
-    </div>
-  );
-}
-
-function TypeSettingsSection({ notify }) {
-  const { data, isLoading, isError, refetch } = useNotificationTypeSettings();
-  const [editingType, setEditingType] = useState(null);
-  const [filterGroup, setFilterGroup] = useState('all'); // 'all' | 'guest' | 'registered'
-  // Title/content đang gõ dở (chưa lưu) của row đang edit — nằm ở section cha để panel preview bên
-  // phải đọc được real-time mà không cần lift state phức tạp qua nhiều tầng props.
-  const [draftTitle, setDraftTitle] = useState('');
-  const [draftContent, setDraftContent] = useState('');
-  // Tỉ lệ cột trái (list) tính theo % — kéo divider để chỉnh, nhớ qua localStorage.
-  const [leftPct, setLeftPct] = useState(() => {
-    try { return Number(localStorage.getItem('adminNotifLeftPct')) || 55; } catch { return 55; }
-  });
-  const containerRef = useRef(null);
-  const dragging = useRef(false);
-
-  const editingSetting = (data || []).find((t) => t.type === editingType) || null;
-
-  const startEdit = (setting) => {
-    setEditingType(setting.type);
-    setDraftTitle(setting.titleTemplate || '');
-    setDraftContent(setting.contentTemplate || '');
-  };
-  const closeEdit = () => setEditingType(null);
-
-  const onDividerDown = (e) => {
-    e.preventDefault();
-    dragging.current = true;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  };
-
-  useEffect(() => {
-    const onMove = (e) => {
-      if (!dragging.current || !containerRef.current) return;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const rect = containerRef.current.getBoundingClientRect();
-      const pct = Math.min(75, Math.max(25, ((clientX - rect.left) / rect.width) * 100));
-      setLeftPct(pct);
-    };
-    const onUp = () => {
-      if (!dragging.current) return;
-      dragging.current = false;
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      try { localStorage.setItem('adminNotifLeftPct', String(leftPct)); } catch { /* ignore */ }
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    window.addEventListener('touchmove', onMove);
-    window.addEventListener('touchend', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
-      window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leftPct]);
-
-  const showSplit = Boolean(editingType);
-  const rawList = data || [];
-  const filteredList = rawList.filter((t) => {
-    if (filterGroup === 'guest') return GUEST_TYPES.has(t.type);
-    if (filterGroup === 'registered') return !GUEST_TYPES.has(t.type);
-    return true;
-  });
-
-  return (
-    <div ref={containerRef} style={{ flex: '1 1 100%', minWidth: 0, display: 'flex', alignItems: 'flex-start' }}>
-      <div style={{ flex: showSplit ? `0 0 ${leftPct}%` : '1 1 100%', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-          <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Kênh &amp; nội dung thông báo tự động</span>
-          <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt chuông web, email, sửa câu chữ và khung giờ gửi cho từng loại — áp dụng toàn hệ thống.</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
-            {(() => {
-              const list = rawList;
-              const webOn = list.filter((t) => t.webEnabled).length;
-              const emailOn = list.filter((t) => t.emailEnabled).length;
-              const sent = list.reduce((s, t) => s + (t.emailsSent || 0), 0);
-              const chips = [
-                ['Tổng loại', list.length],
-                ['Khách để lại thông tin', list.filter(t => GUEST_TYPES.has(t.type)).length],
-                ['Thành viên đăng ký', list.filter(t => !GUEST_TYPES.has(t.type)).length],
-                ['Email bật', emailOn],
-                ['Email đã gửi', sent],
-              ];
-              return chips.map(([label, val]) => (
-                <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 'var(--space-2) var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', minWidth: 96 }}>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
-                  <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{val.toLocaleString('vi-VN')}</span>
-                </div>
-              ));
-            })()}
-          </div>
-        </div>
-
-        {/* Phân nhóm đối tượng thông báo */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '10px var(--gutter-card)', background: 'var(--surface-subtle)', borderBottom: '1px solid var(--border-hairline)' }}>
-          {[
-            { id: 'all', label: `Tất cả (${rawList.length})` },
-            { id: 'guest', label: `Khách chưa đăng ký / Để lại thông tin (${rawList.filter(t => GUEST_TYPES.has(t.type)).length})` },
-            { id: 'registered', label: `Thành viên đã đăng ký (${rawList.filter(t => !GUEST_TYPES.has(t.type)).length})` },
-          ].map((b) => (
-            <button key={b.id} type="button" onClick={() => setFilterGroup(b.id)}
-              style={{
-                padding: '6px 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
-                font: 'var(--type-body-sm)', fontSize: 13,
-                fontWeight: filterGroup === b.id ? 'var(--fw-semibold)' : 'var(--fw-normal)',
-                background: filterGroup === b.id ? (b.id === 'guest' ? '#d97706' : 'var(--action-dark)') : 'var(--white)',
-                color: filterGroup === b.id ? 'var(--white)' : 'var(--text-body)',
-                boxShadow: filterGroup === b.id ? 'var(--shadow-sm)' : 'var(--shadow-inset-hairline)',
-                transition: 'all 0.15s ease',
-              }}>
-              {b.label}
-            </button>
-          ))}
-        </div>
-
-        {isLoading ? (
-          <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>
-        ) : isError ? (
-          <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--status-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <span>Lỗi tải dữ liệu</span>
-            <button type="button" onClick={() => refetch()} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
-          </div>
-        ) : filteredList.length === 0 ? (
-          <div style={{ padding: '32px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có loại thông báo nào trong nhóm này.</div>
-        ) : (
-          filteredList.map((t) => (
-            <TypeSettingRow key={t.type} setting={t} notify={notify}
-              editing={editingType === t.type}
-              onEdit={() => startEdit(t)}
-              onCloseEdit={closeEdit}
-              draftTitle={draftTitle} setDraftTitle={setDraftTitle}
-              draftContent={draftContent} setDraftContent={setDraftContent} />
-          ))
-        )}
-      </div>
-
-      {showSplit && (
-        <>
-          <div
-            onMouseDown={onDividerDown}
-            onTouchStart={onDividerDown}
-            role="separator"
-            aria-orientation="vertical"
-            title="Kéo để đổi tỉ lệ"
-            style={{ flex: '0 0 auto', width: 24, alignSelf: 'stretch', cursor: 'col-resize', touchAction: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <div style={{ width: 4, height: 40, borderRadius: 'var(--radius-pill)', background: 'var(--border-hairline)' }} />
-          </div>
-          {editingSetting && (
-            <div style={{ flex: `0 0 ${100 - leftPct}%`, minWidth: 280 }}>
-              <LivePreviewPanel setting={editingSetting} title={draftTitle} content={draftContent} />
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-// Panel preview bên phải — gọi backend render HTML thật (EmailTemplate.Wrap, cùng code dùng khi gửi
-// email thật) mỗi khi title/content đổi, debounce 400ms để không gọi API dồn dập theo từng ký tự gõ.
-function LivePreviewPanel({ setting, title, content }) {
-  const preview = usePreviewEmail();
-  const [debouncedTitle] = useDebouncedValue(title, 400);
-  const [debouncedContent] = useDebouncedValue(content, 400);
-  const [html, setHtml] = useState('');
-
-  useEffect(() => {
-    let cancelled = false;
-    preview.mutateAsync({ type: setting.type, title: debouncedTitle || null, content: debouncedContent || null })
-      .then((res) => { if (!cancelled) setHtml(res.html); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setting.type, debouncedTitle, debouncedContent]);
-
-  return (
-    <div style={{ width: '100%', position: 'sticky', top: 'var(--space-4)', background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-        <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Xem trước email</span>
-        <p style={{ margin: '4px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{TYPE_LABEL[setting.type] || setting.type} — cập nhật theo nội dung bạn đang gõ.</p>
-      </div>
-      <div style={{ padding: 'var(--gutter-card)', background: 'var(--surface-sunken)' }}>
-        {html ? (
-          <iframe title="Email preview" srcDoc={html} style={{ width: '100%', height: 640, border: 'none', borderRadius: 'var(--radius-md)', background: '#ffffff' }} />
-        ) : (
-          <div style={{ height: 640, display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải preview…</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTitle, setDraftTitle, draftContent, setDraftContent }) {
-  const update = useUpdateNotificationTypeSetting();
-  const sendTest = useSendTestEmail();
-  const [triggerHour, setTriggerHour] = useState(setting.triggerHour ?? '');
-  const isFengShui = setting.type === 'fengshui_match';
-  const [dailyLimit, setDailyLimit] = useState(setting.dailyLimitPerUser ?? 2);
-  const { data: queueStats } = useFengShuiQueueStats(isFengShui && editing);
-  const [testEmail, setTestEmail] = useState('');
-
-  // UC27 — dropdown "Layout email": liệt kê template áp dụng type này + tùy chọn "Mặc định hệ thống".
-  const { data: templatesData } = useAdminEmailTemplates();
-  const updateTemplate = useUpdateEmailTemplate();
-  const templates = templatesData?.items || templatesData || [];
-  const applicableTemplates = templates.filter((t) => (t.appliesTo || []).includes(setting.type));
-  const activeTemplate = applicableTemplates.find((t) => t.isActive);
-  const setEmailLayout = (templateId) => {
-    if (!templateId) {
-      const current = applicableTemplates.find((t) => t.isActive);
-      if (current) updateTemplate.mutate({ id: current.id, isActive: false }, { onSuccess: () => notify('Đã đặt về layout mặc định hệ thống') });
-      return;
-    }
-    updateTemplate.mutate({ id: templateId, isActive: true }, {
-      onSuccess: () => notify('Đã áp dụng layout email'),
-      onError: (err) => notify(err.message || 'Có lỗi xảy ra.'),
-    });
-  };
-
-  const toggle = (field) => {
-    update.mutate({ type: setting.type, webEnabled: setting.webEnabled, emailEnabled: setting.emailEnabled,
-      titleTemplate: setting.titleTemplate, contentTemplate: setting.contentTemplate, triggerHour: setting.triggerHour, dailyLimitPerUser: setting.dailyLimitPerUser,
-      [field]: !setting[field] }, {
-      onError: (err) => notify?.(err?.message || 'Đổi cài đặt thất bại, thử lại.'),
-    });
-  };
-
-  const saveEdit = async () => {
-    try {
-      await update.mutateAsync({
-        type: setting.type, webEnabled: setting.webEnabled, emailEnabled: setting.emailEnabled,
-        titleTemplate: draftTitle.trim() || null, contentTemplate: draftContent.trim() || null,
-        triggerHour: setting.triggerHour !== null ? (triggerHour === '' ? null : Number(triggerHour)) : null,
-        dailyLimitPerUser: isFengShui ? Math.max(0, Math.min(50, Number(dailyLimit) || 0)) : setting.dailyLimitPerUser,
-      });
-      notify('Đã lưu');
-      onCloseEdit();
-    } catch (e) { notify(e.message || 'Lỗi khi lưu'); }
-  };
-
-  const sendTestNow = async () => {
-    if (!testEmail.trim()) { notify('Vui lòng nhập địa chỉ email nhận'); return; }
-    try {
-      await sendTest.mutateAsync({ type: setting.type, toEmail: testEmail.trim() });
-      notify(`Đã gửi email thử tới ${testEmail.trim()}`);
-    } catch (e) { notify(e.message || 'Lỗi khi gửi thử'); }
-  };
-
-  return (
-    <div
-      role="button" tabIndex={0}
-      onClick={editing ? onCloseEdit : onEdit}
-      onKeyDown={(e) => { if (e.key === 'Enter') (editing ? onCloseEdit : onEdit)(); }}
-      style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', boxShadow: editing ? 'inset 3px 0 0 var(--action-primary), inset 0 -1px 0 var(--grey-100)' : 'inset 0 -1px 0 var(--grey-100)', background: editing ? 'var(--surface-tint-cream)' : 'transparent', cursor: 'pointer' }}
-    >
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-        <div style={{ flex: '1 1 240px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{TYPE_LABEL[setting.type] || setting.type}</span>
-          {GUEST_TYPES.has(setting.type) && (
-            <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center' }}>
-              Khách chưa đăng ký
-            </span>
-          )}
-        </div>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{setting.emailsSent ?? 0} email</span>
-        <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
-          <input type="checkbox" checked={setting.webEnabled} onChange={() => toggle('webEnabled')} disabled={update.isPending} /> Chuông web
-        </label>
-        <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
-          <input type="checkbox" checked={setting.emailEnabled} onChange={() => toggle('emailEnabled')} disabled={update.isPending} /> Email
-        </label>
-        {!setting.webEnabled && !setting.emailEnabled && (
-          <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontWeight: 'var(--fw-semibold)' }}>⚠ Đã tắt hoàn toàn — user sẽ không nhận loại này qua bất kỳ kênh nào</span>
-        )}
-        <span style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{editing ? 'Đang sửa ▸' : ''}</span>
-      </div>
-      {!editing && TYPE_DESC[setting.type] && (
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{TYPE_DESC[setting.type]}</span>
-      )}
-      {editing && (
-        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 'var(--space-2) var(--space-3)', background: 'var(--white)', borderRadius: 'var(--radius-field)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Mặc định hiện tại</span>
-            <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{setting.defaultTitle}</span>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{setting.defaultContent}</span>
-          </div>
-          <Input label="Tiêu đề tùy chỉnh (để trống = dùng mặc định ở trên)" placeholder={setting.defaultTitle} value={draftTitle} onChange={(e) => setDraftTitle(e.target.value)} />
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nội dung tùy chỉnh (để trống = dùng mặc định ở trên)</span>
-            <textarea rows={2} value={draftContent} placeholder={setting.defaultContent} onChange={(e) => setDraftContent(e.target.value)} style={{ background: 'var(--white)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '8px 12px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-              {GUEST_TYPES.has(setting.type)
-                ? 'Biến có sẵn: {CustomerName} · {PlateNumber} · {StatusLabel} · {Phone} · {SiteName} — thay tự động khi gửi.'
-                : 'Biến có sẵn: {UserName} · {SiteName} — thay tự động theo từng người khi gửi.'}
-            </span>
-          </label>
-          {isFengShui && (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 320 }}>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hạn mức thông báo mỗi người / ngày (0 = tạm dừng gửi)</span>
-              <input type="number" min="0" max="50" value={dailyLimit} onChange={(e) => setDailyLimit(e.target.value)}
-                style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 10px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-                Biển kho và biển VPA hợp mệnh (điểm ≥ 70%) xếp hàng theo từng người, kho gửi trước. Mỗi người nhận tối đa số thông báo này mỗi ngày, dàn đều
-                {Number(dailyLimit) > 0 ? ` (cách nhau khoảng ${(24 / Number(dailyLimit)).toFixed(1)} giờ)` : ''}; phần còn lại chờ trong hàng đợi (giữ tối đa 50 biển/người, bỏ sau 7 ngày).
-              </span>
-              {queueStats && (
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-body)' }}>
-                  Hàng đợi hiện tại: <b>{queueStats.pending.toLocaleString('vi-VN')}</b> biển đang chờ (kho {queueStats.pendingOwn.toLocaleString('vi-VN')} · VPA {queueStats.pendingVpa.toLocaleString('vi-VN')}) của <b>{queueStats.usersWaiting.toLocaleString('vi-VN')}</b> người; đã gửi 24 giờ qua: <b>{queueStats.sentLast24h.toLocaleString('vi-VN')}</b>.
-                </span>
-              )}
-            </label>
-          )}
-          {setting.triggerHour !== null && HOUR_HAS_EFFECT.has(setting.type) ? (
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 220 }}>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Giờ gửi (giờ UTC, 0-23)</span>
-              <input type="number" min="0" max="23" value={triggerHour} onChange={(e) => setTriggerHour(e.target.value)}
-                style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', padding: '0 10px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-                Giờ Việt Nam = UTC + 7 → gửi lúc {triggerHour !== '' ? `${(Number(triggerHour) + 7) % 24}h VN` : '—'} nếu nhập {triggerHour !== '' ? `${triggerHour}h UTC` : 'ở trên'}.
-              </span>
-            </label>
-          ) : setting.triggerHour !== null ? (
-            <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', fontStyle: 'italic' }}>
-              ⚠ Loại này không dùng "Giờ gửi" cố định — {setting.type === 'digest' ? 'mỗi user tự chọn giờ riêng trong hồ sơ cá nhân' : 'job chạy cố định 1 lần/ngày, bỏ qua giờ đặt ở đây'}. Ẩn field để tránh admin tưởng chỉnh được.
-            </span>
-          ) : (
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>Loại này gửi ngay khi sự kiện xảy ra (real-time), không có giờ cố định để chỉnh.</span>
-          )}
-          <div style={{ maxWidth: 280 }}>
-            <Select label="Layout email (UC27)" value={activeTemplate?.id || ''} onChange={setEmailLayout}
-              options={[{ value: '', label: 'Mặc định hệ thống' }, ...applicableTemplates.map((t) => ({ value: t.id, label: t.name }))]} />
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>
-              Khung "Xem trước email" bên phải luôn hiện đúng layout hiện tại (mặc định hoặc template đã chọn) — không cần preview riêng.
-            </span>
-            {applicableTemplates.length === 0 && (
-              <span style={{ display: 'block', font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có template nào gắn cho loại này — tạo ở trang "Mẫu email".</span>
-            )}
-          </div>
-          <Button variant="dark" size="sm" style={{ alignSelf: 'flex-start' }} onClick={saveEdit} disabled={update.isPending}>{update.isPending ? 'Đang lưu…' : 'Lưu'}</Button>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-end', flexWrap: 'wrap', boxShadow: 'inset 0 1px 0 var(--border-hairline)', paddingTop: 'var(--space-2)' }}>
-            <div style={{ flex: '1 1 220px' }}>
-              <Input label="Gửi thử email mẫu tới" placeholder="ban@email.com" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} required />
-            </div>
-            <Button variant="ghost" size="sm" onClick={sendTestNow} disabled={sendTest.isPending}>{sendTest.isPending ? 'Đang gửi…' : 'Gửi thử'}</Button>
-          </div>
-        </div>
-      )}
+      {tab === 'logs' && <EmailLogsSection notify={notify} />}
     </div>
   );
 }

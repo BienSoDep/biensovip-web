@@ -127,7 +127,7 @@ function PropsPanel({ block, onChange }) {
       );
     case 'plate_block':
       return (
-        <Select label="Nguồn dữ liệu biển" value={props.source || 'auto'} onChange={(v) => setProp('source', v)}
+        <Select label="Nguồn dữ liệu biển" info="Tự động: lấy đúng biển gắn với thông báo khi gửi thật. Biển mẫu: chỉ dùng cố định 1 biển demo để xem giao diện." value={props.source || 'auto'} onChange={(v) => setProp('source', v)}
           options={[{ value: 'auto', label: 'Tự động (biển thật của notification)' }, { value: 'sample', label: 'Biển mẫu' }]} />
       );
     case 'cta_button':
@@ -135,7 +135,7 @@ function PropsPanel({ block, onChange }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           <Input label="Nhãn nút" value={props.label || ''} onChange={(e) => setProp('label', e.target.value)}
             error={!props.label?.trim() ? 'Bắt buộc' : ''} required />
-          <Select label="Đích đến" value={props.url_type || 'site'} onChange={(v) => setProp('url_type', v)}
+          <Select label="Đích đến" info="Nơi người nhận sẽ tới khi bấm nút này trong email." value={props.url_type || 'site'} onChange={(v) => setProp('url_type', v)}
             options={[
               { value: 'site', label: 'Trang chủ' }, { value: 'profile', label: 'Trang tài khoản' },
               { value: 'plate', label: 'Biển liên quan' }, { value: 'custom', label: 'URL tùy chỉnh' },
@@ -148,12 +148,12 @@ function PropsPanel({ block, onChange }) {
       );
     case 'stars':
       return (
-        <Select label="Số sao" value={String(props.rating || 'auto')} onChange={(v) => setProp('rating', v)}
+        <Select label="Số sao" info="Tự động: lấy đúng điểm đánh giá thật gắn với thông báo. Chọn số cố định chỉ để xem demo." value={String(props.rating || 'auto')} onChange={(v) => setProp('rating', v)}
           options={[{ value: 'auto', label: 'Tự động' }, ...[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `${n} sao` }))]} />
       );
     case 'video_banner':
       return (
-        <Select label="Nguồn video" value={props.source || 'featured'} onChange={(v) => setProp('source', v)}
+        <Select label="Nguồn video" info="Video nổi bật: tự lấy video đang được đánh dấu nổi bật. Chọn 'Không hiện' nếu muốn ẩn khối này khi thiếu video." value={props.source || 'featured'} onChange={(v) => setProp('source', v)}
           options={[{ value: 'featured', label: 'Video nổi bật' }, { value: 'none', label: 'Không hiện nếu không có video' }]} />
       );
     case 'spacer':
@@ -382,7 +382,7 @@ export default function EmailBuilder({ notify }) {
 
         {/* Cột 3: Preview */}
         <div className="email-builder-preview" style={{ flex: '1 1 360px', minWidth: 300, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <Select label="Xem trước với dữ liệu mẫu" value={sampleType} onChange={setSampleType}
+          <Select label="Xem trước với dữ liệu mẫu" info="Chọn loại thông báo để xem email hiển thị ra sao với dữ liệu mẫu tương ứng, không ảnh hưởng tới template đã lưu." value={sampleType} onChange={setSampleType}
             options={NOTIFICATION_TYPES} />
           {previewErr && <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{previewErr}</p>}
           {blocks.length === 0 ? (

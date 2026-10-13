@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import { InfoTip } from '../../../components/index.jsx';
 import Skeleton from '../../../components/Skeleton.jsx';
 import { useVpaStats } from '../../../services/adminVpa.js';
@@ -32,11 +32,28 @@ export default function VpaStatsCharts() {
 
   return (
     <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: open ? 'var(--space-3)' : 0 }}>
-      <button type="button" onClick={() => setOpen((v) => !v)}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: 'none', background: 'none', cursor: 'pointer', padding: 0, font: 'var(--type-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-        <span>Thống kê biển VPA</span>
-        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+        <button type="button" onClick={() => setOpen((v) => !v)}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, border: 'none', background: 'none', cursor: 'pointer', padding: 0, font: 'var(--type-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+          <span>Thống kê nhanh biển VPA</span>
+          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+        <a
+          href="/admin/thong-ke-bien-vpa"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            font: 'var(--type-caption)',
+            fontWeight: 'var(--fw-semibold)',
+            color: 'var(--action-primary)',
+            textDecoration: 'none',
+          }}
+        >
+          <span>Xem Dashboard Thống kê VPA chi tiết</span>
+          <ArrowRight size={13} />
+        </a>
+      </div>
       {open && (
         isLoading || !data ? (
           <Skeleton variant="table" rows={3} />

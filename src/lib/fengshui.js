@@ -27,10 +27,14 @@ export const INDUSTRIES = [
 
 export const VEHICLES = ['Ô tô', 'Xe máy'];
 
-// Bậc thang cho slider ngân sách (kéo chọn ngưỡng tối đa) — bậc cuối = không giới hạn (cap: null).
+// Bậc thang cho slider ngân sách: mốc sàn 5tr, nhảy mỗi 2 triệu từ 10tr lên 100tr, các nấc cao lên 2 tỷ, bậc cuối = không giới hạn (cap: null).
 export const BUDGET_STEPS = [
-  5_000_000, 100_000_000, 150_000_000, 200_000_000, 300_000_000,
-  500_000_000, 700_000_000, 1_000_000_000, 1_500_000_000, 2_000_000_000, null,
+  5_000_000,
+  ...Array.from({ length: 46 }, (_, i) => 10_000_000 + i * 2_000_000), // 10tr -> 100tr (nhảy mỗi lần 2 triệu)
+  120_000_000, 140_000_000, 160_000_000, 180_000_000, 200_000_000,
+  250_000_000, 300_000_000, 400_000_000, 500_000_000, 700_000_000,
+  1_000_000_000, 1_500_000_000, 2_000_000_000,
+  null,
 ];
 
 export const formatBudget = (cap) => {

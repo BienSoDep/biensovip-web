@@ -3,6 +3,7 @@ import {
   Sparkles,
   SlidersHorizontal,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
 import {
@@ -239,7 +240,7 @@ export default function AdminInsights({ go, patch, st }) {
                 cursor: 'pointer',
               }}
             />
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>→</span>
+            <ArrowRight size={12} color="var(--text-faint)" />
             <input
               type="date"
               value={toDate}

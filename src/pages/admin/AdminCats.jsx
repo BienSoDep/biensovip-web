@@ -40,7 +40,7 @@ const DEFAULT_FAQ_SETS = [
       { question: 'Biển số đẹp có sang tên được không?', answer: 'Có. Tất cả biển số trên Biensovip đều có hồ sơ đầy đủ và sang tên được theo đúng quy định pháp luật. Xem thêm tại trang Hướng dẫn sang tên.' },
       { question: 'Mua biển số trả góp được không?', answer: 'Hiện tại chúng tôi hỗ trợ thanh toán 2 đợt: đặt cọc 30–50% khi ký hợp đồng, phần còn lại sau khi sang tên hoàn tất. Với biển giá trị cao, có thể thương lượng thêm.' },
       { question: 'Tôi ở tỉnh khác, mua biển số Đà Nẵng có được không?', answer: 'Được. Bạn cần có hộ khẩu hoặc tạm trú dài hạn tại Đà Nẵng để đăng ký sang tên. Nếu chưa có, chúng tôi sẽ tư vấn giải pháp phù hợp.' },
-      { question: 'Làm sao biết biển số là thật, không phải lừa đảo?', answer: 'Biensovip hoạt động công khai tại Đà Nẵng, có địa chỉ văn phòng rõ ràng. Mọi giao dịch đều có hợp đồng công chứng. Bạn có thể đến xem giấy tờ gốc trước khi đặt cọc.' },
+      { question: 'Làm sao biết biển số là thật, không phải lừa đảo?', answer: 'Biensovip hoạt động công khai, tư vấn minh bạch qua Fanpage Facebook và Hotline chính thức. Mọi giao dịch đều có hợp đồng công chứng chuyển nhượng và kiểm tra văn bản gốc trước khi đặt cọc.' },
       { question: 'Sau khi mua, tôi có bán lại được không?', answer: 'Có. Biển số sau khi sang tên là tài sản của bạn. Bạn có thể bán lại bất kỳ lúc nào. Liên hệ chúng tôi để được hỗ trợ đăng bán miễn phí.' },
       { question: 'Phí sang tên là bao nhiêu?', answer: 'Phí sang tên do Nhà nước quy định, khoảng 2–4 triệu đồng tùy loại xe và tỉnh thành. Phí này không bao gồm trong giá biển số.' },
       { question: 'Thời gian sang tên mất bao lâu?', answer: 'Thông thường 1–2 ngày làm việc kể từ khi nộp hồ sơ đầy đủ. Trường hợp phức tạp có thể kéo dài 3–5 ngày.' },
@@ -219,7 +219,10 @@ function FaqSetManager({ notify }) {
         {/* Cột 1: Danh sách các bộ FAQ */}
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Danh sách bộ FAQ ({items.length})</span>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              Danh sách bộ FAQ ({items.length})
+              <InfoTip text="Mỗi bộ FAQ có thể gắn với một chuyên mục bài viết riêng hoặc áp dụng chung toàn site để tăng tín hiệu Google FAQPage Schema." />
+            </span>
           </div>
           {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
           {!isLoading && items.length === 0 && (
@@ -308,7 +311,10 @@ function FaqSetManager({ notify }) {
           <Input label="Tên bộ FAQ" placeholder="VD: FAQ mua bán biển số" value={form.name} error={err}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Danh mục blog áp dụng</span>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Danh mục blog áp dụng
+              <InfoTip text="Nếu chọn danh mục, bộ câu hỏi này sẽ tự động xuất hiện ở chân trang tất cả bài viết thuộc danh mục tương ứng." />
+            </span>
             <select value={form.blogCategoryCode} onChange={(e) => setForm((f) => ({ ...f, blogCategoryCode: e.target.value }))}
               style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }}>
               <option value="">— Không gắn danh mục (Áp dụng chung) —</option>
@@ -751,9 +757,14 @@ export default function AdminCats({ notify, goToMeanings }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div className="admin-tablist">
+      <div className="admin-tablist" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          Cấu trúc
+          <InfoTip text="Quản lý cấu trúc dữ liệu toàn trang: Phân loại danh mục biển số/tỉnh thành, kho câu hỏi FAQ theo chủ đề, và quy trình HowTo chuẩn SEO." />
+        </span>
         {MAIN_TABS.map((t) => (
           <button key={t.value} type="button" onClick={() => setMainTab(t.value)}
+            title={`Chuyển sang tab: ${t.label}`}
             style={{
               height: 36, padding: '0 16px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
               background: mainTab === t.value ? 'var(--action-primary)' : 'var(--surface-sunken)',
@@ -766,9 +777,14 @@ export default function AdminCats({ notify, goToMeanings }) {
       {mainTab === 'howto' && <HowToManager notify={notify} />}
 
       {mainTab === 'categories' && (<>
-      <div className="admin-tablist">
+      <div className="admin-tablist" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          Nhóm danh mục
+          <InfoTip text="Chọn nhóm phân loại để quản lý danh sách thuộc tính lọc cho người dùng trên website (loại biển, khoảng giá, tỉnh thành, dòng xe, chuyên mục blog)." />
+        </span>
         {CATEGORY_GROUPS.map((g) => (
           <button key={g.value} type="button" onClick={() => setGroup(g.value)}
+            title={`Xem danh mục nhóm: ${g.label}`}
             style={{
               height: 36, padding: '0 16px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
               background: group === g.value ? 'var(--action-dark)' : 'var(--surface-muted)',
@@ -781,7 +797,7 @@ export default function AdminCats({ notify, goToMeanings }) {
         <div style={{ flex: '1 1 340px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{CATEGORY_GROUPS.find((g) => g.value === group)?.label}</span>
-            <InfoTip text="Thứ tự hiển thị: danh mục ở trên xuất hiện trước trên trang website. Kéo tay cầm ☰ cạnh số thứ tự (1, 2, 3…) để sắp xếp lại." />
+            <InfoTip text="Thứ tự hiển thị: danh mục ở trên xuất hiện trước trên trang website. Kéo tay cầm (icon 6 chấm) cạnh số thứ tự (1, 2, 3…) để sắp xếp lại." />
           </div>
           {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
           {isError && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>Không tải được danh sách.</div>}
@@ -790,7 +806,10 @@ export default function AdminCats({ notify, goToMeanings }) {
           )}
           {group === 'province' && (
             <div style={{ padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt cả miền:</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Bật/tắt cả miền:
+                <InfoTip text="Thao tác nhanh để hiển thị hoặc ẩn đồng loạt tất cả các tỉnh thành thuộc miền Bắc, miền Trung hoặc miền Nam khỏi bộ lọc công khai." />
+              </span>
               {REGIONS.map((r) => (
                 <span key={r.value} style={{ display: 'inline-flex', gap: 4 }}>
                   <Button variant="outline" size="sm" onClick={() => toggleRegion(r.value, true)} disabled={setRegionActive.isPending}>Bật {r.label}</Button>
@@ -824,7 +843,11 @@ export default function AdminCats({ notify, goToMeanings }) {
             </>
           )}
           {!editId && (
-            <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Danh mục mới thêm vào cuối danh sách — kéo tay cầm ☰ để đổi thứ tự hiển thị trên website.</p>
+            <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+              <span>Danh mục mới thêm vào cuối danh sách — kéo tay cầm</span>
+              <GripVertical size={13} style={{ verticalAlign: 'middle' }} />
+              <span>để đổi thứ tự hiển thị trên website.</span>
+            </p>
           )}
           {isPriceRange && (
             <>

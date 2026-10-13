@@ -8,8 +8,14 @@ import { useUpdateVpaPlate, useCreateVpaPlate, useSetVpaPrice, useUnlockVpaField
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_LOCK_FLAGS, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 
 const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)}đ`);
-const TAB_ADD = [1, 2, 3].map((v) => ({ value: String(v), label: VPA_TAB_LABELS[v] }));
-const TAB_EDIT = [1, 2, 3, 4].map((v) => ({ value: String(v), label: VPA_TAB_LABELS[v] }));
+const TAB_FULL_LABELS = {
+  1: 'Biển số tháng (công bố)',
+  2: 'Biển số tuần (chính thức)',
+  3: 'Biển hết hạn',
+  4: 'Hết hạn nội bộ',
+};
+const TAB_ADD = [1, 2, 3].map((v) => ({ value: String(v), label: TAB_FULL_LABELS[v] || VPA_TAB_LABELS[v] }));
+const TAB_EDIT = [1, 2, 3, 4].map((v) => ({ value: String(v), label: TAB_FULL_LABELS[v] || VPA_TAB_LABELS[v] }));
 const VEHICLES = [{ value: 'Car', label: 'Ô tô' }, { value: 'MotorBike', label: 'Xe máy' }];
 const toLocalInput = (iso) => {
   if (!iso) return '';
@@ -121,7 +127,7 @@ export default function VpaPlateDrawer({ plate, plateTypes, provinces, onClose, 
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--space-3)' }}>
-          <Select label="Tab" value={f.tab} options={editing ? TAB_EDIT : TAB_ADD} onChange={set('tab')} />
+          <Select label="Tab" info="Trạng thái biển trong 4 tab VPA: Tháng (công bố) → Tuần (sắp đấu chính thức) → Hết hạn (đã qua phiên)." value={f.tab} options={editing ? TAB_EDIT : TAB_ADD} onChange={set('tab')} />
           <Select label="Loại biển" value={f.plateTypeId} options={[editing ? { value: '', label: 'Giữ nguyên' } : none, ...plateTypes]} onChange={set('plateTypeId')} />
           <Select label="Tỉnh/thành (theo đầu số)" value={f.provinceId} options={[editing ? { value: '', label: 'Giữ nguyên' } : none, ...provinces]} onChange={set('provinceId')} />
         </div>

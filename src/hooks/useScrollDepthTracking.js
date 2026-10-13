@@ -28,9 +28,9 @@ export function useScrollDepthTracking(screen) {
           if (pct >= milestone && !reachedRef.current.has(milestone)) {
             reachedRef.current.add(milestone);
             trackScrollDepth(milestone, null);
+            updateScrollDepth(milestone);
           }
         }
-        updateScrollDepth(pct);
       });
     };
 

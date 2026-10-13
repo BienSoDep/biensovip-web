@@ -1,16 +1,25 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import {
   ChevronLeft, ChevronRight, Search, X, Plus, Pencil, Trash2,
-  ExternalLink, AlertTriangle, CheckCircle2, Image, FileText, Tag,
-  HelpCircle, Sparkles, Filter, Info, Layers
+  ExternalLink, AlertTriangle, CheckCircle2, Image, FileText,
+  Sparkles, Filter, Layers, RotateCw, Clock
 } from 'lucide-react';
-import { Badge, IconButton, Select, InfoTip } from '../../components/index.jsx';
+import { Badge, Select, TableColumnMenu, TableSortHeader, useTableColumns } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
 import ConfirmBulkModal from '../../components/ConfirmBulkModal.jsx';
 import { useAdminBlogPosts, useDeleteBlogPost } from '../../services/blog.js';
 import { BulkAddPostsModal, BulkSeedPostInfoModal } from './BlogBulkModals.jsx';
+
+export const POST_COLUMNS = [
+  { key: 'cover', label: 'Ảnh bìa', default: true },
+  { key: 'title', label: 'Tiêu đề & Chuyên mục', default: true },
+  { key: 'status', label: 'Trạng thái', default: true },
+  { key: 'quality', label: 'Độ hoàn thiện & SEO', default: true },
+  { key: 'updatedAt', label: 'Ngày cập nhật', default: true },
+  { key: 'actions', label: 'Thao tác', default: true },
+];
 
 const STATUS_TONE = { draft: 'amber', published: 'mint' };
 const STATUS_LABEL = { draft: 'Bản nháp', published: 'Đã xuất bản' };
@@ -159,7 +168,18 @@ export default function AdminPosts({ st, patch, notify }) {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  const { isVisible, colMenuProps } = useTableColumns({
+    storageKey: 'bsv.admin.postCols',
+    columns: POST_COLUMNS,
+  });
+
   const [sortBy, sortDir] = sort.split(':');
+  const sortObj = useMemo(() => ({ key: sortBy, dir: sortDir }), [sortBy, sortDir]);
+  const handleSort = (s) => {
+    setSort(`${s.key}:${s.dir}`);
+    setPage(1);
+  };
+
   const { data, isLoading, isError, refetch } = useAdminBlogPosts(
     status || undefined,
     debouncedSearch || undefined,
@@ -265,6 +285,111 @@ export default function AdminPosts({ st, patch, notify }) {
         </div>
       </div>
 
+      {/* 4 Thẻ KPI Thống kê bài viết */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-3)' }}>
+        <div
+          onClick={() => changeStatus('')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: status === '' ? '2px solid var(--action-primary)' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FileText size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tổng bài viết</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--text-strong)' }}>{total}</div>
+          </div>
+        </div>
+
+        <div
+          onClick={() => changeStatus('published')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: status === 'published' ? '2px solid #059669' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã xuất bản</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>
+              {rawItems.filter((p) => p.status === 'published').length}
+            </div>
+          </div>
+        </div>
+
+        <div
+          onClick={() => changeStatus('draft')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: status === 'draft' ? '2px solid #d97706' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Clock size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bản nháp</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#d97706' }}>
+              {rawItems.filter((p) => p.status === 'draft').length}
+            </div>
+          </div>
+        </div>
+
+        <div
+          onClick={() => setQualityFilter('issues')}
+          style={{
+            background: 'var(--white)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-inset-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            cursor: 'pointer',
+            border: qualityFilter === 'issues' ? '2px solid #7c3aed' : '2px solid transparent',
+            transition: 'all 120ms ease',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={22} />
+          </div>
+          <div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đạt chuẩn SEO 100%</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>
+              {qualityStats.perfectCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>/ {itemsWithQuality.length}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 1. Lọc Chuyên Mục (Category Tabs) */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
@@ -362,10 +487,31 @@ export default function AdminPosts({ st, patch, notify }) {
               </button>
             )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            title="Làm mới danh sách"
+            style={{
+              height: 34,
+              width: 34,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--radius-field)',
+              border: '1px solid var(--border-hairline)',
+              background: 'var(--white)',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <RotateCw size={14} />
+          </button>
         </div>
 
-        {/* Dropdown sắp xếp */}
+        {/* Dropdown sắp xếp & Quản lý cột */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <TableColumnMenu {...colMenuProps} />
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Sắp xếp:</span>
           <Select value={sort} options={SORT_OPTS} onChange={(v) => { setSort(v); setPage(1); }} style={{ width: 190 }} />
         </div>
@@ -425,12 +571,44 @@ export default function AdminPosts({ st, patch, notify }) {
               <span style={{ flex: '0 0 24px' }}>
                 {items.length > 0 && <input type="checkbox" checked={selected.size === items.length} onChange={toggleSelectAll} />}
               </span>
-              <span style={{ flex: '0 0 64px' }}>Ảnh bìa</span>
-              <span style={{ flex: '3 1 240px' }}>Tiêu đề & Chuyên mục</span>
-              <span style={{ flex: '1 1 110px' }}>Trạng thái</span>
-              <span style={{ flex: '2 1 180px' }}>Độ hoàn thiện & SEO</span>
-              <span style={{ flex: '1 1 100px' }}>Ngày cập nhật</span>
-              <span style={{ flex: '0 0 88px', textAlign: 'right' }}>Thao tác</span>
+              {isVisible('cover') && <span style={{ flex: '0 0 64px' }}>Ảnh bìa</span>}
+              {isVisible('title') && (
+                <TableSortHeader
+                  label="Tiêu đề & Chuyên mục"
+                  sortKey="title"
+                  currentSort={sortObj}
+                  onSort={handleSort}
+                  style={{ flex: '3 1 240px' }}
+                />
+              )}
+              {isVisible('status') && (
+                <TableSortHeader
+                  label="Trạng thái"
+                  sortKey="status"
+                  currentSort={sortObj}
+                  onSort={handleSort}
+                  style={{ flex: '1 1 110px' }}
+                />
+              )}
+              {isVisible('quality') && (
+                <TableSortHeader
+                  label="Độ hoàn thiện & SEO"
+                  sortKey="quality"
+                  currentSort={sortObj}
+                  onSort={handleSort}
+                  style={{ flex: '2 1 180px' }}
+                />
+              )}
+              {isVisible('updatedAt') && (
+                <TableSortHeader
+                  label="Ngày cập nhật"
+                  sortKey="updatedAt"
+                  currentSort={sortObj}
+                  onSort={handleSort}
+                  style={{ flex: '1 1 100px' }}
+                />
+              )}
+              {isVisible('actions') && <span style={{ flex: '0 0 88px', textAlign: 'right' }}>Thao tác</span>}
             </div>
 
             {isLoading && <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải danh sách bài viết…</div>}
@@ -459,135 +637,194 @@ export default function AdminPosts({ st, patch, notify }) {
                 </span>
 
                 {/* Thumbnail Preview */}
-                <div style={{ flex: '0 0 64px' }}>
-                  {a.coverImageUrl ? (
-                    <img
-                      src={a.coverImageUrl}
-                      alt={a.title}
-                      style={{
-                        width: 58,
-                        height: 38,
-                        objectFit: 'cover',
-                        borderRadius: 'var(--radius-sm)',
-                        boxShadow: 'var(--shadow-inset-hairline)',
-                        background: 'var(--surface-muted)',
-                      }}
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    />
-                  ) : (
-                    <div
-                      title="Chưa có ảnh đại diện"
-                      style={{
-                        width: 58,
-                        height: 38,
-                        borderRadius: 'var(--radius-sm)',
-                        background: '#fee2e2',
-                        color: '#b91c1c',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        font: 'var(--type-caption)',
-                        fontSize: 10,
-                        fontWeight: 'var(--fw-semibold)',
-                      }}
-                    >
-                      <Image size={16} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Tiêu đề + Chuyên mục + Slug */}
-                <div style={{ flex: '3 1 240px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-                      {a.title}
-                    </span>
-                    <Badge tone={CATEGORY_TONE[a.category] || 'neutral'}>
-                      {CATEGORY_LABEL[a.category] || a.category}
-                    </Badge>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                    <span>/{a.slug}</span>
-                    {a.status === 'published' && (
-                      <a
-                        href={`#/bai-viet/${a.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Xem bài viết trên website"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--link)', textDecoration: 'none' }}
+                {isVisible('cover') && (
+                  <div style={{ flex: '0 0 64px' }}>
+                    {a.coverImageUrl ? (
+                      <img
+                        src={a.coverImageUrl}
+                        alt={a.title}
+                        style={{
+                          width: 58,
+                          height: 38,
+                          objectFit: 'cover',
+                          borderRadius: 'var(--radius-sm)',
+                          boxShadow: 'var(--shadow-inset-hairline)',
+                          background: 'var(--surface-muted)',
+                        }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div
+                        title="Chưa có ảnh đại diện"
+                        style={{
+                          width: 58,
+                          height: 38,
+                          borderRadius: 'var(--radius-sm)',
+                          background: '#fee2e2',
+                          color: '#b91c1c',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          font: 'var(--type-caption)',
+                          fontSize: 10,
+                          fontWeight: 'var(--fw-semibold)',
+                        }}
                       >
-                        <ExternalLink size={12} /> Xem web
-                      </a>
+                        <Image size={16} />
+                      </div>
                     )}
                   </div>
-                </div>
+                )}
+
+                {/* Tiêu đề + Chuyên mục + Slug */}
+                {isVisible('title') && (
+                  <div style={{ flex: '3 1 240px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
+                        {a.title}
+                      </span>
+                      <Badge tone={CATEGORY_TONE[a.category] || 'neutral'}>
+                        {CATEGORY_LABEL[a.category] || a.category}
+                      </Badge>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                      <span>/{a.slug}</span>
+                      {a.status === 'published' && (
+                        <a
+                          href={`#/bai-viet/${a.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Xem bài viết trên website"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--link)', textDecoration: 'none' }}
+                        >
+                          <ExternalLink size={12} /> Xem web
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Trạng thái bài viết */}
-                <div style={{ flex: '1 1 110px' }}>
-                  {a.status === 'draft' && a.scheduledPublishAt ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <Badge tone="blue">Hẹn giờ</Badge>
-                      <span style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-muted)' }}>
-                        {formatDateTime(a.scheduledPublishAt)}
-                      </span>
-                    </div>
-                  ) : (
-                    <Badge tone={STATUS_TONE[a.status] || 'neutral'}>
-                      {STATUS_LABEL[a.status] || a.status}
-                    </Badge>
-                  )}
-                </div>
+                {isVisible('status') && (
+                  <div style={{ flex: '1 1 110px' }}>
+                    {a.status === 'draft' && a.scheduledPublishAt ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Badge tone="blue">Hẹn giờ</Badge>
+                        <span style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-muted)' }}>
+                          {formatDateTime(a.scheduledPublishAt)}
+                        </span>
+                      </div>
+                    ) : (
+                      <Badge tone={STATUS_TONE[a.status] || 'neutral'}>
+                        {STATUS_LABEL[a.status] || a.status}
+                      </Badge>
+                    )}
+                  </div>
+                )}
 
                 {/* Điểm chất lượng & Cảnh báo thiếu thông tin */}
-                <div style={{ flex: '2 1 180px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: 'var(--radius-pill)',
-                        fontSize: 11,
-                        fontWeight: 'var(--fw-semibold)',
-                        background: a.quality.score >= 80 ? '#dcfce7' : a.quality.score >= 50 ? '#fef3c7' : '#fee2e2',
-                        color: a.quality.score >= 80 ? '#166534' : a.quality.score >= 50 ? '#92400e' : '#991b1b',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      {a.quality.score >= 80 ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
-                      {a.quality.score}% · {a.quality.statusLabel}
-                    </span>
-                  </div>
+                {isVisible('quality') && (
+                  <div style={{ flex: '2 1 180px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-pill)',
+                          fontSize: 11,
+                          fontWeight: 'var(--fw-semibold)',
+                          background: a.quality.score >= 80 ? '#dcfce7' : a.quality.score >= 50 ? '#fef3c7' : '#fee2e2',
+                          color: a.quality.score >= 80 ? '#166534' : a.quality.score >= 50 ? '#92400e' : '#991b1b',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        {a.quality.score >= 80 ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                        {a.quality.score}% · {a.quality.statusLabel}
+                      </span>
+                    </div>
 
-                  {/* Danh sách cảnh báo ngắn */}
-                  {a.quality.issues.length > 0 ? (
-                    <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#dc2626' }}>
-                      ⚠ {a.quality.issues.slice(0, 2).join(' · ')}{a.quality.issues.length > 2 ? ` (+${a.quality.issues.length - 2})` : ''}
-                    </span>
-                  ) : (
-                    <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#16a34a' }}>
-                      ✓ Đủ ảnh, meta SEO & nội dung
-                    </span>
-                  )}
-                </div>
+                    {/* Danh sách cảnh báo ngắn */}
+                    {a.quality.issues.length > 0 ? (
+                      <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        <AlertTriangle size={11} style={{ flexShrink: 0 }} />
+                        <span>{a.quality.issues.slice(0, 2).join(' · ')}{a.quality.issues.length > 2 ? ` (+${a.quality.issues.length - 2})` : ''}</span>
+                      </span>
+                    ) : (
+                      <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        <CheckCircle2 size={11} style={{ flexShrink: 0 }} />
+                        <span>Đủ ảnh, meta SEO & nội dung</span>
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Ngày đăng / Ngày cập nhật */}
-                <div style={{ flex: '1 1 100px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>
-                    {formatDate(a.publishedAt || a.createdAt)}
-                  </span>
-                  <span style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-muted)' }}>
-                    {a.readingTimeMinutes ? `${a.readingTimeMinutes} phút đọc` : ''}
-                  </span>
-                </div>
+                {isVisible('updatedAt') && (
+                  <div style={{ flex: '1 1 100px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>
+                      {formatDate(a.publishedAt || a.createdAt)}
+                    </span>
+                    <span style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-muted)' }}>
+                      {a.readingTimeMinutes ? `${a.readingTimeMinutes} phút đọc` : ''}
+                    </span>
+                  </div>
+                )}
 
                 {/* Thao tác */}
-                <div style={{ flex: '0 0 88px', display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-                  <IconButton name="pencil" label="Sửa bài viết" size="sm" onClick={() => openEditPost(a)} />
-                  <IconButton name="trash-2" label="Xóa" size="sm" disabled={deletingId === a.id} onClick={() => confirmRemove(a)} />
+                {isVisible('actions') && (
+                  <div style={{ flex: '0 0 88px', display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                  <button
+                    type="button"
+                    onClick={() => openEditPost(a)}
+                    title="Chỉnh sửa bài viết"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 'var(--radius-field)',
+                      border: 'none',
+                      background: 'var(--surface-sunken)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--text-body)',
+                      transition: 'background 120ms ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-muted)'; e.currentTarget.style.color = 'var(--text-strong)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; e.currentTarget.style.color = 'var(--text-body)'; }}
+                  >
+                    <Pencil size={14} />
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={deletingId === a.id}
+                    onClick={() => confirmRemove(a)}
+                    title="Xóa bài viết"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 'var(--radius-field)',
+                      border: 'none',
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      cursor: deletingId === a.id ? 'default' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#dc2626',
+                      opacity: deletingId === a.id ? 0.5 : 1,
+                      transition: 'background 120ms ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'; }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+          ))}
           </div>
         </div>
 

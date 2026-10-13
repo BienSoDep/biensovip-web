@@ -1,15 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
-import {
-  AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
-} from 'recharts';
-import { toast } from 'react-hot-toast';
-import { CreditCard, FileText, Users, BadgeCheck } from 'lucide-react';
+import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3, ArrowRight } from 'lucide-react';
 import { routeFor } from '../../config/routes.js';
-import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
-import PlateVisual from '../../components/PlateVisual.jsx';
 import { InfoTip } from '../../components/index.jsx';
 import {
   useDashboardSummary, useActionsChart, useTrafficSources, useFunnel, usePlateDistribution,
@@ -28,221 +21,23 @@ import {
   MicroEngagementsChart,
   LeadPipelineHealthCard,
 } from './dashboard/DashboardAdvancedCharts.jsx';
-import { useSystemHealth, useTestSystemEmail } from '../../services/systemHealth.js';
-
-const HEALTH_LABEL = { ok: 'Ổn định', degraded: 'Cần chú ý', down: 'Sự cố', running: 'Đang chạy' };
-const HEALTH_COLOR = {
-  ok: 'var(--status-success-ink)',
-  degraded: 'var(--status-warning-ink)',
-  down: 'var(--status-danger)',
-  running: 'var(--action-primary)',
-};
-
-function SystemHealthWidget() {
-  const { data, isLoading, refetch, isFetching } = useSystemHealth();
-  const { sendTestEmail } = useTestSystemEmail();
-  const [testingEmail, setTestingEmail] = useState(false);
-  const [showJobs, setShowJobs] = useState(false);
-
-  if (isLoading || !data) return null;
-
-  const handleTestEmail = async () => {
-    setTestingEmail(true);
-    try {
-      const res = await sendTestEmail();
-      toast.success(res?.data || 'Đã gửi email kiểm tra thành công!');
-      refetch();
-    } catch (err) {
-      toast.error(err?.message || 'Gửi email kiểm tra thất bại.');
-    } finally {
-      setTestingEmail(false);
-    }
-  };
-
-  const metrics = data.serverMetrics;
-  const jobs = data.jobsLastRun || [];
-
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 'var(--space-3)',
-      background: 'var(--white)',
-      borderRadius: 'var(--radius-card)',
-      padding: 'var(--gutter-card)',
-      boxShadow: 'var(--shadow-inset-hairline)',
-    }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)' }}>
-            Hạ tầng &amp; Trạng thái hệ thống
-          </span>
-
-          {/* Database */}
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
-            <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.dbStatus] || 'var(--text-faint)', display: 'inline-block' }} />
-            Database: <b style={{ color: HEALTH_COLOR[data.dbStatus] }}>{HEALTH_LABEL[data.dbStatus] || data.dbStatus}</b>
-            {data.dbLatencyMs != null && (
-              <span style={{ color: data.dbLatencyMs > 100 ? 'var(--status-warning-ink)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', fontSize: '0.8rem' }}>
-                ({data.dbLatencyMs}ms)
-              </span>
-            )}
-          </span>
-
-          {/* Email */}
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
-            <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.emailStatus] || 'var(--text-faint)', display: 'inline-block' }} />
-            Email (SMTP): <b style={{ color: HEALTH_COLOR[data.emailStatus] }}>{HEALTH_LABEL[data.emailStatus] || data.emailStatus}</b>
-            {data.lastEmailFailedAt && data.emailStatus === 'down' && (
-              <span style={{ color: 'var(--status-danger)', fontSize: '0.8rem' }}>
-                (lỗi: {new Date(data.lastEmailFailedAt).toLocaleTimeString('vi-VN')})
-              </span>
-            )}
-          </span>
-
-          {/* Cloudinary */}
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
-            <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', background: HEALTH_COLOR[data.cloudinaryStatus] || 'var(--text-faint)', display: 'inline-block' }} />
-            Kho ảnh (Cloudinary): <b style={{ color: HEALTH_COLOR[data.cloudinaryStatus] }}>{HEALTH_LABEL[data.cloudinaryStatus] || data.cloudinaryStatus}</b>
-          </span>
-
-          {/* Uptime & RAM */}
-          {metrics && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
-              <span>Uptime: <b>{metrics.uptimeFormatted}</b></span>
-              <span>•</span>
-              <span>RAM: <b>{metrics.memoryUsedMb} MB</b></span>
-            </span>
-          )}
-        </div>
-
-        {/* Action buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button
-            type="button"
-            onClick={handleTestEmail}
-            disabled={testingEmail}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-pill)',
-              border: '1px solid var(--border-hairline)',
-              background: 'transparent',
-              color: 'var(--text-body)',
-              font: 'var(--type-caption)',
-              fontWeight: 'var(--fw-medium)',
-              cursor: testingEmail ? 'default' : 'pointer',
-            }}
-          >
-            {testingEmail ? 'Đang gửi test…' : 'Gửi mail test'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 'var(--radius-pill)',
-              border: '1px solid var(--action-primary)',
-              background: 'var(--brand-50)',
-              color: 'var(--action-primary)',
-              font: 'var(--type-caption)',
-              fontWeight: 'var(--fw-semibold)',
-              cursor: isFetching ? 'default' : 'pointer',
-            }}
-          >
-            {isFetching ? 'Đang kiểm tra…' : 'Kiểm tra lại'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowJobs(!showJobs)}
-            style={{
-              padding: '4px 8px',
-              borderRadius: 'var(--radius-pill)',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--link)',
-              font: 'var(--type-caption)',
-              cursor: 'pointer',
-            }}
-          >
-            {showJobs ? 'Ẩn Background Jobs ▲' : `Xem Jobs ngầm (${jobs.length}) ▼`}
-          </button>
-        </div>
-      </div>
-
-      {/* Danh sách Background Jobs ngầm khi mở rộng */}
-      {showJobs && (
-        <div style={{
-          marginTop: 'var(--space-2)',
-          paddingTop: 'var(--space-3)',
-          borderTop: '1px solid var(--border-hairline)',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: 'var(--space-2)',
-        }}>
-          {jobs.length > 0 ? (
-            jobs.map((job) => (
-              <div
-                key={job.jobName}
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--surface-sunken)',
-                  border: '1px solid var(--border-hairline)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  font: 'var(--type-caption)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-                  <span
-                    aria-hidden
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: HEALTH_COLOR[job.status] || 'var(--text-faint)',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-strong)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    {job.jobName}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>
-                    {job.lastRunAt ? format(new Date(job.lastRunAt), 'HH:mm:ss') : 'Chưa chạy'}
-                  </span>
-                  <span style={{ color: HEALTH_COLOR[job.status] || 'var(--text-muted)', fontWeight: 'var(--fw-bold)' }}>
-                    {HEALTH_LABEL[job.status] || job.status}
-                  </span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-              Đang đồng bộ trạng thái background jobs...
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Bảng màu series biểu đồ — ngoại lệ đã duyệt (FRONTEND-DESIGN-RULES.md mục 4) nhưng phải khớp tone
-// thương hiệu: chỉ dùng blue/orange/amber/mint/rose/grey từ tokens.css, bỏ hẳn tím/hồng/teal lạ tone
-// (trước đây #7c3aed/#db2777/#0891b2 làm dashboard lệch nhận diện).
-const PIE_COLORS = ['#3B5BFF', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
+import SystemHealthWidget from './dashboard/SystemHealthWidget.jsx';
+import SkeletonBase from '../../components/skeletons/SkeletonBase.jsx';
+import {
+  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+} from 'recharts';
+import KpiCard from './dashboard/DashboardKpiCard.jsx';
+import {
+  PIE_COLORS, TrafficSourcesPie, TopPlatesTable,
+  FunnelView, DistributionCard, EmptyBlock, ErrorBlock
+} from './dashboard/DashboardWidgets.jsx';
 
 const KPI_CARDS = [
-  { key: 'totalViews', label: 'Tổng lượt xem', icon: FileText, series: 'views', color: '#3B5BFF', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
-  { key: 'contactRequests', label: 'Yêu cầu liên hệ', icon: Users, series: 'contacts', color: '#C75B00', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
-  { key: 'closedContacts', label: 'Đã chốt', icon: BadgeCheck, series: 'closed', color: '#3FBF8F', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
-  { key: 'soldPlates', label: 'Đã bán', icon: CreditCard, series: 'sold', color: '#E5484D', access: (k) => k?.soldPlates },
+  { key: 'totalViews', label: 'Tổng lượt xem', info: 'Tổng số lượt khách truy cập xem chi tiết các biển số trong kỳ đã chọn.', icon: FileText, series: 'views', color: '#3B5BFF', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
+  { key: 'contactRequests', label: 'Yêu cầu liên hệ', info: 'Số lượt khách gửi yêu cầu gọi lại, tư vấn mua biển hoặc bấm nút chat Zalo/Hotline.', icon: Users, series: 'contacts', color: '#C75B00', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
+  { key: 'closedContacts', label: 'Đã chốt', info: 'Số lượng giao dịch tư vấn thành công đã được nhân viên chuyển sang trạng thái chốt.', icon: BadgeCheck, series: 'closed', color: '#3FBF8F', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
+  { key: 'soldPlates', label: 'Đã bán', info: 'Tổng số lượng biển số trong kho đã bán thành công trong khoảng thời gian đã chọn.', icon: CreditCard, series: 'sold', color: '#E5484D', access: (k) => k?.soldPlates },
 ];
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
@@ -261,7 +56,7 @@ function fmtPct(n) {
   return `${sign}${n}%`;
 }
 
-export default function Dashboard({ go, st }) {
+export default function Dashboard({ go, st, patch }) {
   const isSuperAdmin = st?.user?.role === 'super-admin';
   const [rangeIdx, setRangeIdx] = useState(1); // default 30 days; null nếu đang dùng custom range
   const [customFrom, setCustomFrom] = useState('');
@@ -406,7 +201,7 @@ export default function Dashboard({ go, st }) {
           <input type="date" value={customFrom} max={customTo || format(new Date(), 'yyyy-MM-dd')}
             onChange={(e) => applyCustomRange(e.target.value, customTo)}
             style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>→</span>
+          <ArrowRight size={12} color="var(--text-faint)" />
           <input type="date" value={customTo} min={customFrom} max={format(new Date(), 'yyyy-MM-dd')}
             onChange={(e) => applyCustomRange(customFrom, e.target.value)}
             style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
@@ -438,6 +233,7 @@ export default function Dashboard({ go, st }) {
               icon={c.icon}
               color={c.color}
               label={c.label}
+              info={c.info}
               value={c.access(kpis)}
               delta={c.delta != null ? fmtPct(c.delta(kpis)) : null}
               deltaColor={c.delta != null ? ((c.delta(kpis) ?? 0) >= 0 ? 'var(--status-success)' : 'var(--status-danger)') : 'var(--text-muted)'}
@@ -485,7 +281,10 @@ export default function Dashboard({ go, st }) {
         <EnhancedActionsChart chartData={chart.data} reduceMotion={reduceMotion} />
 
         <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nguồn truy cập</h3>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            Nguồn truy cập
+            <InfoTip size={12} text="Tỷ lệ phân bổ khách hàng đến từ các kênh: Tìm kiếm tự nhiên Google (Organic), Mạng xã hội, Quảng cáo hoặc truy cập trực tiếp." />
+          </h3>
           {traffic.isLoading ? (
             <SkeletonBase height={280} />
           ) : traffic.data?.items?.length > 0 ? (
@@ -500,7 +299,10 @@ export default function Dashboard({ go, st }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 500px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Biển số được quan tâm nhất</h3>
+            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              Biển số được quan tâm nhất
+              <InfoTip size={12} text="Bảng xếp hạng các biển số có lượt xem, lưu vào danh sách yêu thích và liên hệ hỏi mua nhiều nhất trong kỳ." />
+            </h3>
           </div>
           {interested.isLoading ? (
             <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
@@ -606,13 +408,96 @@ export default function Dashboard({ go, st }) {
           {topContent.isLoading ? (
             <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
           ) : topContent.data?.items?.length > 0 ? (
-            topContent.data.items.map((c, i) => (
-              <div key={c.contentId} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < topContent.data.items.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24 }}>{i + 1}</span>
-                <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
-                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{c.views} xem</span>
-              </div>
-            ))
+            topContent.data.items.map((c, i) => {
+              const postUrl = routeFor('post', c.slug || c.contentId);
+              return (
+                <div
+                  key={c.contentId}
+                  style={{
+                    padding: 'var(--space-3) var(--gutter-card)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-3)',
+                    boxShadow: i < topContent.data.items.length - 1 ? 'inset 0 -1px 0 var(--border-hairline, var(--grey-100))' : 'none',
+                  }}
+                >
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24, flexShrink: 0, fontWeight: 'var(--fw-semibold)' }}>
+                    {i + 1}
+                  </span>
+                  <a
+                    href={postUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Mở bài viết: ${c.title}`}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      font: 'var(--type-body-sm)',
+                      fontWeight: 'var(--fw-medium)',
+                      color: 'var(--text-strong)',
+                      textDecoration: 'none',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      transition: 'color 140ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--action-primary, #3b5bff)';
+                      const icon = e.currentTarget.querySelector('.dash-ext-link');
+                      if (icon) icon.style.opacity = '1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--text-strong)';
+                      const icon = e.currentTarget.querySelector('.dash-ext-link');
+                      if (icon) icon.style.opacity = '0.35';
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {c.title}
+                    </span>
+                    <ExternalLink
+                      className="dash-ext-link"
+                      size={13}
+                      style={{ flexShrink: 0, opacity: 0.35, transition: 'opacity 140ms ease' }}
+                      aria-hidden="true"
+                    />
+                  </a>
+                  {patch && (
+                    <button
+                      type="button"
+                      onClick={() => patch({ screen: 'compose', editPostId: c.contentId })}
+                      title="Chỉnh sửa bài viết trong Admin"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 4,
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        borderRadius: 'var(--radius-sm, 4px)',
+                        transition: 'color 140ms ease, background-color 140ms ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--action-primary, #3b5bff)';
+                        e.currentTarget.style.background = 'var(--surface-subtle, rgba(0,0,0,0.05))';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--text-muted)';
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <Edit3 size={13} aria-hidden="true" />
+                    </button>
+                  )}
+                  <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    {c.views} xem
+                  </span>
+                </div>
+              );
+            })
           ) : (
             <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có dữ liệu bài viết</EmptyBlock></div>
           )}
@@ -891,215 +776,3 @@ export default function Dashboard({ go, st }) {
   );
 }
 
-function useCountUp(target, animate) {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!animate) { setVal(Number(target) || 0); return; }
-    const n = Number(target) || 0;
-    if (!n) { setVal(0); return; }
-    let raf;
-    const t0 = performance.now();
-    const dur = 700;
-    const tick = (t) => {
-      const p = Math.min(1, (t - t0) / dur);
-      setVal(Math.round(n * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, animate]);
-  return val;
-}
-
-function Sparkline({ data, color, animate }) {
-  const pts = (data || []).map((v) => ({ v }));
-  if (!pts.length) return null;
-  return (
-    <div style={{ height: 36, width: '100%' }}>
-      <ResponsiveContainer width="100%" height={36}>
-        <AreaChart data={pts} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={`spark-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
-              <stop offset="100%" stopColor={color} stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2} fill={`url(#spark-${color.replace('#', '')})`} isAnimationActive={animate} animationDuration={700} dot={false} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-function KpiCard({ icon: Icon, color, label, value, delta, deltaColor, spark, animate }) {
-  const shown = useCountUp(value, animate);
-  return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', minWidth: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: `${color}1f`, color }}>
-          <Icon size={18} />
-        </span>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: 1 }}>{label}</span>
-      </div>
-      <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{shown.toLocaleString('vi-VN')}</span>
-      {delta != null && (
-        <span style={{ font: 'var(--type-caption)', color: deltaColor }}>{delta} so với kỳ trước</span>
-      )}
-      <Sparkline data={spark} color={color} animate={animate} />
-    </div>
-  );
-}
-
-function parsePlate(raw) {
-  if (!raw) return { prov: '', seri: '', num: '' };
-  const s = raw.trim();
-  const idx = Math.max(s.lastIndexOf('-'), s.lastIndexOf(' '));
-  if (idx < 0) return { prov: '', seri: '', num: s };
-  const left = s.slice(0, idx).replace(/[\s-]/g, '');
-  const num = s.slice(idx + 1).trim();
-  const prov = left.match(/^\d{1,2}/)?.[0] || '';
-  const seri = left.slice(prov.length);
-  return { prov, seri, num };
-}
-
-function TrafficSourcesPie({ items, animate }) {
-  const total = items.reduce((acc, it) => acc + (Number(it.visits) || 0), 0);
-  const data = items.map((it, i) => ({
-    name: it.source,
-    value: Number(it.visits) || 0,
-    pct: total > 0 ? Math.round((Number(it.visits) || 0) / total * 100) : 0,
-    fill: PIE_COLORS[i % PIE_COLORS.length],
-  }));
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <div style={{ height: 200 }}>
-        <ResponsiveContainer width="100%" height={200}>
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={54} outerRadius={90} isAnimationActive={animate} animationDuration={700}>
-              {data.map((d) => <Cell key={d.name} fill={d.fill} />)}
-            </Pie>
-            <Tooltip formatter={(v, n) => [`${v} (${data.find((d) => d.name === n)?.pct ?? 0}%)`, n]} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-        {data.map((d) => (
-          <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-caption)' }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: d.fill, flex: '0 0 auto' }} />
-            <span style={{ flex: 1, color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
-            <span style={{ color: 'var(--text-muted)' }}>{d.pct}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TopPlatesTable({ items }) {
-  const sorted = [...items].sort((a, b) => (b.views || 0) - (a.views || 0));
-  return (
-    <div>
-      {sorted.map((p, i) => {
-        const parsed = parsePlate(p.plateNumber);
-        const rank = i + 1;
-        return (
-          <div key={p.plateId} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', boxShadow: i < sorted.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
-            <span style={{ width: 24, height: 24, borderRadius: 'var(--radius-sm)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', flex: '0 0 auto',
-              background: rank <= 3 ? 'var(--amber-500)' : 'var(--surface-sunken)', color: rank <= 3 ? 'var(--white)' : 'var(--text-muted)' }}>
-              {rank}
-            </span>
-            <div style={{ width: 72, flexShrink: 0 }}>
-              <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
-            </div>
-            <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateNumber}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 84px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.plateTypeName || '—'}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 60px', textAlign: 'right' }}>{p.views ?? 0} xem</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: '0 0 56px', textAlign: 'right' }}>{p.contacts ?? 0} LH</span>
-            <a
-              href={routeFor('detail', p.plateId)}
-              onClick={(e) => { e.preventDefault(); history.pushState(null, '', routeFor('detail', p.plateId)); window.dispatchEvent(new PopStateEvent('popstate')); }}
-              style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--link)', textDecoration: 'none', flex: '0 0 auto' }}
-            >
-              Xem →
-            </a>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-const FUNNEL_STEPS = [
-  ['Lượt xem', 'views', '#3B5BFF'],
-  ['Liên hệ', 'contacts', '#C75B00'],
-  ['Đang tư vấn', 'consulting', '#F5C542'],
-  ['Đã chốt', 'closed', '#3FBF8F'],
-];
-
-function FunnelView({ data }) {
-  const max = Math.max(1, data.views);
-  const rows = FUNNEL_STEPS.map(([label, key, color]) => ({
-    label,
-    value: data[key] ?? 0,
-    color,
-    pct: Math.round(((data[key] ?? 0) / max) * 100),
-  }));
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      {rows.map((r) => (
-        <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span style={{ width: 96, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{r.label}</span>
-          <div style={{ flex: 1, height: 28, background: 'var(--grey-100)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-            <div style={{ width: `${r.pct}%`, height: '100%', background: r.color, borderRadius: 'var(--radius-sm)', transition: 'width .3s var(--ease-out)' }} />
-          </div>
-          <span style={{ width: 40, textAlign: 'right', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{r.value}</span>
-        </div>
-      ))}
-      <div style={{ display: 'flex', gap: 'var(--space-4)', marginTop: 'var(--space-2)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-        <span>Liên hệ/Xem: <b style={{ color: 'var(--text-strong)' }}>{data.contactRate}%</b></span>
-        <span>Chốt/Liên hệ: <b style={{ color: 'var(--text-strong)' }}>{data.closeRate}%</b></span>
-      </div>
-    </div>
-  );
-}
-
-function DistributionCard({ title, data }) {
-  const items = data.data?.items || [];
-  return (
-    <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-      <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{title}</h3>
-      {data.isLoading ? (
-        <SkeletonBase height={260} />
-      ) : items.length > 0 ? (
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={items}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
-            <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} angle={-35} textAnchor="end" />
-            <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="count" name="Số biển" fill="#3B5BFF" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      ) : (
-        <EmptyBlock>Chưa có dữ liệu</EmptyBlock>
-      )}
-    </div>
-  );
-}
-
-function EmptyBlock({ children }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, font: 'var(--type-body-sm)', color: 'var(--text-faint)' }}>
-      {children}
-    </div>
-  );
-}
-
-function ErrorBlock({ onRetry }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)', padding: 'var(--space-4)', font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>
-      <span>Lỗi tải dữ liệu</span>
-      <button type="button" onClick={onRetry} style={{ font: 'var(--type-caption)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none' }}>Thử lại</button>
-    </div>
-  );
-}

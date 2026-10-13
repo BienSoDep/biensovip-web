@@ -5,7 +5,7 @@ const ASPECT = { short: '330/165', long: '520/110' };
 // Font tỉ lệ % theo CHIỀU CAO khung biển (cqh) — lấy từ kích thước render của màn Detail (size lg) làm mẫu.
 // Nhờ đó mọi size/preview mọi trang giữ đúng 1 tỉ lệ chữ-số/số-khung giống nhau; khung co giãn → chữ scale theo.
 const RATIO = {
-  short: { topFs: '23cqh', numFs: '49cqh' },
+  short: { topFs: '28cqh', numFs: '58cqh' },
   long: { provFs: '55cqh', seriFs: '38cqh', numFs: '96cqh' },
 };
 
@@ -121,11 +121,41 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
     );
   }
 
+  const cleanPrefix = `${prov || ''}${seri || ''}`.replace(/-+$/, '');
+
   return (
     <div style={plateStyle} role="img" aria-label={ariaLabel}>
-      <div aria-hidden style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: s.gap, fontFamily, fontWeight: 700, color: textColor, textShadow, whiteSpace: 'nowrap', lineHeight: 1 }}>
-        <span style={{ fontSize: scaleFontSize(numFs, 0.72) }}>{prov}{seri && seri.length > 1 ? '-' : ''}{seri}-</span>
-        <span style={{ fontSize: numFs, letterSpacing: s.ls }}>{num}</span>
+      <div
+        aria-hidden
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily,
+          fontWeight: 700,
+          color: textColor,
+          textShadow,
+          whiteSpace: 'nowrap',
+          lineHeight: 1,
+        }}
+      >
+        <span style={{ fontSize: scaleFontSize(numFs, 0.9) }}>
+          {cleanPrefix}
+        </span>
+        <span
+          style={{
+            fontSize: scaleFontSize(numFs, 0.75),
+            opacity: 0.85,
+            padding: '0 4px',
+            transform: 'translateY(-1px)',
+          }}
+        >
+          -
+        </span>
+        <span style={{ fontSize: numFs, letterSpacing: s.ls }}>
+          {num}
+        </span>
       </div>
       {screws}
     </div>

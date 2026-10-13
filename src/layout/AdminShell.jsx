@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import {
+  CheckCircle2, ChevronDown, Menu, PanelLeftClose, PanelLeftOpen, X,
+  LayoutDashboard, LineChart, BookOpen, Car, Gavel, BarChart3, FolderTree,
+  ShoppingBag, Flame, Users, TicketPercent, FileText, Video, Compass,
+  ShieldCheck, Bell, Star, Bot, Handshake, FileCode, MessageSquareShare,
+  UserCog, History, Eye, SlidersHorizontal,
+} from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
@@ -38,6 +44,7 @@ import AdminOpsTools from '../pages/admin/AdminOpsTools.jsx';
 import AdminNotificationsHub from '../pages/admin/AdminNotificationsHub.jsx';
 import AdminInsights from '../pages/admin/AdminInsights.jsx';
 import AdminVpaMarket from '../pages/admin/AdminVpaMarket.jsx';
+import AdminVpaStats from '../pages/admin/AdminVpaStats.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -46,24 +53,25 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 // Ánh xạ màn hình admin → quyền "resource:view" tối thiểu để hiện nav/render.
 // dash & astaff không map (dash luôn hiện; astaff chỉ super-admin).
 const NAV_PERM = {
-  aplates: 'plates:view', avpa: 'vpa_prices:view', acoupons: 'plates:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
+  aplates: 'plates:view', avpa: 'vpa_prices:view', acoupons: 'coupons:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
   achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view', asortsettings: 'settings:view',
-  aauditlog: 'audit_logs:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
+  aauditlog: 'audit_logs:view', arisklog: 'risk_events:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
   apolicypages: 'policy_pages:view',
   actvtemplates: 'ctv_message_templates:view',
   ainsights: 'analytics:view',
   avpamarket: 'vpa_prices:view',
+  avpastats: 'vpa_prices:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
 // Mục menu nào vai trò hiện tại được thấy. Sidebar lọc bằng hàm này; AdminGuide suy thẳng từ đây
-// nên hướng dẫn không thể lệch khỏi menu thật (trước đây AdminGuide tự chép tay danh sách mục →
-// đã lệch: còn nhắc 'Mẫu email'/'Rủi ro CTV' đã gộp thành tab, thiếu 16 mục đang có).
+// nên hướng dẫn không thể lệch khỏi menu thật.
 export const canSeeNav = (st, navKey) => {
-  if (navKey === 'astaff' || navKey === 'arisklog') return st.user?.role === 'super-admin';
+  if (navKey === 'astaff') return st.user?.role === 'super-admin';
+  if (navKey === 'arisklog') return st.user?.role === 'super-admin' || canPerm(st, 'risk_events:view');
   const perm = NAV_PERM[navKey];
   return !perm || canPerm(st, perm);
 };
@@ -81,6 +89,7 @@ const GROUPED_REDIRECT = {
   amaintenance: 'afeatureflags',
   adbconsole: 'afeatureflags',
   aemailtpl: 'anotifications',
+  avpamarket: 'avpastats',
 };
 
 // View đang chọn của trang Bán hàng — đọc thẳng từ URL thay vì lưu state, để URL cũ có ?view=
@@ -94,7 +103,48 @@ function salesViewFromUrl() {
 const ADMIN_INFO = {
   dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
   aplates: 'Quản lý toàn bộ biển số rao bán. Đổi trạng thái Còn hàng/Đã bán khi có giao dịch, cập nhật giá đúng lúc để khách không thấy giá cũ.',
-  avpa: 'Quản lý biển đấu giá lấy từ VPA bằng cùng công cụ như Biển của shop. Giá khách thấy là "Giá duyệt": chưa duyệt thì khách thấy "Giá liên hệ". Giá gợi ý = trung bình giá trúng của nhóm tương tự × hệ số (số trong ngoặc là số mẫu). Trường bạn sửa tay (loại biển, tỉnh, tab, nổi bật) được khóa, crawl không ghi đè. "Hết hạn nội bộ" = biển biến mất khỏi VPA, chỉ Admin thấy. Ẩn = giấu khỏi khách, dữ liệu vẫn giữ; biển VPA không xóa hẳn vì lần crawl sau sẽ tạo lại. Rê chuột vào biểu tượng (i) ở tiêu đề cột để xem giải thích. Tab "Duyệt giá" có 3 nút mới: "Duyệt tất cả theo bộ lọc" (duyệt hết biển khớp bộ lọc, không chỉ trang đang xem), "Duyệt lại giá toàn bộ" (tính lại giá rồi áp gợi ý mới cho biển đã duyệt — dùng khi nguồn Công bố/Chính thức đi chậm hơn Kết quả nên lúc duyệt lần đầu còn thiếu mẫu), và bản "(ghi đè cả sửa tay)" áp luôn cho biển nghi Admin từng sửa giá tay — dùng cẩn thận. Rê chuột vào từng nút hoặc biểu tượng (i) cạnh nút để xem chi tiết.',
+  avpa: (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', lineHeight: 1.6, fontSize: 'var(--type-body-sm)' }}>
+      <div style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-medium)' }}>
+        Quản lý kho biển đấu giá VPA với đầy đủ công cụ duyệt giá, phân loại và đồng bộ tự động.
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px 24px' }}>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Giá hiển thị:</strong> Khách chỉ thấy <em>"Giá duyệt"</em>. Khi chưa duyệt hiển thị <em>"Giá liên hệ"</em>.
+        </div>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Giá gợi ý:</strong> = Trung bình giá trúng nhóm tương tự × hệ số (số trong ngoặc là số mẫu đấu giá).
+        </div>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Khóa trường sửa tay:</strong> Khi sửa tay (loại biển, tỉnh, tab, nổi bật), hệ thống sẽ khóa để crawl không ghi đè.
+        </div>
+        <div>
+          <strong style={{ color: 'var(--text-strong)' }}>• Hết hạn / Ẩn:</strong> <em>"Hết hạn nội bộ"</em> là biển biến mất khỏi VPA; <em>"Ẩn"</em> là giấu khỏi khách nhưng vẫn lưu giữ dữ liệu.
+        </div>
+      </div>
+      <div style={{ borderTop: '1px dashed var(--border-hairline)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <strong style={{ color: 'var(--text-strong)' }}>Các thao tác chính trong tab "Duyệt giá":</strong>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '6px 24px', paddingLeft: '8px' }}>
+          <div>
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Duyệt tất cả theo bộ lọc:</strong> Duyệt giá toàn bộ biển có gợi ý khớp bộ lọc đang chọn.
+          </div>
+          <div>
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Duyệt lại giá toàn bộ:</strong> Tính lại giá theo mẫu kết quả mới nhất rồi cập nhật cho biển đã duyệt.
+          </div>
+          <div>
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Duyệt lại (ghi đè sửa tay):</strong> Cập nhật giá mới cho toàn bộ, áp dụng cho cả biển từng sửa tay.
+          </div>
+          <div>
+            <CheckCircle2 size={14} color="var(--action-primary)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+            <strong>Tính lại giá gợi ý:</strong> Quét sinh giá gợi ý tự động cho toàn bộ biển mới cào về chưa có giá.
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
   acoupons: 'Tạo và quản lý mã giảm giá — khách nhập mã khi gửi liên hệ/đặt cọc. Tắt mã khi không muốn dùng nữa, không cần xóa.',
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
@@ -121,12 +171,13 @@ const ADMIN_INFO = {
   ashowroom: 'Tab Số liệu: khuếch đại/tạo thêm con số hiển thị công khai, không đổi dữ liệu giao dịch/hoa hồng nội bộ. Tab Thứ tự sắp xếp: kéo-thả đổi ưu tiên sắp xếp mặc định danh sách biển.',
   asortsettings: 'Thứ tự ưu tiên sắp xếp mặc định danh sách biển công khai — kéo-thả đổi thứ tự 4 tiêu chí (Tỉnh ưu tiên/Hot/Ngày đăng/Loại biển), chỉ áp dụng khi khách không chủ động chọn sắp xếp khác.',
   aerrorlogs: 'Nhật ký lỗi hệ thống (Warning trở lên) ghi từ Serilog — tra cứu lỗi 500/exception gần đây mà không cần SSH đọc log VPS. Tự xóa log cũ hơn 30 ngày.',
-  afeatureflags: 'Tab Feature flags: bật/tắt nhanh tính năng không cần deploy lại. Tab Bảo trì: bật/tắt bảo trì từng trang public. Tab DB console: xem nhanh dữ liệu 7 bảng cố định.',
+  afeatureflags: 'Tab Máy chủ & Hạ tầng: giám sát hiệu năng VPS chính (RAM/Disk/DB/Uptime) và tình trạng Proxy cào VPA theo thời gian thực. Tab Feature flags: bật/tắt nhanh tính năng không cần deploy lại. Tab Bảo trì: bật/tắt bảo trì từng trang public. Tab DB console: xem nhanh dữ liệu 7 bảng cố định.',
   adbconsole: 'Xem nhanh dữ liệu 7 bảng cố định (biển số, danh mục, giao dịch, liên hệ, hoa hồng, hội thoại chatbot) qua bộ lọc có sẵn — không chạy được SQL tự do, không xem được bảng nhạy cảm.',
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
   ainsights: 'Báo cáo chuyên sâu: Phễu chuyển đổi toàn diện, radar phát hiện điểm nghẽn, đối soát cung - cầu kho biển, sức khỏe nguồn lead và danh sách biển số tồn đọng cần kích cầu.',
-  avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật (không phải giá gợi ý/giá duyệt): so kỳ 7 ngày, xu hướng giá theo tuần kèm trung bình động, dự báo tuần tới (ước tính thô, xem R² để biết độ tin cậy), xếp hạng tỉnh/loại biển tăng giá nhanh nhất, lời khuyên tự sinh từ số liệu, và đối chiếu giá trúng VPA với giá niêm yết biển của shop — hai con số khác bản chất, chỉ để tham khảo mặt bằng.',
+  avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật — so kỳ 7 ngày, chuỗi xu hướng 12 tuần & MA 4 tuần, xếp hạng biến động và đối chiếu giá shop.',
+  avpastats: 'Báo cáo toàn diện kho biển VPA và phân tích thị trường đấu giá. Chuyển đổi giữa 2 tab: "Thống kê Kho & Tiến độ duyệt" (kho biển, cơ cấu giá, giám sát crawler) và "Phân tích Thị trường & Dự báo" (giá trúng thật, chuỗi xu hướng 12 tuần & MA 4 tuần, biến động tỉnh/loại biển, đối chiếu giá shop).',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -141,14 +192,96 @@ const BADGE_NAV = {
 };
 const LAST_SEEN_KEY = 'bsd_admin_last_seen';
 
-const NAV_COLLAPSED_KEY = 'bsd_admin_nav_collapsed_groups';
+const NAV_ICONS = {
+  dash: LayoutDashboard,
+  ainsights: LineChart,
+  aguide: BookOpen,
+  aplates: Car,
+  avpa: Gavel,
+  avpastats: BarChart3,
+  acats: FolderTree,
+  asales: ShoppingBag,
+  ainterestleads: Flame,
+  acustomers: Users,
+  acoupons: TicketPercent,
+  aposts: FileText,
+  avideos: Video,
+  ameanings: Compass,
+  apolicypages: ShieldCheck,
+  anotifications: Bell,
+  areviews: Star,
+  achatbot: Bot,
+  acollabs: Handshake,
+  acollabcontent: FileCode,
+  actvtemplates: MessageSquareShare,
+  astaff: UserCog,
+  aauditlog: History,
+  ashowroom: Eye,
+  afeatureflags: SlidersHorizontal,
+};
 
 function NavItemButton({ navKey, label, on, badgeCount, onClick }) {
+  const IconComponent = NAV_ICONS[navKey];
   return (
-    <button type="button" className="pill-btn" data-on={String(on)} data-dark="false" aria-current={on ? 'page' : undefined} onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 14px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'var(--transition-control)', background: pill(on).background, color: pill(on).color }}>
-      <span style={{ flex: 1 }}>{label}</span>
+    <button
+      type="button"
+      className="pill-btn"
+      data-on={String(on)}
+      data-dark="false"
+      aria-current={on ? 'page' : undefined}
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        textAlign: 'left',
+        padding: '9px 12px',
+        border: 'none',
+        borderRadius: 'var(--radius-pill)',
+        font: 'var(--type-body-sm)',
+        fontWeight: on ? 'var(--fw-bold)' : 'var(--fw-medium)',
+        fontSize: '13px',
+        cursor: 'pointer',
+        transition: 'var(--transition-control)',
+        background: pill(on).background,
+        color: pill(on).color,
+      }}
+    >
+      {IconComponent && (
+        <IconComponent
+          size={16}
+          strokeWidth={on ? 2.4 : 1.9}
+          style={{
+            flexShrink: 0,
+            opacity: on ? 1 : 0.75,
+            color: 'currentColor',
+          }}
+        />
+      )}
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
       {badgeCount > 0 && (
-        <span aria-label={`${badgeCount} mới`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: on ? 'rgba(255,255,255,.28)' : 'var(--status-danger)', color: on ? 'var(--text-inverse)' : '#fff', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{badgeCount > 99 ? '99+' : badgeCount}</span>
+        <span
+          aria-label={`${badgeCount} mới`}
+          style={{
+            minWidth: 18,
+            height: 18,
+            padding: '0 5px',
+            borderRadius: 'var(--radius-pill)',
+            background: on ? 'rgba(255,255,255,.28)' : 'var(--status-danger)',
+            color: on ? 'var(--text-inverse)' : '#fff',
+            font: 'var(--type-caption)',
+            fontSize: 'var(--fs-micro)',
+            fontWeight: 'var(--fw-bold)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {badgeCount > 99 ? '99+' : badgeCount}
+        </span>
       )}
     </button>
   );
@@ -289,8 +422,13 @@ export default function AdminShell({
   // tự chuyển về trang chính (về tab đầu, không giữ tab cũ — đơn giản, không vỡ bookmark cũ).
   const mergedRedirect = GROUPED_REDIRECT[s];
   useEffect(() => {
-    if (mergedRedirect) go(mergedRedirect)();
-  }, [mergedRedirect, go]);
+    if (mergedRedirect) {
+      if (s === 'avpamarket') {
+        window.history.replaceState(null, '', '/admin/thong-ke-bien-vpa?tab=market');
+      }
+      go(mergedRedirect)();
+    }
+  }, [mergedRedirect, s, go]);
 
   // 3 màn cũ của nhóm Bán hàng gộp vào 'asales' — chuyển hướng kèm ?view= để giữ đúng view tương ứng.
   useEffect(() => {
@@ -311,13 +449,13 @@ export default function AdminShell({
       {drawerOpen && (
         <div className="admin-drawer-overlay" style={{ position: 'fixed', inset: 0, zIndex: 85 }}>
           <div aria-hidden="true" onClick={() => setDrawerOpen(false)} style={{ position: 'absolute', inset: 0, background: 'var(--overlay-scrim)', animation: 'fadeIn 140ms var(--ease-out)' }} />
-          <div ref={drawerRef} id="admin-drawer" role="dialog" aria-modal="true" aria-label="Menu quản trị" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(280px, 85vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-5) 0', animation: 'modalIn 180ms var(--ease-out)', overflow: 'hidden' }}>
+          <div ref={drawerRef} id="admin-drawer" role="dialog" aria-modal="true" aria-label="Menu quản trị" style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'min(300px, 85vw)', background: 'var(--white)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', padding: 'var(--space-5) 0', animation: 'modalIn 180ms var(--ease-out)', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--space-5)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <img src="/assets/logo-mark.png" alt="Biensovip" style={{ width: 32, height: 32, objectFit: 'contain' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
                   <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.user?.fullName || st.user?.email || 'Tài khoản'}</span>
-                  <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: isSuperAdmin ? 'var(--action-primary)' : 'var(--text-muted)' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span>
+                  <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: isSuperAdmin ? 'var(--action-primary)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
@@ -338,11 +476,14 @@ export default function AdminShell({
       )}
 
       {!collapsed && (
-        <aside className="admin-sidebar" style={{ flex: '0 0 248px', minWidth: 230, background: 'var(--white)', boxShadow: 'inset -1px 0 0 var(--border-hairline)', padding: 'var(--space-5) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <aside className="admin-sidebar" style={{ flex: '0 0 285px', minWidth: 275, background: 'var(--white)', boxShadow: 'inset -1px 0 0 var(--border-hairline)', padding: 'var(--space-5) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '0 var(--space-5)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
               <img src="/assets/logo-mark.png" alt="Biensovip" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
-              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}><span title={st.user?.email} style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.user?.fullName || st.user?.email || 'Tài khoản'}</span><span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: isSuperAdmin ? 'var(--action-primary)' : 'var(--text-muted)' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span></div>
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
+                <span title={st.user?.email} style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.user?.fullName || st.user?.email || 'Tài khoản'}</span>
+                <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: isSuperAdmin ? 'var(--action-primary)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>{isSuperAdmin ? 'Quản trị viên' : 'Nhân viên'}</span>
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
               <AdminNotificationBell go={go} />
@@ -360,7 +501,21 @@ export default function AdminShell({
           </div>
         </aside>
       )}
-      <main className="admin-main" aria-hidden={drawerOpen ? true : undefined} inert={drawerOpen ? '' : undefined} style={{ flex: '1 1 560px', minWidth: 0, padding: 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <main
+        className={`admin-main ${s === 'compose' ? 'admin-main--compose' : ''}`}
+        aria-hidden={drawerOpen ? true : undefined}
+        inert={drawerOpen ? '' : undefined}
+        style={{
+          flex: '1 1 560px',
+          minWidth: 0,
+          padding: s === 'compose' ? 'var(--space-4) clamp(16px,2.5vw,28px) var(--space-3)' : 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: s === 'compose' ? 'var(--space-3)' : 'var(--space-5)',
+          height: s === 'compose' ? 'calc(100vh - 42px)' : undefined,
+          overflow: s === 'compose' ? 'hidden' : undefined,
+        }}
+      >
         {collapsed && (
           <button type="button" onClick={toggleCollapsed} aria-label="Hiện menu" title="Hiện menu" style={{ alignSelf: 'flex-start', width: 36, height: 36, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <PanelLeftOpen size={18} />
@@ -386,11 +541,12 @@ export default function AdminShell({
           <AdminInfoBanner storageKey={s} title="Về trang này">{ADMIN_INFO[s]}</AdminInfoBanner>
         )}
 
-        {s === 'dash' && <Dashboard st={st} go={go} />}
+        {s === 'dash' && <Dashboard st={st} go={go} patch={patch} />}
         {s === 'aguide' && <AdminGuide isSuperAdmin={isSuperAdmin} canSee={(k) => canSeeNav(st, k)} go={go} />}
         {s === 'aplates' && <AdminPlates go={go} notify={notify} st={st} />}
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
         {s === 'avpa' && <AdminVpa notify={notify} isSuperAdmin={isSuperAdmin} go={go} />}
+        {s === 'avpastats' && <AdminVpaStats go={go} patch={patch} st={st} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
         {s === 'asales' && <AdminSales notify={notify} go={go} st={st} initialView={salesViewFromUrl()} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} st={st} />}

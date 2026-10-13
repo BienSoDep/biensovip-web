@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Check } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { Input, Select, Checkbox, IconButton } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -87,7 +88,7 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
                   <Input label="Số điện thoại" required type="tel" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-                  <Select label="Mục đích" value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Đặt cọc giữ biển'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'deposit_request' })} />
+                  <Select label="Mục đích" info="Chọn lý do bạn liên hệ để shop tư vấn đúng hướng (đặt cọc, mua ngay hay chỉ hỏi thêm)." value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Đặt cọc giữ biển'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'deposit_request' })} />
                   <Input label="Mã giảm giá" value={st.mCouponCode || ''} onChange={setField('mCouponCode')} onBlur={checkCoupon} placeholder="Nhập mã nếu có" />
                 </div>
                 {checkingCoupon && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang kiểm tra…</span>}
@@ -114,7 +115,9 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'fadeIn 140ms var(--ease-out)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-bg)', color: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✓</div>
+                  <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-pill)', background: 'var(--status-success-bg)', color: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Check size={26} strokeWidth={2.5} />
+                  </div>
                   <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Cảm ơn bạn</span>
                   <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Yêu cầu đã được ghi nhận. Chúng tôi gọi lại trong 15 phút.</span>
                 </div>

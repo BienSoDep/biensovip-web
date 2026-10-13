@@ -1,11 +1,11 @@
 import {
   CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Star, Gift,
-  SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp,
+  SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, RefreshCw, ArrowRight,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
-import { Select, IconButton, SearchField, InfoTip } from '../../../components/index.jsx';
+import { Select, IconButton, SearchField, InfoTip, PlateIssueTip } from '../../../components/index.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import Skeleton from '../../../components/Skeleton.jsx';
 import { formatDate } from '../../../lib/date.js';
@@ -63,6 +63,32 @@ export default function PlateTable({
   notify,
   openPriceReference,
 }) {
+  const setDatePreset = (preset) => {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const fmt = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+    if (preset === 'today') {
+      const s = fmt(d);
+      setFromDate(s);
+      setToDate(s);
+    } else if (preset === '7days') {
+      const to = fmt(d);
+      d.setDate(d.getDate() - 7);
+      const from = fmt(d);
+      setFromDate(from);
+      setToDate(to);
+    } else if (preset === '30days') {
+      const to = fmt(d);
+      d.setDate(d.getDate() - 30);
+      const from = fmt(d);
+      setFromDate(from);
+      setToDate(to);
+    } else if (preset === 'clear') {
+      setFromDate('');
+      setToDate('');
+    }
+    setPage(1);
+  };
   const SortHeader = ({ label, sortKey, style, className }) => (
     <button
       type="button"
@@ -207,14 +233,68 @@ export default function PlateTable({
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
           <Select label="Trạng thái" value={status} options={STATUS_OPTIONS} onChange={(v) => { setStatus(v); setPage(1); }} />
           <SearchField placeholder="Tìm biển số…" value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} width={220} />
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            Từ ngày
-            <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 2, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            Đến ngày
-            <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }} />
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thời gian</span>
+              <div style={{ display: 'inline-flex', gap: 3 }}>
+                {[['Hôm nay', 'today'], ['7 ngày', '7days'], ['30 ngày', '30days']].map(([txt, val]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setDatePreset(val)}
+                    style={{
+                      border: 'none',
+                      background: 'var(--surface-sunken)',
+                      color: 'var(--text-body)',
+                      padding: '1px 6px',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      transition: 'background-color 120ms',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--grey-200)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  >
+                    {txt}
+                  </button>
+                ))}
+                {(fromDate || toDate) && (
+                  <button
+                    type="button"
+                    onClick={() => setDatePreset('clear')}
+                    title="Xóa lọc ngày"
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      color: 'var(--status-danger)',
+                      padding: '1px 4px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+            </div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
+                style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }}
+                title="Từ ngày"
+              />
+              <ArrowRight size={11} color="var(--text-muted)" />
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setPage(1); }}
+                style={{ height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' }}
+                title="Đến ngày"
+              />
+            </div>
+          </div>
           <Select label="Hiển thị" value={perPage} options={PER_PAGE_OPTIONS} onChange={(v) => { setPerPage(Number(v)); setPage(1); }} />
           <div style={{ position: 'relative' }}>
             <Button variant="ghost" size="md" onClick={() => setColMenuOpen((o) => !o)}>Cột hiển thị</Button>
@@ -232,17 +312,27 @@ export default function PlateTable({
               </>
             )}
           </div>
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={() => refetch()}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            title="Tải lại danh sách biển"
+          >
+            <RefreshCw size={14} />
+            <span>Làm mới</span>
+          </Button>
           <div style={{ flex: 1 }} />
-          <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
+          <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống toàn bộ danh sách biển số đang lọc dưới dạng file CSV" onClick={() => exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
             {exporting ? 'Đang xuất…' : 'Xuất CSV'}
           </Button>
-          <Button variant="ghost" size="md" disabled={checkingMissingInfo} onClick={openMissingInfoModal}>
+          <Button variant="ghost" size="md" disabled={checkingMissingInfo} title="Dùng AI tự động phân tích ý nghĩa phong thủy và tạo mô tả cho các biển số còn trống dữ liệu" onClick={openMissingInfoModal}>
             {checkingMissingInfo ? 'Đang kiểm tra…' : 'Sinh thông tin hàng loạt'}
           </Button>
-          <Button variant="ghost" size="md" disabled={checkingMissingImage} onClick={openMissingImageModal}>
+          <Button variant="ghost" size="md" disabled={checkingMissingImage} title="Hệ thống tự động vẽ ảnh mockup biển số gắn xe thực tế cho các biển chưa có ảnh" onClick={openMissingImageModal}>
             {checkingMissingImage ? 'Đang kiểm tra…' : 'Sinh ảnh hàng loạt'}
           </Button>
-          <Button variant="ghost" size="md" disabled={checkingGeneratedImage} onClick={openPurgeImageModal}>
+          <Button variant="ghost" size="md" disabled={checkingGeneratedImage} title="Xóa toàn bộ các ảnh mockup đã sinh tự động để tạo lại mẫu mới" onClick={openPurgeImageModal}>
             {checkingGeneratedImage ? 'Đang kiểm tra…' : 'Xóa ảnh sinh cũ'}
           </Button>
           <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
@@ -250,10 +340,10 @@ export default function PlateTable({
 
         {/* Category filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
-          <Select label="Loại biển" value={plateTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...plateTypes]} onChange={(v) => { setPlateTypeFilter(v); setPage(1); }} />
-          <Select label="Loại xe" value={vehicleTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...vehicleTypes]} onChange={(v) => { setVehicleTypeFilter(v); setPage(1); }} />
-          <Select label="Tỉnh/thành" value={provinceFilter} options={[{ value: '', label: 'Tất cả' }, ...provinces]} onChange={(v) => { setProvinceFilter(v); setPage(1); }} />
-          <Select label="Nổi bật" value={hotFilter} options={HOT_OPTIONS} onChange={(v) => { setHotFilter(v); setPage(1); }} />
+          <Select label="Loại biển" info="Lọc theo thế số đặc biệt: Ngũ quý, Tứ quý, Tam hoa, Thần tài, Lộc phát, Tiến lên..." value={plateTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...plateTypes]} onChange={(v) => { setPlateTypeFilter(v); setPage(1); }} />
+          <Select label="Loại xe" info="Phân loại biển đăng ký dành cho Ô tô hoặc Xe máy" value={vehicleTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...vehicleTypes]} onChange={(v) => { setVehicleTypeFilter(v); setPage(1); }} />
+          <Select label="Tỉnh/thành" info="Lọc theo tỉnh thành hoặc đầu số đăng ký xe" value={provinceFilter} options={[{ value: '', label: 'Tất cả' }, ...provinces]} onChange={(v) => { setProvinceFilter(v); setPage(1); }} />
+          <Select label="Nổi bật" info="Lọc các biển số được đánh dấu sao VIP hoặc hiển thị ưu tiên tại trang chủ" value={hotFilter} options={HOT_OPTIONS} onChange={(v) => { setHotFilter(v); setPage(1); }} />
         </div>
       </div>
 
@@ -325,14 +415,12 @@ export default function PlateTable({
                         {p.plateNumber}
                       </span>
                       {dataIssuesByPlateId.has(p.id) && (
-                        <button
-                          type="button"
+                        <PlateIssueTip
+                          issues={dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c)}
+                          tone="danger"
+                          size={15}
                           onClick={() => openEdit(p)}
-                          title={`Dữ liệu thiếu/sai: ${dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c).join(', ')}`}
-                          style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}
-                        >
-                          <TriangleAlert size={15} color="var(--status-danger)" />
-                        </button>
+                        />
                       )}
                     </div>
                     {isNewPlate(p) && (
@@ -347,6 +435,35 @@ export default function PlateTable({
                   <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>
                     {p.priceOnRequest ? 'Giá liên hệ' : (p.price ? fmt(p.price) : '—')}
                   </div>
+                  {p.suggestedPrice ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => openPriceReference(p.id)}
+                          title="Xem nguồn và công thức tính giá thị trường tham khảo"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            font: 'var(--type-caption)',
+                            color: 'var(--text-muted)',
+                            textDecoration: 'underline dotted',
+                          }}
+                        >
+                          TT: {fmt(p.suggestedPrice)}
+                        </button>
+                        {p.sampleCount && p.sampleCount > 0 ? (
+                          <span style={{ fontSize: '10px', color: '#059669', background: '#ecfdf5', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                            Cùng tỉnh
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '10px', color: '#d97706', background: '#fffbeb', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                            Giá khởi điểm
+                          </span>
+                        )}
+                      </div>
+                  ) : null}
                   {p.salePrice ? (
                     <div style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', textDecoration: 'line-through' }}>
                       {fmt(p.salePrice)}
@@ -440,15 +557,30 @@ export default function PlateTable({
               {colPrefs.plateType && <SortHeader label="Loại biển" sortKey="plateTypeName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.vehicleType && <SortHeader label="Loại xe" sortKey="vehicleTypeName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.province && <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />}
-              {colPrefs.price && <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />}
-              {colPrefs.suggestedPrice && (
+              {colPrefs.price && (
                 <span style={{ flex: '1 1 110px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <SortHeader label="Giá gợi ý VPA" sortKey="suggestedPrice" />
-                  <InfoTip size={12} text="Giá ước tính từ kết quả đấu giá VPA biển trùng đuôi số (hoặc giá sàn cùng nhóm nếu chưa có mẫu) × hệ số. Chỉ để tham khảo, không tự áp vào Giá bán." />
+                  <SortHeader label="Giá bán" sortKey="price" />
+                  <InfoTip size={12} text="Giá bán công khai trên website (VND). Bấm trực tiếp vào ô giá để sửa nhanh mà không cần mở form." />
                 </span>
               )}
-              {colPrefs.salePrice && <SortHeader label="Giá KM" sortKey="salePrice" style={{ flex: '1 1 96px' }} />}
-              {colPrefs.gifted && <span style={{ flex: '1 1 96px' }}>Biển tặng</span>}
+              {colPrefs.suggestedPrice && (
+                <span style={{ flex: '1 1 125px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Giá TT tham khảo" sortKey="suggestedPrice" />
+                  <InfoTip size={12} text="Giá thị trường tham khảo (gợi ý từ VPA dựa trên kết quả đấu giá các mẫu tương đồng × hệ số). Bấm vào giá để xem chi tiết mẫu và công thức." />
+                </span>
+              )}
+              {colPrefs.salePrice && (
+                <span style={{ flex: '1 1 96px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Giá KM" sortKey="salePrice" />
+                  <InfoTip size={12} text="Giá khuyến mãi giảm giá trực tiếp cho khách mua trong đợt ưu đãi." />
+                </span>
+              )}
+              {colPrefs.gifted && (
+                <span style={{ flex: '1 1 96px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span>Biển tặng</span>
+                  <InfoTip size={12} text="Biển số tặng kèm hoặc ưu đãi đặc biệt dành cho khách hàng thân thiết/mua combo." />
+                </span>
+              )}
               {colPrefs.isNew && <span className="plate-col-new" style={{ flex: '0 0 48px' }}>Mới</span>}
               {colPrefs.status && (
                 <span style={{ flex: '1 1 100px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -456,7 +588,12 @@ export default function PlateTable({
                   <InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." />
                 </span>
               )}
-              {colPrefs.pendingContact && <SortHeader label="Liên hệ chờ" sortKey="pendingContactCount" style={{ flex: '0 0 96px' }} />}
+              {colPrefs.pendingContact && (
+                <span style={{ flex: '0 0 96px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Liên hệ chờ" sortKey="pendingContactCount" />
+                  <InfoTip size={12} text="Số lượng khách hàng đã gửi form yêu cầu tư vấn hoặc liên hệ mua biển này chưa được xử lý." />
+                </span>
+              )}
               {colPrefs.imageCount && <SortHeader label="Số ảnh" sortKey="imageCount" style={{ flex: '0 0 76px' }} />}
               {colPrefs.createdAt && <SortHeader label="Ngày tạo" sortKey="createdAt" style={{ flex: '1 1 96px' }} />}
               {colPrefs.updatedAt && <SortHeader label="Cập nhật" sortKey="updatedAt" className="plate-col-updated" style={{ flex: '1 1 96px' }} />}
@@ -496,14 +633,12 @@ export default function PlateTable({
                     </button>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.plateNumber}</span>
                     {dataIssuesByPlateId.has(p.id) && (
-                      <button
-                        type="button"
+                      <PlateIssueTip
+                        issues={dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c)}
+                        tone="danger"
+                        size={14}
                         onClick={() => openEdit(p)}
-                        title={`Dữ liệu thiếu/sai: ${dataIssuesByPlateId.get(p.id).map((c) => DATA_ISSUE_LABELS[c] || c).join(', ')} — bấm để sửa`}
-                        style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}
-                      >
-                        <TriangleAlert size={14} color="var(--status-danger)" />
-                      </button>
+                      />
                     )}
                   </span>
                   {colPrefs.plateType && <span style={{ flex: '1 1 88px', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{p.plateTypeName}</span>}
@@ -514,23 +649,49 @@ export default function PlateTable({
                       {renderCell(p, 'price')}
                       {!p.priceOnRequest && p.suggestedPrice > 0 && p.price > 0
                         && Math.abs(p.price - p.suggestedPrice) > p.suggestedPrice * 0.1 && (
-                        <TriangleAlert
+                        <PlateIssueTip
+                          text={`Giá bán lệch ${Math.round(Math.abs(p.price - p.suggestedPrice) / p.suggestedPrice * 100)}% so với giá gợi ý VPA (${fmt(p.suggestedPrice)})`}
+                          tone="warning"
                           size={14}
-                          style={{ color: 'var(--status-warning-ink)', flexShrink: 0 }}
-                          title={`Lệch ${Math.round(Math.abs(p.price - p.suggestedPrice) / p.suggestedPrice * 100)}% so giá gợi ý VPA (${fmt(p.suggestedPrice)})`}
                         />
                       )}
                     </span>
                   )}
                   {colPrefs.suggestedPrice && (
-                    <button
-                      type="button"
-                      onClick={() => openPriceReference(p.id)}
-                      title="Xem nguồn tính giá gợi ý"
-                      style={{ flex: '1 1 110px', font: 'var(--type-body-sm)', background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: p.suggestedPrice ? 'var(--text-default)' : 'var(--text-faint)', textDecoration: 'underline dotted' }}
-                    >
-                      {p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}
-                    </button>
+                    <div style={{ flex: '1 1 135px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <button
+                        type="button"
+                        onClick={() => openPriceReference(p.id)}
+                        title="Xem nguồn và công thức tính giá thị trường tham khảo (VPA)"
+                        style={{
+                          font: 'var(--type-body-sm)',
+                          fontWeight: p.suggestedPrice ? 'var(--fw-medium)' : 'normal',
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          color: p.suggestedPrice ? 'var(--action-primary, #2563eb)' : 'var(--text-faint)',
+                          textDecoration: 'underline dotted',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <span>{p.suggestedPrice ? fmt(p.suggestedPrice) : '—'}</span>
+                      </button>
+                      {p.suggestedPrice ? (
+                        p.sampleCount && p.sampleCount > 0 ? (
+                          <span style={{ fontSize: '10.5px', color: '#059669', background: '#ecfdf5', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, width: 'fit-content', border: '1px solid #a7f3d0' }}>
+                            Cùng tỉnh ({p.sampleCount} mẫu)
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '10.5px', color: '#d97706', background: '#fffbeb', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, width: 'fit-content', border: '1px solid #fde68a' }}>
+                            Giá khởi điểm
+                          </span>
+                        )
+                      ) : null}
+                    </div>
                   )}
                   {colPrefs.salePrice && <span style={{ flex: '1 1 96px', font: 'var(--type-body-sm)', color: p.salePrice ? 'var(--status-danger)' : 'var(--text-faint)' }}>{p.salePrice ? fmt(p.salePrice) : '—'}</span>}
                   {colPrefs.gifted && (
@@ -632,6 +793,13 @@ export default function PlateTable({
             style={{ border: 'none', background: 'var(--status-danger)', color: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 12px', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', cursor: 'pointer' }}
           >
             Xóa
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleAll({ target: { checked: false } })}
+            style={{ border: 'none', background: 'none', color: 'var(--white)', textDecoration: 'underline', font: 'var(--type-caption)', cursor: 'pointer' }}
+          >
+            Bỏ chọn
           </button>
         </div>
       )}

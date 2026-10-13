@@ -80,10 +80,13 @@ export default function ContactRequestForm({ user, source, compact = false }) {
       <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={set('fullName')} required />
       <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={form.phone} onChange={set('phone')} required />
       {!compact && (
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mục đích</span>
-          <Select value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(form.intent)] || 'Hỏi chung'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => setForm((f) => ({ ...f, intent: INTENT_VAL[v] || 'inquiry' }))} />
-        </label>
+        <Select
+          label="Mục đích"
+          info="Chọn lý do bạn liên hệ để shop tư vấn đúng hướng (đặt cọc, mua ngay hay chỉ hỏi thêm)."
+          value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(form.intent)] || 'Hỏi chung'}
+          options={INTENT_OPTS.map((o) => ({ value: o, label: o }))}
+          onChange={(v) => setForm((f) => ({ ...f, intent: INTENT_VAL[v] || 'inquiry' }))}
+        />
       )}
       {!compact && (form.intent === 'deposit_request' || form.intent === 'buy') && (
         <Input label="Biển số quan tâm" placeholder="VD: 43A1-999.99" value={form.plateNumber} onChange={set('plateNumber')} />

@@ -1,4 +1,4 @@
-import { Users, Compass, Eye, MessageSquare, CheckCircle2, TrendingDown, ArrowRight } from 'lucide-react';
+import { Users, Compass, Eye, MessageSquare, CheckCircle2, TrendingDown, ArrowRight, AlertTriangle } from 'lucide-react';
 import StatCard from './StatCard.jsx';
 
 export default function FunnelKpiSection({ funnelData, onActionClick, onSelectTab }) {
@@ -222,7 +222,11 @@ export default function FunnelKpiSection({ funnelData, onActionClick, onSelectTa
                         fontWeight: isHighDrop ? 'var(--fw-bold)' : 'var(--fw-medium)',
                         whiteSpace: 'nowrap',
                       }}>
-                        {isHighDrop ? `⚠️ Rớt ${stepItem.dropOff.toFixed(0)}%` : `Đi tiếp ${stepItem.rateNext.toFixed(0)}%`}
+                        {isHighDrop ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <AlertTriangle size={11} /> Rớt {stepItem.dropOff.toFixed(0)}%
+                          </span>
+                        ) : `Đi tiếp ${stepItem.rateNext.toFixed(0)}%`}
                       </span>
                     )}
                   </div>

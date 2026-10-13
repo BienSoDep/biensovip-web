@@ -9,6 +9,7 @@ import {
   usePlatePriceReference,
 } from '../../services/adminPlates.js';
 import PriceReferenceModal from '../../components/PriceReferenceModal.jsx';
+import { InfoTip } from '../../components/index.jsx';
 import { openVpaWithSearch } from './vpa/VpaAdminList.jsx';
 import { useAdminCategories } from '../../services/categories.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
@@ -39,6 +40,7 @@ import {
   num,
 } from './plates/plateUtils.js';
 import PlateCountSummary from './PlateCountSummary.jsx';
+
 import PlateQuickAddBar from './plates/PlateQuickAddBar.jsx';
 import PlateDrawerForm from './plates/PlateDrawerForm.jsx';
 import PlateBulkModals from './plates/PlateBulkModals.jsx';
@@ -283,6 +285,8 @@ export default function AdminPlates({ go, notify, st }) {
     ), { duration: 5000 });
   };
 
+
+
   // Quick Add State
   const [quickNum, setQuickNum] = useState('');
   const [quickPrice, setQuickPrice] = useState('');
@@ -310,6 +314,9 @@ export default function AdminPlates({ go, notify, st }) {
   const plates = data?.items || [];
   const total = data?.total || 0;
   const { data: allData } = useAdminPlates({ page: 1, perPage: 1, status: 'all' }); // tổng không lọc
+  const { data: availableData } = useAdminPlates({ page: 1, perPage: 1, status: 'available' });
+  const { data: soldData } = useAdminPlates({ page: 1, perPage: 1, status: 'sold' });
+  const { data: hotData } = useAdminPlates({ page: 1, perPage: 1, status: 'all', isHot: true });
 
   const { data: dataIssuesRes } = usePlateDataIssues();
   const dataIssuesByPlateId = new Map((dataIssuesRes?.items || []).map((i) => [i.plateId, i.issues]));
@@ -336,6 +343,10 @@ export default function AdminPlates({ go, notify, st }) {
   const provinces = provincesData?.items || [];
   const vehicleTypes = vehicleTypesData?.items || [];
   const defaultQuickVehicleTypeId = (vehicleTypes.find((v) => (v.name || '').toLowerCase().includes('xe máy')) || {}).id || '';
+  const carTypeId = (vehicleTypes.find((v) => (v.name || '').toLowerCase().includes('ô tô')) || {}).id;
+  const motoTypeId = defaultQuickVehicleTypeId;
+  const { data: carData } = useAdminPlates({ page: 1, perPage: 1, status: 'all', vehicleTypeId: carTypeId }, !!carTypeId);
+  const { data: motoData } = useAdminPlates({ page: 1, perPage: 1, status: 'all', vehicleTypeId: motoTypeId }, !!motoTypeId);
 
   const [editPlateId, setEditPlateId] = useState(null);
   const { data: editDetail } = useAdminPlate(editPlateId);
@@ -698,6 +709,145 @@ export default function AdminPlates({ go, notify, st }) {
         vehicleTypes={catOpts(vehicleTypes)}
         provinces={catOpts(provinces)}
       />
+
+      {/* Khối thẻ đếm số lượng biển số theo mục / trạng thái kho hàng */}
+      <div
+        role="tablist"
+        aria-label="Thống kê và lọc nhanh kho biển số"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))',
+          gap: 'var(--space-3)',
+        }}
+      >
+        {[
+          {
+            key: 'all',
+            label: 'Tất cả biển số',
+            note: 'Toàn bộ kho biển',
+            info: 'Toàn bộ biển số đang quản lý trên hệ thống (cả ô tô và xe máy).',
+            count: allData?.total,
+            carCount: carData?.total,
+            motoCount: motoData?.total,
+            active: status === 'all' && !hotFilter,
+            onClick: () => { setStatus('all'); setHotFilter(''); setPage(1); },
+          },
+          {
+            key: 'available',
+            label: 'Còn hàng',
+            note: 'Đang sẵn sàng bán',
+            info: 'Biển số đang sẵn sàng giao dịch và hiển thị công khai trên website.',
+            count: availableData?.total,
+            active: status === 'available' && !hotFilter,
+            onClick: () => { setStatus('available'); setHotFilter(''); setPage(1); },
+          },
+          {
+            key: 'sold',
+            label: 'Đã bán',
+            note: 'Đã chốt giao dịch',
+            info: 'Biển số đã chốt đơn thành công hoặc đã hoàn tất thủ tục bàn giao sang tên.',
+            count: soldData?.total,
+            active: status === 'sold' && !hotFilter,
+            onClick: () => { setStatus('sold'); setHotFilter(''); setPage(1); },
+          },
+          {
+            key: 'hot',
+            label: 'Biển nổi bật',
+            note: 'Gắn sao VIP / Hot deal',
+            info: 'Biển số được gắn sao VIP hoặc ưu đãi hot deal, hiển thị tại các vị trí nổi bật trang chủ.',
+            count: hotData?.total,
+            active: hotFilter === 'true',
+            onClick: () => { setHotFilter(hotFilter === 'true' ? '' : 'true'); setStatus('all'); setPage(1); },
+          },
+          {
+            key: 'issues',
+            label: 'Cần hoàn thiện',
+            note: 'Thiếu ảnh, mô tả, giá lệch',
+            info: 'Biển số cần hoàn thiện dữ liệu: thiếu ảnh mockup thực tế, thiếu bài viết phong thủy hoặc giá chưa hợp lệ.',
+            count: dataIssuesRes?.items?.length || 0,
+            active: false,
+            badgeTone: (dataIssuesRes?.items?.length || 0) > 0 ? 'var(--status-danger-bg)' : undefined,
+            badgeColor: (dataIssuesRes?.items?.length || 0) > 0 ? 'var(--status-danger)' : undefined,
+            onClick: () => openMissingInfoModal(),
+          },
+        ].map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={t.active}
+            onClick={t.onClick}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              gap: 4,
+              padding: 'var(--space-3) var(--space-4)',
+              border: t.active ? '1.5px solid var(--action-primary)' : '1px solid var(--grey-200, #e5e7eb)',
+              borderRadius: 'var(--radius-card)',
+              cursor: 'pointer',
+              textAlign: 'left',
+              background: t.active ? 'var(--action-primary)' : 'var(--white)',
+              color: t.active ? 'var(--action-primary-text)' : 'var(--text-strong)',
+              boxShadow: t.active ? 'var(--shadow-2)' : 'var(--shadow-inset-hairline)',
+              transition: 'background-color 160ms var(--ease-standard), border-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)',
+              position: 'relative',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 8 }}>
+              <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                {t.label}
+                {t.info && (
+                  <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <InfoTip text={t.info} size={12} style={{ color: t.active ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
+                  </span>
+                )}
+              </span>
+              {t.count != null && (
+                <span
+                  style={{
+                    font: 'var(--type-caption)',
+                    fontWeight: 'var(--fw-semibold)',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-pill)',
+                    background: t.active ? 'rgba(255,255,255,0.22)' : (t.badgeTone || 'var(--surface-sunken)'),
+                    color: t.active ? 'var(--action-primary-text)' : (t.badgeColor || 'var(--text-muted)'),
+                    fontSize: '11px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {new Intl.NumberFormat('vi-VN').format(t.count)} biển
+                </span>
+              )}
+            </div>
+            <span
+              style={{
+                font: 'var(--type-caption)',
+                fontSize: '12px',
+                color: t.active ? 'var(--action-primary-text)' : 'var(--action-primary, #C75B00)',
+                opacity: t.active ? 0.9 : 1,
+                fontWeight: t.active ? 'var(--fw-medium)' : 'var(--fw-semibold)',
+              }}
+            >
+              {t.note}
+            </span>
+            {(t.carCount != null || t.motoCount != null) && (
+              <span
+                style={{
+                  font: 'var(--type-caption)',
+                  fontSize: '11px',
+                  color: t.active ? 'rgba(255,255,255,0.85)' : 'var(--text-muted)',
+                }}
+              >
+                Ô tô {new Intl.NumberFormat('vi-VN').format(t.carCount || 0)} · Xe máy {new Intl.NumberFormat('vi-VN').format(t.motoCount || 0)}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+
 
       <PlateCountSummary matched={data?.total} all={allData?.total} filtered={activeFiltersCount > 0 || !!debouncedKeyword} />
 

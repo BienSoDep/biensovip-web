@@ -33,3 +33,10 @@ export function useTestSystemEmail() {
     sendTestEmail: () => apiClient.post('/api/admin/system-health/test-email', {}),
   };
 }
+
+export function useTestProxyConnection() {
+  return {
+    testProxy: () => apiClient.post('/api/admin/system-health/proxy-test', {}),
+  };
+}
+

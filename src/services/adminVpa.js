@@ -16,6 +16,16 @@ export function useVpaAdminFacets(params) {
 // Admin UC49: duyệt giá biển VPA, ẩn/ghim, cài đặt + lần chạy (super-admin), giám sát và điều khiển crawl (T19).
 const KEY = 'admin-vpa';
 
+// Kết quả đấu giá đã cào (bảng riêng vpa_auction_results — không chung schema với 4 tab vpa_plates).
+export function useVpaAuctionResults(params) {
+  const qs = toQuery(params);
+  return useQuery({
+    queryKey: [KEY, 'auction-results', qs],
+    queryFn: () => apiClient.get(`/api/admin/vpa/auction-results?${qs}`),
+    placeholderData: (prev) => prev,
+  });
+}
+
 function toQuery(params) {
   const q = new URLSearchParams();
   Object.entries(params || {}).forEach(([k, v]) => { if (v !== '' && v != null) q.set(k, v); });
@@ -95,9 +105,16 @@ export const useApproveAllVpaSuggested = () => useVpaMutation((params) => apiCli
 // Published/Official đi chậm hơn Results — tính lại giá mọi nhóm rồi áp giá gợi ý mới cho biển đã duyệt.
 export const useApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed?overrideManual=${!!overrideManual}`));
 
+// Tính toán lại giá gợi ý cho mọi nhóm và tự động gán vào biển chưa có giá trên hệ thống.
+export const useRecomputeVpaSuggestions = () => useVpaMutation(() => apiClient.post('/api/admin/vpa/plates/price/recompute-suggestions'));
+
+// Áp dụng ngay lập tức giá gợi ý mới cho toàn bộ các biển Đề xuất đổi giá (Drifted)
+export const useApproveDriftedVpa = () => useVpaMutation(() => apiClient.post('/api/admin/vpa/plates/price/approve-drifted'));
+
 // Bản chạy nền có thanh tiến trình — trả { runId } ngay, không chờ duyệt xong (dùng với useVpaApproveRun để polling).
 export const useStartApproveAllVpaSuggested = () => useVpaMutation((params) => apiClient.post(`/api/admin/vpa/plates/price/approve-all/start?${toQuery(params)}`));
 export const useStartApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed/start?overrideManual=${!!overrideManual}`));
+export const useStartApproveMatchedSamplesVpa = () => useVpaMutation(() => apiClient.post('/api/admin/vpa/plates/price/approve-matched-samples/start'));
 
 // Polling tiến trình 1 lượt duyệt — tự dừng polling khi status khác "running".
 export function useVpaApproveRun(runId, enabled) {
@@ -135,6 +152,22 @@ export async function exportVpaCsv(params) {
   URL.revokeObjectURL(url);
 }
 
+export async function exportVpaAuctionResultsCsv(params) {
+  const auth = loadAuth();
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/auction-results/export?${toQuery(params)}`, {
+    headers: auth?.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
+  });
+  if (!res.ok) throw new Error(`Xuất file thất bại (${res.status})`);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ket-qua-dau-gia-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export const useUpdateVpaSettings = () => useVpaMutation((body) => apiClient.put('/api/admin/vpa/settings', body));
 // "Crawl ngay": source = key ('official'|'published'|'results'); options = { vehicle, province, fresh, resultsFull, dryRun } (tất cả tùy chọn).
 export const useRunVpaCrawl = () => useVpaMutation((arg) => {
@@ -142,6 +175,8 @@ export const useRunVpaCrawl = () => useVpaMutation((arg) => {
   return apiClient.post(`/api/admin/vpa/crawl/${source}/run`, options);
 });
 export const useStopVpaCrawl = () => useVpaMutation((source) => apiClient.post(`/api/admin/vpa/crawl/${source}/stop`));
+// Hủy hẳn (chờ dọn xong) — dùng khi Dừng xong vẫn còn "đang chạy" (dọn dẹp dở) nên đổi xe/Crawl ngay bị chặn VPA_ALREADY_RUNNING.
+export const useForceStopVpaCrawl = () => useVpaMutation((source) => apiClient.post(`/api/admin/vpa/crawl/${source}/force-stop`));
 export const usePauseVpaCrawl = () => useVpaMutation((value) => apiClient.post('/api/admin/vpa/crawl/pause', { value }));
 export const useRevertVpaRun = () => useVpaMutation((runId) => apiClient.post(`/api/admin/vpa/crawl/runs/${runId}/revert`));
 export const useApplyVpaVanish = () => useVpaMutation((runId) => apiClient.post(`/api/admin/vpa/crawl/runs/${runId}/apply-vanish`));

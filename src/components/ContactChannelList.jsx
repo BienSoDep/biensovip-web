@@ -14,8 +14,8 @@ export default function ContactChannelList({ notify, zaloSource = 'contact_page'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', height: '100%' }}>
       <div style={{ position: 'relative', flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: '0 0 0 2px var(--action-primary) inset', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-        <span style={{ position: 'absolute', top: -10, left: 20, background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', padding: '2px 10px', borderRadius: 'var(--radius-pill)' }}>Nhanh nhất</span>
-        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: '#0068FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ZaloIcon style={{ color: '#fff' }} /></div>
+        <span style={{ position: 'absolute', top: -10, left: 20, background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', padding: '2px 10px', borderRadius: 'var(--radius-xs)' }}>Nhanh nhất</span>
+        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-sm)', background: '#0068FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ZaloIcon style={{ color: '#fff' }} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhắn Zalo</h3>
           <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{content.info.phone_display} · phản hồi {content.info.reply_time}</p>
@@ -24,7 +24,7 @@ export default function ContactChannelList({ notify, zaloSource = 'contact_page'
       </div>
 
       <div style={{ flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: 'var(--mint-100)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={22} style={{ color: 'var(--status-success-ink)' }} /></div>
+        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-sm)', background: 'var(--mint-100)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={22} style={{ color: 'var(--status-success-ink)' }} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Gọi điện thoại</h3>
           <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{content.info.hours}</p>
@@ -33,7 +33,7 @@ export default function ContactChannelList({ notify, zaloSource = 'contact_page'
       </div>
 
       <div style={{ flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: '#E7EFFD', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FacebookIcon style={{ color: '#1877F2' }} /></div>
+        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-sm)', background: '#E7EFFD', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FacebookIcon style={{ color: '#1877F2' }} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Facebook</h3>
           <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Nhắn tin qua fanpage, xem thêm biển số mới đăng.</p>
@@ -42,7 +42,7 @@ export default function ContactChannelList({ notify, zaloSource = 'contact_page'
       </div>
 
       <div style={{ flex: 1, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-pill)', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TikTokIcon style={{ color: 'var(--white)' }} /></div>
+        <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 'var(--radius-sm)', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TikTokIcon style={{ color: 'var(--white)' }} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>TikTok</h3>
           <p style={{ margin: '2px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Video giới thiệu biển số, đánh giá thực tế từ khách.</p>

@@ -166,7 +166,7 @@ export function generatePlateDiscussions(plate) {
       badge: 'Chủ doanh nghiệp',
       location: 'Hồng Bàng, Hải Phòng',
       date: '2 ngày trước',
-      content: `Bác @${buyer3} cứ qua trực tiếp hoặc nhờ người nhà ghé showroom 106 Hoàng Diệu là rõ ngay. Anh Duy Đinh tư vấn rất đàng hoàng, cho xem tận mắt văn bản xác nhận trúng đấu giá của Cục CSGT rồi mới ký cọc, làm ăn minh bạch đàng hoàng 10 điểm!`,
+      content: `Bác @${buyer3} cứ nhắn tin trực tiếp qua Fanpage Facebook Duy Đinh hoặc gọi hotline là rõ ngay. Anh Duy Đinh tư vấn rất đàng hoàng, cho xem tận mắt văn bản xác nhận trúng đấu giá của Cục CSGT rồi mới ký cọc, làm ăn minh bạch đàng hoàng 10 điểm!`,
       reactions: { like: 16 + (seed % 7), love: 8, haha: 3, wow: 4, sad: 0, angry: 0 },
     },
   ];
@@ -179,7 +179,7 @@ export function generatePlateDiscussions(plate) {
     },
     {
       q: `Em đang chuẩn bị nhận xe ${chosenVehicle} tại đại lý, muốn lấy biển ${chars.plateNumber} này gắn vào xe thì quy trình giữ biển và đặt cọc như thế nào vậy anh Duy?`,
-      r: `Dạ Duy Đinh chào ${buyer1}, chúc mừng anh chuẩn bị nhận chiếc ${chosenVehicle} rất đẳng cấp! Quy trình bên Duy cực kỳ tinh gọn: Anh đặt cọc giữ biển qua hợp đồng điện tử/trực tiếp tại showroom 106 Hoàng Diệu, Đà Nẵng. Duy sẽ lập tức niêm phong hồ sơ, chuyển trạng thái "Đã cọc" trên hệ thống và cùng anh ký hợp đồng công chứng. Khi xe anh xuất hóa đơn đại lý, bên Duy sẽ trực tiếp nộp hồ sơ cấp biển định danh ngay trong ngày để anh kịp ngày đẹp bấm biển ra xe ạ!`,
+      r: `Dạ Duy Đinh chào ${buyer1}, chúc mừng anh chuẩn bị nhận chiếc ${chosenVehicle} rất đẳng cấp! Quy trình bên Duy cực kỳ tinh gọn: Anh đặt cọc giữ biển qua hợp đồng điện tử hoặc kết nối Fanpage / Zalo để ký công chứng. Duy sẽ lập tức niêm phong hồ sơ, chuyển trạng thái "Đã cọc" trên hệ thống và cùng anh hoàn tất hợp đồng công chứng. Khi xe anh xuất hóa đơn đại lý, bên Duy sẽ trực tiếp nộp hồ sơ cấp biển định danh ngay trong ngày để anh kịp ngày đẹp bấm biển ra xe ạ!`,
     },
     {
       q: `Tôi ở tận ${loc1}, biển này đầu số ${chars.province} thì tôi có làm thủ tục định danh đứng tên chính chủ tại CSGT nơi tôi cư trú được không chuyên gia?`,
@@ -370,9 +370,9 @@ export function generatePlateDiscussions(plate) {
     discussions.push({
       id: `qa-${seed}-4`,
       author: buyer4,
-      location: 'Showroom 106 Hoàng Diệu, Đà Nẵng',
+      location: 'Kết nối qua Fanpage Facebook',
       date: '4 ngày trước',
-      content: `Hôm qua tôi có qua trực tiếp văn phòng 106 Hoàng Diệu gặp anh Duy xem giấy tờ gốc của biển ${chars.plateNumber}. Tác phong làm việc rất chuyên nghiệp, tư vấn đàng hoàng và minh bạch từng điều khoản hợp đồng. Rất ủng hộ cách làm việc uy tín của anh Duy!`,
+      content: `Hôm qua tôi có liên hệ qua Fanpage Facebook gặp anh Duy xem giấy tờ gốc của biển ${chars.plateNumber}. Tác phong làm việc rất chuyên nghiệp, tư vấn đàng hoàng và minh bạch từng điều khoản hợp đồng. Rất ủng hộ cách làm việc uy tín của anh Duy!`,
       reactions: {
         like: 31 + (seed % 15),
         love: 20 + (seed % 9),
@@ -387,7 +387,7 @@ export function generatePlateDiscussions(plate) {
         role: 'Chủ sáng lập Biensovip · Chuyên gia Biển Số',
         verified: true,
         date: '4 ngày trước',
-        content: `Duy Đinh xin chân thành cảm ơn ${buyer4} đã dành thời gian quý báu ghé thăm showroom và đặt trọn niềm tin vào Biensovip. Sự an tâm và hài lòng của quý khách hàng luôn là tôn chỉ hoạt động suốt hơn 10 năm qua của Duy. Kính chúc anh vạn dặm bình an, thượng lộ may mắn và sự nghiệp luôn thăng tiến rực rỡ!`,
+        content: `Duy Đinh xin chân thành cảm ơn ${buyer4} đã theo dõi Fanpage và đặt trọn niềm tin vào Biensovip. Sự an tâm và hài lòng của quý khách hàng luôn là tôn chỉ hoạt động suốt hơn 10 năm qua của Duy. Kính chúc anh vạn dặm bình an, thượng lộ may mắn và sự nghiệp luôn thăng tiến rực rỡ!`,
         reactions: {
           like: 42 + (seed % 14),
           love: 25 + (seed % 8),
@@ -442,15 +442,15 @@ export function generateSoldPlateFeedbacks(plate) {
     let tags = [];
 
     if (i === 0) {
-      comment = `Lấy biển ${chars.plateNumber} lắp cho chiếc ${car} tại showroom Đà Nẵng. Anh Duy Đinh tư vấn rất có tâm, làm việc thẳng thắn, hợp đồng công chứng chuyển nhượng rõ ràng. Đúng 48 giờ là hoàn tất thủ tục thu hồi và cấp đăng ký xe định danh tại CSGT. Rất an tâm!`;
+      comment = `Lấy biển ${chars.plateNumber} lắp cho chiếc ${car}. Anh Duy Đinh tư vấn rất có tâm, làm việc thẳng thắn, hợp đồng công chứng chuyển nhượng rõ ràng. Đúng 48 giờ là hoàn tất thủ tục thu hồi và cấp đăng ký xe định danh tại CSGT. Rất an tâm!`;
       reply = `Biensovip và Duy Đinh xin chân thành cảm ơn ${name}! Chúc anh vạn dặm bình an, lái xe may mắn và công việc luôn đại cát đại lợi. Hồ sơ định danh được bên em bảo hành pháp lý trọn đời ạ.`;
-      tags = ['Định danh chính chủ', 'Giao dịch tại showroom', 'Bảo hành pháp lý'];
+      tags = ['Định danh chính chủ', 'Giao dịch toàn quốc', 'Bảo hành pháp lý'];
     } else if (i === 1) {
-      comment = `Giao dịch biển số giá trị lớn qua mạng ban đầu cũng hơi đắn đo. Nhưng khi qua trực tiếp showroom 106 Hoàng Diệu gặp anh Duy thì thấy sự minh bạch tuyệt đối: kiểm tra nguồn gốc biển đấu giá, hợp đồng ủy quyền và biên nhận cọc đầy đủ. Đúng 3 ngày nhận cavet xe định danh tên mình. 10 điểm uy tín!`;
+      comment = `Giao dịch biển số giá trị lớn qua mạng ban đầu cũng hơi đắn đo. Nhưng khi nhắn tin qua Fanpage Duy Đinh gọi video xem trực tiếp thì thấy sự minh bạch tuyệt đối: kiểm tra nguồn gốc biển đấu giá, hợp đồng ủy quyền và biên nhận cọc đầy đủ. Đúng 3 ngày nhận cavet xe định danh tên mình. 10 điểm uy tín!`;
       reply = `Duy Đinh cảm ơn ${name} đã đặt trọn niềm tin vào Biensovip. Sự an tâm và hài lòng của khách hàng luôn là tôn chỉ hoạt động suốt 10 năm qua của Duy!`;
       tags = ['Nguồn gốc Cục CSGT', 'Hợp đồng công chứng', 'Sang tên 3 ngày'];
     } else if (i === 2) {
-      comment = `Mình ở tận ${loc} mua biển qua anh Duy Đinh ở Đà Nẵng, ban đầu lo ngại khoảng cách địa lý. Nhưng anh Duy cử nhân sự bay vào tận nơi hỗ trợ làm hợp đồng công chứng và sang tên định danh tại CSGT địa phương. Rất chu đáo, chuyên nghiệp và đúng hẹn.`;
+      comment = `Mình ở tận ${loc} mua biển qua anh Duy Đinh ở Đà Nẵng, ban đầu lo ngại khoảng cách địa lý. Nhưng anh Duy cử nhân sự hỗ trợ làm hợp đồng công chứng và sang tên định danh tại CSGT địa phương. Rất chu đáo, chuyên nghiệp và đúng hẹn.`;
       reply = `Cảm ơn ${name}! Biensovip cam kết hỗ trợ giao dịch và sang tên tận nơi trên toàn quốc, đảm bảo an toàn pháp lý tuyệt đối cho mọi khách hàng ở xa.`;
       tags = ['Hỗ trợ tận nơi', 'Định danh toàn quốc', 'Đúng cam kết'];
     } else {
@@ -509,7 +509,7 @@ export function generatePlateReviews(plate) {
       comment = `Biển ${chars.plateNumber} thế số quá đẹp, gắn lên chiếc ${car} nhìn rất uy lực và sang trọng. Anh Duy tư vấn phong thủy theo bản mệnh rất chuẩn chỉ và có tâm, không vẽ vời phát sinh chi phí. Sẽ tiếp tục ủng hộ bên anh!`;
       reply = `Biensovip và Duy xin cảm ơn anh rất nhiều! Chúc anh công việc kinh doanh luôn đại cát đại lợi, buôn may bán đắt và phát tài phát lộc!`;
     } else if (i === 2) {
-      comment = `Trước khi chốt biển này có nhờ anh Duy check phạt nguội và kiểm tra văn bản trúng đấu giá gốc của Cục CSGT. Mọi thứ minh bạch 100%, có biên bản bàn giao và hợp đồng rõ ràng. Đánh giá 5 sao cho uy tín của showroom 106 Hoàng Diệu!`;
+      comment = `Trước khi chốt biển này có nhờ anh Duy check phạt nguội và kiểm tra văn bản trúng đấu giá gốc của Cục CSGT. Mọi thứ minh bạch 100%, có biên bản bàn giao và hợp đồng rõ ràng. Đánh giá 5 sao cho uy tín của Duy Đinh - Biensovip!`;
       reply = `Duy Đinh rất trân trọng tình cảm và đánh giá 5 sao của anh! Sự minh bạch pháp lý và an tâm của khách hàng luôn là tôn chỉ số 1 của Biensovip suốt 10 năm qua.`;
     } else {
       comment = `Giao dịch nhanh gọn, được tặng kèm bộ ép mica viền titan chống nước lắp lên xe rất vừa vặn và đẹp mắt. Đội ngũ hỗ trợ nhiệt tình từ khâu chọn biển đến lúc ra cavet chính chủ.`;

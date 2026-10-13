@@ -32,7 +32,7 @@ export default function GoogleAnalyticsPanel() {
         <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{totalEvents} loại event đang track — traffic, hành vi khách theo thời gian thực</span>
         <div style={{ flex: 1 }} />
         {GA4_CONFIGURED ? (
-          <a href={GA4_REPORT_URL} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--text-inverse)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', textDecoration: 'none' }}>
+          <a href={GA4_REPORT_URL} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--action-primary-text)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', textDecoration: 'none' }}>
             Mở Google Analytics <ExternalLink size={14} />
           </a>
         ) : (

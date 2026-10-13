@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ShieldCheck, Star, Award, CheckCircle2, PhoneCall, MessageCircle, Clock, Car, MapPin, ChevronRight, ThumbsUp, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Star, Award, CheckCircle2, PhoneCall, MessageCircle, Clock, Car, MapPin, ChevronRight, ThumbsUp, RefreshCw, Check } from 'lucide-react';
 import Button from './Button.jsx';
 import { useSystemReviews } from '../services/reviewService.js';
 import { formatDate } from '../lib/date.js';
@@ -317,7 +317,10 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                         fontWeight: 600,
                       }}
                     >
-                      ✓ {t}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <Check size={11} strokeWidth={2.5} />
+                        {t}
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -361,8 +364,8 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--text-strong, #0F172A)', fontWeight: 600 }}>
-              🛡️ Cam kết dịch vụ Biensovip:
+            <span style={{ fontSize: 13, color: 'var(--text-strong, #0F172A)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <ShieldCheck size={16} style={{ color: 'var(--action-primary, #C75B00)' }} /> Cam kết dịch vụ Biensovip:
             </span>
             <span style={{ fontSize: 12.5, color: 'var(--text-muted, #475569)' }}>
               100% Biển sạch nguồn gốc · Hợp đồng pháp lý công chứng · Đền bù 200% nếu sai lệch
