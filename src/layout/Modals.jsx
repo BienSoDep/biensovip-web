@@ -70,7 +70,7 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
   return (
     <>
       {st.modal && cur && (
-        <div role="dialog" aria-modal="true" aria-labelledby="modal-contact-title" aria-describedby="modal-contact-desc" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-contact-title" aria-describedby="modal-contact-desc" onClick={(e) => { if (e.target === e.currentTarget) patch({ modal: false, sent: false }); }} style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
           <div ref={contactRef} style={{ width: '100%', maxWidth: 620, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-4)', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3) var(--space-4)' }}>
