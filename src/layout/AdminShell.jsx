@@ -37,6 +37,7 @@ import AdminPublicDisplay from '../pages/admin/AdminPublicDisplay.jsx';
 import AdminOpsTools from '../pages/admin/AdminOpsTools.jsx';
 import AdminNotificationsHub from '../pages/admin/AdminNotificationsHub.jsx';
 import AdminInsights from '../pages/admin/AdminInsights.jsx';
+import AdminVpaMarket from '../pages/admin/AdminVpaMarket.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -54,6 +55,7 @@ const NAV_PERM = {
   apolicypages: 'policy_pages:view',
   actvtemplates: 'ctv_message_templates:view',
   ainsights: 'analytics:view',
+  avpamarket: 'vpa_prices:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
@@ -92,7 +94,7 @@ function salesViewFromUrl() {
 const ADMIN_INFO = {
   dash: 'Tổng quan lượt xem, liên hệ mới, tỉ lệ chuyển đổi. Xem biểu đồ traffic theo ngày/tuần/tháng để nắm nhịp độ trước khi vào việc.',
   aplates: 'Quản lý toàn bộ biển số rao bán. Đổi trạng thái Còn hàng/Đã bán khi có giao dịch, cập nhật giá đúng lúc để khách không thấy giá cũ.',
-  avpa: 'Quản lý biển đấu giá lấy từ VPA bằng cùng công cụ như Biển của shop. Giá khách thấy là "Giá duyệt": chưa duyệt thì khách thấy "Giá liên hệ". Giá gợi ý = trung bình giá trúng của nhóm tương tự × hệ số (số trong ngoặc là số mẫu). Trường bạn sửa tay (loại biển, tỉnh, tab, nổi bật) được khóa, crawl không ghi đè. "Hết hạn nội bộ" = biển biến mất khỏi VPA, chỉ Admin thấy. Ẩn = giấu khỏi khách, dữ liệu vẫn giữ; biển VPA không xóa hẳn vì lần crawl sau sẽ tạo lại. Rê chuột vào biểu tượng (i) ở tiêu đề cột để xem giải thích.',
+  avpa: 'Quản lý biển đấu giá lấy từ VPA bằng cùng công cụ như Biển của shop. Giá khách thấy là "Giá duyệt": chưa duyệt thì khách thấy "Giá liên hệ". Giá gợi ý = trung bình giá trúng của nhóm tương tự × hệ số (số trong ngoặc là số mẫu). Trường bạn sửa tay (loại biển, tỉnh, tab, nổi bật) được khóa, crawl không ghi đè. "Hết hạn nội bộ" = biển biến mất khỏi VPA, chỉ Admin thấy. Ẩn = giấu khỏi khách, dữ liệu vẫn giữ; biển VPA không xóa hẳn vì lần crawl sau sẽ tạo lại. Rê chuột vào biểu tượng (i) ở tiêu đề cột để xem giải thích. Tab "Duyệt giá" có 3 nút mới: "Duyệt tất cả theo bộ lọc" (duyệt hết biển khớp bộ lọc, không chỉ trang đang xem), "Duyệt lại giá toàn bộ" (tính lại giá rồi áp gợi ý mới cho biển đã duyệt — dùng khi nguồn Công bố/Chính thức đi chậm hơn Kết quả nên lúc duyệt lần đầu còn thiếu mẫu), và bản "(ghi đè cả sửa tay)" áp luôn cho biển nghi Admin từng sửa giá tay — dùng cẩn thận. Rê chuột vào từng nút hoặc biểu tượng (i) cạnh nút để xem chi tiết.',
   acoupons: 'Tạo và quản lý mã giảm giá — khách nhập mã khi gửi liên hệ/đặt cọc. Tắt mã khi không muốn dùng nữa, không cần xóa.',
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
@@ -124,6 +126,7 @@ const ADMIN_INFO = {
   apolicypages: 'Chỉnh nội dung 4 trang tĩnh: Điều khoản sử dụng, Chính sách bảo mật, Hướng dẫn sang tên, Câu hỏi thường gặp. Tiêu đề/phụ đề sửa trực tiếp, phần nội dung chi tiết sửa qua ô JSON.',
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
   ainsights: 'Báo cáo chuyên sâu: Phễu chuyển đổi toàn diện, radar phát hiện điểm nghẽn, đối soát cung - cầu kho biển, sức khỏe nguồn lead và danh sách biển số tồn đọng cần kích cầu.',
+  avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật (không phải giá gợi ý/giá duyệt): so kỳ 7 ngày, xu hướng giá theo tuần kèm trung bình động, dự báo tuần tới (ước tính thô, xem R² để biết độ tin cậy), xếp hạng tỉnh/loại biển tăng giá nhanh nhất, lời khuyên tự sinh từ số liệu, và đối chiếu giá trúng VPA với giá niêm yết biển của shop — hai con số khác bản chất, chỉ để tham khảo mặt bằng.',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -405,6 +408,7 @@ export default function AdminShell({
         {s === 'aauditlog' && <AdminLogs st={st} notify={notify} />}
         {s === 'ashowroom' && <AdminPublicDisplay notify={notify} />}
         {s === 'ainsights' && <AdminInsights go={go} patch={patch} st={st} />}
+        {s === 'avpamarket' && <AdminVpaMarket notify={notify} />}
         {s === 'afeatureflags' && <AdminOpsTools notify={notify} patch={patch} />}
         {s === 'apolicypages' && <AdminPolicyPages notify={notify} />}
         {s === 'actvtemplates' && <AdminCtvMessageTemplates notify={notify} />}

@@ -109,6 +109,11 @@ function withParams(path, params) {
   return s ? `${path}?${s}` : path;
 }
 
+// Dùng ở RequireAuth: access token hết hạn (tab bị treo lâu) nhưng còn refresh token thì thử làm mới
+// TRƯỚC khi kết luận "chưa đăng nhập" — tránh đá về /login rồi ngay sau đó các request dở dang 401 lại
+// tự refresh thành công, gây nháy/vòng điều hướng khi mở lại tab sau một thời gian dài.
+export const tryRefreshToken = tryRefresh;
+
 export const apiClient = {
   get: (path, opts) => request(withParams(path, opts?.params)),
   post: (path, data) => request(path, { method: 'POST', body: data != null ? JSON.stringify(data) : undefined }),

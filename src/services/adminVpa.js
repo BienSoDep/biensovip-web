@@ -43,6 +43,34 @@ export function useVpaOverview(options) {
   });
 }
 
+// 4 biểu đồ tab "Danh sách biển VPA" — enabled=false khi khung đang gấp lại (không tải cho tới khi mở ra).
+export function useVpaStats(enabled = true) {
+  return useQuery({
+    queryKey: [KEY, 'stats'],
+    queryFn: () => apiClient.get('/api/admin/vpa/stats'),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+// Trang Phân tích thị trường VPA — { provinceId, plateTypeId } null = toàn thị trường.
+export function useVpaMarketAnalysis({ provinceId, plateTypeId } = {}) {
+  return useQuery({
+    queryKey: [KEY, 'market-analysis', provinceId || '', plateTypeId || ''],
+    queryFn: () => apiClient.get('/api/admin/vpa/market-analysis', { params: { provinceId, plateTypeId } }),
+    staleTime: 60_000,
+  });
+}
+
+// Minh bạch nguồn giá gợi ý (bấm vào ô Giá gợi ý trong danh sách Biển VPA). Chỉ tải khi modal mở.
+export function useVpaPlatePriceReference(id, enabled) {
+  return useQuery({
+    queryKey: [KEY, 'price-reference', id],
+    queryFn: () => apiClient.get(`/api/admin/vpa/plates/${id}/price-reference`),
+    enabled: enabled && !!id,
+  });
+}
+
 export function useVpaRuns(limit = 30, enabled = true) {
   return useQuery({
     queryKey: [KEY, 'runs', limit],
@@ -62,6 +90,24 @@ function useVpaMutation(fn) {
 
 export const useSetVpaPrice = () => useVpaMutation(({ id, price }) => apiClient.patch(`/api/admin/vpa/plates/${id}/price`, { price }));
 export const useApproveVpaSuggested = () => useVpaMutation((ids) => apiClient.post('/api/admin/vpa/plates/price/approve-suggested', { ids }));
+// Duyệt MỌI biển khớp bộ lọc hiện tại (không giới hạn 500 như approve-suggested) — server tự lặp theo lô tới hết.
+export const useApproveAllVpaSuggested = () => useVpaMutation((params) => apiClient.post(`/api/admin/vpa/plates/price/approve-all?${toQuery(params)}`));
+// Published/Official đi chậm hơn Results — tính lại giá mọi nhóm rồi áp giá gợi ý mới cho biển đã duyệt.
+export const useApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed?overrideManual=${!!overrideManual}`));
+
+// Bản chạy nền có thanh tiến trình — trả { runId } ngay, không chờ duyệt xong (dùng với useVpaApproveRun để polling).
+export const useStartApproveAllVpaSuggested = () => useVpaMutation((params) => apiClient.post(`/api/admin/vpa/plates/price/approve-all/start?${toQuery(params)}`));
+export const useStartApproveRecomputedVpa = () => useVpaMutation((overrideManual) => apiClient.post(`/api/admin/vpa/plates/price/approve-recomputed/start?overrideManual=${!!overrideManual}`));
+
+// Polling tiến trình 1 lượt duyệt — tự dừng polling khi status khác "running".
+export function useVpaApproveRun(runId, enabled) {
+  return useQuery({
+    queryKey: [KEY, 'approve-run', runId],
+    queryFn: () => apiClient.get(`/api/admin/vpa/plates/price/approve-runs/${runId}`),
+    enabled: enabled && !!runId,
+    refetchInterval: (q) => (q.state.data?.status === 'running' ? 1000 : false),
+  });
+}
 export const useRejectVpaPrice = () => useVpaMutation((ids) => apiClient.post('/api/admin/vpa/plates/price/reject', { ids }));
 export const useApproveVpaGroup = () => useVpaMutation((groupId) => apiClient.post(`/api/admin/vpa/price-groups/${groupId}/approve`));
 export const useHideVpaPlate = () => useVpaMutation(({ id, value }) => apiClient.post(`/api/admin/vpa/plates/${id}/hide`, { value }));

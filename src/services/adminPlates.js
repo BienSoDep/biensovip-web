@@ -41,6 +41,15 @@ export async function checkPlateVersion(id, updatedAt) {
   return result.conflict;
 }
 
+// UC49 — minh bạch nguồn giá gợi ý VPA (bấm vào ô Giá gợi ý). Chỉ tải khi modal mở.
+export function usePlatePriceReference(id, enabled) {
+  return useQuery({
+    queryKey: ['admin-plate-price-reference', id],
+    queryFn: () => apiClient.get(`/api/admin/plates/${id}/price-reference`),
+    enabled: enabled && !!id,
+  });
+}
+
 function invalidate(qc) {
   qc.invalidateQueries({ queryKey: ['admin-plates'] });
   qc.invalidateQueries({ queryKey: ['admin-plate'] });

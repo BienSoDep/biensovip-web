@@ -109,6 +109,7 @@ export const TOGGLEABLE_COLUMNS = [
   { key: 'vehicleType', label: 'Loại xe', default: true },
   { key: 'province', label: 'Tỉnh/thành', default: true },
   { key: 'price', label: 'Giá', default: true },
+  { key: 'suggestedPrice', label: 'Giá gợi ý VPA', default: false },
   { key: 'gifted', label: 'Biển tặng', default: true },
   { key: 'isNew', label: 'Mới', default: true },
   { key: 'status', label: 'Trạng thái', default: true },
