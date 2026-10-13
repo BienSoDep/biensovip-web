@@ -235,7 +235,7 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
                 style={{
                   height: '100%',
                   width: `${completionPct}%`,
-                  background: run.itemsMissing ? 'var(--amber-500, #F59E0B)' : 'var(--emerald-500, #10B981)',
+                  background: run.itemsMissing ? 'var(--status-warning, #F5C542)' : 'var(--status-success, #3FBF8F)',
                   borderRadius: 3,
                   transition: 'width 0.3s ease',
                 }}
@@ -243,7 +243,7 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', alignItems: 'center' }}>
               <span>{formatInt(run.pagesFetched)} trang</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: run.itemsMissing ? 'var(--amber-600, #D97706)' : 'var(--emerald-600, #059669)', fontWeight: 'var(--fw-semibold)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: run.itemsMissing ? 'var(--status-warning-ink, #8A6100)' : 'var(--status-success-ink, #1B7A5A)', fontWeight: 'var(--fw-semibold)' }}>
                 {run.itemsMissing ? <AlertTriangle size={11} /> : <CheckCircle2 size={11} />}
                 {run.itemsMissing ? `Thiếu ${formatInt(run.itemsMissing)} biển` : '100% đạt chuẩn'}
               </span>
@@ -270,16 +270,16 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
               <TrendingUp size={14} style={{ color: 'var(--text-muted)' }} />
             </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 'var(--fw-bold)', lineHeight: 1.2, display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-              <span style={{ color: 'var(--emerald-600, #059669)' }}>+{formatInt(run.inserted)}</span>
+              <span style={{ color: 'var(--status-success-ink, #1B7A5A)' }}>+{formatInt(run.inserted)}</span>
               <span style={{ fontSize: '12px', fontWeight: 'normal', color: 'var(--text-muted)' }}>mới</span>
               <span style={{ color: 'var(--grey-400, #9ca3af)', fontSize: '12px' }}>/</span>
-              <span style={{ color: 'var(--blue-600, #2563eb)' }}>{formatInt(run.updated)}</span>
+              <span style={{ color: 'var(--action-primary, #C75B00)' }}>{formatInt(run.updated)}</span>
               <span style={{ fontSize: '12px', fontWeight: 'normal', color: 'var(--text-muted)' }}>sửa</span>
             </div>
             {/* Visual Delta Bar */}
             <div style={{ height: 5, borderRadius: 3, background: 'var(--grey-100, #f3f4f6)', overflow: 'hidden', margin: '4px 0 2px', display: 'flex' }}>
-              <div style={{ height: '100%', width: `${pctInserted}%`, background: '#10B981' }} title={`Mới: ${pctInserted}%`} />
-              <div style={{ height: '100%', width: `${pctUpdated}%`, background: '#3B82F6' }} title={`Cập nhật: ${pctUpdated}%`} />
+              <div style={{ height: '100%', width: `${pctInserted}%`, background: 'var(--status-success, #3FBF8F)' }} title={`Mới: ${pctInserted}%`} />
+              <div style={{ height: '100%', width: `${pctUpdated}%`, background: 'var(--action-primary, #C75B00)' }} title={`Cập nhật: ${pctUpdated}%`} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)' }}>
               <span>Bỏ qua: {formatInt(run.skippedForeign)}</span>
@@ -354,7 +354,7 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
                 style={{
                   height: '100%',
                   width: `${Math.min(100, ((ratePlates || 0) / 150) * 100)}%`,
-                  background: '#6366F1',
+                  background: 'var(--action-primary, #C75B00)',
                   borderRadius: 3,
                 }}
               />
@@ -649,7 +649,7 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 4 }}>
               <div style={{ background: 'var(--surface-sunken, #f9fafb)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--grey-100)' }}>
                 <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Biến động nạp mới</span>
-                <span style={{ font: 'var(--type-title-3)', color: 'var(--emerald-600, #059669)', fontWeight: 'var(--fw-bold)' }}>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--status-success-ink, #1B7A5A)', fontWeight: 'var(--fw-bold)' }}>
                   +{formatInt(run.inserted)} phiên đấu giá mới
                 </span>
                 <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>
@@ -659,7 +659,7 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
 
               <div style={{ background: 'var(--surface-sunken, #f9fafb)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--grey-100)' }}>
                 <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Biến động cập nhật</span>
-                <span style={{ font: 'var(--type-title-3)', color: 'var(--blue-600, #2563eb)', fontWeight: 'var(--fw-bold)' }}>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--action-primary, #C75B00)', fontWeight: 'var(--fw-bold)' }}>
                   {formatInt(run.updated)} phiên được cập nhật
                 </span>
                 <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>
@@ -669,7 +669,7 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
 
               <div style={{ background: 'var(--surface-sunken, #f9fafb)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--grey-100)' }}>
                 <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Tác động định giá</span>
-                <span style={{ font: 'var(--type-title-3)', color: 'var(--purple-600, #7c3aed)', fontWeight: 'var(--fw-bold)' }}>
+                <span style={{ font: 'var(--type-title-3)', color: 'var(--action-primary, #C75B00)', fontWeight: 'var(--fw-bold)' }}>
                   Tự động làm tươi mẫu
                 </span>
                 <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>

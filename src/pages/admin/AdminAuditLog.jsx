@@ -30,8 +30,8 @@ const ENTITY_OPTS = [
 ];
 
 const ACTION_CONFIG = {
-  create: { label: 'Tạo mới', tone: 'mint', bg: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: 'rgba(16, 185, 129, 0.25)', icon: PlusCircle },
-  update: { label: 'Cập nhật', tone: 'blue', bg: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: 'rgba(59, 130, 246, 0.25)', icon: Pencil },
+  create: { label: 'Tạo mới', tone: 'mint', bg: 'rgba(63,191,143, 0.1)', color: '#3FBF8F', border: 'rgba(63,191,143, 0.25)', icon: PlusCircle },
+  update: { label: 'Cập nhật', tone: 'blue', bg: 'rgba(241,151,32, 0.1)', color: '#C75B00', border: 'rgba(241,151,32, 0.25)', icon: Pencil },
   delete: { label: 'Xóa dữ liệu', tone: 'danger', bg: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', border: 'rgba(239, 68, 68, 0.25)', icon: Trash2 },
   status_change: { label: 'Đổi trạng thái', tone: 'amber', bg: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: 'rgba(245, 158, 11, 0.25)', icon: AlertCircle },
 };
@@ -95,7 +95,7 @@ export default function AdminAuditLog() {
       {/* 4 Thẻ KPI Hoạt động */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-3)' }}>
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <History size={22} />
           </div>
           <div>
@@ -105,22 +105,22 @@ export default function AdminAuditLog() {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <PlusCircle size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thao tác Tạo mới</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>{stats.creates}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>{stats.creates}</div>
           </div>
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Pencil size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Thao tác Cập nhật</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#2563eb' }}>{stats.updates}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#C75B00' }}>{stats.updates}</div>
           </div>
         </div>
 

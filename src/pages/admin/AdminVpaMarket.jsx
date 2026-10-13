@@ -6,7 +6,7 @@ import Skeleton from '../../components/Skeleton.jsx';
 import { useVpaMarketAnalysis } from '../../services/adminVpa.js';
 import { useAdminCategories } from '../../services/categories.js';
 
-const PALETTE = ['#3B5BFF', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
+const PALETTE = ['#F19720', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
 const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)}đ`);
 const CARD = { background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' };
 const ALL = { value: '', label: 'Toàn thị trường' };
@@ -48,7 +48,7 @@ export default function AdminVpaMarket() {
               display: 'inline-flex',
               padding: '4px 8px',
               borderRadius: 'var(--radius-sm)',
-              background: 'var(--action-primary-subtle, rgba(59,91,255,0.08))',
+              background: 'var(--action-primary-subtle, rgba(241,151,32,0.08))',
               color: 'var(--action-primary)',
               font: 'var(--type-caption)',
               fontWeight: 'var(--fw-bold)'

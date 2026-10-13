@@ -40,9 +40,9 @@ export default function PriceReferenceModal({
           gap: 5,
           padding: "4px 10px",
           borderRadius: "var(--radius-pill, 9999px)",
-          background: "#ecfdf5",
-          color: "#059669",
-          border: "1px solid #a7f3d0",
+          background: "#F0FAF6",
+          color: "#3FBF8F",
+          border: "1px solid #D6F0E5",
           fontSize: "12px",
           fontWeight: "var(--fw-semibold, 600)",
         }}>
@@ -167,7 +167,7 @@ export default function PriceReferenceModal({
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ font: "var(--type-caption)", fontWeight: "var(--fw-semibold)", color: "var(--text-strong)", display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <CheckCircle2 size={13} style={{ color: "#059669" }} />
+                    <CheckCircle2 size={13} style={{ color: "#3FBF8F" }} />
                     Danh sách {items.length} mẫu đấu giá CÙNG TỈNH trùng khớp số đuôi:
                   </span>
                   <span style={{ font: "var(--type-caption)", color: "var(--text-muted)" }}>
@@ -217,8 +217,8 @@ export default function PriceReferenceModal({
                               fontSize: "11px",
                               padding: "2px 6px",
                               borderRadius: "4px",
-                              background: "#ecfdf5",
-                              color: "#059669",
+                              background: "#F0FAF6",
+                              color: "#3FBF8F",
                               fontWeight: "var(--fw-semibold, 600)",
                             }}
                           >
@@ -244,7 +244,7 @@ export default function PriceReferenceModal({
                         <span
                           style={{
                             fontWeight: "var(--fw-bold, 700)",
-                            color: "var(--action-primary, #059669)",
+                            color: "var(--action-primary, #3FBF8F)",
                           }}
                         >
                           {fmt(it.auctionPrice)}

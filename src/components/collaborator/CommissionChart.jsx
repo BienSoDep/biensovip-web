@@ -10,8 +10,8 @@ function CommissionTooltip({ active, payload, label }) {
   return (
     <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-3)', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160 }}>
       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{label}</span>
-      <span style={{ font: 'var(--type-caption)', color: '#16a34a' }}>Đã trả: {money(byKey.paid || 0)}</span>
-      <span style={{ font: 'var(--type-caption)', color: '#2563eb' }}>Đã duyệt: {money(byKey.approved || 0)}</span>
+      <span style={{ font: 'var(--type-caption)', color: '#3FBF8F' }}>Đã trả: {money(byKey.paid || 0)}</span>
+      <span style={{ font: 'var(--type-caption)', color: '#C75B00' }}>Đã duyệt: {money(byKey.approved || 0)}</span>
       <span style={{ font: 'var(--type-caption)', color: '#ca8a04' }}>Chờ duyệt: {money(byKey.pending || 0)}</span>
       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', borderTop: '1px solid var(--grey-100)', paddingTop: 4, marginTop: 2 }}>Tổng: {money(total)}</span>
     </div>
@@ -77,8 +77,8 @@ export default function CommissionChart({ recent }) {
             <YAxis tick={{ fontSize: 12 }} tickFormatter={formatMoneyAxis} />
             <Tooltip content={<CommissionTooltip />} />
             <Legend />
-            <Bar dataKey="paid" name="Đã trả" stackId="a" fill="#16a34a" radius={[0, 0, 0, 0]} />
-            <Bar dataKey="approved" name="Đã duyệt" stackId="a" fill="#2563eb" />
+            <Bar dataKey="paid" name="Đã trả" stackId="a" fill="#3FBF8F" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="approved" name="Đã duyệt" stackId="a" fill="#C75B00" />
             <Bar dataKey="pending" name="Chờ duyệt" stackId="a" fill="#ca8a04" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>

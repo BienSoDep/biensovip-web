@@ -32,11 +32,11 @@ const PLATE_CATEGORIES = [
 ];
 
 const CATEGORY_STYLE = {
-  plate_type: { bg: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: 'rgba(59, 130, 246, 0.25)', label: 'Kiểu biển' },
-  digit: { bg: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: 'rgba(16, 185, 129, 0.25)', label: 'Ý nghĩa số' },
+  plate_type: { bg: 'rgba(241,151,32, 0.1)', color: '#C75B00', border: 'rgba(241,151,32, 0.25)', label: 'Kiểu biển' },
+  digit: { bg: 'rgba(63,191,143, 0.1)', color: '#3FBF8F', border: 'rgba(63,191,143, 0.25)', label: 'Ý nghĩa số' },
   series: { bg: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: 'rgba(245, 158, 11, 0.25)', label: 'Dãy số / Nút' },
   general: { bg: 'rgba(107, 114, 128, 0.1)', color: '#4b5563', border: 'rgba(107, 114, 128, 0.25)', label: 'Chung' },
-  custom: { bg: 'rgba(236, 72, 153, 0.1)', color: '#db2777', border: 'rgba(236, 72, 153, 0.25)', label: 'Tùy chỉnh' },
+  custom: { bg: 'rgba(168,72,90, 0.1)', color: '#A8485A', border: 'rgba(168,72,90, 0.25)', label: 'Tùy chỉnh' },
 };
 
 const catLabel = (v) => (CATEGORIES.find((c) => c.value === v) || PLATE_CATEGORIES.find((c) => c.value === v) || {}).label || v;
@@ -180,7 +180,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
       {/* 4 KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-3)' }}>
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Sparkles size={22} />
           </div>
           <div>
@@ -190,7 +190,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={22} />
           </div>
           <div>
@@ -200,7 +200,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Layers size={22} />
           </div>
           <div>
@@ -775,7 +775,7 @@ function PlatesTab({ notify }) {
                     width: '100%',
                     padding: '12px 16px',
                     textAlign: 'left',
-                    background: isSelected ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
+                    background: isSelected ? 'rgba(241,151,32, 0.08)' : 'transparent',
                     border: 'none',
                     borderBottom: '1px solid var(--border-hairline)',
                     cursor: 'pointer',
@@ -833,7 +833,7 @@ function PlatesTab({ notify }) {
               alignItems: 'center',
               gap: 12,
             }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(241,151,32, 0.1)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Car size={28} />
               </div>
               <div style={{ font: 'var(--type-title-3)', fontWeight: 700, color: 'var(--text-strong)' }}>

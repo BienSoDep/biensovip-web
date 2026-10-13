@@ -91,12 +91,12 @@ const QUICK_QUESTIONS = [
 ──────────────────────────────────────────────────────────── */
 function getAvatarColor(name = "") {
   const palettes = [
-    { bg: "#EFF6FF", text: "#1D4ED8", border: "#BFDBFE" },
-    { bg: "#F0FDF4", text: "#15803D", border: "#BBF7D0" },
+    { bg: "#EFF6FF", text: "#C75B00", border: "#BFDBFE" },
+    { bg: "#F0FAF6", text: "#2E9970", border: "#D6F0E5" },
     { bg: "#FEF3C7", text: "#B45309", border: "#FDE68A" },
-    { bg: "#FDF2F8", text: "#BE185D", border: "#FBCFE8" },
-    { bg: "#F5F3FF", text: "#6D28D9", border: "#DDD6FE" },
-    { bg: "#ECFEFF", text: "#0E7490", border: "#A5F3FC" },
+    { bg: "#FDF2F8", text: "#8a3645", border: "#FBCFE8" },
+    { bg: "#F5F3FF", text: "#4A4F59", border: "#DDD6FE" },
+    { bg: "#ECFEFF", text: "#8a3d00", border: "#A5F3FC" },
   ];
   let s = 0;
   for (let i = 0; i < name.length; i++) s += name.charCodeAt(i);
@@ -935,15 +935,15 @@ export default function PlateDiscussion({ plate, notify, user }) {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                background: "rgba(16,185,129,.1)",
-                color: "#065F46",
+                background: "rgba(63,191,143,.1)",
+                color: "#2E9970",
                 padding: "4px 10px",
                 borderRadius: "var(--radius-pill)",
                 font: "var(--type-caption)",
-                border: "1px solid rgba(16,185,129,.25)",
+                border: "1px solid rgba(63,191,143,.25)",
               }}
             >
-              <BadgeCheck size={14} style={{ color: "#059669" }} />
+              <BadgeCheck size={14} style={{ color: "#3FBF8F" }} />
               Đang bình luận với tài khoản: <strong>{userDisplayName}</strong>
             </div>
           ) : (
@@ -1414,7 +1414,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                           borderRadius: "var(--radius-xl)",
                           padding: "12px 14px",
                           border: "1px solid var(--border-hairline)",
-                          borderLeft: "3px solid #3B82F6",
+                          borderLeft: "3px solid #F19720",
                           display: "flex",
                           flexDirection: "column",
                           gap: 6,
@@ -1450,8 +1450,8 @@ export default function PlateDiscussion({ plate, notify, user }) {
                             {cReply.badge && (
                               <span
                                 style={{
-                                  background: "rgba(59,130,246,.1)",
-                                  color: "#2563EB",
+                                  background: "rgba(241,151,32,.1)",
+                                  color: "#C75B00",
                                   font: "var(--type-caption)",
                                   padding: "1px 6px",
                                   borderRadius: 4,

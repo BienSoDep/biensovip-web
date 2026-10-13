@@ -291,12 +291,12 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
         </div>
 
         <div style={{ background: 'var(--white)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--mint-50, #ecfdf5)', color: 'var(--status-success-ink, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-pill)', background: 'var(--mint-50, #F0FAF6)', color: 'var(--status-success-ink, #3FBF8F)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={18} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: '11px' }}>Đã xác nhận thanh toán ({kpis.confirmedCnt})</span>
-            <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '16px', color: 'var(--status-success-ink, #059669)' }}>
+            <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '16px', color: 'var(--status-success-ink, #3FBF8F)' }}>
               {money(kpis.confirmedSum)}
             </span>
           </div>
@@ -494,7 +494,7 @@ export default function AdminTransactions({ notify, filterContactRequestId }) {
                   )}
 
                   {isVisible('amount') && (
-                    <span data-label="Số tiền" style={{ flex: '1 1 90px', fontWeight: 'var(--fw-bold)', color: 'var(--status-success-ink, #059669)' }}>
+                    <span data-label="Số tiền" style={{ flex: '1 1 90px', fontWeight: 'var(--fw-bold)', color: 'var(--status-success-ink, #3FBF8F)' }}>
                       {money(t.amount)}
                     </span>
                   )}

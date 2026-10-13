@@ -51,17 +51,17 @@ const STATUS_TABS = [
 const SIGNAL_OPTS = [
   { val: 'all', label: 'Tất cả tín hiệu' },
   { val: 'favorited', label: 'Đã thả tim', icon: Heart, color: '#ef4444' },
-  { val: 'repeat_view', label: 'Xem nhiều lần', icon: Eye, color: '#2563eb' }
+  { val: 'repeat_view', label: 'Xem nhiều lần', icon: Eye, color: '#C75B00' }
 ];
 
 function getAvatarBg(str = '') {
   const colors = [
-    'linear-gradient(135deg, #2563eb, #1d4ed8)',
-    'linear-gradient(135deg, #059669, #047857)',
+    'linear-gradient(135deg, #C75B00, #C75B00)',
+    'linear-gradient(135deg, #3FBF8F, #2E9970)',
     'linear-gradient(135deg, #d97706, #b45309)',
-    'linear-gradient(135deg, #7c3aed, #6d28d9)',
-    'linear-gradient(135deg, #db2777, #be185d)',
-    'linear-gradient(135deg, #0891b2, #0e7490)',
+    'linear-gradient(135deg, #6B7180, #4A4F59)',
+    'linear-gradient(135deg, #A8485A, #8a3645)',
+    'linear-gradient(135deg, #C75B00, #8a3d00)',
   ];
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -245,7 +245,7 @@ export default function AdminInterestLeads({ notify }) {
             transition: 'all 140ms ease'
           }}
         >
-          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(199,91,0, 0.1)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={20} />
           </div>
           <div>
@@ -272,7 +272,7 @@ export default function AdminInterestLeads({ notify }) {
             transition: 'all 140ms ease'
           }}
         >
-          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--intent-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(63,191,143, 0.12)', color: 'var(--intent-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={20} />
           </div>
           <div>
@@ -694,7 +694,7 @@ export default function AdminInterestLeads({ notify }) {
                         gap: 4,
                         padding: '4px 10px',
                         borderRadius: 'var(--radius-pill)',
-                        background: 'rgba(16, 185, 129, 0.1)',
+                        background: 'rgba(63,191,143, 0.1)',
                         color: 'var(--intent-success)',
                         font: 'var(--type-caption)',
                         fontWeight: 600

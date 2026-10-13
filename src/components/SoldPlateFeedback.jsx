@@ -42,8 +42,8 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
       {/* 1. Verified Handover Banner */}
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(217, 119, 6, 0.06) 100%)',
-          border: '1.5px solid rgba(16, 185, 129, 0.35)',
+          background: 'linear-gradient(135deg, rgba(63,191,143, 0.08) 0%, rgba(217, 119, 6, 0.06) 100%)',
+          border: '1.5px solid rgba(63,191,143, 0.35)',
           borderRadius: 'var(--radius-card, 16px)',
           padding: 'var(--space-5, 20px) var(--space-6, 24px)',
           display: 'flex',
@@ -63,20 +63,20 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                 width: 36,
                 height: 36,
                 borderRadius: '50%',
-                background: 'rgba(16, 185, 129, 0.15)',
-                color: '#059669',
+                background: 'rgba(63,191,143, 0.15)',
+                color: '#3FBF8F',
               }}
             >
               <CheckCircle2 size={22} />
             </span>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ font: 'var(--type-title-2, 700 18px / 24px sans-serif)', color: '#065F46' }}>
+                <span style={{ font: 'var(--type-title-2, 700 18px / 24px sans-serif)', color: '#2E9970' }}>
                   Biển số đã bàn giao thành công
                 </span>
                 <span
                   style={{
-                    background: '#10B981',
+                    background: '#3FBF8F',
                     color: '#FFF',
                     padding: '2px 8px',
                     borderRadius: 999,
@@ -120,11 +120,11 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
             gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
             gap: 12,
             paddingTop: 12,
-            borderTop: '1px dashed rgba(16, 185, 129, 0.25)',
+            borderTop: '1px dashed rgba(63,191,143, 0.25)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Car size={18} style={{ color: '#059669', flexShrink: 0 }} />
+            <Car size={18} style={{ color: '#3FBF8F', flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 11, color: 'var(--text-muted, #64748B)', textTransform: 'uppercase', fontWeight: 600 }}>Phương tiện gắn biển</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong, #0F172A)' }}>Xe con 5 - 7 chỗ cao cấp</div>
@@ -132,7 +132,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <MapPin size={18} style={{ color: '#059669', flexShrink: 0 }} />
+            <MapPin size={18} style={{ color: '#3FBF8F', flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 11, color: 'var(--text-muted, #64748B)', textTransform: 'uppercase', fontWeight: 600 }}>Khu vực bàn giao</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong, #0F172A)' }}>{plate.province || 'Toàn quốc'}</div>
@@ -140,7 +140,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Clock size={18} style={{ color: '#059669', flexShrink: 0 }} />
+            <Clock size={18} style={{ color: '#3FBF8F', flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 11, color: 'var(--text-muted, #64748B)', textTransform: 'uppercase', fontWeight: 600 }}>Thời gian sang tên</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong, #0F172A)' }}>24h - 48h làm việc</div>
@@ -148,10 +148,10 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <ShieldCheck size={18} style={{ color: '#059669', flexShrink: 0 }} />
+            <ShieldCheck size={18} style={{ color: '#3FBF8F', flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 11, color: 'var(--text-muted, #64748B)', textTransform: 'uppercase', fontWeight: 600 }}>Pháp lý bảo đảm</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#059669' }}>Bảo hành trọn đời</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#3FBF8F' }}>Bảo hành trọn đời</div>
             </div>
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
               <span style={{ fontSize: 13, color: 'var(--text-muted, #64748B)' }}>/ 5.0</span>
             </div>
             <span style={{ height: 16, width: 1, background: '#CBD5E1' }} />
-            <span style={{ fontSize: 12, color: '#059669', fontWeight: 600 }}>500+ Giao dịch an toàn</span>
+            <span style={{ fontSize: 12, color: '#3FBF8F', fontWeight: 600 }}>500+ Giao dịch an toàn</span>
           </div>
         </div>
 
@@ -259,7 +259,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 2,
-                          color: '#059669',
+                          color: '#3FBF8F',
                           fontSize: 11,
                           fontWeight: 600,
                         }}
@@ -401,7 +401,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                   gap: 6,
                   fontSize: 13,
                   fontWeight: 600,
-                  color: '#059669',
+                  color: '#3FBF8F',
                   textDecoration: 'none',
                 }}
               >

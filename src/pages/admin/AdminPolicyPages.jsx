@@ -147,7 +147,7 @@ function PolicyLivePreview({
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3FBF8F', display: 'inline-block' }} />
           <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', color: 'var(--text-faint)' }}>
             biensovip.com/{slug === 'terms' ? 'dieu-khoan' : slug === 'privacy' ? 'bao-mat' : slug === 'transfer' ? 'sang-ten' : slug === 'faq' ? 'hoi-dap' : 'quy-trinh'}
           </span>

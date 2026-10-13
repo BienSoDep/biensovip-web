@@ -454,7 +454,7 @@ export default function PlateTable({
                           TT: {fmt(p.suggestedPrice)}
                         </button>
                         {p.sampleCount && p.sampleCount > 0 ? (
-                          <span style={{ fontSize: '10px', color: '#059669', background: '#ecfdf5', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                          <span style={{ fontSize: '10px', color: '#3FBF8F', background: '#F0FAF6', padding: '1px 4px', borderRadius: '4px', fontWeight: 600 }}>
                             Cùng tỉnh
                           </span>
                         ) : (
@@ -671,7 +671,7 @@ export default function PlateTable({
                           padding: 0,
                           textAlign: 'left',
                           cursor: 'pointer',
-                          color: p.suggestedPrice ? 'var(--action-primary, #2563eb)' : 'var(--text-faint)',
+                          color: p.suggestedPrice ? 'var(--action-primary, #C75B00)' : 'var(--text-faint)',
                           textDecoration: 'underline dotted',
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -682,7 +682,7 @@ export default function PlateTable({
                       </button>
                       {p.suggestedPrice ? (
                         p.sampleCount && p.sampleCount > 0 ? (
-                          <span style={{ fontSize: '10.5px', color: '#059669', background: '#ecfdf5', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, width: 'fit-content', border: '1px solid #a7f3d0' }}>
+                          <span style={{ fontSize: '10.5px', color: '#3FBF8F', background: '#F0FAF6', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, width: 'fit-content', border: '1px solid #D6F0E5' }}>
                             Cùng tỉnh ({p.sampleCount} mẫu)
                           </span>
                         ) : (

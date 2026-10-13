@@ -193,7 +193,7 @@ function DealReportsQueue({ notify }) {
                 size="sm"
                 disabled={approve.isPending}
                 onClick={() => doApprove(r.id)}
-                style={{ background: '#059669', borderColor: '#059669' }}
+                style={{ background: '#3FBF8F', borderColor: '#3FBF8F' }}
               >
                 Duyệt deal
               </Button>
@@ -409,7 +409,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Users size={22} />
           </div>
           <div>
@@ -433,11 +433,11 @@ export default function AdminCollaborators({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: statusFilter === 'active' ? '2px solid #059669' : '2px solid transparent',
+            border: statusFilter === 'active' ? '2px solid #3FBF8F' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={22} />
           </div>
           <div>
@@ -445,7 +445,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
               Đang hoạt động
               <InfoTip text="Cộng tác viên có tài khoản hợp lệ, có thể chia sẻ link/mã giới thiệu và nhận hoa hồng." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>{stats.active}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>{stats.active}</div>
           </div>
         </div>
 
@@ -493,7 +493,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
 
         {/* KPI 5: Hoa hồng chờ chi trả */}
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Wallet size={22} />
           </div>
           <div>
@@ -501,7 +501,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
               Hoa hồng chờ chi trả
               <InfoTip text="Số tiền hoa hồng đã được xác nhận và đang chờ admin phê duyệt lệnh chuyển khoản thanh toán cho CTV." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>{money(stats.pendingPayout)}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#6B7180' }}>{money(stats.pendingPayout)}</div>
           </div>
         </div>
       </div>
@@ -769,7 +769,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                           width: 38,
                           height: 38,
                           borderRadius: '50%',
-                          background: c.status === 'locked' ? 'linear-gradient(135deg, #9ca3af, #6b7280)' : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                          background: c.status === 'locked' ? 'linear-gradient(135deg, #9ca3af, #6b7280)' : 'linear-gradient(135deg, #F19720, #8A8F99)',
                           color: '#ffffff',
                           display: 'flex',
                           alignItems: 'center',
@@ -806,7 +806,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                               target="_blank"
                               rel="noreferrer"
                               title="Nhắn Zalo"
-                              style={{ color: '#0284c7', display: 'flex', alignItems: 'center' }}
+                              style={{ color: '#C75B00', display: 'flex', alignItems: 'center' }}
                             >
                               <MessageCircle size={13} />
                             </a>
@@ -828,9 +828,9 @@ export default function AdminCollaborators({ st, patch, notify }) {
                             gap: 5,
                             padding: '3px 8px',
                             borderRadius: 6,
-                            background: 'rgba(59, 130, 246, 0.08)',
-                            border: '1px solid rgba(59, 130, 246, 0.2)',
-                            color: '#2563eb',
+                            background: 'rgba(241,151,32, 0.08)',
+                            border: '1px solid rgba(241,151,32, 0.2)',
+                            color: '#C75B00',
                             fontFamily: 'monospace',
                             fontSize: 12,
                             fontWeight: 700,
@@ -838,7 +838,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                           }}
                         >
                           <span>{c.referralCode || '—'}</span>
-                          {copiedCode === c.referralCode ? <Check size={12} color="#059669" /> : <Copy size={12} />}
+                          {copiedCode === c.referralCode ? <Check size={12} color="#3FBF8F" /> : <Copy size={12} />}
                         </button>
                       </div>
                     )}
@@ -846,7 +846,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                     {/* Commissions (Earned & Pending) */}
                     {isVisible('commission') && (
                       <div>
-                        <div style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: '#059669' }}>
+                        <div style={{ font: 'var(--type-body-sm)', fontWeight: 700, color: '#3FBF8F' }}>
                           {money(c.commissionEarned)}
                         </div>
                         {Number(c.commissionPending) > 0 && (
@@ -890,7 +890,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                                 width: 26,
                                 height: 26,
                                 borderRadius: 4,
-                                background: '#059669',
+                                background: '#3FBF8F',
                                 color: '#fff',
                                 border: 'none',
                                 cursor: 'pointer',
@@ -928,8 +928,8 @@ export default function AdminCollaborators({ st, patch, notify }) {
                               borderRadius: 'var(--radius-pill)',
                               fontSize: 12,
                               fontWeight: 700,
-                              background: c.commissionRate != null ? 'rgba(139, 92, 246, 0.1)' : 'var(--surface-sunken)',
-                              color: c.commissionRate != null ? '#7c3aed' : 'var(--text-body)',
+                              background: c.commissionRate != null ? 'rgba(138,143,153, 0.1)' : 'var(--surface-sunken)',
+                              color: c.commissionRate != null ? '#6B7180' : 'var(--text-body)',
                               border: '1px solid var(--border-hairline)',
                             }}>
                               {ratePct}%
@@ -963,9 +963,9 @@ export default function AdminCollaborators({ st, patch, notify }) {
                               borderRadius: 'var(--radius-pill)',
                               fontSize: 12,
                               fontWeight: 600,
-                              background: 'rgba(16, 185, 129, 0.1)',
-                              color: '#059669',
-                              border: '1px solid rgba(16, 185, 129, 0.25)',
+                              background: 'rgba(63,191,143, 0.1)',
+                              color: '#3FBF8F',
+                              border: '1px solid rgba(63,191,143, 0.25)',
                               cursor: 'pointer',
                             }}
                           >
@@ -1013,14 +1013,14 @@ export default function AdminCollaborators({ st, patch, notify }) {
                           borderRadius: 'var(--radius-pill)',
                           fontSize: 12,
                           fontWeight: 600,
-                          background: 'rgba(59, 130, 246, 0.08)',
-                          color: '#2563eb',
-                          border: '1px solid rgba(59, 130, 246, 0.2)',
+                          background: 'rgba(241,151,32, 0.08)',
+                          color: '#C75B00',
+                          border: '1px solid rgba(241,151,32, 0.2)',
                           cursor: 'pointer',
                           transition: 'all 120ms ease',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#2563eb'; e.currentTarget.style.color = '#fff'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.08)'; e.currentTarget.style.color = '#2563eb'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#C75B00'; e.currentTarget.style.color = '#fff'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(241,151,32, 0.08)'; e.currentTarget.style.color = '#C75B00'; }}
                       >
                         <Wallet size={13} />
                         <span>Hoa hồng</span>
@@ -1043,7 +1043,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
               Bạn có chắc chắn muốn chuyển trạng thái của CTV <strong>{confirm.collabName}</strong> sang{' '}
-              <strong style={{ color: confirm.to === 'locked' ? '#dc2626' : '#059669' }}>
+              <strong style={{ color: confirm.to === 'locked' ? '#dc2626' : '#3FBF8F' }}>
                 {STATUS_LABEL[confirm.to] || confirm.to}
               </strong>?
             </p>
@@ -1092,8 +1092,8 @@ export default function AdminCollaborators({ st, patch, notify }) {
                 disabled={updatingId === confirm.id}
                 onClick={() => applyStatus(confirm.id, confirm.to)}
                 style={{
-                  background: confirm.to === 'locked' ? '#dc2626' : '#059669',
-                  borderColor: confirm.to === 'locked' ? '#dc2626' : '#059669'
+                  background: confirm.to === 'locked' ? '#dc2626' : '#3FBF8F',
+                  borderColor: confirm.to === 'locked' ? '#dc2626' : '#3FBF8F'
                 }}
               >
                 {updatingId === confirm.id ? 'Đang cập nhật…' : 'Xác nhận'}

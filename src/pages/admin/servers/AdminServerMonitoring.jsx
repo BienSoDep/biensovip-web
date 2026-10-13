@@ -9,7 +9,7 @@ import Button from '../../../components/Button.jsx';
 import SkeletonBase from '../../../components/skeletons/SkeletonBase.jsx';
 
 const STATUS_CONFIG = {
-  ok: { label: 'Ổn định', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.1)', icon: CheckCircle2 },
+  ok: { label: 'Ổn định', color: '#3FBF8F', bg: 'rgba(63,191,143, 0.1)', icon: CheckCircle2 },
   degraded: { label: 'Cần chú ý', color: '#d97706', bg: 'rgba(217, 119, 6, 0.1)', icon: AlertTriangle },
   down: { label: 'Sự cố / Mất kết nối', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.1)', icon: XCircle },
   blocked: { label: 'Bị chặn (403 VPA)', color: '#ea580c', bg: 'rgba(234, 88, 12, 0.1)', icon: AlertTriangle },
@@ -173,14 +173,14 @@ export default function AdminServerMonitoring() {
                       <div style={{
                         width: `${Math.min(100, main.Disk.UsedPercent)}%`,
                         height: '100%',
-                        background: main.Disk.Status === 'danger' ? 'var(--status-danger)' : (main.Disk.Status === 'warning' ? '#f59e0b' : '#16a34a'),
+                        background: main.Disk.Status === 'danger' ? 'var(--status-danger)' : (main.Disk.Status === 'warning' ? '#f59e0b' : '#3FBF8F'),
                         borderRadius: 'var(--radius-pill)',
                         transition: 'width 0.4s ease'
                       }} />
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: 11 }}>
-                      <span>Còn trống: <b style={{ color: '#16a34a' }}>{main.Disk.FreeGb} GB</b></span>
+                      <span>Còn trống: <b style={{ color: '#3FBF8F' }}>{main.Disk.FreeGb} GB</b></span>
                       <span>Mức sử dụng: <b>{main.Disk.UsedPercent}%</b></span>
                     </div>
                   </div>
@@ -191,7 +191,7 @@ export default function AdminServerMonitoring() {
                   <div style={{ padding: '12px 14px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', font: 'var(--type-body-sm)' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-                        <Activity size={15} style={{ color: '#8b5cf6' }} /> Bộ nhớ RAM Hệ thống
+                        <Activity size={15} style={{ color: '#8A8F99' }} /> Bộ nhớ RAM Hệ thống
                       </span>
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                         Đã dùng: <b style={{ color: 'var(--text-strong)' }}>{main.Memory.UsedMb.toLocaleString()} MB</b> / {main.Memory.TotalMb.toLocaleString()} MB
@@ -203,7 +203,7 @@ export default function AdminServerMonitoring() {
                       <div style={{
                         width: `${Math.min(100, main.Memory.UsedPercent)}%`,
                         height: '100%',
-                        background: main.Memory.UsedPercent > 90 ? 'var(--status-danger)' : (main.Memory.UsedPercent > 75 ? '#f59e0b' : '#3b82f6'),
+                        background: main.Memory.UsedPercent > 90 ? 'var(--status-danger)' : (main.Memory.UsedPercent > 75 ? '#f59e0b' : '#F19720'),
                         borderRadius: 'var(--radius-pill)',
                         transition: 'width 0.4s ease'
                       }} />
@@ -240,7 +240,7 @@ export default function AdminServerMonitoring() {
                     <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <Database size={12} /> Database Latency
                     </div>
-                    <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: (main?.DbLatencyMs || 0) > 100 ? '#ea580c' : '#16a34a', marginTop: 2 }}>
+                    <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: (main?.DbLatencyMs || 0) > 100 ? '#ea580c' : '#3FBF8F', marginTop: 2 }}>
                       {main?.DbLatencyMs != null ? `${main.DbLatencyMs} ms` : '—'}
                     </div>
                   </div>
@@ -277,7 +277,7 @@ export default function AdminServerMonitoring() {
                 gap: 'var(--space-2)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-tint-cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-sm)', background: 'var(--surface-tint-cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C75B00' }}>
                     <Wifi size={20} />
                   </div>
                   <div>
@@ -325,11 +325,11 @@ export default function AdminServerMonitoring() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', font: 'var(--type-body-sm)', marginTop: 4 }}>
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>IP Thấy từ Internet (Exit IP):</span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-                      <Globe size={13} style={{ color: '#0284c7' }} />
+                      <Globe size={13} style={{ color: '#C75B00' }} />
                       {proxy?.ExitIp ? (
                         <>
                           <span>{proxy.ExitIp}</span>
-                          <span style={{ padding: '1px 6px', borderRadius: 4, background: '#16a34a', color: '#fff', fontSize: 10, fontWeight: 700 }}>VN</span>
+                          <span style={{ padding: '1px 6px', borderRadius: 4, background: '#3FBF8F', color: '#fff', fontSize: 10, fontWeight: 700 }}>VN</span>
                         </>
                       ) : (
                         <span style={{ color: 'var(--text-faint)' }}>Chưa nhận diện</span>
@@ -344,7 +344,7 @@ export default function AdminServerMonitoring() {
                     <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                       Độ trễ Round-Trip
                     </div>
-                    <div style={{ font: 'var(--type-title-3)', color: proxy?.LatencyMs > 2000 ? '#ea580c' : '#16a34a', marginTop: 2 }}>
+                    <div style={{ font: 'var(--type-title-3)', color: proxy?.LatencyMs > 2000 ? '#ea580c' : '#3FBF8F', marginTop: 2 }}>
                       {proxy?.LatencyMs != null ? `${proxy.LatencyMs} ms` : '—'}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
@@ -356,7 +356,7 @@ export default function AdminServerMonitoring() {
                     <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                       Vượt rào Cổng VPA
                     </div>
-                    <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: proxy?.VpaStatus === 'ok' ? '#16a34a' : (proxy?.VpaStatus === 'blocked_403' ? '#dc2626' : 'var(--text-strong)'), marginTop: 4 }}>
+                    <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: proxy?.VpaStatus === 'ok' ? '#3FBF8F' : (proxy?.VpaStatus === 'blocked_403' ? '#dc2626' : 'var(--text-strong)'), marginTop: 4 }}>
                       {proxy?.VpaStatus === 'ok' ? 'Thành công (200 OK)' : (proxy?.VpaStatus === 'blocked_403' ? 'Bị chặn (403 Cloudflare)' : (proxy?.VpaStatus || 'Chưa test'))}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
@@ -407,7 +407,7 @@ export default function AdminServerMonitoring() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: job.status === 'ok' ? '#16a34a' : '#d97706', flexShrink: 0 }} />
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: job.status === 'ok' ? '#3FBF8F' : '#d97706', flexShrink: 0 }} />
                     <span style={{ fontWeight: 'var(--fw-medium)', color: 'var(--text-strong)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                       {job.jobName}
                     </span>

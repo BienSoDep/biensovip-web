@@ -396,7 +396,7 @@ function TypeSettingRow({ setting, notify, editing, onEdit, onCloseEdit, draftTi
             </span>
           )}
           {meta.isRealtime ? (
-            <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', fontSize: 11, fontWeight: 'var(--fw-medium)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'rgba(241,151,32, 0.1)', color: '#C75B00', fontSize: 11, fontWeight: 'var(--fw-medium)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
               <Zap size={10} /> Real-time
             </span>
           ) : (

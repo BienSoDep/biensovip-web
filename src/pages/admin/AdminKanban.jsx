@@ -163,8 +163,8 @@ function Card({ item, dragging, onClick, edge, onQuickMove, onConfirm, confirmin
               width: 22,
               height: 22,
               borderRadius: 'var(--radius-pill)',
-              background: '#ecfdf5',
-              color: '#059669',
+              background: '#F0FAF6',
+              color: '#3FBF8F',
               textDecoration: 'none',
             }}
           >
@@ -183,7 +183,7 @@ function Card({ item, dragging, onClick, edge, onQuickMove, onConfirm, confirmin
               height: 22,
               borderRadius: 'var(--radius-pill)',
               background: '#eff6ff',
-              color: '#2563eb',
+              color: '#C75B00',
               textDecoration: 'none',
             }}
           >
@@ -218,7 +218,7 @@ function Card({ item, dragging, onClick, edge, onQuickMove, onConfirm, confirmin
       {item.amount != null && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, borderTop: '1px dashed var(--grey-200)', paddingTop: 4 }}>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: '11px' }}>Số tiền:</span>
-          <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--status-success-ink, #059669)' }}>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--status-success-ink, #3FBF8F)' }}>
             {VND.format(item.amount)} đ
           </span>
         </div>
@@ -387,7 +387,7 @@ function DetailModal({ item, kind, onClose, onQuickMove, nextLabel, updateStatus
         <Row label="Điện thoại">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <a href={`tel:${item.phone}`} style={{ color: 'var(--text-link)', textDecoration: 'none', fontWeight: 'var(--fw-bold)' }}>{item.phone}</a>
-            <a href={toZaloUrl(item.phone)} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#2563eb', display: 'inline-flex', alignItems: 'center', gap: 3 }}>Chat Zalo <ExternalLink size={12} /></a>
+            <a href={toZaloUrl(item.phone)} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#C75B00', display: 'inline-flex', alignItems: 'center', gap: 3 }}>Chat Zalo <ExternalLink size={12} /></a>
           </div>
         </Row>
         <Row label={isTx ? 'Biển giao dịch' : 'Biển quan tâm'}>{item.plateNumber || (isTx ? '—' : 'Khách hỏi chung, không có biển cụ thể')}</Row>
