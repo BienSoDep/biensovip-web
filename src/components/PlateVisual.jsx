@@ -63,7 +63,9 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
   // prov+seri+num, không chỉ num, nếu không seri to sẽ đẩy tràn khung khi seri dài 2 ký tự.
   const totalLen = isMoto ? numLen : numLen + String(prov || '').length + String(seri || '').length;
   const baseline = isMoto ? BASELINE_NUM_LEN[kind] : BASELINE_NUM_LEN[kind] + 2;
-  const numScale = Math.min(1, baseline / Math.max(totalLen, 1));
+  // Biên an toàn 4%: scale lý thuyết vẫn tràn nhẹ khung thật ở case totalLen == baseline
+  // (VD biển dài "43A-164.36" tràn ~3% do letterSpacing/kerning không nằm trong công thức đếm ký tự).
+  const numScale = Math.min(1, (baseline / Math.max(totalLen, 1)) * 0.96);
   const numFs = scaleFontSize(r.numFs, numScale);
   const ariaLabel = ['Biển số', prov, seri, num].filter(Boolean).join(' ');
   // Hiệu ứng chữ dập nổi (embossed) — đậm hơn: bóng tối đổ dày xuống dưới-phải (thành lõm khuất sáng)
