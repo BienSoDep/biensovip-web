@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { InfoTip } from './index.jsx';
 
 // Trang admin gộp nhiều trang con thành tab ngang — dùng cho các nhóm chức năng liên quan chặt
 // (VD Blog+Bình luận, Nhật ký hệ thống/lỗi/rủi ro CTV, Báo cáo & Phân tích VPA).
@@ -89,6 +90,11 @@ export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChan
                 }}
               >
                 <span>{t.label}</span>
+                {t.info && (
+                  <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <InfoTip text={t.info} size={13} style={{ color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
+                  </span>
+                )}
                 {t.count != null && (
                   <span
                     style={{

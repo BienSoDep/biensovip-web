@@ -84,7 +84,7 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
                 <div><h2 id="modal-contact-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Chốt biển này</h2><p id="modal-contact-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Shop gọi lại trong 15 phút, kể cả chủ nhật.</p></div>
                 <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.mName} error={st.mErr.name} onChange={setField('mName')} />
                 <Input label="Số điện thoại" type="tel" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
-                <Select label="Mục đích" value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Đặt cọc giữ biển'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'deposit_request' })} />
+                <Select label="Mục đích" info="Chọn lý do bạn liên hệ để shop tư vấn đúng hướng (đặt cọc, mua ngay hay chỉ hỏi thêm)." value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Đặt cọc giữ biển'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'deposit_request' })} />
                 <Input label="Mã giảm giá" value={st.mCouponCode || ''} onChange={setField('mCouponCode')} onBlur={checkCoupon} placeholder="Nhập mã nếu có" />
                 {checkingCoupon && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang kiểm tra…</span>}
                 {!checkingCoupon && couponStatus?.valid && (

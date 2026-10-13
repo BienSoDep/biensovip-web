@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
-import { Select, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from '../../components/index.jsx';
+import { Select, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems, InfoTip } from '../../components/index.jsx';
 import { useAdminReviews, useUpdateReviewStatus, useReplyReview } from '../../services/adminReviewService.js';
 import { formatDate, formatDateTime } from '../../lib/date.js';
 
@@ -91,6 +91,10 @@ export default function AdminReviews({ notify }) {
       {/* Filter bar: Status pills, Plate type, Star filter, search, Column Toggle */}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, marginRight: 2 }}>
+            Duyệt
+            <InfoTip text="Quy trình kiểm duyệt: 'Chờ duyệt' cần duyệt trước khi hiển thị; 'Đã duyệt' hiển thị trên web; 'Đã từ chối' ẩn khỏi trang công khai." />
+          </span>
           {[
             { key: 'pending', label: 'Chờ duyệt' },
             { key: 'approved', label: 'Đã duyệt' },
@@ -121,6 +125,10 @@ export default function AdminReviews({ notify }) {
           <span style={{ width: 1, height: 20, background: 'var(--border-hairline)', margin: '0 4px' }} />
 
           {/* Lọc theo loại biển */}
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, marginRight: 2 }}>
+            Kho
+            <InfoTip text="Lọc theo tình trạng bán của biển số liên quan: Đang mở bán hoặc Đã bán thành công." />
+          </span>
           {[
             { key: 'all', label: 'Mọi biển' },
             { key: 'available', label: 'Đang bán' },
@@ -188,7 +196,10 @@ export default function AdminReviews({ notify }) {
         gap: 'var(--space-3)',
         flexWrap: 'wrap',
       }}>
-        <span style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'none', fontWeight: 600 }}>Sắp xếp theo:</span>
+        <span style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          Sắp xếp theo:
+          <InfoTip text="Bấm vào tiêu đề cột để đảo chiều tăng dần hoặc giảm dần danh sách đánh giá." />
+        </span>
         {isVisible('createdAt') && (
           <TableSortHeader label="Thời gian" sortKey="createdAt" currentSort={sort} onSort={(key, dir) => setSort({ key, dir })} />
         )}

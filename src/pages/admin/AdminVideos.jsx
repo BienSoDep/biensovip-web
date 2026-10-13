@@ -527,13 +527,13 @@ export default function AdminVideos({ notify }) {
           </div>
           {editId && (
             <>
-              <Input label="ID bài đăng page" placeholder="VD: 1789… (Facebook post_id / TikTok item id)" value={form.postId} onChange={(e) => setForm((f) => ({ ...f, postId: e.target.value }))} />
-              <Input label="URL bài đăng page" placeholder="https://facebook.com/page/posts/… hoặc https://tiktok.com/@…/video/…" value={form.postUrl} onChange={(e) => setForm((f) => ({ ...f, postUrl: e.target.value }))} />
+              <Input label="ID bài đăng page" info="ID bài gốc trên Facebook/TikTok — dùng để đối chiếu, không hiển thị cho khách." placeholder="VD: 1789… (Facebook post_id / TikTok item id)" value={form.postId} onChange={(e) => setForm((f) => ({ ...f, postId: e.target.value }))} />
+              <Input label="URL bài đăng page" info="Link gốc tới bài đăng trên page Facebook/TikTok (không phải link video đã dán ở trên)." placeholder="https://facebook.com/page/posts/… hoặc https://tiktok.com/@…/video/…" value={form.postUrl} onChange={(e) => setForm((f) => ({ ...f, postUrl: e.target.value }))} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-                <Input label="Lượt xem" type="number" placeholder="0" value={form.viewCount} onChange={(e) => setForm((f) => ({ ...f, viewCount: e.target.value }))} />
-                <Input label="Lượt thích" type="number" placeholder="0" value={form.likeCount} onChange={(e) => setForm((f) => ({ ...f, likeCount: e.target.value }))} />
-                <Input label="Lượt chia sẻ" type="number" placeholder="0" value={form.shareCount} onChange={(e) => setForm((f) => ({ ...f, shareCount: e.target.value }))} />
-                <Input label="Bình luận" type="number" placeholder="0" value={form.commentCount} onChange={(e) => setForm((f) => ({ ...f, commentCount: e.target.value }))} />
+                <Input label="Lượt xem" info="Số liệu nhập tay để hiển thị trên site — không tự đồng bộ từ TikTok/Facebook." type="number" placeholder="0" value={form.viewCount} onChange={(e) => setForm((f) => ({ ...f, viewCount: e.target.value }))} />
+                <Input label="Lượt thích" info="Số liệu nhập tay để hiển thị trên site — không tự đồng bộ từ TikTok/Facebook." type="number" placeholder="0" value={form.likeCount} onChange={(e) => setForm((f) => ({ ...f, likeCount: e.target.value }))} />
+                <Input label="Lượt chia sẻ" info="Số liệu nhập tay để hiển thị trên site — không tự đồng bộ từ TikTok/Facebook." type="number" placeholder="0" value={form.shareCount} onChange={(e) => setForm((f) => ({ ...f, shareCount: e.target.value }))} />
+                <Input label="Bình luận" info="Số liệu nhập tay để hiển thị trên site — không tự đồng bộ từ TikTok/Facebook." type="number" placeholder="0" value={form.commentCount} onChange={(e) => setForm((f) => ({ ...f, commentCount: e.target.value }))} />
               </div>
             </>
           )}

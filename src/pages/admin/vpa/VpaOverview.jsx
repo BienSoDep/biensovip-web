@@ -584,16 +584,6 @@ function OverviewBody({ data, notify }) {
             />
 
             <Input
-              label="Quét kết quả đầy đủ mỗi (ngày)"
-              info="Chu kỳ (tính theo ngày) để tự động quét vét toàn bộ lịch sử đấu giá từ trước đến nay thay vì chỉ cào các phiên gần nhất."
-              type="number"
-              min="1"
-              value={form.resultsFullEveryDays}
-              onChange={set('resultsFullEveryDays')}
-              hint="Chu kỳ quét vét toàn bộ lịch sử đấu giá"
-            />
-
-            <Input
               label="Giãn cách cảnh báo (phút)"
               info="Khoảng cách thời gian tối thiểu giữa các email cảnh báo sự cố gửi đến kỹ thuật viên, tránh gửi dồn dập nhiều email liên tục."
               type="number"

@@ -367,7 +367,10 @@ export default function AdminStaff({ notify }) {
             <Users size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tổng nhân viên</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Tổng nhân viên
+              <InfoTip text="Tổng số tài khoản nội bộ có quyền truy cập vào bảng điều khiển quản trị." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--text-strong)' }}>{stats.total}</div>
           </div>
         </div>
@@ -391,7 +394,10 @@ export default function AdminStaff({ notify }) {
             <ShieldCheck size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Quản trị viên (Super Admin)</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Quản trị viên (Super Admin)
+              <InfoTip text="Tài khoản có toàn quyền truy cập, chỉnh sửa toàn bộ cấu hình hệ thống và quản lý tài khoản nhân viên khác." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>{stats.superAdminCount}</div>
           </div>
         </div>
@@ -415,7 +421,10 @@ export default function AdminStaff({ notify }) {
             <Users size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nhân viên vận hành</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Nhân viên vận hành
+              <InfoTip text="Tài khoản nhân viên được phân quyền hạn theo từng phân hệ nghiệp vụ cụ thể (Kho biển, Bán hàng, Nội dung...)." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#2563eb' }}>{stats.staffCount}</div>
           </div>
         </div>
@@ -439,7 +448,10 @@ export default function AdminStaff({ notify }) {
             <UserCheck size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang hoạt động</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Đang hoạt động
+              <InfoTip text="Số tài khoản nhân viên đang mở khóa và có thể đăng nhập bình thường vào hệ thống." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>
               {stats.activeCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>({stats.lockedCount} khóa)</span>
             </div>
@@ -858,6 +870,7 @@ export default function AdminStaff({ notify }) {
 
           <Select
             label="Vai trò nhân sự"
+            info="Nhân viên vận hành: quyền giới hạn theo phân quyền chức năng. Quản trị viên: toàn quyền, kể cả quản lý nhân sự khác."
             value={form.role}
             options={ROLE_OPTS}
             onChange={field('role')}

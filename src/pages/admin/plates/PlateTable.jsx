@@ -323,16 +323,16 @@ export default function PlateTable({
             <span>Làm mới</span>
           </Button>
           <div style={{ flex: 1 }} />
-          <Button variant="ghost" size="md" disabled={exporting} onClick={() => exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
+          <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống toàn bộ danh sách biển số đang lọc dưới dạng file CSV" onClick={() => exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
             {exporting ? 'Đang xuất…' : 'Xuất CSV'}
           </Button>
-          <Button variant="ghost" size="md" disabled={checkingMissingInfo} onClick={openMissingInfoModal}>
+          <Button variant="ghost" size="md" disabled={checkingMissingInfo} title="Dùng AI tự động phân tích ý nghĩa phong thủy và tạo mô tả cho các biển số còn trống dữ liệu" onClick={openMissingInfoModal}>
             {checkingMissingInfo ? 'Đang kiểm tra…' : 'Sinh thông tin hàng loạt'}
           </Button>
-          <Button variant="ghost" size="md" disabled={checkingMissingImage} onClick={openMissingImageModal}>
+          <Button variant="ghost" size="md" disabled={checkingMissingImage} title="Hệ thống tự động vẽ ảnh mockup biển số gắn xe thực tế cho các biển chưa có ảnh" onClick={openMissingImageModal}>
             {checkingMissingImage ? 'Đang kiểm tra…' : 'Sinh ảnh hàng loạt'}
           </Button>
-          <Button variant="ghost" size="md" disabled={checkingGeneratedImage} onClick={openPurgeImageModal}>
+          <Button variant="ghost" size="md" disabled={checkingGeneratedImage} title="Xóa toàn bộ các ảnh mockup đã sinh tự động để tạo lại mẫu mới" onClick={openPurgeImageModal}>
             {checkingGeneratedImage ? 'Đang kiểm tra…' : 'Xóa ảnh sinh cũ'}
           </Button>
           <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
@@ -340,10 +340,10 @@ export default function PlateTable({
 
         {/* Category filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-3)' }}>
-          <Select label="Loại biển" value={plateTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...plateTypes]} onChange={(v) => { setPlateTypeFilter(v); setPage(1); }} />
-          <Select label="Loại xe" value={vehicleTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...vehicleTypes]} onChange={(v) => { setVehicleTypeFilter(v); setPage(1); }} />
-          <Select label="Tỉnh/thành" value={provinceFilter} options={[{ value: '', label: 'Tất cả' }, ...provinces]} onChange={(v) => { setProvinceFilter(v); setPage(1); }} />
-          <Select label="Nổi bật" value={hotFilter} options={HOT_OPTIONS} onChange={(v) => { setHotFilter(v); setPage(1); }} />
+          <Select label="Loại biển" info="Lọc theo thế số đặc biệt: Ngũ quý, Tứ quý, Tam hoa, Thần tài, Lộc phát, Tiến lên..." value={plateTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...plateTypes]} onChange={(v) => { setPlateTypeFilter(v); setPage(1); }} />
+          <Select label="Loại xe" info="Phân loại biển đăng ký dành cho Ô tô hoặc Xe máy" value={vehicleTypeFilter} options={[{ value: '', label: 'Tất cả' }, ...vehicleTypes]} onChange={(v) => { setVehicleTypeFilter(v); setPage(1); }} />
+          <Select label="Tỉnh/thành" info="Lọc theo tỉnh thành hoặc đầu số đăng ký xe" value={provinceFilter} options={[{ value: '', label: 'Tất cả' }, ...provinces]} onChange={(v) => { setProvinceFilter(v); setPage(1); }} />
+          <Select label="Nổi bật" info="Lọc các biển số được đánh dấu sao VIP hoặc hiển thị ưu tiên tại trang chủ" value={hotFilter} options={HOT_OPTIONS} onChange={(v) => { setHotFilter(v); setPage(1); }} />
         </div>
       </div>
 
@@ -557,15 +557,30 @@ export default function PlateTable({
               {colPrefs.plateType && <SortHeader label="Loại biển" sortKey="plateTypeName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.vehicleType && <SortHeader label="Loại xe" sortKey="vehicleTypeName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.province && <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />}
-              {colPrefs.price && <SortHeader label="Giá (bấm sửa)" sortKey="price" style={{ flex: '1 1 110px' }} />}
+              {colPrefs.price && (
+                <span style={{ flex: '1 1 110px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Giá bán" sortKey="price" />
+                  <InfoTip size={12} text="Giá bán công khai trên website (VND). Bấm trực tiếp vào ô giá để sửa nhanh mà không cần mở form." />
+                </span>
+              )}
               {colPrefs.suggestedPrice && (
                 <span style={{ flex: '1 1 125px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <SortHeader label="Giá TT tham khảo" sortKey="suggestedPrice" />
                   <InfoTip size={12} text="Giá thị trường tham khảo (gợi ý từ VPA dựa trên kết quả đấu giá các mẫu tương đồng × hệ số). Bấm vào giá để xem chi tiết mẫu và công thức." />
                 </span>
               )}
-              {colPrefs.salePrice && <SortHeader label="Giá KM" sortKey="salePrice" style={{ flex: '1 1 96px' }} />}
-              {colPrefs.gifted && <span style={{ flex: '1 1 96px' }}>Biển tặng</span>}
+              {colPrefs.salePrice && (
+                <span style={{ flex: '1 1 96px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Giá KM" sortKey="salePrice" />
+                  <InfoTip size={12} text="Giá khuyến mãi giảm giá trực tiếp cho khách mua trong đợt ưu đãi." />
+                </span>
+              )}
+              {colPrefs.gifted && (
+                <span style={{ flex: '1 1 96px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span>Biển tặng</span>
+                  <InfoTip size={12} text="Biển số tặng kèm hoặc ưu đãi đặc biệt dành cho khách hàng thân thiết/mua combo." />
+                </span>
+              )}
               {colPrefs.isNew && <span className="plate-col-new" style={{ flex: '0 0 48px' }}>Mới</span>}
               {colPrefs.status && (
                 <span style={{ flex: '1 1 100px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -573,7 +588,12 @@ export default function PlateTable({
                   <InfoTip size={12} text="Trạng thái biển: Còn hàng = đang bán; Đã bán = chốt giao dịch; Hết hạn = biển đấu giá quá hạn, tự ẩn khỏi trang." />
                 </span>
               )}
-              {colPrefs.pendingContact && <SortHeader label="Liên hệ chờ" sortKey="pendingContactCount" style={{ flex: '0 0 96px' }} />}
+              {colPrefs.pendingContact && (
+                <span style={{ flex: '0 0 96px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Liên hệ chờ" sortKey="pendingContactCount" />
+                  <InfoTip size={12} text="Số lượng khách hàng đã gửi form yêu cầu tư vấn hoặc liên hệ mua biển này chưa được xử lý." />
+                </span>
+              )}
               {colPrefs.imageCount && <SortHeader label="Số ảnh" sortKey="imageCount" style={{ flex: '0 0 76px' }} />}
               {colPrefs.createdAt && <SortHeader label="Ngày tạo" sortKey="createdAt" style={{ flex: '1 1 96px' }} />}
               {colPrefs.updatedAt && <SortHeader label="Cập nhật" sortKey="updatedAt" className="plate-col-updated" style={{ flex: '1 1 96px' }} />}

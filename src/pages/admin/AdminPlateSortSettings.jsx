@@ -40,7 +40,10 @@ function SortableCriterionRow({ token, idx, provinceOptions, priorityProvinceId,
         </button>
         <span style={{ width: 22, textAlign: 'center', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: '2px 0' }}>{idx + 1}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{CRITERIA_LABEL[token] || token}</div>
+          <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {CRITERIA_LABEL[token] || token}
+            <InfoTip text={CRITERIA_DESC[token]} size={13} />
+          </div>
           <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{CRITERIA_DESC[token]}</div>
         </div>
       </div>

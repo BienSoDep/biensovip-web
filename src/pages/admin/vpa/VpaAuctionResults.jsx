@@ -212,9 +212,9 @@ export default function VpaAuctionResults() {
           <Select label="Loại xe" value={vehicle} options={VEHICLES} onChange={(v) => { setVehicle(v); setPage(1); }} />
           <MultiFilter label="Tỉnh/thành" options={provinces} value={provinceIds} onChange={(v) => { setProvinceIds(v); setPage(1); }} searchable />
           <Select label="Nổi bật" value={featured} options={YES_NO('Chỉ nổi bật', 'Không nổi bật')} onChange={(v) => { setFeatured(v); setPage(1); }} />
-          <Select label="Trạng thái giá" value={priceState} options={AUCTION_STATE_OPTS} onChange={(v) => { setPriceState(v); setPage(1); }} />
-          <Select label="Ẩn/hiện" value={hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={(v) => { setHidden(v); setPage(1); }} />
-          <Select label="Nguồn" value={manual} options={[{ value: '', label: 'Tất cả' }, { value: 'false', label: 'Đồng bộ VPA' }]} onChange={(v) => { setManual(v); setPage(1); }} />
+          <Select label="Trạng thái giá" info="Lọc theo việc giá gợi ý đã được duyệt hiển thị cho khách hay chưa." value={priceState} options={AUCTION_STATE_OPTS} onChange={(v) => { setPriceState(v); setPage(1); }} />
+          <Select label="Ẩn/hiện" info="Biển đang ẩn sẽ không hiện trên website cho khách xem." value={hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={(v) => { setHidden(v); setPage(1); }} />
+          <Select label="Nguồn" info="Các bản ghi ở tab này đều lấy từ kết quả đấu giá VPA đã cào về." value={manual} options={[{ value: '', label: 'Tất cả' }, { value: 'false', label: 'Đồng bộ VPA' }]} onChange={(v) => { setManual(v); setPage(1); }} />
           {(plateTypeIds.length > 0 || provinceIds.length > 0) && (
             <Button variant="ghost" size="md" onClick={clearCats}>Xóa lọc loại biển/tỉnh</Button>
           )}

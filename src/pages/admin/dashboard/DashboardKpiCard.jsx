@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { InfoTip } from '../../../components/index.jsx';
 
 export function useCountUp(target, animate) {
   const [val, setVal] = useState(0);
@@ -41,7 +42,7 @@ export function Sparkline({ data, color, animate }) {
   );
 }
 
-export default function KpiCard({ icon: Icon, color, label, value, delta, deltaColor, spark, animate }) {
+export default function KpiCard({ icon: Icon, color, label, info, value, delta, deltaColor, spark, animate }) {
   const shown = useCountUp(value, animate);
   return (
     <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', minWidth: 0 }}>
@@ -49,7 +50,10 @@ export default function KpiCard({ icon: Icon, color, label, value, delta, deltaC
         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 'var(--radius-sm)', background: `${color}1f`, color }}>
           <Icon size={18} />
         </span>
-        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: 1 }}>{label}</span>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', flex: 1, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          {label}
+          {info && <InfoTip text={info} size={13} />}
+        </span>
       </div>
       <span style={{ font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{shown.toLocaleString('vi-VN')}</span>
       {delta != null && (

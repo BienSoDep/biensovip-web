@@ -1181,12 +1181,12 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
           <MultiFilter label="Tỉnh/thành" options={provinces} value={f.provinceIds} onChange={setFilter('provinceIds')} counts={facets?.provinces} searchable />
           <Select label="Nổi bật" value={f.featured} options={YES_NO('Chỉ nổi bật', 'Không nổi bật')} onChange={setFilter('featured')} />
           {queue ? (
-            <Select label="Trạng thái giá" value={f.priceState} options={QUEUE_STATE_OPTS} onChange={setFilter('priceState')} />
+            <Select label="Trạng thái giá" info="Lọc theo việc giá gợi ý đã được duyệt hiển thị cho khách hay chưa." value={f.priceState} options={QUEUE_STATE_OPTS} onChange={setFilter('priceState')} />
           ) : (
-            <Select label="Trạng thái giá" value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />
+            <Select label="Trạng thái giá" info="Lọc theo việc giá gợi ý đã được duyệt hiển thị cho khách hay chưa." value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />
           )}
-          <Select label="Ẩn/hiện" value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />
-          <Select label="Nguồn" value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />
+          <Select label="Ẩn/hiện" info="Biển đang ẩn sẽ không hiện trên website cho khách xem." value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />
+          <Select label="Nguồn" info="Thêm tay: admin tự tạo thủ công. Đồng bộ VPA: hệ thống tự cào về từ vpa.com.vn." value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />
           {(f.plateTypeIds.length > 0 || f.provinceIds.length > 0) && (
             <Button variant="ghost" size="md" onClick={clearCats}>Xóa lọc loại biển/tỉnh</Button>
           )}

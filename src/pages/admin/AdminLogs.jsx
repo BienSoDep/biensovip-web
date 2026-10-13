@@ -9,13 +9,13 @@ import { canPerm } from '../../layout/AdminShell.jsx';
 export default function AdminLogs({ st, notify }) {
   const isSuperAdmin = st.user?.role === 'super-admin';
   const tabs = [
-    { key: 'audit', label: 'Hệ thống', render: () => <AdminAuditLog /> },
+    { key: 'audit', label: 'Hệ thống', info: 'Lịch sử thao tác tạo, sửa, xóa dữ liệu của ban quản trị và nhân viên', render: () => <AdminAuditLog /> },
   ];
   if (canPerm(st, 'error_logs:view')) {
-    tabs.push({ key: 'errors', label: 'Lỗi', render: () => <AdminErrorLogs /> });
+    tabs.push({ key: 'errors', label: 'Lỗi', info: 'Nhật ký các lỗi kỹ thuật và ngoại lệ hệ thống backend/frontend', render: () => <AdminErrorLogs /> });
   }
   if (isSuperAdmin) {
-    tabs.push({ key: 'risk', label: 'Rủi ro CTV', render: () => <AdminRiskLog notify={notify} /> });
+    tabs.push({ key: 'risk', label: 'Rủi ro CTV', info: 'Cảnh báo các giao dịch bất thường hoặc dấu hiệu gian lận hoa hồng cộng tác viên', render: () => <AdminRiskLog notify={notify} /> });
   }
   return <AdminTabbedPage tabs={tabs} />;
 }

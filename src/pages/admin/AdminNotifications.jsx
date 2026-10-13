@@ -120,12 +120,12 @@ export default function AdminNotifications({ notify, st }) {
                   style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }}
                 />
               </div>
-              <Select label="Đối tượng" value={target} options={TARGETS} onChange={setTarget} />
+              <Select label="Đối tượng" info="Chọn gửi cho toàn bộ user, chỉ user đã đăng ký nhận email tổng hợp, hay chọn đích danh từng người." value={target} options={TARGETS} onChange={setTarget} />
               {target === 'specific' && <UserPicker selected={selectedUsers} onChange={setSelectedUsers} />}
-              {target !== 'subscribers' && <Select label="Kênh gửi" value={channel} options={CHANNELS} onChange={setChannel} />}
+              {target !== 'subscribers' && <Select label="Kênh gửi" info="Chọn gửi qua thông báo trong app, email, hay cả hai." value={channel} options={CHANNELS} onChange={setChannel} />}
               {target !== 'subscribers' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-                  <Select label="Layout email" value={templateId} onChange={setTemplateId}
+                  <Select label="Layout email" info="Giao diện email sẽ dùng khi gửi — chọn 'Mặc định hệ thống' nếu không cần layout riêng." value={templateId} onChange={setTemplateId}
                     options={[{ value: '', label: 'Mặc định hệ thống' }, ...broadcastTemplates.map((t) => ({ value: t.id, label: t.name }))]} />
                   {broadcastTemplates.length === 0 && (
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Chưa có template áp dụng cho "broadcast" — tạo ở tab "Mẫu email".</span>

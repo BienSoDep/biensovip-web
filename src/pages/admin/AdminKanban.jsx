@@ -681,6 +681,7 @@ export default function AdminKanban({ notify, go, onOpenContact }) {
 
         <Select
           label="Mục đích"
+          info="Lọc theo lý do khách liên hệ (đặt cọc, mua đứt, hỏi chung, săn hộ...)."
           value={intentFilter}
           options={[
             { value: '', label: 'Tất cả mục đích' },

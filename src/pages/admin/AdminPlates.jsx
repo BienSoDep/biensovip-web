@@ -9,6 +9,7 @@ import {
   usePlatePriceReference,
 } from '../../services/adminPlates.js';
 import PriceReferenceModal from '../../components/PriceReferenceModal.jsx';
+import { InfoTip } from '../../components/index.jsx';
 import { openVpaWithSearch } from './vpa/VpaAdminList.jsx';
 import { useAdminCategories } from '../../services/categories.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
@@ -724,6 +725,7 @@ export default function AdminPlates({ go, notify, st }) {
             key: 'all',
             label: 'Tất cả biển số',
             note: 'Toàn bộ kho biển',
+            info: 'Toàn bộ biển số đang quản lý trên hệ thống (cả ô tô và xe máy).',
             count: allData?.total,
             carCount: carData?.total,
             motoCount: motoData?.total,
@@ -734,6 +736,7 @@ export default function AdminPlates({ go, notify, st }) {
             key: 'available',
             label: 'Còn hàng',
             note: 'Đang sẵn sàng bán',
+            info: 'Biển số đang sẵn sàng giao dịch và hiển thị công khai trên website.',
             count: availableData?.total,
             active: status === 'available' && !hotFilter,
             onClick: () => { setStatus('available'); setHotFilter(''); setPage(1); },
@@ -742,6 +745,7 @@ export default function AdminPlates({ go, notify, st }) {
             key: 'sold',
             label: 'Đã bán',
             note: 'Đã chốt giao dịch',
+            info: 'Biển số đã chốt đơn thành công hoặc đã hoàn tất thủ tục bàn giao sang tên.',
             count: soldData?.total,
             active: status === 'sold' && !hotFilter,
             onClick: () => { setStatus('sold'); setHotFilter(''); setPage(1); },
@@ -750,6 +754,7 @@ export default function AdminPlates({ go, notify, st }) {
             key: 'hot',
             label: 'Biển nổi bật',
             note: 'Gắn sao VIP / Hot deal',
+            info: 'Biển số được gắn sao VIP hoặc ưu đãi hot deal, hiển thị tại các vị trí nổi bật trang chủ.',
             count: hotData?.total,
             active: hotFilter === 'true',
             onClick: () => { setHotFilter(hotFilter === 'true' ? '' : 'true'); setStatus('all'); setPage(1); },
@@ -758,6 +763,7 @@ export default function AdminPlates({ go, notify, st }) {
             key: 'issues',
             label: 'Cần hoàn thiện',
             note: 'Thiếu ảnh, mô tả, giá lệch',
+            info: 'Biển số cần hoàn thiện dữ liệu: thiếu ảnh mockup thực tế, thiếu bài viết phong thủy hoặc giá chưa hợp lệ.',
             count: dataIssuesRes?.items?.length || 0,
             active: false,
             badgeTone: (dataIssuesRes?.items?.length || 0) > 0 ? 'var(--status-danger-bg)' : undefined,
@@ -790,8 +796,13 @@ export default function AdminPlates({ go, notify, st }) {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 8 }}>
-              <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '14px' }}>
+              <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 {t.label}
+                {t.info && (
+                  <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <InfoTip text={t.info} size={12} style={{ color: t.active ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
+                  </span>
+                )}
               </span>
               {t.count != null && (
                 <span
