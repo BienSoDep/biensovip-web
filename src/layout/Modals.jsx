@@ -70,7 +70,7 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
     <>
       {st.modal && cur && (
         <div role="dialog" aria-modal="true" aria-labelledby="modal-contact-title" aria-describedby="modal-contact-desc" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 18px', overflow: 'auto', animation: 'fadeIn 140ms var(--ease-out)' }}>
-          <div ref={contactRef} style={{ width: '100%', maxWidth: 460, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'modalIn 180ms var(--ease-out)' }}>
+          <div ref={contactRef} style={{ width: '100%', maxWidth: 620, background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'modalIn 180ms var(--ease-out)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                 <PlateVisual size="sm" prov={cur.prov} seri={cur.seri} num={cur.num} />
