@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import {
   Sparkles,
@@ -33,6 +33,7 @@ import {
   DIGIT_ELEMENTS,
 } from '../lib/fengshuiPlateAnalyzer.js';
 import { useFengShuiLookup } from '../services/fengshuiService.js';
+import { saveFengShuiAnalysisHistory } from '../services/fengShuiHistory.js';
 import { useBlogPosts } from '../services/blog.js';
 import { routeFor } from '../config/routes.js';
 import { PURPOSES, INDUSTRIES, VEHICLES, BUDGET_STEPS, formatBudget } from '../lib/fengshui.js';
@@ -208,21 +209,41 @@ function getRelevantBlogArticles(analyzedData, blogPosts = []) {
   });
 }
 
+// Giữ kết quả luận giải khi điều hướng qua trang khác rồi quay lại — cùng pattern
+// sessionStorage đã dùng ở LuckyPlate.jsx (STORAGE_KEY riêng, không đụng key kia).
+const STORAGE_KEY = 'bsv.fengshuiAnalyzerState';
+function loadStoredState() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function storeState(state) {
+  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* ignore */ }
+}
+
+const stored = loadStoredState();
+
 export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
-  const [plateInput, setPlateInput] = useState('');
-  const [inputMode, setInputMode] = useState('free'); // 'free' | 'structured'
-  const [structuredParts, setStructuredParts] = useState({ prov: '43', seri: 'A', num: '164.36' });
-  const [includeProfile, setIncludeProfile] = useState(true);
-  const [fullName, setFullName] = useState(user?.fullName || '');
-  const [birthDate, setBirthDate] = useState(user?.birthDate || '2005-05-26');
-  const [purpose, setPurpose] = useState('Kinh doanh');
-  const [industry, setIndustry] = useState('Bán lẻ / thương mại');
-  const [vehicle, setVehicle] = useState('Ô tô');
-  const [budgetStep, setBudgetStep] = useState(BUDGET_STEPS.length - 1); // Mặc định không giới hạn
+  const [plateInput, setPlateInput] = useState(stored?.plateInput ?? '');
+  const [inputMode, setInputMode] = useState(stored?.inputMode ?? 'free'); // 'free' | 'structured'
+  const [structuredParts, setStructuredParts] = useState(stored?.structuredParts ?? { prov: '43', seri: 'A', num: '164.36' });
+  const [includeProfile, setIncludeProfile] = useState(stored?.includeProfile ?? true);
+  const [fullName, setFullName] = useState(stored?.fullName ?? (user?.fullName || ''));
+  const [birthDate, setBirthDate] = useState(stored?.birthDate ?? (user?.birthDate || '2005-05-26'));
+  const [purpose, setPurpose] = useState(stored?.purpose ?? 'Kinh doanh');
+  const [industry, setIndustry] = useState(stored?.industry ?? 'Bán lẻ / thương mại');
+  const [vehicle, setVehicle] = useState(stored?.vehicle ?? 'Ô tô');
+  const [budgetStep, setBudgetStep] = useState(stored?.budgetStep ?? (BUDGET_STEPS.length - 1)); // Mặc định không giới hạn
   const [err, setErr] = useState('');
-  const [analyzedData, setAnalyzedData] = useState(null);
-  const [analysisMode, setAnalysisMode] = useState('detailed'); // 'detailed' | 'brief'
-  const [plateShape, setPlateShape] = useState('long'); // 'long' | 'short'
+  const [analyzedData, setAnalyzedData] = useState(stored?.analyzedData ?? null);
+  const [analysisMode, setAnalysisMode] = useState(stored?.analysisMode ?? 'detailed'); // 'detailed' | 'brief'
+  const [plateShape, setPlateShape] = useState(stored?.plateShape ?? 'long'); // 'long' | 'short'
+
+  // Lưu lại mỗi khi state đổi — JSON nhỏ, không cần debounce.
+  useEffect(() => {
+    storeState({ plateInput, inputMode, structuredParts, includeProfile, fullName, birthDate, purpose, industry, vehicle, budgetStep, analyzedData, analysisMode, plateShape });
+  }, [plateInput, inputMode, structuredParts, includeProfile, fullName, birthDate, purpose, industry, vehicle, budgetStep, analyzedData, analysisMode, plateShape]);
 
   const captureRef = useRef(null);
 
@@ -297,6 +318,24 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
     }
 
     setAnalyzedData(res);
+
+    // Lưu lịch sử luận giải (public, fire-and-forget) — dùng cho mục đích khác sau này
+    // (lead gen / phân tích hành vi khách). Không chặn UI, không await.
+    saveFengShuiAnalysisHistory({
+      plateNumberRaw: res.formatted,
+      provinceCode: res.provinceCode,
+      series: res.series,
+      numberPart: res.digits.join(''),
+      fullName: includeProfile ? (fullName || null) : null,
+      birthDate: includeProfile && bYear ? birthDate : null,
+      purpose: includeProfile ? purpose : null,
+      industry: includeProfile && purpose === 'Kinh doanh' ? industry : null,
+      vehicleType: vehicle,
+      score: res.totalScore,
+      scoreTier: res.rank.title,
+      elementResult: res.napAm?.element || null,
+      resultJson: JSON.stringify(res),
+    });
 
     // Tự động gọi API lookup để lấy danh sách biển đề xuất cải vận
     const lookupDate = bYear ? birthDate : '1990-01-01';
