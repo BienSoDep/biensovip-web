@@ -23,8 +23,8 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout, fav
   const { data: vpaCounts } = useVpaCounts('');
   const { data: stockData } = usePlates({ perPage: 1 });
   const stockTotal = stockData?.total;
-  const tuanCount = vpaCounts?.tuan;
-  const thangCount = vpaCounts?.thang;
+  const tuanCount = vpaCounts?.weekly;
+  const thangCount = vpaCounts?.monthly;
 
   const navigateToPlatesTab = (tabParam) => {
     onClose();
