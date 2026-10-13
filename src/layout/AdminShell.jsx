@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LineChart, BookOpen, Car, Gavel, BarChart3, FolderTree,
   ShoppingBag, Flame, Users, TicketPercent, FileText, Video, Compass,
   ShieldCheck, Bell, Star, Bot, Handshake, FileCode, MessageSquareShare,
-  UserCog, History, Eye, SlidersHorizontal,
+  UserCog, History, Eye, SlidersHorizontal, ScrollText,
 } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
@@ -30,6 +30,7 @@ import AdminVideos from '../pages/admin/AdminVideos.jsx';
 import AdminCollaborators from '../pages/admin/AdminCollaborators.jsx';
 import AdminCollaboratorContent from '../pages/admin/AdminCollaboratorContent.jsx';
 import AdminInterestLeads from '../pages/admin/AdminInterestLeads.jsx';
+import AdminFengShuiHistory from '../pages/admin/AdminFengShuiHistory.jsx';
 import AdminReviews from '../pages/admin/AdminReviews.jsx';
 import AdminChatbot from '../pages/admin/AdminChatbot.jsx';
 import AdminMeanings from '../pages/admin/AdminMeanings.jsx';
@@ -57,6 +58,7 @@ const NAV_PERM = {
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
   acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
+  afengshuihistory: 'fengshui_history:view',
   achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view', asortsettings: 'settings:view',
   aauditlog: 'audit_logs:view', arisklog: 'risk_events:view', aerrorlogs: 'error_logs:view', afeatureflags: 'feature_flags:view', adbconsole: 'db_console:view',
   apolicypages: 'policy_pages:view',
@@ -164,6 +166,7 @@ const ADMIN_INFO = {
   areviews: 'Duyệt đánh giá khách gửi trước khi hiển thị công khai trên trang chi tiết biển; có thể trả lời đánh giá.',
   ameanings: 'Mẫu ý nghĩa phong thủy chung theo loại biển/con số, và ý nghĩa riêng gắn cho từng biển cụ thể.',
   achatbot: 'Lịch sử hội thoại chatbot AI với khách — bật/tắt và chỉnh cấu hình trả lời tự động.',
+  afengshuihistory: 'Toàn bộ lượt khách luận giải biển số tại trang công khai /luan-bien-so — cả khách vãng lai lẫn đã đăng nhập.',
   aauditlog: 'Tab Hệ thống: lịch sử mọi thay đổi dữ liệu (ai sửa gì, khi nào). Tab Lỗi: nhật ký lỗi 500/exception. Tab Rủi ro CTV (chỉ Quản trị viên): cảnh báo bất thường ở cộng tác viên.',
   arisklog: 'Chỉ Quản trị viên thấy trang này. Cảnh báo tự động khi phát hiện dấu hiệu bất thường ở cộng tác viên — rà soát và xử lý.',
   compose: 'Soạn bài viết mới — điền tiêu đề, nội dung, ảnh bìa rồi đăng hoặc lưu nháp.',
@@ -211,6 +214,7 @@ const NAV_ICONS = {
   anotifications: Bell,
   areviews: Star,
   achatbot: Bot,
+  afengshuihistory: ScrollText,
   acollabs: Handshake,
   acollabcontent: FileCode,
   actvtemplates: MessageSquareShare,
@@ -561,6 +565,7 @@ export default function AdminShell({
         {s === 'ainterestleads' && <AdminInterestLeads notify={notify} />}
         {s === 'areviews' && <AdminReviews notify={notify} />}
         {s === 'achatbot' && <AdminChatbot notify={notify} />}
+        {s === 'afengshuihistory' && <AdminFengShuiHistory />}
         {s === 'aauditlog' && <AdminLogs st={st} notify={notify} />}
         {s === 'ashowroom' && <AdminPublicDisplay notify={notify} />}
         {s === 'ainsights' && <AdminInsights go={go} patch={patch} st={st} />}
