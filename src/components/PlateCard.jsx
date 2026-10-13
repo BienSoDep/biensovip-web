@@ -79,6 +79,9 @@ export default function PlateCard({
     );
   }
 
+  const badgeCount = [isHot, fsBadge, onSale && !sold, type, badge].filter(Boolean).length;
+  const badgeRowMinHeight = badgeCount >= 3 ? 84 : 60;
+
   return (
     <Card
       tone="sunken"
@@ -91,7 +94,7 @@ export default function PlateCard({
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
-        <div style={{ minHeight: badge ? 84 : 60, overflow: 'hidden' }}> {/* có nhãn đếm ngược/phiên: chừa đủ 3 dòng để biển số không bị đẩy lệch giữa các thẻ */}
+        <div style={{ minHeight: badgeRowMinHeight, overflow: 'hidden' }}> {/* chừa đủ 2 dòng badge theo số badge thực có, tránh biển số bị đẩy lệch giữa các thẻ */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', rowGap: 6 }}>
               {isHot && <Badge tone="hot">🔥 HOT</Badge>}
