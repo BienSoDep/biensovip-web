@@ -380,7 +380,9 @@ export default function App() {
     if (!st.mName.trim()) err.name = 'Vui lòng nhập họ tên.';
     if (!st.mPhone.trim()) err.phone = 'Vui lòng nhập số điện thoại.';
     else if (!validatePhone(st.mPhone)) err.phone = 'Số điện thoại chưa đúng định dạng (VD: 0905221334).';
-    if (st.mEmail?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(st.mEmail.trim())) err.email = 'Email chưa đúng định dạng.';
+    if (!st.mEmail?.trim()) err.email = 'Vui lòng nhập email.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(st.mEmail.trim())) err.email = 'Email chưa đúng định dạng.';
+    if (!st.mNote?.trim()) err.note = 'Vui lòng nhập ghi chú.';
     if (Object.keys(err).length) { patch({ mErr: err }); return; }
 
     // UC07 — gửi thật lên API (backend resolve plateNumber → plateId, chống spam qua honeypot).

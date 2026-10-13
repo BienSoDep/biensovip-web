@@ -306,7 +306,9 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
     if (cForm.honeypot) { setContactOpen(false); return; } // bot trap
     if (!cForm.fullName.trim()) return setCErr({ field: 'fullName', message: 'Vui lòng nhập họ tên' });
     if (!validatePhone(cForm.phone)) return setCErr({ field: 'phone', message: 'Số điện thoại không hợp lệ' });
-    if (cForm.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email.trim())) return setCErr({ field: 'email', message: 'Email chưa đúng định dạng' });
+    if (!cForm.email.trim()) return setCErr({ field: 'email', message: 'Vui lòng nhập email' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email.trim())) return setCErr({ field: 'email', message: 'Email chưa đúng định dạng' });
+    if (!cForm.note?.trim()) return setCErr({ field: 'note', message: 'Vui lòng nhập ghi chú' });
     setCErr(null);
     submitContact.mutate({
       fullName: cForm.fullName.trim(), phone: normalizePhone(cForm.phone),
@@ -697,7 +699,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               )}
             </div>
             <div>
-              <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />
+              <Input label="Ghi chú" required value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" error={cErr?.field === 'note' ? cErr.message : undefined} />
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
                 {NOTE_TEMPLATES.map((t) => (
                   <button key={t} type="button" onClick={() => setCF('note')(t)} style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-tint-cream)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-pill)', padding: '4px 10px', cursor: 'pointer' }}>{t}</button>
@@ -705,7 +707,7 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
               </div>
             </div>
             <div>
-              <Input label="Email" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" error={cErr?.field === 'email' ? cErr.message : undefined} />
+              <Input label="Email" required type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" error={cErr?.field === 'email' ? cErr.message : undefined} />
             </div>
             <div>
               <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={cForm.subscribe} onChange={(v) => setCForm((f) => ({ ...f, subscribe: !!v }))} />

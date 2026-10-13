@@ -83,8 +83,8 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 <div><h2 id="modal-contact-title" style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>Chốt biển này</h2><p id="modal-contact-desc" style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Shop gọi lại trong 15 phút, kể cả chủ nhật.</p></div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-                  <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={st.mName} error={st.mErr.name} onChange={setField('mName')} />
-                  <Input label="Số điện thoại" type="tel" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
+                  <Input label="Họ và tên" required placeholder="Nguyễn Văn A" value={st.mName} error={st.mErr.name} onChange={setField('mName')} />
+                  <Input label="Số điện thoại" required type="tel" placeholder="09xx xxx xxx" value={st.mPhone} error={st.mErr.phone} onChange={setField('mPhone')} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
                   <Select label="Mục đích" value={INTENT_OPTS[Object.keys(INTENT_VAL).indexOf(st.mIntent)] || 'Đặt cọc giữ biển'} options={INTENT_OPTS.map((o) => ({ value: o, label: o }))} onChange={(v) => patch({ mIntent: INTENT_VAL[v] || 'deposit_request' })} />
@@ -98,15 +98,16 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
                   <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Mã không hợp lệ hoặc đã hết hạn</span>
                 )}
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
+                  <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú<span style={{ color: 'var(--status-danger)' }}> *</span></span>
                   <textarea rows={3} placeholder="VD: muốn đặt cọc giữ biển" value={st.mNote} onChange={setField('mNote')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
+                  {st.mErr.note && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{st.mErr.note}</span>}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
                     {NOTE_TEMPLATES.map((t) => (
                       <button key={t} type="button" onClick={() => patch({ mNote: t })} style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-tint-cream)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-pill)', padding: '4px 10px', cursor: 'pointer' }}>{t}</button>
                     ))}
                   </div>
                 </label>
-                <Input label="Email" type="email" placeholder="email@example.com" value={st.mEmail || ''} error={st.mErr.email} onChange={setField('mEmail')} />
+                <Input label="Email" required type="email" placeholder="email@example.com" value={st.mEmail || ''} error={st.mErr.email} onChange={setField('mEmail')} />
                 <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={!!st.mSubscribe} onChange={(v) => patch({ mSubscribe: !!v })} />
                 <Button variant="primary" size="lg" fullWidth onClick={() => submitContact(couponStatus)} disabled={mSending} loading={mSending}>Gửi yêu cầu</Button>
               </div>
