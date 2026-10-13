@@ -10,6 +10,7 @@ import { routeFor } from '../config/routes.js';
 // Cùng bộ mục đích với PlateDetail.jsx's "Chốt biển này" — 2 form phải đồng nhất field/hành vi.
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request' };
+const NOTE_TEMPLATES = ['Muốn đặt cọc giữ biển', 'Cần tư vấn thêm về giá', 'Xem biển tận nơi được không?', 'Hỗ trợ trả góp/thủ tục sang tên'];
 
 export default function Modals({ st, patch, cur, submitContact, mSending, setField, openPlate }) {
   // Mã giảm giá live-check khi rời ô — cùng UX với PlateDetail.jsx.
@@ -99,6 +100,11 @@ export default function Modals({ st, patch, cur, submitContact, mSending, setFie
                 <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                   <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
                   <textarea rows={3} placeholder="VD: muốn đặt cọc giữ biển" value={st.mNote} onChange={setField('mNote')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                    {NOTE_TEMPLATES.map((t) => (
+                      <button key={t} type="button" onClick={() => patch({ mNote: t })} style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-tint-cream)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-pill)', padding: '4px 10px', cursor: 'pointer' }}>{t}</button>
+                    ))}
+                  </div>
                 </label>
                 <Input label="Email" type="email" placeholder="email@example.com" value={st.mEmail || ''} error={st.mErr.email} onChange={setField('mEmail')} />
                 <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={!!st.mSubscribe} onChange={(v) => patch({ mSubscribe: !!v })} />

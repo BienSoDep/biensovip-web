@@ -38,6 +38,7 @@ const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose'
 const REVIEWS_PER_PAGE = 5;
 
 const INTENT_OPTS = ['Hỏi chung', 'Đặt cọc giữ biển', 'Mua đứt'];
+const NOTE_TEMPLATES = ['Muốn đặt cọc giữ biển', 'Cần tư vấn thêm về giá', 'Xem biển tận nơi được không?', 'Hỗ trợ trả góp/thủ tục sang tên'];
 const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc giữ biển': 'deposit_request', 'Mua đứt': 'buy' };
 
 // UC40 §3.3 — CTV lấy link giới thiệu riêng cho biển đang xem, kèm copy sẵn tin nhắn mời khách.
@@ -697,6 +698,11 @@ export default function PlateDetail({ plateId, favs, onFav, openPlate, openPost,
             </div>
             <div>
               <Input label="Ghi chú" value={cForm.note} onChange={setCF('note')} placeholder="Ví dụ: muốn đặt cọc giữ biển" />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+                {NOTE_TEMPLATES.map((t) => (
+                  <button key={t} type="button" onClick={() => setCF('note')(t)} style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-tint-cream)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-pill)', padding: '4px 10px', cursor: 'pointer' }}>{t}</button>
+                ))}
+              </div>
             </div>
             <div>
               <Input label="Email" type="email" value={cForm.email} onChange={setCF('email')} placeholder="email@example.com" error={cErr?.field === 'email' ? cErr.message : undefined} />
