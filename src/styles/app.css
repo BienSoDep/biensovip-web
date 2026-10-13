@@ -53,6 +53,7 @@ span.compare-desktop-table { display: flex; }
   background: var(--surface-sunken);
 }
 .select-item[data-selected] {
+  background: var(--surface-tint-cream);
   color: var(--action-primary);
   font-weight: var(--fw-semibold);
 }

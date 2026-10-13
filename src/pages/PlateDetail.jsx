@@ -79,6 +79,7 @@ const BADGE_TONE = { "Mới lên sàn": "amber", "Đã có khách cọc": "rose"
 const REVIEWS_PER_PAGE = 5;
 
 const INTENT_OPTS = ["Hỏi chung", "Đặt cọc giữ biển", "Mua đứt"];
+const NOTE_TEMPLATES = ["Muốn đặt cọc giữ biển", "Cần tư vấn thêm về giá", "Xem biển tận nơi được không?", "Hỗ trợ trả góp/thủ tục sang tên"];
 const INTENT_VAL = {
   "Hỏi chung": "inquiry",
   "Đặt cọc giữ biển": "deposit_request",
@@ -527,11 +528,12 @@ export default function PlateDetail({
       return setCErr({ field: "fullName", message: "Vui lòng nhập họ tên" });
     if (!validatePhone(cForm.phone))
       return setCErr({ field: "phone", message: "Số điện thoại không hợp lệ" });
-    if (
-      cForm.email.trim() &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email.trim())
-    )
+    if (!cForm.email.trim())
+      return setCErr({ field: "email", message: "Vui lòng nhập email" });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cForm.email.trim()))
       return setCErr({ field: "email", message: "Email chưa đúng định dạng" });
+    if (!cForm.note?.trim())
+      return setCErr({ field: "note", message: "Vui lòng nhập ghi chú" });
     setCErr(null);
     submitContact.mutate(
       {
@@ -2326,14 +2328,22 @@ export default function PlateDetail({
             <div>
               <Input
                 label="Ghi chú"
+                required
                 value={cForm.note}
                 onChange={setCF("note")}
                 placeholder="Ví dụ: muốn đặt cọc giữ biển"
+                error={cErr?.field === "note" ? cErr.message : undefined}
               />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)", marginTop: "var(--space-2)" }}>
+                {NOTE_TEMPLATES.map((t) => (
+                  <button key={t} type="button" onClick={() => setCF("note")(t)} style={{ font: "var(--type-caption)", color: "var(--text-muted)", background: "var(--surface-tint-cream)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-pill)", padding: "4px 10px", cursor: "pointer" }}>{t}</button>
+                ))}
+              </div>
             </div>
             <div>
               <Input
                 label="Email"
+                required
                 type="email"
                 value={cForm.email}
                 onChange={setCF("email")}

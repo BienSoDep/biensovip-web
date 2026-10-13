@@ -291,7 +291,9 @@ export function Select({ label, info, value, options = [], onChange, variant, st
                     {o.icon && <img src={o.icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />}
                     {o.label}
                   </BaseSelect.ItemText>
-                  <BaseSelect.ItemIndicator style={{ display: 'flex', color: 'var(--action-primary)' }}><Check size={14} /></BaseSelect.ItemIndicator>
+                  <BaseSelect.ItemIndicator style={{ display: 'flex' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', flexShrink: 0 }} />
+                  </BaseSelect.ItemIndicator>
                 </BaseSelect.Item>
               ))}
             </BaseSelect.Popup>
