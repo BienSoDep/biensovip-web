@@ -252,8 +252,8 @@ export default function AdminReviews({ notify }) {
                     {r.plateStatus && (
                       <span style={{
                         fontSize: 11, fontWeight: 'var(--fw-bold)', padding: '2px 8px', borderRadius: 'var(--radius-pill)',
-                        background: r.plateStatus === 'available' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(107, 114, 128, 0.12)',
-                        color: r.plateStatus === 'available' ? '#059669' : '#4B5563',
+                        background: r.plateStatus === 'available' ? 'rgba(63,191,143, 0.12)' : 'rgba(107, 114, 128, 0.12)',
+                        color: r.plateStatus === 'available' ? '#3FBF8F' : '#4B5563',
                       }}>
                         {r.plateStatus === 'available' ? 'Đang bán' : 'Đã bán'}
                       </span>

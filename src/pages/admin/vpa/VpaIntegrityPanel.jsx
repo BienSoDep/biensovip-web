@@ -80,9 +80,9 @@ function FixHistory({ notify }) {
 }
 
 // Kiểm tra dữ liệu biển VPA ngay trong danh sách: nhóm lỗi + số biển, bấm vào để xem biển lỗi và sửa từng biển hoặc cả nhóm.
-export default function VpaIntegrityPanel({ notify, onClose }) {
+export default function VpaIntegrityPanel({ notify, onClose, initialOpen = null }) {
   const { data, isLoading, isError, isFetching, refetch } = useVpaIntegrity(true);
-  const [open, setOpen] = useState(null);
+  const [open, setOpen] = useState(initialOpen);
   const bad = (data || []).filter((c) => c.count > 0);
   const total = bad.reduce((s, c) => s + c.count, 0);
 

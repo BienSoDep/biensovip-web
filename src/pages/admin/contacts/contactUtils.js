@@ -5,7 +5,7 @@ export const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Hủy'];
 export const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Hủy': 'cancelled' };
 // found giữ lại trong map hiển thị — phòng data cũ chưa migrate về closed vẫn hiện đúng nhãn thay vì "undefined".
 export const STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã chốt (cũ)', cancelled: 'Hủy' };
-export const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#7B2D8B', cancelled: 'var(--text-faint)' };
+export const STATUS_COLOR = { new: 'var(--blue-700)', consulting: 'var(--status-warning-ink)', closed: 'var(--status-success-ink)', found: '#6B7180', cancelled: 'var(--text-faint)' };
 export const INTENT_OPTS = ['Tất cả', 'Hỏi chung', 'Đặt cọc', 'Mua đứt', 'Săn hộ'];
 export const INTENT_VAL = { 'Hỏi chung': 'inquiry', 'Đặt cọc': 'deposit_request', 'Mua đứt': 'buy', 'Săn hộ': 'hunting' };
 

@@ -248,7 +248,7 @@ export default function AdminVideos({ notify }) {
             gap: 'var(--space-3)'
           }}
         >
-          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(199,91,0, 0.1)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Video size={20} />
           </div>
           <div>
@@ -269,7 +269,7 @@ export default function AdminVideos({ notify }) {
             gap: 'var(--space-3)'
           }}
         >
-          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--intent-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(63,191,143, 0.1)', color: 'var(--intent-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Eye size={20} />
           </div>
           <div>

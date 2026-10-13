@@ -17,7 +17,7 @@ const STATUS_OPTS = [
 
 const STATUS_CONFIG = {
   pending: { label: 'Chờ duyệt', tone: 'amber', bg: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: 'rgba(245, 158, 11, 0.25)', icon: Clock },
-  approved: { label: 'Đã duyệt', tone: 'mint', bg: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: 'rgba(16, 185, 129, 0.25)', icon: CheckCircle2 },
+  approved: { label: 'Đã duyệt', tone: 'mint', bg: 'rgba(63,191,143, 0.1)', color: '#3FBF8F', border: 'rgba(63,191,143, 0.25)', icon: CheckCircle2 },
   rejected: { label: 'Đã từ chối', tone: 'danger', bg: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', border: 'rgba(239, 68, 68, 0.25)', icon: XCircle },
 };
 
@@ -98,7 +98,7 @@ export default function AdminBlogComments({ notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageSquare size={22} />
           </div>
           <div>
@@ -146,16 +146,16 @@ export default function AdminBlogComments({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: status === 'approved' ? '2px solid #059669' : '2px solid transparent',
+            border: status === 'approved' ? '2px solid #3FBF8F' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã phê duyệt</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>{stats.approved}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>{stats.approved}</div>
           </div>
         </div>
 
@@ -347,7 +347,7 @@ export default function AdminBlogComments({ notify }) {
                     width: 40,
                     height: 40,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                    background: 'linear-gradient(135deg, #F19720, #8A8F99)',
                     color: '#ffffff',
                     display: 'flex',
                     alignItems: 'center',
@@ -399,7 +399,7 @@ export default function AdminBlogComments({ notify }) {
                         color: 'var(--action-primary)',
                         padding: '3px 8px',
                         borderRadius: 6,
-                        background: 'rgba(59, 130, 246, 0.08)',
+                        background: 'rgba(241,151,32, 0.08)',
                         width: 'fit-content',
                       }}>
                         <FileText size={12} />
@@ -430,7 +430,7 @@ export default function AdminBlogComments({ notify }) {
                             size="sm"
                             onClick={() => act(c.id, 'approved')}
                             disabled={moderate.isPending}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#059669', borderColor: '#059669' }}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#3FBF8F', borderColor: '#3FBF8F' }}
                           >
                             <CheckCircle2 size={14} /> Duyệt hiển thị
                           </Button>
@@ -452,7 +452,7 @@ export default function AdminBlogComments({ notify }) {
                           size="sm"
                           onClick={() => act(c.id, 'approved')}
                           disabled={moderate.isPending}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669' }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#3FBF8F' }}
                         >
                           <CheckCircle2 size={14} /> Khôi phục & Duyệt lại
                         </Button>

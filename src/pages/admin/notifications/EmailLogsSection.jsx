@@ -229,8 +229,8 @@ export default function EmailLogsSection({ notify }) {
                           borderRadius: 'var(--radius-pill)',
                           fontSize: 12,
                           fontWeight: 'var(--fw-semibold)',
-                          background: isSuccess ? '#ecfdf5' : '#fef2f2',
-                          color: isSuccess ? '#065f46' : '#991b1b',
+                          background: isSuccess ? '#F0FAF6' : '#fef2f2',
+                          color: isSuccess ? '#2E9970' : '#991b1b',
                         }}>
                           {isSuccess ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
                           {isSuccess ? 'Thành công' : 'Thất bại'}
@@ -394,8 +394,8 @@ export default function EmailLogsSection({ notify }) {
                     borderRadius: 'var(--radius-pill)',
                     fontSize: 12,
                     fontWeight: 'var(--fw-semibold)',
-                    background: selectedLog.status === 'success' ? '#ecfdf5' : '#fef2f2',
-                    color: selectedLog.status === 'success' ? '#065f46' : '#991b1b',
+                    background: selectedLog.status === 'success' ? '#F0FAF6' : '#fef2f2',
+                    color: selectedLog.status === 'success' ? '#2E9970' : '#991b1b',
                   }}>
                     {selectedLog.status === 'success' ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
                     {selectedLog.status === 'success' ? 'Thành công' : 'Thất bại'}

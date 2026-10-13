@@ -1,6 +1,6 @@
 import { InfoTip } from '../../../components/index.jsx';
 
-export const PALETTE = ['#3B5BFF', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
+export const PALETTE = ['#F19720', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
 
 export const STATE_NAMES = {
   None: 'Chưa có gợi ý',
@@ -12,7 +12,7 @@ export const STATE_NAMES = {
 
 export const STATE_COLORS = {
   Approved: 'var(--status-success-ink, #2b8a3e)',
-  Suggested: 'var(--action-primary, #3b5bff)',
+  Suggested: 'var(--action-primary, #F19720)',
   None: 'var(--text-muted, #868e96)',
   Drifted: 'var(--status-warning-ink, #d97706)',
   Rejected: 'var(--status-danger, #e03131)',
@@ -67,7 +67,7 @@ export function StatCard({ label, value, sub, tone, icon: Icon, badge }) {
             fontWeight: 600,
             padding: '2px 6px',
             borderRadius: 4,
-            background: 'rgba(59,91,255,0.08)',
+            background: 'rgba(241,151,32,0.08)',
             color: 'var(--action-primary)'
           }}>
             {badge}

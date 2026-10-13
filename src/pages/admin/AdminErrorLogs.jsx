@@ -82,7 +82,7 @@ export default function AdminErrorLogs() {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Bug size={22} />
           </div>
           <div>
@@ -293,7 +293,7 @@ export default function AdminErrorLogs() {
           </div>
         ) : filteredItems.length === 0 ? (
           <div style={{ padding: 56, textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-            <Check size={36} color="#059669" />
+            <Check size={36} color="#3FBF8F" />
             <div style={{ font: 'var(--type-body)', fontWeight: 600, color: 'var(--text-strong)' }}>
               Không có lỗi nào được ghi nhận
             </div>
@@ -403,7 +403,7 @@ export default function AdminErrorLogs() {
                           backdropFilter: 'blur(4px)',
                         }}
                       >
-                        {copiedId === log.id ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
+                        {copiedId === log.id ? <Check size={12} color="#3FBF8F" /> : <Copy size={12} />}
                         <span>{copiedId === log.id ? 'Đã copy' : 'Copy Trace'}</span>
                       </button>
                     </div>

@@ -79,7 +79,7 @@ export default function BottleneckRadarSection({ bottlenecks = [], onActionClick
             const badgeBg = isCrit ? 'var(--status-danger-bg)' : isWarn ? 'var(--status-warning-bg)' : 'var(--status-success-bg)';
             const accentBorder = isCrit ? 'var(--status-danger)' : isWarn ? 'var(--status-warning)' : 'var(--status-success)';
             const badgeLabel = isCrit ? 'Cấp bách' : isWarn ? 'Cảnh báo' : 'Cơ hội';
-            const dotColor = isCrit ? '#ef4444' : isWarn ? '#f59e0b' : '#10b981';
+            const dotColor = isCrit ? '#ef4444' : isWarn ? '#f59e0b' : '#3FBF8F';
             const actionLink = getFallbackLink(item);
 
             const handleCardClick = () => {

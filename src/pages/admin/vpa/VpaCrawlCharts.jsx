@@ -32,11 +32,11 @@ import { VPA_SOURCES, VPA_RUN_STATUS, formatDateTime, formatDuration, formatInt,
 
 const TONE_COLORS = {
   primary: '#C75B00',
-  blue: '#3B5BFF',
-  mint: '#10B981',
-  amber: '#F59E0B',
-  purple: '#8B5CF6',
-  rose: '#EF4444',
+  blue: '#6B7180',
+  mint: '#3FBF8F',
+  amber: '#F5C542',
+  purple: '#3A3E47',
+  rose: '#E5484D',
   grid: 'rgba(0, 0, 0, 0.06)',
 };
 
@@ -74,8 +74,8 @@ function CustomTooltip({ active, payload, label }) {
             fontWeight: 'var(--fw-bold, 700)',
             padding: '2px 7px',
             borderRadius: 'var(--radius-pill, 9999px)',
-            background: d.status === 1 ? '#ecfdf5' : d.status === 0 ? '#eff6ff' : '#fef2f2',
-            color: d.status === 1 ? '#059669' : d.status === 0 ? '#2563eb' : '#dc2626',
+            background: d.status === 1 ? '#F0FAF6' : d.status === 0 ? '#eff6ff' : '#fef2f2',
+            color: d.status === 1 ? '#3FBF8F' : d.status === 0 ? '#C75B00' : '#dc2626',
           }}
         >
           {d.statusName}

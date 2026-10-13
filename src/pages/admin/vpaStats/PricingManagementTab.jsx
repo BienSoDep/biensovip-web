@@ -111,8 +111,8 @@ export default function PricingManagementTab({ go, patch }) {
             gap: 'var(--space-3)',
             padding: 'var(--space-3) var(--space-4)',
             borderRadius: 'var(--radius-md)',
-            background: 'rgba(59,91,255,0.06)',
-            border: '1px solid rgba(59,91,255,0.2)'
+            background: 'rgba(241,151,32,0.06)',
+            border: '1px solid rgba(241,151,32,0.2)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Sparkles size={20} color="var(--action-primary)" />
@@ -200,7 +200,7 @@ export default function PricingManagementTab({ go, patch }) {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip formatter={(val) => [`${num(val)} biển`, 'Số lượng']} />
-                <Bar dataKey="count" name="Số biển" fill="var(--action-primary, #3B5BFF)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" name="Số biển" fill="var(--action-primary, #F19720)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

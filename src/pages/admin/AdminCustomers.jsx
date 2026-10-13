@@ -76,12 +76,12 @@ const STATUS_COLOR = { active: 'var(--intent-success)', locked: 'var(--intent-da
 // Tạo avatar màu sắc ngẫu nhiên nhưng nhất quán theo tên
 function getAvatarBg(str = '') {
   const colors = [
-    'linear-gradient(135deg, #2563eb, #1d4ed8)',
-    'linear-gradient(135deg, #059669, #047857)',
+    'linear-gradient(135deg, #C75B00, #C75B00)',
+    'linear-gradient(135deg, #3FBF8F, #2E9970)',
     'linear-gradient(135deg, #d97706, #b45309)',
-    'linear-gradient(135deg, #7c3aed, #6d28d9)',
-    'linear-gradient(135deg, #db2777, #be185d)',
-    'linear-gradient(135deg, #0891b2, #0e7490)',
+    'linear-gradient(135deg, #6B7180, #4A4F59)',
+    'linear-gradient(135deg, #A8485A, #8a3645)',
+    'linear-gradient(135deg, #C75B00, #8a3d00)',
   ];
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -306,7 +306,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
             transition: 'all 140ms ease'
           }}
         >
-          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(199,91,0, 0.1)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Users size={20} />
           </div>
           <div>
@@ -331,7 +331,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
             transition: 'all 140ms ease'
           }}
         >
-          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.12)', color: 'var(--intent-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'rgba(63,191,143, 0.12)', color: 'var(--intent-success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={20} />
           </div>
           <div>
@@ -945,7 +945,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
       {/* Modal Xác nhận Khóa / Mở khóa tài khoản */}
       <Modal open={!!confirmLock} onClose={() => setConfirmLock(null)} title={`Xác nhận ${confirmLock?.verb} tài khoản`} maxWidth="440px">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: confirmLock?.next === 'locked' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)', padding: '12px 14px', borderRadius: 'var(--radius-field)' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: confirmLock?.next === 'locked' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(63,191,143, 0.08)', padding: '12px 14px', borderRadius: 'var(--radius-field)' }}>
             {confirmLock?.next === 'locked' ? (
               <ShieldAlert size={20} style={{ color: 'var(--intent-danger)', flexShrink: 0, marginTop: 2 }} />
             ) : (
