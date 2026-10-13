@@ -232,7 +232,7 @@ function NotificationSettingsSection({ notify }) {
           <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>Nhận thông báo qua email</span>
         </label>
         <div style={{ maxWidth: 220 }}>
-          <Select label="Khung giờ nhận email tổng hợp" value={hour} options={NOTIFY_HOUR_OPTS} onChange={changeHour} />
+          <Select label="Khung giờ nhận email tổng hợp" info="Email tổng hợp các thông báo mới (biển yêu thích giảm giá, tin nhắn...) sẽ gửi vào khung giờ này mỗi ngày." value={hour} options={NOTIFY_HOUR_OPTS} onChange={changeHour} />
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
+import { InfoTip } from '../../components/index.jsx';
 import {
   useAdminChatSessions, useAdminChatSessionDetail, useDeleteChatSession,
   useChatbotSettings, useUpdateChatbotSettings, useChatbotStats,
@@ -11,9 +12,9 @@ import {
 import { formatDateTime } from '../../lib/date.js';
 
 const TABS = [
-  { value: 'sessions', label: 'Lịch sử hội thoại' },
-  { value: 'settings', label: 'Cấu hình trợ lý' },
-  { value: 'stats', label: 'Thống kê' },
+  { value: 'sessions', label: 'Lịch sử hội thoại', info: 'Xem lại các đoạn chat thực tế giữa khách hàng và trợ lý AI để cải thiện kịch bản tư vấn.' },
+  { value: 'settings', label: 'Cấu hình trợ lý', info: 'Thiết lập System Prompt ngữ cảnh, độ sáng tạo Temperature và giới hạn Token.' },
+  { value: 'stats', label: 'Thống kê', info: 'Báo cáo số lượt hội thoại và tần suất sử dụng chatbot theo ngày.' },
 ];
 
 export default function AdminChatbot({ notify }) {
@@ -21,7 +22,7 @@ export default function AdminChatbot({ notify }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
         {TABS.map((t) => (
           <button key={t.value} type="button" onClick={() => setTab(t.value)}
             style={{
@@ -30,7 +31,15 @@ export default function AdminChatbot({ notify }) {
               background: tab === t.value ? 'var(--action-primary)' : 'var(--white)',
               color: tab === t.value ? 'var(--white)' : 'var(--text-body)',
               boxShadow: tab === t.value ? 'none' : 'var(--shadow-inset-hairline)',
-            }}>{t.label}</button>
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+            }}>
+            <span>{t.label}</span>
+            {t.info && (
+              <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <InfoTip text={t.info} size={13} style={{ color: tab === t.value ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
+              </span>
+            )}
+          </button>
         ))}
       </div>
       {tab === 'sessions' && <SessionsTab notify={notify} />}
@@ -176,7 +185,10 @@ function SettingsTab({ notify }) {
   return (
     <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', maxWidth: 640 }}>
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>System prompt</span>
+        <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          System prompt
+          <InfoTip text="Lời nhắc chỉ thị tính cách, ngữ cảnh chuyên môn về biển số và quy tắc ứng xử của AI khi phản hồi khách." />
+        </span>
         <textarea value={current.systemPrompt} onChange={(e) => set('systemPrompt', e.target.value)} rows={8}
           style={{ resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', padding: '10px 12px', font: 'var(--type-body-sm)', fontFamily: 'inherit' }} />
       </label>
@@ -186,17 +198,26 @@ function SettingsTab({ notify }) {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--space-3)' }}>
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Temperature (0–2)</span>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            Temperature (0–2)
+            <InfoTip text="Độ biến thiên sáng tạo: 0 là trả lời chính xác, cố định; 0.7 - 1.0 là văn phong tự nhiên, linh hoạt." />
+          </span>
           <input type="number" min={0} max={2} step={0.1} value={current.temperature} onChange={(e) => set('temperature', e.target.value)}
             style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)' }} />
         </label>
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Max tokens</span>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            Max tokens
+            <InfoTip text="Giới hạn số lượng token tối đa trong mỗi câu trả lời để kiểm soát độ dài và chi phí API." />
+          </span>
           <input type="number" min={1} value={current.maxTokens} onChange={(e) => set('maxTokens', e.target.value)}
             style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)' }} />
         </label>
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Rate limit / giờ / phiên</span>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            Rate limit / giờ / phiên
+            <InfoTip text="Số lượt tin nhắn tối đa mỗi khách hàng được phép gửi trong 1 giờ để chống spam bot." />
+          </span>
           <input type="number" min={1} value={current.rateLimitPerHour} onChange={(e) => set('rateLimitPerHour', e.target.value)}
             style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', font: 'var(--type-body-sm)' }} />
         </label>
@@ -204,7 +225,10 @@ function SettingsTab({ notify }) {
 
       <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
         <input type="checkbox" checked={current.enabled} onChange={(e) => set('enabled', e.target.checked)} />
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>Bật trợ lý AI</span>
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          Bật trợ lý AI
+          <InfoTip text="Bật hoặc tắt biểu tượng chatbox trợ lý ảo AI trên toàn bộ website của khách hàng." />
+        </span>
       </label>
 
       <div style={{ display: 'flex', gap: 'var(--space-2)' }}>

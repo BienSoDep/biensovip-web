@@ -1055,6 +1055,7 @@ const FALLBACK_PLATES = [
                       />
                       <Input
                         label="Mã giới thiệu (không bắt buộc)"
+                        info="Nhập mã của cộng tác viên đã giới thiệu bạn (nếu có) để họ được ghi nhận."
                         placeholder="Mã CTV giới thiệu bạn"
                         value={st.aReferral}
                         error={st.aErr.referral}

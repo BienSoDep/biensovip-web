@@ -39,6 +39,9 @@ biensovip-web/
     │   └── constants.js            # PER_PAGE, shared constants
     ├── components/
     │   ├── index.jsx               # Barrel: Input, Select, Button, Badge, Icon*, Card, InfoTip, ImageUrlInput…
+    │   ├── AdminTabbedPage.jsx     # Component tab ngang chuẩn mực (Pure Derived State, URL ?tab=..., popstate)
+    │   ├── FloatingActionBar.jsx   # Thanh công cụ thao tác hàng loạt nổi (bỏ ẩn, ẩn, duyệt giá, copy, export)
+    │   ├── PriceReferenceModal.jsx # Popup minh bạch nguồn gốc & công thức định giá gợi ý VPA
     │   ├── Modal.jsx / Drawer.jsx  # Overlay + body scroll-lock (bù scrollbar để không nhích layout)
     │   ├── ConfirmModal.jsx        # Xác nhận thao tác (xoá, bulk…)
     │   ├── GlobalSearch.jsx        # Tìm kiếm toàn site
@@ -61,7 +64,7 @@ biensovip-web/
     │   ├── usePathRouter.js        # Path-based routing (parse pathname → screen)
     │   ├── useDelayedLoading.js, useStaggeredReveal.js, useExportCsv.js, useSeo.js
     ├── layout/
-    │   ├── AdminShell.jsx          # Admin layout wrapper
+    │   ├── AdminShell.jsx          # Admin layout wrapper (7 nhóm phân hệ, 24 màn hình, user chip)
     │   ├── Footer.jsx              # Footer — link tỉnh/loại-biển trỏ thẳng `/bai-viet/{slug}`
     │   ├── Header.jsx, MobileDrawer.jsx, Modals.jsx
     ├── lib/
@@ -81,14 +84,16 @@ biensovip-web/
     │   ├── NotFound.jsx, ServerError.jsx
     │   └── admin/
     │       ├── Dashboard.jsx, AdminPlates.jsx, AdminCats.jsx, AdminContacts.jsx, AdminCustomers.jsx
-    │       ├── AdminStaff.jsx (RBAC + đổi mật khẩu nhân viên), AdminPosts.jsx, Compose.jsx
+    │       ├── AdminStaff.jsx (RBAC 30 resources + presets Dev/Vận hành + đổi MK), AdminPosts.jsx, Compose.jsx
+    │       ├── AdminVpa.jsx (5 tab ngang qua AdminTabbedPage), AdminVpaStats.jsx, AdminSettings.jsx
     │       ├── AdminMeanings.jsx, AdminVideos.jsx, AdminReviews.jsx, AdminNotifications.jsx
     │       ├── AdminCollaborators.jsx, AdminChatbot.jsx, AdminAuditLog.jsx, EmailBuilder.jsx
+    │       └── vpa/                # VpaAdminList, VpaPriceQueue, VpaAuctionResults, VpaCrawlAdmin, VpaWorkflowGuide
     ├── services/                    # API clients — mỗi domain 1 file (dùng `apiClient`)
     │   ├── apiClient.js             # fetch wrapper (JWT, ApiResponse<T>, upload)
     │   ├── authService.js, plates.js, plateDetail.js, blog.js, categories.js, landing.js
-    │   ├── adminStaff.js, adminPlates.js, adminDashboard.js, adminAuditLog.js, …
-    │   └── (40 file — xem thư mục)
+    │   ├── adminStaff.js, adminPlates.js, adminVpa.js, adminDashboard.js, adminAuditLog.js, …
+    │   └── (40+ file — xem thư mục)
     └── styles/
         ├── app.css                 # Main stylesheet (gồm @media mobile: FAB, plate-grid 1 cột…)
         ├── skeleton.css
@@ -175,7 +180,7 @@ Backend phải chạy song song (`dotnet run --project src/Biensovip.Api`) — f
 `home, list, detail, register, login, forgot, fav, profile, lucky, about, blog, post, chat, compare, saved, reviews, notifications, collab, terms, privacy, transfer, faq, gmailCallback, provinceLanding, plateTypeLanding, notfound`
 
 ### Admin
-`dash, adminLogin, aplates, acats, acontacts, aposts, compose, acustomers, astaff, avideos, anotifications, aemailtpl, acollabs, areviews, ameanings, achatbot, aauditlog`
+`dash, adminLogin, aplates, avpa, avpastats, acats, acontacts, aposts, compose, acustomers, astaff, avideos, anotifications, aemailtpl, acollabs, areviews, ameanings, achatbot, aauditlog, asettings, apolicies, asubscribers, amaintenance, avanity, aerrorlog, adbconsole, aflags, apaylinks, acoupons, arisks`
 
 ### Error
 `notfound, servererror`
@@ -196,6 +201,21 @@ Backend phải chạy song song (`dotnet run --project src/Biensovip.Api`) — f
 ### Mobile responsive fixes
 - `app.css`: FAB (chatbot/zalo/back-to-top) thu về 44px ≤768px; `plate-grid` 1 cột ≤480px; hero-desc `text-overflow:ellipsis`; hero badge/price `flexWrap:wrap`.
 - `Modal.jsx`/`Drawer.jsx`: scroll-lock bù scrollbar (`paddingRight = scrollbarWidth`) — không làm layout nhích ngang khi mở overlay.
+
+### Phân hệ Biển VPA & Thao tác hàng loạt (UC49)
+- **Bỏ ẩn hàng loạt (`isHidden: false`):** Kích hoạt API `POST /api/admin/vpa/plates/bulk-edit`, tự động đồng bộ bật hiển thị công khai `plates.visible = true`.
+- **Ẩn hàng loạt (`isHidden: true`):** Đánh dấu ẩn khỏi khách hàng `plates.visible = false`.
+- **Thanh công cụ nổi (`FloatingActionBar`):** Duyệt giá gợi ý, từ chối giá, đổi tab, đổi loại/tỉnh, ghim, nổi bật, sao chép số biển vào clipboard, xuất CSV các biển đã chọn.
+- **Chọn thông minh:** Bộ chọn nhanh các biển đang ẩn, biển chưa duyệt giá trên trang hiện tại.
+- **Hướng dẫn quy trình (`VpaWorkflowGuide`):** Modal và tab hướng dẫn chi tiết quy trình duyệt giá, mã màu nhãn trạng thái và vòng đời biển VPA.
+
+### Thành phần Tab chuẩn hóa (`AdminTabbedPage.jsx`)
+- Pure Derived State pattern: Loại bỏ cascading re-renders, render mượt mà không cảnh báo linter.
+- Tự động đồng bộ URL search param (`?tab=...`), hỗ trợ lịch sử trình duyệt Back/Forward qua sự kiện `popstate`.
+
+### Phân quyền Nhân viên đa tầng (`AdminStaff.jsx`)
+- Hỗ trợ đầy đủ 30 resources trong `PermissionCatalog` (bao gồm `analytics:view`, `vpa_prices:view/update`).
+- Presets phân quyền: "Preset Dev", "Nhân viên vận hành", chọn hết / bỏ chọn theo từng nhóm danh mục.
 
 ## Integration with backend
 

@@ -42,9 +42,17 @@ Frontend Single Page Application (SPA) cho nền tảng thương mại điện t
   - Sửa giá bán trực tiếp trên bảng (inline edit), cấu hình giá khuyến mãi, biển tặng kèm.
   - **Cột "Giá TT tham khảo":** Hiển thị ngay giá thị trường tính toán từ VPA để admin đối chiếu nhanh giá bán của shop.
   - **Popup minh bạch công thức (`PriceReferenceModal`):** Hiển thị phương thức suy luận, công thức chi tiết `TB giá trúng × Hệ số = Giá gợi ý` và danh sách 50 phiên đấu giá mẫu thực tế.
-- **Quản lý VPA & Định giá tự động (UC49):**
-  - Danh sách biển VPA, phân tích thị trường, biểu đồ thống kê theo tỉnh thành/loại biển.
-  - Giám sát tiến độ Crawler, xử lý ngoại lệ (Integrity Panel) và duyệt giá hàng loạt.
+- **Quản lý VPA & Thao tác hàng loạt (UC49):**
+  - **Thao tác hàng loạt đa năng:** Bỏ ẩn hàng loạt (`IsHidden = false`), Ẩn hàng loạt (`IsHidden = true`), Duyệt giá gợi ý, Từ chối giá, Đổi tab (Tháng/Tuần/Hết hạn), Đổi loại biển, Đổi tỉnh thành, Ghim và Nổi bật.
+  - **Bộ công cụ chọn thông minh:** Chọn nhanh tất cả biển đang ẩn, biển chưa duyệt, hoặc biển có giá gợi ý trên trang hiện tại.
+  - **Tiện ích sao chép & xuất dữ liệu:** Sao chép danh sách số biển đã chọn vào clipboard (gửi Zalo/tư vấn nhanh) hoặc Xuất file CSV danh sách đã chọn.
+  - **Hướng dẫn quy trình tích hợp (`VpaWorkflowGuide`):** Modal và tab hướng dẫn chi tiết ý nghĩa từng nút bấm, màu sắc nhãn trạng thái và vòng đời biển VPA.
+- **Cấu trúc Tab ngang chuẩn mực (`AdminTabbedPage`):**
+  - Đồng bộ URL subtab (`?tab=...`), hỗ trợ lịch sử trình duyệt Back/Forward qua sự kiện `popstate`, mô hình Pure Derived State tránh re-render giật lag.
+- **Phân quyền Nhân viên đa tầng (`AdminStaff`):**
+  - Ma trận phân quyền trực quan theo 7 nhóm phân hệ nghiệp vụ và kỹ thuật.
+  - Hỗ trợ đầy đủ 30 resources trong `PermissionCatalog` (bao gồm `analytics`, `vpa_prices`).
+  - Phím tắt tiện lợi: "Preset Dev", "Nhân viên vận hành", chọn hết / bỏ chọn theo từng nhóm danh mục.
 - **Quản trị nội dung & Marketing:** Soạn bài viết blog, quản lý danh mục, chính sách, CRM liên hệ và hệ thống cộng tác viên (CTV).
 
 ---

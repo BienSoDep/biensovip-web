@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
+import { InfoTip } from './index.jsx';
 
 // Trang admin gộp nhiều trang con thành tab ngang — dùng cho các nhóm chức năng liên quan chặt
 // (VD Blog+Bình luận, Nhật ký hệ thống/lỗi/rủi ro CTV, Báo cáo & Phân tích VPA).
 // Style pill-tab copy từ AdminContacts.jsx.
 // `tabs`: [{ key, label, render: () => ReactNode }] — ẩn tab nào không truyền (VD thiếu quyền).
 // `initialTab`: key tab mặc định khi vào trang lần đầu hoặc key đó không còn trong danh sách hiện tại.
-export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabParam = 'tab' }) {
+// `activeTab`: (tùy chọn) điều khiển tab từ bên ngoài (controlled mode).
+export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChange, subtabParam = 'tab' }) {
   const getInitialActive = () => {
+    if (activeTab) return activeTab;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const qTab = params.get(subtabParam) || params.get('subtab');
@@ -17,20 +20,26 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
 
   const [active, setActive] = useState(getInitialActive);
 
-  // Sync if tabs or initialTab change dynamically
+  // Lắng nghe popstate (Back/Forward trình duyệt) để đồng bộ tab theo URL
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const qTab = params.get(subtabParam) || params.get('subtab');
       if (qTab && tabs.some((t) => t.key === qTab)) {
         setActive(qTab);
-        return;
+        onTabChange?.(qTab);
+      } else {
+        const fallback = initialTab || tabs[0]?.key;
+        if (fallback) {
+          setActive(fallback);
+          onTabChange?.(fallback);
+        }
       }
-    }
-    if (!tabs.some((t) => t.key === active)) {
-      setActive(initialTab || tabs[0]?.key);
-    }
-  }, [tabs, initialTab]);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [tabs, subtabParam, initialTab, onTabChange]);
 
   const handleSelect = (key) => {
     setActive(key);
@@ -38,13 +47,16 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
     if (typeof window !== 'undefined') {
       try {
         const url = new URL(window.location.href);
-        url.searchParams.set('tab', key);
+        url.searchParams.set(subtabParam, key);
         window.history.replaceState(null, '', url.toString());
       } catch { /* ignore */ }
     }
   };
 
-  const current = tabs.find((t) => t.key === active) || tabs[0];
+  // Xác định tab thực tế ngay trong render: ưu tiên activeTab (nếu controlled) hoặc active (uncontrolled),
+  // fallback an toàn về initialTab hoặc tab đầu tiên mà không gây cascading render.
+  const rawKey = activeTab || active;
+  const current = tabs.find((t) => t.key === rawKey) || (initialTab && tabs.find((t) => t.key === initialTab)) || tabs[0];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -57,11 +69,13 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
                 key={t.key}
                 type="button"
                 role="tab"
+                title={t.title || t.note || t.tip || `Chuyển sang tab ${t.label}`}
                 aria-selected={isActive}
                 onClick={() => handleSelect(t.key)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
+                  gap: 6,
                   height: 36,
                   padding: '0 16px',
                   border: 'none',
@@ -75,7 +89,26 @@ export default function AdminTabbedPage({ tabs, initialTab, onTabChange, subtabP
                   transition: 'all 140ms ease',
                 }}
               >
-                {t.label}
+                <span>{t.label}</span>
+                {t.info && (
+                  <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <InfoTip text={t.info} size={13} style={{ color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
+                  </span>
+                )}
+                {t.count != null && (
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      padding: '1px 6px',
+                      borderRadius: 'var(--radius-pill)',
+                      background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--surface-sunken)',
+                      color: isActive ? '#ffffff' : 'var(--text-muted)',
+                      fontWeight: 'var(--fw-semibold)',
+                    }}
+                  >
+                    {t.count}
+                  </span>
+                )}
               </button>
             );
           })}

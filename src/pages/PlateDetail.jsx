@@ -2261,6 +2261,7 @@ export default function PlateDetail({
             <div>
               <Select
                 label="Mục đích"
+                info="Chọn lý do bạn liên hệ để shop tư vấn đúng hướng (đặt cọc, mua ngay hay chỉ hỏi thêm)."
                 value={plate.vpa ? "inquiry" : cForm.intent}
                 onChange={(v) => setCForm((f) => ({ ...f, intent: v }))}
                 options={(plate.vpa

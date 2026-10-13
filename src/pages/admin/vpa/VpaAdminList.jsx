@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
-  Copy, ExternalLink, MoreHorizontal, Plus, TrendingUp, TrendingDown, RefreshCw, RotateCcw, AlertTriangle, ArrowRight, CheckCircle2, Info,
+  Copy, ExternalLink, MoreHorizontal, Plus, TrendingUp, TrendingDown, RefreshCw, RotateCcw, AlertTriangle, ArrowRight, CheckCircle2, Info, CheckCheck, Download, BookOpen,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -98,16 +98,24 @@ const loadCols = () => {
 const dateField = { height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' };
 const catOpts = (list) => (list || []).map((c) => ({ value: c.id, label: c.name }));
 const chip = { background: 'var(--surface-sunken)', color: 'var(--text-body)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', font: 'var(--type-caption)' };
-const bulkBtn = { border: 'none', background: 'var(--white)', color: 'var(--text-strong)', borderRadius: 'var(--radius-sm)', padding: '4px 10px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer' };
+const bulkBtn = { border: 'none', background: 'var(--white)', color: 'var(--text-strong)', borderRadius: 'var(--radius-sm)', padding: '4px 10px', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', transition: 'all 120ms ease' };
+const quickSelectBtn = { border: 'none', background: 'none', padding: '6px 10px', textAlign: 'left', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer', transition: 'background-color 120ms', width: '100%' };
 const roundBtn = { width: 36, height: 36, borderRadius: '50%', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
 
 function SortHeader({ sort, toggleSort, label, sortKey, style, tip }) {
+  const isSorted = sort?.key === sortKey;
+  const dirLabel = isSorted ? (sort.dir === 'asc' ? 'đang tăng dần — bấm để giảm dần' : 'đang giảm dần — bấm để tăng dần') : 'bấm để sắp xếp';
   return (
     <span style={{ ...style, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-      <button type="button" onClick={() => toggleSort(sortKey)} aria-sort={sort?.key === sortKey ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit' }}>
+      <button
+        type="button"
+        onClick={() => toggleSort(sortKey)}
+        aria-sort={isSorted ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
+        title={tip ? `${label}: ${tip} (${dirLabel})` : `Sắp xếp theo ${label} (${dirLabel})`}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', fontSize: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit' }}
+      >
         {label}
-        {sort?.key === sortKey ? (sort.dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
+        {isSorted ? (sort.dir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} />}
       </button>
       {tip && <InfoTip size={12} text={tip} />}
     </span>
@@ -263,7 +271,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
     <div style={{ position: 'relative' }}>
       <button
         type="button"
-        title="Thao tác khác"
+        title="Thao tác khác (Từ chối giá, Duyệt cả nhóm, Ẩn/Hiện, Ghim, Sao chép, Xem trang khách)"
         aria-label="Thao tác khác"
         onClick={() => setOpen((v) => !v)}
         style={{
@@ -288,7 +296,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-4)',
               padding: 4,
-              minWidth: 175,
+              minWidth: 185,
               display: 'flex',
               flexDirection: 'column',
               gap: 2,
@@ -298,6 +306,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               <button
                 type="button"
                 onClick={() => { setOpen(false); onReject(); }}
+                title="Từ chối giá gợi ý — chuyển trạng thái về Đã từ chối"
                 style={menuItemStyle}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -310,6 +319,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               <button
                 type="button"
                 onClick={() => { setOpen(false); onGroupApprove(); }}
+                title="Duyệt giá gợi ý cho toàn bộ biển trong cùng nhóm tương đồng"
                 style={menuItemStyle}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -321,16 +331,20 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
             <button
               type="button"
               onClick={() => { setOpen(false); onToggleHide(); }}
+              title={plate.isHidden ? 'Bỏ ẩn — Cho phép khách hàng nhìn thấy biển này trên web' : 'Ẩn khỏi khách — Khách truy cập web sẽ không nhìn thấy biển này'}
               style={menuItemStyle}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
             >
-              {plate.isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
-              <span>{plate.isHidden ? 'Hiện biển' : 'Ẩn khỏi khách'}</span>
+              {plate.isHidden ? <Eye size={14} color="#059669" /> : <EyeOff size={14} />}
+              <span style={plate.isHidden ? { color: '#059669', fontWeight: 600 } : undefined}>
+                {plate.isHidden ? 'Bỏ ẩn (Hiện lại)' : 'Ẩn khỏi khách'}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => { setOpen(false); onTogglePin(); }}
+              title={plate.isPinned ? 'Bỏ ghim khỏi đầu danh sách' : 'Ghim biển số lên đầu danh sách quản trị'}
               style={menuItemStyle}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -341,6 +355,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
             <button
               type="button"
               onClick={() => { setOpen(false); onCopy(); }}
+              title="Sao chép số biển vào bộ nhớ tạm"
               style={menuItemStyle}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -353,6 +368,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               target="_blank"
               rel="noreferrer"
               onClick={() => setOpen(false)}
+              title="Xem trang công khai của biển số này trên website"
               style={{ ...menuItemStyle, textDecoration: 'none' }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
@@ -373,7 +389,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
 
 // Danh sách biển VPA cho Admin — cùng bố cục và công cụ với trang Biển số (lọc, cột, sắp xếp, sửa nhanh, hàng loạt, CSV, ngăn kéo).
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
-export default function VpaAdminList({ queue = false, notify }) {
+export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
   const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', from: '', to: '', ...(queue ? { plateTypeIds: [], provinceIds: [] } : loadSavedFilters()) });
   const [q, setQ] = useState(queue ? '' : consumeDeepLinkQ);
   const [dq] = useDebouncedValue(q, 300);
@@ -381,6 +397,7 @@ export default function VpaAdminList({ queue = false, notify }) {
   const [limit, setLimit] = useState(50);
   const [sort, setSort] = useState(null);
   const [sel, setSel] = useState(() => new Set());
+  const [quickSelectOpen, setQuickSelectOpen] = useState(false);
   const [cols, setCols] = useState(loadCols);
   const [colMenu, setColMenu] = useState(false);
   const [mobileView, setMobileView] = useState('card');
@@ -501,6 +518,54 @@ export default function VpaAdminList({ queue = false, notify }) {
   const toggleAll = () => setSel(allSelected ? new Set() : new Set(items.map((i) => i.id)));
   const bulkIds = [...sel].slice(0, MAX_BULK);
 
+  const hiddenOnPage = items.filter((p) => p.isHidden);
+  const pendingOnPage = items.filter((p) => p.priceState === 1 || p.priceState === 4);
+  const selectHidden = () => setSel(new Set(hiddenOnPage.map((p) => p.id)));
+  const selectPending = () => setSel(new Set(pendingOnPage.map((p) => p.id)));
+  const selectAll = () => setSel(new Set(items.map((p) => p.id)));
+  const clearSel = () => setSel(new Set());
+
+  const copySelectedPlates = () => {
+    const selectedPlates = items.filter((p) => sel.has(p.id)).map((p) => p.plateNumber);
+    if (selectedPlates.length === 0) return;
+    const text = selectedPlates.join('\n');
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+      notify?.(`Đã sao chép ${selectedPlates.length} số biển vào bộ nhớ tạm!`, 'success');
+    }
+  };
+
+  const exportSelectedPlates = () => {
+    const selectedItems = items.filter((p) => sel.has(p.id));
+    if (selectedItems.length === 0) return;
+    const headers = ['Số biển', 'Loại xe', 'Loại biển', 'Tỉnh/thành', 'Giá khởi điểm', 'Giá gợi ý', 'Giá duyệt', 'Trạng thái giá', 'Đang ẩn', 'Nổi bật', 'Ghim', 'Tab'];
+    const rows = selectedItems.map((p) => [
+      `"${p.plateNumber}"`,
+      `"${isCar(p.vehicle) ? 'Ô tô' : 'Xe máy'}"`,
+      `"${(p.plateTypeName || '').replace(/"/g, '""')}"`,
+      `"${(p.provinceName || '').replace(/"/g, '""')}"`,
+      p.startingPrice || 0,
+      p.suggestedPrice || 0,
+      p.approvedPrice || 0,
+      `"${VPA_PRICE_STATES[p.priceState]?.label || ''}"`,
+      p.isHidden ? '"Đang ẩn"' : '"Đang hiện"',
+      p.isFeatured ? '"Có"' : '"Không"',
+      p.isPinned ? '"Có"' : '"Không"',
+      `"${TAB_FULL_LABELS[p.tab] || p.tab}"`,
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vpa-bien-da-chon-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    notify?.(`Đã xuất CSV cho ${selectedItems.length} biển đã chọn!`, 'success');
+  };
+
   const run = async (fn, okMsg, clear = false) => {
     try {
       const r = await fn();
@@ -538,7 +603,7 @@ export default function VpaAdminList({ queue = false, notify }) {
   };
   const changeTab = (p, tab) => run(() => update.mutateAsync({ id: p.id, body: { tab: Number(tab) } }), 'Đã đổi tab (khóa, crawl không ghi đè)');
   const toggleFeatured = (p) => run(() => update.mutateAsync({ id: p.id, body: { isFeatured: !p.isFeatured } }), p.isFeatured ? 'Đã bỏ nổi bật' : 'Đã đánh dấu nổi bật');
-  const toggleHide = (p) => run(() => hide.mutateAsync({ id: p.id, value: !p.isHidden }), p.isHidden ? 'Đã hiện biển' : 'Đã ẩn biển');
+  const toggleHide = (p) => run(() => hide.mutateAsync({ id: p.id, value: !p.isHidden }), p.isHidden ? 'Đã bỏ ẩn (biển đã hiển thị lại ngoài website)' : 'Đã ẩn biển khỏi khách hàng');
   const togglePin = (p) => run(() => pin.mutateAsync({ id: p.id, value: !p.isPinned }), p.isPinned ? 'Đã bỏ ghim' : 'Đã ghim lên đầu');
   const pending = (p) => p.priceState === 1 || p.priceState === 4;
 
@@ -562,10 +627,10 @@ export default function VpaAdminList({ queue = false, notify }) {
 
   const flags = (p, size) => (
     <>
-      <button type="button" onClick={() => toggleFeatured(p)} title={p.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}>
+      <button type="button" onClick={() => toggleFeatured(p)} title={p.isFeatured ? 'Bỏ nổi bật (hiện đang là biển nổi bật)' : 'Đánh dấu nổi bật để ưu tiên hiển thị'} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}>
         <Star size={size} fill={p.isFeatured ? 'var(--amber-500)' : 'none'} color={p.isFeatured ? 'var(--amber-500)' : 'var(--grey-300)'} />
       </button>
-      {p.isPinned && <Pin size={size} color="var(--action-primary)" aria-label="Đã ghim" />}
+      {p.isPinned && <span title="Biển được ghim lên đầu danh sách quản trị" style={{ display: 'inline-flex' }}><Pin size={size} color="var(--action-primary)" aria-label="Đã ghim" /></span>}
       {p.lockedFields > 0 && <span title={VPA_HELP.lock} style={{ display: 'inline-flex' }}><Lock size={size - 1} color="var(--text-muted)" /></span>}
     </>
   );
@@ -1030,6 +1095,26 @@ export default function VpaAdminList({ queue = false, notify }) {
             <RefreshCw size={14} />
             <span>Làm mới</span>
           </Button>
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={() => {
+              if (onOpenGuide) onOpenGuide();
+              else {
+                try {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('tab', 'guide');
+                  window.history.pushState(null, '', url.toString());
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                } catch { /* ignore */ }
+              }
+            }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--action-primary)' }}
+            title="Xem hướng dẫn quy trình, ý nghĩa từng nút bấm và cách giải quyết các tình huống phổ biến"
+          >
+            <BookOpen size={14} />
+            <span>Hướng dẫn dùng nút</span>
+          </Button>
           <div style={{ flex: 1 }} />
           {!queue && (
             <Button
@@ -1096,12 +1181,12 @@ export default function VpaAdminList({ queue = false, notify }) {
           <MultiFilter label="Tỉnh/thành" options={provinces} value={f.provinceIds} onChange={setFilter('provinceIds')} counts={facets?.provinces} searchable />
           <Select label="Nổi bật" value={f.featured} options={YES_NO('Chỉ nổi bật', 'Không nổi bật')} onChange={setFilter('featured')} />
           {queue ? (
-            <Select label="Trạng thái giá" value={f.priceState} options={QUEUE_STATE_OPTS} onChange={setFilter('priceState')} />
+            <Select label="Trạng thái giá" info="Lọc theo việc giá gợi ý đã được duyệt hiển thị cho khách hay chưa." value={f.priceState} options={QUEUE_STATE_OPTS} onChange={setFilter('priceState')} />
           ) : (
-            <Select label="Trạng thái giá" value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />
+            <Select label="Trạng thái giá" info="Lọc theo việc giá gợi ý đã được duyệt hiển thị cho khách hay chưa." value={f.priceState} options={STATE_OPTS} onChange={setFilter('priceState')} />
           )}
-          <Select label="Ẩn/hiện" value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />
-          <Select label="Nguồn" value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />
+          <Select label="Ẩn/hiện" info="Biển đang ẩn sẽ không hiện trên website cho khách xem." value={f.hidden} options={YES_NO('Đang ẩn', 'Đang hiện')} onChange={setFilter('hidden')} />
+          <Select label="Nguồn" info="Thêm tay: admin tự tạo thủ công. Đồng bộ VPA: hệ thống tự cào về từ vpa.com.vn." value={f.manual} options={YES_NO('Thêm tay', 'Đồng bộ VPA')} onChange={setFilter('manual')} />
           {(f.plateTypeIds.length > 0 || f.provinceIds.length > 0) && (
             <Button variant="ghost" size="md" onClick={clearCats}>Xóa lọc loại biển/tỉnh</Button>
           )}
@@ -1203,8 +1288,74 @@ export default function VpaAdminList({ queue = false, notify }) {
         <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ minWidth: 1280 }}>
             <div style={{ display: 'flex', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              <span style={{ flex: '0 0 34px' }}>
+              <span style={{ flex: '0 0 46px', display: 'inline-flex', alignItems: 'center', gap: 2, position: 'relative' }}>
                 <input type="checkbox" aria-label="Chọn tất cả" checked={allSelected} onChange={toggleAll} ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }} style={{ width: 16, height: 16, accentColor: 'var(--action-primary)', cursor: 'pointer' }} />
+                <button
+                  type="button"
+                  title="Tùy chọn chọn nhanh theo loại (ẩn, chờ duyệt...)"
+                  onClick={() => setQuickSelectOpen((v) => !v)}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    padding: '2px',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <ChevronDown size={12} />
+                </button>
+                {quickSelectOpen && (
+                  <>
+                    <div onClick={() => setQuickSelectOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 20,
+                      background: 'var(--white)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)',
+                      padding: '6px', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 2,
+                      textTransform: 'none', letterSpacing: 'normal',
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => { selectAll(); setQuickSelectOpen(false); }}
+                        style={quickSelectBtn}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                      >
+                        Chọn tất cả trên trang ({items.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { selectHidden(); setQuickSelectOpen(false); }}
+                        style={quickSelectBtn}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                      >
+                        Chỉ chọn biển đang ẩn ({hiddenOnPage.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { selectPending(); setQuickSelectOpen(false); }}
+                        style={quickSelectBtn}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                      >
+                        Chỉ chọn biển chờ duyệt giá ({pendingOnPage.length})
+                      </button>
+                      {sel.size > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => { clearSel(); setQuickSelectOpen(false); }}
+                          style={{ ...quickSelectBtn, color: 'var(--status-danger)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                        >
+                          Bỏ chọn tất cả
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </span>
               <span style={{ flex: '0 0 56px' }}>Ảnh</span>
               <SortHeader {...sh} label="Biển số" sortKey="plateNumber" style={{ flex: '1 1 150px' }} />
@@ -1390,35 +1541,242 @@ export default function VpaAdminList({ queue = false, notify }) {
       />
 
       {sel.size > 0 && (
-        <div style={{
-          position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 'var(--z-bulk)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center',
-          padding: 'var(--space-2) var(--space-4)', background: 'var(--text-strong)', color: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', maxWidth: 'calc(100vw - 24px)', boxSizing: 'border-box',
-        }}>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--white)' }}>Đã chọn {sel.size} biển{sel.size > MAX_BULK ? ` (chỉ xử lý ${MAX_BULK} đầu)` : ''}</span>
-          <select defaultValue="" onChange={(e) => { if (e.target.value) { bulkEdit({ tab: Number(e.target.value) }, 'Đã đổi tab cho'); e.target.value = ''; } }}
-            style={{ border: 'none', background: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', font: 'var(--type-caption)', color: 'var(--text-strong)', cursor: 'pointer', outline: 'none' }}>
-            <option value="" disabled>Đổi tab ▾</option>
-            {TAB_ROW.slice(0, 3).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          {[['Loại biển ▾', 'plateTypeId', plateTypes, 'Đã đổi loại biển cho'], ['Tỉnh ▾', 'provinceId', provinces, 'Đã đổi tỉnh cho']].map(([ph, field, opts, verb]) => (
-            <select key={field} defaultValue="" aria-label={ph} onChange={(e) => { if (e.target.value) { bulkEdit({ [field]: e.target.value }, verb); e.target.value = ''; } }}
-              style={{ border: 'none', background: 'var(--white)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', font: 'var(--type-caption)', color: 'var(--text-strong)', cursor: 'pointer', outline: 'none', maxWidth: 140 }}>
-              <option value="" disabled>{ph}</option>
-              {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        <div
+          role="toolbar"
+          aria-label="Thao tác hàng loạt"
+          style={{
+            position: 'fixed', left: '50%', bottom: 20, transform: 'translateX(-50%)', zIndex: 'var(--z-bulk)',
+            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'center',
+            padding: '8px 16px', background: '#0f172a', color: '#ffffff', borderRadius: 'var(--radius-xl)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+            maxWidth: 'calc(100vw - 24px)', boxSizing: 'border-box', border: '1px solid rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          {/* Cụm 1: Thông tin số lượng & Bỏ chọn */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#f8fafc', whiteSpace: 'nowrap' }}>
+              Đã chọn <strong style={{ color: '#38bdf8' }}>{sel.size}</strong> biển{sel.size > MAX_BULK ? ` (xử lý ${MAX_BULK} đầu)` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={clearSel}
+              style={{
+                border: 'none', background: 'rgba(255, 255, 255, 0.1)', color: '#94a3b8',
+                borderRadius: 'var(--radius-sm)', padding: '2px 8px', fontSize: '11px', cursor: 'pointer',
+              }}
+            >
+              Bỏ chọn
+            </button>
+          </div>
+
+          <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
+
+          {/* Cụm 2: HIỂN THỊ (Bỏ ẩn / Ẩn) - RÕ RÀNG VÀ DỄ DÙNG NHẤT */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => bulkEdit({ isHidden: false }, 'Đã bỏ ẩn cho')}
+              disabled={bulk.isPending}
+              title="Bỏ ẩn hàng loạt — cho phép khách hàng nhìn thấy các biển này trên web"
+              style={{
+                ...bulkBtn,
+                background: '#059669',
+                color: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                fontWeight: 600,
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <Eye size={14} />
+              <span>Bỏ ẩn</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => bulkEdit({ isHidden: true }, 'Đã ẩn')}
+              disabled={bulk.isPending}
+              title="Ẩn hàng loạt khỏi khách hàng"
+              style={{
+                ...bulkBtn,
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: '#fca5a5',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <EyeOff size={14} />
+              <span>Ẩn</span>
+            </button>
+          </div>
+
+          <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
+
+          {/* Cụm 3: GIÁ & DUYỆT */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => run(() => approve.mutateAsync(bulkIds), bulkMsg('Đã đồng ý giá gợi ý cho'), true)}
+              disabled={approve.isPending}
+              title="Duyệt giá gợi ý cho các biển đã chọn"
+              style={{
+                ...bulkBtn,
+                background: 'var(--action-primary, #C75B00)',
+                color: '#ffffff',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <CheckCheck size={14} />
+              <span>Duyệt giá</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => run(() => reject.mutateAsync(bulkIds), bulkMsg('Đã từ chối'), true)}
+              disabled={reject.isPending}
+              title="Từ chối giá gợi ý"
+              style={{
+                ...bulkBtn,
+                background: '#dc2626',
+                color: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '6px 8px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <X size={14} />
+              <span>Từ chối</span>
+            </button>
+          </div>
+
+          <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
+
+          {/* Cụm 4: THUỘC TÍNH (Tab / Loại biển / Tỉnh) */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  bulkEdit({ tab: Number(e.target.value) }, 'Đã đổi tab cho');
+                  e.target.value = '';
+                }
+              }}
+              style={{
+                border: 'none', background: 'rgba(255, 255, 255, 0.95)', borderRadius: 'var(--radius-sm)',
+                padding: '5px 8px', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer', outline: 'none',
+              }}
+            >
+              <option value="" disabled>Đổi tab ▾</option>
+              {TAB_ROW.slice(0, 3).map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
             </select>
-          ))}
-          {[
-            ['Nổi bật', { isFeatured: true }, 'Đã đánh dấu nổi bật'], ['Bỏ nổi bật', { isFeatured: false }, 'Đã bỏ nổi bật'],
-            ['Ghim', { isPinned: true }, 'Đã ghim'], ['Bỏ ghim', { isPinned: false }, 'Đã bỏ ghim'],
-            ['Ẩn', { isHidden: true }, 'Đã ẩn'], ['Hiện', { isHidden: false }, 'Đã hiện'],
-          ].map(([text, body, verb]) => (
-            <button key={text} type="button" onClick={() => bulkEdit(body, verb)} disabled={bulk.isPending} style={bulkBtn}>{text}</button>
-          ))}
-          <button type="button" onClick={() => run(() => approve.mutateAsync(bulkIds), bulkMsg('Đã đồng ý giá gợi ý cho'), true)}
-            style={{ ...bulkBtn, background: 'var(--action-primary)', color: 'var(--white)', fontWeight: 'var(--fw-bold)' }}>Duyệt giá gợi ý</button>
-          <button type="button" onClick={() => run(() => reject.mutateAsync(bulkIds), bulkMsg('Đã từ chối'), true)}
-            style={{ ...bulkBtn, background: 'var(--status-danger)', color: 'var(--white)', fontWeight: 'var(--fw-bold)' }}>Từ chối giá</button>
-          <button type="button" onClick={() => setSel(new Set())} style={{ border: 'none', background: 'none', color: 'var(--white)', textDecoration: 'underline', font: 'var(--type-caption)', cursor: 'pointer' }}>Bỏ chọn</button>
+            {[['Loại biển ▾', 'plateTypeId', plateTypes, 'Đã đổi loại biển cho'], ['Tỉnh ▾', 'provinceId', provinces, 'Đã đổi tỉnh cho']].map(([ph, field, opts, verb]) => (
+              <select
+                key={field}
+                defaultValue=""
+                aria-label={ph}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    bulkEdit({ [field]: e.target.value }, verb);
+                    e.target.value = '';
+                  }
+                }}
+                style={{
+                  border: 'none', background: 'rgba(255, 255, 255, 0.95)', borderRadius: 'var(--radius-sm)',
+                  padding: '5px 8px', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer', outline: 'none', maxWidth: 130,
+                }}
+              >
+                <option value="" disabled>{ph}</option>
+                {opts.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            ))}
+          </div>
+
+          <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
+
+          {/* Cụm 5: ĐÁNH DẤU (Nổi bật / Ghim) */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            {[
+              ['Nổi bật', { isFeatured: true }, 'Đã đánh dấu nổi bật'],
+              ['Bỏ nổi bật', { isFeatured: false }, 'Đã bỏ nổi bật'],
+              ['Ghim', { isPinned: true }, 'Đã ghim'],
+              ['Bỏ ghim', { isPinned: false }, 'Đã bỏ ghim'],
+            ].map(([text, body, verb]) => (
+              <button
+                key={text}
+                type="button"
+                onClick={() => bulkEdit(body, verb)}
+                disabled={bulk.isPending}
+                style={{
+                  ...bulkBtn,
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  color: '#e2e8f0',
+                  padding: '5px 8px',
+                  fontSize: '11px',
+                }}
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
+
+          {/* Cụm 6: TIỆN ÍCH ADMIN (Sao chép số biển & Xuất CSV đã chọn) */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              onClick={copySelectedPlates}
+              title="Sao chép toàn bộ số biển đã chọn vào bộ nhớ tạm (dạng danh sách xuống dòng) để gửi Zalo / chat"
+              style={{
+                ...bulkBtn,
+                background: 'rgba(56, 189, 248, 0.15)',
+                color: '#38bdf8',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <Copy size={13} />
+              <span>Copy biển</span>
+            </button>
+            <button
+              type="button"
+              onClick={exportSelectedPlates}
+              title="Xuất file CSV chứa chi tiết các biển đã chọn"
+              style={{
+                ...bulkBtn,
+                background: 'rgba(255, 255, 255, 0.12)',
+                color: '#f8fafc',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <Download size={13} />
+              <span>Xuất CSV</span>
+            </button>
+          </div>
         </div>
       )}
 

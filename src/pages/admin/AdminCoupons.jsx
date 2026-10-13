@@ -110,6 +110,7 @@ export default function AdminCoupons({ notify }) {
                 key={tab.key}
                 type="button"
                 onClick={() => setStatusFilter(tab.key)}
+                title={`Lọc mã giảm giá: ${tab.label}`}
                 style={{
                   padding: '6px 14px',
                   borderRadius: 'var(--radius-pill)',
@@ -155,6 +156,7 @@ export default function AdminCoupons({ notify }) {
               <button
                 type="button"
                 onClick={() => setKeyword('')}
+                title="Xóa từ khóa tìm kiếm"
                 style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
               >
                 <X size={13} />

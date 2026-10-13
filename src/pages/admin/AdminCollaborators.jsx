@@ -5,7 +5,7 @@ import {
   Edit2, ShieldAlert, MessageCircle, CheckCircle2
 } from 'lucide-react';
 import Button from '../../components/Button.jsx';
-import { Select, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from '../../components/index.jsx';
+import { Select, TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems, InfoTip } from '../../components/index.jsx';
 import Modal from '../../components/Modal.jsx';
 import AuditHistoryButton from '../../components/AuditHistoryButton.jsx';
 import CollaboratorCommissionsModal from '../../components/CollaboratorCommissionsModal.jsx';
@@ -413,7 +413,10 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <Users size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tổng số CTV</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Tổng số CTV
+              <InfoTip text="Tổng số cộng tác viên đã đăng ký tham gia mạng lưới tiếp thị và giới thiệu bán biển số." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--text-strong)' }}>{stats.total}</div>
           </div>
         </div>
@@ -438,7 +441,10 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <UserCheck size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang hoạt động</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Đang hoạt động
+              <InfoTip text="Cộng tác viên có tài khoản hợp lệ, có thể chia sẻ link/mã giới thiệu và nhận hoa hồng." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>{stats.active}</div>
           </div>
         </div>
@@ -463,7 +469,10 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <UserX size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bị khóa tài khoản</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Bị khóa tài khoản
+              <InfoTip text="Tài khoản CTV bị tạm khóa do vi phạm chính sách hoặc phát hiện dấu hiệu gian lận lượt click/đơn hàng." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#dc2626' }}>{stats.locked}</div>
           </div>
         </div>
@@ -474,7 +483,10 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <Coins size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Tổng hoa hồng tích lũy</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Tổng hoa hồng tích lũy
+              <InfoTip text="Tổng số tiền hoa hồng toàn bộ CTV đã kiếm được từ các đơn hàng chốt giao dịch thành công." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#d97706' }}>{money(stats.totalEarned)}</div>
           </div>
         </div>
@@ -485,7 +497,10 @@ export default function AdminCollaborators({ st, patch, notify }) {
             <Wallet size={22} />
           </div>
           <div>
-            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hoa hồng chờ chi trả</div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Hoa hồng chờ chi trả
+              <InfoTip text="Số tiền hoa hồng đã được xác nhận và đang chờ admin phê duyệt lệnh chuyển khoản thanh toán cho CTV." />
+            </div>
             <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>{money(stats.pendingPayout)}</div>
           </div>
         </div>

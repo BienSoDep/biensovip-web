@@ -127,7 +127,7 @@ export default function VpaPlateDrawer({ plate, plateTypes, provinces, onClose, 
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--space-3)' }}>
-          <Select label="Tab" value={f.tab} options={editing ? TAB_EDIT : TAB_ADD} onChange={set('tab')} />
+          <Select label="Tab" info="Trạng thái biển trong 4 tab VPA: Tháng (công bố) → Tuần (sắp đấu chính thức) → Hết hạn (đã qua phiên)." value={f.tab} options={editing ? TAB_EDIT : TAB_ADD} onChange={set('tab')} />
           <Select label="Loại biển" value={f.plateTypeId} options={[editing ? { value: '', label: 'Giữ nguyên' } : none, ...plateTypes]} onChange={set('plateTypeId')} />
           <Select label="Tỉnh/thành (theo đầu số)" value={f.provinceId} options={[editing ? { value: '', label: 'Giữ nguyên' } : none, ...provinces]} onChange={set('provinceId')} />
         </div>

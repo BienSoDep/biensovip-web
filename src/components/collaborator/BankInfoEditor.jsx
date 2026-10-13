@@ -32,9 +32,9 @@ export function BankInfoEditor({ onDone }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} />
-      <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
-      <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
+      <Select label="Ngân hàng" info="Ngân hàng nhận hoa hồng cộng tác viên — dùng để tạo mã QR chuyển khoản bên dưới." value={bankCode} options={banks} onChange={setBankCode} />
+      <Input label="Số tài khoản" info="Số tài khoản sẽ nhận tiền hoa hồng khi giao dịch qua bạn thành công." placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+      <Input label="Tên chủ tài khoản (không bắt buộc)" info="Để trống nếu trùng tên tài khoản đăng ký — điền khi tài khoản đứng tên người khác." placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
       {qrPreviewUrl && (
         <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 140, height: 140, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
       )}

@@ -508,6 +508,7 @@ function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }
 
         <Select
           label="Loại quy tắc"
+          info="Phân loại theo Kiểu biển (tứ quý, ngũ quý), Ý nghĩa số (0-9), Dãy số/Nút (tổng điểm 9 nút), hoặc Quy tắc chung."
           value={form.category}
           options={CATEGORIES}
           onChange={(v) => onSet('category', v)}
@@ -515,8 +516,9 @@ function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }
         />
 
         <label style={fieldWrap}>
-          <span style={fieldLbl}>
+          <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             Key nhận diện <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>— Thuật toán tự khớp theo key này</span>
+            <InfoTip text="Mã định danh kỹ thuật để thuật toán AI so khớp tự động khi quét biển mới: VD plate_type:tu_quy_8888, digit:8, series:nut_9." />
           </span>
           <input
             type="text"
@@ -529,7 +531,10 @@ function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }
         </label>
 
         <label style={fieldWrap}>
-          <span style={fieldLbl}>Tiêu đề ý nghĩa</span>
+          <span style={{ ...fieldLbl, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            Tiêu đề ý nghĩa
+            <InfoTip text="Tiêu đề tóm tắt ý nghĩa phong thủy hiển thị nổi bật trên thẻ biển số ngoài trang chủ." />
+          </span>
           <input
             type="text"
             placeholder="VD: Tứ quý 8888 - Toàn phát đại lộc"

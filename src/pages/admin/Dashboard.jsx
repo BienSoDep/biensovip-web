@@ -34,10 +34,10 @@ import {
 } from './dashboard/DashboardWidgets.jsx';
 
 const KPI_CARDS = [
-  { key: 'totalViews', label: 'Tổng lượt xem', icon: FileText, series: 'views', color: '#3B5BFF', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
-  { key: 'contactRequests', label: 'Yêu cầu liên hệ', icon: Users, series: 'contacts', color: '#C75B00', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
-  { key: 'closedContacts', label: 'Đã chốt', icon: BadgeCheck, series: 'closed', color: '#3FBF8F', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
-  { key: 'soldPlates', label: 'Đã bán', icon: CreditCard, series: 'sold', color: '#E5484D', access: (k) => k?.soldPlates },
+  { key: 'totalViews', label: 'Tổng lượt xem', info: 'Tổng số lượt khách truy cập xem chi tiết các biển số trong kỳ đã chọn.', icon: FileText, series: 'views', color: '#3B5BFF', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
+  { key: 'contactRequests', label: 'Yêu cầu liên hệ', info: 'Số lượt khách gửi yêu cầu gọi lại, tư vấn mua biển hoặc bấm nút chat Zalo/Hotline.', icon: Users, series: 'contacts', color: '#C75B00', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
+  { key: 'closedContacts', label: 'Đã chốt', info: 'Số lượng giao dịch tư vấn thành công đã được nhân viên chuyển sang trạng thái chốt.', icon: BadgeCheck, series: 'closed', color: '#3FBF8F', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
+  { key: 'soldPlates', label: 'Đã bán', info: 'Tổng số lượng biển số trong kho đã bán thành công trong khoảng thời gian đã chọn.', icon: CreditCard, series: 'sold', color: '#E5484D', access: (k) => k?.soldPlates },
 ];
 
 const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
@@ -233,6 +233,7 @@ export default function Dashboard({ go, st, patch }) {
               icon={c.icon}
               color={c.color}
               label={c.label}
+              info={c.info}
               value={c.access(kpis)}
               delta={c.delta != null ? fmtPct(c.delta(kpis)) : null}
               deltaColor={c.delta != null ? ((c.delta(kpis) ?? 0) >= 0 ? 'var(--status-success)' : 'var(--status-danger)') : 'var(--text-muted)'}
@@ -280,7 +281,10 @@ export default function Dashboard({ go, st, patch }) {
         <EnhancedActionsChart chartData={chart.data} reduceMotion={reduceMotion} />
 
         <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nguồn truy cập</h3>
+          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            Nguồn truy cập
+            <InfoTip size={12} text="Tỷ lệ phân bổ khách hàng đến từ các kênh: Tìm kiếm tự nhiên Google (Organic), Mạng xã hội, Quảng cáo hoặc truy cập trực tiếp." />
+          </h3>
           {traffic.isLoading ? (
             <SkeletonBase height={280} />
           ) : traffic.data?.items?.length > 0 ? (
@@ -295,7 +299,10 @@ export default function Dashboard({ go, st, patch }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 500px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Biển số được quan tâm nhất</h3>
+            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              Biển số được quan tâm nhất
+              <InfoTip size={12} text="Bảng xếp hạng các biển số có lượt xem, lưu vào danh sách yêu thích và liên hệ hỏi mua nhiều nhất trong kỳ." />
+            </h3>
           </div>
           {interested.isLoading ? (
             <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>

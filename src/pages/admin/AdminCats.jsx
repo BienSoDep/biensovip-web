@@ -219,7 +219,10 @@ function FaqSetManager({ notify }) {
         {/* Cột 1: Danh sách các bộ FAQ */}
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
           <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Danh sách bộ FAQ ({items.length})</span>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              Danh sách bộ FAQ ({items.length})
+              <InfoTip text="Mỗi bộ FAQ có thể gắn với một chuyên mục bài viết riêng hoặc áp dụng chung toàn site để tăng tín hiệu Google FAQPage Schema." />
+            </span>
           </div>
           {isLoading && <div style={{ padding: 'var(--gutter-card)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải…</div>}
           {!isLoading && items.length === 0 && (
@@ -308,7 +311,10 @@ function FaqSetManager({ notify }) {
           <Input label="Tên bộ FAQ" placeholder="VD: FAQ mua bán biển số" value={form.name} error={err}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
           <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Danh mục blog áp dụng</span>
+            <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              Danh mục blog áp dụng
+              <InfoTip text="Nếu chọn danh mục, bộ câu hỏi này sẽ tự động xuất hiện ở chân trang tất cả bài viết thuộc danh mục tương ứng." />
+            </span>
             <select value={form.blogCategoryCode} onChange={(e) => setForm((f) => ({ ...f, blogCategoryCode: e.target.value }))}
               style={{ height: 36, border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--surface-sunken)', padding: '0 10px', font: 'var(--type-body-sm)' }}>
               <option value="">— Không gắn danh mục (Áp dụng chung) —</option>
@@ -751,9 +757,14 @@ export default function AdminCats({ notify, goToMeanings }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div className="admin-tablist">
+      <div className="admin-tablist" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          Cấu trúc
+          <InfoTip text="Quản lý cấu trúc dữ liệu toàn trang: Phân loại danh mục biển số/tỉnh thành, kho câu hỏi FAQ theo chủ đề, và quy trình HowTo chuẩn SEO." />
+        </span>
         {MAIN_TABS.map((t) => (
           <button key={t.value} type="button" onClick={() => setMainTab(t.value)}
+            title={`Chuyển sang tab: ${t.label}`}
             style={{
               height: 36, padding: '0 16px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
               background: mainTab === t.value ? 'var(--action-primary)' : 'var(--surface-sunken)',
@@ -766,9 +777,14 @@ export default function AdminCats({ notify, goToMeanings }) {
       {mainTab === 'howto' && <HowToManager notify={notify} />}
 
       {mainTab === 'categories' && (<>
-      <div className="admin-tablist">
+      <div className="admin-tablist" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          Nhóm danh mục
+          <InfoTip text="Chọn nhóm phân loại để quản lý danh sách thuộc tính lọc cho người dùng trên website (loại biển, khoảng giá, tỉnh thành, dòng xe, chuyên mục blog)." />
+        </span>
         {CATEGORY_GROUPS.map((g) => (
           <button key={g.value} type="button" onClick={() => setGroup(g.value)}
+            title={`Xem danh mục nhóm: ${g.label}`}
             style={{
               height: 36, padding: '0 16px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer',
               background: group === g.value ? 'var(--action-dark)' : 'var(--surface-muted)',
@@ -790,7 +806,10 @@ export default function AdminCats({ notify, goToMeanings }) {
           )}
           {group === 'province' && (
             <div style={{ padding: 'var(--space-3) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bật/tắt cả miền:</span>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Bật/tắt cả miền:
+                <InfoTip text="Thao tác nhanh để hiển thị hoặc ẩn đồng loạt tất cả các tỉnh thành thuộc miền Bắc, miền Trung hoặc miền Nam khỏi bộ lọc công khai." />
+              </span>
               {REGIONS.map((r) => (
                 <span key={r.value} style={{ display: 'inline-flex', gap: 4 }}>
                   <Button variant="outline" size="sm" onClick={() => toggleRegion(r.value, true)} disabled={setRegionActive.isPending}>Bật {r.label}</Button>

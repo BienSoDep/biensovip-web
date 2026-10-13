@@ -61,7 +61,7 @@ export default function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone
           <Input label="Số biển đang muốn giới thiệu (tùy chọn)" placeholder="VD: 43A1-999.99" value={plateNumber} onChange={(e) => setPlateNumber(e.target.value)} />
         </div>
         {categories.length > 0 && (
-          <Select label="Lọc danh mục" value={filterCategory} options={[{ value: '', label: 'Tất cả' }, ...categories.map((c) => ({ value: c, label: c }))]} onChange={setFilterCategory} />
+          <Select label="Lọc danh mục" info="Lọc nhanh theo nhóm mẫu tin nhắn admin đã phân loại (VD: chào hỏi, chốt đơn, chăm sóc sau bán)." value={filterCategory} options={[{ value: '', label: 'Tất cả' }, ...categories.map((c) => ({ value: c, label: c }))]} onChange={setFilterCategory} />
         )}
       </div>
 
