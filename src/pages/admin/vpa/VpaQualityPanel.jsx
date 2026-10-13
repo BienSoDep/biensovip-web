@@ -4,17 +4,28 @@ import { formatInt } from '../../../lib/vpaFormat.js';
 const CARD = { background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' };
 const TAB_NAMES = { Month: 'Tháng', Week: 'Tuần', Expired: 'Hết hạn', ExpiredInternal: 'Hết hạn nội bộ' };
 
-function Tile({ label, value, warn, hint }) {
+function Tile({ label, value, warn, hint, onClick }) {
+  const clickable = onClick && value > 0;
+  const Tag = clickable ? 'button' : 'div';
   return (
-    <div title={hint} style={{ background: warn && value > 0 ? 'var(--amber-50)' : 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Tag
+      type={clickable ? 'button' : undefined}
+      title={clickable ? `${hint || ''} — bấm để xem và sửa` : hint}
+      onClick={clickable ? onClick : undefined}
+      style={{
+        background: warn && value > 0 ? 'var(--amber-50)' : 'var(--surface-sunken)', borderRadius: 'var(--radius-md)',
+        padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 2, border: 'none', textAlign: 'left',
+        font: 'inherit', cursor: clickable ? 'pointer' : 'default',
+      }}
+    >
       <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{label}</span>
       <b style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{formatInt(value)}</b>
-    </div>
+    </Tag>
   );
 }
 
 // Bảng chất lượng dữ liệu VPA: số biển theo tab và các nhóm cần xử lý (chưa phân loại, chưa có nhóm giá, chờ duyệt giá…).
-export default function VpaQualityPanel({ enabled }) {
+export default function VpaQualityPanel({ enabled, onOpenIntegrity }) {
   const { data, isLoading, isError } = useVpaQuality(enabled);
   if (isLoading) return <div style={{ ...CARD, color: 'var(--text-muted)' }}>Đang tải chất lượng dữ liệu…</div>;
   if (isError || !data) return null;
@@ -22,12 +33,12 @@ export default function VpaQualityPanel({ enabled }) {
   return (
     <div style={CARD}>
       <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Chất lượng dữ liệu</span>
-      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đếm trực tiếp từ kho biển VPA. Ô vàng là nhóm cần Admin xem lại.</span>
+      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đếm trực tiếp từ kho biển VPA. Ô vàng là nhóm cần Admin xem lại{onOpenIntegrity ? ' — bấm "Chưa phân loại biển"/"Chưa có tỉnh" để xem và sửa' : ''}.</span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 'var(--space-3)' }}>
         <Tile label="Tổng số biển" value={data.total} />
         {Object.entries(data.byTab || {}).map(([k, n]) => <Tile key={k} label={`Tab ${TAB_NAMES[k] || k}`} value={n} />)}
-        <Tile label="Chưa phân loại biển" value={data.noType} warn hint="Biển chưa khớp loại biển nào trong danh mục" />
-        <Tile label="Chưa có tỉnh" value={data.noProvince} warn hint="Đầu số chưa khớp tỉnh trong danh mục" />
+        <Tile label="Chưa phân loại biển" value={data.noType} warn hint="Biển chưa khớp loại biển nào trong danh mục" onClick={onOpenIntegrity ? () => onOpenIntegrity('no_type') : undefined} />
+        <Tile label="Chưa có tỉnh" value={data.noProvince} warn hint="Đầu số chưa khớp tỉnh trong danh mục" onClick={onOpenIntegrity ? () => onOpenIntegrity('no_province') : undefined} />
         <Tile label="Chưa thuộc nhóm giá" value={data.noPriceGroup} warn hint="Chưa có kết quả đấu giá cùng nhóm nên chưa có giá gợi ý (không tính tab nội bộ)" />
         <Tile label="Chờ duyệt giá" value={data.pendingPrice} warn hint="Có giá gợi ý hoặc đề xuất đổi giá, chờ Admin duyệt" />
         <Tile label="Đang ẩn" value={data.hidden} />

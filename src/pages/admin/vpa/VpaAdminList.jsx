@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
@@ -389,7 +389,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
 
 // Danh sách biển VPA cho Admin — cùng bố cục và công cụ với trang Biển số (lọc, cột, sắp xếp, sửa nhanh, hàng loạt, CSV, ngăn kéo).
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
-export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
+export default function VpaAdminList({ queue = false, notify, onOpenGuide, openIntegrityCode }) {
   const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', from: '', to: '', ...(queue ? { plateTypeIds: [], provinceIds: [] } : loadSavedFilters()) });
   const [q, setQ] = useState(queue ? '' : consumeDeepLinkQ);
   const [dq] = useDebouncedValue(q, 300);
@@ -405,7 +405,8 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
   const [drawer, setDrawer] = useState(null); // null | { plate? }
   const [cell, setCell] = useState(null);
   const [exporting, setExporting] = useState(false);
-  const [integrity, setIntegrity] = useState(false);
+  const [integrity, setIntegrity] = useState(() => !!openIntegrityCode);
+  useEffect(() => { if (openIntegrityCode) setIntegrity(true); }, [openIntegrityCode]);
   const [bulkSeedOpen, setBulkSeedOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ plateNumber: '', vehicle: 'Car', tab: '1', price: '' });
@@ -786,7 +787,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
         </div>
       )}
 
-      {integrity && !queue && <VpaIntegrityPanel notify={notify} onClose={() => setIntegrity(false)} />}
+      {integrity && !queue && <VpaIntegrityPanel key={openIntegrityCode} notify={notify} onClose={() => setIntegrity(false)} initialOpen={openIntegrityCode} />}
 
       {queue && (
         <div
