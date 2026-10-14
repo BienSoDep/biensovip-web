@@ -2241,3 +2241,25 @@ button[aria-expanded]:hover {
 .compose-column-right::-webkit-scrollbar-thumb:hover {
   background: var(--grey-400, #9ca3af);
 }
+
+/* Trang Profile: nav section trái sticky ẩn trên mobile, chuyển về 1 cột xếp dọc */
+.profile-side-nav a:hover,
+.profile-side-nav a:focus-visible {
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+}
+#profile-section,
+#security-section,
+#notification-section,
+#become-ctv,
+#feedback-section {
+  scroll-margin-top: calc(var(--space-10) + var(--space-4));
+}
+@media (max-width: 768px) {
+  .profile-layout {
+    flex-direction: column;
+  }
+  .profile-side-nav {
+    display: none;
+  }
+}
