@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import Button from '../Button.jsx';
 import { Badge, InfoTip } from '../index.jsx';
 import { SkeletonCard } from '../Skeleton.jsx';
-import { useCollaboratorDashboard, useCollaboratorContacts } from '../../services/collaborators.js';
+import { useAllCommissions, useCollaboratorDashboard, useCollaboratorContacts } from '../../services/collaborators.js';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { buildCtvInviteMessage } from '../../lib/zaloMessage.js';
 import { CTV_TABS } from './collaboratorConstants.js';
@@ -28,9 +28,25 @@ export function DashboardBody({ data, onReset, go }) {
   const contacts = useCollaboratorContacts(data.status === 'active');
   const { exportCsv: exportCommissions, loading: exportingCommissions } = useExportCsv('/api/collaborators/commissions/export');
   const [tourActive, setTourActive] = useState(false);
+  const [commissionFilter, setCommissionFilter] = useState('all');
+  const { data: allCommissions } = useAllCommissions();
   useEffect(() => {
     if (data.status === 'active' && !hasSeenTour(data.referralCode)) setTourActive(true);
   }, [data.status, data.referralCode]);
+
+  // Báo CTV biết có hoa hồng mới kể từ lần ghé thăm trước — so tổng số dòng hoa hồng với lần cuối
+  // lưu trong localStorage, không cần hạ tầng realtime (polling/websocket) cho tính năng nhỏ này.
+  useEffect(() => {
+    if (!allCommissions || data.status !== 'active') return;
+    try {
+      const key = `biensovip_ctv_commission_count_${data.referralCode}`;
+      const prevCount = Number(localStorage.getItem(key) || 0);
+      if (prevCount > 0 && allCommissions.length > prevCount) {
+        toast.success(`Bạn có ${allCommissions.length - prevCount} hoa hồng mới!`);
+      }
+      localStorage.setItem(key, String(allCommissions.length));
+    } catch { /* storage blocked */ }
+  }, [allCommissions, data.status, data.referralCode]);
 
   const copyText = (text, onDone) => {
     if (navigator.clipboard?.writeText) {
@@ -77,6 +93,13 @@ export function DashboardBody({ data, onReset, go }) {
           )}
         </div>
       </div>
+
+      {!data.bankAccount && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', background: 'var(--amber-50, #fffbeb)', border: '1px solid var(--status-warning)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4) var(--gutter-card)' }}>
+          <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>Bạn chưa khai thông tin ngân hàng — admin không thể chuyển hoa hồng cho bạn cho tới khi bổ sung.</span>
+          <Button variant="primary" size="sm" onClick={() => { setTab('overview'); setEditingBank(true); }}>Cập nhật ngay</Button>
+        </div>
+      )}
 
       <div role="tablist" aria-label="Mục quản lý CTV" data-tour="ctv-tabs" style={{ display: 'flex', gap: 4, background: 'var(--surface-sunken)', padding: 4, borderRadius: 'var(--radius-sm)', overflowX: 'auto' }}>
         {CTV_TABS.map((t) => (
@@ -145,22 +168,37 @@ export function DashboardBody({ data, onReset, go }) {
             <CommissionChart recent={data.recent} />
           </div>
 
-          {data.recent?.length > 0 && (
+          {allCommissions?.length > 0 && (
             <div data-tour="ctv-commission-history" style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  Lịch sử hoa hồng ({data.recent.length} gần nhất)
+                  Lịch sử hoa hồng ({allCommissions.length})
                   <InfoTip text="Chờ duyệt: giao dịch mới, admin chưa xác nhận đã nhận tiền. Đã duyệt: admin đã xác nhận, chờ chuyển khoản. Đã trả: đã chuyển vào tài khoản ngân hàng bạn đăng ký." />
                 </span>
                 <Button variant="ghost" size="sm" disabled={exportingCommissions} onClick={() => exportCommissions().catch((e) => toast.error(e.message))}>
                   {exportingCommissions ? 'Đang xuất…' : 'Xuất CSV'}
                 </Button>
               </div>
-              {data.recent.map((r) => (
+              <div style={{ display: 'flex', gap: 4, background: 'var(--surface-sunken)', padding: 3, borderRadius: 'var(--radius-xs)', alignSelf: 'flex-start' }}>
+                {[['all', 'Tất cả'], ['pending', 'Chờ duyệt'], ['approved', 'Đã duyệt'], ['paid', 'Đã trả']].map(([k, label]) => (
+                  <button key={k} type="button" onClick={() => setCommissionFilter(k)}
+                    style={{ height: 28, padding: '0 12px', border: 'none', borderRadius: 'var(--radius-xs)', cursor: 'pointer', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)',
+                      background: commissionFilter === k ? 'var(--action-primary)' : 'transparent', color: commissionFilter === k ? 'var(--white)' : 'var(--text-muted)' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {allCommissions.filter((r) => commissionFilter === 'all' || r.status === commissionFilter).map((r) => (
                 <div key={r.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ font: 'var(--type-body-sm)' }}>{r.plateNumber || '—'}</span>
                     <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+                    {r.manualReason && (
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hoa hồng cộng tay: {r.manualReason}</span>
+                    )}
+                    {r.paidProofUrl && (
+                      <a href={r.paidProofUrl} target="_blank" rel="noreferrer" style={{ font: 'var(--type-caption)', color: 'var(--action-primary)' }}>Xem minh chứng đã trả</a>
+                    )}
                   </div>
                   <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>{money(r.amount)}</span>
                   <Badge tone={r.status === 'paid' ? 'mint' : r.status === 'approved' ? 'blue' : r.status === 'cancelled' ? 'rose' : 'amber'}>

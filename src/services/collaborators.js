@@ -123,6 +123,15 @@ export function useSubmitDealReport() {
   });
 }
 
+// CTV xem lại các báo cáo giao dịch mình đã nộp + trạng thái duyệt/từ chối (trước đây chỉ nộp được,
+// không có cách nào biết kết quả ngoài hỏi admin trực tiếp).
+export function useMyDealReports() {
+  return useQuery({
+    queryKey: ['collaborator-deal-reports'],
+    queryFn: () => apiClient.get('/api/collaborators/deal-reports?page=1&limit=20'),
+  });
+}
+
 // Upload ảnh minh chứng (chuyển khoản/tin nhắn Zalo) đính kèm báo cáo giao dịch.
 export function useUploadDealReportProof() {
   return useMutation({
