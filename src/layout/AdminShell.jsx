@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LineChart, BookOpen, Car, Gavel, BarChart3, FolderTree,
   ShoppingBag, Flame, Users, TicketPercent, FileText, Video, Compass,
   ShieldCheck, Bell, Star, Bot, Handshake, FileCode, MessageSquareShare,
-  UserCog, History, Eye, SlidersHorizontal, ScrollText,
+  UserCog, History, Eye, SlidersHorizontal, ScrollText, MessageSquareWarning,
 } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
@@ -27,6 +27,7 @@ import AdminTransactions from '../pages/admin/AdminTransactions.jsx';
 import AdminStaff from '../pages/admin/AdminStaff.jsx';
 import AdminCustomers from '../pages/admin/AdminCustomers.jsx';
 import AdminVideos from '../pages/admin/AdminVideos.jsx';
+import AdminSystemFeedback from '../pages/admin/AdminSystemFeedback.jsx';
 import AdminCollaborators from '../pages/admin/AdminCollaborators.jsx';
 import AdminCollaboratorContent from '../pages/admin/AdminCollaboratorContent.jsx';
 import AdminInterestLeads from '../pages/admin/AdminInterestLeads.jsx';
@@ -56,7 +57,7 @@ import { useNotificationCounts } from '../services/systemHealth.js';
 const NAV_PERM = {
   aplates: 'plates:view', avpa: 'vpa_prices:view', acoupons: 'coupons:view', acats: 'categories:view', asales: 'contacts:view', acontacts: 'contacts:view', akanban: 'contacts:view', atransactions: 'transactions:view',
   aposts: 'posts:view', compose: 'posts:view', ablogcomments: 'posts:view', ameanings: 'meanings:view',
-  acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view',
+  acustomers: 'customers:view', avideos: 'videos:view', anotifications: 'notifications:view', asystemfeedback: 'system_feedback:view',
   areviews: 'reviews:view', acollabs: 'collaborators:view', acollabcontent: 'collaborators:view', ainterestleads: 'interest-leads:view', aemailtpl: 'email_templates:view',
   afengshuihistory: 'fengshui_history:view',
   achatbot: 'chatbot:view', amaintenance: 'maintenance:view', ashowroom: 'vanity_metrics:view', asortsettings: 'settings:view',
@@ -158,6 +159,7 @@ const ADMIN_INFO = {
   astaff: 'Chỉ Quản trị viên thấy trang này. Tạo tài khoản nhân viên, phân quyền theo từng resource, khóa/mở tài khoản hoặc đổi mật khẩu hộ khi nhân viên quên.',
   acustomers: 'Danh sách tài khoản khách đã đăng ký — xem lịch sử mua và biển yêu thích của từng khách.',
   avideos: 'Video TikTok/Facebook giới thiệu biển. Dán link để hệ thống tự nhận diện nền tảng và tạo ảnh xem trước.',
+  asystemfeedback: 'Báo cáo lỗi/góp ý người dùng gửi từ trang Hồ sơ. Đổi trạng thái Mới → Đang xử lý → Đã xử lý/Từ chối để theo dõi tiến độ.',
   anotifications: 'Soạn/gửi thông báo thủ công tới khách, quản lý email đăng ký nhận tin và cấu hình email tự động theo sự kiện. Tab Mẫu email để kéo-thả dựng bố cục.',
   aemailtpl: 'Kéo-thả dựng bố cục email dùng chung cho các loại thông báo tự động.',
   acollabs: 'Danh sách cộng tác viên giới thiệu khách. Quy trình: CTV đăng ký tự kích hoạt ngay (không cần duyệt) → chia sẻ link giới thiệu → khách đặt cọc/mua qua link → hoa hồng tự tính (mặc định 10%, tối thiểu 10%, chỉnh riêng từng CTV ở cột "Hệ số") → hoa hồng ở trạng thái "Chờ duyệt" cho tới khi bạn xác nhận đã chuyển khoản và bấm chi trả trong mục hoa hồng của từng CTV.',
@@ -209,6 +211,7 @@ const NAV_ICONS = {
   acoupons: TicketPercent,
   aposts: FileText,
   avideos: Video,
+  asystemfeedback: MessageSquareWarning,
   ameanings: Compass,
   apolicypages: ShieldCheck,
   anotifications: Bell,
@@ -558,6 +561,7 @@ export default function AdminShell({
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
         {s === 'acustomers' && <AdminCustomers st={st} setSt={setSt} notify={notify} />}
         {s === 'avideos' && <AdminVideos notify={notify} />}
+        {s === 'asystemfeedback' && <AdminSystemFeedback notify={notify} />}
         {s === 'anotifications' && <AdminNotificationsHub st={st} notify={notify} />}
         {s === 'acollabs' && <AdminCollaborators st={st} patch={patch} setSt={setSt} notify={notify} />}
         {s === 'atransactions' && <AdminTransactions notify={notify} />}
