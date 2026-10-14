@@ -98,6 +98,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
   const { data: featured, isLoading: featuredLoading } = useFeaturedPlates(6);
   const featuredItems = featured || [];
   const { data: siteRating } = useSiteRating();
+  const { data: plateCountData } = usePlates({ perPage: 1 });
   const { data: activityFeed } = useActivityFeed(6);
   const feedItems = activityFeed?.items || [];
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
@@ -144,7 +145,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
               </div>
             )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', paddingTop: 'var(--space-6)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_1_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span></div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{plateCountData ? plateCountData.total.toLocaleString('vi-VN') : T('home.hero.stat_1_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span></div>
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{siteRating ? `${siteRating.avgRating.toFixed(1)}/5` : T('home.hero.stat_2_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_2_l')}</span></div>
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_3_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_3_l')}</span></div>
             </div>

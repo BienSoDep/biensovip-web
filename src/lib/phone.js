@@ -1,5 +1,4 @@
 // Phone helpers — THE fix for the P1 loose-regex trust-boundary audit point.
-// Other agents import these instead of the permissive /^0\d{8,10}$/ in mockData.
 
 // Trim, strip spaces/dashes/dots, convert leading +84/0084 to 0.
 export function normalizePhone(p) {

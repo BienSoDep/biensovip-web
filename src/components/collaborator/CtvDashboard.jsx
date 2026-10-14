@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Button from '../Button.jsx';
 import { Badge, InfoTip } from '../index.jsx';
@@ -16,6 +16,7 @@ import DealReportForm from './DealReportForm.jsx';
 import GmailLinkSection from './GmailLinkSection.jsx';
 import ProcessSteps from './ProcessSteps.jsx';
 import MessageTemplatesSection from './MessageTemplatesSection.jsx';
+import OnboardingTour, { HelpButton, hasSeenTour } from './OnboardingTour.jsx';
 
 export function DashboardBody({ data, onReset, go }) {
   const [tab, setTab] = useState('overview');
@@ -26,6 +27,10 @@ export function DashboardBody({ data, onReset, go }) {
   const [editingProfile, setEditingProfile] = useState(false);
   const contacts = useCollaboratorContacts(data.status === 'active');
   const { exportCsv: exportCommissions, loading: exportingCommissions } = useExportCsv('/api/collaborators/commissions/export');
+  const [tourActive, setTourActive] = useState(false);
+  useEffect(() => {
+    if (data.status === 'active' && !hasSeenTour(data.referralCode)) setTourActive(true);
+  }, [data.status, data.referralCode]);
 
   const copyText = (text, onDone) => {
     if (navigator.clipboard?.writeText) {
@@ -60,7 +65,7 @@ export function DashboardBody({ data, onReset, go }) {
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-          <button type="button" onClick={() => copyText(data.referralCode, () => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); })}
+          <button type="button" data-tour="ctv-referral-code" onClick={() => copyText(data.referralCode, () => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 2000); })}
             title="Bấm để sao chép mã" style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer' }}>
             <Badge tone="mint">{codeCopied ? 'Đã sao chép' : data.referralCode}</Badge>
           </button>
@@ -73,7 +78,7 @@ export function DashboardBody({ data, onReset, go }) {
         </div>
       </div>
 
-      <div role="tablist" aria-label="Mục quản lý CTV" style={{ display: 'flex', gap: 4, background: 'var(--surface-sunken)', padding: 4, borderRadius: 'var(--radius-sm)', overflowX: 'auto' }}>
+      <div role="tablist" aria-label="Mục quản lý CTV" data-tour="ctv-tabs" style={{ display: 'flex', gap: 4, background: 'var(--surface-sunken)', padding: 4, borderRadius: 'var(--radius-sm)', overflowX: 'auto' }}>
         {CTV_TABS.map((t) => (
           <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
             style={{ flex: '1 1 0', minWidth: 'max-content', height: 40, padding: '0 18px', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)',
@@ -86,7 +91,7 @@ export function DashboardBody({ data, onReset, go }) {
 
       {tab === 'overview' && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
+          <div data-tour="ctv-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
             {[
               ['Lượt click', String(data.clicks), 'var(--text-strong)', 'Số lần khách bấm vào link/mã giới thiệu của bạn, tính cả khách chưa để lại thông tin gì.'],
               ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)', 'Số khách đã đăng ký tài khoản hoặc để lại liên hệ qua link của bạn — chưa chắc đã mua.'],
@@ -113,8 +118,8 @@ export function DashboardBody({ data, onReset, go }) {
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{data.referralUrl}</span>
               </div>
-              <Button variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
-              {!editingBank && <Button variant="outline" size="md" onClick={() => setEditingBank(true)}>Sửa thông tin ngân hàng</Button>}
+              <Button data-tour="ctv-copy-link" variant="primary" size="md" onClick={copyLink}>{copied ? 'Đã sao chép' : 'Sao chép link'}</Button>
+              {!editingBank && <Button data-tour="ctv-bank-edit" variant="outline" size="md" onClick={() => setEditingBank(true)}>Sửa thông tin ngân hàng</Button>}
               {!editingProfile && <Button variant="outline" size="md" onClick={() => setEditingProfile(true)}>Sửa hồ sơ nhắn tin</Button>}
             </div>
             {editingBank && <BankInfoEditor onDone={() => setEditingBank(false)} />}
@@ -136,10 +141,12 @@ export function DashboardBody({ data, onReset, go }) {
 
       {tab === 'commission' && (
         <>
-          <CommissionChart recent={data.recent} />
+          <div data-tour="ctv-commission-chart">
+            <CommissionChart recent={data.recent} />
+          </div>
 
           {data.recent?.length > 0 && (
-            <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <div data-tour="ctv-commission-history" style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   Lịch sử hoa hồng ({data.recent.length} gần nhất)
@@ -168,7 +175,7 @@ export function DashboardBody({ data, onReset, go }) {
 
       {tab === 'referral' && (
         <>
-          <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div data-tour="ctv-referral-link" style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
               <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
@@ -179,19 +186,29 @@ export function DashboardBody({ data, onReset, go }) {
             </div>
           </div>
 
-          <ClickStatsSection />
+          <div data-tour="ctv-click-stats"><ClickStatsSection /></div>
 
-          <HotPlatesWidget referralUrl={data.referralUrl} />
+          <div data-tour="ctv-hot-plates"><HotPlatesWidget referralUrl={data.referralUrl} /></div>
 
           <TopReferredPlates />
         </>
       )}
 
       {tab === 'messages' && (
-        <MessageTemplatesSection referralUrl={data.referralUrl} ctvName={data.fullName} ctvPhone={data.ctvPhone} ctvTitle={data.ctvTitle} ctvZaloLink={data.ctvZaloLink} />
+        <div data-tour="ctv-messages">
+          <MessageTemplatesSection referralUrl={data.referralUrl} ctvName={data.fullName} ctvPhone={data.ctvPhone} ctvTitle={data.ctvTitle} ctvZaloLink={data.ctvZaloLink} />
+        </div>
       )}
 
       <Button variant="ghost" size="sm" onClick={onReset}>Đăng xuất</Button>
+
+      <OnboardingTour
+        active={tourActive}
+        referralCode={data.referralCode}
+        setTab={setTab}
+        onClose={() => setTourActive(false)}
+      />
+      {!tourActive && <HelpButton onClick={() => setTourActive(true)} />}
     </section>
   );
 }

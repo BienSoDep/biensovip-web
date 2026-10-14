@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { validatePhone } from './lib/mockData.js';
+import { validatePhone } from './lib/phone.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
 import { prefillFromUser, maybeSavePhoneToProfile } from './lib/contactPrefill.js';
 import * as authApi from './services/authService.js';
