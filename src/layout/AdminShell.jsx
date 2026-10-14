@@ -189,22 +189,31 @@ const ADMIN_INFO = {
 // UC35 mở rộng (2026-09) — badge "mới" cho 11 mục có khái niệm bản ghi mới tạo rõ ràng. "Bình luận blog"
 // và "Rủi ro CTV" đã gộp thành tab con trong trang Blog/Nhật ký (không còn nav item riêng) — badge gán
 // cho slug trang CHA (aposts/aauditlog), đại diện luôn cho việc "có bình luận/rủi ro mới cần xem trong đó".
+// Giá trị có thể là 1 field string hoặc mảng nhiều field (cộng dồn) — VD aauditlog gộp cả rủi ro CTV
+// lẫn lỗi hệ thống mới vào chung 1 badge vì cả 2 đều là tab con của cùng trang Nhật ký.
 const BADGE_NAV = {
   acontacts: 'newContacts', areviews: 'newReviews', acollabs: 'newCollaborators',
   atransactions: 'newTransactions', acustomers: 'newCustomers', ainterestleads: 'newInterestLeads',
   aposts: 'newBlogComments', avideos: 'newVideos', aplates: 'newPlates',
-  achatbot: 'newChatSessions', aauditlog: 'newRiskEvents',
+  achatbot: 'newChatSessions', aauditlog: ['newRiskEvents', 'newErrorLogs'],
 };
 const LAST_SEEN_KEY = 'bsd_admin_last_seen';
 // Per-nav "đã xem": lưu snapshot count lúc admin bấm vào từng mục (không phải 1 mốc thời gian chung
 // cho cả 10 mục) — bấm xem 1 mục chỉ hết badge của đúng mục đó, không ảnh hưởng badge mục khác.
 const SEEN_COUNTS_KEY = 'bsd_admin_seen_counts';
 
-// Backlog thật đang chờ xử lý (DealReport Pending, SystemFeedback mới, VPA chưa duyệt giá) — KHÁC
-// BADGE_NAV ở trên: số này không tự hết khi admin bấm vào xem, chỉ giảm khi admin thực sự duyệt/từ
-// chối/xử lý xong trong trang đó. Không áp dụng cơ chế "đã xem" (markSeen/seenCounts).
+// Backlog thật đang chờ xử lý (DealReport + hoa hồng chờ duyệt, SystemFeedback mới, VPA chưa duyệt
+// giá) — KHÁC BADGE_NAV ở trên: số này không tự hết khi admin bấm vào xem, chỉ giảm khi admin thực
+// sự duyệt/từ chối/xử lý xong trong trang đó. Không áp dụng cơ chế "đã xem" (markSeen/seenCounts).
 const BACKLOG_BADGE_NAV = {
-  acollabs: 'pendingDealReports', asystemfeedback: 'newSystemFeedback', avpa: 'pendingVpaPriceApprovals',
+  acollabs: ['pendingDealReports', 'pendingCommissionApprovals'],
+  asystemfeedback: 'newSystemFeedback',
+  avpa: 'pendingVpaPriceApprovals',
+};
+const sumFields = (counts, key) => {
+  if (!counts || !key) return 0;
+  const fields = Array.isArray(key) ? key : [key];
+  return fields.reduce((sum, f) => sum + (counts[f] || 0), 0);
 };
 
 const NAV_ICONS = {
@@ -334,7 +343,7 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
     const badgeKey = BADGE_NAV[navKey];
     if (!badgeKey || !counts) return;
     setSeenCounts((prev) => {
-      const next = { ...prev, [navKey]: counts[badgeKey] || 0 };
+      const next = { ...prev, [navKey]: sumFields(counts, badgeKey) };
       try { localStorage.setItem(SEEN_COUNTS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
@@ -345,9 +354,9 @@ function AdminSidebarNav({ s, st, go, onNavigate }) {
   const renderItem = ([key, label]) => {
     const on = s === key || (key === 'aposts' && s === 'compose');
     const badgeKey = BADGE_NAV[key];
-    const newCount = badgeKey && counts ? Math.max(0, (counts[badgeKey] || 0) - (seenCounts[key] || 0)) : 0;
+    const newCount = badgeKey ? Math.max(0, sumFields(counts, badgeKey) - (seenCounts[key] || 0)) : 0;
     const backlogKey = BACKLOG_BADGE_NAV[key];
-    const backlogCount = backlogKey && counts ? (counts[backlogKey] || 0) : 0;
+    const backlogCount = sumFields(counts, backlogKey);
     const badgeCount = newCount + backlogCount;
     return (
       <NavItemButton key={key} navKey={key} label={label} on={on} badgeCount={badgeCount}
