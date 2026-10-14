@@ -22,6 +22,9 @@ export const FS_HISTORY_COLUMNS = [
 
 const ELEMENT_LABEL = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
 
+// Style lặp lại cho date input + select filter — hằng số module-scope, không tạo object mới mỗi render.
+const FILTER_FIELD_STYLE = { height: 34, borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '0 8px', font: 'var(--type-body-sm)' };
+
 function scoreTone(tier) {
   if (!tier) return 'neutral';
   if (tier.includes('Cực Phẩm') || tier.includes('Đại Cát')) return 'mint';
@@ -155,33 +158,33 @@ export default function AdminFengShuiHistory() {
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Từ:</span>
           <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
-            style={{ height: 34, borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '0 8px', font: 'var(--type-body-sm)' }} />
+            style={FILTER_FIELD_STYLE} />
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đến:</span>
           <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }}
-            style={{ height: 34, borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '0 8px', font: 'var(--type-body-sm)' }} />
+            style={FILTER_FIELD_STYLE} />
         </div>
 
         <select value={elementFilter} onChange={(e) => { setElementFilter(e.target.value); setPage(1); }}
-          style={{ height: 34, borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '0 8px', font: 'var(--type-body-sm)' }}>
+          style={FILTER_FIELD_STYLE}>
           <option value="all">Tất cả mệnh</option>
           {Object.entries(ELEMENT_LABEL).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
         </select>
 
         <select value={purposeFilter} onChange={(e) => { setPurposeFilter(e.target.value); setPage(1); }}
-          style={{ height: 34, borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '0 8px', font: 'var(--type-body-sm)' }}>
+          style={FILTER_FIELD_STYLE}>
           <option value="all">Tất cả mục đích</option>
           {purposeOptions.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
 
         <select value={accountFilter} onChange={(e) => { setAccountFilter(e.target.value); setPage(1); }}
-          style={{ height: 34, borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '0 8px', font: 'var(--type-body-sm)' }}>
+          style={FILTER_FIELD_STYLE}>
           <option value="all">Khách vãng lai + đăng ký</option>
           <option value="guest">Chỉ khách vãng lai</option>
           <option value="member">Chỉ đã đăng ký</option>
         </select>
 
         <select value={followUpFilter} onChange={(e) => { setFollowUpFilter(e.target.value); setPage(1); }}
-          style={{ height: 34, borderRadius: 'var(--radius-field)', border: '1px solid var(--border-hairline)', padding: '0 8px', font: 'var(--type-body-sm)' }}>
+          style={FILTER_FIELD_STYLE}>
           <option value="all">Mọi trạng thái</option>
           <option value="pending">Chưa xử lý</option>
           <option value="done">Đã xử lý</option>
