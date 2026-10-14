@@ -93,7 +93,7 @@ export default function AdminSales({ notify, go, st, initialView }) {
         {/* Hàng 5 Thẻ KPI nhanh */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(170px, 100%), 1fr))', gap: 'var(--space-2)' }}>
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-pill)', background: 'var(--blue-50, #eff6ff)', color: 'var(--blue-600, #2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-pill)', background: 'var(--blue-50, #eff6ff)', color: 'var(--blue-600, #C75B00)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <PhoneCall size={16} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -117,12 +117,12 @@ export default function AdminSales({ notify, go, st, initialView }) {
           </div>
 
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-pill)', background: 'var(--mint-50, #ecfdf5)', color: 'var(--status-success-ink, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-pill)', background: 'var(--mint-50, #F0FAF6)', color: 'var(--status-success-ink, #3FBF8F)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <CheckCircle2 size={16} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: '11px' }}>Đã chốt bán</span>
-              <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '16px', color: 'var(--status-success-ink, #059669)' }}>
+              <span style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', fontSize: '16px', color: 'var(--status-success-ink, #3FBF8F)' }}>
                 {stats?.closed ?? 0}
               </span>
             </div>
@@ -141,7 +141,7 @@ export default function AdminSales({ notify, go, st, initialView }) {
           </div>
 
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-pill)', background: 'var(--mint-50, #ecfdf5)', color: 'var(--status-success-ink, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 'var(--radius-pill)', background: 'var(--mint-50, #F0FAF6)', color: 'var(--status-success-ink, #3FBF8F)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <CircleDollarSign size={16} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>

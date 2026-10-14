@@ -52,7 +52,7 @@ function Progress({ run, now, stuck }) {
         {run.currentSlice && <span>Đang cào tỉnh <b>{run.currentSlice}</b></span>}
         <span>
           Đã cào: <b style={{ color: 'var(--text-strong)' }}>{formatInt(run.itemsSeen || 0)}</b> biển
-          {run.inserted > 0 && <span style={{ color: 'var(--status-success, #059669)' }}> (+{formatInt(run.inserted)} mới)</span>}
+          {run.inserted > 0 && <span style={{ color: 'var(--status-success, #3FBF8F)' }}> (+{formatInt(run.inserted)} mới)</span>}
         </span>
         <span>{formatInt(run.pagesFetched)} trang</span>
         {pagesPerSec != null && <span>{pagesPerSec.toFixed(1)} trang/giây (trung bình)</span>}

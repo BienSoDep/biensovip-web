@@ -26,7 +26,7 @@ export default function SystemGuardrailsCard() {
           <div>
             <div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8 }}>
               Quy tắc hệ thống &amp; Chống spam (Guardrails Engine)
-              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'rgba(34, 197, 94, 0.1)', color: '#15803d', fontWeight: 'var(--fw-semibold)' }}>
+              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'rgba(63,191,143, 0.1)', color: '#2E9970', fontWeight: 'var(--fw-semibold)' }}>
                 Đang bảo vệ
               </span>
             </div>
@@ -38,7 +38,7 @@ export default function SystemGuardrailsCard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-2)' }}>
         <div style={{ padding: '10px 14px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            <Moon size={14} style={{ color: '#8b5cf6' }} />
+            <Moon size={14} style={{ color: '#8A8F99' }} />
             <span>Khung giờ im lặng (Quiet Hours)</span>
           </div>
           <div style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{quietStr} (Giờ VN)</div>
@@ -71,10 +71,10 @@ export default function SystemGuardrailsCard() {
 
         <div style={{ padding: '10px 14px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            <Sparkles size={14} style={{ color: '#3b82f6' }} />
+            <Sparkles size={14} style={{ color: '#F19720' }} />
             <span>Trợ lý AI Gợi ý biển</span>
           </div>
-          <div style={{ font: 'var(--type-title-3)', color: rails.aiSuggestEnabled ? '#15803d' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ font: 'var(--type-title-3)', color: rails.aiSuggestEnabled ? '#2E9970' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
             {rails.aiSuggestEnabled ? 'Đang hoạt động' : 'Tạm dừng (Mặc định)'}
           </div>
           <div style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-faint)', lineHeight: 1.4 }}>

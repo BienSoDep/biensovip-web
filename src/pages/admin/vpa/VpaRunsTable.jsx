@@ -194,7 +194,7 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                 font: 'var(--type-caption)',
               }}
             >
-              <CheckCircle2 size={14} style={{ color: 'var(--status-success-ink, #16a34a)' }} />
+              <CheckCircle2 size={14} style={{ color: 'var(--status-success-ink, #3FBF8F)' }} />
               <span style={{ color: 'var(--text-muted)' }}>Tỷ lệ đạt:</span>
               <strong style={{ color: 'var(--text-strong)' }}>{stats.successRate}%</strong>
             </div>
@@ -495,8 +495,8 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                           style={{
                             padding: '1px 6px',
                             borderRadius: 4,
-                            background: isCar(r.vehicle) ? 'var(--blue-50, #eff6ff)' : 'var(--mint-50, #ecfdf5)',
-                            color: isCar(r.vehicle) ? 'var(--blue-700, #1d4ed8)' : 'var(--status-success-ink, #065f46)',
+                            background: isCar(r.vehicle) ? 'var(--blue-50, #eff6ff)' : 'var(--mint-50, #F0FAF6)',
+                            color: isCar(r.vehicle) ? 'var(--blue-700, #C75B00)' : 'var(--status-success-ink, #2E9970)',
                             font: 'var(--type-caption)',
                             fontSize: '11px',
                             fontWeight: 'var(--fw-medium)',
@@ -651,7 +651,7 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                           Thiếu {formatInt(r.itemsMissing)} biển
                         </span>
                       ) : (
-                        <span style={{ font: 'var(--type-caption)', fontSize: '10px', color: 'var(--status-success-ink, #16a34a)', whiteSpace: 'nowrap' }}>
+                        <span style={{ font: 'var(--type-caption)', fontSize: '10px', color: 'var(--status-success-ink, #3FBF8F)', whiteSpace: 'nowrap' }}>
                           {completionPct}% đạt chuẩn
                         </span>
                       )}
@@ -667,8 +667,8 @@ export default function VpaRunsTable({ notify, onRun, settings }) {
                         style={{
                           padding: '1px 6px',
                           borderRadius: 4,
-                          background: r.inserted > 0 ? 'var(--status-success-bg, #dcfce7)' : 'var(--surface-sunken)',
-                          color: r.inserted > 0 ? 'var(--status-success-ink, #166534)' : 'var(--text-muted)',
+                          background: r.inserted > 0 ? 'var(--status-success-bg, #E8F8F1)' : 'var(--surface-sunken)',
+                          color: r.inserted > 0 ? 'var(--status-success-ink, #2E9970)' : 'var(--text-muted)',
                           fontWeight: r.inserted > 0 ? 'var(--fw-bold)' : 'var(--fw-normal)',
                           font: 'var(--type-caption)',
                           fontSize: '11px',

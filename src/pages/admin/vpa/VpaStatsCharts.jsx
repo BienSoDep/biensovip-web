@@ -6,7 +6,7 @@ import Skeleton from '../../../components/Skeleton.jsx';
 import { useVpaStats } from '../../../services/adminVpa.js';
 
 // Cùng bảng màu dùng ở Dashboard (DashboardAdvancedCharts.jsx) — nhất quán thương hiệu toàn admin.
-const PALETTE = ['#3B5BFF', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
+const PALETTE = ['#F19720', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
 // Backend trả key theo TÊN enum VpaPriceState (None/Suggested/Approved/Rejected/Drifted), không phải số —
 // khác VPA_PRICE_STATES (dùng cho cột "Trạng thái giá" trong bảng, key số theo JSON biển trả về).
 const STATE_NAMES = { None: 'Chưa có gợi ý', Suggested: 'Có gợi ý', Approved: 'Đã duyệt', Rejected: 'Đã từ chối', Drifted: 'Đề xuất đổi giá' };

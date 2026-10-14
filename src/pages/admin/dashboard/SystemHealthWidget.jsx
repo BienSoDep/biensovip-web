@@ -87,11 +87,11 @@ export default function SystemHealthWidget() {
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
               <span aria-hidden style={{
                 width: 8, height: 8, borderRadius: '50%',
-                background: data.proxyServer.Status === 'ok' ? '#16a34a' : (data.proxyServer.Status === 'blocked' ? '#ea580c' : (data.proxyServer.Status === 'not_configured' ? '#6b7280' : '#dc2626')),
+                background: data.proxyServer.Status === 'ok' ? '#3FBF8F' : (data.proxyServer.Status === 'blocked' ? '#ea580c' : (data.proxyServer.Status === 'not_configured' ? '#6b7280' : '#dc2626')),
                 display: 'inline-block'
               }} />
               Proxy VPA: <b style={{
-                color: data.proxyServer.Status === 'ok' ? '#16a34a' : (data.proxyServer.Status === 'blocked' ? '#ea580c' : '#dc2626')
+                color: data.proxyServer.Status === 'ok' ? '#3FBF8F' : (data.proxyServer.Status === 'blocked' ? '#ea580c' : '#dc2626')
               }}>
                 {data.proxyServer.Status === 'ok' ? 'Online' : (data.proxyServer.Status === 'blocked' ? 'Bị 403' : (data.proxyServer.Status === 'not_configured' ? 'Chưa bật' : 'Mất kết nối'))}
               </b>

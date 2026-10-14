@@ -7,10 +7,10 @@ import { routeFor } from '../../../config/routes.js';
 import SkeletonBase from '../../../components/skeletons/SkeletonBase.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 
-export const PIE_COLORS = ['#3B5BFF', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
+export const PIE_COLORS = ['#F19720', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
 
 export const FUNNEL_STEPS = [
-  ['Lượt xem', 'views', '#3B5BFF'],
+  ['Lượt xem', 'views', '#6B7180'],
   ['Liên hệ', 'contacts', '#C75B00'],
   ['Đang tư vấn', 'consulting', '#F5C542'],
   ['Đã chốt', 'closed', '#3FBF8F'],
@@ -135,7 +135,7 @@ export function DistributionCard({ title, data }) {
             <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={0} angle={-35} textAnchor="end" />
             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
             <Tooltip />
-            <Bar dataKey="count" name="Số biển" fill="#3B5BFF" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="count" name="Số biển" fill="#F19720" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       ) : (

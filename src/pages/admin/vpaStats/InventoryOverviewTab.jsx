@@ -61,7 +61,7 @@ export default function InventoryOverviewTab({ go, patch }) {
               display: 'inline-flex',
               padding: '4px 8px',
               borderRadius: 'var(--radius-sm)',
-              background: 'var(--action-primary-subtle, rgba(59,91,255,0.08))',
+              background: 'var(--action-primary-subtle, rgba(241,151,32,0.08))',
               color: 'var(--action-primary)',
               font: 'var(--type-caption)',
               fontWeight: 'var(--fw-bold)'
@@ -163,8 +163,8 @@ export default function InventoryOverviewTab({ go, patch }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
           {/* Card Ô tô */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(59,91,255,0.04) 0%, rgba(59,91,255,0.01) 100%)',
-            border: '1px solid rgba(59,91,255,0.15)',
+            background: 'linear-gradient(135deg, rgba(241,151,32,0.04) 0%, rgba(241,151,32,0.01) 100%)',
+            border: '1px solid rgba(241,151,32,0.15)',
             borderRadius: 'var(--radius-md)',
             padding: 'var(--space-4)',
             display: 'flex',

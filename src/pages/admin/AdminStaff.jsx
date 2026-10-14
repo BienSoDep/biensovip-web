@@ -363,7 +363,7 @@ export default function AdminStaff({ notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Users size={22} />
           </div>
           <div>
@@ -386,11 +386,11 @@ export default function AdminStaff({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: roleFilter === 'super-admin' ? '2px solid #7c3aed' : '2px solid transparent',
+            border: roleFilter === 'super-admin' ? '2px solid #6B7180' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldCheck size={22} />
           </div>
           <div>
@@ -398,7 +398,7 @@ export default function AdminStaff({ notify }) {
               Quản trị viên (Super Admin)
               <InfoTip text="Tài khoản có toàn quyền truy cập, chỉnh sửa toàn bộ cấu hình hệ thống và quản lý tài khoản nhân viên khác." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>{stats.superAdminCount}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#6B7180' }}>{stats.superAdminCount}</div>
           </div>
         </div>
 
@@ -413,11 +413,11 @@ export default function AdminStaff({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: roleFilter === 'staff' ? '2px solid #2563eb' : '2px solid transparent',
+            border: roleFilter === 'staff' ? '2px solid #C75B00' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Users size={22} />
           </div>
           <div>
@@ -425,7 +425,7 @@ export default function AdminStaff({ notify }) {
               Nhân viên vận hành
               <InfoTip text="Tài khoản nhân viên được phân quyền hạn theo từng phân hệ nghiệp vụ cụ thể (Kho biển, Bán hàng, Nội dung...)." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#2563eb' }}>{stats.staffCount}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#C75B00' }}>{stats.staffCount}</div>
           </div>
         </div>
 
@@ -440,11 +440,11 @@ export default function AdminStaff({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: roleFilter === 'active' ? '2px solid #059669' : '2px solid transparent',
+            border: roleFilter === 'active' ? '2px solid #3FBF8F' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={22} />
           </div>
           <div>
@@ -452,7 +452,7 @@ export default function AdminStaff({ notify }) {
               Đang hoạt động
               <InfoTip text="Số tài khoản nhân viên đang mở khóa và có thể đăng nhập bình thường vào hệ thống." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>
               {stats.activeCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>({stats.lockedCount} khóa)</span>
             </div>
           </div>
@@ -707,9 +707,9 @@ export default function AdminStaff({ notify }) {
                           borderRadius: 'var(--radius-pill)',
                           fontSize: 12,
                           fontWeight: 600,
-                          background: isSuper ? 'rgba(124, 58, 237, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                          color: isSuper ? '#7c3aed' : '#2563eb',
-                          border: isSuper ? '1px solid rgba(124, 58, 237, 0.25)' : '1px solid rgba(59, 130, 246, 0.25)',
+                          background: isSuper ? 'rgba(107,113,128, 0.1)' : 'rgba(241,151,32, 0.1)',
+                          color: isSuper ? '#6B7180' : '#C75B00',
+                          border: isSuper ? '1px solid rgba(107,113,128, 0.25)' : '1px solid rgba(241,151,32, 0.25)',
                         }}>
                           {isSuper ? <ShieldCheck size={12} /> : <Users size={12} />}
                           {ROLE_LABEL[x.role] || x.role}
@@ -877,9 +877,9 @@ export default function AdminStaff({ notify }) {
           />
 
           {form.role === 'super-admin' ? (
-            <div style={{ padding: '12px 16px', background: 'rgba(124, 58, 237, 0.08)', borderRadius: 'var(--radius-field)', border: '1px solid rgba(124, 58, 237, 0.2)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <ShieldCheck size={20} color="#7c3aed" />
-              <span style={{ fontSize: 13, color: '#6d28d9', fontWeight: 500 }}>
+            <div style={{ padding: '12px 16px', background: 'rgba(107,113,128, 0.08)', borderRadius: 'var(--radius-field)', border: '1px solid rgba(107,113,128, 0.2)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <ShieldCheck size={20} color="#6B7180" />
+              <span style={{ fontSize: 13, color: '#4A4F59', fontWeight: 500 }}>
                 Quản trị viên (Super Admin) có toàn quyền xem, thêm, sửa, xóa trên mọi phân hệ hệ thống.
               </span>
             </div>
@@ -894,7 +894,7 @@ export default function AdminStaff({ notify }) {
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, permissions: DEV_PRESET }))}
                     title="Cấp quyền xem tất cả các trang/phân hệ cho Dev/Tester (kèm bật/tắt Feature flags)"
-                    style={{ font: 'var(--type-caption)', color: '#0284c7', background: 'rgba(2, 132, 199, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(2, 132, 199, 0.25)', fontWeight: 600 }}
+                    style={{ font: 'var(--type-caption)', color: '#C75B00', background: 'rgba(199,91,0, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(199,91,0, 0.25)', fontWeight: 600 }}
                   >
                     Preset Dev (Chỉ xem)
                   </button>
@@ -918,7 +918,7 @@ export default function AdminStaff({ notify }) {
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, permissions: ALL_PERMS }))}
                     title="Chọn toàn bộ quyền (Xem, Thêm, Sửa, Xóa)"
-                    style={{ font: 'var(--type-caption)', color: '#059669', background: 'rgba(5, 150, 105, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(5, 150, 105, 0.25)' }}
+                    style={{ font: 'var(--type-caption)', color: '#3FBF8F', background: 'rgba(63,191,143, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(63,191,143, 0.25)' }}
                   >
                     Chọn hết
                   </button>

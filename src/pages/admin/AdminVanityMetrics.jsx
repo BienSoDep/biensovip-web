@@ -133,7 +133,7 @@ export default function AdminVanityMetrics({ notify }) {
       {/* 3 Thẻ KPI Thống kê trạng thái số liệu */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-3)' }}>
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Sliders size={22} />
           </div>
           <div>
@@ -155,12 +155,12 @@ export default function AdminVanityMetrics({ notify }) {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldCheck size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hiển thị số liệu thật 100%</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>
               {stats.realCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>chỉ số</span>
             </div>
           </div>
@@ -169,8 +169,8 @@ export default function AdminVanityMetrics({ notify }) {
 
       {/* Banner lưu ý an toàn */}
       <div style={{
-        background: 'rgba(59, 130, 246, 0.06)',
-        border: '1px solid rgba(59, 130, 246, 0.2)',
+        background: 'rgba(241,151,32, 0.06)',
+        border: '1px solid rgba(241,151,32, 0.2)',
         borderRadius: 'var(--radius-card)',
         padding: '12px 18px',
         display: 'flex',
@@ -180,8 +180,8 @@ export default function AdminVanityMetrics({ notify }) {
         gap: 12,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Info size={18} color="#2563eb" />
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: '#1e40af', lineHeight: 1.5 }}>
+          <Info size={18} color="#C75B00" />
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: '#8a3d00', lineHeight: 1.5 }}>
             Các cấu hình này <strong>chỉ áp dụng hiển thị công khai</strong> ra giao diện người dùng nhằm tăng tương tác, <strong>hoàn toàn không thay đổi</strong> dữ liệu giao dịch, đơn hàng hay đối soát hoa hồng nội bộ.
           </p>
         </div>
@@ -228,7 +228,7 @@ export default function AdminVanityMetrics({ notify }) {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 14,
-                borderLeft: item.enabled ? '4px solid #f59e0b' : '4px solid #10b981',
+                borderLeft: item.enabled ? '4px solid #f59e0b' : '4px solid #3FBF8F',
                 transition: 'all 120ms ease',
               }}
             >
@@ -256,9 +256,9 @@ export default function AdminVanityMetrics({ notify }) {
                   borderRadius: 'var(--radius-pill)',
                   fontSize: 11,
                   fontWeight: 600,
-                  background: item.enabled ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                  color: item.enabled ? '#d97706' : '#059669',
-                  border: item.enabled ? '1px solid rgba(245, 158, 11, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)',
+                  background: item.enabled ? 'rgba(245, 158, 11, 0.1)' : 'rgba(63,191,143, 0.1)',
+                  color: item.enabled ? '#d97706' : '#3FBF8F',
+                  border: item.enabled ? '1px solid rgba(245, 158, 11, 0.25)' : '1px solid rgba(63,191,143, 0.25)',
                   flexShrink: 0,
                 }}>
                   {item.enabled ? <Zap size={11} /> : <ShieldCheck size={11} />}

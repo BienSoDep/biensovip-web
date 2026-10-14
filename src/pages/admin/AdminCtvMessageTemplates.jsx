@@ -21,9 +21,9 @@ const CHANNEL_OPTS = [
 ];
 
 const CHANNEL_CONFIG = {
-  zalo: { label: 'Zalo', bg: 'rgba(2, 132, 199, 0.1)', color: '#0284c7', border: 'rgba(2, 132, 199, 0.25)', icon: MessageCircle },
-  facebook: { label: 'Facebook', bg: 'rgba(29, 78, 216, 0.1)', color: '#1d4ed8', border: 'rgba(29, 78, 216, 0.25)', icon: Share2 },
-  sms: { label: 'SMS', bg: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed', border: 'rgba(124, 58, 237, 0.25)', icon: Smartphone },
+  zalo: { label: 'Zalo', bg: 'rgba(199,91,0, 0.1)', color: '#C75B00', border: 'rgba(199,91,0, 0.25)', icon: MessageCircle },
+  facebook: { label: 'Facebook', bg: 'rgba(199,91,0, 0.1)', color: '#C75B00', border: 'rgba(199,91,0, 0.25)', icon: Share2 },
+  sms: { label: 'SMS', bg: 'rgba(107,113,128, 0.1)', color: '#6B7180', border: 'rgba(107,113,128, 0.25)', icon: Smartphone },
   default: { label: 'Đa kênh', bg: 'rgba(107, 114, 128, 0.1)', color: '#4b5563', border: 'rgba(107, 114, 128, 0.25)', icon: MessageSquareQuote },
 };
 
@@ -336,7 +336,7 @@ export default function AdminCtvMessageTemplates({ notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageSquareQuote size={22} />
           </div>
           <div>
@@ -356,16 +356,16 @@ export default function AdminCtvMessageTemplates({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: channelFilter === 'zalo' ? '2px solid #0284c7' : '2px solid transparent',
+            border: channelFilter === 'zalo' ? '2px solid #C75B00' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(199,91,0, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageCircle size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Kênh Zalo</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#0284c7' }}>{stats.zalo}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#C75B00' }}>{stats.zalo}</div>
           </div>
         </div>
 
@@ -380,16 +380,16 @@ export default function AdminCtvMessageTemplates({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: channelFilter === 'facebook' ? '2px solid #1d4ed8' : '2px solid transparent',
+            border: channelFilter === 'facebook' ? '2px solid #C75B00' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(29, 78, 216, 0.12)', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(199,91,0, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Share2 size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Kênh Facebook</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#1d4ed8' }}>{stats.fb}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#C75B00' }}>{stats.fb}</div>
           </div>
         </div>
 
@@ -404,16 +404,16 @@ export default function AdminCtvMessageTemplates({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: channelFilter === 'sms' ? '2px solid #7c3aed' : '2px solid transparent',
+            border: channelFilter === 'sms' ? '2px solid #6B7180' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(124, 58, 237, 0.12)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(107,113,128, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Smartphone size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Kênh SMS</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>{stats.sms}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#6B7180' }}>{stats.sms}</div>
           </div>
         </div>
       </div>
@@ -615,8 +615,8 @@ export default function AdminCtvMessageTemplates({ notify }) {
                         borderRadius: 6,
                         fontSize: 12,
                         fontWeight: 600,
-                        background: 'rgba(59, 130, 246, 0.08)',
-                        color: '#2563eb',
+                        background: 'rgba(241,151,32, 0.08)',
+                        color: '#C75B00',
                       }}>
                         {t.category}
                       </span>
@@ -675,10 +675,10 @@ export default function AdminCtvMessageTemplates({ notify }) {
                         background: 'var(--surface-sunken)',
                         cursor: 'pointer',
                         fontSize: 12,
-                        color: '#2563eb',
+                        color: '#C75B00',
                       }}
                     >
-                      {copiedId === t.id ? <Check size={13} color="#059669" /> : <Copy size={13} />}
+                      {copiedId === t.id ? <Check size={13} color="#3FBF8F" /> : <Copy size={13} />}
                       <span>{copiedId === t.id ? 'Đã copy' : 'Copy thử'}</span>
                     </button>
 

@@ -434,7 +434,7 @@ const BADGE_STYLES = {
   },
   accent: {
     bg: 'var(--blue-50, #eff6ff)',
-    fg: 'var(--blue-700, #1d4ed8)',
+    fg: 'var(--blue-700, #C75B00)',
     border: '1px solid var(--blue-200, #bfdbfe)',
   },
   danger: {
@@ -603,7 +603,7 @@ function GuideCard({ item, go, isExpanded, onToggleExpand, onOpenDetail }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <CheckCircle2 size={15} style={{ color: 'var(--status-success-ink, #16a34a)' }} />
+                <CheckCircle2 size={15} style={{ color: 'var(--status-success-ink, #3FBF8F)' }} />
                 <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Quy trình thao tác chuẩn
                 </span>
@@ -882,7 +882,7 @@ function GuideListItem({ item, go, isExpanded, onToggleExpand, onOpenDetail }) {
           {/* Cột 1: Quy trình chuẩn */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-              <CheckCircle2 size={16} style={{ color: 'var(--status-success-ink, #16a34a)' }} />
+              <CheckCircle2 size={16} style={{ color: 'var(--status-success-ink, #3FBF8F)' }} />
               <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Quy trình thao tác chuẩn
               </span>
@@ -1442,7 +1442,7 @@ export default function AdminGuide({ isSuperAdmin, canSee, go }) {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <CheckCircle2 size={18} style={{ color: 'var(--status-success-ink, #16a34a)' }} />
+                <CheckCircle2 size={18} style={{ color: 'var(--status-success-ink, #3FBF8F)' }} />
                 <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
                   QUY TRÌNH THAO TÁC CHUẨN
                 </span>

@@ -302,7 +302,7 @@ export default function AdminPosts({ st, patch, notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FileText size={22} />
           </div>
           <div>
@@ -322,16 +322,16 @@ export default function AdminPosts({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: status === 'published' ? '2px solid #059669' : '2px solid transparent',
+            border: status === 'published' ? '2px solid #3FBF8F' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã xuất bản</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#059669' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>
               {rawItems.filter((p) => p.status === 'published').length}
             </div>
           </div>
@@ -374,16 +374,16 @@ export default function AdminPosts({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: qualityFilter === 'issues' ? '2px solid #7c3aed' : '2px solid transparent',
+            border: qualityFilter === 'issues' ? '2px solid #6B7180' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Sparkles size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đạt chuẩn SEO 100%</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#7c3aed' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#6B7180' }}>
               {qualityStats.perfectCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>/ {itemsWithQuality.length}</span>
             </div>
           </div>
@@ -732,8 +732,8 @@ export default function AdminPosts({ st, patch, notify }) {
                           borderRadius: 'var(--radius-pill)',
                           fontSize: 11,
                           fontWeight: 'var(--fw-semibold)',
-                          background: a.quality.score >= 80 ? '#dcfce7' : a.quality.score >= 50 ? '#fef3c7' : '#fee2e2',
-                          color: a.quality.score >= 80 ? '#166534' : a.quality.score >= 50 ? '#92400e' : '#991b1b',
+                          background: a.quality.score >= 80 ? '#E8F8F1' : a.quality.score >= 50 ? '#fef3c7' : '#fee2e2',
+                          color: a.quality.score >= 80 ? '#2E9970' : a.quality.score >= 50 ? '#92400e' : '#991b1b',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 4,
@@ -751,7 +751,7 @@ export default function AdminPosts({ st, patch, notify }) {
                         <span>{a.quality.issues.slice(0, 2).join(' · ')}{a.quality.issues.length > 2 ? ` (+${a.quality.issues.length - 2})` : ''}</span>
                       </span>
                     ) : (
-                      <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <span style={{ font: 'var(--type-caption)', fontSize: 11, color: '#3FBF8F', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                         <CheckCircle2 size={11} style={{ flexShrink: 0 }} />
                         <span>Đủ ảnh, meta SEO & nội dung</span>
                       </span>

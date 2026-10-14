@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
@@ -336,8 +336,8 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
             >
-              {plate.isHidden ? <Eye size={14} color="#059669" /> : <EyeOff size={14} />}
-              <span style={plate.isHidden ? { color: '#059669', fontWeight: 600 } : undefined}>
+              {plate.isHidden ? <Eye size={14} color="#3FBF8F" /> : <EyeOff size={14} />}
+              <span style={plate.isHidden ? { color: '#3FBF8F', fontWeight: 600 } : undefined}>
                 {plate.isHidden ? 'Bỏ ẩn (Hiện lại)' : 'Ẩn khỏi khách'}
               </span>
             </button>
@@ -389,7 +389,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
 
 // Danh sách biển VPA cho Admin — cùng bố cục và công cụ với trang Biển số (lọc, cột, sắp xếp, sửa nhanh, hàng loạt, CSV, ngăn kéo).
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
-export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
+export default function VpaAdminList({ queue = false, notify, onOpenGuide, openIntegrityCode }) {
   const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', from: '', to: '', ...(queue ? { plateTypeIds: [], provinceIds: [] } : loadSavedFilters()) });
   const [q, setQ] = useState(queue ? '' : consumeDeepLinkQ);
   const [dq] = useDebouncedValue(q, 300);
@@ -405,7 +405,8 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
   const [drawer, setDrawer] = useState(null); // null | { plate? }
   const [cell, setCell] = useState(null);
   const [exporting, setExporting] = useState(false);
-  const [integrity, setIntegrity] = useState(false);
+  const [integrity, setIntegrity] = useState(() => !!openIntegrityCode);
+  useEffect(() => { if (openIntegrityCode) setIntegrity(true); }, [openIntegrityCode]);
   const [bulkSeedOpen, setBulkSeedOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quick, setQuick] = useState({ plateNumber: '', vehicle: 'Car', tab: '1', price: '' });
@@ -786,7 +787,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
         </div>
       )}
 
-      {integrity && !queue && <VpaIntegrityPanel notify={notify} onClose={() => setIntegrity(false)} />}
+      {integrity && !queue && <VpaIntegrityPanel key={openIntegrityCode} notify={notify} onClose={() => setIntegrity(false)} initialOpen={openIntegrityCode} />}
 
       {queue && (
         <div
@@ -1455,8 +1456,8 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
                                 fontWeight: 'var(--fw-bold)',
                                 padding: '1px 5px',
                                 borderRadius: 'var(--radius-pill)',
-                                background: isUp ? '#ecfdf5' : '#fff1f2',
-                                color: isUp ? '#059669' : '#e11d48',
+                                background: isUp ? '#F0FAF6' : '#fff1f2',
+                                color: isUp ? '#3FBF8F' : '#e11d48',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 2,
@@ -1479,9 +1480,9 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
                           padding: '1px 5px',
                           borderRadius: '4px',
                           fontWeight: 600,
-                          background: (p.sampleCount || 0) > 0 ? '#ecfdf5' : '#fffbeb',
-                          color: (p.sampleCount || 0) > 0 ? '#059669' : '#d97706',
-                          border: (p.sampleCount || 0) > 0 ? '1px solid #a7f3d0' : '1px solid #fde68a',
+                          background: (p.sampleCount || 0) > 0 ? '#F0FAF6' : '#fffbeb',
+                          color: (p.sampleCount || 0) > 0 ? '#3FBF8F' : '#d97706',
+                          border: (p.sampleCount || 0) > 0 ? '1px solid #D6F0E5' : '1px solid #fde68a',
                         }}
                       >
                         {(p.sampleCount || 0) > 0 ? (
@@ -1556,7 +1557,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
           {/* Cụm 1: Thông tin số lượng & Bỏ chọn */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: '12px', fontWeight: 600, color: '#f8fafc', whiteSpace: 'nowrap' }}>
-              Đã chọn <strong style={{ color: '#38bdf8' }}>{sel.size}</strong> biển{sel.size > MAX_BULK ? ` (xử lý ${MAX_BULK} đầu)` : ''}
+              Đã chọn <strong style={{ color: '#F19720' }}>{sel.size}</strong> biển{sel.size > MAX_BULK ? ` (xử lý ${MAX_BULK} đầu)` : ''}
             </span>
             <button
               type="button"
@@ -1581,7 +1582,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
               title="Bỏ ẩn hàng loạt — cho phép khách hàng nhìn thấy các biển này trên web"
               style={{
                 ...bulkBtn,
-                background: '#059669',
+                background: '#3FBF8F',
                 color: '#ffffff',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1746,7 +1747,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide }) {
               style={{
                 ...bulkBtn,
                 background: 'rgba(56, 189, 248, 0.15)',
-                color: '#38bdf8',
+                color: '#F19720',
                 border: '1px solid rgba(56, 189, 248, 0.3)',
                 display: 'inline-flex',
                 alignItems: 'center',

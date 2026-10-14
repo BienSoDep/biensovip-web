@@ -26,7 +26,7 @@ const BUTTON_DIRECTORY = [
     name: 'Bỏ ẩn (Hàng loạt)',
     category: 'visibility',
     icon: Eye,
-    styleMock: { background: '#059669', color: '#fff', border: 'none' },
+    styleMock: { background: '#3FBF8F', color: '#fff', border: 'none' },
     location: 'Thanh thao tác hàng loạt (Floating Dock nổi ở đáy màn hình khi tick chọn biển)',
     purpose: 'Gỡ cờ ẩn (is_hidden = false) cho tất cả các biển đang được chọn, khôi phục quyền hiển thị cho khách hàng trên website và ứng dụng.',
     whenToUse: 'Dùng khi muốn hiển thị lại các biển trước đây bị ẩn (do trùng kho shop đã bán, trùng cào, hoặc admin tạm ẩn trước đó).',
@@ -127,7 +127,7 @@ const BUTTON_DIRECTORY = [
     name: 'Copy số biển (Vào bộ nhớ tạm)',
     category: 'bulk',
     icon: Copy,
-    styleMock: { background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)' },
+    styleMock: { background: 'rgba(56, 189, 248, 0.15)', color: '#F19720', border: '1px solid rgba(56, 189, 248, 0.3)' },
     location: 'Thanh thao tác hàng loạt (Floating Dock)',
     purpose: 'Sao chép toàn bộ danh sách số biển đã tick chọn vào Clipboard theo định dạng mỗi số một dòng.',
     whenToUse: 'Dùng khi admin cần lấy nhanh danh sách 10-30 biển đẹp để dán gửi Zalo/Telegram báo giá cho khách hoặc gửi sếp kiểm tra.',
@@ -316,14 +316,14 @@ const TAB_EXPLANATIONS = [
   {
     tabNumber: '1',
     name: 'Biển số tháng (Biển công bố)',
-    badgeColor: '#3b82f6',
+    badgeColor: '#F19720',
     desc: 'Danh sách các biển số xe dự kiến đưa ra đấu giá trong tháng được Bộ Công An và VPA công bố công khai. Chưa ấn định ngày giờ đấu giá cụ thể.',
     actionGuide: 'Cần phân loại, gán loại biển và tính giá gợi ý sẵn để khách hàng tham khảo đặt lịch trước.',
   },
   {
     tabNumber: '2',
     name: 'Biển số tuần (Biển chính thức)',
-    badgeColor: '#10b981',
+    badgeColor: '#3FBF8F',
     desc: 'Các biển số đã có lịch đấu giá chính thức (có ngày, giờ, ca đấu giá cụ thể trong tuần). Khách hàng có thể nộp tiền đặt trước để tham gia đấu giá.',
     actionGuide: 'Cần duyệt giá chuẩn xác và ghim/nổi bật các biển VIP lên đầu trang chủ để thu hút khách đăng ký đấu giá.',
   },
@@ -406,7 +406,7 @@ export default function VpaWorkflowGuide({ onNavigateTab }) {
               justifyContent: 'center',
             }}
           >
-            <BookOpen size={20} color="#38bdf8" />
+            <BookOpen size={20} color="#F19720" />
           </div>
           <div>
             <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.01em' }}>
@@ -451,7 +451,7 @@ export default function VpaWorkflowGuide({ onNavigateTab }) {
                     width: 18,
                     height: 18,
                     borderRadius: '50%',
-                    background: '#38bdf8',
+                    background: '#F19720',
                     color: '#0f172a',
                     fontSize: '11px',
                     fontWeight: 700,

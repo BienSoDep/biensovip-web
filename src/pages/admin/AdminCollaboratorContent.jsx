@@ -91,7 +91,7 @@ function CollaboratorBenefitLivePreview({ titleHtml, bodyHtml, onUpdateTitle, on
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3FBF8F', display: 'inline-block' }} />
           <span style={{ marginLeft: 8, fontFamily: 'var(--font-mono)', color: 'var(--text-faint)' }}>
             biensovip.com/cong-tac-vien
           </span>

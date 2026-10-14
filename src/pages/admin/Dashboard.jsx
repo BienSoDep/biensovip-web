@@ -34,7 +34,7 @@ import {
 } from './dashboard/DashboardWidgets.jsx';
 
 const KPI_CARDS = [
-  { key: 'totalViews', label: 'Tổng lượt xem', info: 'Tổng số lượt khách truy cập xem chi tiết các biển số trong kỳ đã chọn.', icon: FileText, series: 'views', color: '#3B5BFF', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
+  { key: 'totalViews', label: 'Tổng lượt xem', info: 'Tổng số lượt khách truy cập xem chi tiết các biển số trong kỳ đã chọn.', icon: FileText, series: 'views', color: '#6B7180', access: (k) => k?.totalViews?.value, delta: (k) => k?.totalViews?.changePercent },
   { key: 'contactRequests', label: 'Yêu cầu liên hệ', info: 'Số lượt khách gửi yêu cầu gọi lại, tư vấn mua biển hoặc bấm nút chat Zalo/Hotline.', icon: Users, series: 'contacts', color: '#C75B00', access: (k) => k?.contactRequests?.value, delta: (k) => k?.contactRequests?.changePercent },
   { key: 'closedContacts', label: 'Đã chốt', info: 'Số lượng giao dịch tư vấn thành công đã được nhân viên chuyển sang trạng thái chốt.', icon: BadgeCheck, series: 'closed', color: '#3FBF8F', access: (k) => k?.closedContacts?.value, delta: (k) => k?.closedContacts?.changePercent },
   { key: 'soldPlates', label: 'Đã bán', info: 'Tổng số lượng biển số trong kho đã bán thành công trong khoảng thời gian đã chọn.', icon: CreditCard, series: 'sold', color: '#E5484D', access: (k) => k?.soldPlates },
@@ -444,7 +444,7 @@ export default function Dashboard({ go, st, patch }) {
                       transition: 'color 140ms ease',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.color = 'var(--action-primary, #3b5bff)';
+                      e.currentTarget.style.color = 'var(--action-primary, #F19720)';
                       const icon = e.currentTarget.querySelector('.dash-ext-link');
                       if (icon) icon.style.opacity = '1';
                     }}
@@ -481,7 +481,7 @@ export default function Dashboard({ go, st, patch }) {
                         transition: 'color 140ms ease, background-color 140ms ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color = 'var(--action-primary, #3b5bff)';
+                        e.currentTarget.style.color = 'var(--action-primary, #F19720)';
                         e.currentTarget.style.background = 'var(--surface-subtle, rgba(0,0,0,0.05))';
                       }}
                       onMouseLeave={(e) => {
@@ -619,7 +619,7 @@ export default function Dashboard({ go, st, patch }) {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="count" name="Số khách" fill="#3B5BFF" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" name="Số khách" fill="#F19720" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

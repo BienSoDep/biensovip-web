@@ -46,7 +46,7 @@ import { InfoTip } from '../../../components/index.jsx';
 import SkeletonBase from '../../../components/skeletons/SkeletonBase.jsx';
 
 // Bảng màu series chuẩn thương hiệu theo tokens.css
-const PALETTE = ['#3B5BFF', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
+const PALETTE = ['#F19720', '#C75B00', '#F5C542', '#3FBF8F', '#E5484D', '#8A6100', '#6B7180', '#3A3E47'];
 
 function EmptyChartBlock({ children = 'Chưa có đủ dữ liệu trong kỳ này' }) {
   return (
@@ -243,8 +243,8 @@ export function EnhancedActionsChart({ chartData, reduceMotion }) {
           <AreaChart data={points} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>
               <linearGradient id="gViewsEnh" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3B5BFF" stopOpacity={0.25} />
-                <stop offset="100%" stopColor="#3B5BFF" stopOpacity={0.01} />
+                <stop offset="0%" stopColor="#F19720" stopOpacity={0.25} />
+                <stop offset="100%" stopColor="#F19720" stopOpacity={0.01} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
@@ -256,7 +256,7 @@ export function EnhancedActionsChart({ chartData, reduceMotion }) {
               <Area
                 type="monotone"
                 dataKey="views"
-                stroke="#3B5BFF"
+                stroke="#F19720"
                 strokeWidth={2}
                 fill="url(#gViewsEnh)"
                 isAnimationActive={!reduceMotion}
@@ -604,7 +604,7 @@ export function SupplyDemandComparisonChart({ categorySupplyDemand = [], onActio
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', font: 'var(--type-caption)' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#3B5BFF' }} />
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#F19720' }} />
             <span>Nhu cầu khách (% Cầu)</span>
           </span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -623,7 +623,7 @@ export function SupplyDemandComparisonChart({ categorySupplyDemand = [], onActio
           <Tooltip
             formatter={(value, name) => [`${value}%`, name === 'demandPct' ? 'Nhu cầu (% Cầu)' : 'Kho sẵn có (% Cung)']}
           />
-          <Bar dataKey="demandPct" name="Nhu cầu (% Cầu)" fill="#3B5BFF" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="demandPct" name="Nhu cầu (% Cầu)" fill="#F19720" radius={[3, 3, 0, 0]} />
           <Bar dataKey="stockPct" name="Kho sẵn có (% Cung)" fill="#C75B00" radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
@@ -782,7 +782,7 @@ export function MicroEngagementsChart({ plateEngagement }) {
   if (!plateEngagement) return null;
 
   const actions = [
-    { label: 'Xem chi tiết', count: plateEngagement.detailViews || 0, color: '#3B5BFF', icon: Eye },
+    { label: 'Xem chi tiết', count: plateEngagement.detailViews || 0, color: '#F19720', icon: Eye },
     { label: 'Bấm Zalo', count: plateEngagement.zaloCount || 0, color: '#3FBF8F', icon: MessageSquare },
     { label: 'Gọi Hotline', count: plateEngagement.phoneCalls || 0, color: '#C75B00', icon: PhoneCall },
     { label: 'Lưu thích', count: plateEngagement.wishlistSaves || 0, color: '#F5C542', icon: Bookmark },

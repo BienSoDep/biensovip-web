@@ -53,7 +53,7 @@ function SwitchRow({ checked, onChange, label, info }) {
   );
 }
 
-export default function VpaOverview({ notify, isSuperAdmin }) {
+export default function VpaOverview({ notify, isSuperAdmin, onOpenPlatesIntegrity }) {
   const { data, isLoading, isError, error } = useVpaOverview({ enabled: isSuperAdmin, poll: true });
 
   if (!isSuperAdmin) {
@@ -342,7 +342,7 @@ function OverviewBody({ data, notify }) {
         ))}
       </div>
 
-      <VpaQualityPanel enabled />
+      <VpaQualityPanel enabled onOpenIntegrity={onOpenPlatesIntegrity} />
 
       {/* PHẦN CÀI ĐẶT 1: CÔNG THỨC GIÁ GỢI Ý - Chia 2 cột cân đối */}
       <div style={CARD}>
