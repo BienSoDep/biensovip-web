@@ -82,10 +82,10 @@ export default function VpaOverview({ notify, isSuperAdmin, onOpenPlatesIntegrit
     );
   }
 
-  return <OverviewBody data={data} notify={notify} />;
+  return <OverviewBody data={data} notify={notify} onOpenPlatesIntegrity={onOpenPlatesIntegrity} />;
 }
 
-function OverviewBody({ data, notify }) {
+function OverviewBody({ data, notify, onOpenPlatesIntegrity }) {
   const save = useUpdateVpaSettings();
   const crawl = useRunVpaCrawl();
   const stop = useStopVpaCrawl();
