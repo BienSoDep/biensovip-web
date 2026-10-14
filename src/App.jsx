@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { validatePhone } from './lib/mockData.js';
+import { validatePhone } from './lib/phone.js';
 import { loadAuth, saveAuth } from './lib/authStore.js';
 import { prefillFromUser, maybeSavePhoneToProfile } from './lib/contactPrefill.js';
 import * as authApi from './services/authService.js';
@@ -516,7 +516,7 @@ export default function App() {
         try {
           const data = await authApi.login({ identifier: email, password: ast.aPw, remember });
           patchAuth({ aErr: {}, aPw: '' });
-          patch({ user: data.user, screen: 'profile', profileOnboarding: true });
+          patch({ user: data.user, screen: 'profile' });
           notify('Đăng ký thành công!');
           favApi.syncFavorites();
         } catch {
@@ -544,7 +544,7 @@ export default function App() {
         // để tính năng hợp mệnh + phân khúc khách hàng có dữ liệu ngay từ lần đăng nhập đầu.
         patchAuth({ aErr: {}, aPw: '' });
         if (isProfileIncomplete(data.user)) {
-          patch({ user: data.user, screen: 'profile', profileOnboarding: true });
+          patch({ user: data.user, screen: 'profile' });
         } else {
           patch({ user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
         }
@@ -611,7 +611,7 @@ export default function App() {
       rememberEmail(ast.aEmail.trim());
       patchAuth({ aErr: {}, step: 1, aOtp: '' });
       if (isProfileIncomplete(data.user)) {
-        patch({ user: data.user, screen: 'profile', profileOnboarding: true, redirectTo: null });
+        patch({ user: data.user, screen: 'profile', redirectTo: null });
       } else {
         patch({ user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
       }
@@ -702,6 +702,7 @@ export default function App() {
     compose: ['Viết bài mới', 'Bài sẽ có slug và meta riêng để tối ưu SEO'],
     acustomers: ['Khách hàng', 'Quản lý tài khoản khách hàng'],
     avideos: ['Video', 'Quản lý video TikTok/Facebook'],
+    asystemfeedback: ['Báo cáo hệ thống', 'Lỗi và góp ý người dùng gửi từ trang Hồ sơ'],
     anotifications: ['Thông báo', 'Gửi thông báo và mẫu email cho khách'],
     acollabs: ['Cộng tác viên', 'Quản lý cộng tác viên bán biển'],
     acollabcontent: ['Nội dung ưu đãi CTV', 'Chỉnh nội dung trang giới thiệu ưu đãi cho cộng tác viên'],
@@ -794,7 +795,7 @@ export default function App() {
             {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
 
             {(s === 'lucky' || s === 'luanBien') && <LuckyPlate screen={s} go={go} patch={patch} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} contact={contact} openPlate={openPlate} onUserUpdate={(u) => patch({ user: u })} />}
-            {s === 'profile' && <Profile go={go} notify={notify} user={st.user} onboarding={!!st.profileOnboarding} onUserUpdate={(u) => patch({ user: u, profileOnboarding: false })} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
+            {s === 'profile' && <Profile go={go} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
             {s === 'about' && <About go={go} />}
 

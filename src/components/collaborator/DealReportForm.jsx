@@ -2,9 +2,13 @@ import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../Button.jsx';
-import { Input, InfoTip } from '../index.jsx';
-import { useSubmitDealReport, useUploadDealReportProof } from '../../services/collaborators.js';
+import { Badge, Input, InfoTip } from '../index.jsx';
+import { useMyDealReports, useSubmitDealReport, useUploadDealReportProof } from '../../services/collaborators.js';
 import { usePlates } from '../../services/plates.js';
+import { money } from './collaboratorUtils.js';
+
+const STATUS_LABEL = { pending: 'Chờ duyệt', approved: 'Đã duyệt', rejected: 'Từ chối' };
+const STATUS_TONE = { pending: 'amber', approved: 'mint', rejected: 'rose' };
 
 export default function DealReportForm() {
   const [open, setOpen] = useState(false);
@@ -21,6 +25,7 @@ export default function DealReportForm() {
   const submitDeal = useSubmitDealReport();
   const uploadProof = useUploadDealReportProof();
   const { data: plateResults } = usePlates({ q: debouncedQuery, perPage: 8 }, { enabled: debouncedQuery.length >= 2 && !plate });
+  const { data: myReports, refetch: refetchReports } = useMyDealReports();
 
   const reset = () => {
     setPlate(null); setPlateQuery(''); setBuyerFullName(''); setBuyerPhone(''); setDealAmount(''); setNote('');
@@ -52,6 +57,7 @@ export default function DealReportForm() {
       toast.success('Đã gửi báo cáo, chờ admin duyệt');
       reset();
       setOpen(false);
+      refetchReports();
     } catch (e) {
       toast.error(e.message || 'Gửi báo cáo thất bại');
     }
@@ -133,6 +139,24 @@ export default function DealReportForm() {
               {submitDeal.isPending ? 'Đang gửi...' : 'Gửi báo cáo'}
             </Button>
           </div>
+        </div>
+      )}
+
+      {myReports?.items?.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Báo cáo đã gửi</span>
+          {myReports.items.map((r) => (
+            <div key={r.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-2)', padding: '8px 0', borderTop: '1px solid var(--grey-100)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                <span style={{ font: 'var(--type-body-sm)' }}>{r.plateNumber || '—'} · {money(r.dealAmount)}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{new Date(r.createdAt).toLocaleDateString('vi-VN')}</span>
+                {r.status === 'rejected' && r.rejectionReason && (
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Lý do từ chối: {r.rejectionReason}</span>
+                )}
+              </div>
+              <Badge tone={STATUS_TONE[r.status] || 'neutral'}>{STATUS_LABEL[r.status] || r.status}</Badge>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -71,7 +71,7 @@ biensovip-web/
     │   ├── authStore.js            # JWT/auth localStorage
     │   ├── cloudinary.js           # Upload ảnh → Cloudinary
     │   ├── plateFormat.js, phone.js, date.js, fengshui.js, compareInsights.js, unsavedGuard.js
-    │   ├── mockData.js             # LEGACY — chỉ còn import trong App.jsx/Modals.jsx (opts). KHÔNG dùng cho dữ liệu chính.
+    │   ├── mockData.js             # LEGACY — chỉ còn import trong App.jsx và lib/phone.js. KHÔNG dùng cho dữ liệu chính.
     │   └── content/vi/*.json       # Nội dung tiếng Việt tĩnh
     ├── pages/
     │   ├── Auth.jsx                # register/login/forgot/adminLogin + OTP + Google (2 cột info/form)
@@ -88,6 +88,10 @@ biensovip-web/
     │       ├── AdminVpa.jsx (5 tab ngang qua AdminTabbedPage), AdminVpaStats.jsx, AdminSettings.jsx
     │       ├── AdminMeanings.jsx, AdminVideos.jsx, AdminReviews.jsx, AdminNotifications.jsx
     │       ├── AdminCollaborators.jsx, AdminChatbot.jsx, AdminAuditLog.jsx, EmailBuilder.jsx
+    │       ├── AdminFengShuiHistory.jsx  # Lịch sử luận giải biển (thống kê + danh sách + chi tiết + đánh dấu đã follow-up)
+    │       ├── dashboard/          # Widget/chart tách khỏi Dashboard.jsx (DashboardWidgets, DashboardAdvancedCharts)
+    │       ├── fengshui-history/   # Component con của AdminFengShuiHistory (vd. FengShuiHistoryDetailModal)
+    │       ├── customers/, plates/, contacts/, insights/, notifications/, servers/, vpaStats/ # Thư mục con theo màn hình lớn
     │       └── vpa/                # VpaAdminList, VpaPriceQueue, VpaAuctionResults, VpaCrawlAdmin, VpaWorkflowGuide
     ├── services/                    # API clients — mỗi domain 1 file (dùng `apiClient`)
     │   ├── apiClient.js             # fetch wrapper (JWT, ApiResponse<T>, upload)
@@ -115,7 +119,7 @@ biensovip-web/
 ### Data layer — REAL API (đã tích hợp backend)
 - **Mọi dữ liệu chính qua API.** `services/apiClient.js` bọc `fetch` (tự gắn JWT, unwrap `ApiResponse<T>`, hàm `upload`).
 - Mỗi domain một service file trong `services/` (authService, plates, blog, categories, adminStaff…).
-- Các page gọi service hook/function, KHÔNG dùng `lib/mockData.js` cho dữ liệu chính. `mockData.js` còn import trong `App.jsx`/`Modals.jsx` chỉ để lấy `opts` (legacy, không phải data source).
+- Các page gọi service hook/function, KHÔNG dùng `lib/mockData.js` cho dữ liệu chính. `mockData.js` còn import trong `App.jsx` và `lib/phone.js` (legacy, không phải data source).
 
 ### Code splitting
 - Page component load qua `React.lazy(() => import(...))` + `<Suspense>` fallback `<PageSkeleton>`.

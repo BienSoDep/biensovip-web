@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
-import { Input, Select, Eyebrow, Icon, DateInputVN } from '../components/index.jsx';
+import AvatarUploader from '../components/AvatarUploader.jsx';
+import FeedbackForm from '../components/FeedbackForm.jsx';
+import { Input, Select, Eyebrow, DateInputVN } from '../components/index.jsx';
 import { updateProfile, changePassword, refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
 import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
 import { useBecomeCollaborator, useUpdateBankInfo } from '../services/collaborators.js';
@@ -9,7 +11,7 @@ import { PURPOSES, VEHICLES } from '../lib/fengshui.js';
 import { validBirthDate } from '../lib/date.js';
 import { validatePhone } from '../lib/phone.js';
 import { fetchVietQrBanks, vietQrImageUrl } from '../lib/vietqr.js';
-import { trackCompleteProfile, trackSkipProfileOnboarding, trackBecomeCollaborator } from '../services/tracking/events.js';
+import { trackBecomeCollaborator } from '../services/tracking/events.js';
 
 const GENDER_OPTS = [{ value: 'male', label: 'Nam' }, { value: 'female', label: 'Nữ' }, { value: 'other', label: 'Khác' }];
 
@@ -49,7 +51,7 @@ function GenderPicker({ value, onChange }) {
   );
 }
 
-export default function Profile({ go, notify, user, onboarding, onUserUpdate, onLogout }) {
+export default function Profile({ go, notify, user, onUserUpdate, onLogout }) {
   // Đến từ "Trở thành CTV" (trang Collaborator) qua hash #become-ctv → cuộn thẳng tới section CTV
   // thay vì bắt user tự cuộn qua Thông tin/Đổi mật khẩu/Thông báo ở trên.
   useEffect(() => {
@@ -84,9 +86,7 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
         preferredPurpose: PURPOSES.find((p) => p.label === form.preferredPurpose)?.key || undefined,
       });
       onUserUpdate?.(updated);
-      if (onboarding) trackCompleteProfile(!!form.birthDate);
       notify('Đã lưu thông tin');
-      if (onboarding) go('home')();
     } catch (err) {
       if (err.code === 'PHONE_EXISTS') setPhoneErr('Số điện thoại đã được sử dụng.');
       else notify(err.message || 'Không lưu được, thử lại sau.');
@@ -95,69 +95,77 @@ export default function Profile({ go, notify, user, onboarding, onUserUpdate, on
     }
   };
 
-  const skip = () => { trackSkipProfileOnboarding(); go('home')(); };
-
   const identifierLabel = user?.identifierType === 'phone' ? 'Số điện thoại' : 'Email';
 
+  // Settings dùng bố cục 2 cột (nav section bên trái sticky + nội dung bên phải) trên desktop
+  // thay vì 1 card đơn độc giữa trang trống — giữ form max-width dễ đọc nhưng không lạc lõng.
+  const SECTION_NAV = [
+    { href: '#profile-section', label: 'Tài khoản' },
+    { href: '#security-section', label: 'Bảo mật' },
+    { href: '#notification-section', label: 'Thông báo' },
+    { href: '#become-ctv', label: 'Cộng tác viên' },
+    { href: '#feedback-section', label: 'Báo cáo hệ thống' },
+  ];
+
   return (
-    <section style={{ maxWidth: 640, margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div
-        style={
-          onboarding
-            ? { display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', background: 'var(--orange-50)', border: '1px solid var(--orange-100)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)' }
-            : { display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }
-        }
-      >
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: onboarding ? 'var(--accent-orange-ink)' : 'var(--blue-600)' }}>
-          {onboarding && <Icon name="sparkles" size={14} />}
-          {onboarding ? 'Chào mừng bạn mới' : 'Tài khoản'}
-        </span>
-        <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
-          {onboarding ? 'Hoàn thiện hồ sơ của bạn' : 'Thông tin cá nhân'}
-        </h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>
-          {onboarding
-            ? 'Điền đầy đủ họ tên, ngày sinh và giới tính để dùng ngay tính năng tìm biển số hợp mệnh, nhận gợi ý biển phù hợp và thông báo đúng nhu cầu của bạn. Bạn có thể bỏ qua và điền sau, nhưng trang này sẽ nhắc lại mỗi lần đăng nhập cho tới khi điền đủ.'
-            : 'Cập nhật họ tên, ngày sinh và giới tính — dùng để tính hợp mệnh phong thủy và gợi ý biển số phù hợp hơn với bạn.'}
-        </p>
-      </div>
+    <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'flex-start' }} className="profile-layout">
+        <nav aria-label="Mục cài đặt" style={{ flex: '0 0 200px', position: 'sticky', top: 'calc(var(--space-10) + var(--space-4))', display: 'flex', flexDirection: 'column', gap: 2 }} className="profile-side-nav">
+          {SECTION_NAV.map((item) => (
+            <a key={item.href} href={item.href} style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--text-body)', textDecoration: 'none' }}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
 
-      <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        <div>
-          <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{identifierLabel}</span>
-          <div style={{ marginTop: 6, height: 40, display: 'flex', alignItems: 'center', padding: '0 14px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', font: 'var(--type-body)', color: 'var(--text-muted)' }}>{user?.identifier || '—'}</div>
-        </div>
-        <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={(e) => set('fullName')(e.target.value)} />
+        <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+          <div id="profile-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--blue-600)' }}>
+              Tài khoản
+            </span>
+            <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
+              Thông tin cá nhân
+            </h1>
+            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>
+              Cập nhật họ tên, ngày sinh và giới tính — dùng để tính hợp mệnh phong thủy và gợi ý biển số phù hợp hơn với bạn.
+            </p>
+          </div>
 
-        <Input label="Số điện thoại" type="tel" placeholder="09xx xxx xxx" value={form.phone} error={phoneErr} onChange={(e) => set('phone')(e.target.value)} />
+          <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <AvatarUploader user={user} onUserUpdate={onUserUpdate} notify={notify} />
+            <div>
+              <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{identifierLabel}</span>
+              <div style={{ marginTop: 6, height: 40, display: 'flex', alignItems: 'center', padding: '0 14px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-field)', font: 'var(--type-body)', color: 'var(--text-muted)' }}>{user?.identifier || '—'}</div>
+            </div>
+            <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={(e) => set('fullName')(e.target.value)} />
 
-        <DateInputVN label="Ngày sinh (dương lịch)" value={form.birthDate} error={err} onChange={(e) => set('birthDate')(e.target.value)} />
+            <Input label="Số điện thoại" type="tel" placeholder="09xx xxx xxx" value={form.phone} error={phoneErr} onChange={(e) => set('phone')(e.target.value)} />
 
-        <GenderPicker value={form.gender} onChange={set('gender')} />
+            <DateInputVN label="Ngày sinh (dương lịch)" value={form.birthDate} error={err} onChange={(e) => set('birthDate')(e.target.value)} />
 
-        <BulletPicker label="Loại xe thường dùng" value={form.preferredVehicle} onChange={set('preferredVehicle')} options={VEHICLES} allowDeselect labelSuffix=" (không bắt buộc)" />
-        <BulletPicker label="Mục đích sử dụng biển thường xuyên" value={form.preferredPurpose} onChange={set('preferredPurpose')} options={PURPOSES.map((p) => p.label)} allowDeselect labelSuffix=" (không bắt buộc)" />
+            <GenderPicker value={form.gender} onChange={set('gender')} />
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
-          <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ flex: 1 }}>
-            {saving ? 'Đang lưu...' : 'Lưu thông tin'}
-          </Button>
-          {onboarding && (
-            <Button variant="ghost" size="lg" onClick={skip}>Bỏ qua</Button>
-          )}
-        </div>
-      </div>
+            <BulletPicker label="Loại xe thường dùng" value={form.preferredVehicle} onChange={set('preferredVehicle')} options={VEHICLES} allowDeselect labelSuffix=" (không bắt buộc)" />
+            <BulletPicker label="Mục đích sử dụng biển thường xuyên" value={form.preferredPurpose} onChange={set('preferredPurpose')} options={PURPOSES.map((p) => p.label)} allowDeselect labelSuffix=" (không bắt buộc)" />
 
-      {!onboarding && (
-        <>
-          <ChangePasswordSection notify={notify} />
-          <NotificationSettingsSection notify={notify} />
+            <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
+              <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ flex: 1 }}>
+                {saving ? 'Đang lưu...' : 'Lưu thông tin'}
+              </Button>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)' }} className="profile-grid-2col">
+            <ChangePasswordSection notify={notify} />
+            <NotificationSettingsSection notify={notify} />
+          </div>
           <BecomeCollaboratorSection go={go} notify={notify} user={user} onUserUpdate={onUserUpdate} />
+          <FeedbackSection />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--grey-100)' }}>
             <Button variant="ghost" onClick={onLogout} fullWidth style={{ color: 'var(--status-danger)' }}>Đăng xuất</Button>
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </section>
   );
 }
@@ -186,12 +194,27 @@ function ChangePasswordSection({ notify }) {
   return (
     <div id="security-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <Eyebrow tone="blue">Bảo mật</Eyebrow>
-      <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Đổi mật khẩu</h3>
         <Input label="Mật khẩu hiện tại" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
         <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự, có cả chữ và số" value={next} onChange={(e) => setNext(e.target.value)} required />
         {err && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
         <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ alignSelf: 'flex-start' }}>{saving ? 'Đang lưu...' : 'Đổi mật khẩu'}</Button>
+      </div>
+    </div>
+  );
+}
+
+function FeedbackSection() {
+  return (
+    <div id="feedback-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <Eyebrow tone="blue">Báo cáo hệ thống</Eyebrow>
+      <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div>
+          <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Gửi báo cáo lỗi / góp ý</h3>
+          <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Gặp lỗi hoặc có góp ý cải thiện hệ thống? Gửi cho đội ngũ phát triển ở đây.</p>
+        </div>
+        <FeedbackForm />
       </div>
     </div>
   );
@@ -224,9 +247,9 @@ function NotificationSettingsSection({ notify }) {
   if (isLoading) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+    <div id="notification-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <Eyebrow tone="blue">Thông báo</Eyebrow>
-      <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
           <input type="checkbox" checked={emailOn} onChange={toggleEmail} />
           <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>Nhận thông báo qua email</span>
@@ -340,7 +363,7 @@ function BecomeCollaboratorSection({ notify, user, onUserUpdate }) {
   return (
     <div id="become-ctv" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <Eyebrow tone="blue">Cộng tác viên</Eyebrow>
-      <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {isCtv ? (
           <>
             <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Bạn đang là Cộng tác viên</h3>

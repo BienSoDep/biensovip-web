@@ -113,8 +113,8 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const { data: vpaCounts } = useVpaCounts('');
   const { data: stockData } = usePlates({ perPage: 1 });
   const stockTotal = stockData?.total;
-  const tuanCount = vpaCounts?.tuan;
-  const thangCount = vpaCounts?.thang;
+  const tuanCount = vpaCounts?.weekly;
+  const thangCount = vpaCounts?.monthly;
   const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
   const navRef = useRef(null);
   const [luckyOpen, setLuckyOpen] = useState(false);

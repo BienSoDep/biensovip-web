@@ -205,6 +205,146 @@ function PasswordStrength({ value }) {
   );
 }
 
+// 1 thẻ biển trong khối showcase — tách riêng để render 2 biển song song (xem khối PLINTH SHOWCASE).
+function PlateShowcaseCard({ plate, onClick }) {
+  return (
+    <motion.a
+      href={routeFor('detail', plate.slug || plate.id)}
+      onClick={onClick}
+      initial={{ opacity: 0, y: 16, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -16, scale: 0.95 }}
+      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 16,
+        textDecoration: 'none',
+        cursor: 'pointer',
+        flex: '1 1 260px',
+        maxWidth: 300,
+        background: 'var(--white)',
+        border: '1px solid var(--border-hairline)',
+        borderRadius: 'var(--radius-surface)',
+        padding: '20px 16px 16px',
+        boxShadow: 'var(--shadow-inset-hairline)',
+        transition: 'border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease',
+      }}
+    >
+      {/* Status chip: VPA Auction / Ready */}
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '4px 10px',
+          borderRadius: 'var(--radius-pill)',
+          background: 'var(--surface-sunken)',
+          border: '1px solid var(--border-hairline)',
+        }}
+      >
+        <span
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            background: 'var(--status-success)',
+            display: 'inline-block',
+          }}
+        />
+        <span
+          style={{
+            font: '10px var(--font-sans)',
+            fontWeight: '700',
+            color: 'var(--status-success)',
+            letterSpacing: '.06em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Kho Biển VPA
+        </span>
+      </div>
+
+      {/* Physical Plate Visual */}
+      <div style={{ width: 'clamp(200px, 20vw, 240px)' }}>
+        <PlateVisual size="lg" {...splitPlateNumber(plate.plateNumber)} />
+      </div>
+
+      {/* Info and Pricing */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <span style={{ font: 'var(--type-body-sm)', fontWeight: '700', color: 'var(--text-strong, #0F172A)' }}>
+            {[plate.vehicleType, plate.province].filter(Boolean).join(' · ')}
+          </span>
+          {plate.isHot && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+                padding: '2px 7px',
+                borderRadius: 'var(--radius-pill)',
+                background: 'var(--status-danger)',
+                color: 'var(--white)',
+                fontSize: '10px',
+                fontWeight: '700',
+                letterSpacing: '.04em',
+              }}
+            >
+              <Flame size={10} fill="currentColor" /> HOT
+            </span>
+          )}
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 3,
+              padding: '2px 7px',
+              borderRadius: 'var(--radius-pill)',
+              background: 'var(--surface-sunken)',
+              color: 'var(--action-primary)',
+              border: '1px solid var(--border-hairline)',
+              fontSize: '10px',
+              fontWeight: '700',
+              letterSpacing: '.04em',
+            }}
+          >
+            VIP
+          </span>
+        </div>
+
+        <span
+          style={{
+            font: '1.2rem var(--font-display)',
+            fontWeight: '800',
+            color: 'var(--action-primary)',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          {formatPrice(plate.price, plate.priceOnRequest)}
+        </span>
+
+        <span
+          style={{
+            font: 'var(--type-caption)',
+            color: 'var(--action-primary)',
+            fontWeight: '600',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            marginTop: 2,
+            transition: 'color 160ms ease',
+          }}
+        >
+          Chi tiết <ArrowUpRight size={14} style={{ color: 'var(--action-primary)' }} />
+        </span>
+      </div>
+    </motion.a>
+  );
+}
+
 export default function Auth({
   st,
   s,
@@ -339,23 +479,25 @@ const FALLBACK_PLATES = [
   { id: 'sample-4', plateNumber: '43C-688.68', vehicleType: 'Xe máy', province: 'Đà Nẵng', price: 68000000, isHot: false },
 ];
 
-  // Xoay biển thực tế nổi bật mỗi 3.8s
+  // Xoay cặp 2 biển thực tế nổi bật mỗi 3.8s
   const { data: featuredPlates } = useFeaturedPlates(6);
   const plates = featuredPlates?.length ? featuredPlates : FALLBACK_PLATES;
   const [plateIdx, setPlateIdx] = useState(0);
   useEffect(() => {
-    if (plates.length < 2) return;
-    const t = setInterval(() => setPlateIdx((i) => (i + 1) % plates.length), 3800);
+    if (plates.length < 3) return;
+    const t = setInterval(() => setPlateIdx((i) => (i + 2) % plates.length), 3800);
     return () => clearInterval(t);
   }, [plates.length]);
-  const plate = plates[plateIdx % (plates.length || 1)];
-  const goPlateDetail = plate
+  const pairLen = plates.length || 1;
+  const plate = plates[plateIdx % pairLen];
+  const plate2 = plates.length > 1 ? plates[(plateIdx + 1) % pairLen] : null;
+  const goPlateDetail = (p) => (p
     ? (e) => {
         e.preventDefault();
-        openPlate?.(plate.id);
+        openPlate?.(p.id);
         go('detail')();
       }
-    : undefined;
+    : undefined);
 
   const activeSlides = s === 'register' ? REGISTER_BENEFIT_SLIDES : PROJECT_HIGHLIGHTS;
   const [highlightIdx, setHighlightIdx] = useState(0);
@@ -495,13 +637,12 @@ const FALLBACK_PLATES = [
                   position: 'relative',
                   width: 44,
                   height: 44,
-                  borderRadius: 12,
-                  background: 'linear-gradient(135deg, #FFFFFF 0%, rgba(245, 158, 11, 0.12) 100%)',
-                  border: '1px solid rgba(217, 119, 6, 0.25)',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--white)',
+                  border: '1px solid var(--border-hairline)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 4px 14px rgba(217, 119, 6, 0.1)',
                 }}
               >
                 <img src="/assets/logo-mark.png" alt="Duy Đinh" style={{ width: 30, height: 30, objectFit: 'contain' }} />
@@ -543,23 +684,21 @@ const FALLBACK_PLATES = [
                 alignItems: 'center',
                 gap: 7,
                 padding: '8px 16px',
-                borderRadius: 'var(--radius-pill)',
-                background: 'rgba(255, 255, 255, 0.85)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(217, 119, 6, 0.22)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--white)',
+                border: '1px solid var(--border-hairline)',
                 font: 'var(--type-caption)',
                 fontWeight: '600',
                 color: 'var(--text-strong, #0F172A)',
                 textDecoration: 'none',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
                 transition: 'all 200ms var(--ease-out)',
               }}
             >
-              <ArrowLeft size={14} style={{ color: '#C75B00' }} /> Trang chủ
+              <ArrowLeft size={14} style={{ color: 'var(--action-primary)' }} /> Trang chủ
             </a>
           </div>
 
-          {/* PLINTH SHOWCASE BIỂN SỐ THỰC TẾ (CENTER PIECE) */}
+          {/* PLINTH SHOWCASE BIỂN SỐ THỰC TẾ (CENTER PIECE) — 2 biển song song */}
           {!!plate && (
             <div
               style={{
@@ -572,172 +711,35 @@ const FALLBACK_PLATES = [
                 flex: 1,
                 minHeight: 0,
                 margin: 'var(--space-2) 0',
+                gap: 16,
               }}
             >
-              <AnimatePresence mode="wait">
-                <motion.a
-                  href={routeFor('detail', plate.slug || plate.id)}
-                  onClick={goPlateDetail}
-                  key={plate.id}
-                  initial={{ opacity: 0, y: 16, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -16, scale: 0.95 }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                  style={{
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 16,
-                    textDecoration: 'none',
-                    cursor: 'pointer',
-                    width: '100%',
-                    maxWidth: 420,
-                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.76) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(217, 119, 6, 0.24)',
-                    borderRadius: 24,
-                    padding: '24px 20px 18px',
-                    boxShadow:
-                      '0 24px 48px -12px rgba(217, 119, 6, 0.16), 0 8px 24px -4px rgba(0, 0, 0, 0.04), inset 0 1px 0 #FFFFFF',
-                    transition: 'border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease',
-                  }}
-                >
-                  {/* Status chip: VPA Auction / Ready */}
-                  <div
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', width: '100%' }}>
+                <AnimatePresence mode="wait">
+                  <PlateShowcaseCard key={plate.id} plate={plate} onClick={goPlateDetail(plate)} />
+                </AnimatePresence>
+                {plate2 && (
+                  <AnimatePresence mode="wait">
+                    <PlateShowcaseCard key={plate2.id} plate={plate2} onClick={goPlateDetail(plate2)} />
+                  </AnimatePresence>
+                )}
+              </div>
+
+              {/* Plate Carousel Step Pills — theo cặp đang hiện */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {plates.map((_, i) => (
+                  <span
+                    key={i}
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '4px 12px',
+                      width: i === plateIdx || i === (plateIdx + 1) % pairLen ? 22 : 6,
+                      height: 5,
                       borderRadius: 'var(--radius-pill)',
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                      background: i === plateIdx || i === (plateIdx + 1) % pairLen ? 'var(--action-primary)' : 'var(--border-hairline)',
+                      transition: 'all 280ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
-                  >
-                    <span
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: '50%',
-                        background: '#10B981',
-                        boxShadow: '0 0 6px #10B981',
-                        display: 'inline-block',
-                      }}
-                    />
-                    <span
-                      style={{
-                        font: '11px var(--font-sans)',
-                        fontWeight: '700',
-                        color: '#059669',
-                        letterSpacing: '.06em',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Kho Biển Đấu Giá VPA · Chính Thức
-                    </span>
-                  </div>
-
-                  {/* Physical Plate Visual */}
-                  <div
-                    style={{
-                      width: 'clamp(260px, 28vw, 340px)',
-                      filter: 'drop-shadow(0 16px 28px rgba(0, 0, 0, 0.14))',
-                    }}
-                  >
-                    <PlateVisual size="lg" {...splitPlateNumber(plate.plateNumber)} />
-                  </div>
-
-                  {/* Info and Pricing */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center', width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <span style={{ font: 'var(--type-title-3)', fontWeight: '700', color: 'var(--text-strong, #0F172A)' }}>
-                        {[plate.vehicleType, plate.province].filter(Boolean).join(' · ')}
-                      </span>
-                      {plate.isHot && (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 3,
-                            padding: '2px 8px',
-                            borderRadius: 'var(--radius-pill)',
-                            background: '#EF4444',
-                            color: '#FFFFFF',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            letterSpacing: '.04em',
-                            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
-                          }}
-                        >
-                          <Flame size={11} fill="currentColor" /> HOT
-                        </span>
-                      )}
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 3,
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-pill)',
-                          background: 'rgba(217, 119, 6, 0.12)',
-                          color: '#B45309',
-                          border: '1px solid rgba(217, 119, 6, 0.25)',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          letterSpacing: '.04em',
-                        }}
-                      >
-                        VIP
-                      </span>
-                    </div>
-
-                    <span
-                      style={{
-                        font: '1.45rem var(--font-display)',
-                        fontWeight: '800',
-                        color: '#B45309',
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      {formatPrice(plate.price, plate.priceOnRequest)}
-                    </span>
-
-                    <span
-                      style={{
-                        font: 'var(--type-caption)',
-                        color: '#C75B00',
-                        fontWeight: '600',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        marginTop: 2,
-                        transition: 'color 160ms ease',
-                      }}
-                    >
-                      Khám phá chi tiết tấm biển <ArrowUpRight size={14} style={{ color: '#C75B00' }} />
-                    </span>
-                  </div>
-
-                  {/* Plate Carousel Step Pills */}
-                  <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                    {plates.map((_, i) => (
-                      <span
-                        key={i}
-                        style={{
-                          width: i === plateIdx ? 22 : 6,
-                          height: 5,
-                          borderRadius: 'var(--radius-pill)',
-                          background: i === plateIdx ? 'var(--action-primary, #C75B00)' : 'rgba(0, 0, 0, 0.14)',
-                          boxShadow: i === plateIdx ? '0 0 6px rgba(217, 119, 6, 0.3)' : 'none',
-                          transition: 'all 280ms cubic-bezier(0.16, 1, 0.3, 1)',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </motion.a>
-              </AnimatePresence>
+                  />
+                ))}
+              </div>
             </div>
           )}
 
@@ -827,11 +829,9 @@ const FALLBACK_PLATES = [
                           alignItems: 'center',
                           gap: 6,
                           padding: '6px 12px',
-                          borderRadius: 10,
-                          background: 'rgba(255, 255, 255, 0.85)',
-                          border: '1px solid rgba(217, 119, 6, 0.15)',
-                          backdropFilter: 'blur(8px)',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
+                          borderRadius: 'var(--radius-md)',
+                          background: 'var(--surface-sunken)',
+                          border: '1px solid var(--border-hairline)',
                         }}
                       >
                         <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '500' }}>
@@ -873,8 +873,7 @@ const FALLBACK_PLATES = [
                           height: 5,
                           width: isActive ? 28 : 6,
                           borderRadius: 'var(--radius-pill)',
-                          background: isActive ? 'var(--action-primary, #C75B00)' : 'rgba(0, 0, 0, 0.16)',
-                          boxShadow: isActive ? '0 0 8px rgba(217, 119, 6, 0.35)' : 'none',
+                          background: isActive ? 'var(--action-primary)' : 'var(--border-hairline)',
                           transition: 'all 280ms cubic-bezier(0.16, 1, 0.3, 1)',
                         }}
                       />

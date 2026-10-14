@@ -787,7 +787,6 @@ export function MicroEngagementsChart({ plateEngagement }) {
     { label: 'Gọi Hotline', count: plateEngagement.phoneCalls || 0, color: '#C75B00', icon: PhoneCall },
     { label: 'Lưu thích', count: plateEngagement.wishlistSaves || 0, color: '#F5C542', icon: Bookmark },
     { label: 'Đưa so sánh', count: plateEngagement.compareActions || 0, color: '#8A6100', icon: GitCompare },
-    { label: 'Tra phong thủy', count: plateEngagement.fengShuiLookups || 0, color: '#E5484D', icon: Sparkles },
     { label: 'Chia sẻ biển', count: plateEngagement.shares || 0, color: '#6B7180', icon: Share2 },
   ];
 

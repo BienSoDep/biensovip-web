@@ -17,9 +17,9 @@ export const ADMIN_NAV = [
   { group: 'Kho biển số & VPA', items: [['aplates', 'Biển số'], ['avpa', 'Biển VPA'], ['avpastats', 'Thống kê & Phân tích VPA'], ['acats', 'Danh mục']] },
   { group: 'Bán hàng & Khách hàng', items: [['asales', 'Bán hàng'], ['ainterestleads', 'Khách quan tâm'], ['acustomers', 'Khách hàng'], ['acoupons', 'Mã giảm giá']] },
   { group: 'Nội dung', items: [['aposts', 'Blog'], ['avideos', 'Video'], ['ameanings', 'Ý nghĩa phong thủy'], ['apolicypages', 'Trang chính sách']] },
-  { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI']] },
+  { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI'], ['afengshuihistory', 'Lịch sử luận giải']] },
   { group: 'Cộng tác viên', items: [['acollabs', 'Cộng tác viên'], ['acollabcontent', 'Nội dung CTV'], ['actvtemplates', 'Mẫu tin nhắn CTV']] },
-  { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký'], ['ashowroom', 'Hiển thị trang public'], ['afeatureflags', 'Công cụ vận hành']] },
+  { group: 'Hệ thống', items: [['astaff', 'Nhân viên'], ['aauditlog', 'Nhật ký'], ['ashowroom', 'Hiển thị trang public'], ['afeatureflags', 'Công cụ vận hành'], ['asystemfeedback', 'Báo cáo hệ thống']] },
 ];
 export const TONES = { 'Mới': 'blue', 'Đang tư vấn': 'amber', 'Đã chốt': 'mint', 'Còn hàng': 'mint', 'Đã bán': 'rose', 'Ẩn': 'neutral', 'Đã xuất bản': 'mint', 'Bản nháp': 'neutral' };
 export const STATUS_FG = { 'Mới': 'var(--blue-700)', 'Đang tư vấn': 'var(--status-warning-ink)', 'Đã chốt': 'var(--status-success-ink)' };

@@ -530,7 +530,7 @@ export default function PlateList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, items.length]);
   const showSkeleton = vpaTab
-    ? vpaQuery.isLoading
+    ? vpaQuery.isLoading || vpaQuery.isFetching
     : useInfinite
       ? inf.isLoading
       : isLoading || isFetching;
