@@ -83,13 +83,14 @@ export default function OnboardingTour({ active, referralCode, setTab, onClose }
 
   return (
     <>
-      <div onClick={finish} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', zIndex: 1000 }} />
-      {rect && (
-        <div style={{
+      {rect ? (
+        <div onClick={finish} style={{
           position: 'fixed', top: rect.top - 6, left: rect.left - 6, width: rect.width + 12, height: rect.height + 12,
           border: '2px solid var(--action-primary)', borderRadius: 10, boxShadow: '0 0 0 4000px rgba(15,23,42,.45)',
-          zIndex: 1001, pointerEvents: 'none', transition: 'all 160ms ease',
+          zIndex: 1001, transition: 'all 160ms ease',
         }} />
+      ) : (
+        <div onClick={finish} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', zIndex: 1000 }} />
       )}
       <div role="dialog" aria-label={s.title} style={{
         position: 'fixed', top: tipTop, left: tipLeft, transform: tipFlipped ? 'translate(-50%,0)' : 'translate(-50%,-100%)',
@@ -106,6 +107,7 @@ export default function OnboardingTour({ active, referralCode, setTab, onClose }
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
           <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{step + 1}/{STEPS.length}</span>
           <div style={{ display: 'flex', gap: 6 }}>
+            {step < STEPS.length - 1 && <Button variant="ghost" size="sm" onClick={finish}>Bỏ qua</Button>}
             {step > 0 && <Button variant="ghost" size="sm" onClick={prev}>Quay lại</Button>}
             <Button variant="primary" size="sm" onClick={next}>{step < STEPS.length - 1 ? 'Tiếp theo' : 'Hoàn tất'}</Button>
           </div>
