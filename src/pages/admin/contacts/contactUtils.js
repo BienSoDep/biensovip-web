@@ -1,6 +1,6 @@
 export const INTENT_LABEL = { inquiry: 'Hỏi chung', deposit_request: 'Đặt cọc', buy: 'Mua đứt', hunting: 'Săn hộ' };
 export const INTENT_COLOR = { inquiry: 'var(--text-muted)', deposit_request: 'var(--accent-orange-ink)', buy: 'var(--blue-700)', hunting: 'var(--accent-purple-ink)' };
-export const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên hệ', 'plate-detail': 'Trang biển số', 'chatbot': 'Trợ lý AI' };
+export const SOURCE_LABEL = { 'home-page': 'Trang chủ', 'contact-page': 'Trang liên hệ', 'plate-detail': 'Trang biển số', 'chatbot': 'Trợ lý AI', 'lucky_plate': 'Tìm biển hợp mệnh' };
 export const STATUS_OPTS = ['Mới', 'Đang tư vấn', 'Đã chốt', 'Hủy'];
 export const STATUS_VAL = { 'Mới': 'new', 'Đang tư vấn': 'consulting', 'Đã chốt': 'closed', 'Hủy': 'cancelled' };
 // found giữ lại trong map hiển thị — phòng data cũ chưa migrate về closed vẫn hiện đúng nhãn thay vì "undefined".

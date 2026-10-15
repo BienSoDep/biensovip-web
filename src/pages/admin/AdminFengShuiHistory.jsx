@@ -9,6 +9,8 @@ import Pagination from '../../components/Pagination.jsx';
 import { useExportCsv } from '../../hooks/useExportCsv.js';
 import { formatDateTime } from '../../lib/date.js';
 import FengShuiHistoryDetailModal from './fengshui-history/FengShuiHistoryDetailModal.jsx';
+import AdminTabbedPage from '../../components/AdminTabbedPage.jsx';
+import FengShuiMatchLogTab from './fengshui-history/FengShuiMatchLogTab.jsx';
 
 export const FS_HISTORY_COLUMNS = [
   { key: 'plate', label: 'Biển số', default: true },
@@ -51,7 +53,15 @@ function KpiCard({ icon: Icon, label, value, color }) {
   );
 }
 
-export default function AdminFengShuiHistory() {
+const PURPOSE_OPTIONS = [
+  { value: 'kinh_doanh', label: 'Kinh doanh' },
+  { value: 'ca_nhan', label: 'Đi lại cá nhân' },
+  { value: 'xe_gia_dinh', label: 'Xe gia đình' },
+  { value: 'xe_dich_vu', label: 'Xe dịch vụ' },
+  { value: 'sua_tam', label: 'Sang tên / sưu tầm' },
+];
+
+function AnalysisHistoryTab() {
   const [search, setSearch] = useState('');
   const [q] = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
@@ -71,6 +81,10 @@ export default function AdminFengShuiHistory() {
 
   const { data, isLoading, isError, refetch, isFetching } = useAdminFengShuiHistory({
     q, page, perPage: 20, fromDate: fromDate || undefined, toDate: toDate || undefined,
+    element: elementFilter !== 'all' ? elementFilter : undefined,
+    purpose: purposeFilter !== 'all' ? purposeFilter : undefined,
+    hasAccount: accountFilter === 'all' ? undefined : accountFilter === 'member',
+    followedUp: followUpFilter === 'all' ? undefined : followUpFilter === 'done',
   });
   const { data: stats } = useAdminFengShuiHistoryStats();
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/fengshui-analysis-history');
@@ -78,19 +92,9 @@ export default function AdminFengShuiHistory() {
   const result = data ?? { items: [], total: 0, page: 1, perPage: 20 };
   const totalPages = Math.max(1, Math.ceil(result.total / result.perPage));
 
-  // Lọc client-side (mệnh/mục đích/tài khoản/trạng thái) — backend không hỗ trợ các filter này,
-  // dữ liệu trang hiện tại (tối đa 20 dòng) đủ nhỏ để lọc phía client không cần round-trip thêm.
-  const filteredItems = (result.items || []).filter((i) => {
-    if (elementFilter !== 'all' && i.elementResult !== elementFilter) return false;
-    if (purposeFilter !== 'all' && i.purpose !== purposeFilter) return false;
-    if (accountFilter === 'guest' && i.hasUserAccount) return false;
-    if (accountFilter === 'member' && !i.hasUserAccount) return false;
-    if (followUpFilter === 'pending' && i.followedUp) return false;
-    if (followUpFilter === 'done' && !i.followedUp) return false;
-    return true;
-  });
-
-  const sortedItems = sortTableItems(filteredItems, sort.key, sort.dir, {
+  // Lọc + sort server-side (element/purpose/hasAccount/followedUp đều gửi lên API) — bảng trên
+  // chỉ còn sort hiển thị cho 20 dòng trang hiện tại, không lọc lại phía client nữa.
+  const sortedItems = sortTableItems(result.items || [], sort.key, sort.dir, {
     plate: (i) => i.plateNumberRaw || '',
     customer: (i) => i.fullName || '',
     purpose: (i) => i.purpose || '',
@@ -99,8 +103,6 @@ export default function AdminFengShuiHistory() {
     status: (i) => (i.followedUp ? 1 : 0),
     time: (i) => i.createdAt || '',
   });
-
-  const purposeOptions = [...new Set((result.items || []).map((i) => i.purpose).filter(Boolean))];
 
   const hasActiveFilters = !!search || !!fromDate || !!toDate || elementFilter !== 'all' || purposeFilter !== 'all' || accountFilter !== 'all' || followUpFilter !== 'all';
   const clearFilters = () => {
@@ -173,7 +175,7 @@ export default function AdminFengShuiHistory() {
         <select value={purposeFilter} onChange={(e) => { setPurposeFilter(e.target.value); setPage(1); }}
           style={FILTER_FIELD_STYLE}>
           <option value="all">Tất cả mục đích</option>
-          {purposeOptions.map((p) => <option key={p} value={p}>{p}</option>)}
+          {PURPOSE_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
         </select>
 
         <select value={accountFilter} onChange={(e) => { setAccountFilter(e.target.value); setPage(1); }}
@@ -323,4 +325,12 @@ export default function AdminFengShuiHistory() {
       <FengShuiHistoryDetailModal id={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
+}
+
+export default function AdminFengShuiHistory() {
+  const tabs = [
+    { key: 'analysis', label: 'Luận giải biển có sẵn', render: () => <AnalysisHistoryTab /> },
+    { key: 'match', label: 'Tìm biển hợp mệnh', render: () => <FengShuiMatchLogTab /> },
+  ];
+  return <AdminTabbedPage tabs={tabs} initialTab="analysis" />;
 }
