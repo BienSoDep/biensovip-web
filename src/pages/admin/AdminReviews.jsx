@@ -50,6 +50,7 @@ export default function AdminReviews({ notify }) {
   const { data, isLoading, isError, refetch } = useAdminReviews(status, page, 20, undefined, q || undefined);
   const updateStatus = useUpdateReviewStatus();
   const replyReview = useReplyReview();
+  const rawItems = data?.items || [];
 
   const filteredAndSortedItems = useMemo(() => {
     let res = rawItems;
