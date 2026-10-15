@@ -3,7 +3,8 @@ import { apiClient } from './apiClient.js';
 
 export function useSendChatbotMessage() {
   return useMutation({
-    mutationFn: ({ sessionId, message }) => apiClient.post('/api/chatbot/message', { sessionId, message }),
+    mutationFn: ({ sessionId, message, currentPlateNumber }) =>
+      apiClient.post('/api/chatbot/message', { sessionId, message, currentPlateNumber }),
   });
 }
 

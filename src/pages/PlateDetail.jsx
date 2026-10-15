@@ -46,6 +46,7 @@ import {
   useLogPlateContact,
 } from "../services/plateDetail.js";
 import { logZaloClick } from "../services/zaloClicks.js";
+import { setCurrentPlateNumber } from "../lib/currentPlateContext.js";
 import {
   trackViewItem,
   trackGenerateLead,
@@ -340,6 +341,11 @@ export default function PlateDetail({
     if (plateId) logView.mutate(plateId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plateId]);
+
+  useEffect(() => {
+    setCurrentPlateNumber(plate?.plateNumber);
+    return () => setCurrentPlateNumber(null);
+  }, [plate?.plateNumber]);
 
   useEffect(() => {
     if (plate) trackViewItem(plate);

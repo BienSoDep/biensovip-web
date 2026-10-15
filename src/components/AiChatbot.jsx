@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles } from 'lucide-react';
 import { useSendChatbotMessage, useChatbotHistory, useChatbotWidgetEnabled } from '../services/chatbotService.js';
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js';
+import { getCurrentPlateNumber } from '../lib/currentPlateContext.js';
 
 const ACTION_LABEL = { chat_with_staff: 'Chat với nhân viên', contact_form: 'Để lại thông tin liên hệ' };
 const SESSION_KEY = 'bsv.chatSessionId';
@@ -109,7 +110,7 @@ export default function AiChatbot({ go }) {
     setMsgs((m) => [...m, { from: 'user', text: v }]);
 
     try {
-      const res = await sendMessage.mutateAsync({ sessionId, message: v });
+      const res = await sendMessage.mutateAsync({ sessionId, message: v, currentPlateNumber: getCurrentPlateNumber() });
       setInput('');
       setSessionId(res.sessionId);
       storeSessionId(res.sessionId);
