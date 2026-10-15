@@ -21,7 +21,7 @@ import { useVpaCounts } from '../../../services/vpa.js';
 import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useStartRecomputeVpaSuggestions, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
-  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useApproveDriftedVpa,
+  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useStartApproveDriftedVpa,
 } from '../../../services/adminVpa.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
@@ -462,7 +462,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const startApproveAll = useStartApproveAllVpaSuggested();
   const startApproveRecomputed = useStartApproveRecomputedVpa();
   const startApproveMatchedSamples = useStartApproveMatchedSamplesVpa();
-  const approveDrifted = useApproveDriftedVpa();
+  const startApproveDrifted = useStartApproveDriftedVpa();
   const [confirmAction, setConfirmAction] = useState(null); // null | 'all' | 'recomputed' | 'recomputed-override' | 'matched-samples' | 'drifted'
   const [approveRunId, setApproveRunId] = useState(null); // UC49 — lượt duyệt nền đang theo dõi (thanh %)
   const { data: approveRun } = useVpaApproveRun(approveRunId, !!approveRunId);
@@ -1808,7 +1808,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           }
           confirmLabel="Thực hiện"
           danger={confirmAction === 'recomputed-override'}
-          loading={startApproveAll.isPending || startApproveRecomputed.isPending || startApproveMatchedSamples.isPending || approveDrifted.isPending}
+          loading={startApproveAll.isPending || startApproveRecomputed.isPending || startApproveMatchedSamples.isPending || startApproveDrifted.isPending}
           onConfirm={() => {
             const action = confirmAction;
             const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); };
@@ -1818,11 +1818,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             } else if (action === 'matched-samples') {
               startApproveMatchedSamples.mutateAsync().then(onStarted).catch(onError);
             } else if (action === 'drifted') {
-              approveDrifted.mutateAsync().then((res) => {
-                setConfirmAction(null);
-                notify?.(`Đã cập nhật giá mới thành công cho ${Number(res?.affected || 0).toLocaleString('vi-VN')} biển!`, 'success');
-                refetch();
-              }).catch(onError);
+              startApproveDrifted.mutateAsync().then(onStarted).catch(onError);
             } else {
               startApproveRecomputed.mutateAsync(action === 'recomputed-override').then(onStarted).catch(onError);
             }
