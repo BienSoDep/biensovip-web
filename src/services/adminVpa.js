@@ -125,6 +125,8 @@ export function useVpaApproveRun(runId, enabled) {
     refetchInterval: (q) => (q.state.data?.status === 'running' ? 1000 : false),
   });
 }
+// "Chạy tiếp" run đã lỗi (chỉ recompute_suggestions/approve_recomputed) — bỏ qua batch đã xong, chạy tiếp phần còn lại.
+export const useResumeVpaApproveRun = () => useVpaMutation((runId) => apiClient.post(`/api/admin/vpa/plates/price/approve-runs/${runId}/resume`));
 export const useRejectVpaPrice = () => useVpaMutation((ids) => apiClient.post('/api/admin/vpa/plates/price/reject', { ids }));
 export const useApproveVpaGroup = () => useVpaMutation((groupId) => apiClient.post(`/api/admin/vpa/price-groups/${groupId}/approve`));
 export const useHideVpaPlate = () => useVpaMutation(({ id, value }) => apiClient.post(`/api/admin/vpa/plates/${id}/hide`, { value }));

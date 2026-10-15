@@ -22,10 +22,12 @@ import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useStartRecomputeVpaSuggestions, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
   useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useStartApproveDriftedVpa,
+  useResumeVpaApproveRun,
 } from '../../../services/adminVpa.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { formatDate } from '../../../lib/date.js';
+import { registerApproveRun } from '../../../lib/runWatcher.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 import Modal from '../../../components/Modal.jsx';
@@ -124,10 +126,14 @@ function SortHeader({ sort, toggleSort, label, sortKey, style, tip }) {
 
 // UC49 — thanh tiến trình cho "Duyệt tất cả theo bộ lọc" / "Duyệt lại giá toàn bộ": run chạy nền, FE polling
 // (useVpaApproveRun) mỗi giây. Chưa có Total (server đếm xong mới biết) → thanh pulse không xác định %.
+const RESUMABLE_KINDS = ['recompute_suggestions', 'approve_recomputed'];
+
 function ApproveRunModal({ run, onClose }) {
   const running = !run || run.status === 'running';
   const hasTotal = !!(run?.total && run.total > 0);
   const pct = hasTotal ? Math.min(100, Math.round((run.done * 100) / run.total)) : null;
+  const resume = useResumeVpaApproveRun();
+  const canResume = run?.status === 'error' && RESUMABLE_KINDS.includes(run?.kind);
   return (
     <Modal open title={running ? 'Đang duyệt giá…' : run.status === 'success' ? 'Duyệt giá xong' : 'Duyệt giá lỗi'} maxWidth="440px">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -152,8 +158,13 @@ function ApproveRunModal({ run, onClose }) {
               ? `Đã hoàn thành: cập nhật ${run.approved.toLocaleString('vi-VN')} biển (xét ${run.done.toLocaleString('vi-VN')}/${(run.total || run.done).toLocaleString('vi-VN')}).`
               : run.error || 'Có lỗi xảy ra.'}
         </p>
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant={running ? 'ghost' : 'primary'} size="md" onClick={onClose}>{running ? 'Chạy nền (đóng)' : 'Đóng'}</Button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+          {canResume && (
+            <Button variant="primary" size="md" loading={resume.isPending} onClick={() => resume.mutate(run.id)}>
+              Chạy tiếp
+            </Button>
+          )}
+          <Button variant={running ? 'ghost' : canResume ? 'ghost' : 'primary'} size="md" onClick={onClose}>{running ? 'Chạy nền (đóng)' : 'Đóng'}</Button>
         </div>
       </div>
     </Modal>
@@ -483,7 +494,9 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     setRecomputing(true);
     try {
       const res = await startRecomputeSuggestions.mutateAsync();
-      setApproveRunId(res?.data?.runId || res?.runId);
+      const rid = res?.data?.runId || res?.runId;
+      setApproveRunId(rid);
+      registerApproveRun(rid);
     } catch (err) {
       notify?.(err?.message || 'Có lỗi khi tính lại giá gợi ý.', 'error');
     } finally {
@@ -1811,7 +1824,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           loading={startApproveAll.isPending || startApproveRecomputed.isPending || startApproveMatchedSamples.isPending || startApproveDrifted.isPending}
           onConfirm={() => {
             const action = confirmAction;
-            const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); };
+            const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); registerApproveRun(r.runId); };
             const onError = (e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); };
             if (action === 'all') {
               startApproveAll.mutateAsync({ queue: true, ...f, q: dq }).then(onStarted).catch(onError);

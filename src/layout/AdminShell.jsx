@@ -13,6 +13,7 @@ import Breadcrumb from '../components/Breadcrumb.jsx';
 import { SearchField, AdminInfoBanner } from '../components/index.jsx';
 import { pill } from '../components/NavBtn.jsx';
 import AdminNotificationBell from './AdminNotificationBell.jsx';
+import AdminRunWatcher from './AdminRunWatcher.jsx';
 import AdminKanban from '../pages/admin/AdminKanban.jsx';
 import AdminSales from '../pages/admin/AdminSales.jsx';
 import * as authApi from '../services/authService.js';
@@ -481,6 +482,7 @@ export default function AdminShell({
 
   return (
     <div className="admin-shell" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
+      <AdminRunWatcher />
       {!drawerOpen && (
         <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" aria-controls="admin-drawer" aria-expanded={drawerOpen} style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <Menu size={20} />
