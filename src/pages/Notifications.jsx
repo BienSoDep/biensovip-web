@@ -11,7 +11,7 @@ function stripHtml(html) {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export default function Notifications({ go, notify }) {
+export default function Notifications({ go, notify, openPost }) {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, refetch } = useNotifications({ page, limit: PER_PAGE });
   const markRead = useMarkNotificationRead();
@@ -21,6 +21,8 @@ export default function Notifications({ go, notify }) {
     if (!n.read) markRead.mutate(n.id);
     markClicked.mutate(n.id); // T10: đo CTR theo loại thông báo
     if (n.plateId && go) go('detail', n.plateId)?.();
+    else if (n.targetScreen === 'post' && n.targetAnchor) openPost?.(n.targetAnchor);
+    else if (n.targetScreen && go) go(n.targetScreen)?.();
   };
 
   const items = data?.items || [];

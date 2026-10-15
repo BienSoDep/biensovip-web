@@ -12,7 +12,7 @@ import { timeAgo } from '../lib/date.js';
 
 const LAST_SEEN_BROADCAST_KEY = 'biensovip_last_seen_broadcast';
 
-function NotificationBell({ go, openPlate, user }) {
+function NotificationBell({ go, openPlate, openPost, user }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const bellRef = useRef(null);
@@ -68,6 +68,8 @@ function NotificationBell({ go, openPlate, user }) {
     if (!n.read) markRead.mutate(n.id);
     setOpen(false);
     if (n.plateId) openPlate(n.plateId);
+    else if (n.targetScreen === 'post' && n.targetAnchor) openPost(n.targetAnchor);
+    else if (n.targetScreen) go(n.targetScreen)();
     else go('notifications')();
   };
 
@@ -106,7 +108,7 @@ function NotificationBell({ go, openPlate, user }) {
   );
 }
 
-export default function Header({ s, go, favCount, user, patch, notify, onMenu, openPlate }) {
+export default function Header({ s, go, favCount, user, patch, notify, onMenu, openPlate, openPost }) {
   const T = contentGet;
   const { ids: compareIds } = useCompareIds();
   const compareCount = compareIds.length;
@@ -473,7 +475,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
           })}
         </nav>
         <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0, marginLeft: 'auto' }}>
-          <NotificationBell go={go} openPlate={openPlate} user={user} />
+          <NotificationBell go={go} openPlate={openPlate} openPost={openPost} user={user} />
           <div style={{ position: 'relative', display: 'flex' }}>
             <IconButton name="heart" label={T('common.fav.label')} onClick={go('fav')} />
             {favCount > 0 && (<span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{favCount}</span>)}
