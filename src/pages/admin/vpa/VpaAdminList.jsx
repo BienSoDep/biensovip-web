@@ -19,9 +19,9 @@ import PlateCountSummary from '../PlateCountSummary.jsx';
 import { useAdminCategories } from '../../../services/categories.js';
 import { useVpaCounts } from '../../../services/vpa.js';
 import {
-  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useVpaApproveRun,
+  useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useStartRecomputeVpaSuggestions, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
-  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useRecomputeVpaSuggestions, useApproveDriftedVpa,
+  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useApproveDriftedVpa,
 } from '../../../services/adminVpa.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
@@ -198,9 +198,10 @@ function ApproveDropdownMenu({ onSelect }) {
             style={{
               position: 'absolute',
               top: '100%',
-              left: 0,
+              right: 0,
               marginTop: 4,
               minWidth: 320,
+              maxWidth: 'min(320px, 92vw)',
               background: 'var(--white)',
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-4)',
@@ -472,19 +473,17 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const update = useUpdateVpaPlate();
   const create = useCreateVpaPlate();
   const bulk = useBulkEditVpa();
-  const recomputeSuggestions = useRecomputeVpaSuggestions();
+  const startRecomputeSuggestions = useStartRecomputeVpaSuggestions();
   const [recomputing, setRecomputing] = useState(false);
 
+  // Trước đây gọi API đồng bộ /recompute-suggestions, chờ response ngay trong request — với kho biển
+  // lớn request này chạy lâu, dễ bị timeout/"Exception while reading from stream" giữa chừng. Giờ dùng
+  // chung cơ chế start+poll+modal tiến trình như "Duyệt hàng loạt" (approveRunId/ApproveRunModal).
   const handleRecomputeSuggestions = async () => {
     setRecomputing(true);
     try {
-      const res = await recomputeSuggestions.mutateAsync();
-      const info = res?.data || {};
-      notify?.(
-        `Đã quét và tính xong giá gợi ý: gán mới cho ${Number(info.platesAssigned || 0).toLocaleString('vi-VN')} biển chưa có giá, cập nhật ${Number(info.platesUpdated || 0).toLocaleString('vi-VN')} biển!`,
-        'success'
-      );
-      refetch();
+      const res = await startRecomputeSuggestions.mutateAsync();
+      setApproveRunId(res?.data?.runId || res?.runId);
     } catch (err) {
       notify?.(err?.message || 'Có lỗi khi tính lại giá gợi ý.', 'error');
     } finally {
@@ -1836,8 +1835,12 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           run={approveRun}
           onClose={() => {
             setApproveRunId(null);
-            if (approveRun?.status === 'success') { notify?.(`Đã duyệt ${approveRun.approved} biển`); refetch(); }
-            else if (approveRun?.status === 'error') notify?.(approveRun.error || 'Thao tác thất bại');
+            if (approveRun?.status === 'success') {
+              notify?.(approveRun.kind === 'recompute_suggestions'
+                ? `Đã tính lại giá gợi ý: gán/cập nhật ${approveRun.approved.toLocaleString('vi-VN')} nhóm, ${approveRun.done.toLocaleString('vi-VN')} biển.`
+                : `Đã duyệt ${approveRun.approved} biển`);
+              refetch();
+            } else if (approveRun?.status === 'error') notify?.(approveRun.error || 'Thao tác thất bại');
           }}
         />
       )}

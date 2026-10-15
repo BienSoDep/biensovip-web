@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
+import BusyModal from '../../../components/BusyModal.jsx';
 import { Badge } from '../../../components/index.jsx';
 import { useVpaIntegrity, useVpaIntegrityRows, useFixVpaIntegrity, useVpaIntegrityFixes, useUndoVpaIntegrity } from '../../../services/adminVpa.js';
 import { VPA_TAB_LABELS, formatDateTime, formatInt, isCar } from '../../../lib/vpaFormat.js';
@@ -13,6 +14,7 @@ function Rows({ check, notify }) {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useVpaIntegrityRows(check.code, page);
   const fix = useFixVpaIntegrity();
+  const [fixingAll, setFixingAll] = useState(false);
   const items = data?.items || [];
   const totalPages = Math.max(1, Math.ceil((data?.total || 0) / 20));
 
@@ -22,12 +24,16 @@ function Rows({ check, notify }) {
       notify?.(`Đã sửa ${formatInt(r.fixed)} biển` + (r.skipped > 0 ? `, ${formatInt(r.skipped)} biển không sửa được (đã khóa hoặc thiếu danh mục)` : '') + `. Còn ${formatInt(r.remaining)} biển lỗi.`);
     } catch (e) { notify?.(e.message || 'Sửa thất bại'); }
   };
-  const fixAll = () => {
-    if (window.confirm(`${check.fixLabel}: áp dụng cho tất cả ${formatInt(check.count)} biển đang lỗi (tối đa 20.000 mỗi lần)? Trường Admin đã khóa không bị đổi.`)) doFix(null);
+  const fixAll = async () => {
+    if (!window.confirm(`${check.fixLabel}: áp dụng cho tất cả ${formatInt(check.count)} biển đang lỗi (tối đa 20.000 mỗi lần)? Trường Admin đã khóa không bị đổi.`)) return;
+    setFixingAll(true);
+    try { await doFix(null); } finally { setFixingAll(false); }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', borderTop: '1px solid var(--grey-100)', paddingTop: 'var(--space-3)' }}>
+      <BusyModal open={fixingAll} title="Đang sửa lỗi hàng loạt…"
+        message={`Đang áp dụng "${check.fixLabel}" cho tới ${formatInt(check.count)} biển — có thể mất vài chục giây với số lượng lớn, vui lòng đợi.`} />
       <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{check.help}</span>
       {check.fixable && check.count > 0 && (
         <span><Button variant="primary" size="sm" loading={fix.isPending} onClick={fixAll}>{check.fixLabel}: tất cả {formatInt(check.count)} biển</Button></span>

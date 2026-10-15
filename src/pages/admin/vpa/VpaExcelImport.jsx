@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import Button from '../../../components/Button.jsx';
+import BusyModal from '../../../components/BusyModal.jsx';
 import { useImportVpaExcel, downloadVpaTemplate } from '../../../services/adminVpa.js';
 
 const CARD = { background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' };
@@ -29,6 +30,7 @@ export default function VpaExcelImport({ notify }) {
 
   return (
     <div style={CARD}>
+      <BusyModal open={importMut.isPending} title="Đang nhập Excel…" message="Đang đọc và ghi dữ liệu — tối đa 20.000 dòng, có thể mất một lúc với file lớn." />
       <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Import Excel dự phòng</span>
       <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
         Dùng khi VPA chặn hoặc đổi cấu trúc. Cột bắt buộc: Biển số, Loại xe; tùy chọn: Tỉnh (mã VPA), Giá khởi điểm, Tab (Tháng/Tuần/Hết hạn), Giờ bắt đầu, Giờ kết thúc, Hạn đăng ký
