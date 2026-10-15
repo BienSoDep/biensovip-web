@@ -47,6 +47,7 @@ export function useVpaOverview(options) {
     queryKey: [KEY, 'overview'],
     queryFn: () => apiClient.get('/api/admin/vpa/overview'),
     retry: false,
+    staleTime: options?.poll ? 0 : 30_000,
     // Có lượt đang chạy thì làm mới dày hơn để thấy tiến độ theo tỉnh.
     refetchInterval: options?.poll ? (q) => (q.state.data?.running?.length ? 4000 : 15000) : false,
     enabled: options?.enabled,
@@ -259,7 +260,7 @@ export async function downloadVpaTemplate() {
 
 // Kiểm tra & sửa lỗi dữ liệu biển (trùng, hỏng, lệch). Đếm nặng nên chỉ chạy khi panel mở.
 export function useVpaIntegrity(enabled) {
-  return useQuery({ queryKey: [KEY, 'integrity'], queryFn: () => apiClient.get('/api/admin/vpa/plates/integrity'), enabled, staleTime: 0, retry: false });
+  return useQuery({ queryKey: [KEY, 'integrity'], queryFn: () => apiClient.get('/api/admin/vpa/plates/integrity'), enabled, staleTime: 5 * 60 * 1000, retry: false });
 }
 
 export function useVpaIntegrityRows(code, page) {
