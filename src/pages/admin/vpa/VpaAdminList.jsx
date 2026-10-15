@@ -198,9 +198,10 @@ function ApproveDropdownMenu({ onSelect }) {
             style={{
               position: 'absolute',
               top: '100%',
-              left: 0,
+              right: 0,
               marginTop: 4,
               minWidth: 320,
+              maxWidth: 'min(320px, 92vw)',
               background: 'var(--white)',
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-4)',
