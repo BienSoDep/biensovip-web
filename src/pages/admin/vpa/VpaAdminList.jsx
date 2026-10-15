@@ -26,6 +26,7 @@ import {
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { formatDate } from '../../../lib/date.js';
+import { registerApproveRun } from '../../../lib/runWatcher.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 import Modal from '../../../components/Modal.jsx';
@@ -483,7 +484,9 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     setRecomputing(true);
     try {
       const res = await startRecomputeSuggestions.mutateAsync();
-      setApproveRunId(res?.data?.runId || res?.runId);
+      const rid = res?.data?.runId || res?.runId;
+      setApproveRunId(rid);
+      registerApproveRun(rid);
     } catch (err) {
       notify?.(err?.message || 'Có lỗi khi tính lại giá gợi ý.', 'error');
     } finally {
@@ -1811,7 +1814,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           loading={startApproveAll.isPending || startApproveRecomputed.isPending || startApproveMatchedSamples.isPending || startApproveDrifted.isPending}
           onConfirm={() => {
             const action = confirmAction;
-            const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); };
+            const onStarted = (r) => { setConfirmAction(null); setApproveRunId(r.runId); registerApproveRun(r.runId); };
             const onError = (e) => { setConfirmAction(null); notify?.(e.message || 'Thao tác thất bại'); };
             if (action === 'all') {
               startApproveAll.mutateAsync({ queue: true, ...f, q: dq }).then(onStarted).catch(onError);
