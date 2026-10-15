@@ -249,6 +249,12 @@ function StatsTab() {
   const unresolvedPct = data.totalAssistantResponses > 0
     ? Math.round((data.unresolvedResponseCount / data.totalAssistantResponses) * 100)
     : 0;
+  const contactRatePct = data.totalSessions > 0
+    ? Math.round((data.sessionsLedToContact / data.totalSessions) * 100)
+    : 0;
+  const plateClickRatePct = data.totalSessions > 0
+    ? Math.round((data.sessionsLedToPlateClick / data.totalSessions) * 100)
+    : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -270,6 +276,8 @@ function StatsTab() {
         <StatTile label="Tin nhắn" value={data.totalMessages} />
         <StatTile label="AI không tự tin trả lời" value={`${unresolvedPct}%`} />
         <StatTile label="Lượt bị giới hạn tần suất" value={data.rateLimitedCount} />
+        <StatTile label="Phiên ra lead (liên hệ)" value={`${contactRatePct}%`} />
+        <StatTile label="Phiên bấm xem biển" value={`${plateClickRatePct}%`} />
       </div>
 
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--space-4)' }}>

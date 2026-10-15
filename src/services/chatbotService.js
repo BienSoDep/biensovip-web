@@ -8,6 +8,18 @@ export function useSendChatbotMessage() {
   });
 }
 
+export function useRateChatbotMessage() {
+  return useMutation({
+    mutationFn: ({ messageId, rating }) => apiClient.post(`/api/chatbot/messages/${messageId}/rating`, { rating }),
+  });
+}
+
+export function useReportChatbotPlateClick() {
+  return useMutation({
+    mutationFn: (sessionId) => apiClient.post(`/api/chatbot/sessions/${sessionId}/plate-click`, {}),
+  });
+}
+
 export function useChatbotHistory(sessionId) {
   return useQuery({
     queryKey: ['chatbot', 'history', sessionId],

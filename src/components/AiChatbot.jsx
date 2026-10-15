@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles } from 'lucide-react';
-import { useSendChatbotMessage, useChatbotHistory, useChatbotWidgetEnabled } from '../services/chatbotService.js';
+import { X, Send, Sparkles, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useSendChatbotMessage, useChatbotHistory, useChatbotWidgetEnabled, useRateChatbotMessage, useReportChatbotPlateClick } from '../services/chatbotService.js';
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js';
 import { getCurrentPlateNumber } from '../lib/currentPlateContext.js';
 
@@ -58,6 +58,8 @@ export default function AiChatbot({ go }) {
   const panelRef = useRef(null);
   const fabRef = useRef(null);
   const sendMessage = useSendChatbotMessage();
+  const rateMessage = useRateChatbotMessage();
+  const reportPlateClick = useReportChatbotPlateClick();
   const storedId = !restoredRef.current ? loadStoredSessionId() : null;
   const history = useChatbotHistory(storedId);
 
@@ -72,7 +74,7 @@ export default function AiChatbot({ go }) {
       restoredRef.current = true;
       if (history.data?.messages?.length) {
         setSessionId(storedId);
-        setMsgs(history.data.messages.map((m) => ({ from: m.role === 'user' ? 'user' : 'bot', text: m.content })));
+        setMsgs(history.data.messages.map((m) => ({ from: m.role === 'user' ? 'user' : 'bot', text: m.content, messageId: m.id, ratedValue: m.rating })));
       } else {
         clearStoredSessionId();
       }
@@ -114,7 +116,7 @@ export default function AiChatbot({ go }) {
       setInput('');
       setSessionId(res.sessionId);
       storeSessionId(res.sessionId);
-      setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions, plates: res.plates }]);
+      setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions, plates: res.plates, messageId: res.messageId }]);
     } catch (e) {
       if (e.status === 429) {
         setRateLimited(true);
@@ -134,7 +136,14 @@ export default function AiChatbot({ go }) {
 
   const openPlate = (slugOrId) => {
     setOpen(false);
+    if (sessionId) reportPlateClick.mutate(sessionId);
     go?.('detail', slugOrId)();
+  };
+
+  const rate = (i, messageId, value) => {
+    if (!messageId) return;
+    setMsgs((m) => m.map((msg, idx) => (idx === i ? { ...msg, ratedValue: value } : msg)));
+    rateMessage.mutate({ messageId, rating: value });
   };
 
   if (widgetFlag && widgetFlag.enabled === false) return null;
@@ -166,7 +175,9 @@ export default function AiChatbot({ go }) {
                 <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: m.from === 'user' ? 'var(--radius-pill)' : 'var(--radius-md)', background: m.from === 'user' ? 'var(--action-primary)' : 'var(--surface-sunken)', color: m.from === 'user' ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)', whiteSpace: 'pre-wrap' }}>
                   {m.from === 'bot' ? <span dangerouslySetInnerHTML={{ __html: renderMarkdownLite(m.text) }} /> : m.text}
                 </div>
-                {m.plates?.length > 0 && (
+                {m.plates?.length >= 2 ? (
+                  <PlateCompareTable plates={m.plates} onOpen={openPlate} />
+                ) : m.plates?.length === 1 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: '90%', width: '100%' }}>
                     {m.plates.map((p) => <PlateMiniCard key={p.slugOrId} plate={p} onOpen={() => openPlate(p.slugOrId)} />)}
                   </div>
@@ -176,6 +187,12 @@ export default function AiChatbot({ go }) {
                     {m.actions.map((a) => (
                       <button key={a} onClick={() => handleAction(a)} style={{ border: '1px solid var(--action-primary)', borderRadius: 'var(--radius-pill)', background: 'transparent', padding: '4px 10px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>{ACTION_LABEL[a] || a}</button>
                     ))}
+                  </div>
+                )}
+                {m.from === 'bot' && m.messageId && (
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button aria-label="Câu trả lời hữu ích" onClick={() => rate(i, m.messageId, 1)} disabled={m.ratedValue != null} style={{ border: 'none', background: 'transparent', cursor: m.ratedValue != null ? 'default' : 'pointer', padding: 2, color: m.ratedValue === 1 ? 'var(--status-success)' : 'var(--text-muted)', opacity: m.ratedValue != null && m.ratedValue !== 1 ? 0.4 : 1 }}><ThumbsUp size={13} /></button>
+                    <button aria-label="Câu trả lời không hữu ích" onClick={() => rate(i, m.messageId, -1)} disabled={m.ratedValue != null} style={{ border: 'none', background: 'transparent', cursor: m.ratedValue != null ? 'default' : 'pointer', padding: 2, color: m.ratedValue === -1 ? 'var(--status-danger)' : 'var(--text-muted)', opacity: m.ratedValue != null && m.ratedValue !== -1 ? 0.4 : 1 }}><ThumbsDown size={13} /></button>
                   </div>
                 )}
               </div>
@@ -204,6 +221,34 @@ export default function AiChatbot({ go }) {
         </div>
       )}
     </>
+  );
+}
+
+function PlateCompareTable({ plates, onOpen }) {
+  return (
+    <div style={{ maxWidth: '95%', width: '100%', overflowX: 'auto', borderRadius: 'var(--radius-field)', boxShadow: 'var(--shadow-inset-hairline)', background: 'var(--white)' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
+        <thead>
+          <tr style={{ background: 'var(--surface-sunken)' }}>
+            <th style={{ textAlign: 'left', padding: '6px 10px', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>Biển</th>
+            <th style={{ textAlign: 'right', padding: '6px 10px', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>Giá</th>
+            <th style={{ textAlign: 'center', padding: '6px 10px', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>TT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {plates.map((p) => {
+            const sold = p.status === 'Sold';
+            return (
+              <tr key={p.slugOrId} onClick={() => !sold && onOpen(p.slugOrId)} style={{ cursor: sold ? 'default' : 'pointer', borderTop: '1px solid var(--border-hairline)' }}>
+                <td style={{ padding: '6px 10px', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</td>
+                <td style={{ padding: '6px 10px', textAlign: 'right', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>{p.priceOnRequest ? 'Liên hệ' : `${Number(p.price).toLocaleString('vi-VN')}đ`}</td>
+                <td style={{ padding: '6px 10px', textAlign: 'center', color: sold ? 'var(--status-danger)' : 'var(--status-success)' }}>{sold ? 'Đã bán' : 'Còn'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
