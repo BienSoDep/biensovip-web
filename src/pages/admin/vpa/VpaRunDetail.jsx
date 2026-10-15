@@ -31,7 +31,7 @@ import Drawer from '../../../components/Drawer.jsx';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import { Badge } from '../../../components/index.jsx';
-import { useVpaRunChanges, useRevertVpaRun, useApplyVpaVanish, exportVpaRunChangesCsv } from '../../../services/adminVpa.js';
+import { useVpaRunChanges, useRevertVpaRun, useApplyVpaVanish, exportVpaRunChangesCsv, useRunVpaCrawl } from '../../../services/adminVpa.js';
 import {
   VPA_SOURCES,
   VPA_SOURCE_CONFIG,
@@ -57,11 +57,40 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
   const [exporting, setExporting] = useState(false);
 
   const hasTabs = run.source === 1 || run.source === 2;
+  const srcCfg = getVpaSourceConfig(run.source);
   const { data: changes, isLoading } = useVpaRunChanges(hasTabs ? run.id : null, { reason, page, limit: PAGE_SIZE });
   const revert = useRevertVpaRun();
   const applyVanish = useApplyVpaVanish();
+  const runCrawl = useRunVpaCrawl();
+  const [recrawling, setRecrawling] = useState(null); // mã tỉnh đang bấm "Cào lại"
 
-  const srcCfg = getVpaSourceConfig(run.source);
+  // Tỉnh nào còn thiếu biển trong lượt này — SliceStatsJson ghi {expected,seen,missing} theo từng tỉnh
+  // (ItemsMissing chỉ là tổng cả lượt, không nói được tỉnh nào). Chỉ Official/Published có lát theo tỉnh.
+  const missingSlices = useMemo(() => {
+    if (!hasTabs || !run.sliceStatsJson) return [];
+    try {
+      const stats = JSON.parse(run.sliceStatsJson);
+      return Object.entries(stats)
+        .filter(([, s]) => s.missing > 0)
+        .map(([code, s]) => ({ code, ...s }))
+        .sort((a, b) => b.missing - a.missing);
+    } catch {
+      return [];
+    }
+  }, [hasTabs, run.sliceStatsJson]);
+
+  const recrawlProvince = async (code) => {
+    setRecrawling(code);
+    try {
+      await runCrawl.mutateAsync({ source: srcCfg.key, vehicle: run.vehicle, province: code });
+      notify?.(`Đã bắt đầu cào lại tỉnh ${code} — xem tiến trình ở danh sách lượt chạy.`);
+    } catch (e) {
+      notify?.(e.message || 'Không bắt đầu được lượt cào lại');
+    } finally {
+      setRecrawling(null);
+    }
+  };
+
   const SourceIcon = run.source === 1 ? CalendarDays : run.source === 2 ? Layers : run.source === 3 ? Gavel : Layers;
 
   const unmapped = (() => {
@@ -494,6 +523,32 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
                 <b>Tiền tố biển chưa khớp danh mục hành chính (số biển): </b>
                 {unmapped.map(([k, n]) => `${k}: ${n}`).join(' · ')}
               </div>
+            </div>
+          </div>
+        )}
+
+        {missingSlices.length > 0 && (
+          <div style={{ background: 'var(--amber-50, #fffbeb)', border: '1px solid var(--amber-200, #fde68a)', borderRadius: 'var(--radius-md, 8px)', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <AlertTriangle size={16} style={{ color: 'var(--amber-600, #d97706)', flexShrink: 0, marginTop: 2 }} />
+              <div style={{ font: 'var(--type-body-sm)', color: 'var(--amber-900, #78350f)' }}>
+                <b>{missingSlices.length} tỉnh còn thiếu biển trong lượt này</b> — VPA đổi trang/xóa tin trong lúc đang cào (phân trang không ổn định với tỉnh lớn chạy nhiều giờ). Bấm "Cào lại" để quét riêng tỉnh đó, không cần chạy lại cả lượt.
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {missingSlices.map((s) => (
+                <div key={s.code} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '6px 8px', background: 'var(--white)', borderRadius: 6, border: '1px solid var(--amber-100, #fef3c7)' }}>
+                  <span style={{ font: 'var(--type-body-sm)', fontSize: '12px' }}>
+                    <b style={{ color: 'var(--text-strong)' }}>Tỉnh {s.code}</b>
+                    <span style={{ color: 'var(--text-muted)' }}> — thiếu {formatInt(s.missing)} / {formatInt(s.expected)} biển</span>
+                  </span>
+                  <Button variant="outline" size="sm" loading={recrawling === s.code}
+                    disabled={recrawling !== null && recrawling !== s.code}
+                    onClick={() => recrawlProvince(s.code)}>
+                    Cào lại
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
         )}
