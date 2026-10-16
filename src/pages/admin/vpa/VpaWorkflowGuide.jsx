@@ -3,7 +3,7 @@ import {
   BookOpen, Search, Eye, EyeOff, CheckCheck, Check, X, Users, RefreshCw, Sparkles,
   Copy, Download, SlidersHorizontal, AlertTriangle, ShieldCheck, HelpCircle, Layers,
   ChevronDown, ChevronUp, ArrowRight, Star, Pin, ExternalLink, Zap, CheckCircle2,
-  Info, Database, Flame, Clock, Car, Filter,
+  Info, Database, Flame, Clock, Car, Filter, Lightbulb,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import { Badge } from '../../../components/index.jsx';
@@ -794,8 +794,9 @@ export default function VpaWorkflowGuide({ onNavigateTab }) {
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-body)', lineHeight: 1.5 }}>
                 {t.desc}
               </p>
-              <div style={{ fontSize: '11px', color: 'var(--action-primary)', background: 'var(--surface-sunken)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', fontWeight: 500 }}>
-                💡 <strong>Việc admin cần làm:</strong> {t.actionGuide}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: '11px', color: 'var(--action-primary)', background: 'var(--surface-sunken)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', fontWeight: 500 }}>
+                <Lightbulb size={13} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+                <span><strong>Việc admin cần làm:</strong> {t.actionGuide}</span>
               </div>
             </div>
           ))}

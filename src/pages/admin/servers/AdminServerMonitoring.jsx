@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Server, HardDrive, Cpu, Activity, Wifi, Globe, RefreshCw,
-  ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Clock, Database, Zap
+  ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Clock, Database, Zap, Lightbulb
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useSystemHealth, useTestProxyConnection } from '../../../services/systemHealth.js';
@@ -373,8 +373,9 @@ export default function AdminServerMonitoring() {
                 )}
 
                 {/* Ghi chú hướng dẫn proxy */}
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, background: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: 'var(--radius-sm)' }}>
-                  💡 <b>Cơ chế hoạt động:</b> Toàn bộ module cào dữ liệu (`IVpaApiClient`) tự động định tuyến các lượt crawl danh sách biển tuần, biển tháng và kết quả đấu giá qua máy chủ proxy này. Khi proxy sống và có IP Việt Nam, VPA sẽ không chặn 403.
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, background: 'var(--surface-sunken)', padding: '10px 12px', borderRadius: 'var(--radius-sm)' }}>
+                  <Lightbulb size={14} style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+                  <span><b>Cơ chế hoạt động:</b> Toàn bộ module cào dữ liệu (`IVpaApiClient`) tự động định tuyến các lượt crawl danh sách biển tuần, biển tháng và kết quả đấu giá qua máy chủ proxy này. Khi proxy sống và có IP Việt Nam, VPA sẽ không chặn 403.</span>
                 </div>
               </div>
             </div>
