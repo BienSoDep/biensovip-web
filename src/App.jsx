@@ -750,7 +750,7 @@ export default function App() {
             let trail = [];
             if (s === 'fav') trail = [{ label: 'Yêu thích' }];
             else if (s === 'profile') trail = [{ label: 'Hồ sơ tài khoản' }];
-            else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
+            else if (s === 'about') trail = [{ label: 'Về Duy Đinh — Người sáng lập Biensovip' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
             else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];

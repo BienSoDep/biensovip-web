@@ -132,14 +132,6 @@ export default function About({ go }) {
 
   return (
     <div className="about-page-wrap">
-      <Breadcrumb
-        keepOnMobile
-        items={[
-          { label: 'Trang chủ', onClick: go('home') },
-          { label: 'Về Duy Đinh — Người sáng lập Biensovip' },
-        ]}
-      />
-
       {/* 1. Hero Section: Founder & Philosophy */}
       <section className="about-hero" itemScope itemType="https://schema.org/Person">
         <div className="about-hero-grid">
