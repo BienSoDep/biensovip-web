@@ -21,7 +21,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import Breadcrumb from '../components/Breadcrumb.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
