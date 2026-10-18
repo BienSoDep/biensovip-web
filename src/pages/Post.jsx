@@ -47,6 +47,40 @@ const FONT_FAMILIES = [
 ];
 const READER_PREFS_KEY = 'biensovip.readerPrefs';
 
+function CompassElementalSvg() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="#cbd5e1" strokeWidth="1.2" strokeDasharray="2 2" />
+      <circle cx="12" cy="12" r="7.5" stroke="#94a3b8" strokeWidth="1.2" />
+      <polygon points="12,3.5 14,12 12,20.5 10,12" fill="#0f172a" />
+      <polygon points="3.5,12 12,10 20.5,12 12,14" fill="#64748b" />
+      <circle cx="12" cy="12" r="2.2" fill="#f59e0b" />
+    </svg>
+  );
+}
+
+function ShieldHarmonySvg() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 3L4 6.5V11.5C4 16.5 7.4 20.8 12 22C16.6 20.8 20 16.5 20 11.5V6.5L12 3Z" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M12 3V22C16.6 20.8 20 16.5 20 11.5V6.5L12 3Z" fill="#e2e8f0" />
+      <circle cx="12" cy="12" r="2.8" fill="#0f172a" />
+      <path d="M10 12L11.5 13.5L14.5 10.5" stroke="#f8fafc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function InfinityFortuneSvg() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M18.178 8C16.143 8 14.5 9.5 12 12C9.5 14.5 7.857 16 5.822 16C3.708 16 2 14.21 2 12C2 9.79 3.708 8 5.822 8C7.857 8 9.5 9.5 12 12C14.5 14.5 16.143 16 18.178 16C20.292 16 22 14.21 22 12C22 9.79 20.292 8 18.178 8Z" stroke="#0f172a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="6" cy="12" r="1.5" fill="#f59e0b" />
+      <circle cx="18" cy="12" r="1.5" fill="#f59e0b" />
+      <path d="M12 7L12.6 10L14 10.6L12.6 11.2L12 14L11.4 11.2L10 10.6L11.4 10L12 7Z" fill="#f59e0b" />
+    </svg>
+  );
+}
+
 function useReaderPrefs() {
   const [sizeIdx, setSizeIdx] = useState(1);
   const [fontId, setFontId] = useState('sans');
@@ -325,35 +359,52 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       {(post.summaryFengShui || post.summaryTaboo || post.summaryMeaning) && (
         <div className="article-quick-summary">
           <div className="article-quick-summary__header">
-            <span className="article-quick-summary__badge">TỔNG QUAN PHONG THỦY</span>
-            <span className="article-quick-summary__sub">Khuyến nghị chuyên gia & luận giải chi tiết</span>
+            <div className="article-quick-summary__title-wrap">
+              <span className="article-quick-summary__badge">TỔNG QUAN PHONG THỦY</span>
+              <span className="article-quick-summary__sub">Biểu đồ nạp âm & khuyến nghị định danh</span>
+            </div>
           </div>
           <div className="article-quick-summary__grid">
             {post.summaryFengShui && (
-              <div className="article-quick-summary__item article-quick-summary__item--positive">
-                <div className="article-quick-summary__tag">
-                  <span className="dot dot--green"></span>
-                  <span>Hợp Mệnh Cát Lợi</span>
+              <div className="article-quick-summary__item">
+                <div className="article-quick-summary__item-top">
+                  <div className="article-quick-summary__icon-box">
+                    <CompassElementalSvg />
+                  </div>
+                  <div className="article-quick-summary__item-heading">
+                    <span className="article-quick-summary__chip">TƯƠNG SINH</span>
+                    <span className="article-quick-summary__label">Hợp Mệnh Cát Lợi</span>
+                  </div>
                 </div>
-                <p>{post.summaryFengShui}</p>
+                <p className="article-quick-summary__text">{post.summaryFengShui}</p>
               </div>
             )}
             {post.summaryTaboo && (
-              <div className="article-quick-summary__item article-quick-summary__item--negative">
-                <div className="article-quick-summary__tag">
-                  <span className="dot dot--red"></span>
-                  <span>Kỵ Mệnh Cần Lưu Ý</span>
+              <div className="article-quick-summary__item">
+                <div className="article-quick-summary__item-top">
+                  <div className="article-quick-summary__icon-box">
+                    <ShieldHarmonySvg />
+                  </div>
+                  <div className="article-quick-summary__item-heading">
+                    <span className="article-quick-summary__chip" style={{ color: '#b91c1c' }}>HÓA GIẢI</span>
+                    <span className="article-quick-summary__label">Kỵ Mệnh Cần Lưu Ý</span>
+                  </div>
                 </div>
-                <p>{post.summaryTaboo}</p>
+                <p className="article-quick-summary__text">{post.summaryTaboo}</p>
               </div>
             )}
             {post.summaryMeaning && (
-              <div className="article-quick-summary__item article-quick-summary__item--meaning">
-                <div className="article-quick-summary__tag">
-                  <span className="dot dot--amber"></span>
-                  <span>Ý Nghĩa & Năng Lượng</span>
+              <div className="article-quick-summary__item">
+                <div className="article-quick-summary__item-top">
+                  <div className="article-quick-summary__icon-box">
+                    <InfinityFortuneSvg />
+                  </div>
+                  <div className="article-quick-summary__item-heading">
+                    <span className="article-quick-summary__chip" style={{ color: '#d97706' }}>VẬN KHÍ</span>
+                    <span className="article-quick-summary__label">Ý Nghĩa & Năng Lượng</span>
+                  </div>
                 </div>
-                <p>{post.summaryMeaning}</p>
+                <p className="article-quick-summary__text">{post.summaryMeaning}</p>
               </div>
             )}
           </div>

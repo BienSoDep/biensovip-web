@@ -1683,36 +1683,46 @@ button[aria-expanded]:hover {
   text-align: center;
   border-top: 1px solid #e2e8f0;
 }
-/* Quick Summary Card — Rich multi-colored highlight grid */
+/* Quick Summary Card — Unified Infographic Layout with SVG integration */
 .article-quick-summary {
   background: #ffffff;
   border: 1px solid #e2e8f0;
+  border-top: 3px solid var(--brand-500);
   border-radius: 12px;
-  padding: var(--gutter-card);
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+  padding: 24px;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  margin-top: var(--space-2);
+  gap: var(--space-5);
+  margin-top: var(--space-3);
+  position: relative;
+  overflow: hidden;
 }
 
 .article-quick-summary__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
   flex-wrap: wrap;
   border-bottom: 1px solid #f1f5f9;
   padding-bottom: var(--space-3);
 }
 
+.article-quick-summary__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .article-quick-summary__badge {
   font-size: 11.5px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  padding: 4px 10px;
+  letter-spacing: 0.07em;
+  padding: 4px 12px;
   border-radius: 4px;
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  color: #f8fafc;
+  color: #ffffff;
   text-transform: uppercase;
 }
 
@@ -1724,81 +1734,90 @@ button[aria-expanded]:hover {
 
 .article-quick-summary__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .article-quick-summary__grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }
 
 .article-quick-summary__item {
-  border-radius: 8px;
-  padding: 14px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  border: 1px solid transparent;
+  gap: 12px;
+  padding-right: 18px;
+  border-right: 1px solid #f1f5f9;
+  transition: transform 0.2s ease;
 }
 
-.article-quick-summary__item p {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.65;
+.article-quick-summary__item:last-child {
+  border-right: none;
+  padding-right: 0;
 }
 
-/* Green Tier: Hợp mệnh */
-.article-quick-summary__item--positive {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border-color: #bbf7d0;
-}
-.article-quick-summary__item--positive .article-quick-summary__tag {
-  color: #15803d;
-}
-.article-quick-summary__item--positive p {
-  color: #14532d;
-}
-
-/* Red Tier: Kỵ mệnh */
-.article-quick-summary__item--negative {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border-color: #fecaca;
-}
-.article-quick-summary__item--negative .article-quick-summary__tag {
-  color: #b91c1c;
-}
-.article-quick-summary__item--negative p {
-  color: #7f1d1d;
+@media (max-width: 900px) {
+  .article-quick-summary__item {
+    padding-right: 0;
+    padding-bottom: 18px;
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .article-quick-summary__item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
 }
 
-/* Amber / Gold Tier: Ý nghĩa */
-.article-quick-summary__item--meaning {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border-color: #fde68a;
-}
-.article-quick-summary__item--meaning .article-quick-summary__tag {
-  color: #b45309;
-}
-.article-quick-summary__item--meaning p {
-  color: #78350f;
-}
-
-.article-quick-summary__tag {
+.article-quick-summary__item-top {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 12px;
+}
+
+.article-quick-summary__icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.article-quick-summary__item-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.article-quick-summary__label {
+  font-size: 13.5px;
   font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.article-quick-summary__chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  color: var(--brand-600);
 }
 
-.article-quick-summary__tag .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
+.article-quick-summary__text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #475569;
 }
-
-.article-quick-summary__tag .dot--green { background: #16a34a; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2); }
-.article-quick-summary__tag .dot--red { background: #dc2626; box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2); }
-.article-quick-summary__tag .dot--amber { background: #d97706; box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2); }
 
 /* Reader preferences toolbar — font family + size controls above article body */
 .reader-prefs {
