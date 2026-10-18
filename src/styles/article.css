@@ -1,0 +1,549 @@
+/* ==========================================================================
+   BLOG ARTICLE BODY & EDITORIAL SYSTEM — Visual Hierarchy & Typography
+   ========================================================================== */
+
+.article-body {
+  line-height: 1.95;
+  font-size: var(--article-font-size, 17px);
+  font-family: var(--article-font-family, var(--font-text));
+  color: #1e293b;
+}
+
+.article-body > * + * {
+  margin-top: var(--space-6);
+}
+
+/* 1. HEADINGS: Deep, authoritative Slate with vibrant amber accent bar */
+.article-body h2 {
+  margin: var(--space-9) 0 var(--space-4);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #0f172a;
+  position: relative;
+  padding-left: 16px;
+  border-left: 5px solid var(--brand-500);
+  scroll-margin-top: 80px;
+  letter-spacing: -0.01em;
+}
+
+.article-body h3 {
+  margin: var(--space-7) 0 var(--space-3);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #1e293b;
+  position: relative;
+  padding-left: 12px;
+  border-left: 3px solid #64748b;
+}
+
+.article-body p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.9;
+}
+
+/* 2. STRONG / BOLD: Crisp dark text for high contrast (NOT mono-orange) */
+.article-body strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* Lead paragraph (Passage Citability / GEO highlight) */
+.article-body > p:first-of-type {
+  font-size: 1.05em;
+  line-height: 1.95;
+  color: #1e293b;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, rgba(241, 151, 32, 0.08) 0%, rgba(254, 244, 231, 0.6) 100%);
+  border-left: 4px solid var(--brand-500);
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 2px 8px rgba(241, 151, 32, 0.05);
+}
+
+/* 3. TABLE SYSTEM: High-contrast, multi-layered editorial tables */
+.article-body table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 14.5px !important;
+  margin: var(--space-7) 0 !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.07) !important;
+  display: table !important;
+}
+
+/* Table Header — Luxurious Dark Navy/Slate Header */
+.article-body thead tr {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border: none !important;
+}
+
+.article-body th {
+  padding: 14px 18px !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  border-bottom: 2px solid var(--brand-500) !important;
+  white-space: nowrap;
+}
+
+.article-body tbody tr {
+  border-bottom: 1px solid #e2e8f0 !important;
+  transition: background-color 0.15s ease;
+}
+
+.article-body tbody tr:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+
+.article-body tbody tr:hover {
+  background-color: #fefce8 !important; /* Soft warm glow on hover */
+}
+
+.article-body td {
+  padding: 13px 18px !important;
+  color: #334155 !important;
+  border: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  vertical-align: middle;
+}
+
+/* Column 1: Item title / Administrative district */
+.article-body td:first-child {
+  font-weight: 600;
+  color: #0f172a !important;
+}
+
+.article-body td:first-child strong {
+  color: #0f172a !important;
+}
+
+/* Column 2: License Plate Badge / Seri Pill */
+.article-body td[style*="font-family:var(--font-mono)"],
+.article-body td[style*="font-family: var(--font-mono)"],
+.article-body td[style*="color:var(--action-primary)"],
+.article-body td[style*="color: var(--action-primary)"] {
+  font-family: var(--font-mono, monospace) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Make plate series & plate numbers look like real embossed license plates */
+.article-body tbody tr td:nth-child(2) {
+  font-family: var(--font-mono, monospace);
+  font-weight: 800;
+  color: #0f172a !important;
+}
+
+.article-body table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+/* 4. CALLOUT & NOTE CARDS (Ghi chú Thông tư 24, pháp lý, lưu ý) */
+.article-body p:has(> em),
+.article-body p:has(> em:first-child),
+.article-body p em {
+  font-style: normal;
+}
+
+.article-body p:has(> em) {
+  background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+  border-left: 4px solid #3b82f6;
+  border: 1px solid #bfdbfe;
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 14px 20px;
+  color: #1e3a8a;
+  font-size: 14.5px;
+  margin: var(--space-5) 0;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
+  line-height: 1.7;
+}
+
+/* 5. BLOCKQUOTES: Rich Editorial Styling */
+.article-body blockquote {
+  margin: var(--space-7) 0;
+  padding: 18px 24px;
+  border-left: 4px solid var(--brand-500);
+  background: #f8fafc;
+  border-radius: 0 8px 8px 0;
+  color: #334155;
+  font-style: italic;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* 6. LISTS: Distinctive bullets & custom numbers */
+.article-body ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.article-body ul > li {
+  position: relative;
+  padding-left: 24px;
+  line-height: 1.85;
+  margin-bottom: 8px;
+  color: #334155;
+}
+
+.article-body ul > li::before {
+  content: "•";
+  position: absolute;
+  left: 6px;
+  top: -1px;
+  color: var(--brand-500);
+  font-size: 1.4em;
+  font-weight: 900;
+}
+
+.article-body ol {
+  padding-left: 24px;
+}
+
+.article-body ol > li {
+  line-height: 1.85;
+  margin-bottom: 10px;
+  color: #334155;
+}
+
+.article-body ol > li::marker {
+  color: var(--brand-600);
+  font-weight: 700;
+}
+
+/* 7. FIGURES & IMAGES: Editorial Frame & Polished Caption */
+.article-body figure {
+  margin: var(--space-7) 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.12);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.article-body figure img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.article-body figcaption {
+  padding: 11px 18px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 13.5px;
+  font-style: italic;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
+.article-body tr:nth-child(even) td {
+  background: var(--surface-sunken);
+}
+
+/* --------------------------------------------------------------------------
+   8. QUICK SUMMARY INFOGRAPHIC CARD
+   -------------------------------------------------------------------------- */
+.article-quick-summary {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-top: 3px solid var(--brand-500);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: var(--space-3);
+  position: relative;
+  overflow: hidden;
+}
+
+.article-quick-summary__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: var(--space-3);
+}
+
+.article-quick-summary__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.article-quick-summary__badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.article-quick-summary__sub {
+  font-size: 13px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.article-quick-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .article-quick-summary__grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.article-quick-summary__item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 18px;
+  border-right: 1px solid #f1f5f9;
+  transition: transform 0.2s ease;
+}
+
+.article-quick-summary__item:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+@media (max-width: 900px) {
+  .article-quick-summary__item {
+    padding-right: 0;
+    padding-bottom: 18px;
+    border-right: none;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .article-quick-summary__item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.article-quick-summary__item-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.article-quick-summary__icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.article-quick-summary__item-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.article-quick-summary__label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.article-quick-summary__chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.article-quick-summary__text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #475569;
+}
+
+/* --------------------------------------------------------------------------
+   9. READER PREFERENCES TOOLBAR
+   -------------------------------------------------------------------------- */
+.reader-prefs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--gutter-card);
+}
+.reader-prefs__group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.reader-prefs__label {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.reader-prefs__btn {
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-page);
+  border-radius: var(--radius-control);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+}
+.reader-prefs__btn:not(:disabled):hover {
+  background: var(--action-ghost-hover);
+}
+.reader-prefs__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.reader-prefs__size {
+  font: var(--type-caption);
+  color: var(--text-strong);
+  min-width: 32px;
+  text-align: center;
+}
+.reader-prefs__font {
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-page);
+  border-radius: var(--radius-control);
+  height: 30px;
+  padding: 0 var(--space-2);
+  font: var(--type-caption);
+  color: var(--text-strong);
+}
+
+/* --------------------------------------------------------------------------
+   10. RELATED ARTICLES GRID
+   -------------------------------------------------------------------------- */
+.article-related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 1024px) {
+  .article-related-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .article-related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.article-related-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  height: 100%;
+}
+
+.article-related-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
+}
+
+.article-related-card__thumb {
+  position: relative;
+  height: 136px;
+  overflow: hidden;
+  background: var(--surface-muted);
+}
+
+.article-related-card:hover .article-related-card__thumb img {
+  transform: scale(1.05);
+}
+
+.article-related-card__thumb img {
+  transition: transform 0.3s ease;
+}
+
+.article-related-card__cat {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.article-related-card__body {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  gap: 8px;
+}
+
+.article-related-card__title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.15s ease;
+}
+
+.article-related-card:hover .article-related-card__title {
+  color: var(--brand-600);
+}
+
+.article-related-card__meta {
+  font-size: 11.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

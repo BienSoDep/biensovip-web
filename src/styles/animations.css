@@ -1,0 +1,202 @@
+/* ==========================================================================
+   ANIMATIONS & MOTION — Keyframes and Accessibility Controls
+   ========================================================================== */
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fanMain {
+  from {
+    opacity: 0;
+    transform: rotate(-5deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-5deg) scale(1);
+  }
+}
+
+@keyframes fanLeft {
+  from {
+    opacity: 0;
+    transform: rotate(-13deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-13deg) scale(1);
+  }
+}
+
+@keyframes fanRight {
+  from {
+    opacity: 0;
+    transform: rotate(7deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(7deg) scale(1);
+  }
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Nút liên hệ nổi gộp — nảy nhẹ định kỳ để thu hút chú ý, dừng khi mở ra 3 icon con */
+@keyframes contactFabBounce {
+  0%, 78%, 100% { transform: translateY(0); }
+  85% { transform: translateY(-6px); }
+  92% { transform: translateY(0); }
+  96% { transform: translateY(-3px); }
+}
+
+.contact-fab-bounce {
+  animation: contactFabBounce 3.2s ease-in-out infinite;
+}
+
+@keyframes contactFabIn {
+  from { opacity: 0; transform: translateY(8px) scale(.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes contactFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes promoRailScroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+@keyframes plateMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--status-success); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 4px transparent; }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .pill-btn,
+  [data-pressable],
+  .pressable,
+  button {
+    transition: none !important;
+  }
+  @keyframes pageIn {
+    from { opacity: 1; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 1; }
+    to { opacity: 1; }
+  }
+  .contact-fab-bounce {
+    animation: none !important;
+  }
+  @keyframes modalIn {
+    from { opacity: 1; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes toastIn {
+    from { opacity: 1; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fanMain {
+    from { opacity: 1; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fanLeft {
+    from { opacity: 1; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fanRight {
+    from { opacity: 1; transform: none; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes heartBeat {
+    from { transform: none; }
+    to { transform: none; }
+  }
+  @keyframes slideInRight {
+    from { transform: none; }
+    to { transform: none; }
+  }
+  .promo-rail__track {
+    animation: none;
+  }
+  .plate-marquee__track {
+    animation: none !important;
+  }
+  .plate-marquee {
+    overflow-x: auto;
+  }
+  .contact-hero__img {
+    animation: none;
+  }
+}
