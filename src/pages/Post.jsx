@@ -323,11 +323,40 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       </header>
 
       {(post.summaryFengShui || post.summaryTaboo || post.summaryMeaning) && (
-        <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Tóm tắt nhanh</span>
-          {post.summaryFengShui && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Hợp mệnh:</strong> {post.summaryFengShui}</p>}
-          {post.summaryTaboo && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Kỵ mệnh:</strong> {post.summaryTaboo}</p>}
-          {post.summaryMeaning && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Ý nghĩa chính:</strong> {post.summaryMeaning}</p>}
+        <div className="article-quick-summary">
+          <div className="article-quick-summary__header">
+            <span className="article-quick-summary__badge">TỔNG QUAN PHONG THỦY</span>
+            <span className="article-quick-summary__sub">Khuyến nghị chuyên gia & luận giải chi tiết</span>
+          </div>
+          <div className="article-quick-summary__grid">
+            {post.summaryFengShui && (
+              <div className="article-quick-summary__item article-quick-summary__item--positive">
+                <div className="article-quick-summary__tag">
+                  <span className="dot dot--green"></span>
+                  <span>Hợp Mệnh Cát Lợi</span>
+                </div>
+                <p>{post.summaryFengShui}</p>
+              </div>
+            )}
+            {post.summaryTaboo && (
+              <div className="article-quick-summary__item article-quick-summary__item--negative">
+                <div className="article-quick-summary__tag">
+                  <span className="dot dot--red"></span>
+                  <span>Kỵ Mệnh Cần Lưu Ý</span>
+                </div>
+                <p>{post.summaryTaboo}</p>
+              </div>
+            )}
+            {post.summaryMeaning && (
+              <div className="article-quick-summary__item article-quick-summary__item--meaning">
+                <div className="article-quick-summary__tag">
+                  <span className="dot dot--amber"></span>
+                  <span>Ý Nghĩa & Năng Lượng</span>
+                </div>
+                <p>{post.summaryMeaning}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

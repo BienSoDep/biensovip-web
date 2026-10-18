@@ -1437,94 +1437,368 @@ button[aria-expanded]:hover {
   height: 100%;
 }
 
-/* Blog article body — raw ContentHtml from backend has no inline styling of its own.
-   --article-font-size / --article-font-family are set inline by the reader-preferences toolbar in Post.jsx. */
+/* ==========================================================================
+   BLOG ARTICLE BODY — Multi-layered Visual Hierarchy & Design System
+   ========================================================================== */
 .article-body {
-  line-height: 1.9;
+  line-height: 1.95;
   font-size: var(--article-font-size, 17px);
   font-family: var(--article-font-family, var(--font-text));
+  color: #1e293b;
 }
+
 .article-body > * + * {
-  margin-top: var(--space-5);
+  margin-top: var(--space-6);
 }
+
+/* 1. HEADINGS: Deep, authoritative Slate with vibrant amber accent bar */
 .article-body h2 {
-  margin: var(--space-9) 0 var(--space-3);
-  font: var(--type-title-1);
-  font-family: inherit;
-  color: var(--action-primary);
+  margin: var(--space-9) 0 var(--space-4);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #0f172a;
+  position: relative;
+  padding-left: 16px;
+  border-left: 5px solid var(--brand-500);
   scroll-margin-top: 80px;
+  letter-spacing: -0.01em;
 }
+
 .article-body h3 {
-  margin: var(--space-6) 0 var(--space-2);
-  font: var(--type-title-2);
-  font-family: inherit;
-  color: var(--action-primary);
+  margin: var(--space-7) 0 var(--space-3);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #1e293b;
+  position: relative;
+  padding-left: 12px;
+  border-left: 3px solid #64748b;
 }
+
 .article-body p {
   margin: 0;
+  color: #334155;
+  line-height: 1.9;
 }
+
+/* 2. STRONG / BOLD: Crisp dark text for high contrast (NOT mono-orange) */
 .article-body strong {
-  color: var(--action-primary);
-  font-weight: var(--fw-semibold);
+  color: #0f172a;
+  font-weight: 700;
 }
-.article-body ul,
+
+/* Lead paragraph (Passage Citability / GEO highlight) */
+.article-body > p:first-of-type {
+  font-size: 1.05em;
+  line-height: 1.95;
+  color: #1e293b;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, rgba(241, 151, 32, 0.08) 0%, rgba(254, 244, 231, 0.6) 100%);
+  border-left: 4px solid var(--brand-500);
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 2px 8px rgba(241, 151, 32, 0.05);
+}
+
+/* 3. TABLE SYSTEM: High-contrast, multi-layered editorial tables */
+.article-body table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 14.5px !important;
+  margin: var(--space-7) 0 !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.07) !important;
+  display: table !important;
+}
+
+/* Table Header — Luxurious Dark Navy/Slate Header */
+.article-body thead tr {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border: none !important;
+}
+
+.article-body th {
+  padding: 14px 18px !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  border-bottom: 2px solid var(--brand-500) !important;
+  white-space: nowrap;
+}
+
+.article-body tbody tr {
+  border-bottom: 1px solid #e2e8f0 !important;
+  transition: background-color 0.15s ease;
+}
+
+.article-body tbody tr:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+
+.article-body tbody tr:hover {
+  background-color: #fefce8 !important; /* Soft warm glow on hover */
+}
+
+.article-body td {
+  padding: 13px 18px !important;
+  color: #334155 !important;
+  border: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  vertical-align: middle;
+}
+
+/* Column 1: Item title / Administrative district */
+.article-body td:first-child {
+  font-weight: 600;
+  color: #0f172a !important;
+}
+
+.article-body td:first-child strong {
+  color: #0f172a !important;
+}
+
+/* Column 2: License Plate Badge / Seri Pill */
+.article-body td[style*="font-family:var(--font-mono)"],
+.article-body td[style*="font-family: var(--font-mono)"],
+.article-body td[style*="color:var(--action-primary)"],
+.article-body td[style*="color: var(--action-primary)"] {
+  font-family: var(--font-mono, monospace) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Make plate series & plate numbers look like real embossed license plates */
+.article-body tbody tr td:nth-child(2) {
+  font-family: var(--font-mono, monospace);
+  font-weight: 800;
+  color: #0f172a !important;
+}
+
+/* Specific styling for plate-like codes in tables */
+.article-body table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+/* 4. CALLOUT & NOTE CARDS (Ghi chú Thông tư 24, pháp lý, lưu ý) */
+.article-body p:has(> em),
+.article-body p:has(> em:first-child),
+.article-body p em {
+  font-style: normal;
+}
+
+.article-body p:has(> em) {
+  background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+  border-left: 4px solid #3b82f6;
+  border: 1px solid #bfdbfe;
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 14px 20px;
+  color: #1e3a8a;
+  font-size: 14.5px;
+  margin: var(--space-5) 0;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
+  line-height: 1.7;
+}
+
+/* 5. BLOCKQUOTES: Rich Editorial Styling */
+.article-body blockquote {
+  margin: var(--space-7) 0;
+  padding: 18px 24px;
+  border-left: 4px solid var(--brand-500);
+  background: #f8fafc;
+  border-radius: 0 8px 8px 0;
+  color: #334155;
+  font-style: italic;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* 6. LISTS: Distinctive bullets & custom numbers */
+.article-body ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.article-body ul > li {
+  position: relative;
+  padding-left: 24px;
+  line-height: 1.85;
+  margin-bottom: 8px;
+  color: #334155;
+}
+
+.article-body ul > li::before {
+  content: "•";
+  position: absolute;
+  left: 6px;
+  top: -1px;
+  color: var(--brand-500);
+  font-size: 1.4em;
+  font-weight: 900;
+}
+
 .article-body ol {
-  margin: 0;
-  padding-left: 22px;
+  padding-left: 24px;
+}
+
+.article-body ol > li {
+  line-height: 1.85;
+  margin-bottom: 10px;
+  color: #334155;
+}
+
+.article-body ol > li::marker {
+  color: var(--brand-600);
+  font-weight: 700;
+}
+
+/* 7. FIGURES & IMAGES: Editorial Frame & Polished Caption */
+.article-body figure {
+  margin: var(--space-7) 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.12);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.article-body figure img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.article-body figcaption {
+  padding: 11px 18px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 13.5px;
+  font-style: italic;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+/* Quick Summary Card — Rich multi-colored highlight grid */
+.article-quick-summary {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: var(--gutter-card);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
 }
-.article-body blockquote {
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-  border-left: 3px solid var(--action-primary);
-  background: var(--surface-sunken);
-  border-radius: var(--radius-sm);
+
+.article-quick-summary__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: var(--space-3);
+}
+
+.article-quick-summary__badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #f8fafc;
+  text-transform: uppercase;
+}
+
+.article-quick-summary__sub {
+  font-size: 13px;
+  color: #64748b;
   font-style: italic;
-  color: var(--text-muted);
 }
-.article-body img {
-  max-width: 100%;
-  height: auto;
-  border-radius: var(--radius-card);
-  display: block;
-  margin: 0 auto;
+
+.article-quick-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-3);
 }
-.article-body figure {
+
+.article-quick-summary__item {
+  border-radius: 8px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid transparent;
+}
+
+.article-quick-summary__item p {
   margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
 }
-/* Editor Compose (Tiptap) — ảnh chèn trong bài không co max-width như .article-body (trang public),
-   nên ảnh gốc to (VD chụp điện thoại 3000px+) tràn khung soạn thảo. */
-.ProseMirror img {
-  max-width: 100%;
-  height: auto;
-  border-radius: var(--radius-sm);
+
+/* Green Tier: Hợp mệnh */
+.article-quick-summary__item--positive {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #bbf7d0;
 }
-.article-body figcaption {
-  margin-top: 6px;
-  font: var(--type-caption);
-  color: var(--text-faint);
-  text-align: center;
+.article-quick-summary__item--positive .article-quick-summary__tag {
+  color: #15803d;
 }
-.article-body table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9em;
-  overflow-x: auto;
-  display: block;
+.article-quick-summary__item--positive p {
+  color: #14532d;
 }
-.article-body th,
-.article-body td {
-  padding: 10px 12px;
-  border: 1px solid var(--border-hairline);
-  text-align: left;
+
+/* Red Tier: Kỵ mệnh */
+.article-quick-summary__item--negative {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fecaca;
 }
-.article-body th {
-  background: var(--surface-sunken);
-  color: var(--action-primary);
-  font-weight: var(--fw-semibold);
+.article-quick-summary__item--negative .article-quick-summary__tag {
+  color: #b91c1c;
 }
+.article-quick-summary__item--negative p {
+  color: #7f1d1d;
+}
+
+/* Amber / Gold Tier: Ý nghĩa */
+.article-quick-summary__item--meaning {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fde68a;
+}
+.article-quick-summary__item--meaning .article-quick-summary__tag {
+  color: #b45309;
+}
+.article-quick-summary__item--meaning p {
+  color: #78350f;
+}
+
+.article-quick-summary__tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.article-quick-summary__tag .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.article-quick-summary__tag .dot--green { background: #16a34a; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2); }
+.article-quick-summary__tag .dot--red { background: #dc2626; box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2); }
+.article-quick-summary__tag .dot--amber { background: #d97706; box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2); }
 
 /* Reader preferences toolbar — font family + size controls above article body */
 .reader-prefs {
