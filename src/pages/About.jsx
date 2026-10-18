@@ -1,191 +1,495 @@
-import { useState } from 'react';
-import { ChevronDown, Play } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  ShieldCheck,
+  Award,
+  Sparkles,
+  Clock,
+  Phone,
+  Mail,
+  MapPin,
+  ExternalLink,
+  ChevronDown,
+  Play,
+  CheckCircle2,
+  Calendar,
+  TrendingUp,
+  Users,
+  FileText,
+  Compass,
+  MessageCircle,
+  BadgeCheck,
+  ArrowRight
+} from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Badge, Eyebrow } from '../components/index.jsx';
 import LazyImage from '../components/LazyImage.jsx';
-import { contentGet, contentItems } from '../lib/content/index.js';
-import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
+import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
 
 export default function About({ go }) {
   const { data: videosData } = useFeaturedPromoVideos(6);
   const videos = videosData?.items || [];
   const [openFaq, setOpenFaq] = useState(null);
-  const [timelineOpen, setTimelineOpen] = useState(false);
-  const STATS = contentItems('about.stats.items').map((s) => [s.n, s.l]);
-  const TIMELINE = contentItems('about.timeline.items').map((t) => [t.key, t.title, t.desc]);
-  const STEPS = contentItems('about.steps.items').map((s) => [s.title, s.desc]);
-  const VALUES = contentItems('about.values.items').map((v) => [v.title, v.desc]);
-  const TESTIMONIALS = contentItems('about.testimonials.items').map((t) => [t.who, t.quote]);
-  const FAQ = contentItems('about.faq.items').map((f) => [f.q, f.a]);
-  const T = contentGet;
+
+  const stats = [
+    { num: '10+', label: 'Năm kinh nghiệm', sub: 'Thực chiến định giá & pháp lý từ 2016' },
+    { num: '5.000+', label: 'Biển số trao tay', sub: 'Bàn giao hợp pháp trên 63 tỉnh thành' },
+    { num: '2.000+', label: 'Khách hàng Đà Nẵng', sub: 'Cộng đồng chủ xe miền Trung tin cậy' },
+    { num: '1–2 Ngày', label: 'Sang tên trung bình', sub: 'Hồ sơ chuẩn chỉ Thông tư 24/2023/TT-BCA' },
+  ];
+
+  const timeline = [
+    { year: '2016', title: 'Khởi đầu từ đam mê', desc: 'Cửa hàng nhỏ 20m² trên đường Nguyễn Văn Linh, chỉ có vài biển số ô tô và một chiếc bàn gỗ đón khách giao lưu số đẹp.' },
+    { year: '2018', title: 'Mở rộng nguồn biển miền Trung', desc: 'Kết nối mạng lưới sưu tầm từ Quảng Nam, Thừa Thiên Huế đến Quảng Ngãi — kho số tăng trưởng lên hơn 200 biển giá trị.' },
+    { year: '2020', title: 'Số hóa nền tảng & Tư vấn online', desc: 'Xây dựng website, Zalo OA và giải pháp luận giải phong thủy từ xa, hỗ trợ chủ xe tại Hà Nội và TP.HCM sở hữu biển số miền Trung.' },
+    { year: '2022', title: 'Cột mốc 5.000 biển số trao tay', desc: 'Vượt mốc 5.000 khách hàng thành công, hơn 65% giao dịch mới đến từ sự giới thiệu của bạn bè, đối tác cũ.' },
+    { year: '2024', title: 'Chuẩn hóa định danh Thông tư 24', desc: 'Tiên phong hướng dẫn khách hàng đăng ký biển số định danh theo quy định mới của Bộ Công an, bảo vệ quyền sở hữu trọn đời.' },
+    { year: '2026', title: 'Hệ sinh thái Biensovip toàn diện', desc: 'Showroom chuẩn mực tại An Thượng 30, đội ngũ chuyên viên tinh nhuệ, cam kết 100% hồ sơ gốc minh bạch và giá công khai.' },
+  ];
+
+  const values = [
+    {
+      icon: <FileText size={22} />,
+      title: 'Hồ sơ gốc minh bạch',
+      desc: 'Mọi biển số đều có hồ sơ pháp lý rõ ràng, kiểm tra dữ liệu đăng kiểm và phạt nguội kỹ lưỡng trước khi bàn giao.',
+    },
+    {
+      icon: <Award size={22} />,
+      title: 'Giá niêm yết công khai',
+      desc: 'Tuyệt đối không tăng giá sau khi chốt, không chi phí ẩn, cam kết giá thị trường chuẩn xác và hợp lý nhất.',
+    },
+    {
+      icon: <Compass size={22} />,
+      title: 'Tư vấn đúng ngũ hành',
+      desc: 'Không chạy theo trào lưu chung — luận giải năng lượng tương sinh theo can chi, mệnh quái và mục đích kinh doanh của chủ nhân.',
+    },
+    {
+      icon: <ShieldCheck size={22} />,
+      title: 'Sang tên trọn gói tận tay',
+      desc: 'Đội ngũ phụ trách toàn bộ thủ tục công chứng, nộp thuế trước bạ và bấm biển tại Phòng CSGT, giao biển dập chuẩn tận nơi.',
+    },
+  ];
+
+  const steps = [
+    {
+      step: '01',
+      title: 'Chọn số hợp mệnh',
+      desc: 'Khách hàng duyệt kho trực tuyến hoặc gửi năm sinh để Duy Đinh phân tích ngũ hành, tìm dải số cát lợi tương sinh.',
+    },
+    {
+      step: '02',
+      title: 'Thẩm định & Giữ chỗ',
+      desc: 'Kiểm tra tình trạng pháp lý xe, tiến hành đặt cọc giữ chỗ có biên nhận, hợp đồng cam kết rõ ràng từ chủ cửa hàng.',
+    },
+    {
+      step: '03',
+      title: 'Thực hiện thủ tục CSGT',
+      desc: 'Chuyên viên nộp thuế trước bạ, rút hồ sơ gốc và thực hiện thủ tục cấp biển định danh theo Thông tư 24.',
+    },
+    {
+      step: '04',
+      title: 'Bàn giao biển dập chuẩn',
+      desc: 'Bàn giao biển số dập chuẩn Cục CSGT cùng giấy hẹn cà vẹt, hỗ trợ lắp đặt khung biển mica hoặc titan cao cấp tận nơi.',
+    },
+  ];
+
+  const testimonials = [
+    {
+      who: 'Chú Hải — Doanh nhân Đà Nẵng',
+      plate: 'Mercedes S450 · Biển Ngũ Quý 999.99',
+      quote: 'Tôi rất ngại thủ tục giấy tờ sang tên vì hay bị kéo dài. Nhưng Duy Đinh trực tiếp xử lý gọn gàng trong 48h, hợp đồng rõ ràng, uy tín tuyệt đối.',
+    },
+    {
+      who: 'Anh Tuấn — Bất Động Sản Hội An',
+      plate: 'BMW X7 · Biển Lộc Phát 68.68',
+      quote: 'Duy luận giải ngũ hành cho tôi rất kỹ, không ép mua biển đắt mà chọn đúng số trợ mệnh kinh doanh. Làm ăn thuận buồm xuôi gió rõ rệt.',
+    },
+    {
+      who: 'Chị Lan — Chủ chuỗi F&B miền Trung',
+      plate: 'Porsche Macan · Biển Sảnh Tiến 567.89',
+      quote: 'Mua từ năm 2020 đến nay, sau đó tôi giới thiệu thêm 4 người bạn thân đến cửa hàng. Duy Đinh làm nghề rất có tâm, giá luôn công khai.',
+    },
+  ];
+
+  const faqs = [
+    {
+      q: 'Biển số mua tại Duy Đinh có sang tên định danh chính chủ được không?',
+      a: 'Hoàn toàn được. Toàn bộ biển số tại Biensovip đều có hồ sơ gốc hợp pháp 100%, tuân thủ nghiêm ngặt quy định tại Thông tư 24/2023/TT-BCA và Thông tư 28/2024/TT-BCA. Khách hàng sẽ được cấp biển định danh chính chủ đứng tên trên cà vẹt.',
+    },
+    {
+      q: 'Khách hàng ở các tỉnh thành khác (Hà Nội, TP.HCM, Tây Nguyên...) có mua được không?',
+      a: 'Hoàn toàn thuận lợi. Quy định biển định danh hiện nay cho phép công dân đăng ký xe tại nơi thường trú hoặc tạm trú. Đội ngũ Duy Đinh hỗ trợ rút hồ sơ gốc, chuyển phát hỏa tốc và hướng dẫn hoàn tất thủ tục đăng ký tận nơi trên cả nước.',
+    },
+    {
+      q: 'Quy trình đặt cọc và cam kết giao dịch như thế nào?',
+      a: 'Khi chọn được biển ưng ý, khách hàng đặt cọc giữ chỗ qua tài khoản chính chủ của Duy Đinh. Cửa hàng lập tức cấp hợp đồng giao dịch điện tử có giá trị pháp lý, cam kết hoàn tiền 100% nếu có bất kỳ vướng mắc nào về mặt pháp lý.',
+    },
+    {
+      q: 'Duy Đinh có thu phí tư vấn phong thủy chọn biển không?',
+      a: 'Không. Duy Đinh tư vấn phong thủy nạp âm, phân tích dãy số hợp can chi và bản mệnh hoàn toàn MIỄN PHÍ cho mọi khách hàng ghé thăm cửa hàng hoặc nhắn tin qua Zalo.',
+    },
+  ];
+
   return (
-    <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-9)', animation: 'pageIn 180ms var(--ease-out)' }}>
-
-      {/* Intro + portrait */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'center' }}>
-        <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Eyebrow tone="blue">{T('about.intro.eyebrow')}</Eyebrow>
-          <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{T('about.intro.title')}</h1>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }}>{T('about.intro.p1')}</p>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }}>{T('about.intro.p2')}</p>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: 'var(--width-prose)' }}>{T('about.intro.p3')}</p>
-        </div>
-        <div style={{ flex: '1 1 240px', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ position: 'relative', width: 'min(100%, 300px)', aspectRatio: '1/1.05', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-surface)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', boxShadow: 'var(--shadow-3)' }}>
-            <div style={{ position: 'absolute', top: 18, right: 18, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-              <Badge tone="dark">{T('about.intro.badge_founder')}</Badge>
-              <Badge tone="mint">{T('about.intro.portrait_caption')}</Badge>
+    <div className="about-page-wrap">
+      {/* 1. Hero Section: Founder & Philosophy */}
+      <section className="about-hero" itemScope itemType="https://schema.org/Person">
+        <div className="about-hero-grid">
+          <div className="about-hero-content">
+            <div className="about-hero-tag">
+              <Sparkles size={14} />
+              <span>Duy Đinh · Người sáng lập Biensovip · Đà Nẵng</span>
             </div>
-            <LazyImage src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=70" alt={T('about.intro.portrait_alt')} style={{ position: 'absolute', inset: 0 }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, display: 'block' }} />
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 18px', background: 'linear-gradient(180deg, rgba(255,255,255,0), var(--ink-900))', color: 'var(--white)', font: 'var(--type-title-3)' }}>{T('about.intro.portrait_caption')}</div>
-          </div>
-        </div>
-      </div>
 
-      {/* Stats */}
-      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 'var(--space-5)' }}>
-        {STATS.map(([n, l]) => (
-          <div key={l} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--action-primary)' }}>{n}</span>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{l}</span>
-          </div>
-        ))}
-      </div>
+            <h1 className="about-hero-title">
+              Chọn Số Như Chọn Vận Khí Cho Chủ Xe
+            </h1>
 
-      {/* Timeline */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <Eyebrow tone="blue">{T('about.timeline.eyebrow')}</Eyebrow>
-        <div className={'about-timeline' + (timelineOpen ? ' open' : '')} style={{ display: 'flex', flexDirection: 'column' }}>
-          {TIMELINE.map(([y, t, d], i) => (
-            <div key={y} className={i >= 3 ? 'about-timeline-item-extra' : ''} style={{ display: 'flex', gap: 'var(--space-5)', paddingBottom: i === TIMELINE.length - 1 ? 0 : 'var(--space-5)', position: 'relative' }}>
-              <div style={{ flex: '0 0 64px', paddingTop: 2, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--action-primary)' }}>{y}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', borderLeft: '2px solid var(--border-hairline)', paddingLeft: 'var(--space-5)' }}>
-                <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{t}</span>
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{d}</span>
+            <p className="about-hero-desc">
+              Xin chào, tôi là <strong>Duy Đinh</strong> — người sáng lập thương hiệu Biensovip tại Đà Nẵng theo đúng nghĩa làm nghề.
+            </p>
+
+            <div className="about-hero-quote">
+              “Tôi tin mỗi con số trên tấm biển không đơn thuần là ký hiệu nhận diện phương tiện — nó là điểm tựa tâm lý, là biểu trưng của sự may mắn, bình an và bản lĩnh của chủ nhân trên mọi hành trình. Hơn một thập kỷ qua, nguyên tắc bất biến của tôi luôn là: <strong>hồ sơ chuẩn chỉ, giá cả công khai và tư vấn bằng cái tâm</strong>.”
+            </div>
+
+            <p className="about-hero-desc" style={{ fontSize: '15px', color: '#475569' }}>
+              Mọi giao dịch thực tế, quá trình bấm biển và bàn giao cho khách hàng đều được tôi trực tiếp ghi hình và chia sẻ minh bạch trên kênh TikTok <strong>@duydinhbiensodepdanang</strong> để khách hàng ở bất cứ đâu đều an tâm tuyệt đối.
+            </p>
+
+            <div className="about-hero-actions">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => window.open('https://zalo.me/0815792699', '_blank')}
+              >
+                <MessageCircle size={18} style={{ marginRight: 6 }} />
+                Nhắn Zalo Duy Đinh: 081 579 2699
+              </Button>
+              <Button variant="outline" size="md" onClick={() => go('list')()}>
+                Khám phá kho biển số →
+              </Button>
+            </div>
+          </div>
+
+          <div className="about-portrait-card">
+            <img
+              src="/assets/duy-dinh-portrait.jpg"
+              alt="Duy Đinh — Người sáng lập Biensovip"
+              className="about-portrait-img"
+              itemProp="image"
+            />
+            <div className="about-portrait-badge">
+              <BadgeCheck size={16} />
+              <span>Chuyên gia E-E-A-T đã xác thực</span>
+            </div>
+            <div className="about-portrait-overlay">
+              <div className="about-portrait-name" itemProp="name">Duy Đinh</div>
+              <div className="about-portrait-role" itemProp="jobTitle">
+                Người sáng lập Biensovip · Chuyên gia Phong thủy & Định giá Biển số
               </div>
             </div>
-          ))}
+          </div>
         </div>
-        <button type="button" className="about-timeline-toggle pressable" aria-expanded={timelineOpen} onClick={() => setTimelineOpen((v) => !v)} style={{ display: 'none', border: 'none', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', height: 36, padding: '0 16px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', cursor: 'pointer', alignSelf: 'flex-start' }}>{timelineOpen ? T('about.timeline.toggle_close') : T('about.timeline.toggle_open')}</button>
-      </div>
+      </section>
 
-      {/* Values */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <Eyebrow tone="blue">{T('about.values.eyebrow')}</Eyebrow>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 'var(--gutter-section)' }}>
-          {VALUES.map(([t, d]) => (
-            <div key={t} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{t}</span>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{d}</span>
+      {/* 2. Stats Grid: Proof of Scale */}
+      <section className="about-stats-grid">
+        {stats.map((s, i) => (
+          <div key={i} className="about-stat-card">
+            <span className="about-stat-number">{s.num}</span>
+            <span className="about-stat-label">{s.label}</span>
+            <span className="about-stat-sub">{s.sub}</span>
+          </div>
+        ))}
+      </section>
+
+      {/* 3. Milestones Timeline: 10 Years Journey */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="about-sec-header">
+          <span className="about-sec-badge">HÀNH TRÌNH 10 NĂM</span>
+          <h2 className="about-sec-title">Dấu Ấn Làm Nghề (2016 – 2026)</h2>
+          <p className="about-sec-sub">
+            Từ một cửa hàng mộc mạc trên đường Nguyễn Văn Linh đến hệ sinh thái giao dịch biển số đẹp uy tín hàng đầu miền Trung.
+          </p>
+        </div>
+
+        <div className="about-timeline-grid">
+          {timeline.map((item, idx) => (
+            <div key={idx} className="about-timeline-card">
+              <div className="about-timeline-year">
+                <Calendar size={18} />
+                <span>{item.year}</span>
+              </div>
+              <h3 className="about-timeline-card-title">{item.title}</h3>
+              <p className="about-timeline-card-desc">{item.desc}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Featured videos */}
+      {/* 4. Core Values: What We Stand For */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="about-sec-header">
+          <span className="about-sec-badge">NGUYÊN TẮC HOẠT ĐỘNG</span>
+          <h2 className="about-sec-title">4 Giá Trị Cốt Lõi Bất Biến</h2>
+          <p className="about-sec-sub">
+            Uy tín là tài sản quý giá nhất của người làm nghề. Đây là những cam kết mà Duy Đinh kiên định gìn giữ suốt 10 năm qua.
+          </p>
+        </div>
+
+        <div className="about-values-grid">
+          {values.map((v, i) => (
+            <div key={i} className="about-value-card">
+              <div className="about-value-icon">{v.icon}</div>
+              <h3 className="about-value-title">{v.title}</h3>
+              <p className="about-value-desc">{v.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. Real Videos: Proof of Work */}
       {videos.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <Eyebrow tone="blue">Video nổi bật</Eyebrow>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 'var(--gutter-section)' }}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div className="about-sec-header">
+            <span className="about-sec-badge">VIDEO BÀN GIAO THỰC TẾ</span>
+            <h2 className="about-sec-title">Người Làm Thực — Việc Thực</h2>
+            <p className="about-sec-sub">
+              Trực tiếp theo dõi những khoảnh khắc bấm biển số, quy trình sang tên và cảm nhận chân thật của khách hàng tại cửa hàng.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
             {videos.map((v) => (
-              <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <div style={{ width: '100%', borderRadius: 'var(--radius-card)', background: 'var(--surface-sunken)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', justifyContent: 'center' }}>
+              <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ width: '100%', borderRadius: '14px', background: '#ffffff', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.04)' }}>
                   {v.platform === 'tiktok' ? (
                     <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
                   ) : (
-                    <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Xem video: ${v.title || ''}`} style={{ position: 'relative', display: 'block', width: '100%', minHeight: 300, borderRadius: 'var(--radius-card)', overflow: 'hidden', background: 'var(--surface-sunken)' }}>
+                    <a
+                      href={v.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ position: 'relative', display: 'block', width: '100%', minHeight: 280, background: '#0f172a' }}
+                    >
                       {v.thumbnailUrl ? (
-                        <LazyImage src={v.thumbnailUrl} alt={v.title || ''} style={{ minHeight: 300 }} imgStyle={{ width: '100%', height: '100%', minHeight: 300, objectFit: 'cover', display: 'block' }} skeletonHeight={300} />
+                        <LazyImage src={v.thumbnailUrl} alt={v.title || ''} style={{ minHeight: 280 }} imgStyle={{ width: '100%', height: '100%', minHeight: 280, objectFit: 'cover', display: 'block' }} skeletonHeight={280} />
                       ) : (
-                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 300, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 280, color: '#94a3b8', font: 'var(--type-body-sm)' }}>Xem video thực tế</div>
                       )}
                       <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,0,0,.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Play size={22} fill="currentColor" style={{ marginLeft: 3 }} />
+                        <span style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(15, 23, 42, 0.75)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.3)' }}>
+                          <Play size={24} fill="currentColor" style={{ marginLeft: 3 }} />
                         </span>
                       </span>
                     </a>
                   )}
                 </div>
-                {v.title && <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{v.title}</span>}
+                {v.title && (
+                  <span style={{ font: 'var(--type-body-sm)', fontWeight: '600', color: '#0f172a', lineHeight: 1.45 }}>
+                    {v.title}
+                  </span>
+                )}
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Process */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <Eyebrow tone="blue">{T('about.steps.eyebrow')}</Eyebrow>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 'var(--gutter-section)' }}>
-          {STEPS.map(([t, d], i) => (
-            <div key={t} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <span style={{ width: 30, height: 30, borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--type-title-3)' }}>{i + 1}</span>
-              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{t}</span>
-              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{d}</span>
+      {/* 6. Step-by-step Process: Thông tư 24 */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="about-sec-header">
+          <span className="about-sec-badge">QUY TRÌNH MINH BẠCH</span>
+          <h2 className="about-sec-title">4 Bước Sở Hữu Biển Đẹp An Toàn</h2>
+          <p className="about-sec-sub">
+            Quy trình khép kín, chuẩn chỉnh pháp lý theo Thông tư 24/2023/TT-BCA, đảm bảo thời gian nhanh nhất cho quý khách.
+          </p>
+        </div>
+
+        <div className="about-process-grid">
+          {steps.map((s, i) => (
+            <div key={i} className="about-process-card">
+              <span className="about-process-num">{s.step}</span>
+              <h3 className="about-process-title">{s.title}</h3>
+              <p className="about-process-desc">{s.desc}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Testimonials */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <Eyebrow tone="blue">{T('about.testimonials.eyebrow')}</Eyebrow>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 'var(--gutter-section)' }}>
-          {TESTIMONIALS.map(([who, q]) => (
-            <div key={who} style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              <span aria-hidden style={{ font: 'var(--type-display-2)', color: 'var(--action-primary)', lineHeight: 1 }}>“</span>
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', fontStyle: 'italic' }}>{q}</p>
-              <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{who}</span>
+      {/* 7. Real Testimonials */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="about-sec-header">
+          <span className="about-sec-badge">KHÁCH HÀNG CHIA SẺ</span>
+          <h2 className="about-sec-title">Cảm Nhận Từ Chủ Xe Thực Tế</h2>
+          <p className="about-sec-sub">
+            Sự an tâm và hài lòng của khách hàng là thước đo giá trị lớn nhất cho chặng đường phát triển của Duy Đinh.
+          </p>
+        </div>
+
+        <div className="about-testi-grid">
+          {testimonials.map((t, idx) => (
+            <div key={idx} className="about-testi-card">
+              <p className="about-testi-quote">“{t.quote}”</p>
+              <div className="about-testi-author">
+                <div className="about-testi-meta">
+                  <span className="about-testi-name">{t.who}</span>
+                  <span className="about-testi-plate">{t.plate}</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* FAQ */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <Eyebrow tone="blue">{T('about.faq.eyebrow')}</Eyebrow>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          {FAQ.map(([q, a], i) => {
-            const open = openFaq === i;
+      {/* 8. FAQ Accordion */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="about-sec-header">
+          <span className="about-sec-badge">HỎI ĐÁP & CHÍNH SÁCH</span>
+          <h2 className="about-sec-title">Câu Hỏi Thường Gặp</h2>
+          <p className="about-sec-sub">
+            Những băn khoăn phổ biến của khách hàng khi tìm kiếm và sang tên biển số xe đẹp.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {faqs.map((f, i) => {
+            const isOpen = openFaq === i;
             return (
-              <div key={q} className={'about-faq-item' + (open ? ' open' : '')} style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-                <button type="button" className="about-faq-toggle pressable" onClick={() => setOpenFaq(open ? null : i)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', textAlign: 'left', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>
-                  <span>{q}</span>
-                  <ChevronDown size={18} className="about-faq-chevron" style={{ flexShrink: 0, transition: 'transform 160ms var(--ease-out)', transform: open ? 'rotate(180deg)' : 'none' }} />
+              <div
+                key={i}
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.15s ease',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : i)}
+                  style={{
+                    width: '100%',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    font: 'var(--type-title-3)',
+                    color: '#0f172a',
+                    fontWeight: '700',
+                  }}
+                >
+                  <span>{f.q}</span>
+                  <ChevronDown
+                    size={20}
+                    style={{
+                      flexShrink: 0,
+                      color: 'var(--brand-600)',
+                      transition: 'transform 0.2s ease',
+                      transform: isOpen ? 'rotate(180deg)' : 'none',
+                    }}
+                  />
                 </button>
-                <span className="about-faq-answer" style={{ display: open ? 'block' : undefined, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{a}</span>
+                {isOpen && (
+                  <div style={{ padding: '0 20px 18px', font: 'var(--type-body-sm)', color: '#475569', lineHeight: 1.75 }}>
+                    {f.a}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {/* CTA */}
-      <div style={{ background: 'var(--surface-inverse)', borderRadius: 'var(--radius-card)', padding: 'clamp(24px,4vw,40px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-5)' }}>
-        <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-          <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>{T('about.cta.title')}</span>
-          <span style={{ font: 'var(--type-body-sm)', color: 'rgba(255,255,255,.66)' }}>{T('about.cta.desc')}</span>
-        </div>
-        <Button variant="primary" size="lg" uppercase onClick={go('list')}>{T('about.cta.button')}</Button>
-      </div>
+      {/* 9. Showroom Đà Nẵng & Multi-channel Contact Hub */}
+      <section className="about-showroom-hub">
+        <div className="about-showroom-info">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fde68a', fontSize: '12px', fontWeight: '800', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            <MapPin size={16} />
+            <span>Showroom & Cơ Sở Chính Thức</span>
+          </div>
 
-      {/* Contact */}
-      <div className="about-contact" style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--space-5)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.shop_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.shop_value')}</span></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.phone_label')}</span><a href={`tel:${T('about.contact.phone_value').replace(/[^0-9]/g, '')}`} style={{ font: 'var(--type-title-3)' }}>{T('about.contact.phone_value')}</a></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.zalo_label')}</span><a href={`https://${T('about.contact.zalo_value')}`} target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)' }}>{T('about.contact.zalo_value')}</a></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Email</span><a href={`mailto:${T('about.contact.email_value') || 'duymc64@gmail.com'}`} style={{ font: 'var(--type-title-3)', color: 'var(--action-primary)', textDecoration: 'none' }}>{T('about.contact.email_value') || 'duymc64@gmail.com'}</a></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.address_label') || 'Địa chỉ cơ sở'}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.address_value') || 'Số 06 An Thượng 30, Ngũ Hành Sơn, Đà Nẵng'}</span></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.facebook_label') || 'Fanpage Facebook'}</span>
-          <a href="https://www.facebook.com/duydinhbiensodepdanang" target="_blank" rel="noopener noreferrer" style={{ font: 'var(--type-title-3)', color: 'var(--action-primary)', textDecoration: 'none' }}>
-            {T('about.contact.facebook_value') || 'Duy Đinh - Biển Số Đẹp Đà Nẵng'}
-          </a>
+          <h2 style={{ margin: 0, fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 800, color: '#ffffff', lineHeight: 1.3 }}>
+            Ghé Thăm Cửa Hàng Duy Đinh Tại Đà Nẵng
+          </h2>
+
+          <p style={{ margin: 0, fontSize: '15px', color: '#cbd5e1', lineHeight: 1.7 }}>
+            Khách hàng có thể đến trực tiếp showroom để xem biển dập thực tế, kiểm tra hồ sơ gốc hoặc hẹn gặp Duy Đinh để được tư vấn phong thủy ngũ hành chuyên sâu.
+          </p>
+
+          <div className="about-showroom-list">
+            <div className="about-contact-item">
+              <div className="about-contact-icon"><MapPin size={18} /></div>
+              <div className="about-contact-text">
+                <span className="about-contact-label">Địa chỉ cơ sở</span>
+                <span className="about-contact-val">Số 06 An Thượng 30, Ngũ Hành Sơn, Đà Nẵng</span>
+              </div>
+            </div>
+
+            <div className="about-contact-item">
+              <div className="about-contact-icon"><Phone size={18} /></div>
+              <div className="about-contact-text">
+                <span className="about-contact-label">Hotline tư vấn</span>
+                <a href="tel:0815792699" className="about-contact-val">081 579 2699</a>
+              </div>
+            </div>
+
+            <div className="about-contact-item">
+              <div className="about-contact-icon"><MessageCircle size={18} /></div>
+              <div className="about-contact-text">
+                <span className="about-contact-label">Zalo kết nối</span>
+                <a href="https://zalo.me/0815792699" target="_blank" rel="noopener noreferrer" className="about-contact-val">zalo.me/0815792699</a>
+              </div>
+            </div>
+
+            <div className="about-contact-item">
+              <div className="about-contact-icon"><Clock size={18} /></div>
+              <div className="about-contact-text">
+                <span className="about-contact-label">Giờ đón khách</span>
+                <span className="about-contact-val">8:00 – 21:00 (Tất cả các ngày)</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('about.contact.hours_label')}</span><span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{T('about.contact.hours_value')}</span></div>
-      </div>
-    </section>
+
+        <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'center', alignItems: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--brand-500)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 18px rgba(245, 158, 11, 0.4)' }}>
+            <Compass size={32} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#ffffff' }}>Cần Định Giá Hoặc Tìm Biển Hợp Mệnh?</h3>
+            <p style={{ margin: 0, fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6 }}>
+              Gửi thông tin năm sinh hoặc biển số bạn đang quan tâm, Duy Đinh sẽ trực tiếp phản hồi và luận giải trong 15 phút.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+            <Button
+              variant="primary"
+              size="md"
+              style={{ width: '100%' }}
+              onClick={() => window.open('https://zalo.me/0815792699', '_blank')}
+            >
+              Nhắn tin trực tiếp qua Zalo
+            </Button>
+            <Button
+              variant="outline"
+              size="md"
+              style={{ width: '100%', borderColor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
+              onClick={() => go('lucky')()}
+            >
+              Tra cứu biển hợp mệnh online
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
