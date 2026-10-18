@@ -48,9 +48,19 @@ export default function GlobalSearch({ go, patch }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--grey-200)', borderRadius: 'var(--radius-field)', padding: '0 12px' }}>
           <Search size={16} style={{ color: 'var(--text-faint)' }} />
-          <input ref={inputRef} value={keyword} onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Tìm biển số, khách hàng, bài viết, liên hệ…"
-            style={{ flex: 1, border: 'none', outline: 'none', height: 40, font: 'var(--type-body-sm)' }} />
+          <input
+            ref={inputRef}
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && groups.length > 0 && groups[0].items.length > 0) {
+                e.preventDefault();
+                goTo(groups[0].screen, groups[0].items[0].text);
+              }
+            }}
+            placeholder="Tìm biển số, khách hàng, bài viết, liên hệ… (nhấn Enter để chọn)"
+            style={{ flex: 1, border: 'none', outline: 'none', height: 40, font: 'var(--type-body-sm)' }}
+          />
         </div>
 
         {isLoading && q && <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Đang tìm…</span>}

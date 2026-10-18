@@ -996,6 +996,12 @@ export default function PlateDiscussion({ plate, notify, user }) {
             background: "var(--white)",
             color: "var(--text-body)",
           }}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              handleSubmitMain(e);
+            }
+          }}
           onFocus={(e) => {
             e.target.style.borderColor = "var(--action-primary)";
             e.target.style.boxShadow = "0 0 0 3px rgba(217,119,6,.12)";
@@ -1579,6 +1585,12 @@ export default function PlateDiscussion({ plate, notify, user }) {
                       lineHeight: 1.55,
                       resize: "vertical",
                       outline: "none",
+                    }}
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmitReply(e, item.id);
+                      }
                     }}
                     onFocus={(e) => {
                       e.target.style.borderColor = "var(--action-primary)";

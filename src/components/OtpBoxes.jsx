@@ -14,6 +14,34 @@ export default function OtpBoxes({ value, onChange, error, disabled }) {
   };
   const onKeyDown = (i, e) => {
     if (e.key === 'Backspace' && !((value || '')[i]) && i > 0) focus(i - 1);
+    if (e.key === 'Enter') {
+      const form = e.currentTarget.form || e.currentTarget.closest('form');
+      if (form) {
+        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (submitBtn) {
+          e.preventDefault();
+          submitBtn.click();
+        } else {
+          const primaryBtn = form.querySelector('button.btn-primary:not([disabled])');
+          if (primaryBtn) {
+            e.preventDefault();
+            primaryBtn.click();
+          } else if (typeof form.requestSubmit === 'function') {
+            e.preventDefault();
+            form.requestSubmit();
+          }
+        }
+      } else {
+        const container = e.currentTarget.closest('[role="dialog"], [data-form-container]')
+          || e.currentTarget.closest('section, article, div[style*="boxShadow"], div[style*="box-shadow"]');
+        const btns = Array.from(container?.querySelectorAll('button.btn-primary:not([disabled]), button[type="submit"]:not([disabled])') || []);
+        const primaryBtn = btns.reverse().find((b) => b.offsetHeight > 0);
+        if (primaryBtn) {
+          e.preventDefault();
+          primaryBtn.click();
+        }
+      }
+    }
   };
   const onPaste = (e) => {
     const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);

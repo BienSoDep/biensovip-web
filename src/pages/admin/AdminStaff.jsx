@@ -830,7 +830,7 @@ export default function AdminStaff({ notify }) {
 
       {/* Drawer: Thêm / Sửa nhân viên */}
       <Drawer open={open} onClose={() => setOpen(false)} title={editId ? 'Sửa thông tin nhân viên' : 'Thêm nhân viên mới'} width="min(52%, 720px)">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
+        <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             {editId ? 'Cập nhật thông tin tài khoản và ma trận quyền hạn truy cập các chức năng.' : 'Tài khoản nhân viên sau khi thêm sẽ có quyền đăng nhập vào trang quản trị.'}
           </p>
@@ -998,37 +998,37 @@ export default function AdminStaff({ notify }) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 8, borderTop: '1px solid var(--border-hairline)', paddingTop: 16 }}>
-            <Button variant="ghost" size="md" onClick={() => setOpen(false)}>Hủy bỏ</Button>
-            <Button variant="primary" size="md" onClick={save} disabled={saving}>
+            <Button variant="ghost" size="md" type="button" onClick={() => setOpen(false)}>Hủy bỏ</Button>
+            <Button variant="primary" size="md" type="submit" disabled={saving}>
               {saving ? 'Đang lưu…' : editId ? 'Lưu thay đổi' : 'Thêm nhân viên'}
             </Button>
           </div>
-        </div>
+        </form>
       </Drawer>
 
       {/* Modal Cấp lại mật khẩu */}
       {pwId && (
         <Modal open onClose={() => setPwId(null)} title="Cấp lại mật khẩu nhân viên" maxWidth="420px">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <form onSubmit={(e) => { e.preventDefault(); confirmResetPassword(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
               Đổi mật khẩu cho nhân viên <strong>{pwTarget?.fullName || pwTarget?.email}</strong>:
             </p>
             <Input
               label="Mật khẩu mới"
               type="password"
-              placeholder="Tối thiểu 6 ký tự"
+              placeholder="Tối thiểu 6 ký tự (nhấn Enter để lưu)"
               value={pwValue}
               error={pwErr}
               onChange={(e) => setPwValue(e.target.value)}
               required
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 8 }}>
-              <Button variant="ghost" size="md" onClick={() => setPwId(null)}>Hủy bỏ</Button>
-              <Button variant="primary" size="md" onClick={confirmResetPassword} loading={pwSaving}>
+              <Button variant="ghost" size="md" type="button" onClick={() => setPwId(null)}>Hủy bỏ</Button>
+              <Button variant="primary" size="md" type="submit" loading={pwSaving}>
                 Cập nhật mật khẩu
               </Button>
             </div>
-          </div>
+          </form>
         </Modal>
       )}
 

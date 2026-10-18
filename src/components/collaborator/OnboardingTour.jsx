@@ -33,15 +33,39 @@ function markSeen(referralCode) {
   try { localStorage.setItem(seenKey(referralCode), '1'); } catch { /* storage blocked */ }
 }
 
+import { useHideOnScroll } from '../../hooks/useHideOnScroll.js';
+
 export function HelpButton({ onClick }) {
+  const scrolling = useHideOnScroll();
   return (
-    <button type="button" onClick={onClick} title="Xem hướng dẫn sử dụng dashboard"
+    <button
+      type="button"
+      onClick={onClick}
+      title="Xem hướng dẫn sử dụng dashboard"
+      aria-label="Xem hướng dẫn sử dụng dashboard"
       style={{
-        position: 'fixed', bottom: 20, right: 20, width: 44, height: 44, borderRadius: '50%',
-        border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-3)', zIndex: 900,
-      }}>
-      <HelpCircle size={22} />
+        position: 'fixed',
+        bottom: 118,
+        right: 10,
+        width: 42,
+        height: 42,
+        borderRadius: '50%',
+        border: 'none',
+        background: 'var(--action-primary)',
+        color: 'var(--white)',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: 'var(--shadow-3)',
+        zIndex: 85,
+        opacity: scrolling ? 0 : 1,
+        transform: scrolling ? 'translateX(72px)' : 'translateX(0)',
+        pointerEvents: scrolling ? 'none' : 'auto',
+        transition: 'opacity 160ms var(--ease-standard), transform 160ms var(--ease-standard)',
+      }}
+    >
+      <HelpCircle size={20} />
     </button>
   );
 }
@@ -61,13 +85,31 @@ export default function OnboardingTour({ active, referralCode, setTab, onClose }
 
   useLayoutEffect(() => {
     if (!active) return;
+
+    const update = () => {
+      const el = document.querySelector(`[data-tour="${STEPS[step].target}"]`);
+      if (!el) { setRect(null); return; }
+      setRect(el.getBoundingClientRect());
+    };
+
+    let timer;
     const id = requestAnimationFrame(() => {
       const el = document.querySelector(`[data-tour="${STEPS[step].target}"]`);
       if (!el) { setRect(null); return; }
       el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      setTimeout(() => setRect(el.getBoundingClientRect()), 200);
+      update();
+      timer = setTimeout(update, 320);
     });
-    return () => cancelAnimationFrame(id);
+
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(id);
+      clearTimeout(timer);
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update);
+    };
   }, [active, step]);
 
   if (!active) return null;
@@ -77,24 +119,23 @@ export default function OnboardingTour({ active, referralCode, setTab, onClose }
   const prev = () => step > 0 && setStep((s) => s - 1);
   const s = STEPS[step];
 
-  const tipTop = rect ? (rect.top < 160 ? rect.bottom + 14 : rect.top - 14) : window.innerHeight / 2;
-  const tipFlipped = rect ? rect.top < 160 : false;
-  const tipLeft = rect ? Math.max(160, Math.min(window.innerWidth - 160, rect.left + rect.width / 2)) : window.innerWidth / 2;
+  const tipTop = rect ? (rect.top < 220 ? rect.bottom + 14 : rect.top - 14) : window.innerHeight / 2;
+  const tipFlipped = rect ? rect.top < 220 : false;
+  const tipLeft = rect ? Math.max(190, Math.min(window.innerWidth - 190, rect.left + rect.width / 2)) : window.innerWidth / 2;
 
   return (
     <>
-      {rect ? (
-        <div onClick={finish} style={{
+      <div onClick={finish} style={{ position: 'fixed', inset: 0, background: rect ? 'transparent' : 'rgba(15,23,42,.45)', zIndex: 1000 }} aria-hidden="true" />
+      {rect && (
+        <div style={{
           position: 'fixed', top: rect.top - 6, left: rect.left - 6, width: rect.width + 12, height: rect.height + 12,
           border: '2px solid var(--action-primary)', borderRadius: 10, boxShadow: '0 0 0 4000px rgba(15,23,42,.45)',
-          zIndex: 1001, transition: 'all 160ms ease',
+          zIndex: 1001, pointerEvents: 'none', transition: 'all 160ms ease',
         }} />
-      ) : (
-        <div onClick={finish} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', zIndex: 1000 }} />
       )}
       <div role="dialog" aria-label={s.title} style={{
         position: 'fixed', top: tipTop, left: tipLeft, transform: tipFlipped ? 'translate(-50%,0)' : 'translate(-50%,-100%)',
-        width: 'min(320px, 90vw)', background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)',
+        width: 'min(380px, calc(100vw - 32px))', boxSizing: 'border-box', background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)',
         boxShadow: '0 20px 40px -10px rgba(0,0,0,.35)', zIndex: 1002, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)',
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
@@ -103,13 +144,33 @@ export default function OnboardingTour({ active, referralCode, setTab, onClose }
             <X size={16} />
           </button>
         </div>
-        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>{s.text}</span>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-          <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{step + 1}/{STEPS.length}</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {step < STEPS.length - 1 && <Button variant="ghost" size="sm" onClick={finish}>Bỏ qua</Button>}
-            {step > 0 && <Button variant="ghost" size="sm" onClick={prev}>Quay lại</Button>}
-            <Button variant="primary" size="sm" onClick={next}>{step < STEPS.length - 1 ? 'Tiếp theo' : 'Hoàn tất'}</Button>
+        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.55 }}>{s.text}</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 8, flexWrap: 'nowrap' }}>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>{step + 1}/{STEPS.length}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            {step < STEPS.length - 1 && (
+              <Button variant="ghost" size="sm" onClick={finish} style={{ padding: '0 10px', height: 32, font: 'var(--type-caption)' }}>
+                Bỏ qua
+              </Button>
+            )}
+            {step > 0 && (
+              <Button variant="ghost" size="sm" onClick={prev} style={{ padding: '0 10px', height: 32, font: 'var(--type-caption)' }}>
+                Quay lại
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={next}
+              style={{
+                padding: '0 16px',
+                height: 32,
+                font: 'var(--type-body-sm)',
+                outline: 'none',
+              }}
+            >
+              {step < STEPS.length - 1 ? 'Tiếp theo' : 'Hoàn tất'}
+            </Button>
           </div>
         </div>
       </div>

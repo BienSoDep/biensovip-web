@@ -110,12 +110,46 @@ export function ImageUrlInput({ label, value, onChange, placeholder, hint }) {
   );
 }
 
-export function Input({ id, label, info, placeholder, value, error, onChange, onBlur, type = 'text', hint, disabled, required, min, max, step, title }) {
+export function Input({ id, label, info, placeholder, value, error, onChange, onBlur, onKeyDown, type = 'text', hint, disabled, required, min, max, step, title, ...rest }) {
   const inputId = id || (label && typeof label === 'string' ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   const errId = error && inputId ? inputId + '-err' : undefined;
   const isPassword = type === 'password';
   const [reveal, setReveal] = useState(false);
   const tooltip = info || title;
+
+  const handleKeyDown = (e) => {
+    if (onKeyDown) onKeyDown(e);
+    if (e.defaultPrevented) return;
+
+    if (e.key === 'Enter') {
+      const form = e.currentTarget.form || e.currentTarget.closest('form');
+      if (form) {
+        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (!submitBtn) {
+          const primaryBtn = form.querySelector('button.btn-primary:not([disabled]), button.btn-danger:not([disabled])');
+          if (primaryBtn) {
+            e.preventDefault();
+            primaryBtn.click();
+          } else if (typeof form.requestSubmit === 'function') {
+            e.preventDefault();
+            form.requestSubmit();
+          }
+        }
+      } else {
+        const container = e.currentTarget.closest('[role="dialog"], [data-form-container], .modal, .drawer, [class*="modal"], [class*="drawer"]')
+          || e.currentTarget.closest('section, article, div[style*="boxShadow"], div[style*="box-shadow"], div[style*="border-radius"]');
+        if (container) {
+          const btns = Array.from(container.querySelectorAll('button.btn-primary:not([disabled]), button.btn-danger:not([disabled]), button[type="submit"]:not([disabled])'));
+          const primaryBtn = btns.reverse().find((b) => b.offsetHeight > 0);
+          if (primaryBtn && primaryBtn !== e.currentTarget) {
+            e.preventDefault();
+            primaryBtn.click();
+          }
+        }
+      }
+    }
+  };
+
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }} title={tooltip}>
       {label && (
@@ -133,6 +167,7 @@ export function Input({ id, label, info, placeholder, value, error, onChange, on
           value={value ?? ''}
           onChange={onChange}
           onBlur={onBlur}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           required={required}
           min={min}
@@ -147,6 +182,7 @@ export function Input({ id, label, info, placeholder, value, error, onChange, on
             padding: isPassword ? '0 40px 0 14px' : '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none',
             opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'text',
           }}
+          {...rest}
         />
         {isPassword && (
           <button type="button" onClick={(e) => { e.preventDefault(); setReveal((r) => !r); }} aria-label={reveal ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} tabIndex={-1}
@@ -181,6 +217,34 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
     else onChange({ target: { value: '' } });
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      const form = e.currentTarget.form || e.currentTarget.closest('form');
+      if (form) {
+        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (!submitBtn) {
+          const primaryBtn = form.querySelector('button.btn-primary:not([disabled])');
+          if (primaryBtn) {
+            e.preventDefault();
+            primaryBtn.click();
+          } else if (typeof form.requestSubmit === 'function') {
+            e.preventDefault();
+            form.requestSubmit();
+          }
+        }
+      } else {
+        const container = e.currentTarget.closest('[role="dialog"], [data-form-container]')
+          || e.currentTarget.closest('section, article, div[style*="boxShadow"], div[style*="box-shadow"]');
+        const btns = Array.from(container?.querySelectorAll('button.btn-primary:not([disabled]), button[type="submit"]:not([disabled])') || []);
+        const primaryBtn = btns.reverse().find((b) => b.offsetHeight > 0);
+        if (primaryBtn) {
+          e.preventDefault();
+          primaryBtn.click();
+        }
+      }
+    }
+  };
+
   const onDay = (e) => { const v = digits(e.target.value).slice(0, 2); setD(v); emit(v, m, y); if (v.length === 2) mRef.current?.focus(); };
   const onMonth = (e) => { const v = digits(e.target.value).slice(0, 2); setM(v); emit(d, v, y); if (v.length === 2) yRef.current?.focus(); };
   const onYear = (e) => { const v = digits(e.target.value).slice(0, 4); setY(v); emit(d, m, v); };
@@ -206,11 +270,11 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={errId}
       >
-        <input ref={dRef} className="date-vn-input" inputMode="numeric" placeholder="ngày" value={d || ''} onChange={onDay} {...boxFocus} style={{ ...boxStyle, flex: '1 1 0', minWidth: 0 }} />
+        <input ref={dRef} className="date-vn-input" inputMode="numeric" placeholder="ngày" value={d || ''} onChange={onDay} onKeyDown={handleKeyDown} {...boxFocus} style={{ ...boxStyle, flex: '1 1 0', minWidth: 0 }} />
         <span style={{ color: 'var(--text-faint)' }}>/</span>
-        <input ref={mRef} className="date-vn-input" inputMode="numeric" placeholder="tháng" value={m || ''} onChange={onMonth} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0', minWidth: 0 }} />
+        <input ref={mRef} className="date-vn-input" inputMode="numeric" placeholder="tháng" value={m || ''} onChange={onMonth} onKeyDown={handleKeyDown} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0', minWidth: 0 }} />
         <span style={{ color: 'var(--text-faint)' }}>/</span>
-        <input ref={yRef} className="date-vn-input" inputMode="numeric" placeholder="năm" value={y || ''} onChange={onYear} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0', minWidth: 0 }} />
+        <input ref={yRef} className="date-vn-input" inputMode="numeric" placeholder="năm" value={y || ''} onChange={onYear} onKeyDown={handleKeyDown} {...boxFocus} style={{ ...boxStyle, flex: '1.3 1 0', minWidth: 0 }} />
       </span>
       {error ? <span id={errId} role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{error}</span>
         : hint ? <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{hint}</span> : null}
@@ -218,7 +282,23 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
   );
 }
 
-export function SearchField({ placeholder, value, onChange, width, ariaLabel }) {
+export function SearchField({ placeholder, value, onChange, onKeyDown, onSubmit, width, ariaLabel }) {
+  const handleKeyDown = (e) => {
+    if (onKeyDown) onKeyDown(e);
+    if (e.defaultPrevented) return;
+    if (e.key === 'Enter') {
+      if (onSubmit) {
+        e.preventDefault();
+        onSubmit(e.target.value);
+      } else {
+        const form = e.currentTarget.form || e.currentTarget.closest('form');
+        if (form && typeof form.requestSubmit === 'function') {
+          form.requestSubmit();
+        }
+      }
+    }
+  };
+
   return (
     <span style={{ position: 'relative', display: 'inline-flex', width, minWidth: 0 }}>
       <Search size={16} style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)', color: 'var(--text-faint)', pointerEvents: 'none' }} />
@@ -228,6 +308,7 @@ export function SearchField({ placeholder, value, onChange, width, ariaLabel }) 
         aria-label={ariaLabel || placeholder}
         value={value ?? ''}
         onChange={onChange}
+        onKeyDown={handleKeyDown}
         style={{
           height: 44, width: '100%', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-field)',
           background: 'var(--white)', padding: '0 16px 0 40px', font: 'var(--type-body-sm)',
@@ -237,6 +318,7 @@ export function SearchField({ placeholder, value, onChange, width, ariaLabel }) 
     </span>
   );
 }
+
 
 export function Select({ label, info, value, options = [], onChange, variant, style, required }) {
   const selected = options.find((o) => o.value === value);

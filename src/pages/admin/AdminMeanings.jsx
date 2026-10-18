@@ -501,7 +501,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
 function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }) {
   return (
     <Drawer open onClose={onClose} title={editId === 'new' ? 'Thêm mẫu ý nghĩa mới' : 'Chỉnh sửa mẫu ý nghĩa'} width="min(52%, 720px)">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
+      <form onSubmit={(e) => { e.preventDefault(); onSave(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           Mẫu quy tắc chung phục vụ thuật toán phân tích ý nghĩa số tự động. Sửa tại đây KHÔNG làm thay đổi nội dung các biển đã gán trước đó.
         </p>
@@ -584,12 +584,12 @@ function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-4)', borderTop: '1px solid var(--border-hairline)', paddingTop: 16 }}>
-          <Button variant="ghost" size="md" onClick={onClose}>Hủy bỏ</Button>
-          <Button variant="primary" size="md" onClick={onSave} disabled={saving}>
+          <Button variant="ghost" size="md" type="button" onClick={onClose}>Hủy bỏ</Button>
+          <Button variant="primary" size="md" type="submit" disabled={saving}>
             {saving ? 'Đang lưu…' : 'Lưu mẫu quy tắc'}
           </Button>
         </div>
-      </div>
+      </form>
     </Drawer>
   );
 }

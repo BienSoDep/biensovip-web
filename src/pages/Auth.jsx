@@ -472,6 +472,18 @@ export default function Auth({
     authSubmit(rememberParam);
   };
 
+  const handlePrimarySubmit = (e) => {
+    e?.preventDefault();
+    if (s === 'login' && !!st.a2faToken) {
+      submitAdmin2fa();
+    } else if (otpMode) {
+      if (st.step === 1) otpLoginRequest();
+      else otpLoginVerify(remember);
+    } else {
+      submitAuth(remember);
+    }
+  };
+
 const FALLBACK_PLATES = [
   { id: 'sample-1', plateNumber: '43B-739.99', vehicleType: 'Ô tô', province: 'Đà Nẵng', price: 155000000, isHot: true },
   { id: 'sample-2', plateNumber: '51K-888.88', vehicleType: 'Ô tô', province: 'TP.HCM', price: 850000000, isHot: true },
@@ -541,6 +553,7 @@ const FALLBACK_PLATES = [
           <svg
             aria-hidden="true"
             viewBox="0 0 600 1000"
+            preserveAspectRatio="none"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             style={{
@@ -579,18 +592,21 @@ const FALLBACK_PLATES = [
               stroke="url(#goldCurveStroke)"
               strokeWidth="1.4"
               strokeDasharray="4 6"
+              vectorEffect="non-scaling-stroke"
             />
             <path
               d="M-70,260 C130,200 250,380 520,280 C600,240 660,260 720,300"
               stroke="#D97706"
               strokeOpacity="0.1"
               strokeWidth="2"
+              vectorEffect="non-scaling-stroke"
             />
             <path
               d="M-30,760 C180,680 300,840 520,740 C580,710 640,730 700,770"
               stroke="url(#goldCurveStroke)"
               strokeWidth="1.4"
               strokeDasharray="6 8"
+              vectorEffect="non-scaling-stroke"
             />
 
             {/* Delicate luxury stars */}
@@ -1008,8 +1024,10 @@ const FALLBACK_PLATES = [
               )}
 
               <AnimatePresence mode="wait">
-                <motion.div
+                <motion.form
                   key={`${s}-${otpMode ? 'otp' : 'std'}`}
+                  onSubmit={handlePrimarySubmit}
+                  noValidate
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
@@ -1369,20 +1387,20 @@ const FALLBACK_PLATES = [
                   {/* NÚT SUBMIT CHÍNH */}
                   <div style={{ marginTop: 4 }}>
                     {s === 'login' && !!st.a2faToken ? (
-                      <Button variant="primary" size="lg" fullWidth onClick={submitAdmin2fa}>
+                      <Button variant="primary" type="submit" size="lg" fullWidth>
                         Xác nhận 2FA
                       </Button>
                     ) : otpMode ? (
                       <Button
                         variant="primary"
+                        type="submit"
                         size="lg"
                         fullWidth
-                        onClick={() => (st.step === 1 ? otpLoginRequest() : otpLoginVerify(remember))}
                       >
                         {st.step === 1 ? 'Gửi mã OTP qua email' : 'Xác nhận & đăng nhập'}
                       </Button>
                     ) : (
-                      <Button variant="primary" size="lg" fullWidth onClick={() => submitAuth(remember)}>
+                      <Button variant="primary" type="submit" size="lg" fullWidth>
                         {authMeta[2]}
                       </Button>
                     )}
@@ -1392,6 +1410,7 @@ const FALLBACK_PLATES = [
                   {otpMode && (
                     <Button
                       variant="ghost"
+                      type="button"
                       size="md"
                       fullWidth
                       onClick={() => {
@@ -1408,6 +1427,7 @@ const FALLBACK_PLATES = [
                   {s === 'forgot' && (
                     <Button
                       variant="ghost"
+                      type="button"
                       size="md"
                       fullWidth
                       onClick={() => {
@@ -1422,7 +1442,7 @@ const FALLBACK_PLATES = [
                     </Button>
                   )}
                   {s === 'login' && !!st.a2faToken && (
-                    <Button variant="ghost" size="md" fullWidth onClick={() => patch({ a2faToken: null, a2faCode: '', aErr: {} })}>
+                    <Button variant="ghost" type="button" size="md" fullWidth onClick={() => patch({ a2faToken: null, a2faCode: '', aErr: {} })}>
                       ← Quay lại đăng nhập
                     </Button>
                   )}
@@ -1490,7 +1510,7 @@ const FALLBACK_PLATES = [
                       <span>Hỗ trợ 24/7</span>
                     </div>
                   </div>
-                </motion.div>
+                </motion.form>
               </AnimatePresence>
             </div>
           </div>
@@ -1499,20 +1519,20 @@ const FALLBACK_PLATES = [
 
       {/* MODAL XÁC NHẬN LIÊN KẾT GOOGLE */}
       <Modal open={!!googleLinkPending} onClose={() => setGoogleLinkPending(null)} title="Xác nhận liên kết Google" maxWidth="420px">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <form onSubmit={(e) => { e.preventDefault(); confirmGoogleLink(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             Email <b>{googleLinkPending?.email}</b> đã có tài khoản. Nhập mã OTP vừa gửi tới email để xác nhận liên kết với Google.
           </p>
           <Input label="Mã OTP" value={linkOtp} onChange={(e) => setLinkOtp(e.target.value)} error={linkErr} />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-            <Button variant="ghost" size="md" onClick={() => setGoogleLinkPending(null)}>
+            <Button variant="ghost" size="md" type="button" onClick={() => setGoogleLinkPending(null)}>
               Hủy
             </Button>
-            <Button variant="primary" size="md" onClick={confirmGoogleLink} loading={googleConfirmLink.isPending}>
+            <Button variant="primary" size="md" type="submit" loading={googleConfirmLink.isPending}>
               Xác nhận
             </Button>
           </div>
-        </div>
+        </form>
       </Modal>
     </section>
   );

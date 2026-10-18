@@ -108,11 +108,11 @@ function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
   if (sent) return <Button variant="ghost" size="sm" disabled>Đã gửi yêu cầu</Button>;
 
   return open ? (
-    <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+    <form onSubmit={(e) => { e.preventDefault(); submitPhone(); }} style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
       <div style={{ width: 180 }}><Input placeholder="Số điện thoại của bạn" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-      <Button variant="primary" size="sm" onClick={submitPhone} disabled={busy}>{busy ? 'Đang gửi...' : 'Gửi'}</Button>
-      <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Hủy</Button>
-    </div>
+      <Button variant="primary" type="submit" size="sm" disabled={busy}>{busy ? 'Đang gửi...' : 'Gửi'}</Button>
+      <Button variant="ghost" type="button" size="sm" onClick={() => setOpen(false)}>Hủy</Button>
+    </form>
   ) : (
     <Button variant="outline" size="sm" onClick={click}>Yêu cầu tư vấn</Button>
   );
@@ -487,7 +487,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
             )}
           </div>
 
-          <Button variant="primary" size="lg" fullWidth onClick={submit} disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
+          <Button variant="primary" type="submit" size="lg" fullWidth disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
         </fieldset>
         </form>
       ) : (

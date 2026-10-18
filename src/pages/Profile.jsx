@@ -109,10 +109,10 @@ export default function Profile({ go, notify, user, onUserUpdate, onLogout }) {
 
   return (
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'flex-start' }} className="profile-layout">
-        <nav aria-label="Mục cài đặt" style={{ flex: '0 0 200px', position: 'sticky', top: 'calc(var(--space-10) + var(--space-4))', display: 'flex', flexDirection: 'column', gap: 2 }} className="profile-side-nav">
+      <div className="profile-layout">
+        <nav aria-label="Mục cài đặt" className="profile-side-nav">
           {SECTION_NAV.map((item) => (
-            <a key={item.href} href={item.href} style={{ padding: '8px 12px', borderRadius: 'var(--radius-field)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--text-body)', textDecoration: 'none' }}>
+            <a key={item.href} href={item.href}>
               {item.label}
             </a>
           ))}
@@ -131,7 +131,7 @@ export default function Profile({ go, notify, user, onUserUpdate, onLogout }) {
             </p>
           </div>
 
-          <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <AvatarUploader user={user} onUserUpdate={onUserUpdate} notify={notify} />
             <div>
               <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>{identifierLabel}</span>
@@ -149,13 +149,13 @@ export default function Profile({ go, notify, user, onUserUpdate, onLogout }) {
             <BulletPicker label="Mục đích sử dụng biển thường xuyên" value={form.preferredPurpose} onChange={set('preferredPurpose')} options={PURPOSES.map((p) => p.label)} allowDeselect labelSuffix=" (không bắt buộc)" />
 
             <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
-              <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ flex: 1 }}>
+              <Button variant="primary" type="submit" size="lg" disabled={saving} style={{ flex: 1 }}>
                 {saving ? 'Đang lưu...' : 'Lưu thông tin'}
               </Button>
             </div>
-          </div>
+          </form>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-6)' }} className="profile-grid-2col">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 'var(--space-6)' }} className="profile-grid-2col">
             <ChangePasswordSection notify={notify} />
             <NotificationSettingsSection notify={notify} />
           </div>
@@ -194,13 +194,13 @@ function ChangePasswordSection({ notify }) {
   return (
     <div id="security-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <Eyebrow tone="blue">Bảo mật</Eyebrow>
-      <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Đổi mật khẩu</h3>
         <Input label="Mật khẩu hiện tại" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
-        <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự, có cả chữ và số" value={next} onChange={(e) => setNext(e.target.value)} required />
+        <Input label="Mật khẩu mới" type="password" placeholder="Tối thiểu 8 ký tự, có cả chữ và số (nhấn Enter để lưu)" value={next} onChange={(e) => setNext(e.target.value)} required />
         {err && <span role="alert" style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{err}</span>}
-        <Button variant="primary" size="lg" onClick={save} disabled={saving} style={{ alignSelf: 'flex-start' }}>{saving ? 'Đang lưu...' : 'Đổi mật khẩu'}</Button>
-      </div>
+        <Button variant="primary" type="submit" size="lg" disabled={saving} style={{ alignSelf: 'flex-start' }}>{saving ? 'Đang lưu...' : 'Đổi mật khẩu'}</Button>
+      </form>
     </div>
   );
 }
@@ -393,21 +393,21 @@ function BecomeCollaboratorSection({ notify, user, onUserUpdate }) {
                 )}
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <form onSubmit={(e) => { e.preventDefault(); saveBankInfo(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                   Cần thông tin ngân hàng để chuyển hoa hồng khi có giao dịch — có thể bổ sung sau, không ảnh hưởng tư cách CTV.
                 </p>
                 <Select label="Ngân hàng" value={bankCode} options={banks} onChange={setBankCode} required />
-                <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} required />
+                <Input label="Số tài khoản" placeholder="Số tài khoản ngân hàng (nhấn Enter để lưu)" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} required />
                 <Input label="Tên chủ tài khoản (không bắt buộc)" placeholder="NGUYEN VAN A" value={bankAccountHolder} onChange={(e) => setBankAccountHolder(e.target.value)} />
                 {qrPreviewUrl && (
                   <img src={qrPreviewUrl} alt="QR chuyển khoản" style={{ width: 160, height: 160, borderRadius: 'var(--radius-field)', alignSelf: 'flex-start' }} />
                 )}
                 <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <Button variant="primary" size="md" onClick={saveBankInfo} disabled={busy}>{busy ? 'Đang lưu...' : 'Lưu'}</Button>
-                  <Button variant="ghost" size="md" onClick={() => setEditingBank(false)} disabled={busy}>Hủy</Button>
+                  <Button variant="primary" type="submit" size="md" disabled={busy}>{busy ? 'Đang lưu...' : 'Lưu'}</Button>
+                  <Button variant="ghost" type="button" size="md" onClick={() => setEditingBank(false)} disabled={busy}>Hủy</Button>
                 </div>
-              </div>
+              </form>
             )}
           </>
         ) : (
@@ -417,11 +417,11 @@ function BecomeCollaboratorSection({ notify, user, onUserUpdate }) {
               Bấm Kích hoạt CTV để bắt đầu. Thông tin ngân hàng nhận hoa hồng điền sau khi kích hoạt xong.
             </p>
             {otpSent ? (
-              <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <form onSubmit={(e) => { e.preventDefault(); confirmOtp(); }} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                 <Input label="Mã xác thực (6 số)" placeholder="000000" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
-                <Button variant="primary" size="md" onClick={confirmOtp} disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
-                <Button variant="ghost" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
-              </div>
+                <Button variant="primary" type="submit" size="md" disabled={otpBusy}>{otpBusy ? 'Đang xác nhận...' : 'Xác nhận'}</Button>
+                <Button variant="ghost" type="button" size="md" onClick={sendOtp} disabled={otpBusy}>Gửi lại mã</Button>
+              </form>
             ) : (
               <Button variant="primary" size="lg" onClick={activate} disabled={busy} style={{ alignSelf: 'flex-start', minWidth: 220, font: 'var(--type-title-3)', padding: '16px 32px' }}>
                 {busy ? 'Đang kích hoạt...' : 'Kích hoạt CTV'}

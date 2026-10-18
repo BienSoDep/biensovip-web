@@ -2242,7 +2242,29 @@ button[aria-expanded]:hover {
   background: var(--grey-400, #9ca3af);
 }
 
-/* Trang Profile: nav section trái sticky ẩn trên mobile, chuyển về 1 cột xếp dọc */
+/* Trang Profile: nav section trái sticky trên desktop, ẩn trên mobile chuyển về 1 cột xếp dọc */
+.profile-layout {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+}
+.profile-side-nav {
+  flex: 0 0 200px;
+  position: sticky;
+  top: calc(var(--space-10) + var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.profile-side-nav a {
+  padding: 8px 12px;
+  border-radius: var(--radius-field);
+  font: var(--type-body-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-body);
+  text-decoration: none;
+  transition: background-color var(--dur-fast), color var(--dur-fast);
+}
 .profile-side-nav a:hover,
 .profile-side-nav a:focus-visible {
   background: var(--surface-sunken);
@@ -2258,8 +2280,13 @@ button[aria-expanded]:hover {
 @media (max-width: 768px) {
   .profile-layout {
     flex-direction: column;
+    gap: var(--space-4);
   }
   .profile-side-nav {
-    display: none;
+    display: none !important;
+  }
+  .profile-grid-2col {
+    grid-template-columns: 1fr !important;
   }
 }
+

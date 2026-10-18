@@ -21,18 +21,16 @@ const CATEGORY_LABEL = {
   'cau-chuyen': 'Câu chuyện khách hàng', 'tinh-thanh': 'Tỉnh thành', 'loai-bien': 'Loại biển', general: 'Tin tức',
 };
 
-// Cùng pool ảnh Unsplash dùng làm cover ở backend seed — chọn ảnh khác cover để minh họa giữa bài, tránh lặp.
+// Cùng pool ảnh minh họa phương tiện, xe cộ, giao thông đô thị và showroom cao cấp — tránh ảnh rừng cây/thợ kim loại lạc quẻ.
 const ILLUSTRATION_POOL = [
-  'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=1200&q=80',
-  'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=1200&q=80',
-  'https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=1200&q=80',
-  'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&q=80',
-  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80',
-  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80',
-  'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=1200&q=80',
-  'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1200&q=80',
-  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80',
-  'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=1200&q=80',
+  'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1200&q=80', // Modern motorbike
+  'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=1200&q=80', // Urban motorcycle ride
+  'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=1200&q=80', // Luxury car showroom
+  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80', // Luxury automobile
+  'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1200&q=80', // High-end sports vehicle
+  'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=1200&q=80', // Modern city transport
+  'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1200&q=80', // Motorcycle highway
+  'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=1200&q=80', // Luxury vehicle front
 ];
 
 function pickIllustration(slug, excludeUrl) {
@@ -93,9 +91,10 @@ function rangeHtml(doc, startBefore, endBefore) {
 
 function useTableOfContents(html) {
   return useMemo(() => {
-    if (!html) return { html, items: [], parts: null };
+    if (!html) return { html, items: [], parts: null, hasImages: false };
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const headings = doc.querySelectorAll('h2');
+    const hasImages = doc.querySelectorAll('img').length > 0;
     const seen = new Set();
     const items = [];
     headings.forEach((h) => {
@@ -104,8 +103,8 @@ function useTableOfContents(html) {
       items.push({ id, text: h.textContent || '' });
     });
 
-    // Chèn ảnh minh họa sau H2 đầu và biển minh họa ở giữa bài — phá thế đơn điệu toàn chữ.
-    // >=4 H2: 3 khúc (ảnh sau đoạn 1, biển ở giữa). 2-3 H2: 2 khúc (chỉ biển ở giữa, không đủ chỗ cho cả 2).
+    // Chèn ảnh minh họa sau H2 đầu (khi bài chưa có ảnh riêng) và biển minh họa ở giữa bài — phá thế đơn điệu toàn chữ.
+    // >=4 H2: 3 khúc (ảnh sau đoạn 1 nếu chưa có ảnh riêng, biển ở giữa). 2-3 H2: 2 khúc (chỉ biển ở giữa).
     let parts = null;
     if (headings.length >= 4) {
       const imgAt = headings[1];
@@ -120,7 +119,7 @@ function useTableOfContents(html) {
       parts = [rangeHtml(doc, null, midAt), rangeHtml(doc, midAt, null)];
     }
 
-    return { html: doc.body.innerHTML, items, parts };
+    return { html: doc.body.innerHTML, items, parts, hasImages };
   }, [html]);
 }
 
@@ -136,7 +135,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const [progress, setProgress] = useState(0);
 
   const contentHtml = useMemo(() => sanitizeHtml(post?.contentHtml), [post?.contentHtml]);
-  const { html: contentWithIds, items: tocItems, parts } = useTableOfContents(contentHtml);
+  const { html: contentWithIds, items: tocItems, parts, hasImages } = useTableOfContents(contentHtml);
   const related = relatedData?.items || [];
   const relatedPlates = relatedPlatesData?.items || [];
   const midPlate = relatedPlates[0];
@@ -370,11 +369,13 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         <div itemProp="articleBody">
           <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[0] }} />
 
-          {parts.length === 3 && illustrationUrl && (
+          {parts.length === 3 && (
             <>
-              <figure style={{ margin: 'var(--space-6) 0 0', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-                <img src={illustrationUrl} alt={postImageAlt} loading="lazy" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
-              </figure>
+              {illustrationUrl && !hasImages && (
+                <figure style={{ margin: 'var(--space-6) 0 0', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+                  <img src={illustrationUrl} alt={postImageAlt} loading="lazy" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
+                </figure>
+              )}
               <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[1] }} />
             </>
           )}
@@ -464,18 +465,22 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
         <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bình luận</h2>
         {user ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <Input placeholder="Viết bình luận của bạn…" value={commentText} onChange={(e) => setCommentText(e.target.value)} />
-            <Button variant="primary" size="sm" disabled={!commentText.trim() || submitComment.isPending} style={{ alignSelf: 'flex-start' }}
-              onClick={() => {
-                submitComment.mutate(commentText.trim(), {
-                  onSuccess: () => { setCommentText(''); notify?.('Bình luận đang chờ duyệt'); },
-                  onError: (e) => notify?.(e.message || 'Gửi bình luận thất bại'),
-                });
-              }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!commentText.trim() || submitComment.isPending) return;
+              submitComment.mutate(commentText.trim(), {
+                onSuccess: () => { setCommentText(''); notify?.('Bình luận đang chờ duyệt'); },
+                onError: (e) => notify?.(e.message || 'Gửi bình luận thất bại'),
+              });
+            }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+          >
+            <Input placeholder="Viết bình luận của bạn… (nhấn Enter để gửi)" value={commentText} onChange={(e) => setCommentText(e.target.value)} />
+            <Button variant="primary" type="submit" size="sm" disabled={!commentText.trim() || submitComment.isPending} style={{ alignSelf: 'flex-start' }}>
               {submitComment.isPending ? 'Đang gửi…' : 'Gửi bình luận'}
             </Button>
-          </div>
+          </form>
         ) : (
           <Button variant="outline" size="sm" onClick={go('login')} style={{ alignSelf: 'flex-start' }}>Đăng nhập để bình luận</Button>
         )}
