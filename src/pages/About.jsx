@@ -152,7 +152,7 @@ export default function About({ go }) {
               “Tôi tin mỗi con số trên tấm biển không đơn thuần là ký hiệu nhận diện phương tiện — nó là điểm tựa tâm lý, là biểu trưng của sự may mắn, bình an và bản lĩnh của chủ nhân trên mọi hành trình. Hơn một thập kỷ qua, nguyên tắc bất biến của tôi luôn là: <strong>hồ sơ chuẩn chỉ, giá cả công khai và tư vấn bằng cái tâm</strong>.”
             </div>
 
-            <p className="about-hero-desc" style={{ fontSize: '15px', color: '#475569' }}>
+            <p className="about-hero-desc" style={{ fontSize: '15px' }}>
               Mọi giao dịch thực tế, quá trình bấm biển và bàn giao cho khách hàng đều được tôi trực tiếp ghi hình và chia sẻ minh bạch trên kênh TikTok <strong>@duydinhbiensodepdanang</strong> để khách hàng ở bất cứ đâu đều an tâm tuyệt đối.
             </p>
 
@@ -207,7 +207,7 @@ export default function About({ go }) {
       <div className="about-trust-bar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <ShieldCheck size={20} style={{ color: 'var(--brand-600)' }} />
-          <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>
+          <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-strong)' }}>
             BẢO CHỨNG GIAO DỊCH AN TOÀN TẠI BIENSOVIP:
           </span>
         </div>
@@ -409,7 +409,7 @@ export default function About({ go }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
             {videos.map((v) => (
               <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ width: '100%', borderRadius: '14px', background: '#ffffff', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.04)' }}>
+                <div style={{ width: '100%', borderRadius: 'var(--radius-card)', background: 'var(--surface-card)', border: '1px solid var(--border-hairline)', overflow: 'hidden', boxShadow: 'var(--shadow-1)' }}>
                   {v.platform === 'tiktok' ? (
                     <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
                   ) : (
@@ -417,15 +417,15 @@ export default function About({ go }) {
                       href={v.videoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ position: 'relative', display: 'block', width: '100%', minHeight: 280, background: '#0f172a' }}
+                      style={{ position: 'relative', display: 'block', width: '100%', minHeight: 280, background: 'var(--surface-card)' }}
                     >
                       {v.thumbnailUrl ? (
                         <LazyImage src={v.thumbnailUrl} alt={v.title || ''} style={{ minHeight: 280 }} imgStyle={{ width: '100%', height: '100%', minHeight: 280, objectFit: 'cover', display: 'block' }} skeletonHeight={280} />
                       ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 280, color: '#94a3b8', font: 'var(--type-body-sm)' }}>Xem video thực tế</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 280, color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Xem video thực tế</div>
                       )}
                       <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(15, 23, 42, 0.75)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.3)' }}>
+                        <span style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(14, 15, 18, 0.75)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-2)' }}>
                           <Play size={24} fill="currentColor" style={{ marginLeft: 3 }} />
                         </span>
                       </span>
@@ -433,7 +433,7 @@ export default function About({ go }) {
                   )}
                 </div>
                 {v.title && (
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: '600', color: '#0f172a', lineHeight: 1.45 }}>
+                  <span style={{ font: 'var(--type-body-sm)', fontWeight: '600', color: 'var(--text-strong)', lineHeight: 1.45 }}>
                     {v.title}
                   </span>
                 )}
@@ -506,11 +506,12 @@ export default function About({ go }) {
               <div
                 key={i}
                 style={{
-                  background: '#ffffff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
+                  background: 'var(--surface-card)',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: 'var(--radius-card)',
                   overflow: 'hidden',
                   transition: 'border-color 0.15s ease',
+                  boxShadow: 'var(--shadow-1)',
                 }}
               >
                 <button
@@ -528,7 +529,7 @@ export default function About({ go }) {
                     cursor: 'pointer',
                     textAlign: 'left',
                     font: 'var(--type-title-3)',
-                    color: '#0f172a',
+                    color: 'var(--text-strong)',
                     fontWeight: '700',
                   }}
                 >
@@ -544,7 +545,7 @@ export default function About({ go }) {
                   />
                 </button>
                 {isOpen && (
-                  <div style={{ padding: '0 20px 18px', font: 'var(--type-body-sm)', color: '#475569', lineHeight: 1.75 }}>
+                  <div style={{ padding: '0 20px 18px', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.75 }}>
                     {f.a}
                   </div>
                 )}
@@ -557,16 +558,16 @@ export default function About({ go }) {
       {/* 11. Showroom Đà Nẵng & Multi-channel Contact Hub */}
       <section className="about-showroom-hub">
         <div className="about-showroom-info">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fde68a', fontSize: '12px', fontWeight: '800', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--brand-700)', fontSize: '12px', fontWeight: '800', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
             <MapPin size={16} />
             <span>Showroom & Cơ Sở Chính Thức</span>
           </div>
 
-          <h2 style={{ margin: 0, fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 800, color: '#ffffff', lineHeight: 1.3 }}>
+          <h2 style={{ margin: 0, fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 800, color: 'var(--text-strong)', lineHeight: 1.3 }}>
             Ghé Thăm Cửa Hàng Duy Đinh Tại Đà Nẵng
           </h2>
 
-          <p style={{ margin: 0, fontSize: '15px', color: '#cbd5e1', lineHeight: 1.7 }}>
+          <p style={{ margin: 0, fontSize: '15px', color: 'var(--text-body)', lineHeight: 1.7 }}>
             Khách hàng có thể đến trực tiếp showroom để xem biển dập thực tế, kiểm tra hồ sơ gốc hoặc hẹn gặp Duy Đinh để được tư vấn phong thủy ngũ hành chuyên sâu.
           </p>
 
@@ -605,14 +606,14 @@ export default function About({ go }) {
           </div>
         </div>
 
-        <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'center', alignItems: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--brand-500)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 18px rgba(245, 158, 11, 0.4)' }}>
+        <div className="about-showroom-cta-card">
+          <div className="about-showroom-cta-avatar">
             <Compass size={32} />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#ffffff' }}>Cần Định Giá Hoặc Tìm Biển Hợp Mệnh?</h3>
-            <p style={{ margin: 0, fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.6 }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text-strong)' }}>Cần Định Giá Hoặc Tìm Biển Hợp Mệnh?</h3>
+            <p style={{ margin: 0, fontSize: '13.5px', color: 'var(--text-body)', lineHeight: 1.6 }}>
               Gửi thông tin năm sinh hoặc biển số bạn đang quan tâm, Duy Đinh sẽ trực tiếp phản hồi và luận giải trong 15 phút.
             </p>
           </div>
@@ -629,7 +630,7 @@ export default function About({ go }) {
             <Button
               variant="outline"
               size="md"
-              style={{ width: '100%', borderColor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
+              style={{ width: '100%' }}
               onClick={() => go('lucky')()}
             >
               Tra cứu biển hợp mệnh online
@@ -645,7 +646,7 @@ export default function About({ go }) {
             <Compass size={20} style={{ color: 'var(--brand-600)' }} />
             <span>Khám Phá Hệ Sinh Thái Biển Số Đẹp & Dịch Vụ Của Duy Đinh</span>
           </div>
-          <span style={{ fontSize: '13px', color: '#64748b' }}>Cập nhật liên tục 2026</span>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Cập nhật liên tục 2026</span>
         </div>
 
         <div className="about-cluster-grid">

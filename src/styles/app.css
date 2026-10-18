@@ -2701,14 +2701,28 @@ button[aria-expanded]:hover {
 /* 1. Hero Section */
 .about-hero {
   position: relative;
-  background: linear-gradient(135deg, #ffffff 0%, #fcfbf8 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: clamp(24px, 4vw, 44px);
-  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+  background: var(--surface-hero);
+  border-radius: var(--radius-surface);
+  padding: clamp(24px, 4.5vw, 48px);
+  box-shadow: var(--shadow-inset-hairline);
+}
+
+.about-hero__glow {
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 380px;
+  height: 380px;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(circle, var(--brand-200) 0%, transparent 68%);
+  opacity: 0.75;
+  pointer-events: none;
 }
 
 .about-hero-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: clamp(28px, 4vw, 48px);
@@ -2733,14 +2747,18 @@ button[aria-expanded]:hover {
   gap: 8px;
   align-self: flex-start;
   padding: 6px 14px;
-  background: rgba(217, 119, 6, 0.08);
-  border: 1px solid rgba(217, 119, 6, 0.25);
-  border-radius: 30px;
+  background: var(--white);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-inset-hairline);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--brand-700, #b45309);
+  color: var(--brand-700);
+}
+
+.about-hero-tag svg {
+  color: var(--brand-500);
 }
 
 .about-hero-title {
@@ -2749,25 +2767,26 @@ button[aria-expanded]:hover {
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--text-strong);
 }
 
 .about-hero-desc {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.85;
-  color: #334155;
+  font-size: 15.5px;
+  line-height: 1.8;
+  color: var(--text-body);
 }
 
 .about-hero-quote {
   padding: 16px 20px;
-  background: #f8fafc;
+  background: var(--white);
   border-left: 3px solid var(--brand-500);
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  box-shadow: var(--shadow-1);
   font-size: 14.5px;
   line-height: 1.75;
   font-style: italic;
-  color: #475569;
+  color: var(--text-strong);
 }
 
 .about-hero-actions {
@@ -2780,11 +2799,11 @@ button[aria-expanded]:hover {
 
 .about-portrait-card {
   position: relative;
-  border-radius: 18px;
+  border-radius: var(--radius-surface);
   overflow: hidden;
-  box-shadow: 0 16px 36px -12px rgba(15, 23, 42, 0.16);
-  border: 3px solid #ffffff;
-  background: #0f172a;
+  box-shadow: var(--shadow-3);
+  border: 1px solid var(--border-hairline);
+  background: var(--ink-900);
   aspect-ratio: 4 / 4.7;
 }
 
@@ -2801,8 +2820,8 @@ button[aria-expanded]:hover {
   left: 0;
   right: 0;
   padding: 24px 20px 18px;
-  background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.95) 100%);
-  color: #ffffff;
+  background: linear-gradient(180deg, transparent 0%, rgba(14, 15, 18, 0.92) 100%);
+  color: var(--white);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -2812,11 +2831,12 @@ button[aria-expanded]:hover {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.01em;
+  color: var(--white);
 }
 
 .about-portrait-role {
   font-size: 13px;
-  color: #fde68a;
+  color: var(--brand-200);
   font-weight: 600;
 }
 
@@ -2824,17 +2844,22 @@ button[aria-expanded]:hover {
   position: absolute;
   top: 14px;
   right: 14px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(253, 230, 138, 0.35);
-  color: #fde68a;
+  border: 1px solid var(--border-hairline);
+  color: var(--brand-700);
   padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11.5px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 6px;
+  box-shadow: var(--shadow-2);
+}
+
+.about-portrait-badge svg {
+  color: var(--brand-600);
 }
 
 /* 2. Stats Grid */
@@ -2857,39 +2882,40 @@ button[aria-expanded]:hover {
 }
 
 .about-stat-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 22px 20px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  box-shadow: var(--shadow-1);
 }
 
 .about-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-2);
+  border-color: var(--brand-200);
 }
 
 .about-stat-number {
   font-size: clamp(26px, 3vw, 36px);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--brand-600, #d97706);
+  color: var(--brand-600);
   line-height: 1.1;
 }
 
 .about-stat-label {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-strong);
 }
 
 .about-stat-sub {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 12.5px;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -2902,7 +2928,7 @@ button[aria-expanded]:hover {
 }
 
 .about-sec-badge {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2913,14 +2939,14 @@ button[aria-expanded]:hover {
   margin: 0;
   font-size: clamp(22px, 2.6vw, 30px);
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-strong);
   letter-spacing: -0.01em;
 }
 
 .about-sec-sub {
   margin: 0;
   font-size: 15px;
-  color: #64748b;
+  color: var(--text-muted);
   max-width: 680px;
   line-height: 1.6;
 }
@@ -2945,21 +2971,22 @@ button[aria-expanded]:hover {
 }
 
 .about-timeline-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 24px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 22px 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   position: relative;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+  box-shadow: var(--shadow-1);
 }
 
 .about-timeline-card:hover {
   transform: translateY(-2px);
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.06);
+  border-color: var(--brand-200);
+  box-shadow: var(--shadow-2);
 }
 
 .about-timeline-year {
@@ -2975,14 +3002,14 @@ button[aria-expanded]:hover {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
 }
 
 .about-timeline-card-desc {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.7;
-  color: #475569;
+  color: var(--text-body);
 }
 
 /* 5. Core Values Grid */
@@ -3005,27 +3032,29 @@ button[aria-expanded]:hover {
 }
 
 .about-value-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 24px 20px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 22px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
-  transition: transform 0.2s ease;
+  box-shadow: var(--shadow-1);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .about-value-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
+  border-color: var(--brand-200);
+  box-shadow: var(--shadow-2);
 }
 
 .about-value-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: rgba(217, 119, 6, 0.1);
-  color: var(--brand-700);
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  color: var(--brand-600);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3036,14 +3065,14 @@ button[aria-expanded]:hover {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
 }
 
 .about-value-desc {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.7;
-  color: #475569;
+  color: var(--text-body);
 }
 
 /* 6. Process Steps */
@@ -3066,22 +3095,30 @@ button[aria-expanded]:hover {
 }
 
 .about-process-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
   padding: 22px 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   position: relative;
+  box-shadow: var(--shadow-1);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.about-process-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand-200);
+  box-shadow: var(--shadow-2);
 }
 
 .about-process-num {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--brand-500);
+  color: var(--ink-900);
   font-size: 13.5px;
   font-weight: 800;
   display: flex;
@@ -3093,14 +3130,14 @@ button[aria-expanded]:hover {
   margin: 0;
   font-size: 15.5px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
 }
 
 .about-process-desc {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.65;
-  color: #475569;
+  color: var(--text-body);
 }
 
 /* 7. Testimonials */
@@ -3117,22 +3154,29 @@ button[aria-expanded]:hover {
 }
 
 .about-testi-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
   padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 16px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+  box-shadow: var(--shadow-1);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.about-testi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand-200);
+  box-shadow: var(--shadow-2);
 }
 
 .about-testi-quote {
   margin: 0;
   font-size: 14.5px;
   line-height: 1.75;
-  color: #334155;
+  color: var(--text-body);
   font-style: italic;
   position: relative;
 }
@@ -3141,7 +3185,7 @@ button[aria-expanded]:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-hairline);
   padding-top: 12px;
 }
 
@@ -3154,25 +3198,29 @@ button[aria-expanded]:hover {
 .about-testi-name {
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
 }
 
 .about-testi-plate {
   font-size: 12px;
-  color: var(--brand-700);
+  color: var(--brand-600);
   font-weight: 600;
 }
 
 /* 8. Showroom & Contact Hub */
 .about-showroom-hub {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border-radius: 20px;
-  padding: clamp(24px, 4vw, 44px);
-  color: #ffffff;
+  background: var(--surface-hero);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-surface);
+  padding: clamp(24px, 4.5vw, 44px);
+  color: var(--text-strong);
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1.15fr 0.85fr;
   gap: clamp(24px, 4vw, 40px);
   align-items: center;
+  box-shadow: var(--shadow-inset-hairline);
+  position: relative;
+  overflow: hidden;
 }
 
 @media (max-width: 900px) {
@@ -3190,7 +3238,7 @@ button[aria-expanded]:hover {
 .about-showroom-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 14px;
   margin-top: 8px;
 }
 
@@ -3203,19 +3251,24 @@ button[aria-expanded]:hover {
 .about-contact-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-1);
 }
 
 .about-contact-icon {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #fde68a;
+  color: var(--brand-600);
 }
 
 .about-contact-text {
@@ -3226,20 +3279,47 @@ button[aria-expanded]:hover {
 
 .about-contact-label {
   font-size: 11.5px;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 700;
 }
 
 .about-contact-val {
   font-size: 14.5px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-strong);
   text-decoration: none;
 }
 
 .about-contact-val:hover {
-  color: #fde68a;
+  color: var(--brand-600);
+}
+
+.about-showroom-cta-card {
+  background: var(--white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-surface);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+  align-items: center;
+  box-shadow: var(--shadow-2);
+}
+
+.about-showroom-cta-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--brand-600);
+  border: 1px solid var(--brand-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-1);
 }
 
 /* 9. 3-Tier Legal Guarantee Shield */
@@ -3256,15 +3336,22 @@ button[aria-expanded]:hover {
 }
 
 .about-guarantee-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
   border-top: 3px solid var(--brand-500);
-  border-radius: 14px;
-  padding: 26px 22px;
+  border-radius: var(--radius-card);
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-1);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.about-guarantee-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+  border-color: var(--brand-200);
 }
 
 .about-guarantee-header {
@@ -3276,9 +3363,9 @@ button[aria-expanded]:hover {
 .about-guarantee-icon-box {
   width: 42px;
   height: 42px;
-  border-radius: 10px;
-  background: rgba(217, 119, 6, 0.1);
-  color: var(--brand-700);
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  color: var(--brand-600);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3297,23 +3384,37 @@ button[aria-expanded]:hover {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
+}
+
+.about-guarantee-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-700);
+  align-self: flex-start;
 }
 
 .about-guarantee-desc {
   margin: 0;
   font-size: 13.5px;
-  line-height: 1.7;
-  color: #475569;
+  line-height: 1.65;
+  color: var(--text-body);
 }
 
-/* 10. Comparison Table: Duy Đinh vs. Free Market */
+/* 10. Transparent Comparison Table */
 .about-compare-wrap {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
 }
 
 .about-compare-table {
@@ -3323,25 +3424,27 @@ button[aria-expanded]:hover {
 }
 
 .about-compare-table th {
-  padding: 18px 22px;
-  background: #0f172a;
-  color: #ffffff;
+  padding: 16px 20px;
+  background: var(--surface-sunken);
+  color: var(--text-strong);
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--border-hairline);
 }
 
 .about-compare-table th.brand-col {
-  background: #1e293b;
-  color: #fde68a;
-  border-bottom: 3px solid var(--brand-500);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border-bottom: 2px solid var(--brand-500);
 }
 
 .about-compare-table td {
-  padding: 16px 22px;
+  padding: 14px 20px;
   font-size: 13.5px;
   line-height: 1.6;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-hairline);
+  color: var(--text-body);
 }
 
 .about-compare-table tr:last-child td {
@@ -3350,20 +3453,20 @@ button[aria-expanded]:hover {
 
 .about-compare-table td.criteria-col {
   font-weight: 700;
-  color: #0f172a;
-  background: #fafafa;
+  color: var(--text-strong);
+  background: var(--surface-sunken);
   width: 28%;
 }
 
 .about-compare-table td.duydinh-col {
-  color: #15803d;
+  color: var(--status-success-ink, #1B7A5A);
   font-weight: 600;
-  background: rgba(240, 253, 244, 0.5);
+  background: var(--green-50, #EEFCF3);
   width: 38%;
 }
 
 .about-compare-table td.market-col {
-  color: #64748b;
+  color: var(--text-muted);
   width: 34%;
 }
 
@@ -3378,10 +3481,10 @@ button[aria-expanded]:hover {
 
 /* 11. Trust Bank & Escrow Bar */
 .about-trust-bar {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 18px 24px;
+  background: var(--surface-tint-cream);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 16px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3392,7 +3495,7 @@ button[aria-expanded]:hover {
 .about-trust-badges {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
@@ -3400,57 +3503,63 @@ button[aria-expanded]:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-body);
 }
+
 .about-trust-badge-item svg {
   color: var(--brand-600);
 }
 
 /* 12. GEO / Passage Citability Block */
 .about-direct-citability {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, rgba(254, 243, 199, 0.35) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.28);
-  border-left: 5px solid var(--brand-600);
-  border-radius: 12px;
-  padding: 20px 24px;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  border-left: 4px solid var(--brand-500);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  padding: 18px 22px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .about-citability-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.05em;
-  color: #b45309;
+  color: var(--brand-700);
   text-transform: uppercase;
+}
+
+.about-citability-header svg {
+  color: var(--brand-600);
 }
 
 .about-citability-text {
   margin: 0;
   font-size: 14.5px;
   line-height: 1.8;
-  color: #1e293b;
+  color: var(--text-body);
 }
 
 .about-citability-text strong {
-  color: #0f172a;
+  color: var(--text-strong);
 }
 
 /* 13. SEO Topic Cluster Internal Linking Hub */
 .about-cluster-hub {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-surface);
   padding: 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: var(--shadow-1);
 }
 
 .about-cluster-header {
@@ -3465,7 +3574,7 @@ button[aria-expanded]:hover {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-strong);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3482,21 +3591,22 @@ button[aria-expanded]:hover {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 140ms ease;
   font-size: 13.5px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-strong);
 }
 
 .about-cluster-card:hover {
-  background: #ffffff;
+  background: var(--white);
   border-color: var(--brand-500);
   color: var(--brand-600);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+  box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
+
