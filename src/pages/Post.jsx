@@ -159,7 +159,7 @@ function useTableOfContents(html) {
 
 export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const { data: post, isLoading, isError } = useBlogPost(postId);
-  const { data: relatedData } = useRelatedPosts(postId, 3);
+  const { data: relatedData } = useRelatedPosts(postId, 8);
   const { data: relatedPlatesData } = useRelatedPlates(postId, 12);
   const { data: commentsData } = useBlogComments(post?.id);
   const submitComment = useSubmitBlogComment(post?.id);
@@ -625,15 +625,33 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       </div>
 
       {related.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-          <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bài viết liên quan</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(220px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <div>
+              <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bài viết liên quan</h2>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Cẩm nang phong thủy, thị trường & hướng dẫn chọn biển số đẹp</span>
+            </div>
+            <button type="button" onClick={() => go('blog')()} style={{ border: 'none', background: 'transparent', color: 'var(--action-primary)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              Xem tất cả bài viết →
+            </button>
+          </div>
+          <div className="article-related-grid">
             {related.map((p) => (
-              <a key={p.id} href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); openRelated(p.slug); }} style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', color: 'inherit', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-                <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 120, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={120} />
-                <div style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.title}</span>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>~{p.readingTimeMinutes} phút đọc</span>
+              <a key={p.id} href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); openRelated(p.slug); }} className="article-related-card">
+                <div className="article-related-card__thumb">
+                  <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: '100%', background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={130} />
+                  {p.category && (
+                    <span className="article-related-card__cat">
+                      {CATEGORY_LABEL[p.category] || p.category}
+                    </span>
+                  )}
+                </div>
+                <div className="article-related-card__body">
+                  <h3 className="article-related-card__title">{p.title}</h3>
+                  <div className="article-related-card__meta">
+                    <span>~{p.readingTimeMinutes} phút đọc</span>
+                    {p.publishedAt && <span>· {formatDate(p.publishedAt)}</span>}
+                  </div>
                 </div>
               </a>
             ))}
