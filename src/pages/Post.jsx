@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { Share2, Link2, MessageCircle, Minus, Plus } from 'lucide-react';
+import { Share2, Link2, MessageCircle, Minus, Plus, ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -482,17 +482,74 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       {postFaqItems.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           <h2 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
-          {postFaqItems.map((item, i) => (
-            <div key={i} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-              <button type="button" onClick={() => setOpenFaqIdx((cur) => (cur === i ? null : i))}
-                style={{ width: '100%', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-                {item.question}
-              </button>
-              {openFaqIdx === i && (
-                <p style={{ margin: 0, padding: '0 var(--space-4) var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{item.answer}</p>
-              )}
-            </div>
-          ))}
+          {postFaqItems.map((item, i) => {
+            const isOpen = openFaqIdx === i;
+            return (
+              <div
+                key={i}
+                style={{
+                  background: 'var(--surface-sunken)',
+                  borderRadius: 'var(--radius-card)',
+                  border: isOpen ? '1px solid var(--border-hairline)' : '1px solid transparent',
+                  overflow: 'hidden',
+                  transition: 'border-color 160ms ease',
+                }}
+              >
+                <button
+                  type="button"
+                  className="faq-accordion-btn"
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenFaqIdx((cur) => (cur === i ? null : i))}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    padding: '14px 16px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    font: 'var(--type-body)',
+                    fontWeight: 'var(--fw-semibold)',
+                    color: 'var(--text-strong)',
+                    outline: 'none',
+                  }}
+                >
+                  <span>{item.question}</span>
+                  <ChevronDown
+                    size={18}
+                    style={{
+                      transform: isOpen ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 160ms var(--ease-out)',
+                      flexShrink: 0,
+                      color: isOpen ? 'var(--action-primary)' : 'var(--text-muted)',
+                    }}
+                  />
+                </button>
+                {isOpen && (
+                  <div
+                    style={{
+                      padding: '10px 16px 16px',
+                      borderTop: '1px solid var(--border-hairline)',
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: 0,
+                        font: 'var(--type-body-sm)',
+                        color: 'var(--text-body)',
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {item.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

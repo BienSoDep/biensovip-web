@@ -65,6 +65,7 @@ export default function TransferGuide({ go, zalo }) {
                   id={`transfer-faq-q-${i}`}
                   aria-expanded={openFaq === i}
                   aria-controls={`transfer-faq-a-${i}`}
+                  className="faq-accordion-btn"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   style={{ width: '100%', border: 'none', background: 'transparent', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', textAlign: 'left', outline: 'none' }}
                 >

@@ -516,6 +516,8 @@ export default function About({ go }) {
               >
                 <button
                   type="button"
+                  className="faq-accordion-btn"
+                  aria-expanded={isOpen}
                   onClick={() => setOpenFaq(isOpen ? null : i)}
                   style={{
                     width: '100%',
@@ -531,6 +533,7 @@ export default function About({ go }) {
                     font: 'var(--type-title-3)',
                     color: 'var(--text-strong)',
                     fontWeight: '700',
+                    outline: 'none',
                   }}
                 >
                   <span>{f.q}</span>
@@ -545,7 +548,7 @@ export default function About({ go }) {
                   />
                 </button>
                 {isOpen && (
-                  <div style={{ padding: '0 20px 18px', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.75 }}>
+                  <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.75 }}>
                     {f.a}
                   </div>
                 )}

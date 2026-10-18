@@ -109,13 +109,23 @@ textarea:focus-visible {
   outline: none !important;
 }
 
-/* Tắt outline đè ngang qua nội dung câu trả lời khi click accordion FAQ */
+/* Tắt outline đè ngang qua nội dung câu trả lời khi click hoặc mở accordion/toggle */
+button[aria-expanded],
+button[aria-expanded]:focus,
+button[aria-expanded]:focus-visible,
+button[aria-expanded]:active,
+.faq-accordion-btn,
 .faq-accordion-btn:focus,
 .faq-accordion-btn:focus-visible,
+.faq-accordion-btn:active,
+.accordion-btn,
 .accordion-btn:focus,
-.accordion-btn:focus-visible {
+.accordion-btn:focus-visible,
+.accordion-btn:active {
   outline: none !important;
+  outline-offset: 0 !important;
 }
+button[aria-expanded]:focus-visible,
 .faq-accordion-btn:focus-visible,
 .accordion-btn:focus-visible {
   box-shadow: inset 0 0 0 2px var(--action-primary) !important;

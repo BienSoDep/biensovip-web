@@ -29,6 +29,7 @@ function FaqAccordion({ faqs }) {
             <button
               type="button"
               className="faq-accordion-btn"
+              aria-expanded={open}
               onClick={() => setOpenIdx(open ? -1 : i)}
               style={{
                 width: '100%',
