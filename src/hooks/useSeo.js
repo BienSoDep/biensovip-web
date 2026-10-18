@@ -146,22 +146,37 @@ export function useSeo(screen, data) {
       title = 'Về Duy Đinh — Shop Biển Số Đẹp Đà Nẵng Uy Tín | ' + BRAND;
       desc = 'Duy Đinh — chuyên gia tư vấn biển số đẹp phong thủy tại Đà Nẵng. Hơn 10 năm kinh nghiệm, hỗ trợ sang tên toàn quốc, dịch vụ Zalo nhanh trong 15 phút.';
       canonical = SITE + '/gioi-thieu';
+      image = SITE + '/assets/duy-dinh-portrait.jpg';
       ld = {
         '@context': 'https://schema.org',
         '@graph': [
           {
             '@type': 'AboutPage',
+            '@id': canonical + '#webpage',
             name: title,
             description: desc,
             url: canonical,
+            breadcrumb: { '@id': canonical + '#breadcrumb' },
+            mainEntity: { '@id': canonical + '#person' },
+          },
+          {
+            '@type': 'BreadcrumbList',
+            '@id': canonical + '#breadcrumb',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE },
+              { '@type': 'ListItem', position: 2, name: 'Về Duy Đinh', item: canonical },
+            ],
           },
           {
             '@type': 'Person',
+            '@id': canonical + '#person',
             name: 'Duy Đinh',
             jobTitle: 'Chuyên gia phong thủy & Định giá biển số xe',
             url: canonical,
-            image: SITE + '/assets/logo-mark.png',
+            image: SITE + '/assets/duy-dinh-portrait.jpg',
             description: 'Người sáng lập Biensovip, chuyên gia hơn 10 năm kinh nghiệm trong lĩnh vực định giá và tư vấn biển số xe đẹp phong thủy tại Đà Nẵng.',
+            telephone: '0815792699',
+            email: 'duymc64@gmail.com',
             address: {
               '@type': 'PostalAddress',
               streetAddress: 'Số 06 An Thượng 30',
@@ -170,7 +185,14 @@ export function useSeo(screen, data) {
               postalCode: '550000',
               addressCountry: 'VN',
             },
-            telephone: '0815792699',
+            knowsAbout: [
+              'Biển số xe đẹp',
+              'Định giá biển số xe',
+              'Phong thủy ngũ hành biển số xe',
+              'Quy trình sang tên thu hồi biển số xe',
+              'Thông tư 24/2023/TT-BCA',
+              'Đấu giá biển số xe',
+            ],
             sameAs: [
               'https://www.facebook.com/duydinhbiensodepdanang',
               'https://zalo.me/0815792699',
@@ -179,9 +201,11 @@ export function useSeo(screen, data) {
           },
           {
             '@type': 'AutoDealer',
+            '@id': SITE + '/#localbusiness',
             name: 'Duy Đinh - Biển Số Đẹp Đà Nẵng',
             url: SITE,
             telephone: '0815792699',
+            image: SITE + '/assets/duy-dinh-portrait.jpg',
             priceRange: '10.000.000đ - 5.000.000.000đ',
             address: {
               '@type': 'PostalAddress',
@@ -196,12 +220,50 @@ export function useSeo(screen, data) {
               latitude: 16.0520,
               longitude: 108.2435,
             },
+            areaServed: ['Đà Nẵng', 'Miền Trung', 'Toàn quốc'],
             openingHoursSpecification: {
               '@type': 'OpeningHoursSpecification',
               dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
               opens: '08:00',
               closes: '21:00',
             },
+          },
+          {
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'Biển số mua tại Duy Đinh có sang tên định danh chính chủ được không?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Hoàn toàn được. Toàn bộ biển số tại Biensovip đều có hồ sơ gốc hợp pháp 100%, tuân thủ nghiêm ngặt quy định tại Thông tư 24/2023/TT-BCA và Thông tư 28/2024/TT-BCA. Khách hàng sẽ được cấp biển định danh chính chủ đứng tên trên cà vẹt.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Khách hàng ở các tỉnh thành khác (Hà Nội, TP.HCM, Tây Nguyên...) có mua được không?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Hoàn toàn thuận lợi. Quy định biển định danh hiện nay cho phép công dân đăng ký xe tại nơi thường trú hoặc tạm trú. Đội ngũ Duy Đinh hỗ trợ rút hồ sơ gốc, chuyển phát hỏa tốc và hướng dẫn hoàn tất thủ tục đăng ký tận nơi trên cả nước.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Quy trình đặt cọc và cam kết giao dịch như thế nào?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Khi chọn được biển ưng ý, khách hàng đặt cọc giữ chỗ qua tài khoản chính chủ của Duy Đinh. Cửa hàng lập tức cấp hợp đồng giao dịch điện tử có giá trị pháp lý, cam kết hoàn tiền 100% nếu có bất kỳ vướng mắc nào về mặt pháp lý.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Duy Đinh có thu phí tư vấn phong thủy chọn biển không?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Không. Duy Đinh tư vấn phong thủy nạp âm, phân tích dãy số hợp can chi và bản mệnh hoàn toàn MIỄN PHÍ cho mọi khách hàng ghé thăm cửa hàng hoặc nhắn tin qua Zalo.',
+                },
+              },
+            ],
           },
         ],
       };

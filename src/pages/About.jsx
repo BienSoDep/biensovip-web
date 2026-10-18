@@ -21,6 +21,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import Breadcrumb from '../components/Breadcrumb.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
@@ -131,6 +132,14 @@ export default function About({ go }) {
 
   return (
     <div className="about-page-wrap">
+      <Breadcrumb
+        keepOnMobile
+        items={[
+          { label: 'Trang chủ', onClick: go('home') },
+          { label: 'Về Duy Đinh — Người sáng lập Biensovip' },
+        ]}
+      />
+
       {/* 1. Hero Section: Founder & Philosophy */}
       <section className="about-hero" itemScope itemType="https://schema.org/Person">
         <div className="about-hero-grid">
@@ -230,6 +239,17 @@ export default function About({ go }) {
           </div>
         </div>
       </div>
+
+      {/* GEO / AEO Passage Citability (Direct Answer Block for AI Search & Google) */}
+      <section className="about-direct-citability" aria-label="Hồ sơ năng lực & Trích dẫn chuyên gia">
+        <div className="about-citability-header">
+          <BadgeCheck size={18} />
+          <span>Thông Tin Định Danh Tác Giả & Nền Tảng (E-E-A-T Verified)</span>
+        </div>
+        <p className="about-citability-text">
+          <strong>Duy Đinh</strong> (tên nhận diện trong giới xe: <em>Duy Đinh Biensovip</em>) là chuyên gia phong thủy và định giá biển số xe với hơn 10 năm kinh nghiệm tại Đà Nẵng, người sáng lập sàn giao dịch <strong>Biensovip.vn</strong>. Showroom hoạt động chính thức tại <strong>Số 06 An Thượng 30, Ngũ Hành Sơn, TP. Đà Nẵng</strong>, chuyên phân phối kho hơn 5.000 biển số xe máy và ô tô đẹp hợp phong thủy, hỗ trợ thủ tục thu hồi sang tên và đăng ký biển định danh theo đúng quy định Thông tư 24/2023/TT-BCA và Thông tư 28/2024/TT-BCA trên 63 tỉnh thành. Mọi giao dịch đều có hợp đồng công chứng, kiểm tra dữ liệu phạt nguội CSGT trước khi bàn giao và cam kết hoàn cọc 100% nếu có vướng mắc pháp lý.
+        </p>
+      </section>
 
       {/* 3. Milestones Timeline: 10 Years Journey */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -624,6 +644,73 @@ export default function About({ go }) {
               Tra cứu biển hợp mệnh online
             </Button>
           </div>
+        </div>
+      </section>
+
+      {/* 12. SEO Topic Cluster & Internal Links Hub */}
+      <section className="about-cluster-hub" aria-label="Khám phá hệ sinh thái Biensovip">
+        <div className="about-cluster-header">
+          <div className="about-cluster-title">
+            <Compass size={20} style={{ color: 'var(--brand-600)' }} />
+            <span>Khám Phá Hệ Sinh Thái Biển Số Đẹp & Dịch Vụ Của Duy Đinh</span>
+          </div>
+          <span style={{ fontSize: '13px', color: '#64748b' }}>Cập nhật liên tục 2026</span>
+        </div>
+
+        <div className="about-cluster-grid">
+          <button
+            type="button"
+            className="about-cluster-card"
+            onClick={() => go('list')()}
+          >
+            <span>Kho Biển Số Đẹp Toàn Quốc</span>
+            <ArrowRight size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="about-cluster-card"
+            onClick={() => { window.location.href = '/tinh-thanh/da-nang'; }}
+          >
+            <span>Biển Số Đẹp Đà Nẵng (Đầu 43)</span>
+            <ArrowRight size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="about-cluster-card"
+            onClick={() => go('lucky')()}
+          >
+            <span>Tra Cứu Biển Hợp Mệnh Ngũ Hành</span>
+            <ArrowRight size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="about-cluster-card"
+            onClick={() => go('luanBien')()}
+          >
+            <span>Luận Giải Phong Thủy Biển 5 Chiều</span>
+            <ArrowRight size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="about-cluster-card"
+            onClick={() => { window.location.href = '/bai-viet/bang-gia-bien-so-xe-may-da-nang-2026'; }}
+          >
+            <span>Bảng Giá Biển Số Xe Máy Đà Nẵng</span>
+            <ArrowRight size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="about-cluster-card"
+            onClick={() => go('blog')()}
+          >
+            <span>Cẩm Nang Pháp Lý & Sang Tên Định Danh</span>
+            <ArrowRight size={16} />
+          </button>
         </div>
       </section>
     </div>

@@ -3404,10 +3404,99 @@ button[aria-expanded]:hover {
   font-weight: 600;
   color: #334155;
 }
-
 .about-trust-badge-item svg {
   color: var(--brand-600);
 }
 
+/* 12. GEO / Passage Citability Block */
+.about-direct-citability {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, rgba(254, 243, 199, 0.35) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-left: 5px solid var(--brand-600);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
+.about-citability-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #b45309;
+  text-transform: uppercase;
+}
 
+.about-citability-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: #1e293b;
+}
+
+.about-citability-text strong {
+  color: #0f172a;
+}
+
+/* 13. SEO Topic Cluster Internal Linking Hub */
+.about-cluster-hub {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.about-cluster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.about-cluster-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-cluster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.about-cluster-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.about-cluster-card:hover {
+  background: #ffffff;
+  border-color: var(--brand-500);
+  color: var(--brand-600);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+  transform: translateY(-1px);
+}
