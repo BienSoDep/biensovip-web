@@ -203,6 +203,34 @@ export default function About({ go }) {
         ))}
       </section>
 
+      {/* Trust & Escrow Bar */}
+      <div className="about-trust-bar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <ShieldCheck size={20} style={{ color: 'var(--brand-600)' }} />
+          <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>
+            BẢO CHỨNG GIAO DỊCH AN TOÀN TẠI BIENSOVIP:
+          </span>
+        </div>
+        <div className="about-trust-badges">
+          <div className="about-trust-badge-item">
+            <CheckCircle2 size={16} />
+            <span>Hợp đồng công chứng minh bạch</span>
+          </div>
+          <div className="about-trust-badge-item">
+            <CheckCircle2 size={16} />
+            <span>Check phạt nguội Cục CSGT</span>
+          </div>
+          <div className="about-trust-badge-item">
+            <CheckCircle2 size={16} />
+            <span>Cam kết hoàn tiền cọc 100%</span>
+          </div>
+          <div className="about-trust-badge-item">
+            <CheckCircle2 size={16} />
+            <span>Bảo chứng số định danh trọn đời</span>
+          </div>
+        </div>
+      </div>
+
       {/* 3. Milestones Timeline: 10 Years Journey */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div className="about-sec-header">
@@ -248,7 +276,115 @@ export default function About({ go }) {
         </div>
       </section>
 
-      {/* 5. Real Videos: Proof of Work */}
+      {/* 5. 3-Tier Legal Guarantee Shield */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="about-sec-header">
+          <span className="about-sec-badge">BẢO CHỨNG PHÁP LÝ ĐỈNH CAO</span>
+          <h2 className="about-sec-title">3 Tầng Bảo Vệ Quyền Lợi Khách Hàng</h2>
+          <p className="about-sec-sub">
+            Khác biệt lớn nhất tại Duy Đinh là sự an toàn tuyệt đối về mặt pháp luật trong suốt quá trình sở hữu và sử dụng biển số.
+          </p>
+        </div>
+
+        <div className="about-guarantee-grid">
+          <div className="about-guarantee-card">
+            <div className="about-guarantee-header">
+              <div className="about-guarantee-icon-box">
+                <FileText size={22} />
+              </div>
+              <div>
+                <span className="about-guarantee-tier">TẦNG 1: PHÁP LÝ NGUỒN GỐC</span>
+                <h3 className="about-guarantee-title">Chuẩn 100% Thông tư 24 & 28</h3>
+              </div>
+            </div>
+            <p className="about-guarantee-desc">
+              100% biển số chuyển nhượng đều có hồ sơ gốc minh bạch, kiểm tra lịch sử đăng kiểm, rà soát phạt nguội trực tiếp trên cổng dữ liệu Bộ Công an trước khi tiến hành thủ tục thu hồi và cấp biển định danh.
+            </p>
+          </div>
+
+          <div className="about-guarantee-card">
+            <div className="about-guarantee-header">
+              <div className="about-guarantee-icon-box">
+                <ShieldCheck size={22} />
+              </div>
+              <div>
+                <span className="about-guarantee-tier">TẦNG 2: TÀI CHÍNH AN TOÀN</span>
+                <h3 className="about-guarantee-title">Cam Kết Hoàn Cọc 100%</h3>
+              </div>
+            </div>
+            <p className="about-guarantee-desc">
+              Hợp đồng giao dịch có biên nhận rõ ràng. Nếu xảy ra bất kỳ vướng mắc nào về mặt pháp lý hoặc không thể sang tên định danh chính chủ do lỗi hồ sơ, Duy Đinh cam kết hoàn trả 100% tiền cọc ngay lập tức mà không giữ lại bất kỳ chi phí nào.
+            </p>
+          </div>
+
+          <div className="about-guarantee-card">
+            <div className="about-guarantee-header">
+              <div className="about-guarantee-icon-box">
+                <Award size={22} />
+              </div>
+              <div>
+                <span className="about-guarantee-tier">TẦNG 3: ĐỒNG HÀNH TRỌN ĐỜI</span>
+                <h3 className="about-guarantee-title">Bảo Chứng Định Danh Vĩnh Viễn</h3>
+              </div>
+            </div>
+            <p className="about-guarantee-desc">
+              Sau khi nhận biển, quý khách tiếp tục được hỗ trợ trọn đời: hỗ trợ thủ tục thu hồi để giữ số định danh khi bán xe cũ, đăng ký gán lại vào xe mới trong tương lai và bảo dưỡng khung biển ép chống nước cao cấp.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Comparison: Duy Đinh vs. Free Market */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <div className="about-sec-header">
+          <span className="about-sec-badge">ĐỐI CHIẾU THỰC TẾ</span>
+          <h2 className="about-sec-title">Tại Sao Khách Hàng Chọn Duy Đinh?</h2>
+          <p className="about-sec-sub">
+            So sánh chi tiết tiêu chuẩn dịch vụ tại Biensovip so với việc tự mua bán trôi nổi hoặc qua trung gian tự do ngoài thị trường.
+          </p>
+        </div>
+
+        <div className="about-compare-wrap">
+          <table className="about-compare-table">
+            <thead>
+              <tr>
+                <th>Tiêu chí đánh giá</th>
+                <th className="brand-col">Giao dịch qua Duy Đinh (Biensovip)</th>
+                <th>Mua bán tự do ngoài thị trường</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="criteria-col">Thẩm định hồ sơ & Phạt nguội</td>
+                <td className="duydinh-col">✓ Kiểm tra dữ liệu Cục CSGT, bảo đảm 100% sạch nợ phạt nguội và đúng số khung máy.</td>
+                <td className="market-col">✗ Người mua tự chịu rủi ro xe dính phạt nguội tiền triệu hoặc giấy tờ mập mờ.</td>
+              </tr>
+              <tr>
+                <td className="criteria-col">Thủ tục định danh Thông tư 24</td>
+                <td className="duydinh-col">✓ Trọn gói từ công chứng, thu hồi đến cấp biển định danh chính chủ trong 24–48h.</td>
+                <td className="market-col">✗ Tự đi làm giấy tờ phức tạp, dễ bị từ chối hồ sơ hoặc treo định danh nhiều tuần.</td>
+              </tr>
+              <tr>
+                <td className="criteria-col">Giá cả & Chi phí phát sinh</td>
+                <td className="duydinh-col">✓ Giá niêm yết công khai, ký hợp đồng trọn gói, tuyệt đối không phát sinh phụ phí.</td>
+                <td className="market-col">✗ Thường bị ép giá, đòi thêm tiền "hoa hồng", phát sinh chi phí "bôi trơn".</td>
+              </tr>
+              <tr>
+                <td className="criteria-col">Luận giải phong thủy</td>
+                <td className="duydinh-col">✓ Chuyên gia 10 năm kinh nghiệm tư vấn chuẩn ngũ hành, nạp âm, can chi miễn phí.</td>
+                <td className="market-col">✗ Đoán mò theo số cảm tính, tư vấn sai mệnh gây bất an tâm lý cho chủ xe.</td>
+              </tr>
+              <tr>
+                <td className="criteria-col">Bảo hành & Trách nhiệm</td>
+                <td className="duydinh-col">✓ Cam kết văn bản: Hoàn cọc 100% nếu có trục trặc pháp lý, bảo chứng số trọn đời.</td>
+                <td className="market-col">✗ Bán xong là hết trách nhiệm, dễ bị chặn liên lạc khi xảy ra sự cố tranh chấp.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* 7. Real Videos: Proof of Work */}
       {videos.length > 0 && (
         <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div className="about-sec-header">
@@ -296,7 +432,7 @@ export default function About({ go }) {
         </section>
       )}
 
-      {/* 6. Step-by-step Process: Thông tư 24 */}
+      {/* 8. Step-by-step Process: Thông tư 24 */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div className="about-sec-header">
           <span className="about-sec-badge">QUY TRÌNH MINH BẠCH</span>
@@ -317,7 +453,7 @@ export default function About({ go }) {
         </div>
       </section>
 
-      {/* 7. Real Testimonials */}
+      {/* 9. Real Testimonials */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div className="about-sec-header">
           <span className="about-sec-badge">KHÁCH HÀNG CHIA SẺ</span>
@@ -342,7 +478,7 @@ export default function About({ go }) {
         </div>
       </section>
 
-      {/* 8. FAQ Accordion */}
+      {/* 10. FAQ Accordion */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div className="about-sec-header">
           <span className="about-sec-badge">HỎI ĐÁP & CHÍNH SÁCH</span>
@@ -407,7 +543,7 @@ export default function About({ go }) {
         </div>
       </section>
 
-      {/* 9. Showroom Đà Nẵng & Multi-channel Contact Hub */}
+      {/* 11. Showroom Đà Nẵng & Multi-channel Contact Hub */}
       <section className="about-showroom-hub">
         <div className="about-showroom-info">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fde68a', fontSize: '12px', fontWeight: '800', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
