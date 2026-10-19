@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../components/Button.jsx';
+import { PageHeader } from '../components/index.jsx';
 import { useNotifications, useMarkNotificationRead, useMarkNotificationClicked } from '../services/notificationService.js';
 import { timeAgo } from '../lib/date.js';
 
@@ -31,10 +32,11 @@ export default function Notifications({ go, notify, openPost }) {
 
   return (
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Thông báo</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{unreadCount ? `${unreadCount} thông báo chưa đọc.` : 'Bạn đã đọc hết thông báo.'}</p>
-      </div>
+      <PageHeader
+        eyebrow="Hộp thư hệ thống"
+        title="Thông báo"
+        subtitle={unreadCount ? `${unreadCount} thông báo chưa đọc.` : 'Bạn đã đọc hết tất cả thông báo.'}
+      />
 
       {isLoading ? (
         <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '72px var(--space-6)', textAlign: 'center' }}>

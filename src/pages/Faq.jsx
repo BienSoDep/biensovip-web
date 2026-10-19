@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import { PageHeader } from '../components/index.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
 import { usePolicyPage } from '../services/policyPages.js';
 import { useFaqSets } from '../services/faqHowTo.js';
@@ -39,10 +40,11 @@ export default function Faq({ go, zalo }) {
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title}</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{subtitle}</p>
-      </div>
+      <PageHeader
+        eyebrow="Hỗ trợ & Giải đáp"
+        title={title}
+        subtitle={subtitle}
+      />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         {QA.map((item, i) => (

@@ -3,7 +3,7 @@ import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
 import AvatarUploader from '../components/AvatarUploader.jsx';
 import FeedbackForm from '../components/FeedbackForm.jsx';
-import { Input, Select, Eyebrow, DateInputVN } from '../components/index.jsx';
+import { Input, Select, Eyebrow, DateInputVN, PageHeader } from '../components/index.jsx';
 import { updateProfile, changePassword, refreshToken, requestEmailVerifyOtp, confirmEmailVerifyOtp } from '../services/authService.js';
 import { useNotificationSettings, useUpdateNotificationSettings } from '../services/notificationService.js';
 import { useBecomeCollaborator, useUpdateBankInfo } from '../services/collaborators.js';
@@ -119,16 +119,12 @@ export default function Profile({ go, notify, user, onUserUpdate, onLogout }) {
         </nav>
 
         <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-          <div id="profile-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--blue-600)' }}>
-              Tài khoản
-            </span>
-            <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
-              Thông tin cá nhân
-            </h1>
-            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>
-              Cập nhật họ tên, ngày sinh và giới tính — dùng để tính hợp mệnh phong thủy và gợi ý biển số phù hợp hơn với bạn.
-            </p>
+          <div id="profile-section">
+            <PageHeader
+              eyebrow="Tài khoản"
+              title="Thông tin cá nhân"
+              subtitle="Cập nhật họ tên, ngày sinh và giới tính — dùng để tính hợp mệnh phong thủy và gợi ý biển số phù hợp hơn với bạn."
+            />
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import Button from '../components/Button.jsx';
 import PlateCard from '../components/PlateCard.jsx';
+import { PageHeader } from '../components/index.jsx';
 
 const SNAP_KEY = 'biensovip_fav_snap';
 const PER_PAGE = 12;
@@ -61,19 +62,22 @@ export default function Fav({ favCards, user, onClearAll, go, notify, contact })
         </div>
       )}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
-        <div style={{ flex: '1 1 320px' }}>
-          <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Biển số đã lưu</h1>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{favCards.length ? favCards.length + ' biển số bạn đang theo dõi. Chúng tôi báo ngay nếu giá thay đổi.' : 'Bạn chưa lưu biển số nào.'}</p>
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {SORT_OPTS.map((o) => (
-            <button key={o.value} type="button" onClick={() => { setSort(o.value); setPage(1); }}
-              style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-sm)', font: 'var(--type-caption)', background: sort === o.value ? 'var(--action-primary)' : 'var(--surface-muted)', color: sort === o.value ? 'var(--white)' : 'var(--text-body)' }}>{o.label}</button>
-          ))}
-        </div>
-        {favCards.length > 0 && <Button variant="outline" size="sm" onClick={onClearAll}>Bỏ lưu tất cả</Button>}
-      </div>
+      <PageHeader
+        eyebrow="Bộ sưu tập của bạn"
+        title="Biển số đã lưu"
+        subtitle={favCards.length ? `${favCards.length} biển số bạn đang theo dõi. Chúng tôi sẽ báo ngay nếu có cập nhật giá mới.` : 'Bạn chưa lưu biển số nào.'}
+        actions={
+          <>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {SORT_OPTS.map((o) => (
+                <button key={o.value} type="button" onClick={() => { setSort(o.value); setPage(1); }}
+                  style={{ border: 'none', cursor: 'pointer', padding: '6px 12px', borderRadius: 'var(--radius-sm)', font: 'var(--type-caption)', background: sort === o.value ? 'var(--action-primary)' : 'var(--surface-muted)', color: sort === o.value ? 'var(--white)' : 'var(--text-body)' }}>{o.label}</button>
+              ))}
+            </div>
+            {favCards.length > 0 && <Button variant="outline" size="sm" onClick={onClearAll}>Bỏ lưu tất cả</Button>}
+          </>
+        }
+      />
       {shown.length > 0 ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
           {shown.map((p) => (

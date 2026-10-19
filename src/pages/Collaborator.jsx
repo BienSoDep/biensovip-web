@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Button from '../components/Button.jsx';
-import { Badge } from '../components/index.jsx';
+import { Badge, PageHeader } from '../components/index.jsx';
 import { SkeletonCard } from '../components/Skeleton.jsx';
 import { useCollaboratorLogout } from '../services/collaboratorAuth.js';
 import { useCollaboratorContacts, useLeaderboard } from '../services/collaborators.js';
@@ -18,10 +18,11 @@ export function CollaboratorCustomers({ go }) {
 
   return (
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-      <div>
-        <span style={{ display: 'block', font: 'var(--type-display-3)', color: 'var(--text-strong)' }}>Khách hàng của tôi</span>
-        <span style={{ display: 'block', marginTop: 4, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Toàn bộ khách đã liên hệ qua link/mã giới thiệu của bạn, kèm tiến độ và số tiền giao dịch.</span>
-      </div>
+      <PageHeader
+        eyebrow="Cộng tác viên"
+        title="Khách hàng của tôi"
+        subtitle="Toàn bộ khách đã liên hệ qua link/mã giới thiệu của bạn, kèm tiến độ và số tiền giao dịch."
+      />
 
       {contacts.isLoading && <SkeletonCard height={200} />}
       {!contacts.isLoading && contacts.isError && (
@@ -71,10 +72,11 @@ export function CollaboratorLeaderboard({ go }) {
 
   return (
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-      <div>
-        <span style={{ display: 'block', font: 'var(--type-display-3)', color: 'var(--text-strong)' }}>Bảng xếp hạng CTV tháng này</span>
-        <span style={{ display: 'block', marginTop: 4, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xếp theo tổng hoa hồng đã duyệt/đã trả — không hiển thị số tiền cụ thể.</span>
-      </div>
+      <PageHeader
+        eyebrow="Cộng tác viên"
+        title="Bảng xếp hạng CTV tháng này"
+        subtitle="Xếp theo tổng hoa hồng đã duyệt/đã trả — không hiển thị số tiền cụ thể."
+      />
       {me && (
         <div style={{ background: 'var(--surface-inverse)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ font: 'var(--type-body-sm)', color: 'var(--white)' }}>Vị trí của bạn</span>

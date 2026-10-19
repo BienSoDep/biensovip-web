@@ -2,9 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { ChevronDown, Compass, LayoutGrid, List as ListIcon, Sparkles } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import BulletPicker from '../components/BulletPicker.jsx';
 import PlateCard from '../components/PlateCard.jsx';
-import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox } from '../components/index.jsx';
+import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox, PageHeader } from '../components/index.jsx';
 import PlateFengShuiAnalyzerTab from './PlateFengShuiAnalyzerTab.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
 import { useSubmitContact } from '../services/contactService.js';
@@ -216,19 +215,13 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
           : [{ label: 'Tư vấn biển hợp mệnh' }]),
       ]} />
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <Eyebrow tone="blue">
-          {activeTab === 'luan-bien' ? 'Giải mã 5 chiều phong thủy' : 'Tư vấn theo ngũ hành'}
-        </Eyebrow>
-        <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
-          {activeTab === 'luan-bien' ? 'Luận giải biển số của bạn & Gợi ý cải vận' : 'Tìm biển số hợp mệnh của bạn'}
-        </h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 840 }}>
-          {activeTab === 'luan-bien'
-            ? 'Nhập biển số hiện tại để phân tích Ngũ hành Hà Đồ, Tổng nút, Âm Dương, Cặp số may mắn và Quẻ Kinh Dịch Mai Hoa — đồng thời nhận gợi ý biển số bù đắp điểm còn thiếu.'
-            : 'Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.'}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={activeTab === 'luan-bien' ? 'Giải mã 5 chiều phong thủy' : 'Tư vấn theo ngũ hành'}
+        title={activeTab === 'luan-bien' ? 'Luận giải biển số của bạn & Gợi ý cải vận' : 'Tìm biển số hợp mệnh của bạn'}
+        subtitle={activeTab === 'luan-bien'
+          ? 'Nhập biển số hiện tại để phân tích Ngũ hành Hà Đồ, Tổng nút, Âm Dương, Cặp số may mắn và Quẻ Kinh Dịch Mai Hoa — đồng thời nhận gợi ý biển số bù đắp điểm còn thiếu.'
+          : 'Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.'}
+      />
 
       {/* 2 Tab chuyển đổi linh hoạt */}
       <div

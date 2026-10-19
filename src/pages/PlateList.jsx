@@ -11,7 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
-import { Select, Checkbox, Radio, Input, Icon } from "../components/index.jsx";
+import { Select, Checkbox, Radio, Input, Icon, PageHeader } from "../components/index.jsx";
 import PlateCard from "../components/PlateCard.jsx";
 import Pagination from "../components/Pagination.jsx";
 import PlateCardSkeleton from "../components/skeletons/PlateCardSkeleton.jsx";
@@ -698,28 +698,14 @@ export default function PlateList({
         style={{
           maxWidth: "var(--width-content)",
           margin: "0 auto",
-          padding: "var(--space-7) var(--pad-page) var(--space-4)",
+          padding: "var(--space-8) var(--pad-page) var(--space-4)",
         }}
       >
-        <h1
-          style={{
-            margin: "var(--space-3) 0 var(--space-2)",
-            font: "var(--type-display-2)",
-            letterSpacing: "var(--ls-display)",
-            color: "var(--text-strong)",
-          }}
-        >
-          Kho biển số đẹp
-        </h1>
-        <p
-          style={{
-            margin: "0 0 var(--space-3)",
-            font: "var(--type-body-sm)",
-            color: "var(--text-muted)",
-          }}
-        >
-          {total} biển số phù hợp bộ lọc hiện tại
-        </p>
+        <PageHeader
+          eyebrow="Kho biển toàn quốc"
+          title="Kho biển số đẹp"
+          subtitle={`${total} biển số phù hợp bộ lọc hiện tại`}
+        />
       </section>
       {/* Chọn nguồn biển trước (Tuần/Tháng/Có sẵn) — quyết định đầu tiên hợp lý hơn tìm kiếm/năm sinh, vốn chỉ thu hẹp trong nguồn đã chọn. */}
       <section

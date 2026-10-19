@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Star, ThumbsUp } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Pagination from '../components/Pagination.jsx';
-import { Avatar } from '../components/index.jsx';
+import { Avatar, PageHeader } from '../components/index.jsx';
 import { usePlates } from '../services/plates.js';
 import { usePlateReviews, useCreateReview } from '../services/reviewService.js';
 import { loadAuth } from '../lib/authStore.js';
@@ -51,10 +51,11 @@ export default function Reviews({ notify, go }) {
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Đánh giá từ khách hàng</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chọn biển số đã mua để xem hoặc gửi đánh giá.</p>
-      </div>
+      <PageHeader
+        eyebrow="Trải nghiệm thực tế"
+        title="Đánh giá từ khách hàng"
+        subtitle="Chọn biển số đã mua để xem phản hồi hoặc gửi đánh giá trải nghiệm của bạn."
+      />
 
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 360 }}>
         <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Biển số đã mua</span>

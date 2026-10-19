@@ -4,7 +4,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
-import { InfoTip, DateInputVN } from '../components/index.jsx';
+import { InfoTip, DateInputVN, PageHeader } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { shouldShowGeneratedImage } from '../lib/plateImageDisplay.js';
 import { useSiteSettings } from '../services/siteSettings.js';
@@ -364,13 +364,12 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
     const slotsNeeded = filledPlate ? 2 : 3;
     return (
       <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
-          <div style={{ flex: '1 1 300px' }}>
-            <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>So sánh biển số</h1>
-            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{filledPlate ? 'Cần ít nhất 2 biển để so sánh — tìm thêm 1 biển nữa.' : 'Tìm và thêm tối đa 3 biển để so sánh cạnh nhau.'}</p>
-          </div>
-          {filledPlate && <Button variant="ghost" size="md" onClick={clear}>Bỏ chọn</Button>}
-        </div>
+        <PageHeader
+          eyebrow="Đối chiếu trực quan"
+          title="So sánh biển số"
+          subtitle={filledPlate ? 'Cần ít nhất 2 biển để so sánh — tìm thêm 1 biển nữa.' : 'Tìm và thêm tối đa 3 biển để so sánh cạnh nhau.'}
+          actions={filledPlate ? <Button variant="ghost" size="md" onClick={clear}>Bỏ chọn</Button> : null}
+        />
         <div className="compare-empty-slots" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--space-4)', width: '100%', alignItems: 'stretch' }}>
           {filledPlate && (() => {
             const { prov, seri, num } = splitPlateNumber(filledPlate.plateNumber);
@@ -421,17 +420,17 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      {/* Tiêu đề & Nút thao tác nhanh */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
-        <div>
-          <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>So sánh biển số</h1>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{plates.length}/{ids.length} biển — so sánh trực quan &amp; chọn số phù hợp nhất.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <Button variant="outline" size="sm" onClick={go('list')}>+ Thêm biển</Button>
-          <Button variant="ghost" size="sm" onClick={clear}>Xóa tất cả</Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Đối chiếu trực quan"
+        title="So sánh biển số"
+        subtitle={`${plates.length}/${ids.length} biển — so sánh trực quan & chọn số phù hợp nhất.`}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={go('list')}>+ Thêm biển</Button>
+            <Button variant="ghost" size="sm" onClick={clear}>Xóa tất cả</Button>
+          </>
+        }
+      />
 
       {isLoading ? (
         <div style={{ padding: '64px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Đang tải dữ liệu so sánh…</div>
