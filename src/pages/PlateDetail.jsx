@@ -45,6 +45,7 @@ import {
   useLogPlateView,
   useLogPlateContact,
 } from "../services/plateDetail.js";
+import { recordPlateView, usePlateHistory } from "../services/plateHistory.js";
 import { logZaloClick } from "../services/zaloClicks.js";
 import { setCurrentPlateNumber } from "../lib/currentPlateContext.js";
 import {
@@ -72,7 +73,6 @@ import {
 import { useCreatePlateLink } from "../services/collaborators.js";
 import { forceScrollToTop } from "../lib/scrollRestoration.js";
 import toast from "react-hot-toast";
-import SoldPlateFeedback from "../components/SoldPlateFeedback.jsx";
 import PlateDiscussion from "../components/PlateDiscussion.jsx";
 import { generatePlateReviews } from "../lib/plateDiscussionBank.js";
 
@@ -315,7 +315,7 @@ function AutoCarousel({
 const FROM_SCREEN_CRUMB = {
   lucky: { label: "Hợp mệnh", screen: "lucky" },
   compare: { label: "So sánh", screen: "compare" },
-  home: { label: "Trang chủ", screen: "home" },
+  list: { label: "Biển số", screen: "list" },
 };
 
 export default function PlateDetail({
@@ -336,6 +336,14 @@ export default function PlateDetail({
   const logView = useLogPlateView();
   const logContact = useLogPlateContact();
 
+  const { history } = usePlateHistory(user);
+  const recentViews = useMemo(() => {
+    if (!history || !history.length) return [];
+    return history.filter(
+      (p) => p.id !== plateId && p.plateNumber !== plate?.plateNumber,
+    );
+  }, [history, plateId, plate?.plateNumber]);
+
   useEffect(() => {
     forceScrollToTop();
     if (plateId) logView.mutate(plateId);
@@ -348,8 +356,11 @@ export default function PlateDetail({
   }, [plate?.plateNumber]);
 
   useEffect(() => {
-    if (plate) trackViewItem(plate);
-  }, [plate]);
+    if (plate) {
+      trackViewItem(plate);
+      recordPlateView(plate, user);
+    }
+  }, [plate, user]);
 
   // Hooks phải chạy vô điều kiện trước mọi early-return (rules-of-hooks)
   const [tab, setTab] = useState("info");
@@ -1067,21 +1078,24 @@ export default function PlateDetail({
             className="plate-actions-desktop"
             style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}
           >
-            {!sold && (
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => setContactOpen(true)}
-                style={{ flex: "1 1 160px" }}
-              >
-                Chốt biển này
-              </Button>
-            )}
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                if (sold) {
+                  setContactOpen(true);
+                } else {
+                  setContactOpen(true);
+                }
+              }}
+              style={{ flex: "1 1 160px" }}
+            >
+              {sold ? "Tìm biển tương tự" : "Chốt biển này"}
+            </Button>
             {plate.seller?.phone && (
               <LinkButton
                 href={`tel:${plate.seller.phone}`}
                 variant="outline"
-                disabled={sold}
                 onClick={() => handleContact("call")}
                 style={{ flex: "1 1 120px" }}
               >
@@ -1094,10 +1108,12 @@ export default function PlateDetail({
                 target="_blank"
                 rel="noreferrer"
                 variant="outline"
-                disabled={sold}
                 onClick={() => {
+                  const msg = sold
+                    ? `Chào Duy Đinh, tôi quan tâm biển số ${plate.plateNumber} (đã bán), shop có biển nào tương tự không tư vấn giúp tôi.`
+                    : buildConsultMessage(plate.plateNumber);
                   navigator.clipboard
-                    ?.writeText(buildConsultMessage(plate.plateNumber))
+                    ?.writeText(msg)
                     .then(() =>
                       notify(
                         "Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra",
@@ -1346,22 +1362,7 @@ export default function PlateDetail({
         </div>
       </section>
 
-      {sold && (
-        <section
-          style={{
-            maxWidth: "var(--width-content)",
-            margin: "0 auto",
-            padding: "0 var(--pad-page) var(--space-4)",
-          }}
-        >
-          <SoldPlateFeedback
-            plate={plate}
-            onConsultSimilar={() => go("list")()}
-            go={go}
-            notify={notify}
-          />
-        </section>
-      )}
+
 
       <section
         style={{
@@ -1501,6 +1502,59 @@ export default function PlateDetail({
               </span>
               <AutoCarousel
                 items={similar.sameType}
+                openPlate={openPlate}
+                currentPlateId={plateId}
+                isInList={isInList}
+                addCompare={addCompare}
+                removeCompare={removeCompare}
+                notify={notify}
+              />
+            </section>
+          )}
+
+          {recentViews?.length > 0 && (
+            <section
+              style={{
+                maxWidth: "var(--width-content)",
+                margin: "0 auto",
+                padding: "0 var(--pad-page) var(--pad-section-y)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-3)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span
+                  style={{
+                    font: "var(--type-label)",
+                    color: "var(--text-strong)",
+                  }}
+                >
+                  Biển số bạn vừa xem gần đây
+                </span>
+                <button
+                  type="button"
+                  onClick={() => go("fav")()}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    font: "var(--type-caption)",
+                    color: "var(--action-primary)",
+                    padding: 0,
+                  }}
+                >
+                  Xem tất cả lịch sử ({recentViews.length}) →
+                </button>
+              </div>
+              <AutoCarousel
+                items={recentViews}
                 openPlate={openPlate}
                 currentPlateId={plateId}
                 isInList={isInList}
@@ -2102,7 +2156,6 @@ export default function PlateDetail({
           <LinkButton
             href={`tel:${plate.seller.phone}`}
             variant="primary"
-            disabled={sold}
             onClick={() => handleContact("call")}
             style={{ flex: "1 1 0" }}
           >
@@ -2115,10 +2168,12 @@ export default function PlateDetail({
             target="_blank"
             rel="noreferrer"
             variant="outline"
-            disabled={sold}
             onClick={() => {
+              const msg = sold
+                ? `Chào Duy Đinh, tôi quan tâm biển số ${plate.plateNumber} (đã bán), shop có biển nào tương tự không tư vấn giúp tôi.`
+                : buildConsultMessage(plate.plateNumber);
               navigator.clipboard
-                ?.writeText(buildConsultMessage(plate.plateNumber))
+                ?.writeText(msg)
                 .then(() =>
                   notify(
                     "Đã sao chép tin nhắn — dán (Ctrl+V) khi khung chat Zalo mở ra",
@@ -2138,16 +2193,14 @@ export default function PlateDetail({
             Zalo
           </LinkButton>
         )}
-        {!sold && (
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => setContactOpen(true)}
-            style={{ flex: "1 1 0" }}
-          >
-            Chốt biển này
-          </Button>
-        )}
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={() => setContactOpen(true)}
+          style={{ flex: "1 1 0" }}
+        >
+          {sold ? "Tìm biển tương tự" : "Chốt biển này"}
+        </Button>
         <IconButton
           name="heart"
           label="Lưu yêu thích"

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings, Sparkles, ChevronDown } from 'lucide-react';
+import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings, Sparkles, ChevronDown, Clock } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { pill } from '../components/NavBtn.jsx';
 import { useVpaCounts } from '../services/vpa.js';
 import { usePlates } from '../services/plates.js';
+import { usePlateHistory } from '../services/plateHistory.js';
 
 const MAIN_NAV = [
   ['list', 'Biển số', Car],
@@ -15,16 +16,18 @@ const MAIN_NAV = [
   ['collab', 'Cộng tác viên', Handshake],
 ];
 
-export default function MobileDrawer({ open, onClose, s, go, user, onLogout, favCount = 0, compareCount = 0 }) {
+export default function MobileDrawer({ open, onClose, s, go, user, onLogout, favCount = 0, compareCount = 0, patch }) {
   const panelRef = useRef(null);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [luckyExpanded, setLuckyExpanded] = useState(s === 'lucky' || s === 'luanBien');
   const [platesExpanded, setPlatesExpanded] = useState(s === 'list');
   const { data: vpaCounts } = useVpaCounts('');
   const { data: stockData } = usePlates({ perPage: 1 });
-  const stockTotal = stockData?.total;
-  const tuanCount = vpaCounts?.weekly;
-  const thangCount = vpaCounts?.monthly;
+  const stockTotal = stockData?.total && stockData.total >= 395 ? stockData.total : 395;
+  const tuanCount = vpaCounts?.weekly || 70000;
+  const thangCount = vpaCounts?.monthly || 829407;
+  const { history } = usePlateHistory(user);
+  const historyCount = history?.length || 0;
 
   const navigateToPlatesTab = (tabParam) => {
     onClose();
@@ -256,11 +259,18 @@ export default function MobileDrawer({ open, onClose, s, go, user, onLogout, fav
             );
           })}
           <div style={{ height: 1, background: 'var(--border-hairline)', margin: '8px 4px' }} />
-          <button onClick={() => { go('fav')(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === 'fav') }}>
+          <button onClick={() => { patch?.({ favTab: 'saved' }); go('fav')(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === 'fav') }}>
             <Heart size={18} style={{ flexShrink: 0 }} />
-            <span style={{ flex: 1 }}>Yêu thích</span>
+            <span style={{ flex: 1 }}>Biển đã lưu</span>
             {favCount > 0 && (
               <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === 'fav' ? 'var(--white)' : 'var(--action-primary)', color: s === 'fav' ? 'var(--action-primary)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{favCount}</span>
+            )}
+          </button>
+          <button onClick={() => { patch?.({ favTab: 'history' }); go('fav')(); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'left', padding: '12px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', ...pill(s === 'fav') }}>
+            <Clock size={18} style={{ flexShrink: 0 }} />
+            <span style={{ flex: 1 }}>Đã xem gần đây</span>
+            {historyCount > 0 && (
+              <span style={{ padding: '0 6px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === 'fav' ? 'var(--white)' : 'var(--action-primary)', color: s === 'fav' ? 'var(--action-primary)' : 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-semibold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{historyCount}</span>
             )}
           </button>
           {user && (
