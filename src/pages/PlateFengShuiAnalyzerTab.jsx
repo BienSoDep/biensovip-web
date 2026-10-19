@@ -227,7 +227,7 @@ const stored = loadStoredState();
 export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
   const [plateInput, setPlateInput] = useState(stored?.plateInput ?? '');
   const [inputMode, setInputMode] = useState(stored?.inputMode ?? 'free'); // 'free' | 'structured'
-  const [structuredParts, setStructuredParts] = useState(stored?.structuredParts ?? { prov: '43', seri: 'A', num: '164.36' });
+  const [structuredParts, setStructuredParts] = useState(stored?.structuredParts ?? { prov: '', seri: '', num: '' });
   const [includeProfile, setIncludeProfile] = useState(stored?.includeProfile ?? true);
   const [fullName, setFullName] = useState(stored?.fullName ?? (user?.fullName || ''));
   const [birthDate, setBirthDate] = useState(stored?.birthDate ?? (user?.birthDate || '2005-05-26'));
@@ -379,7 +379,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
 
   // Tách biển hiển thị đồ họa
   const visualSplit = useMemo(() => {
-    if (!analyzedData?.formatted) return { prov: '43', seri: 'A', num: '164.36' };
+    if (!analyzedData?.formatted) return { prov: '30', seri: 'K', num: '888.88' };
     return splitPlateNumber(analyzedData.formatted);
   }, [analyzedData]);
 
@@ -415,7 +415,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
               <Compass size={20} />
             </span>
             <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>
-              Nhập biển số xe của bạn để luận giải phong thủy
+              Nhập biển số xe để luận giải phong thủy
             </h2>
           </div>
           <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>
@@ -428,7 +428,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
           {/* Header & Tab chuyển đổi chế độ nhập */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <label style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
-              Biển số hiện tại của bạn <span style={{ color: 'var(--status-danger)' }}>*</span>
+              Biển số xe cần luận giải <span style={{ color: 'var(--status-danger)' }}>*</span>
             </label>
 
             {/* Switcher 2 chế độ: Nhập tự do vs Chọn nhập nhanh */}
@@ -738,7 +738,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                   >
                     <span>{structuredParts.prov || '43'}{structuredParts.seri || 'A'}</span>
                     <span>-</span>
-                    <span>{structuredParts.num || '164.36'}</span>
+                    <span>{structuredParts.num || '888.88'}</span>
                   </div>
                 </div>
 
@@ -769,7 +769,6 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
               Thử nhanh mẫu biển:
             </span>
             {[
-              { label: '43A-164.36 (Số của bạn)', val: '43A-164.36' },
               { label: '30K-888.88 (Ngũ quý 8)', val: '30K-888.88' },
               { label: '51K-686.86 (Lộc phát)', val: '51K-686.86' },
               { label: '29A-999.99 (Cửu đỉnh)', val: '29A-999.99' },
