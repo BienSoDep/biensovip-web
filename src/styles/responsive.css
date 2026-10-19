@@ -114,18 +114,20 @@
     flex-direction: column !important;
     width: 100% !important;
     border-radius: var(--radius-card) !important;
+    padding: 6px !important;
   }
   .plate-search-bar > span,
   .plate-search-bar > input,
   .plate-search-bar > button,
+  .plate-search-bar > div,
   .plate-search-bar > span > input {
     width: 100% !important;
   }
   .plate-search-divider {
-    width: auto !important;
+    width: 100% !important;
     height: 1px !important;
     align-self: stretch !important;
-    margin: 0 !important;
+    margin: 4px 0 !important;
   }
 
   /* Compare: mobile xếp 1 cột dọc */
