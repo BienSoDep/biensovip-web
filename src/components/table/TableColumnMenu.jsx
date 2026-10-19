@@ -126,7 +126,7 @@ export function TableColumnMenu({
               right: 0,
               zIndex: 100,
               background: 'var(--white)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-card)',
               boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
               border: '1px solid var(--border-hairline)',
               padding: '8px',

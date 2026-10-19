@@ -78,7 +78,7 @@
 
   /* Home search bar: xếp dọc rõ ràng */
   .home-search-bar {
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--radius-card) !important;
     flex-direction: column;
     align-items: stretch !important;
     padding: 14px !important;
@@ -113,7 +113,7 @@
   .plate-search-bar {
     flex-direction: column !important;
     width: 100% !important;
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--radius-card) !important;
   }
   .plate-search-bar > span,
   .plate-search-bar > input,

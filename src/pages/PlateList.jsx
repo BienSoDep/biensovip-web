@@ -820,7 +820,7 @@ export default function PlateList({
             maxWidth: "100%",
             background: "var(--white)",
             border: "1px solid var(--border-hairline)",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "var(--radius-card)",
             overflow: "hidden",
           }}
         >

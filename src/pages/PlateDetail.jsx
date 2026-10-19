@@ -648,7 +648,7 @@ export default function PlateDetail({
                 width: "100%",
                 maxWidth: 560,
                 background: "var(--white)",
-                borderRadius: "var(--radius-xl)",
+                borderRadius: "var(--radius-surface)",
                 padding: 24,
               }}
             >
@@ -661,7 +661,7 @@ export default function PlateDetail({
                   fetchPriority="high"
                   style={{
                     width: "100%",
-                    borderRadius: "var(--radius-md)",
+                    borderRadius: "var(--radius-card)",
                     cursor: "zoom-in",
                   }}
                 />

@@ -44,7 +44,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
         style={{
           background: 'linear-gradient(135deg, rgba(63,191,143, 0.08) 0%, rgba(217, 119, 6, 0.06) 100%)',
           border: '1.5px solid rgba(63,191,143, 0.35)',
-          borderRadius: 'var(--radius-card, 16px)',
+          borderRadius: 'var(--radius-card)',
           padding: 'var(--space-5, 20px) var(--space-6, 24px)',
           display: 'flex',
           flexDirection: 'column',
@@ -79,7 +79,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                     background: '#3FBF8F',
                     color: '#FFF',
                     padding: '2px 8px',
-                    borderRadius: 999,
+                    borderRadius: 'var(--radius-pill)',
                     fontSize: 12,
                     fontWeight: 700,
                     letterSpacing: 0.5,
@@ -313,7 +313,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                         background: 'rgba(217, 119, 6, 0.08)',
                         color: '#B45309',
                         padding: '2px 8px',
-                        borderRadius: 6,
+                        borderRadius: 'var(--radius-pill)',
                         fontWeight: 600,
                       }}
                     >
@@ -330,13 +330,13 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
               {item.adminReply && (
                 <div
                   style={{
-                    background: 'rgba(15, 23, 42, 0.03)',
-                    borderLeft: '3px solid var(--action-primary, #D97706)',
+                    background: 'var(--surface-sunken)',
+                    borderLeft: '3px solid var(--action-primary)',
                     padding: '8px 12px',
-                    borderRadius: '0 8px 8px 0',
+                    borderRadius: '0 var(--radius-card) var(--radius-card) 0',
                     fontSize: 12.5,
                     lineHeight: 1.5,
-                    color: 'var(--text-muted, #475569)',
+                    color: 'var(--text-muted)',
                   }}
                 >
                   <span style={{ fontWeight: 700, color: 'var(--action-primary, #D97706)', display: 'block', marginBottom: 2 }}>

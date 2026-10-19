@@ -179,7 +179,7 @@ export default function TwoFactorSettingsModal({
               style={{
                 display: "block",
                 padding: "10px 14px",
-                borderRadius: "var(--radius-md)",
+                borderRadius: "var(--radius-card)",
                 background: "var(--surface-sunken)",
                 font: "var(--type-body-sm)",
                 wordBreak: "break-all",
@@ -234,7 +234,7 @@ export default function TwoFactorSettingsModal({
                 gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
                 gap: 8,
                 padding: "10px 14px",
-                borderRadius: "var(--radius-md)",
+                borderRadius: "var(--radius-card)",
                 background: "var(--surface-sunken)",
                 fontFamily: "var(--font-mono)",
                 font: "var(--type-body-sm)",
