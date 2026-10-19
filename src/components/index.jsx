@@ -13,6 +13,7 @@ export { Badge, Eyebrow } from './ui/Badge.jsx';
 export { Icon, IconButton } from './ui/IconButton.jsx';
 export { Card, Avatar } from './ui/Card.jsx';
 
+export { default as Button } from './Button.jsx';
 export { default as PlateIssueTip } from './PlateIssueTip.jsx';
 export { default as PageHeader } from './PageHeader.jsx';
 export { TableColumnMenu, TableSortHeader, useTableColumns, sortTableItems } from './table/TableColumnMenu.jsx';
