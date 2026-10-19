@@ -16,6 +16,7 @@ export default function PageHeader({
   children,
   style,
   className,
+  fullWidth = false,
 }) {
   return (
     <div
@@ -26,10 +27,20 @@ export default function PageHeader({
         alignItems: 'flex-end',
         justifyContent: 'space-between',
         gap: 'var(--space-4)',
+        width: '100%',
         ...style,
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', flex: '1 1 320px', maxWidth: 840 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-3)',
+          flex: '1 1 320px',
+          width: '100%',
+          maxWidth: fullWidth || !actions ? '100%' : 840,
+        }}
+      >
         {eyebrow && (
           <Eyebrow tone="blue">
             {eyebrow}
@@ -41,6 +52,7 @@ export default function PageHeader({
             font: 'var(--type-display-1)',
             letterSpacing: 'var(--ls-display)',
             color: 'var(--text-strong)',
+            width: '100%',
           }}
         >
           {title}
@@ -52,6 +64,7 @@ export default function PageHeader({
               font: 'var(--type-body)',
               color: 'var(--text-muted)',
               lineHeight: 'var(--lh-body)',
+              width: '100%',
             }}
           >
             {subtitle}

@@ -8,7 +8,9 @@ export default function Breadcrumb({ items, keepOnMobile, inset }) {
   const wrapStyle = inset
     ? { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0, font: 'var(--type-caption)' }
     : { maxWidth: 'var(--width-content)', margin: '0 auto', padding: '12px var(--pad-page)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0, font: 'var(--type-caption)' };
-  const validItems = (items || []).filter((it) => it && it.label);
+  const validItems = (items || []).filter(
+    (it, idx, arr) => it && it.label && (idx === 0 || it.label !== arr[idx - 1]?.label)
+  );
   if (!validItems.length) return null;
   return (
     <nav aria-label={contentGet('common.breadcrumb.aria')} className={'page-breadcrumb' + (keepOnMobile ? ' keep-mobile' : '')} style={inset ? undefined : { boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>

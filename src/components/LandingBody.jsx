@@ -99,6 +99,7 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
         <PageHeader
           eyebrow="Danh mục biển số"
           title={title || 'Kho Biển Số Đẹp'}
+          fullWidth
         >
           {intro && (
             <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-muted)', lineHeight: 'var(--lh-body)', width: '100%' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
