@@ -67,7 +67,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
       <section style={{ padding: '0 var(--pad-page)', margin: '15px 0' }}>
         <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-hero)', borderRadius: 'var(--radius-surface)', padding: 'clamp(24px,8vw,64px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', alignItems: 'center' }}>
           <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-            <Eyebrow tone="blue" className="hero-eyebrow">{T('home.hero.eyebrow')}</Eyebrow>
+            <Eyebrow tone="blue" className="hero-eyebrow">{plateCountData && plateCountData.total >= 395 ? `${plateCountData.total.toLocaleString('vi-VN')} biển số đang chờ chủ mới` : '395 biển số đang chờ chủ mới'}</Eyebrow>
             <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{T('home.hero.title_line1')}<br />{T('home.hero.title_line2')}</h1>
             <p className="hero-desc" style={{ margin: 0, maxWidth: 'var(--width-prose)', font: 'var(--type-body)', color: 'var(--text-body)' }}>{T('home.hero.desc')}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }} className="hero-cta-row">
@@ -81,7 +81,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
               </div>
             )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', paddingTop: 'var(--space-6)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{plateCountData ? plateCountData.total.toLocaleString('vi-VN') : T('home.hero.stat_1_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span></div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{plateCountData && plateCountData.total >= 395 ? plateCountData.total.toLocaleString('vi-VN') : '395'}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span></div>
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{siteRating ? `${siteRating.avgRating.toFixed(1)}/5` : T('home.hero.stat_2_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_2_l')}</span></div>
               <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_3_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_3_l')}</span></div>
             </div>
