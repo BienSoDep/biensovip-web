@@ -976,7 +976,7 @@ const FALLBACK_PLATES = [
                     display: 'flex',
                     background: 'var(--grey-100)',
                     padding: 4,
-                    borderRadius: 14,
+                    borderRadius: 'var(--radius-card)',
                     border: '1px solid var(--border-hairline)',
                   }}
                 >
@@ -987,13 +987,13 @@ const FALLBACK_PLATES = [
                     style={{
                       flex: 1,
                       padding: '9px 16px',
-                      borderRadius: 10,
+                      borderRadius: 'var(--radius-control)',
                       border: 'none',
                       background: s === 'login' ? 'var(--white)' : 'transparent',
                       font: 'var(--type-body-sm)',
                       fontWeight: s === 'login' ? '700' : '500',
                       color: s === 'login' ? 'var(--text-strong)' : 'var(--text-muted)',
-                      boxShadow: s === 'login' ? '0 2px 8px rgba(0, 0, 0, 0.08)' : 'none',
+                      boxShadow: s === 'login' ? 'var(--shadow-1)' : 'none',
                       cursor: 'pointer',
                       transition: 'all 160ms var(--ease-out)',
                     }}
@@ -1007,13 +1007,13 @@ const FALLBACK_PLATES = [
                     style={{
                       flex: 1,
                       padding: '9px 16px',
-                      borderRadius: 10,
+                      borderRadius: 'var(--radius-control)',
                       border: 'none',
                       background: s === 'register' ? 'var(--white)' : 'transparent',
                       font: 'var(--type-body-sm)',
                       fontWeight: s === 'register' ? '700' : '500',
                       color: s === 'register' ? 'var(--text-strong)' : 'var(--text-muted)',
-                      boxShadow: s === 'register' ? '0 2px 8px rgba(0, 0, 0, 0.08)' : 'none',
+                      boxShadow: s === 'register' ? 'var(--shadow-1)' : 'none',
                       cursor: 'pointer',
                       transition: 'all 160ms var(--ease-out)',
                     }}

@@ -125,11 +125,11 @@ export default function OnboardingTour({ active, referralCode, setTab, onClose }
 
   return (
     <>
-      <div onClick={finish} style={{ position: 'fixed', inset: 0, background: rect ? 'transparent' : 'rgba(15,23,42,.45)', zIndex: 1000 }} aria-hidden="true" />
+      <div onClick={finish} style={{ position: 'fixed', inset: 0, background: rect ? 'transparent' : 'var(--overlay-scrim, rgba(15,23,42,.45))', zIndex: 1000 }} aria-hidden="true" />
       {rect && (
         <div style={{
           position: 'fixed', top: rect.top - 6, left: rect.left - 6, width: rect.width + 12, height: rect.height + 12,
-          border: '2px solid var(--action-primary)', borderRadius: 10, boxShadow: '0 0 0 4000px rgba(15,23,42,.45)',
+          border: '2px solid var(--action-primary)', borderRadius: 'var(--radius-card)', boxShadow: '0 0 0 4000px var(--overlay-scrim, rgba(15,23,42,.45))',
           zIndex: 1001, pointerEvents: 'none', transition: 'all 160ms ease',
         }} />
       )}

@@ -726,13 +726,13 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                       gap: 6,
                       padding: '4px 14px',
                       background: '#ffffff',
-                      border: '2px solid #334155',
+                      border: '2px solid var(--ink-900, #111827)',
                       borderRadius: 'var(--radius-xs)',
                       fontFamily: 'monospace',
                       fontWeight: '900',
                       fontSize: '16px',
                       letterSpacing: '1px',
-                      color: '#0f172a',
+                      color: 'var(--text-strong, #111827)',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
                     }}
                   >
@@ -1407,12 +1407,12 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                         width: 48,
                         height: 54,
                         borderRadius: 'var(--radius-sm)',
-                        background: c?.bg || '#f8fafc',
-                        border: `1px solid ${c?.border || '#cbd5e1'}`,
+                        background: c?.bg || 'var(--surface-sunken)',
+                        border: `1px solid ${c?.border || 'var(--border-hairline)'}`,
                       }}
                     >
-                      <span style={{ fontSize: '19px', fontWeight: 'var(--fw-bold)', color: c?.text || '#1e293b' }}>{d}</span>
-                      <span style={{ fontSize: '11px', fontWeight: 'var(--fw-medium)', color: c?.badge || '#64748b' }}>{el}</span>
+                      <span style={{ fontSize: '19px', fontWeight: 'var(--fw-bold)', color: c?.text || 'var(--text-strong)' }}>{d}</span>
+                      <span style={{ fontSize: '11px', fontWeight: 'var(--fw-medium)', color: c?.badge || 'var(--text-muted)' }}>{el}</span>
                     </div>
                   );
                 })}

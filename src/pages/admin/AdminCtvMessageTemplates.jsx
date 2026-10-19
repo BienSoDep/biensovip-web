@@ -336,7 +336,7 @@ export default function AdminCtvMessageTemplates({ notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageSquareQuote size={22} />
           </div>
           <div>
@@ -356,16 +356,16 @@ export default function AdminCtvMessageTemplates({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: channelFilter === 'zalo' ? '2px solid #C75B00' : '2px solid transparent',
+            border: channelFilter === 'zalo' ? '2px solid var(--brand-500)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(199,91,0, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MessageCircle size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Kênh Zalo</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#C75B00' }}>{stats.zalo}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--brand-600)' }}>{stats.zalo}</div>
           </div>
         </div>
 
@@ -380,16 +380,16 @@ export default function AdminCtvMessageTemplates({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: channelFilter === 'facebook' ? '2px solid #C75B00' : '2px solid transparent',
+            border: channelFilter === 'facebook' ? '2px solid var(--brand-500)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(199,91,0, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Share2 size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Kênh Facebook</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#C75B00' }}>{stats.fb}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--brand-600)' }}>{stats.fb}</div>
           </div>
         </div>
 
@@ -404,16 +404,16 @@ export default function AdminCtvMessageTemplates({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: channelFilter === 'sms' ? '2px solid #6B7180' : '2px solid transparent',
+            border: channelFilter === 'sms' ? '2px solid var(--grey-400)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(107,113,128, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--grey-100)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Smartphone size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Kênh SMS</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#6B7180' }}>{stats.sms}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--text-muted)' }}>{stats.sms}</div>
           </div>
         </div>
       </div>
@@ -463,7 +463,7 @@ export default function AdminCtvMessageTemplates({ notify }) {
                 <span>{t.label}</span>
                 <span style={{
                   padding: '1px 7px',
-                  borderRadius: 10,
+                  borderRadius: 'var(--radius-pill)',
                   fontSize: 11,
                   fontWeight: 700,
                   background: active ? 'rgba(255, 255, 255, 0.22)' : 'var(--border-hairline)',

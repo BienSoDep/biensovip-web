@@ -302,7 +302,7 @@ export default function AdminPosts({ st, patch, notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FileText size={22} />
           </div>
           <div>
@@ -322,16 +322,16 @@ export default function AdminPosts({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: status === 'published' ? '2px solid #3FBF8F' : '2px solid transparent',
+            border: status === 'published' ? '2px solid var(--status-success-ink)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--green-50)', color: 'var(--status-success-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đã xuất bản</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--status-success-ink)' }}>
               {rawItems.filter((p) => p.status === 'published').length}
             </div>
           </div>
@@ -348,16 +348,16 @@ export default function AdminPosts({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: status === 'draft' ? '2px solid #d97706' : '2px solid transparent',
+            border: status === 'draft' ? '2px solid var(--brand-500)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Clock size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Bản nháp</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#d97706' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--brand-600)' }}>
               {rawItems.filter((p) => p.status === 'draft').length}
             </div>
           </div>
@@ -374,11 +374,11 @@ export default function AdminPosts({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: qualityFilter === 'issues' ? '2px solid #6B7180' : '2px solid transparent',
+            border: qualityFilter === 'issues' ? '2px solid var(--grey-400)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--grey-100)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Sparkles size={22} />
           </div>
           <div>

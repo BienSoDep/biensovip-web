@@ -157,7 +157,7 @@ export default function VpaRunDetail({ run, onClose, notify, settings }) {
               style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
+                borderRadius: 'var(--radius-control)',
                 background: srcCfg.pillBg,
                 border: `1px solid ${srcCfg.border}`,
                 color: srcCfg.color,

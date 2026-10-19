@@ -509,12 +509,12 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                       <span style={{ color: 'var(--text-muted)' }}>Phong thủy</span>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'flex-end' }}>
                         {elemConf && (
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: elemConf.bg, color: elemConf.color }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 'var(--radius-pill)', background: elemConf.bg, color: elemConf.color }}>
                             {elemConf.label}
                           </span>
                         )}
                         {(info?.patterns || []).map((pat) => (
-                          <span key={pat} style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: 'var(--orange-50)', color: 'var(--action-primary)' }}>
+                          <span key={pat} style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 'var(--radius-pill)', background: 'var(--orange-50)', color: 'var(--action-primary)' }}>
                             {pat}
                           </span>
                         ))}
@@ -665,12 +665,12 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                   <div key={p.id} style={{ padding: '10px clamp(8px,3vw,var(--space-4))', boxShadow: 'inset 0 -1px 0 var(--grey-100)', borderLeft: '1px solid var(--orange-100)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
                       {elemConf && (
-                        <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: elemConf.bg, color: elemConf.color, border: `1px solid ${elemConf.border}` }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: elemConf.bg, color: elemConf.color, border: `1px solid ${elemConf.border}` }}>
                           {elemConf.label}
                         </span>
                       )}
                       {(info?.patterns || []).map((pat) => (
-                        <span key={pat} style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: 'var(--orange-50)', color: 'var(--action-primary)', border: '1px solid var(--orange-200)' }}>
+                        <span key={pat} style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--orange-50)', color: 'var(--action-primary)', border: '1px solid var(--orange-200)' }}>
                           {pat}
                         </span>
                       ))}
@@ -702,12 +702,12 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Điểm chung:</span>
                 {insights.commonElement && (
-                  <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <Check size={12} /> Cùng ngũ hành {insights.commonElementLabel}
                   </span>
                 )}
                 {insights.commonPatterns.map((label) => (
-                  <span key={label} style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span key={label} style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--radius-pill)', background: 'var(--green-50)', color: 'var(--status-success-ink)', border: '1px solid var(--green-200)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <Check size={12} /> Cùng mẫu: {label}
                   </span>
                 ))}
@@ -727,12 +727,12 @@ export default function Compare({ go, notify, allPlates, user, openPlate, favCar
                     </span>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                       {!insights.commonElement && pi.element && (
-                        <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 10, background: ELEMENT_CONFIG[pi.element]?.bg || 'var(--grey-100)', color: ELEMENT_CONFIG[pi.element]?.color || 'var(--text-strong)' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 6px', borderRadius: 'var(--radius-pill)', background: ELEMENT_CONFIG[pi.element]?.bg || 'var(--grey-100)', color: ELEMENT_CONFIG[pi.element]?.color || 'var(--text-strong)' }}>
                           {insights.elementLabel[pi.element]}
                         </span>
                       )}
                       {pi.uniquePatterns.map((label) => (
-                        <span key={label} style={{ fontSize: 11, fontWeight: 500, padding: '1px 6px', borderRadius: 10, background: 'var(--surface-sunken)', color: 'var(--text-strong)' }}>
+                        <span key={label} style={{ fontSize: 11, fontWeight: 500, padding: '1px 6px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', color: 'var(--text-strong)' }}>
                           {label}
                         </span>
                       ))}
