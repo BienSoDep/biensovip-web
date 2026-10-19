@@ -21,73 +21,8 @@ import { useSiteRating } from '../services/siteRating.js';
 import { useActivityFeed } from '../services/activityFeed.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
 
-// Debounce a value — waits `delay`ms of silence before committing, so typing doesn't fire
-// a request per keystroke. Pure client-side; React Query then caches each committed value.
-function useDebounced(value, delay = 300) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
+import { THEMATIC_PLATE_TYPES } from '../data/homePlateTypes.js';
 
-const THEMATIC_PLATE_TYPES = [
-  {
-    name: 'Biển Ngũ Quý',
-    slug: 'bien-ngu-quy',
-    tag: 'Đẳng cấp tối thượng',
-    examples: '999.99 · 888.88 · 666.66',
-    desc: '5 chữ số đồng nhất, đỉnh cao quyền lực và tài vận dồi dào.',
-    accent: 'linear-gradient(135deg, rgba(234,179,8,.1), rgba(245,158,11,.04))',
-    borderColor: 'rgba(234,179,8,.22)',
-  },
-  {
-    name: 'Biển Tứ Quý',
-    slug: 'bien-tu-quy',
-    tag: 'Vững chãi bền lâu',
-    examples: '8888 · 9999 · 6666 · 7777',
-    desc: '4 số liền kề biểu trưng bốn mùa bình an, làm ăn thịnh vượng.',
-    accent: 'linear-gradient(135deg, rgba(59,130,246,.1), rgba(37,99,235,.04))',
-    borderColor: 'rgba(59,130,246,.22)',
-  },
-  {
-    name: 'Biển Tam Hoa',
-    slug: 'bien-tam-hoa',
-    tag: 'Hài hòa may mắn',
-    examples: '666 · 888 · 999 · 777',
-    desc: '3 số đuôi cân đối, tài lộc khởi sắc, phổ biến cho cả ô tô & xe máy.',
-    accent: 'linear-gradient(135deg, rgba(16,185,129,.1), rgba(5,150,105,.04))',
-    borderColor: 'rgba(16,185,129,.22)',
-  },
-  {
-    name: 'Biển Lộc Phát',
-    slug: 'bien-loc-phat',
-    tag: 'Tài lộc sinh sôi',
-    examples: '6868 · 8686 · 6688 · 8866',
-    desc: 'Cặp số vàng 68 - 86 được giới kinh doanh, buôn bán săn đón hàng đầu.',
-    accent: 'linear-gradient(135deg, rgba(249,115,22,.1), rgba(234,88,12,.04))',
-    borderColor: 'rgba(249,115,22,.22)',
-  },
-  {
-    name: 'Biển Thần Tài',
-    slug: 'bien-than-tai',
-    tag: 'May mắn bảo hộ',
-    examples: '7979 · 3979 · 7939 · 3939',
-    desc: 'Thần tài lớn 79 & nhỏ 39 mang lại hanh thông, quý nhân phù trợ.',
-    accent: 'linear-gradient(135deg, rgba(168,85,247,.1), rgba(147,51,234,.04))',
-    borderColor: 'rgba(168,85,247,.22)',
-  },
-  {
-    name: 'Biển Sảnh Tiến',
-    slug: 'bien-sanh-tien',
-    tag: 'Thăng tiến vượt bậc',
-    examples: '123.45 · 567.89 · 234.56',
-    desc: 'Dãy số tiến liên tục tượng trưng cho công danh sự nghiệp tiến bước.',
-    accent: 'linear-gradient(135deg, rgba(99,102,241,.1), rgba(79,70,229,.04))',
-    borderColor: 'rgba(99,102,241,.22)',
-  },
-];
 
 export default function Home({ settings, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact, user }) {
   const [q, setQ] = useState('');

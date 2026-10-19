@@ -11,10 +11,11 @@ import { useBlogComments, useSubmitBlogComment } from '../services/blogComments.
 import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import AuthorBox from '../components/AuthorBox.jsx';
-import { Input } from '../components/index.jsx';
 import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } from '../services/tracking/events.js';
 import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 import { forceScrollToTop } from '../lib/scrollRestoration.js';
+import { PostReaderToolbar, useReaderPrefs } from './post/PostReaderToolbar.jsx';
+import { PostCommentSection } from './post/PostCommentSection.jsx';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -39,13 +40,6 @@ function pickIllustration(slug, excludeUrl) {
   const pool = ILLUSTRATION_POOL.filter((u) => u !== excludeUrl);
   return pool[hash % pool.length];
 }
-
-const FONT_SIZES = [15, 17, 19, 21];
-const FONT_FAMILIES = [
-  { id: 'sans', label: 'Mặc định', value: 'var(--font-text)' },
-  { id: 'serif', label: 'Chữ chân', value: '"Noto Serif","Times New Roman",serif' },
-];
-const READER_PREFS_KEY = 'biensovip.readerPrefs';
 
 function CompassElementalSvg() {
   return (
@@ -79,26 +73,6 @@ function InfinityFortuneSvg() {
       <path d="M12 7L12.6 10L14 10.6L12.6 11.2L12 14L11.4 11.2L10 10.6L11.4 10L12 7Z" fill="#f59e0b" />
     </svg>
   );
-}
-
-function useReaderPrefs() {
-  const [sizeIdx, setSizeIdx] = useState(1);
-  const [fontId, setFontId] = useState('sans');
-
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(READER_PREFS_KEY) || '{}');
-      if (Number.isInteger(saved.sizeIdx) && FONT_SIZES[saved.sizeIdx]) setSizeIdx(saved.sizeIdx);
-      if (FONT_FAMILIES.some((f) => f.id === saved.fontId)) setFontId(saved.fontId);
-    } catch { /* ignore malformed prefs */ }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(READER_PREFS_KEY, JSON.stringify({ sizeIdx, fontId }));
-  }, [sizeIdx, fontId]);
-
-  const fontFamily = FONT_FAMILIES.find((f) => f.id === fontId)?.value || FONT_FAMILIES[0].value;
-  return { sizeIdx, setSizeIdx, fontId, setFontId, fontSize: FONT_SIZES[sizeIdx], fontFamily };
 }
 
 function formatDate(iso) {
@@ -163,7 +137,6 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const { data: relatedPlatesData } = useRelatedPlates(postId, 12);
   const { data: commentsData } = useBlogComments(post?.id);
   const submitComment = useSubmitBlogComment(post?.id);
-  const [commentText, setCommentText] = useState('');
   const [openFaqIdx, setOpenFaqIdx] = useState(null);
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -430,20 +403,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         </nav>
       )}
 
-      <div className="reader-prefs">
-        <div className="reader-prefs__group">
-          <span className="reader-prefs__label">Cỡ chữ</span>
-          <button type="button" className="reader-prefs__btn" onClick={() => setSizeIdx((i) => Math.max(0, i - 1))} disabled={sizeIdx === 0} aria-label="Giảm cỡ chữ"><Minus size={14} /></button>
-          <span className="reader-prefs__size">{fontSize}px</span>
-          <button type="button" className="reader-prefs__btn" onClick={() => setSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))} disabled={sizeIdx === FONT_SIZES.length - 1} aria-label="Tăng cỡ chữ"><Plus size={14} /></button>
-        </div>
-        <div className="reader-prefs__group">
-          <span className="reader-prefs__label">Font chữ</span>
-          <select id="reader-font-select" name="reader-font" className="reader-prefs__font" value={fontId} onChange={(e) => setFontId(e.target.value)} aria-label="Chọn kiểu chữ">
-            {FONT_FAMILIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-          </select>
-        </div>
-      </div>
+      <PostReaderToolbar sizeIdx={sizeIdx} setSizeIdx={setSizeIdx} fontSize={fontSize} fontId={fontId} setFontId={setFontId} />
 
       {parts ? (
         <div itemProp="articleBody">
@@ -599,42 +559,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
 
       <AuthorBox />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-        <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bình luận</h2>
-        {user ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!commentText.trim() || submitComment.isPending) return;
-              submitComment.mutate(commentText.trim(), {
-                onSuccess: () => { setCommentText(''); notify?.('Bình luận đang chờ duyệt'); },
-                onError: (e) => notify?.(e.message || 'Gửi bình luận thất bại'),
-              });
-            }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
-          >
-            <Input placeholder="Viết bình luận của bạn… (nhấn Enter để gửi)" value={commentText} onChange={(e) => setCommentText(e.target.value)} />
-            <Button variant="primary" type="submit" size="sm" disabled={!commentText.trim() || submitComment.isPending} style={{ alignSelf: 'flex-start' }}>
-              {submitComment.isPending ? 'Đang gửi…' : 'Gửi bình luận'}
-            </Button>
-          </form>
-        ) : (
-          <Button variant="outline" size="sm" onClick={go('login')} style={{ alignSelf: 'flex-start' }}>Đăng nhập để bình luận</Button>
-        )}
-        {(commentsData?.items || []).length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {commentsData.items.map((c) => (
-              <div key={c.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{c.userName || 'Người dùng'}</span>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{formatDate(c.createdAt)}</span>
-                </div>
-                <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{c.content}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <PostCommentSection user={user} commentsData={commentsData} submitComment={submitComment} notify={notify} go={go} />
 
       {relatedPlates.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
