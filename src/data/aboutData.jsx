@@ -35,7 +35,7 @@ export const ABOUT_VALUES = [
   {
     icon: <ShieldCheck size={22} />,
     title: 'Sang tên trọn gói tận tay',
-    desc: 'Đội ngũ phụ trách toàn bộ thủ tục công chứng, nộp thuế trước bạ và bấm biển tại Phòng CSGT, giao biển dập chuẩn tận nơi.',
+    desc: 'Đội ngũ phụ trách toàn bộ thủ tục công chứng, nộp thuế trước bạ và đăng ký định danh theo quy định, giao biển dập chuẩn tận nơi.',
   },
 ];
 
@@ -52,13 +52,13 @@ export const ABOUT_STEPS = [
   },
   {
     step: '03',
-    title: 'Thực hiện thủ tục CSGT',
+    title: 'Thực hiện thủ tục định danh',
     desc: 'Chuyên viên nộp thuế trước bạ, rút hồ sơ gốc và thực hiện thủ tục cấp biển định danh theo Thông tư 24.',
   },
   {
     step: '04',
     title: 'Bàn giao biển dập chuẩn',
-    desc: 'Bàn giao biển số dập chuẩn Cục CSGT cùng giấy hẹn cà vẹt, hỗ trợ lắp đặt khung biển mica hoặc titan cao cấp tận nơi.',
+    desc: 'Bàn giao biển số dập chuẩn quy chuẩn nhà nước cùng giấy hẹn cà vẹt, hỗ trợ lắp đặt khung biển mica hoặc titan cao cấp tận nơi.',
   },
 ];
 

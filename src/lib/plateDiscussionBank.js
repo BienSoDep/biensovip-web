@@ -128,7 +128,7 @@ export function generatePlateDiscussions(plate) {
       badge: 'Đã mua biển tại sàn',
       location: 'Bình Thạnh, TP.HCM',
       date: 'Hôm qua',
-      content: `Chuẩn đó bác @${buyer1}! Tháng trước em cũng mua một biển đầu số Đà Nẵng bên anh Duy mang về đăng ký tại Đội CSGT Rạch Chiếc (Thủ Đức). Hồ sơ anh Duy chuẩn bị sẵn hết từ A-Z, nộp DVC online xong ra nộp biển cũ lấy giấy hẹn 2 ngày là có biển mới tên mình, cực kỳ tiện lợi!`,
+      content: `Chuẩn đó bác @${buyer1}! Tháng trước em cũng mua một biển đầu số Đà Nẵng bên anh Duy mang về đăng ký tại cơ quan đăng ký xe địa phương. Hồ sơ anh Duy chuẩn bị sẵn hết từ A-Z, nộp DVC online xong ra nộp biển cũ lấy giấy hẹn 2 ngày là có biển mới tên mình, cực kỳ tiện lợi!`,
       reactions: { like: 12 + (seed % 7), love: 6 + (seed % 5), haha: 2, wow: 3, sad: 0, angry: 0 },
     },
     {
@@ -166,7 +166,7 @@ export function generatePlateDiscussions(plate) {
       badge: 'Chủ doanh nghiệp',
       location: 'Hồng Bàng, Hải Phòng',
       date: '2 ngày trước',
-      content: `Bác @${buyer3} cứ nhắn tin trực tiếp qua Fanpage Facebook Duy Đinh hoặc gọi hotline là rõ ngay. Anh Duy Đinh tư vấn rất đàng hoàng, cho xem tận mắt văn bản xác nhận trúng đấu giá của Cục CSGT rồi mới ký cọc, làm ăn minh bạch đàng hoàng 10 điểm!`,
+      content: `Bác @${buyer3} cứ nhắn tin trực tiếp qua Fanpage Facebook Duy Đinh hoặc gọi hotline là rõ ngay. Anh Duy Đinh tư vấn rất đàng hoàng, cho xem tận mắt văn bản xác nhận trúng đấu giá chính thức rồi mới ký cọc, làm ăn minh bạch đàng hoàng 10 điểm!`,
       reactions: { like: 16 + (seed % 7), love: 8, haha: 3, wow: 4, sad: 0, angry: 0 },
     },
   ];
@@ -175,15 +175,15 @@ export function generatePlateDiscussions(plate) {
   const q1Templates = [
     {
       q: `Chào anh Duy, biển ${chars.plateNumber} này đã bao gồm trọn gói chi phí thu hồi và thủ tục định danh vào xe mới của mình chưa? Mình ở ${loc1} thì bên mình hỗ trợ nộp hồ sơ ở đâu?`,
-      r: `Dạ Duy Đinh xin kính chào ${buyer1}! Giá báo niêm yết trên hệ thống là giá trọn gói 100%, Biensovip cam kết bao toàn bộ chi phí công chứng ủy quyền mua bán, nộp lệ phí nhà nước và thực hiện thủ tục định danh tại Phòng CSGT Công an TP ${chars.province}. Anh chỉ cần chuẩn bị CCCD gắn chip và giấy tờ xe, chuyên viên bên Duy sẽ hỗ trợ nộp và lấy giấy hẹn tận nơi. Đúng 24h - 48h làm việc là hoàn tất thủ tục cấp đăng ký xe chính chủ tên anh ạ!`,
+      r: `Dạ Duy Đinh xin kính chào ${buyer1}! Giá báo niêm yết trên hệ thống là giá trọn gói 100%, Biensovip cam kết bao toàn bộ chi phí công chứng ủy quyền mua bán, nộp lệ phí nhà nước và thực hiện thủ tục định danh tại cơ quan đăng ký xe ${chars.province}. Anh chỉ cần chuẩn bị CCCD gắn chip và giấy tờ xe, chuyên viên bên Duy sẽ hỗ trợ nộp và lấy giấy hẹn tận nơi. Đúng 24h - 48h làm việc là hoàn tất thủ tục cấp đăng ký xe chính chủ tên anh ạ!`,
     },
     {
       q: `Em đang chuẩn bị nhận xe ${chosenVehicle} tại đại lý, muốn lấy biển ${chars.plateNumber} này gắn vào xe thì quy trình giữ biển và đặt cọc như thế nào vậy anh Duy?`,
       r: `Dạ Duy Đinh chào ${buyer1}, chúc mừng anh chuẩn bị nhận chiếc ${chosenVehicle} rất đẳng cấp! Quy trình bên Duy cực kỳ tinh gọn: Anh đặt cọc giữ biển qua hợp đồng điện tử hoặc kết nối Fanpage / Zalo để ký công chứng. Duy sẽ lập tức niêm phong hồ sơ, chuyển trạng thái "Đã cọc" trên hệ thống và cùng anh hoàn tất hợp đồng công chứng. Khi xe anh xuất hóa đơn đại lý, bên Duy sẽ trực tiếp nộp hồ sơ cấp biển định danh ngay trong ngày để anh kịp ngày đẹp bấm biển ra xe ạ!`,
     },
     {
-      q: `Tôi ở tận ${loc1}, biển này đầu số ${chars.province} thì tôi có làm thủ tục định danh đứng tên chính chủ tại CSGT nơi tôi cư trú được không chuyên gia?`,
-      r: `Dạ Duy Đinh xin kính chào ${buyer1}! Theo đúng quy định tại Thông tư 24/2023/TT-BCA của Bộ Công an, biển số định danh trúng đấu giá có giá trị lưu hành và đăng ký toàn quốc. Dù biển mang đầu số ${chars.province}, anh hoàn toàn có quyền đăng ký vào xe của mình tại Phòng CSGT nơi anh thường trú hoặc tạm trú (${loc1}). Biensovip có đội ngũ chuyên viên hỗ trợ giao dịch và sang tên tận nơi trên 63 tỉnh/thành, đảm bảo an toàn pháp lý tuyệt đối cho anh ạ!`,
+      q: `Tôi ở tận ${loc1}, biển này đầu số ${chars.province} thì tôi có làm thủ tục định danh đứng tên chính chủ tại cơ quan đăng ký xe nơi tôi cư trú được không chuyên gia?`,
+      r: `Dạ Duy Đinh xin kính chào ${buyer1}! Theo đúng quy định tại Thông tư 24/2023/TT-BCA của Bộ Công an, biển số định danh trúng đấu giá có giá trị lưu hành và đăng ký toàn quốc. Dù biển mang đầu số ${chars.province}, anh hoàn toàn có quyền đăng ký vào xe của mình tại cơ quan đăng ký xe nơi anh thường trú hoặc tạm trú (${loc1}). Biensovip có đội ngũ chuyên viên hỗ trợ giao dịch và sang tên tận nơi trên 63 tỉnh/thành, đảm bảo an toàn pháp lý tuyệt đối cho anh ạ!`,
     },
   ];
   const q1 = q1Templates[seed % q1Templates.length];
@@ -309,8 +309,8 @@ export function generatePlateDiscussions(plate) {
   // Câu 3: Về pháp lý, check phạt nguội & tính minh bạch nguồn gốc
   const q3Templates = [
     {
-      q: `Trước khi xuống tiền cọc biển ${chars.plateNumber}, bên mình có hỗ trợ kiểm tra trực tiếp tình trạng phạt nguội và xem hồ sơ trúng đấu giá gốc của Cục Cảnh sát giao thông không anh?`,
-      r: `Dạ Duy Đinh xin kính chào ${buyer3}! Đây là băn khoăn rất chính đáng của quý khách khi giao dịch tài sản giá trị. Duy cam kết 100% biển số trên sàn Biensovip đều là biển sạch nguồn gốc: có đầy đủ văn bản xác nhận trúng đấu giá của Cục CSGT (Bộ Công an), hồ sơ xuất xứ minh bạch. Trước khi ký cọc, Duy sẽ cùng anh check tra cứu phạt nguội trực tiếp trên cổng thông tin Cục CSGT và xuất bản đối soát. Nếu phát hiện bất kỳ sai lệch nào, Biensovip xin đền bù gấp đôi tiền cọc cho anh ạ!`,
+      q: `Trước khi xuống tiền cọc biển ${chars.plateNumber}, bên mình có hỗ trợ kiểm tra trực tiếp tình trạng phạt nguội và xem hồ sơ trúng đấu giá gốc không anh?`,
+      r: `Dạ Duy Đinh xin kính chào ${buyer3}! Đây là băn khoăn rất chính đáng của quý khách khi giao dịch tài sản giá trị. Duy cam kết 100% biển số trên sàn Biensovip đều là biển sạch nguồn gốc: có đầy đủ văn bản xác nhận trúng đấu giá hợp pháp theo quy định, hồ sơ xuất xứ minh bạch. Trước khi ký cọc, Duy sẽ cùng anh check tra cứu phạt nguội trực tiếp trên hệ thống dữ liệu toàn quốc và xuất bản đối soát. Nếu phát hiện bất kỳ sai lệch nào, Biensovip xin đền bù gấp đôi tiền cọc cho anh ạ!`,
     },
     {
       q: `Tôi muốn chốt nhanh biển này trong ngày hôm nay, bên anh Duy có bớt thêm chút lộc may mắn cho khách thiện chí không ạ?`,
@@ -318,7 +318,7 @@ export function generatePlateDiscussions(plate) {
     },
     {
       q: `Biển này tôi muốn lắp cho xe ${secondaryVehicle} của công ty để đưa đón đối tác, bên anh có xuất được hợp đồng mua bán pháp lý và hóa đơn rõ ràng không?`,
-      r: `Dạ Duy Đinh xin chào ${buyer3}! Hoàn toàn được anh nhé. Biensovip thực hiện đầy đủ hợp đồng chuyển nhượng ủy quyền công chứng hợp pháp giữa chủ sở hữu và công ty của anh. Toàn bộ chứng từ thanh toán, biên bản bàn giao biển số và giấy hẹn định danh của Phòng CSGT đều được lập chuẩn chỉ theo quy định của pháp luật, công ty anh hoàn toàn thuận tiện đưa vào chi phí hợp lý của doanh nghiệp ạ!`,
+      r: `Dạ Duy Đinh xin chào ${buyer3}! Hoàn toàn được anh nhé. Biensovip thực hiện đầy đủ hợp đồng chuyển nhượng ủy quyền công chứng hợp pháp giữa chủ sở hữu và công ty của anh. Toàn bộ chứng từ thanh toán, biên bản bàn giao biển số và giấy hẹn định danh của cơ quan đăng ký xe đều được lập chuẩn chỉ theo quy định của pháp luật, công ty anh hoàn toàn thuận tiện đưa vào chi phí hợp lý của doanh nghiệp ạ!`,
     },
   ];
   const q3 = q3Templates[(seed + 2) % q3Templates.length];
@@ -442,15 +442,15 @@ export function generateSoldPlateFeedbacks(plate) {
     let tags = [];
 
     if (i === 0) {
-      comment = `Lấy biển ${chars.plateNumber} lắp cho chiếc ${car}. Anh Duy Đinh tư vấn rất có tâm, làm việc thẳng thắn, hợp đồng công chứng chuyển nhượng rõ ràng. Đúng 48 giờ là hoàn tất thủ tục thu hồi và cấp đăng ký xe định danh tại CSGT. Rất an tâm!`;
+      comment = `Lấy biển ${chars.plateNumber} lắp cho chiếc ${car}. Anh Duy Đinh tư vấn rất có tâm, làm việc thẳng thắn, hợp đồng công chứng chuyển nhượng rõ ràng. Đúng 48 giờ là hoàn tất thủ tục thu hồi và cấp đăng ký xe định danh theo quy định. Rất an tâm!`;
       reply = `Biensovip và Duy Đinh xin chân thành cảm ơn ${name}! Chúc anh vạn dặm bình an, lái xe may mắn và công việc luôn đại cát đại lợi. Hồ sơ định danh được bên em bảo hành pháp lý trọn đời ạ.`;
       tags = ['Định danh chính chủ', 'Giao dịch toàn quốc', 'Bảo hành pháp lý'];
     } else if (i === 1) {
       comment = `Giao dịch biển số giá trị lớn qua mạng ban đầu cũng hơi đắn đo. Nhưng khi nhắn tin qua Fanpage Duy Đinh gọi video xem trực tiếp thì thấy sự minh bạch tuyệt đối: kiểm tra nguồn gốc biển đấu giá, hợp đồng ủy quyền và biên nhận cọc đầy đủ. Đúng 3 ngày nhận cavet xe định danh tên mình. 10 điểm uy tín!`;
       reply = `Duy Đinh cảm ơn ${name} đã đặt trọn niềm tin vào Biensovip. Sự an tâm và hài lòng của khách hàng luôn là tôn chỉ hoạt động suốt 10 năm qua của Duy!`;
-      tags = ['Nguồn gốc Cục CSGT', 'Hợp đồng công chứng', 'Sang tên 3 ngày'];
+      tags = ['Nguồn gốc đấu giá minh bạch', 'Hợp đồng công chứng', 'Sang tên 3 ngày'];
     } else if (i === 2) {
-      comment = `Mình ở tận ${loc} mua biển qua anh Duy Đinh ở Đà Nẵng, ban đầu lo ngại khoảng cách địa lý. Nhưng anh Duy cử nhân sự hỗ trợ làm hợp đồng công chứng và sang tên định danh tại CSGT địa phương. Rất chu đáo, chuyên nghiệp và đúng hẹn.`;
+      comment = `Mình ở tận ${loc} mua biển qua anh Duy Đinh ở Đà Nẵng, ban đầu lo ngại khoảng cách địa lý. Nhưng anh Duy cử nhân sự hỗ trợ làm hợp đồng công chứng và sang tên định danh tại cơ quan đăng ký xe địa phương. Rất chu đáo, chuyên nghiệp và đúng hẹn.`;
       reply = `Cảm ơn ${name}! Biensovip cam kết hỗ trợ giao dịch và sang tên tận nơi trên toàn quốc, đảm bảo an toàn pháp lý tuyệt đối cho mọi khách hàng ở xa.`;
       tags = ['Hỗ trợ tận nơi', 'Định danh toàn quốc', 'Đúng cam kết'];
     } else {
@@ -509,7 +509,7 @@ export function generatePlateReviews(plate) {
       comment = `Biển ${chars.plateNumber} thế số quá đẹp, gắn lên chiếc ${car} nhìn rất uy lực và sang trọng. Anh Duy tư vấn phong thủy theo bản mệnh rất chuẩn chỉ và có tâm, không vẽ vời phát sinh chi phí. Sẽ tiếp tục ủng hộ bên anh!`;
       reply = `Biensovip và Duy xin cảm ơn anh rất nhiều! Chúc anh công việc kinh doanh luôn đại cát đại lợi, buôn may bán đắt và phát tài phát lộc!`;
     } else if (i === 2) {
-      comment = `Trước khi chốt biển này có nhờ anh Duy check phạt nguội và kiểm tra văn bản trúng đấu giá gốc của Cục CSGT. Mọi thứ minh bạch 100%, có biên bản bàn giao và hợp đồng rõ ràng. Đánh giá 5 sao cho uy tín của Duy Đinh - Biensovip!`;
+      comment = `Trước khi chốt biển này có nhờ anh Duy check phạt nguội và kiểm tra văn bản xác nhận trúng đấu giá gốc. Mọi thứ minh bạch 100%, có biên bản bàn giao và hợp đồng rõ ràng. Đánh giá 5 sao cho uy tín của Duy Đinh - Biensovip!`;
       reply = `Duy Đinh rất trân trọng tình cảm và đánh giá 5 sao của anh! Sự minh bạch pháp lý và an tâm của khách hàng luôn là tôn chỉ số 1 của Biensovip suốt 10 năm qua.`;
     } else {
       comment = `Giao dịch nhanh gọn, được tặng kèm bộ ép mica viền titan chống nước lắp lên xe rất vừa vặn và đẹp mắt. Đội ngũ hỗ trợ nhiệt tình từ khâu chọn biển đến lúc ra cavet chính chủ.`;

@@ -81,7 +81,7 @@ const QUICK_QUESTIONS = [
   "Biển này đã bao gồm trọn gói thuế phí sang tên định danh chưa shop?",
   "Mình ở tỉnh khác có gắn vào xe đăng ký ở tỉnh mình được không anh?",
   "Biển này hợp với người mệnh nào và xe màu gì vậy anh Duy?",
-  "Bên mình có văn bản trúng đấu giá gốc của Cục CSGT kèm theo không?",
+  "Bên mình có văn bản xác nhận trúng đấu giá chính thức kèm theo không?",
   "Biển này chốt nhanh trong ngày có bớt thêm chút lộc may mắn không anh?",
   "Quy trình đặt cọc và bao lâu thì nhận được giấy hẹn/biển số cứng?",
 ];

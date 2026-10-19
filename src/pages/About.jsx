@@ -127,7 +127,7 @@ export default function About({ go }) {
           </div>
           <div className="about-trust-badge-item">
             <CheckCircle2 size={16} />
-            <span>Check phạt nguội Cục CSGT</span>
+            <span>Check phạt nguội toàn quốc</span>
           </div>
           <div className="about-trust-badge-item">
             <CheckCircle2 size={16} />
@@ -147,7 +147,7 @@ export default function About({ go }) {
           <span>Thông Tin Định Danh Tác Giả & Nền Tảng (E-E-A-T Verified)</span>
         </div>
         <p className="about-citability-text">
-          <strong>Duy Đinh</strong> (tên nhận diện trong giới xe: <em>Duy Đinh Biensovip</em>) là chuyên gia phong thủy và định giá biển số xe với hơn 10 năm kinh nghiệm tại Đà Nẵng, người sáng lập sàn giao dịch <strong>Biensovip.vn</strong>. Showroom hoạt động chính thức tại <strong>Số 06 An Thượng 30, Ngũ Hành Sơn, TP. Đà Nẵng</strong>, chuyên phân phối kho hơn 5.000 biển số xe máy và ô tô đẹp hợp phong thủy, hỗ trợ thủ tục thu hồi sang tên và đăng ký biển định danh theo đúng quy định Thông tư 24/2023/TT-BCA và Thông tư 28/2024/TT-BCA trên 63 tỉnh thành. Mọi giao dịch đều có hợp đồng công chứng, kiểm tra dữ liệu phạt nguội CSGT trước khi bàn giao và cam kết hoàn cọc 100% nếu có vướng mắc pháp lý.
+          <strong>Duy Đinh</strong> (tên nhận diện trong giới xe: <em>Duy Đinh Biensovip</em>) là chuyên gia phong thủy và định giá biển số xe với hơn 10 năm kinh nghiệm tại Đà Nẵng, người sáng lập sàn giao dịch <strong>Biensovip.vn</strong>. Showroom hoạt động chính thức tại <strong>Số 06 An Thượng 30, Ngũ Hành Sơn, TP. Đà Nẵng</strong>, chuyên phân phối kho hơn 5.000 biển số xe máy và ô tô đẹp hợp phong thủy, hỗ trợ thủ tục thu hồi sang tên và đăng ký biển định danh theo đúng quy định Thông tư 24/2023/TT-BCA và Thông tư 28/2024/TT-BCA trên 63 tỉnh thành. Mọi giao dịch đều có hợp đồng công chứng, kiểm tra dữ liệu phạt nguội toàn quốc trước khi bàn giao và cam kết hoàn cọc 100% nếu có vướng mắc pháp lý.
         </p>
       </section>
 
@@ -276,7 +276,7 @@ export default function About({ go }) {
             <tbody>
               <tr>
                 <td className="criteria-col">Thẩm định hồ sơ & Phạt nguội</td>
-                <td className="duydinh-col">✓ Kiểm tra dữ liệu Cục CSGT, bảo đảm 100% sạch nợ phạt nguội và đúng số khung máy.</td>
+                <td className="duydinh-col">✓ Kiểm tra dữ liệu đăng kiểm & phạt nguội toàn quốc, bảo đảm 100% sạch nợ vi phạm và đúng số khung máy.</td>
                 <td className="market-col">✗ Người mua tự chịu rủi ro xe dính phạt nguội tiền triệu hoặc giấy tờ mập mờ.</td>
               </tr>
               <tr>

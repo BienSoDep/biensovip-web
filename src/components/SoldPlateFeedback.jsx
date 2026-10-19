@@ -19,7 +19,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
     ? dbItems.map((r, idx) => ({
         id: r.id,
         customerName: maskName(r.reviewerName || 'Khách hàng'),
-        location: r.plateProvince ? `CSGT ${r.plateProvince}` : 'Khách hàng toàn quốc',
+        location: r.plateProvince ? `Khu vực ${r.plateProvince}` : 'Khách hàng toàn quốc',
         vehicle: idx % 2 === 0 ? 'Mercedes-Benz E300 / GLC' : 'Lexus / Porsche Macan',
         plateNumber: r.plateNumber || plate.plateNumber,
         rating: r.rating || 5,
