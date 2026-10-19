@@ -10,7 +10,7 @@ import {
   useAdminStaff, useCreateStaff, useUpdateStaff,
   useDeleteStaff, useResetStaffPassword
 } from '../../services/adminStaff.js';
-import { loadAuth } from '../../lib/authStore.js';
+import { loadAuth, clearAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';

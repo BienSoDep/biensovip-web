@@ -8,6 +8,7 @@ import {
   useUpdateCustomer,
   useCustomerSessions,
   useRevokeCustomerSession,
+  useVerifyCustomerEmail,
 } from '../../../services/adminCustomers.js';
 import { formatDate, formatDateTime } from '../../../lib/date.js';
 import { Badge } from '../../../components/index.jsx';
@@ -22,6 +23,24 @@ import { routeFor } from '../../../config/routes.js';
 const fmtDate = formatDate;
 const fmtDateTime = formatDateTime;
 const fmtVnd = (n) => (n == null ? null : Number(n).toLocaleString('vi-VN') + 'đ');
+
+const GENDER_LABEL = { male: 'Nam', female: 'Nữ', other: 'Khác' };
+const CONTACT_STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã chốt (cũ)', cancelled: 'Hủy' };
+const ELEMENT_LABEL = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
+
+function getAvatarBg(str = '') {
+  const colors = [
+    'linear-gradient(135deg, #C75B00, #C75B00)',
+    'linear-gradient(135deg, #3FBF8F, #2E9970)',
+    'linear-gradient(135deg, #d97706, #b45309)',
+    'linear-gradient(135deg, #6B7180, #4A4F59)',
+    'linear-gradient(135deg, #A8485A, #8a3645)',
+    'linear-gradient(135deg, #C75B00, #8a3d00)',
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
 
 function DrawerSection({ title, count, children }) {
   return (

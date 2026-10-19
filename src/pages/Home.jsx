@@ -22,6 +22,7 @@ import { useActivityFeed } from '../services/activityFeed.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
 
 import { THEMATIC_PLATE_TYPES } from '../data/homePlateTypes.js';
+import { useDebounce } from '../hooks/useDebounce.js';
 
 
 export default function Home({ settings, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact, user }) {
@@ -45,7 +46,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
   // Home search: catId/qDebounced empty = show featured plates as before.
   // Any non-empty selection replaces that section with live search results (usePlates is React
   // Query, so identical filters within the session are served from cache instead of refetching).
-  const debouncedQ = useDebounced(q, 300);
+  const debouncedQ = useDebounce(q, 300);
   const selectedCatId = cat !== 'Tất cả' ? (plateTypes?.items || []).find((c) => c.name === cat)?.id : null;
   const isSearching = !!debouncedQ.trim() || !!selectedCatId;
   const searchFilters = { q: debouncedQ.trim() || undefined, cat: selectedCatId ? [selectedCatId] : undefined, perPage: 12 };
