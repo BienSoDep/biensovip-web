@@ -34,7 +34,7 @@ export default function TechnicalAnalyticsSection({
       {/* Bảng theo trang */}
       <section style={{ background: 'var(--surface-card)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
         <h2 style={{ font: 'var(--type-title-2)', margin: '0 0 var(--space-3)', fontWeight: 'var(--fw-bold)' }}>Chi tiết lượt xem theo màn hình (Pages)</h2>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
             <thead>
               <tr style={{ textAlign: 'left', color: 'var(--text-muted)', font: 'var(--type-caption)' }}>
@@ -58,6 +58,19 @@ export default function TechnicalAnalyticsSection({
               )}
             </tbody>
           </table>
+        </div>
+        <div className="admin-simple-cards">
+          {(pages.data?.pages || []).map((p) => (
+            <div key={p.screen} className="admin-row">
+              <div data-label="Màn hình" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{p.screen}</div>
+              <div data-label="Lượt xem">{p.views}</div>
+              <div data-label="TG TB">{fmtDuration(p.avgDurationSeconds)}</div>
+              <div data-label="Tỷ lệ thoát">{p.bounceRatePct.toFixed(0)}%</div>
+            </div>
+          ))}
+          {!pages.data?.pages?.length && (
+            <div style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Chưa có dữ liệu trong khoảng ngày này.</div>
+          )}
         </div>
       </section>
 
@@ -100,7 +113,7 @@ export default function TechnicalAnalyticsSection({
       {/* Sự kiện CTA & Event Log */}
       <section style={{ background: 'var(--surface-card)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
         <h2 style={{ font: 'var(--type-title-2)', margin: '0 0 var(--space-3)', fontWeight: 'var(--fw-bold)' }}>Nhật ký sự kiện (Raw Analytics Events)</h2>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
             <thead>
               <tr style={{ textAlign: 'left', color: 'var(--text-muted)', font: 'var(--type-caption)' }}>
@@ -124,6 +137,18 @@ export default function TechnicalAnalyticsSection({
               )}
             </tbody>
           </table>
+        </div>
+        <div className="admin-simple-cards">
+          {(events.data?.events || []).slice(0, 25).map((e, i) => (
+            <div key={i} className="admin-row">
+              <div data-label="Sự kiện" style={{ fontWeight: 'var(--fw-semibold)' }}>{e.eventName}</div>
+              <div data-label="Dữ liệu" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.eventData || '—'}</div>
+              <div data-label="Số lần" style={{ fontWeight: 'var(--fw-semibold)' }}>{e.count}</div>
+            </div>
+          ))}
+          {!events.data?.events?.length && (
+            <div style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Chưa có sự kiện trong khoảng ngày này.</div>
+          )}
         </div>
       </section>
 

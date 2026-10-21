@@ -61,7 +61,7 @@ export default function AdminTabbedPage({ tabs, initialTab, activeTab, onTabChan
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       {tabs.length > 1 && (
-        <div role="tablist" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+        <div role="tablist" className="admin-tablist" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
           {tabs.map((t) => {
             const isActive = t.key === current?.key;
             return (

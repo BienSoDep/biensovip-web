@@ -234,7 +234,9 @@ export default function VpaAuctionResults() {
           </div>
         )}
         {!isLoading && items.length > 0 && (
-          <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
+          <>
+          <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
             <thead>
               <tr style={{ textAlign: 'left', color: 'var(--text-muted)', font: 'var(--type-caption)', borderBottom: '1px solid var(--grey-100)' }}>
                 <th style={{ padding: '10px 16px' }}>Biển số</th>
@@ -264,6 +266,22 @@ export default function VpaAuctionResults() {
               ))}
             </tbody>
           </table>
+          </div>
+          <div className="admin-simple-cards">
+            {items.map((r) => (
+              <div key={r.id} className="admin-row">
+                <div data-label="Biển số"><b>{r.plateNumber}</b></div>
+                <div data-label="Loại xe">{r.vehicle === 'Car' || r.vehicle === 1 ? 'Ô tô' : 'Xe máy'}</div>
+                <div data-label="Tỉnh/thành">{r.provinceName || '—'}</div>
+                <div data-label="Loại biển">{r.plateTypeName || '—'}</div>
+                <div data-label="Giá khởi điểm">{money(r.startingPrice)}</div>
+                <div data-label="Giá trúng">{money(r.auctionPrice)}</div>
+                <div data-label="Thời gian">{formatDateTime(r.auctionStartAt)}{r.auctionEndAt ? ` → ${formatDateTime(r.auctionEndAt)}` : ''}</div>
+                <div data-label="Trạng thái">{r.waitingConfirm ? 'Chờ xác nhận' : 'Đã xác nhận'}</div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
 

@@ -2,6 +2,10 @@
    GLOBAL RESPONSIVE STYLES — Breakpoints, Mobile Nav, Drawers & Viewports
    ========================================================================== */
 
+.plate-actions-mobile {
+  display: none;
+}
+
 /* --------------------------------------------------------------------------
    1. MOBILE BREAKPOINT (<= 768px)
    -------------------------------------------------------------------------- */
@@ -259,10 +263,6 @@
     backdrop-filter: var(--glass-blur);
     box-shadow: 0 -1px 0 var(--border-hairline);
   }
-}
-
-.plate-actions-mobile {
-  display: none;
 }
 
 /* --------------------------------------------------------------------------

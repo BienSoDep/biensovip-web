@@ -327,7 +327,38 @@ button[aria-expanded]:hover {
   .vpa-row > [data-label] { flex: 1 1 42%; min-width: 0; }
   .vpa-row > [data-label]::before { content: attr(data-label); display: block; font: var(--type-caption); color: var(--text-muted); }
   .vpa-row > .vpa-actions { flex: 1 1 100%; }
+
+  /* Generic table→card fallback for simple admin tables (report/log/analytics tables) */
+  .admin-simple-table-wrap { display: none !important; }
+  .admin-simple-cards { display: flex !important; }
+  .admin-simple-cards > .admin-row {
+    display: block;
+    padding: var(--space-3) var(--space-4);
+    background: var(--white);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-inset-hairline);
+  }
+  .admin-simple-cards > .admin-row > [data-label] {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 3px 0;
+    min-width: 0;
+    white-space: normal;
+  }
+  .admin-simple-cards > .admin-row > [data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 100px;
+    font: var(--type-caption);
+    font-size: var(--fs-micro);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
 }
+.admin-simple-cards { display: none; flex-direction: column; gap: var(--space-3); padding: var(--space-3); background: var(--surface-sunken); }
 
 .admin-plates-mobile-bar,
 .admin-contacts-mobile-bar {
