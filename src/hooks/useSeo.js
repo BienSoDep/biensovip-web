@@ -321,6 +321,10 @@ export function useSeo(screen, data) {
       title = 'Cộng Tác Viên Biển Số Đẹp — Nhận Hoa Hồng Hấp Dẫn | ' + BRAND;
       desc = 'Đăng ký cộng tác viên Biensovip, giới thiệu khách mua biển số đẹp và nhận hoa hồng hấp dẫn. Làm online, không cần vốn.';
       canonical = SITE + '/cong-tac-vien';
+    } else if (screen === 'aiChat') {
+      title = 'Trợ lý AI Biensovip — Tư vấn biển số đẹp | ' + BRAND;
+      desc = 'Chat trực tiếp với trợ lý AI Biensovip để tìm biển số đẹp hợp mệnh, tra giá và quy trình đấu giá hộ.';
+      canonical = SITE + '/tro-ly-ai';
     } else if (screen === 'terms') {
       title = 'Điều khoản sử dụng | ' + BRAND;
       canonical = SITE + '/dieu-khoan';

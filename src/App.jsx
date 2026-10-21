@@ -62,6 +62,7 @@ const PlateTypeLandingPage = lazy(() => import('./pages/PlateTypeLandingPage.jsx
 const Post = lazy(() => import('./pages/Post.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 const ChatZaloContact = lazy(() => import('./pages/ChatZaloContact.jsx'));
+const ChatbotPage = lazy(() => import('./pages/ChatbotPage.jsx'));
 const Compare = lazy(() => import('./pages/Compare.jsx'));
 const SavedSearches = lazy(() => import('./pages/SavedSearches.jsx'));
 const Reviews = lazy(() => import('./pages/Reviews.jsx'));
@@ -804,6 +805,8 @@ export default function App() {
             {s === 'about' && <About go={go} />}
 
             {s === 'chat' && <ChatZaloContact notify={notify} user={st.user} />}
+
+            {s === 'aiChat' && <ChatbotPage go={go} user={st.user} />}
 
             {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} favCards={favCards} />}
 

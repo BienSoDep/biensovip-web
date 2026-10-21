@@ -37,3 +37,14 @@ export function useChatbotWidgetEnabled() {
     staleTime: 60_000,
   });
 }
+
+// Sidebar "lịch sử trò chuyện" trang /tro-ly-ai — chỉ khách đã đăng nhập mới có dữ liệu (API 401 nếu
+// chưa login, enabled kiểm soát bởi nơi gọi để tránh gọi thừa khi chưa có user).
+export function useMyChatbotSessions(enabled) {
+  return useQuery({
+    queryKey: ['chatbot', 'my-sessions'],
+    queryFn: () => apiClient.get('/api/chatbot/sessions'),
+    enabled: !!enabled,
+    retry: false,
+  });
+}

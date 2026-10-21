@@ -22,7 +22,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const thangCount = vpaCounts?.monthly || 829407;
   const { history } = usePlateHistory(user);
   const historyCount = history?.length || 0;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['aiChat', T('common.nav.aiChat'), Sparkles], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
   const navRef = useRef(null);
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [platesOpen, setPlatesOpen] = useState(false);
