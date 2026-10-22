@@ -31,6 +31,8 @@ import { registerApproveRun } from '../../../lib/runWatcher.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 import Modal from '../../../components/Modal.jsx';
+import { useExportWithProgress } from '../../../hooks/useExportWithProgress.js';
+import ExportProgressModal from '../../../components/ExportProgressModal.jsx';
 
 const MAX_BULK = 500;
 const COL_KEY = 'bsv.admin.vpaColumns';
@@ -415,8 +417,15 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const [mobileView, setMobileView] = useState('card');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [drawer, setDrawer] = useState(null); // null | { plate? }
-  const [cell, setCell] = useState(null);
-  const [exporting, setExporting] = useState(false);
+  const {
+    isOpen: exportModalOpen,
+    progress: exportProgress,
+    startExport: runExportWithProgress,
+    cancelDownload: cancelExportDownload,
+    closeModal: closeExportModal,
+  } = useExportWithProgress();
+  const [exportMenu, setExportMenu] = useState(null); // null | 'xlsx' | 'docx' | 'csv'
+  const exporting = exportModalOpen && exportProgress.phase !== 'completed' && exportProgress.phase !== 'error';
   const [integrity, setIntegrity] = useState(() => !!openIntegrityCode);
   useEffect(() => { if (openIntegrityCode) setIntegrity(true); }, [openIntegrityCode]);
   const [bulkSeedOpen, setBulkSeedOpen] = useState(false);
@@ -593,18 +602,23 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const bulkMsg = (verb) => (r) => `${verb} ${r.affected} biển${r.skipped ? ` (bỏ qua ${r.skipped})` : ''}`;
   const bulkEdit = (body, verb) => run(() => bulk.mutateAsync({ ids: bulkIds, ...body }), bulkMsg(verb), true);
 
-  const doExport = async () => {
-    setExporting(true);
-    try { await exportVpaCsv({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
+  const handleExportChoice = (format, isCurrentPageOnly = false) => {
+    setExportMenu(null);
+    const exportParams = isCurrentPageOnly
+      ? { ...params, page, limit }
+      : { ...params, page: undefined, limit: undefined };
+
+    runExportWithProgress({
+      url: '/api/admin/vpa/plates/export',
+      params: exportParams,
+      format,
+      defaultFileName: isCurrentPageOnly ? `bien-vpa-trang-${page}` : 'bien-vpa',
+    });
   };
-  const doExportXlsx = async () => {
-    setExporting(true);
-    try { await exportVpaXlsx({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
-  };
-  const doExportDocx = async () => {
-    setExporting(true);
-    try { await exportVpaDocx({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
-  };
+
+  const doExport = () => handleExportChoice('csv', false);
+  const doExportXlsx = () => handleExportChoice('xlsx', false);
+  const doExportDocx = () => handleExportChoice('docx', false);
 
   const quickAdd = async () => {
     const price = quick.price === '' ? null : Number(quick.price);
@@ -1161,9 +1175,187 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             </Button>
           )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
-          <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
-          <Button variant="ghost" size="md" disabled={exporting} title="Xuất Excel có trang trí — dùng gửi khách hàng" onClick={doExportXlsx}>{exporting ? 'Đang xuất…' : 'Xuất Excel'}</Button>
-          <Button variant="ghost" size="md" disabled={exporting} title="Xuất Word dạng bảng giá gọn — dùng gửi khách hàng" onClick={doExportDocx}>{exporting ? 'Đang xuất…' : 'Xuất Word'}</Button>
+          {/* Nút Xuất CSV */}
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="ghost"
+              size="md"
+              disabled={exporting}
+              onClick={() => setExportMenu((m) => (m === 'csv' ? null : 'csv'))}
+              title="Xuất CSV danh sách biển"
+            >
+              <span>Xuất CSV</span>
+              <span style={{ fontSize: 10, marginLeft: 2, opacity: 0.7 }}>▾</span>
+            </Button>
+            {exportMenu === 'csv' && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 4,
+                  background: 'var(--white)',
+                  border: '1px solid var(--grey-200, #e2e8f0)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-3, 0 10px 15px -3px rgba(0,0,0,0.1))',
+                  zIndex: 30,
+                  minWidth: 240,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: 4,
+                }}
+              >
+                <button
+                  type="button"
+                  style={{
+                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
+                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                  onClick={() => handleExportChoice('csv', true)}
+                >
+                  📄 Xuất trang hiện tại ({items.length} biển)
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
+                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                  onClick={() => handleExportChoice('csv', false)}
+                >
+                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển)
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Nút Xuất Excel */}
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="ghost"
+              size="md"
+              disabled={exporting}
+              title="Xuất file Excel có trang trí, tự động phân chia sheets theo phiên và hiển thị giá mẫu tham chiếu"
+              onClick={() => setExportMenu((m) => (m === 'xlsx' ? null : 'xlsx'))}
+              style={{ fontWeight: 600, color: '#107c41' }}
+            >
+              <span>Xuất Excel</span>
+              <span style={{ fontSize: 10, marginLeft: 2, opacity: 0.7 }}>▾</span>
+            </Button>
+            {exportMenu === 'xlsx' && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 4,
+                  background: 'var(--white)',
+                  border: '1px solid var(--grey-200, #e2e8f0)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-3, 0 10px 15px -3px rgba(0,0,0,0.1))',
+                  zIndex: 30,
+                  minWidth: 270,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: 4,
+                }}
+              >
+                <button
+                  type="button"
+                  style={{
+                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
+                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                  onClick={() => handleExportChoice('xlsx', true)}
+                >
+                  📄 Xuất trang này (trang {page} • {items.length} biển)
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
+                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                  onClick={() => handleExportChoice('xlsx', false)}
+                >
+                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển • chia sheets)
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Nút Xuất Word */}
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="ghost"
+              size="md"
+              disabled={exporting}
+              title="Xuất Word dạng catalogue có trang trí — dùng gửi khách hàng"
+              onClick={() => setExportMenu((m) => (m === 'docx' ? null : 'docx'))}
+              style={{ fontWeight: 600, color: '#2b579a' }}
+            >
+              <span>Xuất Word</span>
+              <span style={{ fontSize: 10, marginLeft: 2, opacity: 0.7 }}>▾</span>
+            </Button>
+            {exportMenu === 'docx' && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 4,
+                  background: 'var(--white)',
+                  border: '1px solid var(--grey-200, #e2e8f0)',
+                  borderRadius: 'var(--radius-md)',
+                  boxShadow: 'var(--shadow-3, 0 10px 15px -3px rgba(0,0,0,0.1))',
+                  zIndex: 30,
+                  minWidth: 240,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: 4,
+                }}
+              >
+                <button
+                  type="button"
+                  style={{
+                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
+                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                  onClick={() => handleExportChoice('docx', true)}
+                >
+                  📄 Xuất trang hiện tại ({items.length} biển)
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
+                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                  onClick={() => handleExportChoice('docx', false)}
+                >
+                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển)
+                </button>
+              </div>
+            )}
+          </div>
           {queue && (
             <>
               <Button
@@ -1506,16 +1698,20 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                           color: (p.sampleCount || 0) > 0 ? '#3FBF8F' : '#d97706',
                           border: (p.sampleCount || 0) > 0 ? '1px solid #D6F0E5' : '1px solid #fde68a',
                         }}
+                        title={(p.sampleCount || 0) > 0
+                          ? `Giá gợi ý = TB ${p.sampleCount} mẫu cùng tỉnh (${money(p.sampleAvgPrice)}) × hệ số 2.5`
+                          : `Chưa có mẫu cùng tỉnh — dùng Giá sàn (${money(p.startingPrice)}) × hệ số 2.5`
+                        }
                       >
                         {(p.sampleCount || 0) > 0 ? (
                           <>
                             <CheckCircle2 size={10} />
-                            Cùng tỉnh ({p.sampleCount} mẫu)
+                            Cùng tỉnh ({p.sampleCount} mẫu{p.sampleAvgPrice ? ` • TB ${money(p.sampleAvgPrice)}` : ''})
                           </>
                         ) : (
                           <>
                             <Info size={10} />
-                            Giá khởi điểm
+                            Giá sàn ({money(p.startingPrice)})
                           </>
                         )}
                       </span>
@@ -1561,6 +1757,13 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
         data={priceRefQuery.data}
         isLoading={priceRefQuery.isLoading}
         onOpenPlate={(plateNumber) => { setPriceRefId(null); setQ(plateNumber); }}
+      />
+
+      <ExportProgressModal
+        open={exportModalOpen}
+        progress={exportProgress}
+        onCancel={cancelExportDownload}
+        onClose={closeExportModal}
       />
 
       {sel.size > 0 && (

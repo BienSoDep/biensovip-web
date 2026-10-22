@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, createElement } from 'react';
 import { loadAuth } from '../lib/authStore.js';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -30,37 +30,50 @@ export async function downloadFile(path, params, fallbackName) {
   URL.revokeObjectURL(url);
 }
 
+import { useExportWithProgress } from './useExportWithProgress.js';
+import ExportProgressModal from '../components/ExportProgressModal.jsx';
+
 export function useExportCsv(path) {
-  const [loading, setLoading] = useState(false);
+  const { isOpen, progress, startExport, cancelDownload, closeModal } = useExportWithProgress();
 
-  const exportCsv = async (params = {}) => {
-    setLoading(true);
-    try {
-      await downloadFile(path, { ...params, format: 'csv' }, 'export.csv');
-    } finally {
-      setLoading(false);
-    }
+  const exportCsv = (params = {}) =>
+    startExport({
+      url: path,
+      params,
+      format: 'csv',
+      defaultFileName: 'bien-so',
+    });
+
+  const exportXlsx = (params = {}) =>
+    startExport({
+      url: path,
+      params,
+      format: 'xlsx',
+      defaultFileName: 'bien-so',
+    });
+
+  const exportDocx = (params = {}) =>
+    startExport({
+      url: path,
+      params,
+      format: 'docx',
+      defaultFileName: 'catalogue-bien-so',
+    });
+
+  const exportModal = createElement(ExportProgressModal, {
+    open: isOpen,
+    progress,
+    onCancel: cancelDownload,
+    onClose: closeModal,
+  });
+
+  return {
+    exportCsv,
+    exportXlsx,
+    exportDocx,
+    loading: isOpen && progress.phase !== 'completed' && progress.phase !== 'error',
+    exportModal,
   };
-
-  const exportXlsx = async (params = {}) => {
-    setLoading(true);
-    try {
-      await downloadFile(path, { ...params, format: 'xlsx' }, 'export.xlsx');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const exportDocx = async (params = {}) => {
-    setLoading(true);
-    try {
-      await downloadFile(path, { ...params, format: 'docx' }, 'export.docx');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { exportCsv, exportXlsx, exportDocx, loading };
 }
 
 // Xuất Word giới thiệu 1 biển cụ thể — nút trên từng dòng danh sách biển.
