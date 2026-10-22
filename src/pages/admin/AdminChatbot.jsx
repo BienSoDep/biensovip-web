@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import {
+  Trash2, ChevronLeft, ChevronRight, BookOpen, Search, Copy, Check,
+  Download, ChevronDown, ChevronUp, Sparkles, Filter, HelpCircle
+} from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDebouncedValue } from '@mantine/hooks';
 import Button from '../../components/Button.jsx';
@@ -10,9 +13,11 @@ import {
   useChatbotSettings, useUpdateChatbotSettings, useChatbotStats,
 } from '../../services/adminChatbot.js';
 import { formatDateTime } from '../../lib/date.js';
+import aiQuestions from '../../lib/content/vi/aiKnowledgeBase100.json';
 
 const TABS = [
   { value: 'sessions', label: 'Lịch sử hội thoại', info: 'Xem lại các đoạn chat thực tế giữa khách hàng và trợ lý AI để cải thiện kịch bản tư vấn.' },
+  { value: 'kb', label: 'Kho 100 câu hỏi mẫu (KB)', info: 'Bộ 100 câu hỏi - đáp chuyên sâu chuẩn hóa về Pháp lý Thông tư 24, Đấu giá VPA, Phong thủy và Dịch vụ.' },
   { value: 'settings', label: 'Cấu hình trợ lý', info: 'Thiết lập System Prompt ngữ cảnh, độ sáng tạo Temperature và giới hạn Token.' },
   { value: 'stats', label: 'Thống kê', info: 'Báo cáo số lượt hội thoại và tần suất sử dụng chatbot theo ngày.' },
 ];
@@ -43,6 +48,7 @@ export default function AdminChatbot({ notify }) {
         ))}
       </div>
       {tab === 'sessions' && <SessionsTab notify={notify} />}
+      {tab === 'kb' && <KnowledgeBaseTab notify={notify} />}
       {tab === 'settings' && <SettingsTab notify={notify} />}
       {tab === 'stats' && <StatsTab />}
     </div>
@@ -320,3 +326,298 @@ function StatTile({ label, value }) {
     </div>
   );
 }
+
+function KnowledgeBaseTab({ notify }) {
+  const [selectedCat, setSelectedCat] = useState('all');
+  const [keyword, setKeyword] = useState('');
+  const [q] = useDebouncedValue(keyword, 250);
+  const [expandedId, setExpandedId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const categories = useMemo(() => {
+    const list = [
+      { id: 'all', label: 'Tất cả', count: aiQuestions.length },
+      { id: 'Pháp lý & Thông tư 24', label: 'Pháp lý & Thông tư 24', count: aiQuestions.filter(x => x.category === 'Pháp lý & Thông tư 24').length },
+      { id: 'Đấu giá VPA & Định giá', label: 'Đấu giá VPA & Định giá', count: aiQuestions.filter(x => x.category === 'Đấu giá VPA & Định giá').length },
+      { id: 'Phong thủy & Luận giải số', label: 'Phong thủy & Luận giải số', count: aiQuestions.filter(x => x.category === 'Phong thủy & Luận giải số').length },
+      { id: 'Quy trình & Dịch vụ Biensovip', label: 'Quy trình & Dịch vụ', count: aiQuestions.filter(x => x.category === 'Quy trình & Dịch vụ Biensovip').length },
+    ];
+    return list;
+  }, []);
+
+  const filtered = useMemo(() => {
+    let list = aiQuestions;
+    if (selectedCat !== 'all') {
+      list = list.filter(item => item.category === selectedCat);
+    }
+    if (q.trim()) {
+      const lower = q.toLowerCase();
+      list = list.filter(item =>
+        item.question.toLowerCase().includes(lower) ||
+        item.answer.toLowerCase().includes(lower) ||
+        item.category.toLowerCase().includes(lower) ||
+        String(item.id).includes(lower)
+      );
+    }
+    return list;
+  }, [selectedCat, q]);
+
+  const copyItem = (item) => {
+    const text = `Câu hỏi: ${item.question}\nTrả lời: ${item.answer}`;
+    navigator.clipboard.writeText(text);
+    setCopiedId(item.id);
+    notify(`Đã sao chép Câu #${item.id}`);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const copyAll = () => {
+    const text = filtered.map(x => `### Câu ${x.id}: ${x.question}\n**Trả lời:** ${x.answer}`).join('\n\n');
+    navigator.clipboard.writeText(text);
+    notify(`Đã sao chép ${filtered.length} câu hỏi vào clipboard!`);
+  };
+
+  const downloadJson = () => {
+    const blob = new Blob([JSON.stringify(aiQuestions, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Biensovip_AI_KnowledgeBase_100_QA.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    notify('Đã tải xuống file JSON 100 câu hỏi AI!');
+  };
+
+  const getCatBadgeColor = (cat) => {
+    switch (cat) {
+      case 'Pháp lý & Thông tư 24': return { bg: 'var(--blue-50)', color: 'var(--blue-700)', border: 'var(--blue-200)' };
+      case 'Đấu giá VPA & Định giá': return { bg: 'var(--amber-50)', color: 'var(--amber-700)', border: 'var(--amber-200)' };
+      case 'Phong thủy & Luận giải số': return { bg: 'var(--mint-50)', color: 'var(--mint-700)', border: 'var(--mint-200)' };
+      default: return { bg: 'var(--brand-50)', color: 'var(--action-primary)', border: 'var(--orange-100)' };
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {/* Header bar */}
+      <div style={{
+        background: 'var(--white)',
+        padding: 'var(--gutter-card)',
+        borderRadius: 'var(--radius-card)',
+        boxShadow: 'var(--shadow-inset-hairline)',
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 'var(--space-3)'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Kho tri thức 100 câu hỏi AI</span>
+            <span style={{ background: 'var(--brand-50)', color: 'var(--action-primary)', padding: '2px 8px', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)' }}>
+              100 câu chuẩn hóa
+            </span>
+          </div>
+          <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+            Dữ liệu huấn luyện & Few-shot injection chuẩn cho Trợ lý ảo AI Chatbot (Pháp lý TT24, Đấu giá VPA, Phong thủy & Dịch vụ).
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <Button variant="outline" size="sm" onClick={copyAll} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Copy size={14} />
+            <span>Sao chép {filtered.length} câu</span>
+          </Button>
+          <Button variant="primary" size="sm" onClick={downloadJson} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Download size={14} />
+            <span>Tải file JSON</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Filter and Category Pills */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', alignItems: 'center' }}>
+        {categories.map(c => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => setSelectedCat(c.id)}
+            style={{
+              border: 'none',
+              borderRadius: 'var(--radius-pill)',
+              padding: '6px 14px',
+              cursor: 'pointer',
+              font: 'var(--type-caption)',
+              fontWeight: selectedCat === c.id ? 'var(--fw-semibold)' : 'var(--fw-medium)',
+              background: selectedCat === c.id ? 'var(--action-primary)' : 'var(--white)',
+              color: selectedCat === c.id ? 'var(--white)' : 'var(--text-body)',
+              boxShadow: selectedCat === c.id ? 'none' : 'var(--shadow-inset-hairline)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+          >
+            <span>{c.label}</span>
+            <span style={{
+              background: selectedCat === c.id ? 'rgba(255,255,255,0.25)' : 'var(--grey-100)',
+              color: selectedCat === c.id ? 'var(--white)' : 'var(--text-muted)',
+              padding: '1px 6px',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: 11
+            }}>
+              {c.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Search Input and Counter */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)' }}>
+        <div style={{ position: 'relative', minWidth: 320 }}>
+          <Search size={16} color="var(--text-faint)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="Tìm theo nội dung câu hỏi, câu trả lời, số thứ tự…"
+            style={{
+              padding: '8px 12px 8px 36px',
+              borderRadius: 'var(--radius-field)',
+              border: '1px solid var(--grey-200)',
+              font: 'var(--type-body-sm)',
+              color: 'var(--text-body)',
+              background: 'var(--white)',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+        <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+          Hiển thị <strong>{filtered.length}</strong> / 100 câu
+        </span>
+      </div>
+
+      {/* Question Accordion List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        {filtered.length === 0 ? (
+          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: '48px var(--gutter-card)', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Không tìm thấy câu hỏi nào phù hợp với từ khóa &ldquo;{keyword}&rdquo;.
+          </div>
+        ) : (
+          filtered.map(item => {
+            const isExpanded = expandedId === item.id;
+            const badge = getCatBadgeColor(item.category);
+            return (
+              <div
+                key={item.id}
+                style={{
+                  background: 'var(--white)',
+                  borderRadius: 'var(--radius-card)',
+                  boxShadow: 'var(--shadow-inset-hairline)',
+                  overflow: 'hidden',
+                  transition: 'box-shadow 140ms ease'
+                }}
+              >
+                {/* Header row */}
+                <div
+                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  style={{
+                    padding: '12px var(--gutter-card)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    gap: 'var(--space-3)',
+                    background: isExpanded ? 'var(--grey-50)' : 'var(--white)',
+                    userSelect: 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: 1, minWidth: 0 }}>
+                    <span style={{
+                      font: 'var(--type-caption)',
+                      fontWeight: 'var(--fw-bold)',
+                      color: 'var(--text-faint)',
+                      minWidth: 36
+                    }}>
+                      #{item.id}
+                    </span>
+                    <span style={{
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: 12,
+                      fontWeight: 'var(--fw-semibold)',
+                      background: badge.bg,
+                      color: badge.color,
+                      border: `1px solid ${badge.border}`,
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {item.category}
+                    </span>
+                    <span style={{
+                      font: 'var(--type-body-sm)',
+                      fontWeight: 'var(--fw-semibold)',
+                      color: 'var(--text-strong)',
+                      flex: 1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: isExpanded ? 'normal' : 'nowrap'
+                    }}>
+                      {item.question}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <button
+                      type="button"
+                      title="Sao chép câu này"
+                      onClick={(e) => { e.stopPropagation(); copyItem(item); }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        padding: 6,
+                        borderRadius: 'var(--radius-circle)',
+                        cursor: 'pointer',
+                        color: copiedId === item.id ? 'var(--mint-600)' : 'var(--text-faint)',
+                        display: 'inline-flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      {copiedId === item.id ? <Check size={16} /> : <Copy size={16} />}
+                    </button>
+                    {isExpanded ? <ChevronUp size={18} color="var(--text-muted)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
+                  </div>
+                </div>
+
+                {/* Expanded Answer */}
+                {isExpanded && (
+                  <div style={{
+                    padding: 'var(--space-3) var(--gutter-card) var(--space-4)',
+                    boxShadow: 'inset 0 1px 0 var(--border-hairline)',
+                    background: 'var(--white)',
+                    animation: 'fadeIn 140ms ease-out'
+                  }}>
+                    <div style={{
+                      font: 'var(--type-body-sm)',
+                      color: 'var(--text-body)',
+                      lineHeight: '1.6',
+                      background: 'var(--grey-50)',
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-field)',
+                      borderLeft: '3px solid var(--action-primary)'
+                    }}>
+                      <div style={{ fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', marginBottom: 4 }}>
+                        Câu trả lời mẫu của AI (Duy Đinh):
+                      </div>
+                      {item.answer}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
