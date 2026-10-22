@@ -1302,7 +1302,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
               variant="ghost"
               size="md"
               disabled={exporting}
-              title="Xuất Word dạng catalogue có trang trí — dùng gửi khách hàng"
+              title="Xuất file Word (.docx) chuyên nghiệp: Trang bìa tổng quan, tự động phân chia theo phiên có ngắt trang và hiển thị giá mẫu tham chiếu"
               onClick={() => setExportMenu((m) => (m === 'docx' ? null : 'docx'))}
               style={{ fontWeight: 600, color: '#2b579a' }}
             >
@@ -1321,7 +1321,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                   borderRadius: 'var(--radius-md)',
                   boxShadow: 'var(--shadow-3, 0 10px 15px -3px rgba(0,0,0,0.1))',
                   zIndex: 30,
-                  minWidth: 240,
+                  minWidth: 260,
                   display: 'flex',
                   flexDirection: 'column',
                   padding: 4,
@@ -1351,7 +1351,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                   onClick={() => handleExportChoice('docx', false)}
                 >
-                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển)
+                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển • chia phần)
                 </button>
               </div>
             )}
