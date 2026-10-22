@@ -78,23 +78,48 @@ export function useExportCsv(path) {
 
 // Xuất Word giới thiệu 1 biển cụ thể — nút trên từng dòng danh sách biển.
 export function useExportPlateDocx() {
+  const { isOpen, progress, startExport, cancelDownload, closeModal } = useExportWithProgress();
+
   const exportPlateDocx = (id, plateNumber) =>
-    downloadFile(`/api/admin/plates/${id}/export-docx`, {}, `bien-${plateNumber || id}.docx`);
-  return { exportPlateDocx };
+    startExport({
+      url: `/api/admin/plates/${id}/export-docx`,
+      params: {},
+      format: 'docx',
+      defaultFileName: `bien-${plateNumber || id}.docx`,
+    });
+
+  const exportModal = createElement(ExportProgressModal, {
+    open: isOpen,
+    progress,
+    onCancel: cancelDownload,
+    onClose: closeModal,
+  });
+
+  return { exportPlateDocx, exportModal };
 }
 
 // Report export — Excel (.xlsx) hoặc PDF, dùng cho Dashboard.
 export function useExportReport(path) {
-  const [loading, setLoading] = useState(false);
+  const { isOpen, progress, startExport, cancelDownload, closeModal } = useExportWithProgress();
 
-  const exportReport = async (format, params = {}) => {
-    setLoading(true);
-    try {
-      await downloadFile(path, { ...params, format }, `export.${format}`);
-    } finally {
-      setLoading(false);
-    }
+  const exportReport = (format, params = {}) =>
+    startExport({
+      url: path,
+      params: { ...params, format },
+      format: format === 'xlsx' ? 'xlsx' : 'pdf',
+      defaultFileName: `bao-cao-thong-ke.${format}`,
+    });
+
+  const exportModal = createElement(ExportProgressModal, {
+    open: isOpen,
+    progress,
+    onCancel: cancelDownload,
+    onClose: closeModal,
+  });
+
+  return {
+    exportReport,
+    loading: isOpen && progress.phase !== 'completed' && progress.phase !== 'error',
+    exportModal,
   };
-
-  return { exportReport, loading };
 }

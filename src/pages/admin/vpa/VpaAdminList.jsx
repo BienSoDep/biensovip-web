@@ -1459,7 +1459,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                       gap: 4,
                     }}
                   >
-                    <span>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu cùng tỉnh` : 'Giá khởi điểm'})` : '—'}</span>
+                    <span>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu${p.sampleAvgPrice ? ` • TB ${money(p.sampleAvgPrice)}` : ''}` : `Giá sàn ${money(p.startingPrice)}`})` : '—'}</span>
                   </button>
                 </div>
               </div>
