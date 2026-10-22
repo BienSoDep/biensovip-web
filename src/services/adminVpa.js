@@ -156,6 +156,7 @@ async function doExportVpaPlates(params, format) {
 
 export const exportVpaCsv = (params) => doExportVpaPlates(params, 'csv');
 export const exportVpaXlsx = (params) => doExportVpaPlates(params, 'xlsx');
+export const exportVpaDocx = (params) => doExportVpaPlates(params, 'docx');
 
 export async function exportVpaAuctionResultsCsv(params) {
   const auth = loadAuth();
