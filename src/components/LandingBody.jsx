@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
 import Button from './Button.jsx';
 import PlateCard from './PlateCard.jsx';
+import PageHeader from './PageHeader.jsx';
 import PlateCardSkeleton from './skeletons/PlateCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { routeFor } from '../config/routes.js';
@@ -29,6 +30,7 @@ function FaqAccordion({ faqs }) {
             <button
               type="button"
               className="faq-accordion-btn"
+              aria-expanded={open}
               onClick={() => setOpenIdx(open ? -1 : i)}
               style={{
                 width: '100%',
@@ -93,13 +95,16 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-7) var(--pad-page) var(--space-4)' }}>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
-          {title || 'Kho Biển Số Đẹp'}
-        </h1>
-        {intro && (
-          <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-body)', width: '100%' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
-        )}
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--space-4)' }}>
+        <PageHeader
+          eyebrow="Danh mục biển số"
+          title={title || 'Kho Biển Số Đẹp'}
+          fullWidth
+        >
+          {intro && (
+            <div className="landing-intro" style={{ font: 'var(--type-body)', color: 'var(--text-muted)', lineHeight: 'var(--lh-body)', width: '100%' }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
+          )}
+        </PageHeader>
         {blogPost && (
           <div style={{ marginTop: 'var(--space-6)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', alignItems: 'center' }}>
             {blogPost.coverImageUrl && (

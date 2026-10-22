@@ -7,6 +7,7 @@ import * as authApi from './services/authService.js';
 import { apiClient } from './services/apiClient.js';
 import * as favApi from './services/favoriteService.js';
 import { getLocalFavorites, addLocalFavorite, removeLocalFavorite, clearLocalFavorites } from './services/favoriteStore.js';
+import { syncPlateHistory } from './services/plateHistory.js';
 import { useComparePlates, useCompareIds } from './services/compareService.js';
 import { trackAddToWishlist, trackRemoveFromWishlist, trackSignUp, trackSignUpFailed, trackLogin } from './services/tracking/events.js';
 import { contentGet } from './lib/content/index.js';
@@ -61,6 +62,7 @@ const PlateTypeLandingPage = lazy(() => import('./pages/PlateTypeLandingPage.jsx
 const Post = lazy(() => import('./pages/Post.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 const ChatZaloContact = lazy(() => import('./pages/ChatZaloContact.jsx'));
+const ChatbotPage = lazy(() => import('./pages/ChatbotPage.jsx'));
 const Compare = lazy(() => import('./pages/Compare.jsx'));
 const SavedSearches = lazy(() => import('./pages/SavedSearches.jsx'));
 const Reviews = lazy(() => import('./pages/Reviews.jsx'));
@@ -519,6 +521,7 @@ export default function App() {
           patch({ user: data.user, screen: 'profile' });
           notify('Đăng ký thành công!');
           favApi.syncFavorites();
+          syncPlateHistory();
         } catch {
           patchAuth({ aErr: {}, aPw: '', step: 1 });
           patch({ screen: 'login' });
@@ -550,6 +553,7 @@ export default function App() {
         }
         notify('Đăng nhập thành công');
         favApi.syncFavorites(); // fire-and-forget: merge local → server
+        syncPlateHistory();
       } catch (e) {
         // Sai với endpoint user — thử lại như tài khoản quản trị trước khi báo lỗi.
         // 1 form, 1 ô nhập, tự nhận diện loại tài khoản qua endpoint nào chấp nhận.
@@ -617,6 +621,7 @@ export default function App() {
       }
       notify('Đăng nhập thành công');
       favApi.syncFavorites();
+      syncPlateHistory();
     } catch (e) { patchAuth({ aErr: { otp: e.message || 'Mã OTP không đúng.' } }); }
   };
 
@@ -742,15 +747,15 @@ export default function App() {
 
           {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost} />}
 
-          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={favCards.length} compareCount={compareIds.length} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
+          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={favCards.length} compareCount={compareIds.length} patch={patch} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
           {/* detail/post/provinceLanding/plateTypeLanding tự render breadcrumb riêng bên trong (cần dữ
               liệu tỉnh/category đã fetch — không có sẵn ở tầng App) — bỏ qua ở đây tránh render 2 lần. */}
           {isPublic && (function () {
             let trail = [];
-            if (s === 'fav') trail = [{ label: 'Yêu thích' }];
+            if (s === 'fav') trail = [{ label: st.favTab === 'history' ? 'Lịch sử duyệt biển số' : 'Biển số đã lưu' }];
             else if (s === 'profile') trail = [{ label: 'Hồ sơ tài khoản' }];
-            else if (s === 'about') trail = [{ label: 'Về chúng tôi' }];
+            else if (s === 'about') trail = [{ label: 'Về Duy Đinh — Người sáng lập Biensovip' }];
             else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
             else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];
@@ -792,7 +797,7 @@ export default function App() {
             {s === 'adminForgot' && <AdminForgotPassword go={go} />}
             {s === 'adminReset' && <AdminResetPassword go={go} />}
 
-            {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} />}
+            {s === 'fav' && <Fav favCards={favCards} user={st.user} onClearAll={clearAllFavs} go={go} notify={notify} contact={contact} favTab={st.favTab || 'saved'} favs={st.favs} onFav={toggleFav} openPlate={openPlate} openBuy={openBuy} />}
 
             {(s === 'lucky' || s === 'luanBien') && <LuckyPlate screen={s} go={go} patch={patch} notify={notify} onNotice={(n) => patch({ listNotice: n })} user={st.user} contact={contact} openPlate={openPlate} onUserUpdate={(u) => patch({ user: u })} />}
             {s === 'profile' && <Profile go={go} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
@@ -800,6 +805,8 @@ export default function App() {
             {s === 'about' && <About go={go} />}
 
             {s === 'chat' && <ChatZaloContact notify={notify} user={st.user} />}
+
+            {s === 'aiChat' && <ChatbotPage go={go} user={st.user} />}
 
             {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} favCards={favCards} />}
 

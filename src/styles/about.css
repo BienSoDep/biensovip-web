@@ -1,0 +1,933 @@
+/* ==========================================================================
+   ABOUT DUY DINH — Editorial Founder Showcase & E-E-A-T Design System
+   ========================================================================== */
+
+.about-page-wrap {
+  max-width: var(--width-content);
+  margin: 0 auto;
+  padding: var(--space-8) var(--pad-page) var(--pad-section-y);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vw, 64px);
+  animation: pageIn 220ms var(--ease-out);
+}
+
+/* --------------------------------------------------------------------------
+   1. Hero Section
+   -------------------------------------------------------------------------- */
+.about-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-hero);
+  border-radius: var(--radius-surface);
+  padding: clamp(24px, 4.5vw, 48px);
+  box-shadow: var(--shadow-inset-hairline);
+}
+
+.about-hero__glow {
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 380px;
+  height: 380px;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(circle, var(--brand-200) 0%, transparent 68%);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.about-hero-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(28px, 4vw, 48px);
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .about-hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.about-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-700);
+  box-shadow: var(--shadow-1);
+  width: fit-content;
+}
+
+.about-hero-tag svg {
+  color: var(--brand-500);
+}
+
+.about-hero-title {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+}
+
+.about-hero-desc {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-body);
+}
+
+.about-hero-quote {
+  padding: 16px 20px;
+  background: var(--white);
+  border-left: 3px solid var(--brand-500);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-strong);
+  font-style: italic;
+  box-shadow: var(--shadow-1);
+}
+
+.about-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+
+.about-portrait-card {
+  position: relative;
+  border-radius: var(--radius-surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-3);
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  aspect-ratio: 4/5;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.about-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.about-portrait-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(14, 15, 18, 0.78);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.about-portrait-badge svg {
+  color: var(--brand-400);
+}
+
+.about-portrait-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(14, 15, 18, 0.9) 100%);
+  padding: 32px 20px 18px;
+  color: #ffffff;
+}
+
+.about-portrait-name {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.about-portrait-role {
+  font-size: 13px;
+  color: var(--brand-200);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   2. Stats Grid
+   -------------------------------------------------------------------------- */
+.about-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .about-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .about-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-stat-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.about-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+.about-stat-number {
+  font-size: clamp(28px, 3.5vw, 36px);
+  font-weight: 900;
+  color: var(--brand-600);
+  line-height: 1.1;
+  font-feature-settings: "tnum";
+}
+
+.about-stat-label {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin-top: 4px;
+}
+
+.about-stat-sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   3. Section Header Generic
+   -------------------------------------------------------------------------- */
+.about-sec-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.about-sec-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.about-sec-title {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+
+.about-sec-sub {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   4. Timeline V2
+   -------------------------------------------------------------------------- */
+.about-timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .about-timeline-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .about-timeline-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-timeline-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+  box-shadow: var(--shadow-1);
+}
+
+.about-timeline-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand-200);
+  box-shadow: var(--shadow-2);
+}
+
+.about-timeline-year {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--brand-600);
+}
+
+.about-timeline-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.about-timeline-card-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+/* --------------------------------------------------------------------------
+   5. Core Values Grid
+   -------------------------------------------------------------------------- */
+.about-values-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .about-values-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .about-values-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-value-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-1);
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.about-value-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand-200);
+  box-shadow: var(--shadow-2);
+}
+
+.about-value-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  color: var(--brand-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-value-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.about-value-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-body);
+}
+
+/* --------------------------------------------------------------------------
+   6. Process Steps
+   -------------------------------------------------------------------------- */
+.about-process-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .about-process-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .about-process-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-process-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  box-shadow: var(--shadow-1);
+}
+
+.about-process-num {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--brand-500);
+  opacity: 0.8;
+  line-height: 1;
+}
+
+.about-process-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.about-process-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-body);
+}
+
+/* --------------------------------------------------------------------------
+   7. Testimonials
+   -------------------------------------------------------------------------- */
+.about-testi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .about-testi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-testi-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-1);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.about-testi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+.about-testi-quote {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text-body);
+  font-style: italic;
+}
+
+.about-testi-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.about-testi-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-testi-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.about-testi-plate {
+  font-size: 12.5px;
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   8. Showroom & Contact Hub
+   -------------------------------------------------------------------------- */
+.about-showroom-hub {
+  background: var(--surface-hero);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-surface);
+  padding: clamp(24px, 4.5vw, 44px);
+  color: var(--text-strong);
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(24px, 4vw, 40px);
+  align-items: center;
+  box-shadow: var(--shadow-inset-hairline);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .about-showroom-hub {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-showroom-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.about-showroom-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+@media (max-width: 560px) {
+  .about-showroom-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 12px 16px;
+  box-shadow: var(--shadow-1);
+}
+
+.about-contact-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--brand-600);
+}
+
+.about-contact-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-contact-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.about-contact-val {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+.about-contact-val:hover {
+  color: var(--brand-600);
+}
+
+.about-showroom-cta-card {
+  background: var(--white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-surface);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+  align-items: center;
+  box-shadow: var(--shadow-2);
+}
+
+.about-showroom-cta-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--brand-600);
+  border: 1px solid var(--brand-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-1);
+}
+
+/* --------------------------------------------------------------------------
+   9. 3-Tier Legal Guarantee Shield
+   -------------------------------------------------------------------------- */
+.about-guarantee-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .about-guarantee-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-guarantee-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-top: 3px solid var(--brand-500);
+  border-radius: var(--radius-card);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-1);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.about-guarantee-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+  border-color: var(--brand-200);
+}
+
+.about-guarantee-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.about-guarantee-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  color: var(--brand-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.about-guarantee-tier {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.about-guarantee-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.about-guarantee-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-700);
+  align-self: flex-start;
+}
+
+.about-guarantee-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-body);
+}
+
+/* --------------------------------------------------------------------------
+   10. Transparent Comparison Table
+   -------------------------------------------------------------------------- */
+.about-compare-wrap {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-1);
+}
+
+.about-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.about-compare-table th {
+  padding: 16px 20px;
+  background: var(--surface-sunken);
+  color: var(--text-strong);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--border-hairline);
+}
+
+.about-compare-table th.brand-col {
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border-bottom: 2px solid var(--brand-500);
+}
+
+.about-compare-table td {
+  padding: 14px 20px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  border-bottom: 1px solid var(--border-hairline);
+  color: var(--text-body);
+}
+
+.about-compare-table tr:last-child td {
+  border-bottom: none;
+}
+
+.about-compare-table td.criteria-col {
+  font-weight: 700;
+  color: var(--text-strong);
+  background: var(--surface-sunken);
+  width: 28%;
+}
+
+.about-compare-table td.duydinh-col {
+  color: var(--status-success-ink, #1B7A5A);
+  font-weight: 600;
+  background: var(--green-50, #EEFCF3);
+  width: 38%;
+}
+
+.about-compare-table td.market-col {
+  color: var(--text-muted);
+  width: 34%;
+}
+
+@media (max-width: 768px) {
+  .about-compare-wrap {
+    overflow-x: auto;
+  }
+  .about-compare-table {
+    min-width: 580px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. Trust Bank & Escrow Bar
+   -------------------------------------------------------------------------- */
+.about-trust-bar {
+  background: var(--surface-tint-cream);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.about-trust-badges {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.about-trust-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.about-trust-badge-item svg {
+  color: var(--brand-600);
+}
+
+/* --------------------------------------------------------------------------
+   12. GEO / Passage Citability Block
+   -------------------------------------------------------------------------- */
+.about-direct-citability {
+  background: var(--brand-50);
+  border: 1px solid var(--brand-200);
+  border-left: 4px solid var(--brand-500);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-citability-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--brand-700);
+  text-transform: uppercase;
+}
+
+.about-citability-header svg {
+  color: var(--brand-600);
+}
+
+.about-citability-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: var(--text-body);
+}
+
+.about-citability-text strong {
+  color: var(--text-strong);
+}
+
+/* --------------------------------------------------------------------------
+   13. SEO Topic Cluster Internal Linking Hub
+   -------------------------------------------------------------------------- */
+.about-cluster-hub {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-surface);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-1);
+}
+
+.about-cluster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.about-cluster-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-strong);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-cluster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.about-cluster-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 140ms ease;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.about-cluster-card:hover {
+  background: var(--white);
+  border-color: var(--brand-500);
+  color: var(--brand-600);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}

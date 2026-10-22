@@ -3,7 +3,20 @@ import { apiClient } from './apiClient.js';
 
 export function useSendChatbotMessage() {
   return useMutation({
-    mutationFn: ({ sessionId, message }) => apiClient.post('/api/chatbot/message', { sessionId, message }),
+    mutationFn: ({ sessionId, message, currentPlateNumber }) =>
+      apiClient.post('/api/chatbot/message', { sessionId, message, currentPlateNumber }),
+  });
+}
+
+export function useRateChatbotMessage() {
+  return useMutation({
+    mutationFn: ({ messageId, rating }) => apiClient.post(`/api/chatbot/messages/${messageId}/rating`, { rating }),
+  });
+}
+
+export function useReportChatbotPlateClick() {
+  return useMutation({
+    mutationFn: (sessionId) => apiClient.post(`/api/chatbot/sessions/${sessionId}/plate-click`, {}),
   });
 }
 
@@ -22,5 +35,16 @@ export function useChatbotWidgetEnabled() {
     queryKey: ['chatbot', 'widget-enabled'],
     queryFn: () => apiClient.get('/api/chatbot/widget-enabled'),
     staleTime: 60_000,
+  });
+}
+
+// Sidebar "lịch sử trò chuyện" trang /tro-ly-ai — chỉ khách đã đăng nhập mới có dữ liệu (API 401 nếu
+// chưa login, enabled kiểm soát bởi nơi gọi để tránh gọi thừa khi chưa có user).
+export function useMyChatbotSessions(enabled) {
+  return useQuery({
+    queryKey: ['chatbot', 'my-sessions'],
+    queryFn: () => apiClient.get('/api/chatbot/sessions'),
+    enabled: !!enabled,
+    retry: false,
   });
 }

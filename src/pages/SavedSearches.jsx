@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Bell, Trash2, Pencil, Check, X, Mail } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { Switch } from '../components/index.jsx';
+import { Switch, PageHeader } from '../components/index.jsx';
 import { useSavedSearches, useUpdateSavedSearch, useDeleteSavedSearch } from '../services/savedSearchService.js';
 import { useNotificationSettings, useUpdateNotificationSettings, useNotifications, useMarkNotificationRead } from '../services/notificationService.js';
 import { timeAgo } from '../lib/date.js';
@@ -70,12 +70,11 @@ export default function SavedSearches({ go, notify, user }) {
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
-        <div style={{ flex: '1 1 300px' }}>
-          <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Thông báo biển mới</h1>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Lưu tiêu chí để nhận thông báo khi có biển phù hợp.</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Cập nhật tự động"
+        title="Thông báo biển mới"
+        subtitle="Lưu tiêu chí tìm kiếm để nhận thông báo ngay khi có biển số phù hợp trong kho."
+      />
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
         {tabBtn('criteria', 'Tiêu chí đã lưu', items?.length || 0)}

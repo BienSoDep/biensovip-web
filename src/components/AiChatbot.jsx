@@ -1,85 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles } from 'lucide-react';
-import { useSendChatbotMessage, useChatbotHistory, useChatbotWidgetEnabled } from '../services/chatbotService.js';
+import { X, Sparkles } from 'lucide-react';
+import { useChatbotWidgetEnabled } from '../services/chatbotService.js';
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js';
-
-const ACTION_LABEL = { chat_with_staff: 'Chat với nhân viên', contact_form: 'Để lại thông tin liên hệ' };
-const SESSION_KEY = 'bsv.chatSessionId';
-const GREETING = { from: 'bot', text: 'Chào bạn! Tôi là trợ lý Biensovip. Bạn cần tư vấn gì về biển số ạ?' };
-
-function loadStoredSessionId() {
-  try { return localStorage.getItem(SESSION_KEY); } catch { return null; }
-}
-function storeSessionId(id) {
-  try { localStorage.setItem(SESSION_KEY, id); } catch { /* ignore */ }
-}
-function clearStoredSessionId() {
-  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
-}
-
-const GREETING_QUICK_REPLIES = ['Xem biển giá dưới 100 triệu', 'Tìm biển hợp mệnh của tôi', 'Cách đặt cọc?'];
-const PLATE_FOUND_QUICK_REPLIES = ['Ý nghĩa biển số này là gì?', 'Còn hàng không?', 'Cách đặt cọc?'];
-const NO_RESULT_QUICK_REPLIES = ['Xem biển giá dưới 100 triệu', 'Chat với nhân viên tư vấn'];
-
-// Định dạng markdown tối giản cho tin nhắn bot — chỉ **in đậm** + xuống dòng, KHÔNG dùng thư viện
-// markdown full (marked) để tránh render HTML tùy ý từ AI (dù đã giới hạn chủ đề, vẫn escape trước
-// khi chèn — an toàn tuyệt đối trước injection dù model có bị chọc cho xuất HTML/script).
-function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-function renderMarkdownLite(text) {
-  const escaped = escapeHtml(text || '');
-  const bolded = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  return bolded.replace(/\n/g, '<br/>');
-}
-
-// Gợi ý câu hỏi tiếp theo — rule-based theo nội dung tin bot vừa trả lời, không cần đổi prompt AI.
-// Có plate card kèm theo → gợi ý xoay quanh biển đó. Không tìm thấy gì → gợi ý lối thoát khác (xem
-// theo giá, hoặc nhờ nhân viên) thay vì lặp lại câu hỏi cũ không ra kết quả.
-function nextQuickReplies(lastMsg) {
-  if (!lastMsg || lastMsg.from !== 'bot') return [];
-  if (lastMsg.plates?.length > 0) return PLATE_FOUND_QUICK_REPLIES;
-  if (/không tìm thấy|không có thông tin/i.test(lastMsg.text || '')) return NO_RESULT_QUICK_REPLIES;
-  return GREETING_QUICK_REPLIES;
-}
+import { useChatConversation, ChatConversationView } from './ChatConversation.jsx';
 
 export default function AiChatbot({ go }) {
   const { data: widgetFlag } = useChatbotWidgetEnabled();
   const [open, setOpen] = useState(false);
   // Ẩn tạm nút FAB lúc cuộn — chỉ khi panel đang đóng, tránh gián đoạn lúc đang chat/cuộn trong panel.
   const scrolling = useHideOnScroll();
-  const [msgs, setMsgs] = useState([GREETING]);
-  const [input, setInput] = useState('');
-  const [sessionId, setSessionId] = useState(null);
-  const [rateLimited, setRateLimited] = useState(false);
-  const restoredRef = useRef(false);
-  const bottomRef = useRef(null);
   const panelRef = useRef(null);
   const fabRef = useRef(null);
-  const sendMessage = useSendChatbotMessage();
-  const storedId = !restoredRef.current ? loadStoredSessionId() : null;
-  const history = useChatbotHistory(storedId);
-
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [msgs, sendMessage.isPending]);
-
-  const quickReplies = sendMessage.isPending ? [] : nextQuickReplies(msgs[msgs.length - 1]);
-
-  // Khôi phục hội thoại cũ từ localStorage — chỉ chạy 1 lần khi có kết quả history.
-  useEffect(() => {
-    if (restoredRef.current || !storedId) return;
-    if (history.isSuccess) {
-      restoredRef.current = true;
-      if (history.data?.messages?.length) {
-        setSessionId(storedId);
-        setMsgs(history.data.messages.map((m) => ({ from: m.role === 'user' ? 'user' : 'bot', text: m.content })));
-      } else {
-        clearStoredSessionId();
-      }
-    } else if (history.isError) {
-      restoredRef.current = true;
-      clearStoredSessionId();
-    }
-  }, [history.isSuccess, history.isError, history.data, storedId]);
+  const conv = useChatConversation();
 
   useEffect(() => {
     if (!open) return;
@@ -103,28 +35,6 @@ export default function AiChatbot({ go }) {
     };
   }, [open]);
 
-  const send = async (text) => {
-    const v = (text ?? input).trim();
-    if (!v || sendMessage.isPending || rateLimited) return;
-    setMsgs((m) => [...m, { from: 'user', text: v }]);
-
-    try {
-      const res = await sendMessage.mutateAsync({ sessionId, message: v });
-      setInput('');
-      setSessionId(res.sessionId);
-      storeSessionId(res.sessionId);
-      setMsgs((m) => [...m, { from: 'bot', text: res.reply, actions: res.suggestActions, plates: res.plates }]);
-    } catch (e) {
-      if (e.status === 429) {
-        setRateLimited(true);
-        setMsgs((m) => [...m, { from: 'bot', text: e.message || 'Bạn đã gửi quá nhiều tin nhắn, vui lòng thử lại sau ít phút.' }]);
-      } else {
-        setInput(v);
-        setMsgs((m) => [...m, { from: 'bot', text: 'Trợ lý AI đang bận, vui lòng chat với nhân viên.', actions: ['chat_with_staff', 'contact_form'] }]);
-      }
-    }
-  };
-
   const handleAction = (action) => {
     setOpen(false);
     if (action === 'chat_with_staff') go?.('chat')();
@@ -134,6 +44,11 @@ export default function AiChatbot({ go }) {
   const openPlate = (slugOrId) => {
     setOpen(false);
     go?.('detail', slugOrId)();
+  };
+
+  const openPost = (slug) => {
+    setOpen(false);
+    go?.('post', slug)();
   };
 
   if (widgetFlag && widgetFlag.enabled === false) return null;
@@ -157,69 +72,17 @@ export default function AiChatbot({ go }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-4)', background: 'var(--action-primary)', color: 'var(--white)' }}>
             <Sparkles size={20} />
             <div style={{ flex: 1 }}><span style={{ font: 'var(--type-title-3)', color: 'var(--white)' }}>Trợ lý Biensovip</span></div>
+            <button
+              aria-label="Mở trang trợ lý đầy đủ"
+              onClick={() => { setOpen(false); go?.('aiChat')(); }}
+              title="Mở trang trợ lý đầy đủ"
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--white)', padding: 4, font: 'var(--type-caption)', opacity: 0.85 }}
+            >Mở rộng</button>
             <button aria-label="Đóng trợ lý" onClick={() => setOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--white)', padding: 4 }}><X size={20} /></button>
           </div>
-          <div aria-live="polite" style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {msgs.map((m, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: m.from === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
-                <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: m.from === 'user' ? 'var(--radius-pill)' : 'var(--radius-md)', background: m.from === 'user' ? 'var(--action-primary)' : 'var(--surface-sunken)', color: m.from === 'user' ? 'var(--white)' : 'var(--text-body)', font: 'var(--type-body-sm)', whiteSpace: 'pre-wrap' }}>
-                  {m.from === 'bot' ? <span dangerouslySetInnerHTML={{ __html: renderMarkdownLite(m.text) }} /> : m.text}
-                </div>
-                {m.plates?.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: '90%', width: '100%' }}>
-                    {m.plates.map((p) => <PlateMiniCard key={p.slugOrId} plate={p} onOpen={() => openPlate(p.slugOrId)} />)}
-                  </div>
-                )}
-                {m.actions?.length > 0 && (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {m.actions.map((a) => (
-                      <button key={a} onClick={() => handleAction(a)} style={{ border: '1px solid var(--action-primary)', borderRadius: 'var(--radius-pill)', background: 'transparent', padding: '4px 10px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: 'pointer' }}>{ACTION_LABEL[a] || a}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-            {sendMessage.isPending && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--surface-sunken)', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Đang trả lời…</div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-          {!rateLimited && quickReplies.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 var(--space-3) var(--space-2)' }}>
-              {quickReplies.map((qr) => (
-                <button key={qr} onClick={() => send(qr)} disabled={sendMessage.isPending} style={{ border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '5px 12px', font: 'var(--type-caption)', color: 'var(--action-primary)', cursor: sendMessage.isPending ? 'default' : 'pointer', opacity: sendMessage.isPending ? 0.6 : 1 }}>{qr}</button>
-              ))}
-            </div>
-          )}
-          {rateLimited && (
-            <div style={{ padding: '0 var(--space-3) var(--space-2)', font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Bạn đã gửi quá nhiều tin nhắn. Vui lòng chat với nhân viên hoặc thử lại sau.</div>
-          )}
-          <div style={{ display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-3)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-            <input type="text" placeholder={rateLimited ? 'Đã tạm khóa gửi tin...' : 'Nhập câu hỏi...'} aria-label="Câu hỏi" disabled={rateLimited} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} style={{ flex: 1, height: 40, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', padding: '0 16px', font: 'var(--type-body-sm)', color: 'var(--text-strong)', opacity: rateLimited ? 0.6 : 1 }} />
-            <button onClick={() => send()} disabled={sendMessage.isPending || rateLimited} style={{ width: 40, height: 40, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: sendMessage.isPending || rateLimited ? 'default' : 'pointer', opacity: sendMessage.isPending || rateLimited ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={16} /></button>
-          </div>
+          <ChatConversationView conv={conv} onOpenPlate={openPlate} onOpenPost={openPost} onAction={handleAction} autoFocusInput={open} />
         </div>
       )}
     </>
-  );
-}
-
-function PlateMiniCard({ plate, onOpen }) {
-  const price = plate.priceOnRequest ? 'Giá liên hệ' : `${Number(plate.price).toLocaleString('vi-VN')}đ`;
-  const sold = plate.status === 'Sold';
-  return (
-    <button type="button" onClick={onOpen} disabled={sold} style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8,
-      border: 'none', borderRadius: 'var(--radius-field)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)',
-      padding: '8px 12px', cursor: sold ? 'default' : 'pointer', textAlign: 'left', width: '100%',
-    }}>
-      <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{plate.plateNumber}{plate.source === 'VPA' && <span style={{ marginLeft: 6, font: 'var(--type-caption)', fontWeight: 'var(--fw-regular)', color: 'var(--text-muted)' }}>Biển VPA</span>}</span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        {sold && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>Đã bán</span>}
-        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{price}</span>
-      </span>
-    </button>
   );
 }

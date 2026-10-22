@@ -7,7 +7,8 @@ const VPA_TAB_BY_PARAM = Object.fromEntries(Object.entries(VPA_TAB_PARAM).map(([
 
 export function readFiltersFromUrl() {
   const params = new URLSearchParams(window.location.search);
-  const tab = VPA_TAB_BY_PARAM[params.get('tab')] || '';
+  const rawTab = params.get('tab');
+  const tab = VPA_TAB_BY_PARAM[rawTab] || (['weekly', 'monthly', 'expired'].includes(rawTab) ? rawTab : '');
   let q = params.get('q') || '';
   if (!q && typeof window !== 'undefined' && window.location.pathname.startsWith('/tim-kiem/')) {
     const raw = window.location.pathname.slice('/tim-kiem/'.length).split('/')[0];

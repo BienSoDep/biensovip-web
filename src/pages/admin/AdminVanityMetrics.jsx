@@ -133,7 +133,7 @@ export default function AdminVanityMetrics({ notify }) {
       {/* 3 Thẻ KPI Thống kê trạng thái số liệu */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-3)' }}>
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Sliders size={22} />
           </div>
           <div>
@@ -143,24 +143,24 @@ export default function AdminVanityMetrics({ notify }) {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Zap size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đang bật khuếch đại</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#d97706' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--brand-600)' }}>
               {stats.enabledCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>chỉ số</span>
             </div>
           </div>
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--green-50)', color: 'var(--status-success-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldCheck size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Hiển thị số liệu thật 100%</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--status-success-ink)' }}>
               {stats.realCount} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-faint)' }}>chỉ số</span>
             </div>
           </div>
@@ -169,8 +169,8 @@ export default function AdminVanityMetrics({ notify }) {
 
       {/* Banner lưu ý an toàn */}
       <div style={{
-        background: 'rgba(241,151,32, 0.06)',
-        border: '1px solid rgba(241,151,32, 0.2)',
+        background: 'var(--brand-50)',
+        border: '1px solid var(--brand-200)',
         borderRadius: 'var(--radius-card)',
         padding: '12px 18px',
         display: 'flex',

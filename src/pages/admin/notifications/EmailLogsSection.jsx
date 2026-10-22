@@ -161,7 +161,7 @@ export default function EmailLogsSection({ notify }) {
         </div>
 
         {/* Logs Table */}
-        <div style={{ overflowX: 'auto' }}>
+        <div className="admin-simple-table-wrap" style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', font: 'var(--type-body-sm)' }}>
             <thead>
               <tr style={{ background: 'var(--surface-sunken)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', color: 'var(--text-muted)', fontSize: 12 }}>
@@ -264,6 +264,44 @@ export default function EmailLogsSection({ notify }) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Logs Cards (mobile) */}
+        <div className="admin-simple-cards">
+          {isLoading ? (
+            <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', color: 'var(--text-muted)' }}>Đang tải nhật ký gửi email…</div>
+          ) : isError ? (
+            <div style={{ padding: '40px var(--gutter-card)', textAlign: 'center', color: 'var(--status-danger)' }}>Lỗi tải dữ liệu.</div>
+          ) : items.length === 0 ? (
+            <div style={{ padding: '48px var(--gutter-card)', textAlign: 'center', color: 'var(--text-muted)' }}>Không tìm thấy nhật ký gửi email nào phù hợp bộ lọc.</div>
+          ) : (
+            items.map((log) => {
+              const isSuccess = log.status === 'success';
+              return (
+                <div key={log.id} className="admin-row">
+                  <div data-label="Thời gian">{formatDateTime(log.createdAt)}</div>
+                  <div data-label="Người nhận">{log.toEmail}</div>
+                  <div data-label="Loại">{TYPE_LABEL[log.type] || log.type}</div>
+                  <div data-label="Tiêu đề">{log.subject || '—'}</div>
+                  <div data-label="Trạng thái">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: isSuccess ? '#2E9970' : '#991b1b', fontWeight: 'var(--fw-semibold)' }}>
+                      {isSuccess ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                      {isSuccess ? 'Thành công' : 'Thất bại'}
+                    </span>
+                  </div>
+                  <div data-label="">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLog(log)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-hairline)', background: 'var(--white)', color: 'var(--action-primary)', fontSize: 12, fontWeight: 'var(--fw-medium)', cursor: 'pointer' }}
+                    >
+                      <Eye size={12} /> Chi tiết
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination */}

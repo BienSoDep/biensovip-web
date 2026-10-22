@@ -75,7 +75,7 @@ export default function ContactRequestForm({ user, source, compact = false }) {
   };
 
   return (
-    <>
+    <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <input type="text" name="company" value={form.honeypot} onChange={set('honeypot')} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }} />
       <Input label="Họ và tên" placeholder="Nguyễn Văn A" value={form.fullName} onChange={set('fullName')} required />
       <Input label="Số điện thoại" placeholder="09xx xxx xxx" value={form.phone} onChange={set('phone')} required />
@@ -93,12 +93,25 @@ export default function ContactRequestForm({ user, source, compact = false }) {
       )}
       {!compact && <Input label="Email (tùy chọn)" type="email" placeholder="email@example.com" value={form.email} onChange={set('email')} />}
       {!compact && <Checkbox label="Báo tôi khi có biển tương tự / khuyến mãi" checked={form.subscribe} onChange={(v) => setForm((f) => ({ ...f, subscribe: !!v }))} />}
-      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
-        <textarea rows={3} placeholder="VD: cần sang tên trong tuần này" value={form.note} onChange={set('note')} style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }} />
+      <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Ghi chú</span>
+        <textarea
+          rows={3}
+          placeholder="VD: cần sang tên trong tuần này (nhấn Enter ở các ô thông tin để gửi)"
+          value={form.note}
+          onChange={set('note')}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+          style={{ background: 'var(--surface-sunken)', border: 'none', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-field)', padding: '12px 14px', font: 'var(--type-body)', color: 'var(--text-strong)', resize: 'vertical', outline: 'none' }}
+        />
       </label>
-      <Button variant="primary" size="lg" fullWidth onClick={handleSubmit} disabled={submit.isPending}>
+      <Button variant="primary" type="submit" size="lg" fullWidth disabled={submit.isPending}>
         {submit.isPending ? 'Đang gửi...' : 'Gửi yêu cầu tư vấn'}
       </Button>
-    </>
+    </form>
   );
 }

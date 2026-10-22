@@ -1,0 +1,389 @@
+/* ==========================================================================
+   GLOBAL RESPONSIVE STYLES — Breakpoints, Mobile Nav, Drawers & Viewports
+   ========================================================================== */
+
+.plate-actions-mobile {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   1. MOBILE BREAKPOINT (<= 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  :root {
+    --pad-page: 16px;
+    --gutter-section: 16px;
+    --pad-section-y: 36px;
+    --gutter-card: 14px;
+    --space-6: 18px;
+    --space-7: 24px;
+    --space-8: 28px;
+    --space-9: 36px;
+    --space-10: 48px;
+    --fs-display-1: 36px;
+    --fs-display-2: 28px;
+    --fs-display-3: 24px;
+    --fs-title-1: 22px;
+    --fs-title-2: 18px;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+  }
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-auth-nav {
+    display: flex !important;
+  }
+  .header-nav-pills {
+    display: none !important;
+  }
+
+  /* Logo header trên mobile */
+  .header-logo-mark {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .header-logo-tagline {
+    display: none !important;
+  }
+
+  .page-breadcrumb {
+    display: none !important;
+  }
+  .page-breadcrumb.keep-mobile {
+    display: flex !important;
+    padding: 8px var(--pad-page);
+  }
+
+  /* Hero CTA full-width trên mobile */
+  .hero-cta-row {
+    flex-direction: column !important;
+  }
+  .hero-cta-row button,
+  .hero-cta-row a {
+    width: 100%;
+  }
+
+  .hero-plate-container {
+    max-width: 400px !important;
+  }
+  .hero-eyebrow {
+    display: none;
+  }
+  .home-search-btn {
+    display: none;
+  }
+
+  /* Home search bar: xếp dọc rõ ràng */
+  .home-search-bar {
+    border-radius: var(--radius-card) !important;
+    flex-direction: column;
+    align-items: stretch !important;
+    padding: 14px !important;
+  }
+  .home-search-field {
+    flex: 1 1 auto !important;
+    max-width: none !important;
+  }
+  .home-search-cats {
+    justify-content: center;
+  }
+
+  /* PlateCard / Detail: single CTA on mobile */
+  .plate-card-cta-secondary,
+  .detail-cta-secondary {
+    display: none;
+  }
+  .plate-card-cta-primary,
+  .detail-cta-primary {
+    flex: 1 1 100% !important;
+  }
+
+  /* PlateList: bộ lọc mobile */
+  .list-filter-toggle-row {
+    display: flex !important;
+  }
+  .list-filter-aside {
+    display: none !important;
+  }
+
+  /* PlateList: thanh pill search mobile */
+  .plate-search-bar {
+    flex-direction: column !important;
+    width: 100% !important;
+    border-radius: var(--radius-card) !important;
+    padding: 6px !important;
+  }
+  .plate-search-bar > span,
+  .plate-search-bar > input,
+  .plate-search-bar > button,
+  .plate-search-bar > div,
+  .plate-search-bar > span > input {
+    width: 100% !important;
+  }
+  .plate-search-divider {
+    width: 100% !important;
+    height: 1px !important;
+    align-self: stretch !important;
+    margin: 4px 0 !important;
+  }
+
+  /* Compare: mobile xếp 1 cột dọc */
+  .compare-empty-slots {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+  .compare-empty-slot {
+    flex: none !important;
+    max-width: none !important;
+    min-height: 0 !important;
+  }
+
+  /* Auth: chỉ còn form trên mobile */
+  .auth-info {
+    display: none !important;
+  }
+  .auth-mobile-back {
+    display: flex !important;
+  }
+
+  .detail-gallery-thumbs {
+    display: none !important;
+  }
+
+  /* Footer mobile */
+  .footer-desc {
+    display: none;
+  }
+  .footer-inner {
+    padding: clamp(20px, 4vw, 36px) !important;
+    gap: 0 !important;
+  }
+  .footer-section {
+    flex-basis: 100% !important;
+    border-top: 1px solid var(--border-hairline);
+    padding: 14px 0;
+  }
+  .footer-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+  }
+  .footer-section-title::-webkit-details-marker { display: none; }
+  .footer-section-title::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-right: 1.5px solid var(--text-faint);
+    border-bottom: 1.5px solid var(--text-faint);
+    transform: rotate(45deg);
+    transition: transform 160ms var(--ease-out);
+  }
+  .footer-section[open] > .footer-section-title::after {
+    transform: rotate(-135deg);
+  }
+  .footer-section > div {
+    padding-top: var(--space-3);
+  }
+
+  /* Dashboard khối phụ accordion */
+  .dash-fold > summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 2px;
+    border-top: 1px solid var(--border-hairline);
+    font: var(--type-title-3);
+    color: var(--text-strong);
+  }
+  .dash-fold > summary::-webkit-details-marker { display: none; }
+  .dash-fold > summary::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+    border-right: 1.5px solid var(--text-faint);
+    border-bottom: 1.5px solid var(--text-faint);
+    transform: rotate(45deg);
+    transition: transform 160ms var(--ease-out);
+  }
+  .dash-fold[open] > summary::after { transform: rotate(-135deg); }
+
+  /* Detail & Floating Sticky Actions */
+  .plate-actions-mobile {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    gap: 8px;
+    align-items: center;
+    padding: 10px var(--pad-page) calc(10px + env(safe-area-inset-bottom));
+    background: var(--glass-fill);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: 0 -1px 0 var(--border-hairline);
+  }
+  .plate-actions-desktop {
+    display: none;
+  }
+  .chatbot-fab,
+  .contact-fab,
+  .back-to-top {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .chatbot-fab { bottom: 16px !important; right: 16px !important; }
+  .contact-fab-wrap { bottom: 72px !important; right: 16px !important; }
+  .back-to-top { bottom: 68px !important; left: 16px !important; }
+  .plate-share-row {
+    display: none !important;
+  }
+  .compose-actions-mobile {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    margin: 0 !important;
+    padding: 10px var(--pad-page) calc(10px + env(safe-area-inset-bottom));
+    background: var(--glass-fill);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: 0 -1px 0 var(--border-hairline);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. DESKTOP / LARGE SCREENS (>= 481px)
+   -------------------------------------------------------------------------- */
+@media (min-width: 481px) {
+  .footer-section-title {
+    pointer-events: none;
+    margin-bottom: var(--space-3);
+  }
+  .footer-section-title::-webkit-details-marker { display: none; }
+  .dash-fold > summary {
+    pointer-events: none;
+    border-top: none;
+    padding: var(--space-2) 0 var(--space-3);
+  }
+  .dash-fold > summary::after { display: none; }
+
+  .about-contact {
+    display: none !important;
+  }
+  .about-faq-answer {
+    display: none !important;
+  }
+  .about-faq-item.open .about-faq-answer {
+    display: block !important;
+  }
+
+  .section-eyebrow {
+    display: none;
+  }
+  .hero-plate-container {
+    max-width: 320px !important;
+  }
+  .hero-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .about-timeline-item-extra {
+    display: none !important;
+  }
+  .about-timeline.open .about-timeline-item-extra {
+    display: flex !important;
+  }
+  .about-timeline-toggle {
+    display: inline-flex !important;
+  }
+
+  .similar-plate-extra {
+    display: none !important;
+  }
+  .meanings-extra {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. SMALL MOBILE (<= 480px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .plate-grid.view-list {
+    grid-template-columns: 1fr !important;
+  }
+  .plate-grid.view-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: var(--space-3) !important;
+  }
+  .list-toolbar-secondary {
+    display: none !important;
+  }
+  .plate-thumb-extra {
+    display: none !important;
+  }
+  .plate-thumb-more {
+    display: flex !important;
+  }
+  .blog-category-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .blog-category-row::-webkit-scrollbar {
+    display: none;
+  }
+  .compare-row-extra {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. DESKTOP HEADER & VIEWPORT CONSTRAINTS
+   -------------------------------------------------------------------------- */
+@media (max-height: 420px) {
+  .chatbot-fab {
+    width: 40px !important;
+    height: 40px !important;
+    bottom: 12px !important;
+    right: 12px !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .header-nav-pills {
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+  .header-nav-pills .pill-btn {
+    padding: 0 11px !important;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1260px) {
+  .header-nav-pills {
+    gap: 4px !important;
+  }
+  .header-nav-pills .pill-btn {
+    padding: 0 9px !important;
+  }
+}

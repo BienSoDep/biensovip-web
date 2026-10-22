@@ -19,7 +19,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
     ? dbItems.map((r, idx) => ({
         id: r.id,
         customerName: maskName(r.reviewerName || 'Khách hàng'),
-        location: r.plateProvince ? `CSGT ${r.plateProvince}` : 'Khách hàng toàn quốc',
+        location: r.plateProvince ? `Khu vực ${r.plateProvince}` : 'Khách hàng toàn quốc',
         vehicle: idx % 2 === 0 ? 'Mercedes-Benz E300 / GLC' : 'Lexus / Porsche Macan',
         plateNumber: r.plateNumber || plate.plateNumber,
         rating: r.rating || 5,
@@ -44,7 +44,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
         style={{
           background: 'linear-gradient(135deg, rgba(63,191,143, 0.08) 0%, rgba(217, 119, 6, 0.06) 100%)',
           border: '1.5px solid rgba(63,191,143, 0.35)',
-          borderRadius: 'var(--radius-card, 16px)',
+          borderRadius: 'var(--radius-card)',
           padding: 'var(--space-5, 20px) var(--space-6, 24px)',
           display: 'flex',
           flexDirection: 'column',
@@ -79,7 +79,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                     background: '#3FBF8F',
                     color: '#FFF',
                     padding: '2px 8px',
-                    borderRadius: 999,
+                    borderRadius: 'var(--radius-pill)',
                     fontSize: 12,
                     fontWeight: 700,
                     letterSpacing: 0.5,
@@ -100,11 +100,11 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
               size="sm"
               onClick={onConsultSimilar}
               style={{
-                background: 'linear-gradient(135deg, var(--action-primary, #D97706) 0%, #B45309 100%)',
+                background: 'linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%)',
                 color: '#FFF',
                 border: 'none',
                 fontWeight: 600,
-                boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
+                boxShadow: 'var(--shadow-1)',
               }}
             >
               <RefreshCw size={15} style={{ marginRight: 6 }} />
@@ -161,9 +161,9 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
       <div
         style={{
           background: 'var(--white, #FFF)',
-          borderRadius: 'var(--radius-card, 16px)',
-          border: '1px solid var(--border-hairline, #E2E8F0)',
-          boxShadow: 'var(--shadow-card, 0 4px 20px rgba(0, 0, 0, 0.04))',
+          borderRadius: 'var(--radius-card)',
+          border: '1px solid var(--border-hairline)',
+          boxShadow: 'var(--shadow-card)',
           padding: 'var(--space-6, 24px)',
           display: 'flex',
           flexDirection: 'column',
@@ -190,18 +190,18 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              background: 'var(--surface-sunken, #F8FAFC)',
+              background: 'var(--surface-sunken)',
               padding: '8px 16px',
-              borderRadius: 12,
-              border: '1px solid var(--border-hairline, #E2E8F0)',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--border-hairline)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <Star size={18} fill="#D97706" style={{ color: '#D97706' }} />
-              <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-strong, #0F172A)' }}>4.9</span>
-              <span style={{ fontSize: 13, color: 'var(--text-muted, #64748B)' }}>/ 5.0</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-strong)' }}>4.9</span>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/ 5.0</span>
             </div>
-            <span style={{ height: 16, width: 1, background: '#CBD5E1' }} />
+            <span style={{ height: 16, width: 1, background: 'var(--border-hairline)' }} />
             <span style={{ fontSize: 12, color: '#3FBF8F', fontWeight: 600 }}>500+ Giao dịch an toàn</span>
           </div>
         </div>
@@ -218,10 +218,10 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
             <div
               key={item.id}
               style={{
-                background: 'var(--surface-sunken, #F8FAFC)',
-                borderRadius: 'var(--radius-md, 12px)',
+                background: 'var(--surface-sunken)',
+                borderRadius: 'var(--radius-card)',
                 padding: 'var(--space-4, 16px)',
-                border: '1px solid rgba(226, 232, 240, 0.8)',
+                border: '1px solid var(--border-hairline)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 12,
@@ -236,7 +236,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                       width: 40,
                       height: 40,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+                      background: 'linear-gradient(135deg, var(--brand-500) 0%, var(--brand-700) 100%)',
                       color: '#FFF',
                       display: 'flex',
                       alignItems: 'center',
@@ -313,7 +313,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                         background: 'rgba(217, 119, 6, 0.08)',
                         color: '#B45309',
                         padding: '2px 8px',
-                        borderRadius: 6,
+                        borderRadius: 'var(--radius-pill)',
                         fontWeight: 600,
                       }}
                     >
@@ -330,13 +330,13 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
               {item.adminReply && (
                 <div
                   style={{
-                    background: 'rgba(15, 23, 42, 0.03)',
-                    borderLeft: '3px solid var(--action-primary, #D97706)',
+                    background: 'var(--surface-sunken)',
+                    borderLeft: '3px solid var(--action-primary)',
                     padding: '8px 12px',
-                    borderRadius: '0 8px 8px 0',
+                    borderRadius: '0 var(--radius-card) var(--radius-card) 0',
                     fontSize: 12.5,
                     lineHeight: 1.5,
-                    color: 'var(--text-muted, #475569)',
+                    color: 'var(--text-muted)',
                   }}
                 >
                   <span style={{ fontWeight: 700, color: 'var(--action-primary, #D97706)', display: 'block', marginBottom: 2 }}>
@@ -352,9 +352,9 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
         {/* 3. Guarantees Bar & Call to Action */}
         <div
           style={{
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.03) 0%, rgba(217, 119, 6, 0.05) 100%)',
-            border: '1px solid rgba(226, 232, 240, 0.9)',
-            borderRadius: 12,
+            background: 'linear-gradient(135deg, var(--surface-card) 0%, var(--brand-50) 100%)',
+            border: '1px solid var(--border-hairline)',
+            borderRadius: 'var(--radius-card)',
             padding: 16,
             display: 'flex',
             alignItems: 'center',
@@ -364,8 +364,8 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 13, color: 'var(--text-strong, #0F172A)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <ShieldCheck size={16} style={{ color: 'var(--action-primary, #C75B00)' }} /> Cam kết dịch vụ Biensovip:
+            <span style={{ fontSize: 13, color: 'var(--text-strong)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <ShieldCheck size={16} style={{ color: 'var(--brand-600)' }} /> Cam kết dịch vụ Biensovip:
             </span>
             <span style={{ fontSize: 12.5, color: 'var(--text-muted, #475569)' }}>
               100% Biển sạch nguồn gốc · Hợp đồng pháp lý công chứng · Đền bù 200% nếu sai lệch

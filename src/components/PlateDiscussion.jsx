@@ -81,7 +81,7 @@ const QUICK_QUESTIONS = [
   "Biển này đã bao gồm trọn gói thuế phí sang tên định danh chưa shop?",
   "Mình ở tỉnh khác có gắn vào xe đăng ký ở tỉnh mình được không anh?",
   "Biển này hợp với người mệnh nào và xe màu gì vậy anh Duy?",
-  "Bên mình có văn bản trúng đấu giá gốc của Cục CSGT kèm theo không?",
+  "Bên mình có văn bản xác nhận trúng đấu giá chính thức kèm theo không?",
   "Biển này chốt nhanh trong ngày có bớt thêm chút lộc may mắn không anh?",
   "Quy trình đặt cọc và bao lâu thì nhận được giấy hẹn/biển số cứng?",
 ];
@@ -262,7 +262,7 @@ function CommentActions({
               left: 0,
               zIndex: 100,
               background: "#ffffff",
-              borderRadius: 9999,
+              borderRadius: "var(--radius-pill)",
               padding: "4px 6px",
               display: "flex",
               alignItems: "center",
@@ -314,7 +314,7 @@ function CommentActions({
                         fontSize: 11,
                         fontWeight: 600,
                         padding: "2px 8px",
-                        borderRadius: 9999,
+                        borderRadius: "var(--radius-pill)",
                         whiteSpace: "nowrap",
                         pointerEvents: "none",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
@@ -756,7 +756,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
       aria-label="Hỏi đáp và thảo luận cộng đồng biển số"
       style={{
         background: "var(--white)",
-        borderRadius: "var(--radius-2xl)",
+        borderRadius: "var(--radius-card)",
         border: "1px solid var(--border-hairline)",
         boxShadow: "var(--shadow-2)",
         padding: "var(--space-6)",
@@ -912,7 +912,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
           background:
             "linear-gradient(135deg,rgba(217,119,6,.04) 0%,rgba(15,23,42,.02) 100%)",
           border: "1px solid rgba(217,119,6,.22)",
-          borderRadius: "var(--radius-2xl)",
+          borderRadius: "var(--radius-card)",
           padding: "var(--gutter-card)",
           display: "flex",
           flexDirection: "column",
@@ -987,7 +987,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
             width: "100%",
             boxSizing: "border-box",
             border: "1px solid var(--border-hairline)",
-            borderRadius: "var(--radius-xl)",
+            borderRadius: "var(--radius-field)",
             padding: "10px 12px",
             font: "var(--type-body-sm)",
             lineHeight: 1.55,
@@ -995,6 +995,12 @@ export default function PlateDiscussion({ plate, notify, user }) {
             outline: "none",
             background: "var(--white)",
             color: "var(--text-body)",
+          }}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+              e.preventDefault();
+              handleSubmitMain(e);
+            }
           }}
           onFocus={(e) => {
             e.target.style.borderColor = "var(--action-primary)";
@@ -1051,7 +1057,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                     width: "100%",
                     boxSizing: "border-box",
                     padding: "8px 10px 8px 30px",
-                    borderRadius: "var(--radius-xl)",
+                    borderRadius: "var(--radius-field)",
                     border: "1px solid var(--border-hairline)",
                     fontSize: 13,
                     background: "var(--white)",
@@ -1084,7 +1090,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                     width: "100%",
                     boxSizing: "border-box",
                     padding: "8px 10px 8px 30px",
-                    borderRadius: "var(--radius-xl)",
+                    borderRadius: "var(--radius-field)",
                     border: "1px solid var(--border-hairline)",
                     fontSize: 13,
                     background: "var(--white)",
@@ -1196,7 +1202,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
               key={item.id}
               style={{
                 background: "var(--surface-sunken)",
-                borderRadius: "var(--radius-2xl)",
+                borderRadius: "var(--radius-card)",
                 padding: "var(--gutter-card)",
                 border: "1px solid var(--border-hairline)",
                 display: "flex",
@@ -1305,7 +1311,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                   style={{
                     marginLeft: 52,
                     background: "var(--white)",
-                    borderRadius: "var(--radius-xl)",
+                    borderRadius: "var(--radius-card)",
                     padding: "14px 16px",
                     border: "1px solid rgba(217,119,6,.2)",
                     borderLeft: "4px solid var(--action-primary)",
@@ -1411,7 +1417,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                         key={cReply.id}
                         style={{
                           background: "var(--white)",
-                          borderRadius: "var(--radius-xl)",
+                          borderRadius: "var(--radius-card)",
                           padding: "12px 14px",
                           border: "1px solid var(--border-hairline)",
                           borderLeft: "3px solid #F19720",
@@ -1454,7 +1460,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                                   color: "#C75B00",
                                   font: "var(--type-caption)",
                                   padding: "1px 6px",
-                                  borderRadius: 4,
+                                  borderRadius: "var(--radius-pill)",
                                 }}
                               >
                                 {cReply.badge}
@@ -1520,7 +1526,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                   style={{
                     marginLeft: 52,
                     background: "var(--white)",
-                    borderRadius: "var(--radius-xl)",
+                    borderRadius: "var(--radius-card)",
                     padding: "14px 16px",
                     border: "1.5px solid var(--action-primary)",
                     display: "flex",
@@ -1573,12 +1579,18 @@ export default function PlateDiscussion({ plate, notify, user }) {
                       width: "100%",
                       boxSizing: "border-box",
                       border: "1px solid var(--border-hairline)",
-                      borderRadius: "var(--radius-xl)",
+                      borderRadius: "var(--radius-field)",
                       padding: "8px 10px",
                       font: "var(--type-body-sm)",
                       lineHeight: 1.55,
                       resize: "vertical",
                       outline: "none",
+                    }}
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmitReply(e, item.id);
+                      }
                     }}
                     onFocus={(e) => {
                       e.target.style.borderColor = "var(--action-primary)";
@@ -1615,7 +1627,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                           style={{
                             flex: "1 1 110px",
                             padding: "6px 10px",
-                            borderRadius: "var(--radius-xl)",
+                            borderRadius: "var(--radius-field)",
                             border: "1px solid var(--border-hairline)",
                             fontSize: 13,
                           }}
@@ -1628,7 +1640,7 @@ export default function PlateDiscussion({ plate, notify, user }) {
                           style={{
                             flex: "1 1 130px",
                             padding: "6px 10px",
-                            borderRadius: "var(--radius-xl)",
+                            borderRadius: "var(--radius-field)",
                             border: "1px solid var(--border-hairline)",
                             fontSize: 13,
                           }}

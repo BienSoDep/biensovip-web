@@ -82,7 +82,7 @@ export default function AdminErrorLogs() {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Bug size={22} />
           </div>
           <div>
@@ -102,16 +102,16 @@ export default function AdminErrorLogs() {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: level === 'Fatal' ? '2px solid #dc2626' : '2px solid transparent',
+            border: level === 'Fatal' ? '2px solid var(--status-danger-ink)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--red-50)', color: 'var(--status-danger-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldAlert size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Mức Fatal (Khẩn cấp)</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#dc2626' }}>{stats.fatal}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--status-danger-ink)' }}>{stats.fatal}</div>
           </div>
         </div>
 
@@ -126,16 +126,16 @@ export default function AdminErrorLogs() {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: level === 'Error' ? '2px solid #e11d48' : '2px solid transparent',
+            border: level === 'Error' ? '2px solid var(--status-danger-ink)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(244, 63, 94, 0.12)', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--red-50)', color: 'var(--status-danger-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <AlertCircle size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Mức Error (Lỗi)</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#e11d48' }}>{stats.error}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--status-danger-ink)' }}>{stats.error}</div>
           </div>
         </div>
 
@@ -150,16 +150,16 @@ export default function AdminErrorLogs() {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: level === 'Warning' ? '2px solid #d97706' : '2px solid transparent',
+            border: level === 'Warning' ? '2px solid var(--brand-500)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <AlertTriangle size={22} />
           </div>
           <div>
             <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Mức Warning (Cảnh báo)</div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#d97706' }}>{stats.warning}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--brand-600)' }}>{stats.warning}</div>
           </div>
         </div>
       </div>
@@ -210,7 +210,7 @@ export default function AdminErrorLogs() {
                 {t.count !== undefined && (
                   <span style={{
                     padding: '1px 7px',
-                    borderRadius: 10,
+                    borderRadius: 'var(--radius-pill)',
                     fontSize: 11,
                     fontWeight: 700,
                     background: active ? 'rgba(255, 255, 255, 0.22)' : 'var(--border-hairline)',

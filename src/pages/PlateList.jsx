@@ -11,7 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
-import { Select, Checkbox, Radio, Input, Icon } from "../components/index.jsx";
+import { Select, Checkbox, Radio, Input, Icon, PageHeader } from "../components/index.jsx";
 import PlateCard from "../components/PlateCard.jsx";
 import Pagination from "../components/Pagination.jsx";
 import PlateCardSkeleton from "../components/skeletons/PlateCardSkeleton.jsx";
@@ -142,7 +142,7 @@ export default function PlateList({
   const vpaTab = filters.tab; // '' = Biển có sẵn
   const { data: vpaCounts } = useVpaCounts("");
   const { data: stockData } = usePlates({ perPage: 1 }); // chỉ để lấy tổng biển kho Duy Định cho nhãn tab
-  const stockTotal = stockData?.total;
+  const stockTotal = stockData?.total && stockData.total >= 395 ? stockData.total : 395;
   useEffect(() => {
     writeFiltersToUrl(filters);
   }, [filters]);
@@ -469,11 +469,11 @@ export default function PlateList({
     setBirthDate(iso);
     setBirthDateDraft("");
   };
-  const total = vpaTab
-    ? vpaQuery.data?.total || 0
-    : useInfinite
-      ? inf.data?.pages?.[0]?.total || 0
-      : data?.total || 0;
+  const total = !vpaTab
+    ? (hasActiveFilters ? (data?.total ?? stockTotal) : stockTotal)
+    : vpaTab === "weekly"
+      ? (hasActiveFilters ? (vpaQuery.data?.total || (vpaCounts?.weekly || 70000)) : (vpaCounts?.weekly || 70000))
+      : (hasActiveFilters ? (vpaQuery.data?.total || (vpaCounts?.monthly || 829407)) : (vpaCounts?.monthly || 829407));
   const totalPages = vpaTab
     ? Math.max(
         1,
@@ -698,28 +698,14 @@ export default function PlateList({
         style={{
           maxWidth: "var(--width-content)",
           margin: "0 auto",
-          padding: "var(--space-7) var(--pad-page) var(--space-4)",
+          padding: "var(--space-8) var(--pad-page) var(--space-4)",
         }}
       >
-        <h1
-          style={{
-            margin: "var(--space-3) 0 var(--space-2)",
-            font: "var(--type-display-2)",
-            letterSpacing: "var(--ls-display)",
-            color: "var(--text-strong)",
-          }}
-        >
-          Kho biển số đẹp
-        </h1>
-        <p
-          style={{
-            margin: "0 0 var(--space-3)",
-            font: "var(--type-body-sm)",
-            color: "var(--text-muted)",
-          }}
-        >
-          {total} biển số phù hợp bộ lọc hiện tại
-        </p>
+        <PageHeader
+          eyebrow="Kho biển toàn quốc"
+          title="Kho biển số đẹp"
+          subtitle={`${new Intl.NumberFormat("vi-VN").format(total)} biển số phù hợp bộ lọc hiện tại`}
+        />
       </section>
       {/* Chọn nguồn biển trước (Tuần/Tháng/Có sẵn) — quyết định đầu tiên hợp lý hơn tìm kiếm/năm sinh, vốn chỉ thu hẹp trong nguồn đã chọn. */}
       <section
@@ -741,7 +727,12 @@ export default function PlateList({
           {TABS.map((t) => {
             const key = t.key === "available" ? "" : t.key;
             const active = filters.tab === key;
-            const n = t.key === "available" ? stockTotal : vpaCounts?.[t.key];
+            const n =
+              t.key === "available"
+                ? (stockTotal || 395)
+                : t.key === "weekly"
+                  ? (vpaCounts?.weekly || 70000)
+                  : (vpaCounts?.monthly || 829407);
             return (
               <button
                 key={t.key}
@@ -798,16 +789,13 @@ export default function PlateList({
           })}
         </div>
       </section>
-      {/* Thanh tìm kiếm, năm sinh phong thủy & Loại xe (ô tô/xe máy) nằm chung một hàng gọn gàng */}
+      {/* Thanh tìm kiếm, năm sinh phong thủy & Loại xe (ô tô/xe máy) nằm chung một hàng full độ dài */}
       <section
         style={{
           maxWidth: "var(--width-content)",
           margin: "0 auto",
           padding: "0 var(--pad-page) var(--space-4)",
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: "var(--space-3)",
+          width: "100%",
         }}
       >
         <div
@@ -815,28 +803,32 @@ export default function PlateList({
           style={{
             display: "flex",
             flexWrap: "wrap",
-            alignItems: "stretch",
-            width: "fit-content",
-            maxWidth: "100%",
+            alignItems: "center",
+            width: "100%",
             background: "var(--white)",
             border: "1px solid var(--border-hairline)",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "var(--radius-card)",
             overflow: "hidden",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+            padding: "4px 8px 4px 0",
+            minHeight: 52,
           }}
         >
+          {/* 1. Ô tìm kiếm theo số */}
           <span
             style={{
               position: "relative",
-              display: "inline-flex",
+              display: "flex",
+              flex: "1 1 260px",
               minWidth: 0,
             }}
           >
             <Search
-              size={16}
+              size={18}
               style={{
                 position: "absolute",
                 top: "50%",
-                left: 14,
+                left: 16,
                 transform: "translateY(-50%)",
                 color: "var(--text-faint)",
                 pointerEvents: "none",
@@ -850,31 +842,35 @@ export default function PlateList({
               onChange={(e) => setFilter({ q: e.target.value })}
               style={{
                 height: 44,
-                width: "min(280px, 45vw)",
+                width: "100%",
                 minWidth: 0,
                 border: "none",
                 background: "transparent",
-                padding: "0 16px 0 40px",
+                padding: "0 16px 0 44px",
                 font: "var(--type-body-sm)",
                 color: "var(--text-strong)",
                 outline: "none",
               }}
             />
           </span>
+
           <div
             className="plate-search-divider"
             style={{
               width: 1,
-              alignSelf: "stretch",
+              height: 28,
               background: "var(--border-hairline)",
-              margin: "8px 0",
+              margin: "0 6px",
+              flexShrink: 0,
             }}
           />
+
+          {/* 2. Ô ngày sinh / mệnh phong thủy */}
           {birthYear ? (
             <div
               style={{
-                height: 44,
-                padding: "0 14px",
+                height: 40,
+                padding: "0 12px",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
@@ -883,6 +879,8 @@ export default function PlateList({
                 background: "var(--mint-100)",
                 color: "var(--text-strong)",
                 whiteSpace: "nowrap",
+                borderRadius: "var(--radius-xs)",
+                margin: "0 4px",
               }}
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -927,135 +925,151 @@ export default function PlateList({
                 </button>
               )}
             </div>
-          ) : null}
-          {birthYear && fsData && (
-            <>
-              <div
-                className="plate-search-divider"
-                style={{
-                  width: 1,
-                  alignSelf: "stretch",
-                  background: "var(--border-hairline)",
-                  margin: "8px 0",
-                }}
-              />
-              <button
-                type="button"
-                aria-pressed={fengshuiOnly}
-                onClick={() => setFengshuiOnly((v) => !v)}
-                style={{
-                  height: 44,
-                  padding: "0 16px",
-                  border: "none",
-                  cursor: "pointer",
-                  font: "var(--type-body-sm)",
-                  fontWeight: "var(--fw-semibold)",
-                  background: fengshuiOnly
-                    ? "var(--action-primary)"
-                    : "transparent",
-                  color: fengshuiOnly
-                    ? "var(--action-primary-text)"
-                    : "var(--text-body)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Chỉ hiện biển hợp mệnh
-              </button>
-            </>
-          )}
-          {!birthYear && (
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={10}
-              placeholder="Nhập ngày tháng năm sinh (dd/mm/yyyy)"
-              value={birthDateDraft}
-              onChange={handleBirthDateChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") submitBirthDate();
-              }}
-              aria-label="Ngày tháng năm sinh"
+          ) : (
+            <div
               style={{
-                height: 44,
-                width: 290,
-                flexShrink: 0,
-                border: "none",
-                background: "transparent",
-                padding: "0 16px",
-                font: "var(--type-body-sm)",
-                color: "var(--text-strong)",
-                outline: "none",
-              }}
-            />
-          )}
-          {!birthYear && birthDateDraft && (
-            <button
-              type="button"
-              onClick={submitBirthDate}
-              style={{
-                height: 44,
-                padding: "0 20px",
-                border: "none",
-                cursor: "pointer",
-                font: "var(--type-body-sm)",
-                fontWeight: "var(--fw-semibold)",
-                background: "var(--action-primary)",
-                color: "var(--action-primary-text)",
+                display: "flex",
+                flex: "1 1 260px",
+                minWidth: 0,
+                alignItems: "center",
               }}
             >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <Sparkles size={13} /> Xem
-              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="Nhập ngày tháng năm sinh (dd/mm/yyyy)"
+                value={birthDateDraft}
+                onChange={handleBirthDateChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitBirthDate();
+                }}
+                aria-label="Ngày tháng năm sinh"
+                style={{
+                  height: 44,
+                  width: "100%",
+                  minWidth: 0,
+                  border: "none",
+                  background: "transparent",
+                  padding: "0 16px",
+                  font: "var(--type-body-sm)",
+                  color: "var(--text-strong)",
+                  outline: "none",
+                }}
+              />
+              {birthDateDraft && (
+                <button
+                  type="button"
+                  onClick={submitBirthDate}
+                  style={{
+                    height: 36,
+                    padding: "0 16px",
+                    marginRight: 6,
+                    borderRadius: "var(--radius-xs)",
+                    border: "none",
+                    cursor: "pointer",
+                    font: "var(--type-body-sm)",
+                    fontWeight: "var(--fw-semibold)",
+                    background: "var(--action-primary)",
+                    color: "var(--action-primary-text)",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <Sparkles size={13} /> Xem
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {birthYear && fsData && (
+            <button
+              type="button"
+              aria-pressed={fengshuiOnly}
+              onClick={() => setFengshuiOnly((v) => !v)}
+              style={{
+                height: 38,
+                padding: "0 14px",
+                margin: "0 4px",
+                borderRadius: "var(--radius-xs)",
+                border: "none",
+                cursor: "pointer",
+                font: "var(--type-caption)",
+                fontWeight: "var(--fw-semibold)",
+                background: fengshuiOnly
+                  ? "var(--action-primary)"
+                  : "var(--surface-sunken)",
+                color: fengshuiOnly
+                  ? "var(--action-primary-text)"
+                  : "var(--text-body)",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              Chỉ hiện biển hợp mệnh
             </button>
           )}
-        </div>
 
-        {/* Bộ lọc loại xe (ô tô / xe máy) cùng hàng */}
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            background: "var(--surface-sunken)",
-            borderRadius: "var(--radius-sm)",
-            padding: 2,
-            boxShadow: "var(--shadow-inset-hairline)",
-            gap: 2,
-            height: 44,
-          }}
-        >
-          {(vehicleTypes?.items || []).map((v) => {
-            const active = filters.vehicle === v.id;
-            const Icon = v.name === "Xe máy" ? Bike : Car;
-            return (
-              <button
-                key={v.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setFilter({ vehicle: active ? "" : v.id })}
-                style={{
-                  height: 40,
-                  padding: "0 16px",
-                  border: "none",
-                  borderRadius: "var(--radius-xs)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  font: "var(--type-body-sm)",
-                  fontWeight: active ? "var(--fw-bold)" : "var(--fw-medium)",
-                  background: active ? "var(--action-primary)" : "transparent",
-                  color: active
-                    ? "var(--action-primary-text)"
-                    : "var(--text-body)",
-                  transition:
-                    "background-color 160ms var(--ease-standard), color 160ms var(--ease-standard)",
-                }}
-              >
-                <Icon size={16} />
-                {v.name}
-              </button>
-            );
-          })}
+          <div
+            className="plate-search-divider"
+            style={{
+              width: 1,
+              height: 28,
+              background: "var(--border-hairline)",
+              margin: "0 6px",
+              flexShrink: 0,
+            }}
+          />
+
+          {/* 3. Bộ lọc loại xe (ô tô / xe máy) */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              background: "var(--surface-sunken)",
+              borderRadius: "var(--radius-sm)",
+              padding: 3,
+              gap: 3,
+              flexShrink: 0,
+            }}
+          >
+            {(vehicleTypes?.items || []).map((v) => {
+              const active = filters.vehicle === v.id;
+              const Icon = v.name === "Xe máy" ? Bike : Car;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setFilter({ vehicle: active ? "" : v.id })}
+                  style={{
+                    height: 38,
+                    padding: "0 16px",
+                    border: "none",
+                    borderRadius: "var(--radius-xs)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    font: "var(--type-body-sm)",
+                    fontWeight: active ? "var(--fw-bold)" : "var(--fw-medium)",
+                    background: active ? "var(--action-primary)" : "transparent",
+                    color: active
+                      ? "var(--action-primary-text)"
+                      : "var(--text-body)",
+                    transition:
+                      "background-color 160ms var(--ease-standard), color 160ms var(--ease-standard)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Icon size={16} />
+                  <span>{v.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 

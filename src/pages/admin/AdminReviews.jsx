@@ -376,7 +376,13 @@ function ReplyBlock({ review, replyReview, notify }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={2} maxLength={1000}
-        placeholder="Phản hồi công khai cho khách hàng…"
+        onKeyDown={(e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            save();
+          }
+        }}
+        placeholder="Phản hồi công khai cho khách hàng… (nhấn Ctrl/Cmd+Enter để lưu)"
         style={{ resize: 'vertical', borderRadius: 'var(--radius-field)', border: '1px solid var(--grey-200)', padding: '8px 12px', font: 'var(--type-body-sm)' }} />
       <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
         <Button variant="primary" size="sm" disabled={replyReview.isPending} onClick={save}>Lưu</Button>

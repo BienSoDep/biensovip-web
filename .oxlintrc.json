@@ -1,8 +1,21 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "browser": true,
+    "builtin": true
+  },
   "plugins": ["react", "oxc"],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "eslint/no-undef": "error"
+  },
+  "overrides": [
+    {
+      "files": ["e2e/**", "scripts/**", "middleware.js", "vite.config.js", "playwright.config.js"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
 }

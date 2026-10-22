@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import LazyImage from '../components/LazyImage.jsx';
 import Button from '../components/Button.jsx';
 import Pagination from '../components/Pagination.jsx';
+import { PageHeader } from '../components/index.jsx';
 import PostCardSkeleton from '../components/skeletons/PostCardSkeleton.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
 import { useBlogPosts } from '../services/blog.js';
@@ -86,13 +87,14 @@ export default function Blog({ patch }) {
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
-      <section style={{ background: 'var(--surface-tint-cream)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-        <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'clamp(28px,4vw,48px) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <h1 style={{ margin: 0, font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>Tin phong thủy</h1>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>Ý nghĩa từng dãy số, cách chọn biển hợp mệnh và quy định mới nhất.</p>
-        </div>
+      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--space-4)' }}>
+        <PageHeader
+          eyebrow="Cẩm nang & Kiến thức"
+          title="Tin phong thủy"
+          subtitle="Ý nghĩa từng dãy số, cách chọn biển hợp mệnh và quy định mới nhất."
+        />
       </section>
-      <section aria-label="Danh sách bài viết" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <section aria-label="Danh sách bài viết" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: '1 1 220px', maxWidth: 360 }}>
             <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)' }} />

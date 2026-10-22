@@ -129,7 +129,7 @@ export default function PlateDrawerForm({
 
   return (
     <Drawer open onClose={onClose} title={editDetail ? 'Sửa biển số' : 'Thêm biển số'} width="min(52%, 720px)">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <form onSubmit={(e) => { e.preventDefault(); onSave(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           {editDetail ? 'Cập nhật thông tin biển đang bán.' : 'Biển sẽ xuất hiện ở đầu bảng và trang chủ.'}
         </p>
@@ -147,7 +147,7 @@ export default function PlateDrawerForm({
                 padding: '0 14px', font: 'var(--type-body)', color: 'var(--text-strong)', outline: 'none',
               }}
             />
-            <Button variant="outline" size="sm" onClick={generateCandidates} disabled={!(form.plateNumber || '').trim()} style={{ whiteSpace: 'nowrap' }}>Tự động điền</Button>
+            <Button variant="outline" size="sm" type="button" onClick={generateCandidates} disabled={!(form.plateNumber || '').trim()} style={{ whiteSpace: 'nowrap' }}>Tự động điền</Button>
           </span>
           {formErr.plateNumber && <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{formErr.plateNumber}</span>}
         </label>
@@ -156,7 +156,7 @@ export default function PlateDrawerForm({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
               <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Gợi ý từ biển số</span>
-              <Button variant="primary" size="sm" onClick={applyAll} style={{ whiteSpace: 'nowrap' }}>Thêm tất cả</Button>
+              <Button variant="primary" size="sm" type="button" onClick={applyAll} style={{ whiteSpace: 'nowrap' }}>Thêm tất cả</Button>
             </div>
             {candRows.map(({ key, label }) => (
               <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
@@ -340,12 +340,12 @@ export default function PlateDrawerForm({
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-          <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
-          <Button variant="primary" size="md" onClick={onSave} disabled={saving || uploading}>
+          <Button variant="ghost" size="md" type="button" onClick={onClose}>Hủy</Button>
+          <Button variant="primary" size="md" type="submit" disabled={saving || uploading}>
             {saving ? 'Đang lưu…' : 'Lưu biển số'}
           </Button>
         </div>
-      </div>
+      </form>
     </Drawer>
   );
 }

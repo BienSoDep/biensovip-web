@@ -191,7 +191,8 @@ function ShopCompareCard({ items }) {
       {!items?.length ? (
         <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có đủ dữ liệu để đối chiếu</div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
+        <>
+        <div className="admin-simple-table-wrap" style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
             <thead>
               <tr style={{ textAlign: 'left', color: 'var(--text-muted)', font: 'var(--type-caption)' }}>
@@ -216,6 +217,21 @@ function ShopCompareCard({ items }) {
             </tbody>
           </table>
         </div>
+        <div className="admin-simple-cards">
+          {items.map((it, i) => {
+            const diff = it.shopAvgPrice != null ? Math.round((it.shopAvgPrice - it.vpaAvgPrice) * 100 / it.vpaAvgPrice) : null;
+            return (
+              <div key={i} className="admin-row">
+                <div data-label="Tỉnh">{it.provinceName}</div>
+                <div data-label="Loại biển">{it.plateTypeName}</div>
+                <div data-label="Giá VPA">{money(it.vpaAvgPrice)} <span style={{ color: 'var(--text-muted)' }}>({it.vpaSampleCount})</span></div>
+                <div data-label="Giá shop">{it.shopAvgPrice != null ? <>{money(it.shopAvgPrice)} <span style={{ color: 'var(--text-muted)' }}>({it.shopSampleCount})</span></> : <span style={{ color: 'var(--text-muted)' }}>Chưa có biển shop</span>}</div>
+                <div data-label="Chênh lệch">{diff == null ? '—' : <Badge tone={diff >= 0 ? 'mint' : 'rose'}>{diff >= 0 ? '+' : ''}{diff}%</Badge>}</div>
+              </div>
+            );
+          })}
+        </div>
+        </>
       )}
     </div>
   );

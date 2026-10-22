@@ -10,7 +10,7 @@ import {
   useAdminStaff, useCreateStaff, useUpdateStaff,
   useDeleteStaff, useResetStaffPassword
 } from '../../services/adminStaff.js';
-import { loadAuth } from '../../lib/authStore.js';
+import { loadAuth, clearAuth } from '../../lib/authStore.js';
 import Modal from '../../components/Modal.jsx';
 import Drawer from '../../components/Drawer.jsx';
 import { SkeletonTable } from '../../components/Skeleton.jsx';
@@ -363,7 +363,7 @@ export default function AdminStaff({ notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Users size={22} />
           </div>
           <div>
@@ -386,11 +386,11 @@ export default function AdminStaff({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: roleFilter === 'super-admin' ? '2px solid #6B7180' : '2px solid transparent',
+            border: roleFilter === 'super-admin' ? '2px solid var(--grey-400)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--grey-100)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldCheck size={22} />
           </div>
           <div>
@@ -398,7 +398,7 @@ export default function AdminStaff({ notify }) {
               Quản trị viên (Super Admin)
               <InfoTip text="Tài khoản có toàn quyền truy cập, chỉnh sửa toàn bộ cấu hình hệ thống và quản lý tài khoản nhân viên khác." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#6B7180' }}>{stats.superAdminCount}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--text-muted)' }}>{stats.superAdminCount}</div>
           </div>
         </div>
 
@@ -413,11 +413,11 @@ export default function AdminStaff({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: roleFilter === 'staff' ? '2px solid #C75B00' : '2px solid transparent',
+            border: roleFilter === 'staff' ? '2px solid var(--brand-500)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Users size={22} />
           </div>
           <div>
@@ -425,7 +425,7 @@ export default function AdminStaff({ notify }) {
               Nhân viên vận hành
               <InfoTip text="Tài khoản nhân viên được phân quyền hạn theo từng phân hệ nghiệp vụ cụ thể (Kho biển, Bán hàng, Nội dung...)." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#C75B00' }}>{stats.staffCount}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--brand-600)' }}>{stats.staffCount}</div>
           </div>
         </div>
 
@@ -440,11 +440,11 @@ export default function AdminStaff({ notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: roleFilter === 'active' ? '2px solid #3FBF8F' : '2px solid transparent',
+            border: roleFilter === 'active' ? '2px solid var(--status-success-ink)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--green-50)', color: 'var(--status-success-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={22} />
           </div>
           <div>
@@ -505,7 +505,7 @@ export default function AdminStaff({ notify }) {
                 <span>{t.label}</span>
                 <span style={{
                   padding: '1px 7px',
-                  borderRadius: 10,
+                  borderRadius: 'var(--radius-pill)',
                   fontSize: 11,
                   fontWeight: 700,
                   background: active ? 'rgba(255, 255, 255, 0.22)' : t.alert ? '#fee2e2' : 'var(--border-hairline)',
@@ -830,7 +830,7 @@ export default function AdminStaff({ notify }) {
 
       {/* Drawer: Thêm / Sửa nhân viên */}
       <Drawer open={open} onClose={() => setOpen(false)} title={editId ? 'Sửa thông tin nhân viên' : 'Thêm nhân viên mới'} width="min(52%, 720px)">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
+        <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
           <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
             {editId ? 'Cập nhật thông tin tài khoản và ma trận quyền hạn truy cập các chức năng.' : 'Tài khoản nhân viên sau khi thêm sẽ có quyền đăng nhập vào trang quản trị.'}
           </p>
@@ -998,37 +998,37 @@ export default function AdminStaff({ notify }) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 8, borderTop: '1px solid var(--border-hairline)', paddingTop: 16 }}>
-            <Button variant="ghost" size="md" onClick={() => setOpen(false)}>Hủy bỏ</Button>
-            <Button variant="primary" size="md" onClick={save} disabled={saving}>
+            <Button variant="ghost" size="md" type="button" onClick={() => setOpen(false)}>Hủy bỏ</Button>
+            <Button variant="primary" size="md" type="submit" disabled={saving}>
               {saving ? 'Đang lưu…' : editId ? 'Lưu thay đổi' : 'Thêm nhân viên'}
             </Button>
           </div>
-        </div>
+        </form>
       </Drawer>
 
       {/* Modal Cấp lại mật khẩu */}
       {pwId && (
         <Modal open onClose={() => setPwId(null)} title="Cấp lại mật khẩu nhân viên" maxWidth="420px">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <form onSubmit={(e) => { e.preventDefault(); confirmResetPassword(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
               Đổi mật khẩu cho nhân viên <strong>{pwTarget?.fullName || pwTarget?.email}</strong>:
             </p>
             <Input
               label="Mật khẩu mới"
               type="password"
-              placeholder="Tối thiểu 6 ký tự"
+              placeholder="Tối thiểu 6 ký tự (nhấn Enter để lưu)"
               value={pwValue}
               error={pwErr}
               onChange={(e) => setPwValue(e.target.value)}
               required
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 8 }}>
-              <Button variant="ghost" size="md" onClick={() => setPwId(null)}>Hủy bỏ</Button>
-              <Button variant="primary" size="md" onClick={confirmResetPassword} loading={pwSaving}>
+              <Button variant="ghost" size="md" type="button" onClick={() => setPwId(null)}>Hủy bỏ</Button>
+              <Button variant="primary" size="md" type="submit" loading={pwSaving}>
                 Cập nhật mật khẩu
               </Button>
             </div>
-          </div>
+          </form>
         </Modal>
       )}
 

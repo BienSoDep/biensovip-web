@@ -61,7 +61,8 @@ export default function AdminDbConsole({ notify }) {
       )}
 
       {rows.length > 0 && (
-        <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflowX: 'auto' }}>
+        <>
+        <div className="admin-simple-table-wrap" style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
             <thead>
               <tr style={{ background: 'var(--surface-sunken)' }}>
@@ -77,6 +78,16 @@ export default function AdminDbConsole({ notify }) {
             </tbody>
           </table>
         </div>
+        <div className="admin-simple-cards">
+          {rows.map((r, i) => (
+            <div key={i} className="admin-row">
+              {columns.map((c) => (
+                <div key={c} data-label={c} style={{ wordBreak: 'break-word' }}>{String(r[c] ?? '—')}</div>
+              ))}
+            </div>
+          ))}
+        </div>
+        </>
       )}
       {query.isSuccess && rows.length === 0 && (
         <div style={{ padding: '24px 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không có dòng nào khớp điều kiện lọc.</div>

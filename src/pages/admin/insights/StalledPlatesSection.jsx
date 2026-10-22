@@ -54,7 +54,8 @@ export default function StalledPlatesSection({ stalledPlates = [], formatPrice, 
           Chưa phát hiện biển số nào có nhiều lượt hỏi mà bị tắc nghẽn kéo dài.
         </div>
       ) : (
-        <div style={{
+        <>
+        <div className="admin-simple-table-wrap" style={{
           overflowX: 'auto',
           WebkitOverflowScrolling: 'touch',
           borderRadius: 'var(--radius-sm)',
@@ -157,6 +158,41 @@ export default function StalledPlatesSection({ stalledPlates = [], formatPrice, 
             </tbody>
           </table>
         </div>
+        <div className="admin-simple-cards">
+          {stalledPlates.map((plate) => (
+            <div key={plate.plateId} className="admin-row">
+              <div data-label="Biển số">
+                <span
+                  onClick={() => onActionClick && onActionClick('/admin/bien-so', { adminQ: plate.plateNumber })}
+                  style={{ fontWeight: 'var(--fw-bold)', fontFamily: 'var(--font-mono)', color: 'var(--text-strong)', cursor: 'pointer' }}
+                >
+                  {plate.plateNumber}
+                </span>
+              </div>
+              <div data-label="Giá niêm yết" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>
+                {formatPrice ? formatPrice(plate.price) : plate.price}
+              </div>
+              <div data-label="Lượt quan tâm">
+                {plate.viewCount} xem · {plate.zaloClickCount} Zalo{plate.leadCount > 0 ? ` · ${plate.leadCount} lead` : ''}
+              </div>
+              <div data-label="Tồn kho" style={{ color: plate.daysInStock > 30 ? 'var(--status-danger-ink)' : 'var(--text-muted)' }}>
+                {plate.daysInStock} ngày
+              </div>
+              <div data-label="Chẩn đoán">{plate.diagnosis}</div>
+              <div data-label="Chiến thuật" style={{ color: 'var(--status-success-ink)' }}>{plate.suggestedTactic}</div>
+              <div data-label="">
+                <button
+                  type="button"
+                  onClick={() => onActionClick && onActionClick('/admin/bien-so', { adminQ: plate.plateNumber })}
+                  style={{ padding: '6px 14px', background: 'var(--surface-card)', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', color: 'var(--text-strong)' }}
+                >
+                  Chỉnh giá / Sửa
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       )}
     </section>
   );

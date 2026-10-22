@@ -97,7 +97,7 @@ export default function VpaPlateDrawer({ plate, plateTypes, provinces, onClose, 
 
   return (
     <Drawer open onClose={onClose} title={editing ? 'Sửa biển VPA' : 'Thêm biển VPA'} width="min(52%, 720px)">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           {editing
             ? 'Trường bạn sửa sẽ được khóa: lần crawl VPA sau không ghi đè. Giá khởi điểm và giá gợi ý do hệ thống tính, không sửa tay.'
@@ -174,10 +174,10 @@ export default function VpaPlateDrawer({ plate, plateTypes, provinces, onClose, 
         )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
-          <Button variant="ghost" size="md" onClick={onClose}>Hủy</Button>
-          <Button variant="primary" size="md" loading={busy} onClick={save}>{editing ? 'Lưu' : 'Thêm biển'}</Button>
+          <Button variant="ghost" size="md" type="button" onClick={onClose}>Hủy</Button>
+          <Button variant="primary" size="md" type="submit" loading={busy}>{editing ? 'Lưu' : 'Thêm biển'}</Button>
         </div>
-      </div>
+      </form>
     </Drawer>
   );
 }

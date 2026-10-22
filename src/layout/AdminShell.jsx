@@ -202,6 +202,7 @@ const LAST_SEEN_KEY = 'bsd_admin_last_seen';
 // Per-nav "đã xem": lưu snapshot count lúc admin bấm vào từng mục (không phải 1 mốc thời gian chung
 // cho cả 10 mục) — bấm xem 1 mục chỉ hết badge của đúng mục đó, không ảnh hưởng badge mục khác.
 const SEEN_COUNTS_KEY = 'bsd_admin_seen_counts';
+const NAV_COLLAPSED_KEY = 'bsd_admin_nav_collapsed';
 
 // Backlog thật đang chờ xử lý (DealReport + hoa hồng chờ duyệt, SystemFeedback mới, VPA chưa duyệt
 // giá) — KHÁC BADGE_NAV ở trên: số này không tự hết khi admin bấm vào xem, chỉ giảm khi admin thực

@@ -409,7 +409,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Users size={22} />
           </div>
           <div>
@@ -433,11 +433,11 @@ export default function AdminCollaborators({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: statusFilter === 'active' ? '2px solid #3FBF8F' : '2px solid transparent',
+            border: statusFilter === 'active' ? '2px solid var(--status-success-ink)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--green-50)', color: 'var(--status-success-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={22} />
           </div>
           <div>
@@ -445,7 +445,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
               Đang hoạt động
               <InfoTip text="Cộng tác viên có tài khoản hợp lệ, có thể chia sẻ link/mã giới thiệu và nhận hoa hồng." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#3FBF8F' }}>{stats.active}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--status-success-ink)' }}>{stats.active}</div>
           </div>
         </div>
 
@@ -461,11 +461,11 @@ export default function AdminCollaborators({ st, patch, notify }) {
             alignItems: 'center',
             gap: 14,
             cursor: 'pointer',
-            border: statusFilter === 'locked' ? '2px solid #dc2626' : '2px solid transparent',
+            border: statusFilter === 'locked' ? '2px solid var(--status-danger-ink)' : '2px solid transparent',
             transition: 'all 120ms ease',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--red-50)', color: 'var(--status-danger-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserX size={22} />
           </div>
           <div>
@@ -473,13 +473,13 @@ export default function AdminCollaborators({ st, patch, notify }) {
               Bị khóa tài khoản
               <InfoTip text="Tài khoản CTV bị tạm khóa do vi phạm chính sách hoặc phát hiện dấu hiệu gian lận lượt click/đơn hàng." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#dc2626' }}>{stats.locked}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--status-danger-ink)' }}>{stats.locked}</div>
           </div>
         </div>
 
         {/* KPI 4: Hoa hồng đã tích lũy */}
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Coins size={22} />
           </div>
           <div>
@@ -487,13 +487,13 @@ export default function AdminCollaborators({ st, patch, notify }) {
               Tổng hoa hồng tích lũy
               <InfoTip text="Tổng số tiền hoa hồng toàn bộ CTV đã kiếm được từ các đơn hàng chốt giao dịch thành công." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#d97706' }}>{money(stats.totalEarned)}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--brand-600)' }}>{money(stats.totalEarned)}</div>
           </div>
         </div>
 
         {/* KPI 5: Hoa hồng chờ chi trả */}
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--grey-100)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Wallet size={22} />
           </div>
           <div>
@@ -501,7 +501,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
               Hoa hồng chờ chi trả
               <InfoTip text="Số tiền hoa hồng đã được xác nhận và đang chờ admin phê duyệt lệnh chuyển khoản thanh toán cho CTV." />
             </div>
-            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: '#6B7180' }}>{money(stats.pendingPayout)}</div>
+            <div style={{ font: 'var(--type-title-2)', fontWeight: 700, color: 'var(--text-muted)' }}>{money(stats.pendingPayout)}</div>
           </div>
         </div>
       </div>
@@ -553,7 +553,7 @@ export default function AdminCollaborators({ st, patch, notify }) {
                 <span>{t.label}</span>
                 <span style={{
                   padding: '1px 7px',
-                  borderRadius: 10,
+                  borderRadius: 'var(--radius-pill)',
                   fontSize: 11,
                   fontWeight: 700,
                   background: active ? 'rgba(255, 255, 255, 0.22)' : t.alert ? '#fee2e2' : 'var(--border-hairline)',

@@ -23,7 +23,7 @@ export function useBlogPost(slug) {
   });
 }
 
-export function useRelatedPosts(slug, limit = 3) {
+export function useRelatedPosts(slug, limit = 8) {
   return useQuery({
     queryKey: ['blog-post-related', slug, limit],
     queryFn: () => apiClient.get(`/api/blog/posts/${slug}/related?limit=${limit}`),

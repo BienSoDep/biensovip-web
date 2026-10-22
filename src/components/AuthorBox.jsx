@@ -25,15 +25,17 @@ export default function AuthorBox({ style }) {
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <img
             itemProp="image"
-            src="/assets/logo-mark.png"
-            alt="Duy Đinh — Chuyên gia phong thủy biển số đẹp"
+            src="/assets/duy-dinh-portrait.jpg"
+            alt="Duy Đinh — Người sáng lập Biensovip"
+            onError={(e) => { e.currentTarget.src = '/assets/logo-mark.png'; }}
             style={{
-              width: 72,
-              height: 72,
+              width: 76,
+              height: 76,
               borderRadius: '50%',
               objectFit: 'cover',
-              border: '2px solid var(--action-primary, #D97706)',
-              background: 'var(--surface-sunken, #0F172A)',
+              border: '2.5px solid var(--action-primary, #D97706)',
+              boxShadow: '0 4px 14px rgba(217, 119, 6, 0.15)',
+              display: 'block',
             }}
           />
           <div

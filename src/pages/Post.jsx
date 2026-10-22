@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { Share2, Link2, MessageCircle, Minus, Plus } from 'lucide-react';
+import { Share2, Link2, MessageCircle, Minus, Plus, ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -11,28 +11,27 @@ import { useBlogComments, useSubmitBlogComment } from '../services/blogComments.
 import { routeFor, PROVINCE_LANDINGS } from '../config/routes.js';
 import Breadcrumb from '../components/Breadcrumb.jsx';
 import AuthorBox from '../components/AuthorBox.jsx';
-import { Input } from '../components/index.jsx';
 import { trackViewBlogPost, trackSelectContent, trackScrollDepth, trackShare } from '../services/tracking/events.js';
 import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 import { forceScrollToTop } from '../lib/scrollRestoration.js';
+import { PostReaderToolbar, useReaderPrefs } from './post/PostReaderToolbar.jsx';
+import { PostCommentSection } from './post/PostCommentSection.jsx';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
   'cau-chuyen': 'Câu chuyện khách hàng', 'tinh-thanh': 'Tỉnh thành', 'loai-bien': 'Loại biển', general: 'Tin tức',
 };
 
-// Cùng pool ảnh Unsplash dùng làm cover ở backend seed — chọn ảnh khác cover để minh họa giữa bài, tránh lặp.
+// Cùng pool ảnh minh họa phương tiện, xe cộ, giao thông đô thị và showroom cao cấp — tránh ảnh rừng cây/thợ kim loại lạc quẻ.
 const ILLUSTRATION_POOL = [
-  'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=1200&q=80',
-  'https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=1200&q=80',
-  'https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=1200&q=80',
-  'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&q=80',
-  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80',
-  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80',
-  'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=1200&q=80',
-  'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1200&q=80',
-  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80',
-  'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=1200&q=80',
+  'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=1200&q=80', // Modern motorbike
+  'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=1200&q=80', // Urban motorcycle ride
+  'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=1200&q=80', // Luxury car showroom
+  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&q=80', // Luxury automobile
+  'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1200&q=80', // High-end sports vehicle
+  'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=1200&q=80', // Modern city transport
+  'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1200&q=80', // Motorcycle highway
+  'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=1200&q=80', // Luxury vehicle front
 ];
 
 function pickIllustration(slug, excludeUrl) {
@@ -42,31 +41,38 @@ function pickIllustration(slug, excludeUrl) {
   return pool[hash % pool.length];
 }
 
-const FONT_SIZES = [15, 17, 19, 21];
-const FONT_FAMILIES = [
-  { id: 'sans', label: 'Mặc định', value: 'var(--font-text)' },
-  { id: 'serif', label: 'Chữ chân', value: '"Noto Serif","Times New Roman",serif' },
-];
-const READER_PREFS_KEY = 'biensovip.readerPrefs';
+function CompassElementalSvg() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="#cbd5e1" strokeWidth="1.2" strokeDasharray="2 2" />
+      <circle cx="12" cy="12" r="7.5" stroke="#94a3b8" strokeWidth="1.2" />
+      <polygon points="12,3.5 14,12 12,20.5 10,12" fill="#0f172a" />
+      <polygon points="3.5,12 12,10 20.5,12 12,14" fill="#64748b" />
+      <circle cx="12" cy="12" r="2.2" fill="#f59e0b" />
+    </svg>
+  );
+}
 
-function useReaderPrefs() {
-  const [sizeIdx, setSizeIdx] = useState(1);
-  const [fontId, setFontId] = useState('sans');
+function ShieldHarmonySvg() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 3L4 6.5V11.5C4 16.5 7.4 20.8 12 22C16.6 20.8 20 16.5 20 11.5V6.5L12 3Z" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M12 3V22C16.6 20.8 20 16.5 20 11.5V6.5L12 3Z" fill="#e2e8f0" />
+      <circle cx="12" cy="12" r="2.8" fill="#0f172a" />
+      <path d="M10 12L11.5 13.5L14.5 10.5" stroke="#f8fafc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(READER_PREFS_KEY) || '{}');
-      if (Number.isInteger(saved.sizeIdx) && FONT_SIZES[saved.sizeIdx]) setSizeIdx(saved.sizeIdx);
-      if (FONT_FAMILIES.some((f) => f.id === saved.fontId)) setFontId(saved.fontId);
-    } catch { /* ignore malformed prefs */ }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(READER_PREFS_KEY, JSON.stringify({ sizeIdx, fontId }));
-  }, [sizeIdx, fontId]);
-
-  const fontFamily = FONT_FAMILIES.find((f) => f.id === fontId)?.value || FONT_FAMILIES[0].value;
-  return { sizeIdx, setSizeIdx, fontId, setFontId, fontSize: FONT_SIZES[sizeIdx], fontFamily };
+function InfinityFortuneSvg() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M18.178 8C16.143 8 14.5 9.5 12 12C9.5 14.5 7.857 16 5.822 16C3.708 16 2 14.21 2 12C2 9.79 3.708 8 5.822 8C7.857 8 9.5 9.5 12 12C14.5 14.5 16.143 16 18.178 16C20.292 16 22 14.21 22 12C22 9.79 20.292 8 18.178 8Z" stroke="#0f172a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="6" cy="12" r="1.5" fill="#f59e0b" />
+      <circle cx="18" cy="12" r="1.5" fill="#f59e0b" />
+      <path d="M12 7L12.6 10L14 10.6L12.6 11.2L12 14L11.4 11.2L10 10.6L11.4 10L12 7Z" fill="#f59e0b" />
+    </svg>
+  );
 }
 
 function formatDate(iso) {
@@ -93,9 +99,10 @@ function rangeHtml(doc, startBefore, endBefore) {
 
 function useTableOfContents(html) {
   return useMemo(() => {
-    if (!html) return { html, items: [], parts: null };
+    if (!html) return { html, items: [], parts: null, hasImages: false };
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const headings = doc.querySelectorAll('h2');
+    const hasImages = doc.querySelectorAll('img').length > 0;
     const seen = new Set();
     const items = [];
     headings.forEach((h) => {
@@ -104,8 +111,8 @@ function useTableOfContents(html) {
       items.push({ id, text: h.textContent || '' });
     });
 
-    // Chèn ảnh minh họa sau H2 đầu và biển minh họa ở giữa bài — phá thế đơn điệu toàn chữ.
-    // >=4 H2: 3 khúc (ảnh sau đoạn 1, biển ở giữa). 2-3 H2: 2 khúc (chỉ biển ở giữa, không đủ chỗ cho cả 2).
+    // Chèn ảnh minh họa sau H2 đầu (khi bài chưa có ảnh riêng) và biển minh họa ở giữa bài — phá thế đơn điệu toàn chữ.
+    // >=4 H2: 3 khúc (ảnh sau đoạn 1 nếu chưa có ảnh riêng, biển ở giữa). 2-3 H2: 2 khúc (chỉ biển ở giữa).
     let parts = null;
     if (headings.length >= 4) {
       const imgAt = headings[1];
@@ -120,23 +127,22 @@ function useTableOfContents(html) {
       parts = [rangeHtml(doc, null, midAt), rangeHtml(doc, midAt, null)];
     }
 
-    return { html: doc.body.innerHTML, items, parts };
+    return { html: doc.body.innerHTML, items, parts, hasImages };
   }, [html]);
 }
 
 export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const { data: post, isLoading, isError } = useBlogPost(postId);
-  const { data: relatedData } = useRelatedPosts(postId, 3);
+  const { data: relatedData } = useRelatedPosts(postId, 8);
   const { data: relatedPlatesData } = useRelatedPlates(postId, 12);
   const { data: commentsData } = useBlogComments(post?.id);
   const submitComment = useSubmitBlogComment(post?.id);
-  const [commentText, setCommentText] = useState('');
   const [openFaqIdx, setOpenFaqIdx] = useState(null);
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const contentHtml = useMemo(() => sanitizeHtml(post?.contentHtml), [post?.contentHtml]);
-  const { html: contentWithIds, items: tocItems, parts } = useTableOfContents(contentHtml);
+  const { html: contentWithIds, items: tocItems, parts, hasImages } = useTableOfContents(contentHtml);
   const related = relatedData?.items || [];
   const relatedPlates = relatedPlatesData?.items || [];
   const midPlate = relatedPlates[0];
@@ -324,11 +330,57 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       </header>
 
       {(post.summaryFengShui || post.summaryTaboo || post.summaryMeaning) && (
-        <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={{ font: 'var(--type-label)', color: 'var(--action-primary)', fontWeight: 'var(--fw-semibold)' }}>Tóm tắt nhanh</span>
-          {post.summaryFengShui && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Hợp mệnh:</strong> {post.summaryFengShui}</p>}
-          {post.summaryTaboo && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Kỵ mệnh:</strong> {post.summaryTaboo}</p>}
-          {post.summaryMeaning && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}><strong>Ý nghĩa chính:</strong> {post.summaryMeaning}</p>}
+        <div className="article-quick-summary">
+          <div className="article-quick-summary__header">
+            <div className="article-quick-summary__title-wrap">
+              <span className="article-quick-summary__badge">TỔNG QUAN PHONG THỦY</span>
+              <span className="article-quick-summary__sub">Biểu đồ nạp âm & khuyến nghị định danh</span>
+            </div>
+          </div>
+          <div className="article-quick-summary__grid">
+            {post.summaryFengShui && (
+              <div className="article-quick-summary__item">
+                <div className="article-quick-summary__item-top">
+                  <div className="article-quick-summary__icon-box">
+                    <CompassElementalSvg />
+                  </div>
+                  <div className="article-quick-summary__item-heading">
+                    <span className="article-quick-summary__chip">TƯƠNG SINH</span>
+                    <span className="article-quick-summary__label">Hợp Mệnh Cát Lợi</span>
+                  </div>
+                </div>
+                <p className="article-quick-summary__text">{post.summaryFengShui}</p>
+              </div>
+            )}
+            {post.summaryTaboo && (
+              <div className="article-quick-summary__item">
+                <div className="article-quick-summary__item-top">
+                  <div className="article-quick-summary__icon-box">
+                    <ShieldHarmonySvg />
+                  </div>
+                  <div className="article-quick-summary__item-heading">
+                    <span className="article-quick-summary__chip" style={{ color: '#b91c1c' }}>HÓA GIẢI</span>
+                    <span className="article-quick-summary__label">Kỵ Mệnh Cần Lưu Ý</span>
+                  </div>
+                </div>
+                <p className="article-quick-summary__text">{post.summaryTaboo}</p>
+              </div>
+            )}
+            {post.summaryMeaning && (
+              <div className="article-quick-summary__item">
+                <div className="article-quick-summary__item-top">
+                  <div className="article-quick-summary__icon-box">
+                    <InfinityFortuneSvg />
+                  </div>
+                  <div className="article-quick-summary__item-heading">
+                    <span className="article-quick-summary__chip" style={{ color: '#d97706' }}>VẬN KHÍ</span>
+                    <span className="article-quick-summary__label">Ý Nghĩa & Năng Lượng</span>
+                  </div>
+                </div>
+                <p className="article-quick-summary__text">{post.summaryMeaning}</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -351,30 +403,19 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         </nav>
       )}
 
-      <div className="reader-prefs">
-        <div className="reader-prefs__group">
-          <span className="reader-prefs__label">Cỡ chữ</span>
-          <button type="button" className="reader-prefs__btn" onClick={() => setSizeIdx((i) => Math.max(0, i - 1))} disabled={sizeIdx === 0} aria-label="Giảm cỡ chữ"><Minus size={14} /></button>
-          <span className="reader-prefs__size">{fontSize}px</span>
-          <button type="button" className="reader-prefs__btn" onClick={() => setSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))} disabled={sizeIdx === FONT_SIZES.length - 1} aria-label="Tăng cỡ chữ"><Plus size={14} /></button>
-        </div>
-        <div className="reader-prefs__group">
-          <span className="reader-prefs__label">Font chữ</span>
-          <select id="reader-font-select" name="reader-font" className="reader-prefs__font" value={fontId} onChange={(e) => setFontId(e.target.value)} aria-label="Chọn kiểu chữ">
-            {FONT_FAMILIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-          </select>
-        </div>
-      </div>
+      <PostReaderToolbar sizeIdx={sizeIdx} setSizeIdx={setSizeIdx} fontSize={fontSize} fontId={fontId} setFontId={setFontId} />
 
       {parts ? (
         <div itemProp="articleBody">
           <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[0] }} />
 
-          {parts.length === 3 && illustrationUrl && (
+          {parts.length === 3 && (
             <>
-              <figure style={{ margin: 'var(--space-6) 0 0', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-                <img src={illustrationUrl} alt={postImageAlt} loading="lazy" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
-              </figure>
+              {illustrationUrl && !hasImages && (
+                <figure style={{ margin: 'var(--space-6) 0 0', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+                  <img src={illustrationUrl} alt={postImageAlt} loading="lazy" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
+                </figure>
+              )}
               <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[1] }} />
             </>
           )}
@@ -401,17 +442,74 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       {postFaqItems.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           <h2 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
-          {postFaqItems.map((item, i) => (
-            <div key={i} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-              <button type="button" onClick={() => setOpenFaqIdx((cur) => (cur === i ? null : i))}
-                style={{ width: '100%', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', padding: 'var(--space-3) var(--space-4)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-                {item.question}
-              </button>
-              {openFaqIdx === i && (
-                <p style={{ margin: 0, padding: '0 var(--space-4) var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{item.answer}</p>
-              )}
-            </div>
-          ))}
+          {postFaqItems.map((item, i) => {
+            const isOpen = openFaqIdx === i;
+            return (
+              <div
+                key={i}
+                style={{
+                  background: 'var(--surface-sunken)',
+                  borderRadius: 'var(--radius-card)',
+                  border: isOpen ? '1px solid var(--border-hairline)' : '1px solid transparent',
+                  overflow: 'hidden',
+                  transition: 'border-color 160ms ease',
+                }}
+              >
+                <button
+                  type="button"
+                  className="faq-accordion-btn"
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenFaqIdx((cur) => (cur === i ? null : i))}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    padding: '14px 16px',
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    font: 'var(--type-body)',
+                    fontWeight: 'var(--fw-semibold)',
+                    color: 'var(--text-strong)',
+                    outline: 'none',
+                  }}
+                >
+                  <span>{item.question}</span>
+                  <ChevronDown
+                    size={18}
+                    style={{
+                      transform: isOpen ? 'rotate(180deg)' : 'none',
+                      transition: 'transform 160ms var(--ease-out)',
+                      flexShrink: 0,
+                      color: isOpen ? 'var(--action-primary)' : 'var(--text-muted)',
+                    }}
+                  />
+                </button>
+                {isOpen && (
+                  <div
+                    style={{
+                      padding: '10px 16px 16px',
+                      borderTop: '1px solid var(--border-hairline)',
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: 0,
+                        font: 'var(--type-body-sm)',
+                        color: 'var(--text-body)',
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {item.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -461,38 +559,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
 
       <AuthorBox />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-        <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bình luận</h2>
-        {user ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <Input placeholder="Viết bình luận của bạn…" value={commentText} onChange={(e) => setCommentText(e.target.value)} />
-            <Button variant="primary" size="sm" disabled={!commentText.trim() || submitComment.isPending} style={{ alignSelf: 'flex-start' }}
-              onClick={() => {
-                submitComment.mutate(commentText.trim(), {
-                  onSuccess: () => { setCommentText(''); notify?.('Bình luận đang chờ duyệt'); },
-                  onError: (e) => notify?.(e.message || 'Gửi bình luận thất bại'),
-                });
-              }}>
-              {submitComment.isPending ? 'Đang gửi…' : 'Gửi bình luận'}
-            </Button>
-          </div>
-        ) : (
-          <Button variant="outline" size="sm" onClick={go('login')} style={{ alignSelf: 'flex-start' }}>Đăng nhập để bình luận</Button>
-        )}
-        {(commentsData?.items || []).length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {commentsData.items.map((c) => (
-              <div key={c.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{c.userName || 'Người dùng'}</span>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{formatDate(c.createdAt)}</span>
-                </div>
-                <p style={{ margin: '4px 0 0', font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{c.content}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <PostCommentSection user={user} commentsData={commentsData} submitComment={submitComment} notify={notify} go={go} />
 
       {relatedPlates.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
@@ -540,15 +607,33 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       </div>
 
       {related.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-          <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bài viết liên quan</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(220px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingTop: 'var(--space-5)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <div>
+              <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bài viết liên quan</h2>
+              <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Cẩm nang phong thủy, thị trường & hướng dẫn chọn biển số đẹp</span>
+            </div>
+            <button type="button" onClick={() => go('blog')()} style={{ border: 'none', background: 'transparent', color: 'var(--action-primary)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              Xem tất cả bài viết →
+            </button>
+          </div>
+          <div className="article-related-grid">
             {related.map((p) => (
-              <a key={p.id} href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); openRelated(p.slug); }} style={{ display: 'flex', flexDirection: 'column', textDecoration: 'none', color: 'inherit', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
-                <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 120, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={120} />
-                <div style={{ padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.title}</span>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>~{p.readingTimeMinutes} phút đọc</span>
+              <a key={p.id} href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); openRelated(p.slug); }} className="article-related-card">
+                <div className="article-related-card__thumb">
+                  <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: '100%', background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={130} />
+                  {p.category && (
+                    <span className="article-related-card__cat">
+                      {CATEGORY_LABEL[p.category] || p.category}
+                    </span>
+                  )}
+                </div>
+                <div className="article-related-card__body">
+                  <h3 className="article-related-card__title">{p.title}</h3>
+                  <div className="article-related-card__meta">
+                    <span>~{p.readingTimeMinutes} phút đọc</span>
+                    {p.publishedAt && <span>· {formatDate(p.publishedAt)}</span>}
+                  </div>
                 </div>
               </a>
             ))}

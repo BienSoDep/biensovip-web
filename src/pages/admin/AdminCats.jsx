@@ -826,9 +826,9 @@ export default function AdminCats({ notify, goToMeanings }) {
             </SortableContext>
           </DndContext>
         </div>
-        <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <form onSubmit={(e) => { e.preventDefault(); addCat(); }} style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{editId ? 'Sửa danh mục' : 'Thêm danh mục mới'}</span>
-          <Input label="Tên danh mục" placeholder="VD: Biển tiến" value={form.name} error={formErr}
+          <Input label="Tên danh mục" placeholder="VD: Biển tiến (nhấn Enter để thêm/lưu)" value={form.name} error={formErr}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
           {isBlogCategory && (
             <>
@@ -858,12 +858,12 @@ export default function AdminCats({ notify, goToMeanings }) {
             </>
           )}
           <div style={{ display: 'flex', gap: 'var(--space-2)', alignSelf: 'flex-start' }}>
-            {editId && <Button variant="ghost" size="md" onClick={resetForm}>Hủy sửa</Button>}
-            <Button variant="dark" size="md" onClick={addCat} disabled={createCat.isPending || updateCat.isPending}>
+            {editId && <Button variant="ghost" size="md" type="button" onClick={resetForm}>Hủy sửa</Button>}
+            <Button variant="dark" type="submit" size="md" disabled={createCat.isPending || updateCat.isPending}>
               {editId ? (updateCat.isPending ? 'Đang lưu…' : 'Lưu thay đổi') : (createCat.isPending ? 'Đang thêm…' : 'Thêm danh mục')}
             </Button>
           </div>
-        </div>
+        </form>
 
         {showCatPlates && (
           <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

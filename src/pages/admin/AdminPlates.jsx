@@ -12,7 +12,7 @@ import PriceReferenceModal from '../../components/PriceReferenceModal.jsx';
 import { InfoTip } from '../../components/index.jsx';
 import { openVpaWithSearch } from './vpa/VpaAdminList.jsx';
 import { useAdminCategories } from '../../services/categories.js';
-import { useExportCsv } from '../../hooks/useExportCsv.js';
+import { useExportCsv, useExportPlateDocx } from '../../hooks/useExportCsv.js';
 import { parsePlateNumber } from '../../lib/plateFormat.js';
 import { buildImportPlatePrompt } from '../../lib/importPlatePrompt.js';
 import {
@@ -58,7 +58,9 @@ export default function AdminPlates({ go, notify, st }) {
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('');
   const [provinceFilter, setProvinceFilter] = useState('');
   const [hotFilter, setHotFilter] = useState('');
-  const { exportCsv, loading: exporting } = useExportCsv('/api/admin/plates');
+  const { exportCsv, exportXlsx, exportDocx, loading: exporting } = useExportCsv('/api/admin/plates');
+  const { exportPlateDocx: exportPlateDocxRaw } = useExportPlateDocx();
+  const exportPlateDocx = (id, plateNumber) => exportPlateDocxRaw(id, plateNumber).catch((e) => toast.error(e.message));
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [mobileView, setMobileView] = useState('card'); // 'card' | 'table'
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -868,7 +870,7 @@ export default function AdminPlates({ go, notify, st }) {
         activeFiltersCount={activeFiltersCount}
         colPrefs={colPrefs} toggleCol={toggleCol}
         colMenuOpen={colMenuOpen} setColMenuOpen={setColMenuOpen}
-        exportCsv={exportCsv} exporting={exporting}
+        exportCsv={exportCsv} exportXlsx={exportXlsx} exportDocx={exportDocx} exportPlateDocx={exportPlateDocx} exporting={exporting}
         checkingMissingInfo={checkingMissingInfo} openMissingInfoModal={openMissingInfoModal}
         checkingMissingImage={checkingMissingImage} openMissingImageModal={openMissingImageModal}
         checkingGeneratedImage={checkingGeneratedImage} openPurgeImageModal={openPurgeImageModal}

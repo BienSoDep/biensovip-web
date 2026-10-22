@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { HelpCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../Button.jsx';
 import { Badge, InfoTip } from '../index.jsx';
@@ -74,7 +75,29 @@ export function DashboardBody({ data, onReset, go }) {
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-9) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div style={{ background: 'var(--surface-inverse)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
         <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-          <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>Xin chào, {data.fullName}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>Xin chào, {data.fullName}</span>
+            <button
+              type="button"
+              onClick={() => setTourActive(true)}
+              title="Xem hướng dẫn sử dụng dashboard"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'rgba(255,255,255,.12)',
+                border: '1px solid rgba(255,255,255,.2)',
+                borderRadius: 'var(--radius-pill)',
+                color: 'var(--white)',
+                padding: '4px 12px',
+                font: 'var(--type-caption)',
+                cursor: 'pointer',
+                transition: 'background-color 140ms ease',
+              }}
+            >
+              <HelpCircle size={14} /> Hướng dẫn
+            </button>
+          </div>
           <span style={{ font: 'var(--type-body-sm)', color: 'rgba(255,255,255,.66)' }}>Mã giới thiệu của bạn</span>
           {data.joinedAt && (
             <span style={{ font: 'var(--type-caption)', color: 'rgba(255,255,255,.5)' }}>Tham gia từ {new Date(data.joinedAt).toLocaleDateString('vi-VN')}</span>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PhoneCall, ChevronDown, HelpCircle, ShieldCheck } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import { PageHeader } from '../components/index.jsx';
 import AuthorBox from '../components/AuthorBox.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
 import { usePolicyPage } from '../services/policyPages.js';
@@ -20,11 +21,13 @@ export default function TransferGuide({ go, zalo }) {
 
   return (
     <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div>
-        <h1 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-display-2)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{title}</h1>
-        <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{subtitle}</p>
-        {updated && <p style={{ margin: 'var(--space-2) 0 0', font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-medium)' }}>{updated}</p>}
-      </div>
+      <PageHeader
+        eyebrow="Thủ tục pháp lý"
+        title={title}
+        subtitle={subtitle}
+      >
+        {updated && <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--action-primary)', fontWeight: 'var(--fw-medium)' }}>{updated}</p>}
+      </PageHeader>
 
       {/* 4 Bước quy trình chuẩn */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -65,6 +68,7 @@ export default function TransferGuide({ go, zalo }) {
                   id={`transfer-faq-q-${i}`}
                   aria-expanded={openFaq === i}
                   aria-controls={`transfer-faq-a-${i}`}
+                  className="faq-accordion-btn"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   style={{ width: '100%', border: 'none', background: 'transparent', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', textAlign: 'left', outline: 'none' }}
                 >

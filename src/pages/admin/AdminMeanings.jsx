@@ -180,7 +180,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
       {/* 4 KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-3)' }}>
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(241,151,32, 0.12)', color: '#C75B00', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Sparkles size={22} />
           </div>
           <div>
@@ -190,7 +190,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(63,191,143, 0.12)', color: '#3FBF8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--green-50)', color: 'var(--status-success-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={22} />
           </div>
           <div>
@@ -200,7 +200,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(138,143,153, 0.12)', color: '#6B7180', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--grey-100)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Layers size={22} />
           </div>
           <div>
@@ -210,7 +210,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
         </div>
 
         <div style={{ background: 'var(--white)', padding: '16px 20px', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-control)', background: 'var(--brand-50)', color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Hash size={22} />
           </div>
           <div>
@@ -501,7 +501,7 @@ function TemplatesTab({ notify, prefillKeyword }) {
 function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }) {
   return (
     <Drawer open onClose={onClose} title={editId === 'new' ? 'Thêm mẫu ý nghĩa mới' : 'Chỉnh sửa mẫu ý nghĩa'} width="min(52%, 720px)">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
+      <form onSubmit={(e) => { e.preventDefault(); onSave(); }} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2) 0' }}>
         <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
           Mẫu quy tắc chung phục vụ thuật toán phân tích ý nghĩa số tự động. Sửa tại đây KHÔNG làm thay đổi nội dung các biển đã gán trước đó.
         </p>
@@ -584,12 +584,12 @@ function TemplateModal({ form, editId, formErr, saving, onSet, onSave, onClose }
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-4)', borderTop: '1px solid var(--border-hairline)', paddingTop: 16 }}>
-          <Button variant="ghost" size="md" onClick={onClose}>Hủy bỏ</Button>
-          <Button variant="primary" size="md" onClick={onSave} disabled={saving}>
+          <Button variant="ghost" size="md" type="button" onClick={onClose}>Hủy bỏ</Button>
+          <Button variant="primary" size="md" type="submit" disabled={saving}>
             {saving ? 'Đang lưu…' : 'Lưu mẫu quy tắc'}
           </Button>
         </div>
-      </div>
+      </form>
     </Drawer>
   );
 }

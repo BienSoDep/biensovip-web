@@ -2,9 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { ChevronDown, Compass, LayoutGrid, List as ListIcon, Sparkles } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import BulletPicker from '../components/BulletPicker.jsx';
 import PlateCard from '../components/PlateCard.jsx';
-import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox } from '../components/index.jsx';
+import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox, PageHeader } from '../components/index.jsx';
 import PlateFengShuiAnalyzerTab from './PlateFengShuiAnalyzerTab.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
 import { useSubmitContact } from '../services/contactService.js';
@@ -47,76 +46,8 @@ const PRICE_PRESETS = [
 ];
 const AVOID_NUMBER_PRESETS = ['4', '7', '49', '53', '13'];
 
-function VehiclePicker({ value, onChange }) {
-  return <BulletPicker label="Loại xe" value={value} onChange={onChange} options={VEHICLES} />;
-}
-
-function PurposePicker({ value, onChange }) {
-  return <BulletPicker label="Mục đích sử dụng" value={value} onChange={onChange} options={PURPOSES.map((p) => p.label)} />;
-}
-
-function IndustryPicker({ value, onChange }) {
-  return <BulletPicker label="Ngành kinh doanh" value={value} onChange={onChange} options={INDUSTRIES.map((i) => i.label)} />;
-}
-
-// Nút "Yêu cầu tư vấn" tại card gợi ý hợp mệnh — guest chỉ cần SĐT gửi thẳng (không bắt đăng nhập,
-// mục tiêu tăng lượng contact); user đã đăng nhập nhưng thiếu SĐT (đăng ký bằng email) thì lưu SĐT
-// vào profile trước rồi mới gửi, để lần sau không phải hỏi lại.
-function RequestConsultButton({ plate, user, notify, onUserUpdate }) {
-  const submitContact = useSubmitContact();
-  const [open, setOpen] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
-
-  const send = (phoneToUse, fullName) => {
-    submitContact.mutate({
-      fullName: fullName || 'Khách hàng', phone: normalizePhone(phoneToUse),
-      plateId: plate.plateId, plateNumber: plate.plateNumber,
-      note: '', source: 'lucky_plate', intent: 'inquiry',
-      subscribeToNotifications: false, honeypot: null,
-    }, {
-      onSuccess: () => { trackGenerateLead(plate.plateId, 'lucky_plate'); notify('Đã gửi yêu cầu tư vấn — admin sẽ liên hệ sớm.'); setSent(true); setOpen(false); },
-      onError: (err) => notify(err?.message || 'Gửi thất bại, vui lòng thử lại.'),
-    });
-  };
-
-  const submitPhone = async () => {
-    if (!validatePhone(phone)) { notify('Số điện thoại không hợp lệ.'); return; }
-    setBusy(true);
-    try {
-      if (user) {
-        const updated = await updateProfile({ phone });
-        onUserUpdate?.(updated);
-        send(phone, user.fullName);
-      } else {
-        send(phone, '');
-      }
-    } catch (e) {
-      notify(e?.message || 'Có lỗi xảy ra, thử lại sau.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const click = () => {
-    if (sent) return;
-    if (user?.phone) { send(user.phone, user.fullName); return; }
-    setOpen(true);
-  };
-
-  if (sent) return <Button variant="ghost" size="sm" disabled>Đã gửi yêu cầu</Button>;
-
-  return open ? (
-    <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
-      <div style={{ width: 180 }}><Input placeholder="Số điện thoại của bạn" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-      <Button variant="primary" size="sm" onClick={submitPhone} disabled={busy}>{busy ? 'Đang gửi...' : 'Gửi'}</Button>
-      <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Hủy</Button>
-    </div>
-  ) : (
-    <Button variant="outline" size="sm" onClick={click}>Yêu cầu tư vấn</Button>
-  );
-}
+import { VehiclePicker, PurposePicker, IndustryPicker } from './lucky/LuckyPlatePickers.jsx';
+import RequestConsultButton from './lucky/RequestConsultButton.jsx';
 
 const SOURCE_OPTIONS = [{ value: '', label: 'Tất cả' }, { value: 'own', label: 'Biển có sẵn' }, { value: 'vpa', label: 'Biển VPA' }];
 
@@ -284,19 +215,13 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
           : [{ label: 'Tư vấn biển hợp mệnh' }]),
       ]} />
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <Eyebrow tone="blue">
-          {activeTab === 'luan-bien' ? 'Giải mã 5 chiều phong thủy' : 'Tư vấn theo ngũ hành'}
-        </Eyebrow>
-        <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
-          {activeTab === 'luan-bien' ? 'Luận giải biển số của bạn & Gợi ý cải vận' : 'Tìm biển số hợp mệnh của bạn'}
-        </h1>
-        <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 840 }}>
-          {activeTab === 'luan-bien'
-            ? 'Nhập biển số hiện tại để phân tích Ngũ hành Hà Đồ, Tổng nút, Âm Dương, Cặp số may mắn và Quẻ Kinh Dịch Mai Hoa — đồng thời nhận gợi ý biển số bù đắp điểm còn thiếu.'
-            : 'Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.'}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={activeTab === 'luan-bien' ? 'Giải mã 5 chiều phong thủy' : 'Tư vấn theo ngũ hành'}
+        title={activeTab === 'luan-bien' ? 'Luận giải biển số của bạn & Gợi ý cải vận' : 'Tìm biển số hợp mệnh của bạn'}
+        subtitle={activeTab === 'luan-bien'
+          ? 'Nhập biển số hiện tại để phân tích Ngũ hành Hà Đồ, Tổng nút, Âm Dương, Cặp số may mắn và Quẻ Kinh Dịch Mai Hoa — đồng thời nhận gợi ý biển số bù đắp điểm còn thiếu.'
+          : 'Nhập ngày sinh để biết bản mệnh, con số may mắn và nhận gợi ý biển số phù hợp phong thủy, đúng ngân sách.'}
+      />
 
       {/* 2 Tab chuyển đổi linh hoạt */}
       <div
@@ -487,7 +412,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
             )}
           </div>
 
-          <Button variant="primary" size="lg" fullWidth onClick={submit} disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
+          <Button variant="primary" type="submit" size="lg" fullWidth disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
         </fieldset>
         </form>
       ) : (

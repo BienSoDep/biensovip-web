@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Copy, RefreshCw, AlertCircle, X, Clock,
   Search, Zap, Mail, Users
@@ -13,6 +13,10 @@ import {
   useRunNotificationTrigger,
   useRunAllNotificationTriggers,
 } from '../../../services/adminNotificationService.js';
+import {
+  useAdminEmailTemplates,
+  useUpdateEmailTemplate,
+} from '../../../services/emailTemplates.js';
 import {
   TYPE_LABEL, TYPE_DESC, GUEST_TYPES, TYPE_META, HOUR_HAS_EFFECT
 } from './notificationConstants.js';

@@ -276,7 +276,7 @@ Quy trình cấp biển số định danh theo Thông tư 24 | huong-dan | publi
 
         {/* Bảng xem trước trực tiếp */}
         {parsedRows.length > 0 && (
-          <div style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-field)' }}>
+          <div className="admin-simple-table-wrap" style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-field)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', font: 'var(--type-caption)' }}>
               <thead>
                 <tr style={{ background: 'var(--surface-sunken)', borderBottom: '1px solid var(--border-hairline)' }}>
@@ -328,6 +328,26 @@ Quy trình cấp biển số định danh theo Thông tư 24 | huong-dan | publi
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {parsedRows.length > 0 && (
+          <div className="admin-simple-cards" style={{ maxHeight: 240, overflowY: 'auto' }}>
+            {parsedRows.map((r, i) => (
+              <div key={r.key} className="admin-row">
+                <div data-label="Tiêu đề">{r.title}<div style={{ color: 'var(--text-faint)', fontSize: 11 }}>/{r.slug}</div></div>
+                <div data-label="Chuyên mục"><Badge tone="blue">{CATEGORY_LABEL[r.category] || r.category}</Badge></div>
+                <div data-label="Trạng thái"><Badge tone={r.status === 'published' ? 'mint' : 'amber'}>{r.status === 'published' ? 'Xuất bản' : 'Bản nháp'}</Badge></div>
+                <div data-label="Kiểm tra">
+                  {r.done ? (
+                    r.success ? <span style={{ color: 'var(--status-mint)' }}><CheckCircle2 size={13} /> Đã tạo</span> : <span style={{ color: 'var(--status-danger)' }}><AlertTriangle size={13} /> {r.error}</span>
+                  ) : r.isValid ? (
+                    <span style={{ color: 'var(--status-mint)' }}><CheckCircle2 size={13} /> Hợp lệ</span>
+                  ) : (
+                    <span style={{ color: 'var(--status-danger)' }}><AlertTriangle size={13} /> {r.error}</span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

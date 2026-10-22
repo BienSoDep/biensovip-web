@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
 import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3, ArrowRight } from 'lucide-react';
@@ -324,7 +325,8 @@ export default function Dashboard({ go, st, patch }) {
         {conversion.isLoading ? (
           <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={220} /></div>
         ) : conversion.data?.items?.length > 0 ? (
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <>
+          <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
               <thead>
                 <tr style={{ color: 'var(--text-faint)', textAlign: 'left' }}>
@@ -354,6 +356,22 @@ export default function Dashboard({ go, st, patch }) {
               </tbody>
             </table>
           </div>
+          <div className="admin-simple-cards">
+            {conversion.data.items.map((p) => (
+              <div key={p.plateId} className="admin-row">
+                <div data-label="Biển số"><b>{p.plateNumber}</b></div>
+                <div data-label="Xem">{p.views}</div>
+                <div data-label="Lưu">{p.favorites}</div>
+                <div data-label="Liên hệ" style={{ color: p.contacts > 0 ? 'var(--status-success)' : 'var(--text-muted)' }}>{p.contacts}</div>
+                <div data-label="Chốt">{p.closed}</div>
+                <div data-label="Đổi l/hệ">{p.contactRate}%</div>
+                <div data-label="Xu hướng" style={{ fontWeight: 'var(--fw-bold)', color: p.trending > 0 ? 'var(--status-success)' : p.trending < 0 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
+                  {p.trending > 0 ? `+${p.trending}%` : `${p.trending}%`}
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         ) : (
           <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có dữ liệu chuyển đổi</EmptyBlock></div>
         )}
@@ -367,7 +385,8 @@ export default function Dashboard({ go, st, patch }) {
         {orders.isLoading ? (
           <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={220} /></div>
         ) : orders.data?.items?.length > 0 ? (
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <>
+          <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
               <thead>
                 <tr style={{ color: 'var(--text-faint)', textAlign: 'left' }}>
@@ -394,6 +413,18 @@ export default function Dashboard({ go, st, patch }) {
               </tbody>
             </table>
           </div>
+          <div className="admin-simple-cards">
+            {orders.data.items.map((o) => (
+              <div key={o.contactId} className="admin-row">
+                <div data-label="Biển số"><b>{o.plateNumber || '—'}</b></div>
+                <div data-label="Khách hàng">{o.fullName} · {o.phone}</div>
+                <div data-label="Mục đích">{INTENT_LABEL[o.intent] || o.intent}</div>
+                <div data-label="Trạng thái" style={{ fontWeight: 'var(--fw-semibold)', color: o.status === 'closed' ? 'var(--status-success)' : 'var(--text-muted)' }}>{ORDER_STATUS_LABEL[o.status] || o.status}</div>
+                <div data-label="Ngày">{format(new Date(o.createdAt), 'dd/MM/yyyy')}</div>
+              </div>
+            ))}
+          </div>
+          </>
         ) : (
           <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có đơn chuyển đổi</EmptyBlock></div>
         )}
