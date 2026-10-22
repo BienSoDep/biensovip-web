@@ -1175,185 +1175,165 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             </Button>
           )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
-          {/* Nút Xuất CSV */}
+          {/* Nút Xuất dữ liệu thống nhất (Excel, Word, CSV) */}
           <div style={{ position: 'relative' }}>
             <Button
               variant="ghost"
               size="md"
               disabled={exporting}
-              onClick={() => setExportMenu((m) => (m === 'csv' ? null : 'csv'))}
-              title="Xuất CSV danh sách biển"
+              title="Xuất danh sách biển số ra file Excel (.xlsx), Word (.docx) hoặc CSV (.csv)"
+              onClick={() => setExportMenu((m) => (m ? null : 'open'))}
+              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              <span>Xuất CSV</span>
-              <span style={{ fontSize: 10, marginLeft: 2, opacity: 0.7 }}>▾</span>
+              <Download size={14} />
+              <span>Xuất dữ liệu</span>
+              <span style={{ fontSize: 10, opacity: 0.7 }}>▾</span>
             </Button>
-            {exportMenu === 'csv' && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: 4,
-                  background: 'var(--white)',
-                  border: '1px solid var(--grey-200, #e2e8f0)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-3, 0 10px 15px -3px rgba(0,0,0,0.1))',
-                  zIndex: 30,
-                  minWidth: 240,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: 4,
-                }}
-              >
-                <button
-                  type="button"
+            {exportMenu && (
+              <>
+                <div
+                  onClick={() => setExportMenu(null)}
+                  style={{ position: 'fixed', inset: 0, zIndex: 29 }}
+                />
+                <div
                   style={{
-                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
-                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: 4,
+                    background: 'var(--white)',
+                    border: '1px solid var(--grey-200, #e2e8f0)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-4, 0 20px 25px -5px rgba(0,0,0,0.15))',
+                    zIndex: 30,
+                    minWidth: 290,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '6px',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                  onClick={() => handleExportChoice('csv', true)}
                 >
-                  📄 Xuất trang hiện tại ({items.length} biển)
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
-                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                  onClick={() => handleExportChoice('csv', false)}
-                >
-                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển)
-                </button>
-              </div>
-            )}
-          </div>
+                  {/* Nhóm Excel */}
+                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#107c41', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>📗 File Excel (.xlsx)</span>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('xlsx', true)}
+                  >
+                    <span>📄</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất trang hiện tại</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Trang {page} • {items.length} biển</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('xlsx', false)}
+                  >
+                    <span>📑</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} biển • tự động chia sheets</span>
+                    </div>
+                  </button>
 
-          {/* Nút Xuất Excel */}
-          <div style={{ position: 'relative' }}>
-            <Button
-              variant="ghost"
-              size="md"
-              disabled={exporting}
-              title="Xuất file Excel có trang trí, tự động phân chia sheets theo phiên và hiển thị giá mẫu tham chiếu"
-              onClick={() => setExportMenu((m) => (m === 'xlsx' ? null : 'xlsx'))}
-              style={{ fontWeight: 600, color: '#107c41' }}
-            >
-              <span>Xuất Excel</span>
-              <span style={{ fontSize: 10, marginLeft: 2, opacity: 0.7 }}>▾</span>
-            </Button>
-            {exportMenu === 'xlsx' && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: 4,
-                  background: 'var(--white)',
-                  border: '1px solid var(--grey-200, #e2e8f0)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-3, 0 10px 15px -3px rgba(0,0,0,0.1))',
-                  zIndex: 30,
-                  minWidth: 270,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: 4,
-                }}
-              >
-                <button
-                  type="button"
-                  style={{
-                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
-                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                  onClick={() => handleExportChoice('xlsx', true)}
-                >
-                  📄 Xuất trang này (trang {page} • {items.length} biển)
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
-                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                  onClick={() => handleExportChoice('xlsx', false)}
-                >
-                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển • chia sheets)
-                </button>
-              </div>
-            )}
-          </div>
+                  <div style={{ height: 1, background: 'var(--grey-100, #f1f5f9)', margin: '4px 0' }} />
 
-          {/* Nút Xuất Word */}
-          <div style={{ position: 'relative' }}>
-            <Button
-              variant="ghost"
-              size="md"
-              disabled={exporting}
-              title="Xuất file Word (.docx) chuyên nghiệp: Trang bìa tổng quan, tự động phân chia theo phiên có ngắt trang và hiển thị giá mẫu tham chiếu"
-              onClick={() => setExportMenu((m) => (m === 'docx' ? null : 'docx'))}
-              style={{ fontWeight: 600, color: '#2b579a' }}
-            >
-              <span>Xuất Word</span>
-              <span style={{ fontSize: 10, marginLeft: 2, opacity: 0.7 }}>▾</span>
-            </Button>
-            {exportMenu === 'docx' && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: 4,
-                  background: 'var(--white)',
-                  border: '1px solid var(--grey-200, #e2e8f0)',
-                  borderRadius: 'var(--radius-md)',
-                  boxShadow: 'var(--shadow-3, 0 10px 15px -3px rgba(0,0,0,0.1))',
-                  zIndex: 30,
-                  minWidth: 260,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: 4,
-                }}
-              >
-                <button
-                  type="button"
-                  style={{
-                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
-                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                  onClick={() => handleExportChoice('docx', true)}
-                >
-                  📄 Xuất trang hiện tại ({items.length} biển)
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    background: 'none', border: 'none', padding: '8px 12px', textAlign: 'left',
-                    borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                    color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                  onClick={() => handleExportChoice('docx', false)}
-                >
-                  📑 Xuất toàn bộ ({data?.total?.toLocaleString('vi-VN') || 0} biển • chia phần)
-                </button>
-              </div>
+                  {/* Nhóm Word */}
+                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#2b579a', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>📘 File Word (.docx)</span>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('docx', true)}
+                  >
+                    <span>📄</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất trang hiện tại</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} biển đang xem</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('docx', false)}
+                  >
+                    <span>📑</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} biển • chia phần & ngắt trang</span>
+                    </div>
+                  </button>
+
+                  <div style={{ height: 1, background: 'var(--grey-100, #f1f5f9)', margin: '4px 0' }} />
+
+                  {/* Nhóm CSV */}
+                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>📙 File CSV (.csv)</span>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('csv', true)}
+                  >
+                    <span>📄</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất CSV trang hiện tại</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} dòng</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('csv', false)}
+                  >
+                    <span>📑</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất CSV toàn bộ</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} dòng</span>
+                    </div>
+                  </button>
+                </div>
+              </>
             )}
           </div>
           {queue && (
@@ -1936,29 +1916,30 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
 
           {/* Cụm 5: ĐÁNH DẤU (Nổi bật / Ghim) */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            {[
-              ['Nổi bật', { isFeatured: true }, 'Đã đánh dấu nổi bật'],
-              ['Bỏ nổi bật', { isFeatured: false }, 'Đã bỏ nổi bật'],
-              ['Ghim', { isPinned: true }, 'Đã ghim'],
-              ['Bỏ ghim', { isPinned: false }, 'Đã bỏ ghim'],
-            ].map(([text, body, verb]) => (
-              <button
-                key={text}
-                type="button"
-                onClick={() => bulkEdit(body, verb)}
-                disabled={bulk.isPending}
-                style={{
-                  ...bulkBtn,
-                  background: 'rgba(255, 255, 255, 0.12)',
-                  color: '#e2e8f0',
-                  padding: '5px 8px',
-                  fontSize: '11px',
-                }}
-              >
-                {text}
-              </button>
-            ))}
+          <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <select
+              defaultValue=""
+              aria-label="Đánh dấu hàng loạt"
+              disabled={bulk.isPending}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === 'featured_on') bulkEdit({ isFeatured: true }, 'Đã đánh dấu nổi bật');
+                else if (v === 'featured_off') bulkEdit({ isFeatured: false }, 'Đã bỏ nổi bật');
+                else if (v === 'pinned_on') bulkEdit({ isPinned: true }, 'Đã ghim');
+                else if (v === 'pinned_off') bulkEdit({ isPinned: false }, 'Đã bỏ ghim');
+                e.target.value = '';
+              }}
+              style={{
+                border: 'none', background: 'rgba(255, 255, 255, 0.95)', borderRadius: 'var(--radius-sm)',
+                padding: '5px 8px', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer', outline: 'none',
+              }}
+            >
+              <option value="" disabled>Đánh dấu ▾</option>
+              <option value="featured_on">⭐ Gắn nổi bật</option>
+              <option value="featured_off">Bỏ nổi bật</option>
+              <option value="pinned_on">📌 Ghim lên đầu</option>
+              <option value="pinned_off">Bỏ ghim</option>
+            </select>
           </div>
 
           <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
