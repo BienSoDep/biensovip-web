@@ -44,6 +44,10 @@ function ChatbotPageInner({ go, user, sessions, activeSessionId, onNewChat, onOp
   const openPlate = (slugOrId) => go?.('detail', slugOrId)();
   const openPost = (slug) => go?.('post', slug)();
 
+  // resetKey remount huỷ hẳn hook đang giữ in-flight send — chặn chuyển phiên lúc đang gửi để không
+  // mất tin nhắn giữa đường (xem review: sendMessage.isPending trong lúc bấm nút mới/chuyển session).
+  const switchDisabled = conv.sendMessage.isPending;
+
   return (
     <div style={{ maxWidth: 1040, margin: '0 auto', padding: 'var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -59,8 +63,8 @@ function ChatbotPageInner({ go, user, sessions, activeSessionId, onNewChat, onOp
         {user && (
           <aside style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <button
-              type="button" onClick={onNewChat}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--action-primary)', borderRadius: 'var(--radius-field)', background: 'var(--white)', padding: '10px 14px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', cursor: 'pointer' }}
+              type="button" onClick={onNewChat} disabled={switchDisabled}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--action-primary)', borderRadius: 'var(--radius-field)', background: 'var(--white)', padding: '10px 14px', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)', cursor: switchDisabled ? 'default' : 'pointer', opacity: switchDisabled ? 0.6 : 1 }}
             >
               <Plus size={16} /> Cuộc trò chuyện mới
             </button>
@@ -75,12 +79,12 @@ function ChatbotPageInner({ go, user, sessions, activeSessionId, onNewChat, onOp
               )}
               {sessions.data?.map((s) => (
                 <button
-                  key={s.sessionId} type="button" onClick={() => onOpenSession(s.sessionId)}
+                  key={s.sessionId} type="button" onClick={() => onOpenSession(s.sessionId)} disabled={switchDisabled}
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 8, width: '100%', textAlign: 'left',
                     border: 'none', borderBottom: '1px solid var(--border-hairline)',
                     background: s.sessionId === currentSessionId ? 'var(--surface-sunken)' : 'transparent',
-                    padding: '10px 12px', cursor: 'pointer',
+                    padding: '10px 12px', cursor: switchDisabled ? 'default' : 'pointer', opacity: switchDisabled ? 0.6 : 1,
                   }}
                 >
                   <MessageSquare size={14} style={{ flexShrink: 0, marginTop: 2, color: 'var(--text-muted)' }} />
