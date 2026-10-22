@@ -58,7 +58,7 @@ export default function AdminPlates({ go, notify, st }) {
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('');
   const [provinceFilter, setProvinceFilter] = useState('');
   const [hotFilter, setHotFilter] = useState('');
-  const { exportCsv, loading: exporting } = useExportCsv('/api/admin/plates');
+  const { exportCsv, exportXlsx, loading: exporting } = useExportCsv('/api/admin/plates');
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [mobileView, setMobileView] = useState('card'); // 'card' | 'table'
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -868,7 +868,7 @@ export default function AdminPlates({ go, notify, st }) {
         activeFiltersCount={activeFiltersCount}
         colPrefs={colPrefs} toggleCol={toggleCol}
         colMenuOpen={colMenuOpen} setColMenuOpen={setColMenuOpen}
-        exportCsv={exportCsv} exporting={exporting}
+        exportCsv={exportCsv} exportXlsx={exportXlsx} exporting={exporting}
         checkingMissingInfo={checkingMissingInfo} openMissingInfoModal={openMissingInfoModal}
         checkingMissingImage={checkingMissingImage} openMissingImageModal={openMissingImageModal}
         checkingGeneratedImage={checkingGeneratedImage} openPurgeImageModal={openPurgeImageModal}

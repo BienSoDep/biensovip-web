@@ -43,7 +43,7 @@ export default function PlateTable({
   colMenuOpen, setColMenuOpen,
 
   // Top action handlers
-  exportCsv, exporting,
+  exportCsv, exportXlsx, exporting,
   checkingMissingInfo, openMissingInfoModal,
   checkingMissingImage, openMissingImageModal,
   checkingGeneratedImage, openPurgeImageModal,
@@ -325,6 +325,9 @@ export default function PlateTable({
           <div style={{ flex: 1 }} />
           <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống toàn bộ danh sách biển số đang lọc dưới dạng file CSV" onClick={() => exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
             {exporting ? 'Đang xuất…' : 'Xuất CSV'}
+          </Button>
+          <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống danh sách biển số đang lọc dưới dạng file Excel có trang trí — dùng gửi khách hàng" onClick={() => exportXlsx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
+            {exporting ? 'Đang xuất…' : 'Xuất Excel'}
           </Button>
           <Button variant="ghost" size="md" disabled={checkingMissingInfo} title="Dùng AI tự động phân tích ý nghĩa phong thủy và tạo mô tả cho các biển số còn trống dữ liệu" onClick={openMissingInfoModal}>
             {checkingMissingInfo ? 'Đang kiểm tra…' : 'Sinh thông tin hàng loạt'}

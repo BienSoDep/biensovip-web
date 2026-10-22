@@ -42,7 +42,16 @@ export function useExportCsv(path) {
     }
   };
 
-  return { exportCsv, loading };
+  const exportXlsx = async (params = {}) => {
+    setLoading(true);
+    try {
+      await downloadFile(path, { ...params, format: 'xlsx' }, 'export.xlsx');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { exportCsv, exportXlsx, loading };
 }
 
 // Report export — Excel (.xlsx) hoặc PDF, dùng cho Dashboard.

@@ -21,7 +21,7 @@ import { useVpaCounts } from '../../../services/vpa.js';
 import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useStartRecomputeVpaSuggestions, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
-  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, useVpaPlatePriceReference, useStartApproveDriftedVpa,
+  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, exportVpaXlsx, useVpaPlatePriceReference, useStartApproveDriftedVpa,
   useResumeVpaApproveRun,
 } from '../../../services/adminVpa.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
@@ -597,6 +597,10 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     setExporting(true);
     try { await exportVpaCsv({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
   };
+  const doExportXlsx = async () => {
+    setExporting(true);
+    try { await exportVpaXlsx({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
+  };
 
   const quickAdd = async () => {
     const price = quick.price === '' ? null : Number(quick.price);
@@ -1154,6 +1158,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
           <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
+          <Button variant="ghost" size="md" disabled={exporting} title="Xuất Excel có trang trí — dùng gửi khách hàng" onClick={doExportXlsx}>{exporting ? 'Đang xuất…' : 'Xuất Excel'}</Button>
           {queue && (
             <>
               <Button

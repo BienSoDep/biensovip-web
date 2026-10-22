@@ -137,22 +137,25 @@ export const useUnlockVpaFields = () => useVpaMutation(({ id, fields }) => apiCl
 export const useCreateVpaPlate = () => useVpaMutation((body) => apiClient.post('/api/admin/vpa/plates', body));
 export const useBulkEditVpa = () => useVpaMutation((body) => apiClient.post('/api/admin/vpa/plates/bulk-edit', body));
 
-// Xuất CSV theo bộ lọc hiện tại (có auth header nên không dùng link trực tiếp).
-export async function exportVpaCsv(params) {
+// Xuất CSV/Excel theo bộ lọc hiện tại (có auth header nên không dùng link trực tiếp).
+async function doExportVpaPlates(params, format) {
   const auth = loadAuth();
-  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/plates/export?${toQuery(params)}`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/plates/export?${toQuery({ ...params, format })}`, {
     headers: auth?.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
   });
   if (!res.ok) throw new Error(`Xuất file thất bại (${res.status})`);
   const url = URL.createObjectURL(await res.blob());
   const a = document.createElement('a');
   a.href = url;
-  a.download = `bien-vpa-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.csv`;
+  a.download = `bien-vpa-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.${format}`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+export const exportVpaCsv = (params) => doExportVpaPlates(params, 'csv');
+export const exportVpaXlsx = (params) => doExportVpaPlates(params, 'xlsx');
 
 export async function exportVpaAuctionResultsCsv(params) {
   const auth = loadAuth();
