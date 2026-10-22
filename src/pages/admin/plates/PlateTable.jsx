@@ -43,7 +43,7 @@ export default function PlateTable({
   colMenuOpen, setColMenuOpen,
 
   // Top action handlers
-  exportCsv, exportXlsx, exporting,
+  exportCsv, exportXlsx, exportDocx, exportPlateDocx, exporting,
   checkingMissingInfo, openMissingInfoModal,
   checkingMissingImage, openMissingImageModal,
   checkingGeneratedImage, openPurgeImageModal,
@@ -329,6 +329,9 @@ export default function PlateTable({
           <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống danh sách biển số đang lọc dưới dạng file Excel có trang trí — dùng gửi khách hàng" onClick={() => exportXlsx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
             {exporting ? 'Đang xuất…' : 'Xuất Excel'}
           </Button>
+          <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống catalogue Word (có ảnh biển số) dễ gửi khách qua Zalo/email" onClick={() => exportDocx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
+            {exporting ? 'Đang xuất…' : 'Xuất Word'}
+          </Button>
           <Button variant="ghost" size="md" disabled={checkingMissingInfo} title="Dùng AI tự động phân tích ý nghĩa phong thủy và tạo mô tả cho các biển số còn trống dữ liệu" onClick={openMissingInfoModal}>
             {checkingMissingInfo ? 'Đang kiểm tra…' : 'Sinh thông tin hàng loạt'}
           </Button>
@@ -531,6 +534,7 @@ export default function PlateTable({
                     <IconButton name="image" label="Sinh ảnh" size="sm" disabled={generatingRowId === p.id} onClick={() => generateRowImage(p)} />
                   )}
                   <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(p)} />
+                  <IconButton name="download" label="Xuất Word" size="sm" onClick={() => exportPlateDocx(p.id, p.plateNumber)} />
                   <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => setConfirmDelete(p.id)} />
                   <AuditHistoryButton entityType="plate" entityId={p.id} />
                 </div>
@@ -745,6 +749,7 @@ export default function PlateTable({
                       <IconButton name="image" label="Sinh ảnh" size="sm" disabled={generatingRowId === p.id} onClick={() => generateRowImage(p)} />
                     )}
                     <IconButton name="pencil" label="Sửa" size="sm" onClick={() => openEdit(p)} />
+                    <IconButton name="download" label="Xuất Word" size="sm" onClick={() => exportPlateDocx(p.id, p.plateNumber)} />
                     <IconButton name="trash-2" label="Xóa" size="sm" onClick={() => setConfirmDelete(p.id)} />
                     <AuditHistoryButton entityType="plate" entityId={p.id} />
                   </span>

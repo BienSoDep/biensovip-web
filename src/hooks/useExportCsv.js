@@ -5,7 +5,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Tải file CSV có auth header (window.location.href không gửi được Authorization) —
 // dùng fetch + blob + <a download> ảo. Trả về hook state để UI hiện loading/disable nút.
-async function downloadFile(path, params, fallbackName) {
+export async function downloadFile(path, params, fallbackName) {
   const qs = new URLSearchParams(params).toString();
   const auth = loadAuth();
   const res = await fetch(`${BASE_URL}${path}?${qs}`, {
@@ -51,7 +51,23 @@ export function useExportCsv(path) {
     }
   };
 
-  return { exportCsv, exportXlsx, loading };
+  const exportDocx = async (params = {}) => {
+    setLoading(true);
+    try {
+      await downloadFile(path, { ...params, format: 'docx' }, 'export.docx');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { exportCsv, exportXlsx, exportDocx, loading };
+}
+
+// Xuất Word giới thiệu 1 biển cụ thể — nút trên từng dòng danh sách biển.
+export function useExportPlateDocx() {
+  const exportPlateDocx = (id, plateNumber) =>
+    downloadFile(`/api/admin/plates/${id}/export-docx`, {}, `bien-${plateNumber || id}.docx`);
+  return { exportPlateDocx };
 }
 
 // Report export — Excel (.xlsx) hoặc PDF, dùng cho Dashboard.
