@@ -15,9 +15,11 @@ import {
 import { formatDateTime } from '../../lib/date.js';
 import aiQuestions from '../../lib/content/vi/aiKnowledgeBase100.json';
 import aiTestingSuite from '../../lib/content/vi/aiChatbotTesting100.json';
+import aiContinuousScenarios from '../../lib/content/vi/aiChatbotContinuousScenarios.json';
 
 const TABS = [
   { value: 'sessions', label: 'Lịch sử hội thoại', info: 'Xem lại các đoạn chat thực tế giữa khách hàng và trợ lý AI để cải thiện kịch bản tư vấn.' },
+  { value: 'scenarios', label: 'Kịch bản liên tục (Multi-turn)', info: '10 chuỗi kịch bản kiểm thử hội thoại đa lượt liên tục (50 turns): Phễu bán hàng, TT24, Đấu giá VPA, Jailbreak, Khiếu nại...' },
   { value: 'testing', label: '100 câu kiểm thử (Testing Suite)', info: 'Bộ 100 câu hỏi test benchmark phân loại tự động (Blocked, DirectPlate, DirectFilter, NeedsLlm).' },
   { value: 'kb', label: 'Kho 100 câu hỏi mẫu (KB)', info: 'Bộ 100 câu hỏi - đáp chuyên sâu chuẩn hóa về Pháp lý Thông tư 24, Đấu giá VPA, Phong thủy và Dịch vụ.' },
   { value: 'settings', label: 'Cấu hình trợ lý', info: 'Thiết lập System Prompt ngữ cảnh, độ sáng tạo Temperature và giới hạn Token.' },
@@ -50,6 +52,7 @@ export default function AdminChatbot({ notify }) {
         ))}
       </div>
       {tab === 'sessions' && <SessionsTab notify={notify} />}
+      {tab === 'scenarios' && <ContinuousScenariosTab notify={notify} />}
       {tab === 'testing' && <TestingSuiteTab notify={notify} />}
       {tab === 'kb' && <KnowledgeBaseTab notify={notify} />}
       {tab === 'settings' && <SettingsTab notify={notify} />}
@@ -941,6 +944,457 @@ function TestingSuiteTab({ notify }) {
                     <span>{isCopied ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContinuousScenariosTab({ notify }) {
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [search, setSearch] = useState('');
+  const [copiedKey, setCopiedKey] = useState(null);
+  const [collapsedMap, setCollapsedMap] = useState({});
+
+  const categories = useMemo(() => {
+    const set = new Set();
+    aiContinuousScenarios.forEach((s) => set.add(s.category));
+    return ['ALL', ...Array.from(set)];
+  }, []);
+
+  const totalTurns = useMemo(() => {
+    return aiContinuousScenarios.reduce((acc, s) => acc + s.turns.length, 0);
+  }, []);
+
+  const filteredScenarios = useMemo(() => {
+    return aiContinuousScenarios.filter((s) => {
+      const matchCat = selectedCategory === 'ALL' || s.category === selectedCategory;
+      if (!matchCat) return false;
+      if (!search.trim()) return true;
+      const q = search.toLowerCase().trim();
+      const matchMeta = s.id.toLowerCase().includes(q) || s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
+      const matchTurns = s.turns.some((t) => t.user.toLowerCase().includes(q) || t.expectedBehavior.toLowerCase().includes(q) || t.contextTag?.toLowerCase().includes(q));
+      return matchMeta || matchTurns;
+    });
+  }, [selectedCategory, search]);
+
+  const toggleCollapse = (id) => {
+    setCollapsedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleCopy = (text, key, label) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    notify?.(`${label || 'Đã sao chép vào clipboard'}!`, 'success');
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleCopyEntireScenario = (s) => {
+    const content = `=== ${s.id}: ${s.title} ===\n` +
+      `Mục tiêu: ${s.description}\n` +
+      `Phân loại: ${s.category} (${s.turns.length} lượt liên tục)\n\n` +
+      s.turns.map((t) =>
+        `[Lượt ${t.turn}] ${t.contextTag} | Intent kỳ vọng: ${t.expectedIntent}\n` +
+        `User: "${t.user}"\n` +
+        `AI kỳ vọng: ${t.expectedBehavior}\n`
+      ).join('\n');
+    handleCopy(content, `scn-${s.id}`, `Đã sao chép kịch bản ${s.id}`);
+  };
+
+  const handleExportJson = () => {
+    const blob = new Blob([JSON.stringify(aiContinuousScenarios, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Biensovip_AI_Continuous_Scenarios_10.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    notify?.('Đã tải xuống bộ 10 kịch bản kiểm thử liên tục (JSON)', 'success');
+  };
+
+  const getIntentBadge = (intent) => {
+    switch (intent) {
+      case 'Blocked':
+        return { bg: 'rgba(239,68,68,0.12)', color: '#dc2626', border: 'rgba(239,68,68,0.3)', label: 'Blocked (Gateway)' };
+      case 'DirectPlate':
+        return { bg: 'rgba(59,130,246,0.12)', color: '#2563eb', border: 'rgba(59,130,246,0.3)', label: 'DirectPlate (DB)' };
+      case 'DirectFilter':
+        return { bg: 'rgba(16,185,129,0.12)', color: '#059669', border: 'rgba(16,185,129,0.3)', label: 'DirectFilter (DB)' };
+      default:
+        return { bg: 'rgba(139,92,246,0.12)', color: '#7c3aed', border: 'rgba(139,92,246,0.3)', label: 'NeedsLlm (AI)' };
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      {/* Banner giới thiệu */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, rgba(235,100,50,0.06) 0%, rgba(59,130,246,0.06) 100%)',
+          border: '1px solid var(--border-hairline)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '16px 20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16
+        }}
+      >
+        <div style={{ maxWidth: 760 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 18 }}>🔄</span>
+            <h3 style={{ margin: 0, font: 'var(--type-title-md)', fontWeight: 'var(--fw-bold)', color: 'var(--text-heading)' }}>
+              Bộ 10 Kịch bản Kiểm thử Hội thoại Liên tục (Multi-turn Scenarios)
+            </h3>
+            <span
+              style={{
+                font: 'var(--type-caption)',
+                fontWeight: 'var(--fw-bold)',
+                background: 'var(--action-primary)',
+                color: 'white',
+                borderRadius: 'var(--radius-pill)',
+                padding: '2px 8px'
+              }}
+            >
+              {totalTurns} Lượt test
+            </span>
+          </div>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.5 }}>
+            Kiểm thử năng lực hội thoại đa lượt thực tế: duy trì ngữ cảnh (Context Retention), chuyển đổi Intent giữa các câu hỏi, xử lý phản đối, phễu chốt đơn và bảo vệ hệ thống trước tấn công đa bước.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={handleExportJson}
+            style={{
+              background: 'var(--white)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-body)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '6px 14px',
+              font: 'var(--type-body-sm)',
+              fontWeight: 'var(--fw-medium)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              boxShadow: 'var(--shadow-inset-hairline)'
+            }}
+          >
+            <Download size={14} />
+            <span>Tải JSON 10 Kịch bản</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Bộ lọc và Tìm kiếm */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          {categories.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setSelectedCategory(c)}
+              style={{
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                padding: '5px 12px',
+                cursor: 'pointer',
+                font: 'var(--type-caption)',
+                fontWeight: selectedCategory === c ? 'var(--fw-bold)' : 'var(--fw-medium)',
+                background: selectedCategory === c ? 'var(--text-heading)' : 'var(--white)',
+                color: selectedCategory === c ? 'var(--white)' : 'var(--text-body)',
+                boxShadow: selectedCategory === c ? 'none' : 'var(--shadow-inset-hairline)'
+              }}
+            >
+              {c === 'ALL' ? 'Tất cả chủ đề' : c}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ position: 'relative', maxWidth: 420 }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)' }} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo mã kịch bản (SCN-01), từ khóa, nội dung lượt chat..."
+            style={{
+              width: '100%',
+              padding: '8px 12px 8px 36px',
+              borderRadius: 'var(--radius-pill)',
+              border: '1px solid var(--border-subtle)',
+              font: 'var(--type-body-sm)',
+              background: 'var(--white)'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Danh sách 10 Kịch bản */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+        {filteredScenarios.length === 0 ? (
+          <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-faint)', font: 'var(--type-body-sm)' }}>
+            Không tìm thấy kịch bản nào phù hợp với bộ lọc hiện tại.
+          </div>
+        ) : (
+          filteredScenarios.map((s) => {
+            const isCollapsed = !!collapsedMap[s.id];
+            const isScnCopied = copiedKey === `scn-${s.id}`;
+
+            return (
+              <div
+                key={s.id}
+                style={{
+                  background: 'var(--white)',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: 'var(--radius-lg)',
+                  boxShadow: 'var(--shadow-card-subtle)',
+                  overflow: 'hidden',
+                  transition: 'border-color 150ms ease'
+                }}
+              >
+                {/* Header kịch bản */}
+                <div
+                  style={{
+                    padding: '14px 18px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    background: 'var(--surface-subtle)',
+                    borderBottom: isCollapsed ? 'none' : '1px solid var(--border-hairline)'
+                  }}
+                >
+                  <div
+                    onClick={() => toggleCollapse(s.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 1, minWidth: 260 }}
+                  >
+                    <span
+                      style={{
+                        font: 'var(--type-caption)',
+                        fontWeight: 'var(--fw-bold)',
+                        background: 'rgba(235,100,50,0.12)',
+                        color: 'var(--action-primary)',
+                        padding: '3px 8px',
+                        borderRadius: 'var(--radius-pill)',
+                        border: '1px solid rgba(235,100,50,0.25)',
+                        fontFamily: 'monospace'
+                      }}
+                    >
+                      {s.id}
+                    </span>
+                    <div>
+                      <h4 style={{ margin: 0, font: 'var(--type-body-md)', fontWeight: 'var(--fw-bold)', color: 'var(--text-heading)' }}>
+                        {s.title}
+                      </h4>
+                      <p style={{ margin: 0, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                        {s.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      style={{
+                        font: 'var(--type-caption)',
+                        fontWeight: 'var(--fw-medium)',
+                        background: 'var(--surface-card)',
+                        color: 'var(--text-body)',
+                        padding: '3px 9px',
+                        borderRadius: 'var(--radius-pill)',
+                        border: '1px solid var(--border-subtle)'
+                      }}
+                    >
+                      {s.category} • {s.turns.length} lượt
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyEntireScenario(s)}
+                      title="Sao chép toàn bộ kịch bản này để test liên tục"
+                      style={{
+                        background: isScnCopied ? 'rgba(16,185,129,0.12)' : 'var(--white)',
+                        color: isScnCopied ? 'var(--mint-700)' : 'var(--text-body)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-pill)',
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4
+                      }}
+                    >
+                      {isScnCopied ? <Check size={13} /> : <Copy size={13} />}
+                      <span>{isScnCopied ? 'Đã sao chép' : 'Sao chép kịch bản'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleCollapse(s.id)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-faint)',
+                        cursor: 'pointer',
+                        padding: 4,
+                        display: 'inline-flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Các lượt hội thoại (Turns Timeline) */}
+                {!isCollapsed && (
+                  <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {s.turns.map((t, idx) => {
+                      const intentStyle = getIntentBadge(t.expectedIntent);
+                      const turnCopyKey = `${s.id}-turn-${t.turn}`;
+                      const isTurnCopied = copiedKey === turnCopyKey;
+
+                      return (
+                        <div
+                          key={t.turn}
+                          style={{
+                            display: 'flex',
+                            gap: 12,
+                            position: 'relative'
+                          }}
+                        >
+                          {/* Dấu chấm & Đường timeline nối các turn */}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 28 }}>
+                            <div
+                              style={{
+                                width: 26,
+                                height: 26,
+                                borderRadius: '50%',
+                                background: 'var(--action-primary)',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                font: 'var(--type-caption)',
+                                fontWeight: 'var(--fw-bold)',
+                                fontSize: 11
+                              }}
+                            >
+                              {t.turn}
+                            </div>
+                            {idx < s.turns.length - 1 && (
+                              <div style={{ width: 2, flex: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
+                            )}
+                          </div>
+
+                          {/* Nội dung lượt test */}
+                          <div
+                            style={{
+                              flex: 1,
+                              background: 'var(--surface-subtle)',
+                              border: '1px solid var(--border-hairline)',
+                              borderRadius: 'var(--radius-md)',
+                              padding: '10px 14px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 6
+                            }}
+                          >
+                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-heading)' }}>
+                                  Lượt {t.turn}
+                                </span>
+                                <span
+                                  style={{
+                                    font: 'var(--type-caption)',
+                                    background: 'var(--surface-card)',
+                                    color: 'var(--text-body)',
+                                    padding: '1px 7px',
+                                    borderRadius: 'var(--radius-pill)',
+                                    border: '1px solid var(--border-hairline)',
+                                    fontSize: 11
+                                  }}
+                                >
+                                  {t.contextTag}
+                                </span>
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span
+                                  style={{
+                                    font: 'var(--type-caption)',
+                                    fontWeight: 'var(--fw-medium)',
+                                    background: intentStyle.bg,
+                                    color: intentStyle.color,
+                                    border: `1px solid ${intentStyle.border}`,
+                                    borderRadius: 'var(--radius-pill)',
+                                    padding: '2px 8px',
+                                    fontSize: 11
+                                  }}
+                                >
+                                  Intent: {intentStyle.label}
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopy(t.user, turnCopyKey, `Đã copy Lượt ${t.turn}`)}
+                                  title="Sao chép tin nhắn này để dán vào khung chat test"
+                                  style={{
+                                    background: isTurnCopied ? 'rgba(16,185,129,0.12)' : 'var(--white)',
+                                    color: isTurnCopied ? 'var(--mint-700)' : 'var(--text-body)',
+                                    border: '1px solid var(--border-subtle)',
+                                    borderRadius: 'var(--radius-pill)',
+                                    padding: '3px 8px',
+                                    cursor: 'pointer',
+                                    fontSize: 11,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4
+                                  }}
+                                >
+                                  {isTurnCopied ? <Check size={12} /> : <Copy size={12} />}
+                                  <span>{isTurnCopied ? 'Copied' : `Copy Lượt ${t.turn}`}</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Tin nhắn của User */}
+                            <div
+                              style={{
+                                font: 'var(--type-body-sm)',
+                                color: 'var(--text-heading)',
+                                background: 'var(--white)',
+                                padding: '8px 12px',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid var(--border-subtle)',
+                                fontStyle: 'italic',
+                                lineHeight: 1.45
+                              }}
+                            >
+                              "{t.user}"
+                            </div>
+
+                            {/* Kỳ vọng xử lý của AI */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                              <span style={{ color: 'var(--action-primary)', fontWeight: 'var(--fw-bold)' }}>Kỳ vọng AI:</span>
+                              <span style={{ color: 'var(--text-body)' }}>{t.expectedBehavior}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })
