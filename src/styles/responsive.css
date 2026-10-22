@@ -369,6 +369,22 @@
   }
 }
 
+@media (min-width: 769px) and (max-width: 1024px) {
+  .header-logo-tagline {
+    display: none !important;
+  }
+  .header-nav-pills {
+    gap: 2px !important;
+  }
+  .header-nav-pills .pill-btn {
+    padding: 0 7px !important;
+    font-size: 13px !important;
+  }
+  .desktop-nav {
+    gap: 4px !important;
+  }
+}
+
 @media (min-width: 1025px) {
   .header-nav-pills {
     gap: 6px !important;
