@@ -4,7 +4,9 @@ import Button from '../../../components/Button.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import { Badge, Checkbox, Input, Select, InfoTip } from '../../../components/index.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
-import { useUpdateVpaPlate, useCreateVpaPlate, useSetVpaPrice, useUnlockVpaFields } from '../../../services/adminVpa.js';
+import { formatDate } from '../../../lib/date.js';
+import { Calculator, CheckCircle2, Info, AlertCircle } from 'lucide-react';
+import { useUpdateVpaPlate, useCreateVpaPlate, useSetVpaPrice, useUnlockVpaFields, useVpaPlatePriceReference } from '../../../services/adminVpa.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_LOCK_FLAGS, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 
 const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)}đ`);
@@ -33,6 +35,7 @@ export default function VpaPlateDrawer({ plate, plateTypes, provinces, onClose, 
   const update = useUpdateVpaPlate();
   const setPrice = useSetVpaPrice();
   const unlock = useUnlockVpaFields();
+  const { data: priceRef, isLoading: refLoading } = useVpaPlatePriceReference(plate?.id, !!editing && !!plate?.id);
   const [f, setF] = useState(() => ({
     plateNumber: plate?.plateNumber || '',
     vehicle: plate ? (isCar(plate.vehicle) ? 'Car' : 'MotorBike') : 'Car',
@@ -152,10 +155,83 @@ export default function VpaPlateDrawer({ plate, plateTypes, provinces, onClose, 
         </div>
 
         {editing && (
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6, font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
-            <span>Giá khởi điểm VPA: <b>{money(plate.startingPrice)}</b> {label('', VPA_HELP.startingPrice)}</span>
-            <span>Giá gợi ý: <b>{plate.suggestedPrice ? money(plate.suggestedPrice) : '—'}</b> ({plate.sampleCount ?? 0} mẫu) {label('', VPA_HELP.suggested)}</span>
-            <span>Phiên: {formatDateTime(plate.auctionStartAt)} → {formatDateTime(plate.auctionEndAt)}</span>
+          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 8, font: 'var(--type-body-sm)', color: 'var(--text-body)', border: '1px solid var(--border-hairline, #e2e8f0)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Giá khởi điểm VPA: <b>{money(plate.startingPrice)}</b> {label('', VPA_HELP.startingPrice)}</span>
+              <span>Phiên: {formatDateTime(plate.auctionStartAt)} → {formatDateTime(plate.auctionEndAt)}</span>
+            </div>
+
+            <div style={{ paddingTop: 8, borderTop: '1px solid var(--border-hairline, #e2e8f0)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 'var(--fw-semibold)' }}>
+                  <Calculator size={14} color="var(--action-primary)" />
+                  Giá gợi ý: <b style={{ color: 'var(--action-primary)' }}>{plate.suggestedPrice ? money(plate.suggestedPrice) : '—'}</b>
+                </span>
+                {priceRef?.items?.length > 0 && (
+                  <span style={{ fontSize: '11px', color: '#3FBF8F', fontWeight: 600, background: '#F0FAF6', padding: '2px 8px', borderRadius: '10px', border: '1px solid #D6F0E5' }}>
+                    {priceRef.items.length} mẫu trúng đấu giá cùng tỉnh
+                  </span>
+                )}
+              </div>
+
+              {refLoading ? (
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Đang tra cứu mẫu đấu giá đối chiếu...</span>
+              ) : priceRef?.items?.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-body)', lineHeight: 1.4 }}>
+                    Công thức: <strong>TB {priceRef.items.length} mẫu ({money(priceRef.avgPrice)})</strong> × Hệ số <strong>{priceRef.factor}x</strong> ≈ <strong style={{ color: 'var(--action-primary)' }}>{money(Math.round(priceRef.avgPrice * priceRef.factor))}</strong>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: 2 }}>
+                      Trùng đuôi số <strong>{priceRef.tailNumber || '—'}</strong> trong kết quả đấu giá thực tế:
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 180, overflowY: 'auto', background: 'var(--white)', padding: 6, borderRadius: '6px', border: '1px solid var(--grey-100, #e2e8f0)' }}>
+                    {priceRef.items.map((it) => (
+                      <div
+                        key={it.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '5px 8px',
+                          borderRadius: '4px',
+                          background: 'var(--surface-sunken)',
+                          fontSize: '12px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-strong)', letterSpacing: '0.5px' }}>
+                            {it.plateNumber}
+                          </span>
+                          {it.provinceName && (
+                            <span style={{ fontSize: '10.5px', padding: '1px 5px', borderRadius: '8px', background: '#F0FAF6', color: '#3FBF8F', fontWeight: 600 }}>
+                              {it.provinceName}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontWeight: 700, color: '#3FBF8F' }}>
+                            {money(it.auctionPrice)}
+                          </span>
+                          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                            {formatDate(it.auctionStartAt)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Info size={12} color="#d97706" />
+                  <span>
+                    {priceRef?.usedOwnStartingPrice || priceRef?.matchType === 'starting_price'
+                      ? `Không có mẫu cùng tỉnh trùng đuôi số (${priceRef?.tailNumber || '—'}) → Tính từ Giá sàn (${money(plate.startingPrice)}) × ${priceRef?.factor || 2.5}x`
+                      : (plate.startingPrice > 0 ? `Tính từ Giá sàn (${money(plate.startingPrice)}) × 2.5 (chưa có mẫu)` : 'Chưa có mẫu đối chiếu')}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

@@ -1691,18 +1691,18 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                         {p.suggestedPrice > 0 ? (
                           (p.sampleCount || 0) > 0 ? (
                             <>
-                              <CheckCircle2 size={10} />
-                              Cùng tỉnh ({p.sampleCount} mẫu{p.sampleAvgPrice ? ` • TB ${money(p.sampleAvgPrice)}` : ''})
+                              <CheckCircle2 size={11} />
+                              Xem {p.sampleCount} biển đối chiếu
                             </>
                           ) : (
                             <>
-                              <Info size={10} />
+                              <Info size={11} />
                               Giá sàn ({money(p.startingPrice)})
                             </>
                           )
                         ) : (
                           <>
-                            <Info size={10} />
+                            <Info size={11} />
                             {p.startingPrice > 0 ? `Chờ tính giá (${money(p.startingPrice)})` : 'Chưa có giá'}
                           </>
                         )}
