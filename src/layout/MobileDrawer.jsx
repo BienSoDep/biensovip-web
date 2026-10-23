@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, Handshake, Heart, Bell, Settings, Sparkles, ChevronDown, Clock, Bot } from 'lucide-react';
+import { X, Car, Compass, GitCompareArrows, BookOpen, MessageCircle, MessageSquare, Handshake, Heart, Bell, Settings, Sparkles, ChevronDown, Clock, Bot } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import Modal from '../components/Modal.jsx';
 import { pill } from '../components/NavBtn.jsx';
@@ -12,7 +12,7 @@ const MAIN_NAV = [
   ['lucky', 'Hợp mệnh', Compass],
   ['compare', 'So sánh', GitCompareArrows],
   ['blog', 'Tin phong thủy', BookOpen],
-  ['aiChat', 'Trợ lý AI', Bot],
+  ['aiChat', 'Nhắn tin', MessageSquare],
   ['chat', 'Liên hệ', MessageCircle],
   ['collab', 'Cộng tác viên', Handshake],
 ];

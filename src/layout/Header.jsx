@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Bell, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock } from 'lucide-react';
+import { Menu, Bell, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock, MessageSquare } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { IconButton, Avatar } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
@@ -22,7 +22,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const thangCount = vpaCounts?.monthly || 829407;
   const { history } = usePlateHistory(user);
   const historyCount = history?.length || 0;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['aiChat', T('common.nav.aiChat'), Sparkles], ['chat', T('common.nav.contact')], ['collab', 'Cộng tác']];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['aiChat', T('common.nav.aiChat'), MessageSquare], ['chat', T('common.nav.contact')], ['collab', 'Cộng tác']];
   const navRef = useRef(null);
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [platesOpen, setPlatesOpen] = useState(false);

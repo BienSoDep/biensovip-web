@@ -70,7 +70,7 @@ export default function Footer({ settings, patch }) {
   const exploreLinks = [
     [routeFor('list'), T('common.footer.list') || 'Kho biển số'],
     [routeFor('lucky'), T('common.footer.lucky') || 'Hợp mệnh'],
-    [routeFor('chat'), 'Trợ lý AI & Tư vấn'],
+    [routeFor('chat'), 'Nhắn tin tư vấn'],
     [routeFor('compare'), T('common.footer.compare') || 'So sánh biển số'],
     [routeFor('collab'), T('common.footer.collab') || 'Cộng tác viên'],
     [routeFor('fav'), T('common.footer.fav') || 'Biển số yêu thích'],
