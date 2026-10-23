@@ -314,9 +314,33 @@ export function useChatConversation(openSessionId) {
   };
 
   const rate = (i, messageId, value) => {
-    if (!messageId) return;
+    const currentMsg = msgs[i];
+    const prevVal = currentMsg?.ratedValue;
+
+    // Nếu bấm lại giá trị hiện tại -> Hủy đánh giá
+    if (prevVal === value) {
+      setMsgs((m) => m.map((msg, idx) => (idx === i ? { ...msg, ratedValue: null } : msg)));
+      toast('Đã hủy đánh giá', { icon: '↩️' });
+      return;
+    }
+
+    // Cập nhật trạng thái đánh giá mới
     setMsgs((m) => m.map((msg, idx) => (idx === i ? { ...msg, ratedValue: value } : msg)));
-    rateMessage.mutate({ messageId, rating: value });
+
+    if (value === 1) {
+      toast.success('Cảm ơn bạn đã phản hồi! Câu trả lời hữu ích.');
+    } else if (value === -1) {
+      toast('Cảm ơn bạn! Biensovip sẽ cải thiện câu trả lời tốt hơn.', { icon: '📝' });
+    }
+
+    // Nếu có messageId hợp lệ dạng UUID từ backend -> gọi mutation API
+    if (messageId && typeof messageId === 'string' && messageId.includes('-')) {
+      rateMessage.mutate({ messageId, rating: value }, {
+        onError: () => {
+          // Bỏ qua lỗi ngầm định để không làm gián đoạn trải nghiệm người dùng
+        }
+      });
+    }
   };
 
   const isRestoring = !!storedId && !restoredRef.current && history.isLoading;
@@ -924,30 +948,43 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
                               </span>
                             </button>
 
-                            {m.messageId && (
-                              <>
-                                <button
-                                  type="button"
-                                  aria-label="Hữu ích"
-                                  className={`claude-action-btn ${m.ratedValue === 1 ? 'active' : ''}`}
-                                  onClick={() => rate(i, m.messageId, 1)}
-                                  disabled={m.ratedValue != null}
-                                  title="Câu trả lời hữu ích"
-                                >
-                                  <ThumbsUp size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  aria-label="Chưa hài lòng"
-                                  className={`claude-action-btn ${m.ratedValue === -1 ? 'active' : ''}`}
-                                  onClick={() => rate(i, m.messageId, -1)}
-                                  disabled={m.ratedValue != null}
-                                  title="Câu trả lời chưa đúng ý"
-                                >
-                                  <ThumbsDown size={13} />
-                                </button>
-                              </>
-                            )}
+                            {/* Nút Thích (Hữu ích) */}
+                            <button
+                              type="button"
+                              aria-label="Câu trả lời hữu ích"
+                              className={`claude-action-btn ${m.ratedValue === 1 ? 'active liked' : ''}`}
+                              onClick={() => rate(i, m.messageId, 1)}
+                              title={m.ratedValue === 1 ? 'Đã thích (Bấm để hủy)' : 'Câu trả lời hữu ích'}
+                              style={{
+                                color: m.ratedValue === 1 ? '#15803D' : undefined,
+                                background: m.ratedValue === 1 ? 'rgba(22, 163, 74, 0.14)' : undefined,
+                              }}
+                            >
+                              <ThumbsUp
+                                size={14}
+                                fill={m.ratedValue === 1 ? '#15803D' : 'none'}
+                                color={m.ratedValue === 1 ? '#15803D' : 'currentColor'}
+                              />
+                            </button>
+
+                            {/* Nút Chưa hài lòng (Chưa đúng ý) */}
+                            <button
+                              type="button"
+                              aria-label="Câu trả lời chưa đúng ý"
+                              className={`claude-action-btn ${m.ratedValue === -1 ? 'active disliked' : ''}`}
+                              onClick={() => rate(i, m.messageId, -1)}
+                              title={m.ratedValue === -1 ? 'Đã đánh giá chưa đúng ý (Bấm để hủy)' : 'Câu trả lời chưa đúng ý'}
+                              style={{
+                                color: m.ratedValue === -1 ? '#DC2626' : undefined,
+                                background: m.ratedValue === -1 ? 'rgba(220, 38, 38, 0.14)' : undefined,
+                              }}
+                            >
+                              <ThumbsDown
+                                size={14}
+                                fill={m.ratedValue === -1 ? '#DC2626' : 'none'}
+                                color={m.ratedValue === -1 ? '#DC2626' : 'currentColor'}
+                              />
+                            </button>
                           </div>
                         );
                       })()}
