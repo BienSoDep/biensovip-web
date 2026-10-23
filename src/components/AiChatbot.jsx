@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Sparkles, Maximize2 } from 'lucide-react';
+import { X, Sparkles, Maximize2, Headphones } from 'lucide-react';
 import { useChatbotWidgetEnabled } from '../services/chatbotService.js';
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js';
 import { useChatConversation, ChatConversationView } from './ChatConversation.jsx';
@@ -11,6 +11,22 @@ export default function AiChatbot({ go, openPlate: onOpenPlateProp, openPost: on
   const panelRef = useRef(null);
   const fabRef = useRef(null);
   const conv = useChatConversation();
+
+  // Lắng nghe sự kiện mở widget từ ContactFab (hỗ trợ chọn thẳng chế độ 'bot' hoặc 'human')
+  useEffect(() => {
+    const handleOpenWidget = (e) => {
+      const mode = e.detail?.mode || 'bot';
+      setOpen(true);
+      if (conv?.switchMode) {
+        conv.switchMode(mode);
+      }
+      if (mode === 'human' && !conv?.customerInfo) {
+        conv?.setConnectModal?.(true);
+      }
+    };
+    window.addEventListener('open-chat-widget', handleOpenWidget);
+    return () => window.removeEventListener('open-chat-widget', handleOpenWidget);
+  }, [conv]);
 
   useEffect(() => {
     if (!open) return;
@@ -98,12 +114,25 @@ export default function AiChatbot({ go, openPlate: onOpenPlateProp, openPost: on
         >
           {/* Claude Header Bar */}
           <div className="claude-widget-header">
-            <div className="claude-bot-avatar" style={{ width: 34, height: 34 }}>
-              <Sparkles size={18} />
+            <div
+              className="claude-bot-avatar"
+              style={{
+                width: 34,
+                height: 34,
+                background: conv.chatMode === 'human' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : undefined,
+              }}
+            >
+              {conv.chatMode === 'human' ? <Headphones size={18} /> : <Sparkles size={18} />}
             </div>
             <div className="claude-widget-header-title">
-              <span className="claude-widget-header-name">Trợ lý AI Biensovip</span>
-              <span className="claude-widget-header-sub">DeepSeek v2 • Trực tuyến</span>
+              <span className="claude-widget-header-name">
+                {conv.chatMode === 'human' ? 'Tư vấn viên trực tiếp' : 'Trợ lý AI Biensovip'}
+              </span>
+              <span className="claude-widget-header-sub">
+                {conv.chatMode === 'human'
+                  ? (conv.isStaffOnline ? 'Chuyên viên đang trực tuyến' : 'Hỗ trợ trực tiếp')
+                  : 'DeepSeek v2 • Trực tuyến'}
+              </span>
             </div>
             <button
               type="button"
