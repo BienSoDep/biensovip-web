@@ -1248,7 +1248,11 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                     <span>📑</span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} biển • tự động chia sheets</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {(data?.total || 0) > 100000
+                          ? `Tối đa 100.000 biển (trên tổng ${(data?.total || 0).toLocaleString('vi-VN')}) • tự động chia sheets`
+                          : `${(data?.total || 0).toLocaleString('vi-VN')} biển • tự động chia sheets`}
+                      </span>
                     </div>
                   </button>
 
@@ -1289,7 +1293,11 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                     <span>📑</span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} biển • chia phần & ngắt trang</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {(data?.total || 0) > 3000
+                          ? `Tối đa 3.000 biển (trên tổng ${(data?.total || 0).toLocaleString('vi-VN')}) • ngắt trang in ấn`
+                          : `${(data?.total || 0).toLocaleString('vi-VN')} biển • ngắt trang in ấn`}
+                      </span>
                     </div>
                   </button>
 
@@ -1330,7 +1338,11 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                     <span>📑</span>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: 600 }}>Xuất CSV toàn bộ</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} dòng</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {(data?.total || 0) > 100000
+                          ? `Tối đa 100.000 dòng (trên tổng ${(data?.total || 0).toLocaleString('vi-VN')})`
+                          : `${(data?.total || 0).toLocaleString('vi-VN')} dòng`}
+                      </span>
                     </div>
                   </button>
                 </div>
