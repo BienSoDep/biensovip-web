@@ -94,10 +94,19 @@ export function useExportWithProgress() {
         throw new Error(body?.error?.message || `Xuất file thất bại (mã ${res.status})`);
       }
 
-      // Lấy tên file từ Content-Disposition nếu có
+      // Lấy tên file chuẩn từ Content-Disposition nếu có (hỗ trợ RFC 5987 và loại bỏ chuỗi rác)
       const disposition = res.headers.get('Content-Disposition') || '';
-      const match = disposition.match(/filename="?([^"]+)"?/);
-      const actualFileName = match?.[1] || initialFileName;
+      const utf8Match = disposition.match(/filename\*=(?:UTF-8'')?([^;\r\n]+)/i);
+      const quotedMatch = disposition.match(/filename="([^"]+)"/i);
+      const plainMatch = disposition.match(/filename=([^;\r\n]+)/i);
+      let actualFileName = initialFileName;
+      if (utf8Match?.[1]) {
+        try { actualFileName = decodeURIComponent(utf8Match[1].replace(/["']/g, '').trim()); } catch { actualFileName = utf8Match[1].trim(); }
+      } else if (quotedMatch?.[1]) {
+        actualFileName = quotedMatch[1].trim();
+      } else if (plainMatch?.[1]) {
+        actualFileName = plainMatch[1].replace(/^["']|["']$/g, '').trim();
+      }
 
       // Lấy Content-Length nếu có
       const contentLengthHeader = res.headers.get('Content-Length');

@@ -17,8 +17,17 @@ export async function downloadFile(path, params, fallbackName) {
   }
   const blob = await res.blob();
   const disposition = res.headers.get('Content-Disposition') || '';
-  const match = disposition.match(/filename="?([^"]+)"?/);
-  const fileName = match?.[1] || fallbackName;
+  const utf8Match = disposition.match(/filename\*=(?:UTF-8'')?([^;\r\n]+)/i);
+  const quotedMatch = disposition.match(/filename="([^"]+)"/i);
+  const plainMatch = disposition.match(/filename=([^;\r\n]+)/i);
+  let fileName = fallbackName;
+  if (utf8Match?.[1]) {
+    try { fileName = decodeURIComponent(utf8Match[1].replace(/["']/g, '').trim()); } catch { fileName = utf8Match[1].trim(); }
+  } else if (quotedMatch?.[1]) {
+    fileName = quotedMatch[1].trim();
+  } else if (plainMatch?.[1]) {
+    fileName = plainMatch[1].replace(/^["']|["']$/g, '').trim();
+  }
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
