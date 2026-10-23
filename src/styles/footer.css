@@ -1,16 +1,16 @@
 /* ==========================================================================
-   BIENSOVIP LUXURY FOOTER STYLES
-   Chân trang cao cấp: Tông Dark Luxury Slate với dải nhấn vàng cam thương hiệu,
-   khối thẻ kênh liên hệ tương tác cao, sitemap chuyên nghiệp & trợ năng chuẩn WCAG.
+   BIENSOVIP LUXURY LIGHT FOOTER STYLES
+   Chân trang cao cấp: Tông Light Luxury thanh lịch, hài hòa với màu nền web,
+   dải nhấn vàng cam thương hiệu Duy Đinh, các thẻ kênh tương tác cao & trợ năng chuẩn WCAG.
    ========================================================================== */
 
 .vip-footer {
   position: relative;
-  background: radial-gradient(circle at 85% 0%, rgba(241, 151, 32, 0.09) 0%, transparent 55%),
-              radial-gradient(circle at 10% 25%, rgba(37, 99, 235, 0.07) 0%, transparent 45%),
-              #0A0E17;
-  color: #F1F5F9;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(circle at 85% 0%, rgba(241, 151, 32, 0.05) 0%, transparent 55%),
+              radial-gradient(circle at 10% 25%, rgba(37, 99, 235, 0.03) 0%, transparent 45%),
+              #F8FAFC;
+  color: #1E293B;
+  border-top: 1px solid #E2E8F0;
   overflow: hidden;
 }
 
@@ -25,9 +25,9 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(241, 151, 32, 0.2) 15%,
+    rgba(241, 151, 32, 0.3) 15%,
     #F19720 50%,
-    rgba(245, 158, 11, 0.8) 75%,
+    rgba(245, 158, 11, 0.7) 75%,
     transparent 100%
   );
   z-index: 1;
@@ -36,7 +36,7 @@
 .vip-footer-inner {
   max-width: var(--width-content, 1216px);
   margin: 0 auto;
-  padding: clamp(32px, 5vw, 60px) var(--pad-page, 24px) 28px;
+  padding: clamp(32px, 5vw, 56px) var(--pad-page, 24px) 28px;
   display: flex;
   flex-direction: column;
   gap: clamp(28px, 4vw, 44px);
@@ -47,12 +47,11 @@
    ========================================================================== */
 
 .vip-contact-bar {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 16px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
 }
 
 .vip-contact-grid {
@@ -68,8 +67,8 @@
   gap: 14px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
   text-decoration: none;
   color: inherit;
   transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
@@ -81,17 +80,17 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 10% 50%, var(--card-glow, rgba(241, 151, 32, 0.12)), transparent 70%);
+  background: radial-gradient(circle at 10% 50%, var(--card-glow, rgba(241, 151, 32, 0.08)), transparent 70%);
   opacity: 0;
   transition: opacity 0.24s ease;
   pointer-events: none;
 }
 
 .vip-contact-card:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: var(--card-border, rgba(241, 151, 32, 0.45));
+  background: #FFFFFF;
+  border-color: var(--card-border, #F19720);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 0 16px -2px var(--card-glow, rgba(241, 151, 32, 0.2));
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 0 14px -2px var(--card-glow, rgba(241, 151, 32, 0.15));
 }
 
 .vip-contact-card:hover::before {
@@ -107,9 +106,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: var(--icon-bg, rgba(241, 151, 32, 0.14));
+  background: var(--icon-bg, #FFF7ED);
   color: var(--icon-color, #F19720);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
   transition: transform 0.24s ease;
 }
 
@@ -119,7 +118,7 @@
 
 .vip-contact-info {
   flex: 1;
-  minWidth: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -130,7 +129,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--label-color, #94A3B8);
+  color: var(--label-color, #64748B);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -139,7 +138,7 @@
 .vip-contact-value {
   font-size: 15px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #0F172A;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -148,7 +147,7 @@
 
 .vip-contact-sub {
   font-size: 12px;
-  color: #94A3B8;
+  color: #64748B;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -169,8 +168,8 @@
 }
 
 @keyframes vip-pulse-green {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
@@ -201,7 +200,7 @@
   width: 40px;
   height: 40px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(241, 151, 32, 0.4));
+  filter: drop-shadow(0 2px 6px rgba(241, 151, 32, 0.25));
 }
 
 .vip-footer-brand-name {
@@ -209,14 +208,14 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #FFFFFF;
+  color: #0F172A;
 }
 
 .vip-footer-brand-desc {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.6;
-  color: #94A3B8;
+  color: #475569;
   max-width: 360px;
 }
 
@@ -226,10 +225,11 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: 10px;
   max-width: 360px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .vip-footer-badge-item {
@@ -237,8 +237,8 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  font-weight: 500;
-  color: #CBD5E1;
+  font-weight: 600;
+  color: #334155;
 }
 
 .vip-footer-badge-item svg {
@@ -259,15 +259,15 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #E2E8F0;
+  color: #1E293B;
 }
 
-/* Đảm bảo ô input newsletter ăn nhập hoàn hảo với dark theme */
+/* Đảm bảo ô input newsletter ăn nhập hoàn hảo với light theme */
 .vip-footer .vip-footer-newsletter input {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  color: #FFFFFF !important;
-  box-shadow: none !important;
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #0F172A !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
   border-radius: 8px !important;
 }
 
@@ -277,21 +277,21 @@
 
 .vip-footer .vip-footer-newsletter input:focus {
   border-color: #F19720 !important;
-  box-shadow: 0 0 0 2px rgba(241, 151, 32, 0.25) !important;
+  box-shadow: 0 0 0 3px rgba(241, 151, 32, 0.15) !important;
 }
 
 .vip-footer .vip-footer-newsletter button {
   background: #F19720 !important;
-  color: #0E0F12 !important;
+  color: #FFFFFF !important;
   font-weight: 700 !important;
   border: none !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(241, 151, 32, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(241, 151, 32, 0.25) !important;
   transition: all 0.2s ease !important;
 }
 
 .vip-footer .vip-footer-newsletter button:hover {
-  background: #F59E0B !important;
+  background: #EA580C !important;
   transform: translateY(-1px);
 }
 
@@ -317,7 +317,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #F8FAFC;
+  color: #0F172A;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -347,7 +347,7 @@
 
 .vip-footer-link {
   font-size: 13.5px;
-  color: #94A3B8;
+  color: #475569;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -357,17 +357,17 @@
 }
 
 .vip-footer-link:hover {
-  color: #F19720;
+  color: #D97706;
   transform: translateX(4px);
 }
 
 .vip-footer-link.highlight {
-  color: #F8FAFC;
+  color: #0F172A;
   font-weight: 600;
 }
 
 .vip-footer-link.highlight:hover {
-  color: #F19720;
+  color: #D97706;
 }
 
 /* ==========================================================================
@@ -376,7 +376,7 @@
 
 .vip-footer-bottom {
   padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid #E2E8F0;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -394,7 +394,7 @@
 }
 
 .vip-footer-copyright strong {
-  color: #94A3B8;
+  color: #1E293B;
   font-weight: 600;
 }
 
@@ -407,11 +407,12 @@
 
 .vip-footer-tag {
   font-size: 11.5px;
-  color: #94A3B8;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #475569;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   padding: 4px 10px;
   border-radius: 6px;
+  font-weight: 500;
 }
 
 .vip-back-to-top {
@@ -419,22 +420,23 @@
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
   border-radius: 20px;
-  color: #CBD5E1;
+  color: #334155;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .vip-back-to-top:hover {
-  background: #F19720;
+  background: #FFF7ED;
   border-color: #F19720;
-  color: #0E0F12;
+  color: #C2410C;
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(241, 151, 32, 0.35);
+  box-shadow: 0 4px 12px rgba(241, 151, 32, 0.18);
 }
 
 /* ==========================================================================

@@ -98,11 +98,11 @@ export default function Footer({ settings, patch }) {
               className="vip-contact-card"
               title="Gọi hotline tư vấn trực tiếp 24/7"
               style={{
-                '--card-glow': 'rgba(241, 151, 32, 0.28)',
-                '--card-border': 'rgba(241, 151, 32, 0.55)',
-                '--icon-bg': 'rgba(241, 151, 32, 0.16)',
-                '--icon-color': '#F19720',
-                '--label-color': '#F59E0B',
+                '--card-glow': 'rgba(241, 151, 32, 0.18)',
+                '--card-border': '#F19720',
+                '--icon-bg': '#FFF7ED',
+                '--icon-color': '#EA580C',
+                '--label-color': '#D97706',
               }}
             >
               <div className="vip-contact-icon-box">
@@ -123,11 +123,11 @@ export default function Footer({ settings, patch }) {
               className="vip-contact-card"
               title="Chat Zalo với chuyên viên tư vấn Duy Đinh"
               style={{
-                '--card-glow': 'rgba(0, 104, 255, 0.28)',
-                '--card-border': 'rgba(0, 104, 255, 0.55)',
-                '--icon-bg': 'rgba(0, 104, 255, 0.16)',
+                '--card-glow': 'rgba(0, 104, 255, 0.16)',
+                '--card-border': '#0068FF',
+                '--icon-bg': '#EFF6FF',
                 '--icon-color': '#0068FF',
-                '--label-color': '#38BDF8',
+                '--label-color': '#0284C7',
               }}
             >
               <div className="vip-contact-icon-box">
@@ -148,11 +148,11 @@ export default function Footer({ settings, patch }) {
               className="vip-contact-card"
               title="Xem vị trí showroom trên Google Maps"
               style={{
-                '--card-glow': 'rgba(239, 68, 68, 0.25)',
-                '--card-border': 'rgba(239, 68, 68, 0.5)',
-                '--icon-bg': 'rgba(239, 68, 68, 0.15)',
-                '--icon-color': '#EF4444',
-                '--label-color': '#F87171',
+                '--card-glow': 'rgba(239, 68, 68, 0.16)',
+                '--card-border': '#EF4444',
+                '--icon-bg': '#FEF2F2',
+                '--icon-color': '#DC2626',
+                '--label-color': '#DC2626',
               }}
             >
               <div className="vip-contact-icon-box">
@@ -173,11 +173,11 @@ export default function Footer({ settings, patch }) {
               className="vip-contact-card"
               title="Ghé thăm Fanpage Duy Đinh - Biển Số Đẹp Đà Nẵng"
               style={{
-                '--card-glow': 'rgba(24, 119, 242, 0.25)',
-                '--card-border': 'rgba(24, 119, 242, 0.5)',
-                '--icon-bg': 'rgba(24, 119, 242, 0.15)',
+                '--card-glow': 'rgba(24, 119, 242, 0.16)',
+                '--card-border': '#1877F2',
+                '--icon-bg': '#EFF6FF',
                 '--icon-color': '#1877F2',
-                '--label-color': '#60A5FA',
+                '--label-color': '#2563EB',
               }}
             >
               <div className="vip-contact-icon-box">
@@ -202,11 +202,11 @@ export default function Footer({ settings, patch }) {
                 }
               }}
               style={{
-                '--card-glow': 'rgba(139, 92, 246, 0.25)',
-                '--card-border': 'rgba(139, 92, 246, 0.5)',
-                '--icon-bg': 'rgba(139, 92, 246, 0.15)',
-                '--icon-color': '#A78BFA',
-                '--label-color': '#C4B5FD',
+                '--card-glow': 'rgba(139, 92, 246, 0.16)',
+                '--card-border': '#8B5CF6',
+                '--icon-bg': '#F5F3FF',
+                '--icon-color': '#7C3AED',
+                '--label-color': '#6D28D9',
               }}
             >
               <div className="vip-contact-icon-box">
@@ -223,7 +223,7 @@ export default function Footer({ settings, patch }) {
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: copiedEmail ? '#10B981' : '#94A3B8',
+                      color: copiedEmail ? '#10B981' : '#64748B',
                       cursor: 'pointer',
                       padding: 2,
                       display: 'flex',
@@ -242,11 +242,11 @@ export default function Footer({ settings, patch }) {
             <div
               className="vip-contact-card"
               style={{
-                '--card-glow': 'rgba(16, 185, 129, 0.25)',
-                '--card-border': 'rgba(16, 185, 129, 0.5)',
-                '--icon-bg': 'rgba(16, 185, 129, 0.15)',
-                '--icon-color': '#10B981',
-                '--label-color': '#34D399',
+                '--card-glow': 'rgba(16, 185, 129, 0.16)',
+                '--card-border': '#10B981',
+                '--icon-bg': '#ECFDF5',
+                '--icon-color': '#059669',
+                '--label-color': '#047857',
                 cursor: 'default',
               }}
             >
