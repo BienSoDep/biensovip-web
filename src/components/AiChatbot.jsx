@@ -4,7 +4,7 @@ import { useChatbotWidgetEnabled } from '../services/chatbotService.js';
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js';
 import { useChatConversation, ChatConversationView } from './ChatConversation.jsx';
 
-export default function AiChatbot({ go }) {
+export default function AiChatbot({ go, openPlate: onOpenPlateProp, openPost: onOpenPostProp }) {
   const { data: widgetFlag } = useChatbotWidgetEnabled();
   const [open, setOpen] = useState(false);
   const scrolling = useHideOnScroll();
@@ -41,12 +41,14 @@ export default function AiChatbot({ go }) {
 
   const openPlate = (slugOrId) => {
     setOpen(false);
-    go?.('detail', slugOrId)();
+    if (onOpenPlateProp) onOpenPlateProp(slugOrId);
+    else go?.('detail', slugOrId)();
   };
 
   const openPost = (slug) => {
     setOpen(false);
-    go?.('post', slug)();
+    if (onOpenPostProp) onOpenPostProp(slug);
+    else go?.('post', slug)();
   };
 
   if (widgetFlag && widgetFlag.enabled === false) return null;

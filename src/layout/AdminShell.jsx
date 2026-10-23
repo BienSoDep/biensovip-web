@@ -482,7 +482,7 @@ export default function AdminShell({
   }, [s, go]);
 
   return (
-    <div className="admin-shell" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)' }}>
+    <div className="admin-shell" style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)', width: '100%', overflowX: 'clip' }}>
       <AdminRunWatcher />
       {!drawerOpen && (
         <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" aria-controls="admin-drawer" aria-expanded={drawerOpen} style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -520,7 +520,7 @@ export default function AdminShell({
       )}
 
       {!collapsed && (
-        <aside className="admin-sidebar" style={{ flex: '0 0 285px', minWidth: 275, background: 'var(--white)', boxShadow: 'inset -1px 0 0 var(--border-hairline)', padding: 'var(--space-5) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <aside className="admin-sidebar" style={{ flex: '0 0 270px', minWidth: 260, maxWidth: 280, flexShrink: 0, background: 'var(--white)', boxShadow: 'inset -1px 0 0 var(--border-hairline)', padding: 'var(--space-5) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: '0 var(--space-5)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
               <img src="/assets/logo-mark.png" alt="Biensovip" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
@@ -550,8 +550,9 @@ export default function AdminShell({
         aria-hidden={drawerOpen ? true : undefined}
         inert={drawerOpen ? '' : undefined}
         style={{
-          flex: '1 1 560px',
+          flex: '1 1 auto',
           minWidth: 0,
+          maxWidth: '100%',
           padding: s === 'compose' ? 'var(--space-4) clamp(16px,2.5vw,28px) var(--space-3)' : 'var(--space-6) clamp(16px,3vw,32px) var(--space-9)',
           display: 'flex',
           flexDirection: 'column',

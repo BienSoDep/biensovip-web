@@ -263,7 +263,7 @@ export default function App() {
   const notify = (msg, type) => (type === 'error' ? toast.error(msg) : toast(msg));
   const heroAnim = makeHeroAnim(fanDone);
 
-  const go = (s) => () => {
+  const go = (s, id) => () => {
     // Route-guard: rời màn Compose khi có thay đổi chưa lưu → xác nhận trước.
     if (st.screen === 'compose' && s !== 'compose' && isComposeDirty()) {
       if (!window.confirm('Bạn có thay đổi chưa lưu. Rời đi sẽ mất những thay đổi này?')) return;
@@ -276,7 +276,16 @@ export default function App() {
       }
     }
     patchAuth({ aErr: {}, step: s === 'forgot' ? 1 : ast.step });
-    patch({ screen: s, modal: false, sent: false, redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo, ...(s !== 'compose' ? { editPostId: null } : {}), drawerOpen: false });
+    patch({
+      screen: s,
+      modal: false,
+      sent: false,
+      ...(s === 'detail' && id ? { curId: id } : {}),
+      ...(s === 'post' && id ? { postId: id } : {}),
+      redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo,
+      ...(s !== 'compose' ? { editPostId: null } : {}),
+      drawerOpen: false,
+    });
   };
   const toggleFav = (id) => {
     setSt((s) => {
@@ -806,7 +815,7 @@ export default function App() {
 
             {s === 'chat' && <ChatZaloContact notify={notify} user={st.user} />}
 
-            {s === 'aiChat' && <ChatbotPage go={go} user={st.user} />}
+            {s === 'aiChat' && <ChatbotPage go={go} openPlate={openPlate} openPost={openPost} user={st.user} />}
 
             {s === 'compare' && <Compare go={go} notify={notify} allPlates={st.plates} user={st.user} openPlate={openPlate} favCards={favCards} />}
 
@@ -863,7 +872,7 @@ export default function App() {
 
           {isPublic && (
             <Suspense fallback={null}>
-              <AiChatbot go={go} />
+              <AiChatbot go={go} openPlate={openPlate} openPost={openPost} />
             </Suspense>
           )}
 

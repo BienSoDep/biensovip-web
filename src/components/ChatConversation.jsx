@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, ThumbsUp, ThumbsDown, MessageCircle, Phone, BookOpen, Sparkles, Copy, Check, ArrowRight, Car, Compass, Scale, ShieldCheck } from 'lucide-react';
+import { Send, ThumbsUp, ThumbsDown, MessageCircle, Phone, BookOpen, Sparkles, Copy, Check, ArrowRight, Car, Compass, Scale, ShieldCheck, Headphones, UserCheck, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useSendChatbotMessage, useChatbotHistory, useRateChatbotMessage, useReportChatbotPlateClick } from '../services/chatbotService.js';
+import { useClientLiveChatRealtime } from '../services/liveChatRealtime.js';
+import { apiClient } from '../services/apiClient.js';
 import { getCurrentPlateNumber } from '../lib/currentPlateContext.js';
 import { DEFAULT_CONTACT } from '../common/constants.js';
 
@@ -109,9 +111,22 @@ function escapeHtml(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function renderMarkdownLite(text) {
+const normalizePlate = (str) => (str || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+
+function renderMarkdownLite(text, plates = []) {
   if (!text) return '';
   let out = escapeHtml(text);
+
+  // Map từ số biển chuẩn hoá sang slugOrId chính xác (từ m.plates)
+  const plateMap = {};
+  if (Array.isArray(plates)) {
+    plates.forEach((p) => {
+      const target = p.slugOrId || p.slug || p.id;
+      if (p.plateNumber && target) {
+        plateMap[normalizePlate(p.plateNumber)] = target;
+      }
+    });
+  }
 
   // 1. Chữ đậm: **nội dung**
   out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -119,8 +134,12 @@ function renderMarkdownLite(text) {
   // 2. Liên kết markdown: [Tên biển](/bien/30F-68679) hoặc [Quy trình](url)
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, url) => {
     const isPlateUrl = url.includes('/bien/');
-    const plateSlug = isPlateUrl ? url.split('/bien/')[1]?.replace(/[^\w-]/g, '') : null;
-    return `<a href="${url}" class="${isPlateUrl ? 'claude-plate-pill-link' : 'claude-text-link'}" ${plateSlug ? `data-plate="${plateSlug}"` : ''} title="Bấm để xem chi tiết biển ${label}">${label}</a>`;
+    let plateSlug = isPlateUrl ? url.split('/bien/')[1]?.replace(/[^\w-]/g, '') : null;
+    if (plateSlug && plateMap[normalizePlate(plateSlug)]) {
+      plateSlug = plateMap[normalizePlate(plateSlug)];
+    }
+    const finalUrl = isPlateUrl && plateSlug ? `/bien/${plateSlug}` : url;
+    return `<a href="${finalUrl}" class="${isPlateUrl ? 'claude-plate-pill-link' : 'claude-text-link'}" ${plateSlug ? `data-plate="${plateSlug}"` : ''} title="Bấm để xem chi tiết ${label}">${label}</a>`;
   });
 
   // 3. Tự động nhận diện biển số xe (VD: 30F-68679, 51C7-88679, 30K-999.99...) khi LLM trả về text thông thường
@@ -130,8 +149,9 @@ function renderMarkdownLite(text) {
     // Chỉ thay thế text bên ngoài các thẻ HTML
     if (!parts[i].startsWith('<')) {
       parts[i] = parts[i].replace(plateRegex, (match) => {
-        const cleanSlug = match.replace(/\s+/g, '').toUpperCase();
-        return `<a href="/bien/${cleanSlug}" class="claude-plate-pill-link" data-plate="${cleanSlug}" title="Bấm để xem chi tiết biển ${match}">${match}</a>`;
+        const norm = normalizePlate(match);
+        const resolvedId = plateMap[norm] || match.replace(/\s+/g, '').toUpperCase();
+        return `<a href="/bien/${resolvedId}" class="claude-plate-pill-link" data-plate="${resolvedId}" title="Bấm để xem chi tiết biển ${match}">${match}</a>`;
       });
     }
   }
@@ -153,6 +173,10 @@ export function useChatConversation(openSessionId) {
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState(null);
   const [rateLimited, setRateLimited] = useState(false);
+  const [isLiveMode, setIsLiveMode] = useState(false);
+  const [isWaitingStaff, setIsWaitingStaff] = useState(false);
+  const [liveStaffName, setLiveStaffName] = useState(null);
+
   const restoredRef = useRef(false);
   const sendMessage = useSendChatbotMessage();
   const rateMessage = useRateChatbotMessage();
@@ -162,13 +186,49 @@ export function useChatConversation(openSessionId) {
 
   const quickReplies = sendMessage.isPending ? [] : nextQuickReplies(msgs[msgs.length - 1]);
 
+  // Lắng nghe SignalR realtime khi đang ở phiên chat
+  useClientLiveChatRealtime(sessionId, {
+    onReceiveMessage: (msg) => {
+      if (msg.role === 'staff') {
+        setMsgs((m) => [...m, { from: 'staff', text: msg.content, senderName: msg.senderName, createdAt: msg.createdAt }]);
+        setIsLiveMode(true);
+        setIsWaitingStaff(false);
+        if (msg.senderName) setLiveStaffName(msg.senderName);
+      } else if (msg.role === 'system') {
+        setMsgs((m) => [...m, { from: 'system', text: msg.content }]);
+      }
+    },
+    onStatusChanged: (statusInfo) => {
+      if (statusInfo.status === 'staff_active') {
+        setIsLiveMode(true);
+        setIsWaitingStaff(false);
+        if (statusInfo.staffName) setLiveStaffName(statusInfo.staffName);
+      } else if (statusInfo.status === 'waiting_staff') {
+        setIsWaitingStaff(true);
+      } else if (statusInfo.status === 'bot' || statusInfo.status === 'resolved') {
+        setIsLiveMode(false);
+        setIsWaitingStaff(false);
+        setLiveStaffName(null);
+      }
+      if (statusInfo.message) {
+        setMsgs((m) => [...m, { from: 'system', text: statusInfo.message.content }]);
+      }
+    },
+  });
+
   useEffect(() => {
     if (restoredRef.current || !storedId) return;
     if (history.isSuccess) {
       restoredRef.current = true;
       if (history.data?.messages?.length) {
         setSessionId(storedId);
-        setMsgs(history.data.messages.map((m) => ({ from: m.role === 'user' ? 'user' : 'bot', text: m.content, messageId: m.id, ratedValue: m.rating })));
+        setMsgs(history.data.messages.map((m) => ({
+          from: m.role === 'user' ? 'user' : (m.role === 'staff' ? 'staff' : (m.role === 'system' ? 'system' : 'bot')),
+          text: m.content,
+          senderName: m.senderName,
+          messageId: m.id,
+          ratedValue: m.rating,
+        })));
       } else if (!openSessionId) {
         clearStoredSessionId();
       }
@@ -178,9 +238,59 @@ export function useChatConversation(openSessionId) {
     }
   }, [history.isSuccess, history.isError, history.data, storedId, openSessionId]);
 
+  const requestStaffSupport = async ({ guestName, guestPhone } = {}) => {
+    let curSessionId = sessionId;
+    if (!curSessionId) {
+      curSessionId = crypto.randomUUID();
+      setSessionId(curSessionId);
+      storeSessionId(curSessionId);
+    }
+    setIsWaitingStaff(true);
+    setIsLiveMode(true);
+
+    try {
+      await apiClient.post(`/api/live-chat/request-support?sessionId=${curSessionId}`, {
+        guestName: guestName || 'Khách hàng',
+        guestPhone: guestPhone || null,
+      });
+      setMsgs((m) => [
+        ...m,
+        { from: 'system', text: 'Quý khách đã yêu cầu kết nối chuyên viên tư vấn. Đội ngũ CSKH đang tiếp nhận trong giây lát...' }
+      ]);
+    } catch (err) {
+      setIsWaitingStaff(false);
+      setIsLiveMode(false);
+    }
+  };
+
+  const switchToBot = () => {
+    setIsLiveMode(false);
+    setIsWaitingStaff(false);
+    setLiveStaffName(null);
+    setMsgs((m) => [
+      ...m,
+      { from: 'system', text: 'Đã chuyển lại chế độ Trợ lý AI. Bạn có thể tiếp tục tra cứu biển số.' }
+    ]);
+  };
+
   const send = async (text) => {
     const v = (text ?? input).trim();
     if (!v || sendMessage.isPending || rateLimited) return;
+
+    // 1. Chế độ Live Chat với Tư vấn viên
+    if (isLiveMode) {
+      setMsgs((m) => [...m, { from: 'user', text: v }]);
+      setInput('');
+      try {
+        await apiClient.post(`/api/live-chat/send?sessionId=${sessionId}`, { content: v });
+        saveSessionToList({ sessionId, preview: v, lastMessageAt: new Date().toISOString() });
+      } catch (err) {
+        setMsgs((m) => [...m, { from: 'system', text: 'Chưa gửi được tin nhắn tới chuyên viên, vui lòng thử lại.' }]);
+      }
+      return;
+    }
+
+    // 2. Chế độ Trợ lý AI Bot thông thường
     setMsgs((m) => [...m, { from: 'user', text: v }]);
 
     try {
@@ -209,14 +319,26 @@ export function useChatConversation(openSessionId) {
 
   const isRestoring = !!storedId && !restoredRef.current && history.isLoading;
 
-  return { msgs, input, setInput, sessionId, rateLimited, sendMessage, quickReplies, send, rate, reportPlateClick, isRestoring };
+  return {
+    msgs, input, setInput, sessionId, rateLimited, sendMessage, quickReplies,
+    send, rate, reportPlateClick, isRestoring, isLiveMode, isWaitingStaff,
+    liveStaffName, requestStaffSupport, switchToBot
+  };
 }
 
 export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, autoFocusInput }) {
-  const { msgs, input, setInput, rateLimited, sendMessage, quickReplies, send, rate, reportPlateClick, sessionId, isRestoring } = conv;
+  const {
+    msgs, input, setInput, rateLimited, sendMessage, quickReplies,
+    send, rate, reportPlateClick, sessionId, isRestoring,
+    isLiveMode, isWaitingStaff, liveStaffName, requestStaffSupport, switchToBot
+  } = conv;
+
   const viewportRef = useRef(null);
   const textareaRef = useRef(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [guestNameInput, setGuestNameInput] = useState('');
+  const [guestPhoneInput, setGuestPhoneInput] = useState('');
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -250,6 +372,12 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
     }
   };
 
+  const handleConfirmConnect = (e) => {
+    e?.preventDefault();
+    requestStaffSupport({ guestName: guestNameInput.trim(), guestPhone: guestPhoneInput.trim() });
+    setShowConnectModal(false);
+  };
+
   if (isRestoring) {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, padding: '32px 24px' }}>
@@ -267,8 +395,157 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
 
   return (
     <>
+      {/* Subheader trạng thái kết nối Live Chat */}
+      {isLiveMode ? (
+        <div style={{
+          padding: '8px 14px',
+          background: '#ECFDF5',
+          borderBottom: '1px solid #A7F3D0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: 12.5,
+          color: '#065F46',
+          zIndex: 5,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: isWaitingStaff ? '#F59E0B' : '#10B981', display: 'inline-block' }} />
+            <strong>{isWaitingStaff ? 'Đang chờ tư vấn viên nhận phiên...' : `Trực tiếp với CSKH (${liveStaffName || 'Tư vấn viên'})`}</strong>
+          </div>
+          <button
+            type="button"
+            onClick={switchToBot}
+            style={{
+              border: '1px solid #6EE7B7',
+              background: '#FFFFFF',
+              color: '#065F46',
+              borderRadius: 6,
+              padding: '3px 8px',
+              fontSize: 11.5,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              fontWeight: 600,
+            }}
+          >
+            <ArrowLeft size={12} /> Về Trợ lý AI
+          </button>
+        </div>
+      ) : (
+        <div style={{
+          padding: '6px 14px',
+          background: 'var(--grey-50)',
+          borderBottom: '1px solid var(--grey-100)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          zIndex: 5,
+        }}>
+          <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>Hỗ trợ 24/7 bởi AI & Chuyên viên</span>
+          <button
+            type="button"
+            onClick={() => setShowConnectModal(true)}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--action-primary)',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            <Headphones size={13} /> Gặp tư vấn viên trực tiếp
+          </button>
+        </div>
+      )}
+
+      {/* Modal Popup Nhập thông tin gặp tư vấn viên */}
+      {showConnectModal && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 16,
+        }}>
+          <div style={{
+            background: 'var(--white)',
+            borderRadius: 12,
+            padding: 20,
+            width: '100%',
+            maxWidth: 320,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Headphones size={20} color="var(--action-primary)" />
+              <strong style={{ fontSize: 15, color: 'var(--text-title)' }}>Kết nối Chuyên viên tư vấn</strong>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14, lineHeight: 1.4 }}>
+              Nhập thông tin để chuyên viên tiện xưng hô và hỗ trợ hồ sơ biển số xe nhanh nhất:
+            </p>
+            <form onSubmit={handleConfirmConnect} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input
+                value={guestNameInput}
+                onChange={(e) => setGuestNameInput(e.target.value)}
+                placeholder="Tên của bạn (VD: Anh Tuấn)..."
+                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--grey-300)', fontSize: 13 }}
+              />
+              <input
+                value={guestPhoneInput}
+                onChange={(e) => setGuestPhoneInput(e.target.value)}
+                placeholder="Số điện thoại / Zalo..."
+                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--grey-300)', fontSize: 13 }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowConnectModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 0',
+                    borderRadius: 6,
+                    border: '1px solid var(--grey-300)',
+                    background: 'var(--white)',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    padding: '8px 0',
+                    borderRadius: 6,
+                    border: 'none',
+                    background: 'var(--action-primary)',
+                    color: 'var(--white)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Bắt đầu kết nối
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div aria-live="polite" className="claude-messages-viewport" ref={viewportRef}>
-        {isConversationFresh ? (
+        {isConversationFresh && !isLiveMode ? (
           <div className="claude-empty-hero">
             <div className="claude-empty-avatar">
               <Sparkles size={28} />
@@ -300,7 +577,50 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
           </div>
         ) : (
           msgs.map((m, i) => {
-            if (i === 0 && isConversationFresh) return null; // Ẩn câu greeting thô sơ khi đã có thẻ hero
+            if (i === 0 && isConversationFresh && !isLiveMode) return null;
+
+            // Tin nhắn Hệ thống
+            if (m.from === 'system') {
+              return (
+                <div key={i} style={{ textAlign: 'center', margin: '8px 0' }}>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '4px 14px',
+                    background: 'rgba(0,0,0,0.04)',
+                    borderRadius: 20,
+                    fontSize: 12,
+                    color: 'var(--text-faint)',
+                  }}>
+                    <AlertCircle size={13} /> {m.text}
+                  </span>
+                </div>
+              );
+            }
+
+            // Tin nhắn Tư vấn viên trực tiếp
+            if (m.from === 'staff') {
+              return (
+                <div key={i} className="claude-msg-row bot">
+                  <div className="claude-bot-wrapper">
+                    <div className="claude-bot-avatar" style={{ background: '#10B981', color: '#FFF' }}>
+                      <UserCheck size={18} />
+                    </div>
+                    <div className="claude-bot-content">
+                      <div className="claude-bot-header">
+                        <span className="claude-bot-name">Tư vấn viên: {m.senderName || 'CSKH'}</span>
+                        <span style={{ fontSize: 11, color: '#10B981', fontWeight: 600 }}>• Nhân sự trực tiếp</span>
+                      </div>
+                      <div className="claude-bot-text" style={{ background: '#F0FDF4', border: '1px solid #DCFCE7', borderRadius: 12, padding: 12, whiteSpace: 'pre-wrap' }}>
+                        {m.text}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div key={i} className={`claude-msg-row ${m.from}`}>
                 {m.from === 'user' ? (
@@ -328,7 +648,7 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
                             }
                           }
                         }}
-                        dangerouslySetInnerHTML={{ __html: renderMarkdownLite(m.text) }}
+                        dangerouslySetInnerHTML={{ __html: renderMarkdownLite(m.text, m.plates) }}
                       />
 
                       {/* Hiển thị thẻ biển số Claude style */}

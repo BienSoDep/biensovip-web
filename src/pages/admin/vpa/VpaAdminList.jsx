@@ -1674,24 +1674,35 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                           padding: '1px 5px',
                           borderRadius: '4px',
                           fontWeight: 600,
-                          background: (p.sampleCount || 0) > 0 ? '#F0FAF6' : '#fffbeb',
-                          color: (p.sampleCount || 0) > 0 ? '#3FBF8F' : '#d97706',
-                          border: (p.sampleCount || 0) > 0 ? '1px solid #D6F0E5' : '1px solid #fde68a',
+                          background: p.suggestedPrice > 0 ? ((p.sampleCount || 0) > 0 ? '#F0FAF6' : '#fffbeb') : 'var(--surface-sunken)',
+                          color: p.suggestedPrice > 0 ? ((p.sampleCount || 0) > 0 ? '#3FBF8F' : '#d97706') : 'var(--text-muted)',
+                          border: p.suggestedPrice > 0 ? ((p.sampleCount || 0) > 0 ? '1px solid #D6F0E5' : '1px solid #fde68a') : '1px solid var(--border-hairline)',
                         }}
-                        title={(p.sampleCount || 0) > 0
-                          ? `Giá gợi ý = TB ${p.sampleCount} mẫu cùng tỉnh (${money(p.sampleAvgPrice)}) × hệ số 2.5`
-                          : `Chưa có mẫu cùng tỉnh — dùng Giá sàn (${money(p.startingPrice)}) × hệ số 2.5`
+                        title={p.suggestedPrice > 0
+                          ? ((p.sampleCount || 0) > 0
+                              ? `Giá gợi ý = TB ${p.sampleCount} mẫu cùng tỉnh (${money(p.sampleAvgPrice)}) × hệ số 2.5`
+                              : `Chưa có mẫu cùng tỉnh — dùng Giá sàn (${money(p.startingPrice)}) × hệ số 2.5`)
+                          : (p.startingPrice > 0
+                              ? `Biển có giá khởi điểm ${money(p.startingPrice)}. Bấm "Duyệt tất cả" hoặc "Tính lại giá" để sinh giá gợi ý tự động.`
+                              : 'Chưa có mẫu kết quả và chưa có giá khởi điểm.')
                         }
                       >
-                        {(p.sampleCount || 0) > 0 ? (
-                          <>
-                            <CheckCircle2 size={10} />
-                            Cùng tỉnh ({p.sampleCount} mẫu{p.sampleAvgPrice ? ` • TB ${money(p.sampleAvgPrice)}` : ''})
-                          </>
+                        {p.suggestedPrice > 0 ? (
+                          (p.sampleCount || 0) > 0 ? (
+                            <>
+                              <CheckCircle2 size={10} />
+                              Cùng tỉnh ({p.sampleCount} mẫu{p.sampleAvgPrice ? ` • TB ${money(p.sampleAvgPrice)}` : ''})
+                            </>
+                          ) : (
+                            <>
+                              <Info size={10} />
+                              Giá sàn ({money(p.startingPrice)})
+                            </>
+                          )
                         ) : (
                           <>
                             <Info size={10} />
-                            Giá sàn ({money(p.startingPrice)})
+                            {p.startingPrice > 0 ? `Chờ tính giá (${money(p.startingPrice)})` : 'Chưa có giá'}
                           </>
                         )}
                       </span>
@@ -2004,7 +2015,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           }
           message={
             confirmAction === 'all'
-              ? `Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc — không chỉ trang đang xem. Có thể mất một lúc với số lượng lớn.`
+              ? `Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc — không chỉ trang đang xem. Hệ thống sẽ tự động gán & tính giá gợi ý theo công thức (khớp mẫu đấu giá hoặc fallback giá khởi điểm) cho các biển mới trước khi duyệt. Có thể mất một lúc với số lượng lớn.`
               : confirmAction === 'matched-samples'
                 ? 'Rà soát các biển đã được duyệt giá dựa trên giá khởi điểm mặc định (chưa có mẫu đấu giá). Hệ thống sẽ tìm trong dữ liệu kết quả đấu giá thực tế vừa cào về; nếu tìm thấy kết quả đấu giá thật, hệ thống sẽ tính lại giá gợi ý chuẩn theo giá trúng thật và tự động cập nhật giá duyệt mới cho biển.'
                 : confirmAction === 'drifted'

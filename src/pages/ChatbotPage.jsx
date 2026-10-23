@@ -22,7 +22,7 @@ function timeAgo(iso) {
   return `${Math.round(diffHour / 24)} ngày trước`;
 }
 
-export default function ChatbotPage({ go, user }) {
+export default function ChatbotPage({ go, user, openPlate, openPost }) {
   useSeo('aiChat');
   const [resetKey, setResetKey] = useState(0);
   const [activeSessionId, setActiveSessionId] = useState(null);
@@ -83,6 +83,8 @@ export default function ChatbotPage({ go, user }) {
       <ChatbotPageInner
         key={resetKey}
         go={go}
+        openPlate={openPlate}
+        openPost={openPost}
         user={user}
         sessions={combinedSessions}
         isLoadingSessions={sessions.isLoading}
@@ -99,6 +101,8 @@ export default function ChatbotPage({ go, user }) {
 
 function ChatbotPageInner({
   go,
+  openPlate: onOpenPlateProp,
+  openPost: onOpenPostProp,
   user,
   sessions,
   isLoadingSessions,
@@ -116,8 +120,14 @@ function ChatbotPageInner({
     if (action === 'chat_with_staff' || action === 'contact_form') go?.('chat')();
   };
 
-  const openPlate = (slugOrId) => go?.('detail', slugOrId)();
-  const openPost = (slug) => go?.('post', slug)();
+  const openPlate = (slugOrId) => {
+    if (onOpenPlateProp) onOpenPlateProp(slugOrId);
+    else go?.('detail', slugOrId)();
+  };
+  const openPost = (slug) => {
+    if (onOpenPostProp) onOpenPostProp(slug);
+    else go?.('post', slug)();
+  };
   const switchDisabled = conv.sendMessage.isPending;
 
   return (

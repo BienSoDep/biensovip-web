@@ -16,8 +16,12 @@ import { formatDateTime } from '../../lib/date.js';
 import aiQuestions from '../../lib/content/vi/aiKnowledgeBase100.json';
 import aiTestingSuite from '../../lib/content/vi/aiChatbotTesting100.json';
 import aiContinuousScenarios from '../../lib/content/vi/aiChatbotContinuousScenarios.json';
+import LiveChatPanel from './chatbot/LiveChatPanel.jsx';
+import CannedResponsesPanel from './chatbot/CannedResponsesPanel.jsx';
 
 const TABS = [
+  { value: 'live', label: '🔴 Live Chat Realtime', info: 'Tiếp nhận và tư vấn trực tiếp 2 chiều theo thời gian thực giữa nhân viên và khách hàng.' },
+  { value: 'canned', label: 'Mẫu trả lời nhanh', info: 'Quản lý kho câu trả lời mẫu soạn sẵn (Canned Responses) kèm phím tắt gõ nhanh cho tư vấn viên.' },
   { value: 'sessions', label: 'Lịch sử hội thoại', info: 'Xem lại các đoạn chat thực tế giữa khách hàng và trợ lý AI để cải thiện kịch bản tư vấn.' },
   { value: 'scenarios', label: 'Kịch bản liên tục (Multi-turn)', info: '10 chuỗi kịch bản kiểm thử hội thoại đa lượt liên tục (50 turns): Phễu bán hàng, TT24, Đấu giá VPA, Jailbreak, Khiếu nại...' },
   { value: 'testing', label: '100 câu kiểm thử (Testing Suite)', info: 'Bộ 100 câu hỏi test benchmark phân loại tự động (Blocked, DirectPlate, DirectFilter, NeedsLlm).' },
@@ -27,7 +31,7 @@ const TABS = [
 ];
 
 export default function AdminChatbot({ notify }) {
-  const [tab, setTab] = useState('sessions');
+  const [tab, setTab] = useState('live');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -51,6 +55,8 @@ export default function AdminChatbot({ notify }) {
           </button>
         ))}
       </div>
+      {tab === 'live' && <LiveChatPanel notify={notify} />}
+      {tab === 'canned' && <CannedResponsesPanel notify={notify} />}
       {tab === 'sessions' && <SessionsTab notify={notify} />}
       {tab === 'scenarios' && <ContinuousScenariosTab notify={notify} />}
       {tab === 'testing' && <TestingSuiteTab notify={notify} />}
