@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, ThumbsUp, ThumbsDown, MessageCircle, Phone, BookOpen, Sparkles, Copy, Check, ArrowRight, Car, Compass, Scale, ShieldCheck, Headphones, UserCheck, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Send, ThumbsUp, ThumbsDown, MessageCircle, Phone, BookOpen, Sparkles, Copy, Check, ArrowRight, Car, Compass, Scale, ShieldCheck, Headphones, UserCheck, AlertCircle, ArrowLeft, Bookmark } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useSendChatbotMessage, useChatbotHistory, useRateChatbotMessage, useReportChatbotPlateClick } from '../services/chatbotService.js';
 import { useClientLiveChatRealtime } from '../services/liveChatRealtime.js';
+import { loadSavedChatAnswers, saveChatAnswer, removeSavedChatAnswer } from '../services/savedChatAnswersStore.js';
 import { apiClient } from '../services/apiClient.js';
 import { getCurrentPlateNumber } from '../lib/currentPlateContext.js';
 import { DEFAULT_CONTACT } from '../common/constants.js';
@@ -359,11 +361,46 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
     if (autoFocusInput && !isRestoring) textareaRef.current?.focus({ preventScroll: true });
   }, [autoFocusInput, isRestoring]);
 
+  const [savedAnswerIds, setSavedAnswerIds] = useState(() => {
+    return new Set(loadSavedChatAnswers().map((x) => x.id));
+  });
+
+  useEffect(() => {
+    const handleSavedAnswersUpdated = (e) => {
+      const list = e.detail || loadSavedChatAnswers();
+      setSavedAnswerIds(new Set(list.map((x) => x.id)));
+    };
+    window.addEventListener('bsv_saved_chat_answers_updated', handleSavedAnswersUpdated);
+    return () => window.removeEventListener('bsv_saved_chat_answers_updated', handleSavedAnswersUpdated);
+  }, []);
+
   const handleCopy = (text, index) => {
     if (!text) return;
     navigator.clipboard?.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const toggleSaveAnswer = (m, i) => {
+    const itemKey = m.messageId || (m.text ? m.text.trim().slice(0, 100) : `ans_${i}`);
+    const isAlreadySaved = savedAnswerIds.has(itemKey);
+
+    if (isAlreadySaved) {
+      removeSavedChatAnswer(itemKey);
+      toast('Đã bỏ lưu câu trả lời', { icon: '🗑️' });
+    } else {
+      const prevPrompt = msgs.slice(0, i).reverse().find((x) => x.from === 'user')?.text || '';
+      saveChatAnswer({
+        id: itemKey,
+        messageId: m.messageId,
+        text: m.text,
+        plates: m.plates,
+        relatedPosts: m.relatedPosts,
+        prompt: prevPrompt,
+        sessionId,
+      });
+      toast.success('Đã lưu câu trả lời vào mục Yêu thích!');
+    }
   };
 
   const openPlate = (slugOrId) => {
@@ -852,39 +889,68 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
                       )}
 
                       {/* Claude Action Bar dưới mỗi tin phản hồi */}
-                      {m.messageId && (
-                        <div className="claude-bot-footer">
-                          <button
-                            type="button"
-                            className="claude-action-btn"
-                            onClick={() => handleCopy(m.text, i)}
-                            title="Sao chép nội dung"
-                          >
-                            {copiedIndex === i ? <Check size={13} color="#10B981" /> : <Copy size={13} />}
-                            <span>{copiedIndex === i ? 'Đã chép' : 'Sao chép'}</span>
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Hữu ích"
-                            className={`claude-action-btn ${m.ratedValue === 1 ? 'active' : ''}`}
-                            onClick={() => rate(i, m.messageId, 1)}
-                            disabled={m.ratedValue != null}
-                            title="Câu trả lời hữu ích"
-                          >
-                            <ThumbsUp size={13} />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Chưa hài lòng"
-                            className={`claude-action-btn ${m.ratedValue === -1 ? 'active' : ''}`}
-                            onClick={() => rate(i, m.messageId, -1)}
-                            disabled={m.ratedValue != null}
-                            title="Câu trả lời chưa đúng ý"
-                          >
-                            <ThumbsDown size={13} />
-                          </button>
-                        </div>
-                      )}
+                      {(m.messageId || m.text) && (() => {
+                        const itemKey = m.messageId || (m.text ? m.text.trim().slice(0, 100) : `ans_${i}`);
+                        const isSaved = savedAnswerIds.has(itemKey);
+                        return (
+                          <div className="claude-bot-footer">
+                            <button
+                              type="button"
+                              className="claude-action-btn"
+                              onClick={() => handleCopy(m.text, i)}
+                              title="Sao chép nội dung"
+                            >
+                              {copiedIndex === i ? <Check size={13} color="#10B981" /> : <Copy size={13} />}
+                              <span>{copiedIndex === i ? 'Đã chép' : 'Sao chép'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              className={`claude-action-btn ${isSaved ? 'active saved' : ''}`}
+                              onClick={() => toggleSaveAnswer(m, i)}
+                              title={isSaved ? 'Bỏ lưu câu trả lời khỏi mục Yêu thích' : 'Lưu câu trả lời vào mục Yêu thích'}
+                              style={{
+                                color: isSaved ? '#D97706' : undefined,
+                                background: isSaved ? 'rgba(241, 151, 32, 0.1)' : undefined,
+                              }}
+                            >
+                              <Bookmark
+                                size={13}
+                                fill={isSaved ? '#D97706' : 'none'}
+                                color={isSaved ? '#D97706' : 'currentColor'}
+                              />
+                              <span style={{ fontWeight: isSaved ? 600 : 400 }}>
+                                {isSaved ? 'Đã lưu' : 'Lưu'}
+                              </span>
+                            </button>
+
+                            {m.messageId && (
+                              <>
+                                <button
+                                  type="button"
+                                  aria-label="Hữu ích"
+                                  className={`claude-action-btn ${m.ratedValue === 1 ? 'active' : ''}`}
+                                  onClick={() => rate(i, m.messageId, 1)}
+                                  disabled={m.ratedValue != null}
+                                  title="Câu trả lời hữu ích"
+                                >
+                                  <ThumbsUp size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-label="Chưa hài lòng"
+                                  className={`claude-action-btn ${m.ratedValue === -1 ? 'active' : ''}`}
+                                  onClick={() => rate(i, m.messageId, -1)}
+                                  disabled={m.ratedValue != null}
+                                  title="Câu trả lời chưa đúng ý"
+                                >
+                                  <ThumbsDown size={13} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}

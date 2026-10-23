@@ -720,6 +720,17 @@
   background: var(--brand-50);
 }
 
+.claude-action-btn.saved {
+  color: #D97706;
+  background: rgba(241, 151, 32, 0.1);
+  font-weight: 600;
+}
+
+.claude-action-btn.saved:hover {
+  background: rgba(241, 151, 32, 0.18);
+  color: #B45309;
+}
+
 /* --- Claude Floating Composer (Thanh nhập liệu nổi) --- */
 .claude-composer-wrapper {
   position: relative;
