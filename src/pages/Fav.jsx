@@ -460,7 +460,7 @@ export default function Fav({
                   <Button variant="outline" size="sm" onClick={onClearAll}>Bỏ lưu tất cả</Button>
                 )}
                 {activeTab === 'history' && historyCards.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={handleClearHistory} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Button variant="outline" size="sm" onClick={clearHistoryAll} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <Trash2 size={14} /> Xóa lịch sử duyệt
                   </Button>
                 )}
