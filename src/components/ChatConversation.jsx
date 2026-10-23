@@ -7,6 +7,8 @@ import { loadSavedChatAnswers, saveChatAnswer, removeSavedChatAnswer } from '../
 import { apiClient } from '../services/apiClient.js';
 import { getCurrentPlateNumber } from '../lib/currentPlateContext.js';
 import { DEFAULT_CONTACT } from '../common/constants.js';
+import { loadAuth } from '../lib/authStore.js';
+import { prefillFromUser } from '../lib/contactPrefill.js';
 
 export const ACTION_LABEL = { chat_with_staff: 'Chat với nhân viên', contact_form: 'Để lại thông tin liên hệ' };
 export const ZALO_LINK = `https://zalo.me/${DEFAULT_CONTACT.zalo}`;
@@ -241,6 +243,13 @@ export function useChatConversation(openSessionId) {
   }, [history.isSuccess, history.isError, history.data, storedId, openSessionId]);
 
   const requestStaffSupport = async ({ guestName, guestPhone } = {}) => {
+    const auth = loadAuth();
+    const user = auth?.user;
+    const prefill = prefillFromUser(user);
+
+    const finalName = guestName?.trim() || prefill.fullName || user?.fullName || user?.name || 'Khách hàng';
+    const finalPhone = guestPhone?.trim() || prefill.phone || (user?.phone || (user?.identifierType === 'phone' ? user?.identifier : null));
+
     let curSessionId = sessionId;
     if (!curSessionId) {
       curSessionId = crypto.randomUUID();
@@ -252,12 +261,12 @@ export function useChatConversation(openSessionId) {
 
     try {
       await apiClient.post(`/api/live-chat/request-support?sessionId=${curSessionId}`, {
-        guestName: guestName || 'Khách hàng',
-        guestPhone: guestPhone || null,
+        guestName: finalName,
+        guestPhone: finalPhone,
       });
       setMsgs((m) => [
         ...m,
-        { from: 'system', text: 'Quý khách đã yêu cầu kết nối chuyên viên tư vấn. Đội ngũ CSKH đang tiếp nhận trong giây lát...' }
+        { from: 'system', text: `Quý khách (${finalName}) đã yêu cầu kết nối chuyên viên tư vấn. Đội ngũ CSKH đang tiếp nhận trong giây lát...` }
       ]);
     } catch (err) {
       setIsWaitingStaff(false);
@@ -363,14 +372,34 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
   const textareaRef = useRef(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [guestNameInput, setGuestNameInput] = useState('');
-  const [guestPhoneInput, setGuestPhoneInput] = useState('');
+  const authUser = loadAuth()?.user;
+  const initialPrefill = prefillFromUser(authUser);
+  const [guestNameInput, setGuestNameInput] = useState(() => initialPrefill.fullName || '');
+  const [guestPhoneInput, setGuestPhoneInput] = useState(() => initialPrefill.phone || '');
+
+  // Tự động kết nối luôn nếu đã đăng nhập, chỉ mở modal khi là khách vãng lai
+  const handleInitiateStaffChat = () => {
+    const user = loadAuth()?.user;
+    const prefill = prefillFromUser(user);
+
+    if (user) {
+      const name = prefill.fullName || user.fullName || user.name || 'Thành viên Biensovip';
+      const phone = prefill.phone || (user.phone || (user.identifierType === 'phone' ? user.identifier : null));
+      requestStaffSupport({ guestName: name, guestPhone: phone });
+      toast.success(`Đã tự động kết nối chuyên viên cho tài khoản ${name}!`);
+      return;
+    }
+
+    setGuestNameInput(prefill.fullName || '');
+    setGuestPhoneInput(prefill.phone || '');
+    setShowConnectModal(true);
+  };
 
   useEffect(() => {
-    const handleOpenModal = () => setShowConnectModal(true);
+    const handleOpenModal = () => handleInitiateStaffChat();
     window.addEventListener('bsv_open_live_chat_modal', handleOpenModal);
     return () => window.removeEventListener('bsv_open_live_chat_modal', handleOpenModal);
-  }, []);
+  }, [requestStaffSupport]);
 
   useEffect(() => {
     if (viewportRef.current && msgs.length > 1) {
@@ -438,6 +467,17 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
       send();
     }
   };
+
+  useEffect(() => {
+    if (showConnectModal) {
+      const u = loadAuth()?.user;
+      if (u) {
+        const p = prefillFromUser(u);
+        if (p.fullName) setGuestNameInput(p.fullName);
+        if (p.phone) setGuestPhoneInput(p.phone);
+      }
+    }
+  }, [showConnectModal]);
 
   const handleConfirmConnect = (e) => {
     e?.preventDefault();
@@ -554,9 +594,27 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
                 <span style={{ fontSize: 12, color: '#059669', fontWeight: 600 }}>● Đội ngũ CSKH đang trực tuyến</span>
               </div>
             </div>
-            <p style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16, lineHeight: 1.5 }}>
-              Quý khách vui lòng để lại thông tin để nhân viên tư vấn xưng hô và hỗ trợ trực tiếp nhanh nhất:
-            </p>
+            {authUser ? (
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: 8,
+                background: '#ECFDF5',
+                border: '1px solid #A7F3D0',
+                fontSize: 12,
+                color: '#065F46',
+                marginBottom: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <Check size={14} color="#059669" />
+                <span>Tài khoản: <strong>{authUser.fullName || authUser.email}</strong> (Đã tự điền)</span>
+              </div>
+            ) : (
+              <p style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16, lineHeight: 1.5 }}>
+                Quý khách vui lòng để lại thông tin để nhân viên tư vấn xưng hô và hỗ trợ trực tiếp nhanh nhất:
+              </p>
+            )}
             <form onSubmit={handleConfirmConnect} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
@@ -676,7 +734,7 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
               <div
                 role="button"
                 tabIndex={0}
-                onClick={() => setShowConnectModal(true)}
+                onClick={handleInitiateStaffChat}
                 className="claude-hero-mode-card live-card"
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>

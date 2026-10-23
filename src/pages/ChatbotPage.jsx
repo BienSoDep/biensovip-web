@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Sparkles, Plus, MessageSquare, RotateCcw, ShieldCheck, PanelLeftClose, PanelLeftOpen, Trash2, LogIn, Clock, X, Headphones } from 'lucide-react';
+import toast from 'react-hot-toast';
 import {
   useChatConversation,
   ChatConversationView,
@@ -11,6 +12,8 @@ import {
 } from '../components/ChatConversation.jsx';
 import { useMyChatbotSessions } from '../services/chatbotService.js';
 import { useSeo } from '../hooks/useSeo.js';
+import { loadAuth } from '../lib/authStore.js';
+import { prefillFromUser } from '../lib/contactPrefill.js';
 
 function timeAgo(iso) {
   if (!iso) return 'Vừa xong';
@@ -276,7 +279,16 @@ function ChatbotPageInner({
                 type="button"
                 onClick={() => {
                   if (!conv.isLiveMode) {
-                    window.dispatchEvent(new CustomEvent('bsv_open_live_chat_modal'));
+                    const u = user || loadAuth()?.user;
+                    const prefill = prefillFromUser(u);
+                    if (u) {
+                      const name = prefill.fullName || u.fullName || u.name || 'Thành viên Biensovip';
+                      const phone = prefill.phone || (u.phone || (u.identifierType === 'phone' ? u.identifier : null));
+                      conv.requestStaffSupport({ guestName: name, guestPhone: phone });
+                      toast.success(`Đang kết nối chuyên viên cho tài khoản ${name}!`);
+                    } else {
+                      window.dispatchEvent(new CustomEvent('bsv_open_live_chat_modal'));
+                    }
                   }
                 }}
                 className={`claude-mode-pill ${conv.isLiveMode ? 'active live' : ''}`}
