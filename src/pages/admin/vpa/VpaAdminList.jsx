@@ -417,6 +417,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const [mobileView, setMobileView] = useState('card');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [drawer, setDrawer] = useState(null); // null | { plate? }
+  const [cell, setCell] = useState(null); // inline editing price cell { id, value }
   const {
     isOpen: exportModalOpen,
     progress: exportProgress,
