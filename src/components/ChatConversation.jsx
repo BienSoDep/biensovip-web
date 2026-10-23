@@ -361,7 +361,7 @@ export function useChatConversation(openSessionId) {
   };
 }
 
-export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, autoFocusInput }) {
+export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, autoFocusInput, onSwitchToStaff }) {
   const {
     msgs, input, setInput, rateLimited, sendMessage, quickReplies,
     send, rate, reportPlateClick, sessionId, isRestoring,
@@ -377,8 +377,13 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
   const [guestNameInput, setGuestNameInput] = useState(() => initialPrefill.fullName || '');
   const [guestPhoneInput, setGuestPhoneInput] = useState(() => initialPrefill.phone || '');
 
-  // Tự động kết nối luôn nếu đã đăng nhập, chỉ mở modal khi là khách vãng lai
+  // Chuyển thẳng sang giao diện chat chuyên viên nếu có onSwitchToStaff
   const handleInitiateStaffChat = () => {
+    if (onSwitchToStaff) {
+      onSwitchToStaff();
+      return;
+    }
+
     const user = loadAuth()?.user;
     const prefill = prefillFromUser(user);
 
@@ -961,6 +966,22 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
                       {/* Nút liên hệ khẩn cấp */}
                       {m.directContact && (
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                          {onSwitchToStaff && (
+                            <button
+                              type="button"
+                              onClick={onSwitchToStaff}
+                              className="claude-chip-btn"
+                              style={{
+                                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                                color: '#FFFFFF',
+                                borderColor: '#059669',
+                                fontWeight: 600,
+                                boxShadow: '0 2px 6px rgba(16, 185, 129, 0.25)',
+                              }}
+                            >
+                              <Headphones size={14} /> Nhắn tin trực tiếp với Quản lý Duy Đinh
+                            </button>
+                          )}
                           <a href={ZALO_LINK} target="_blank" rel="noopener noreferrer" className="claude-chip-btn" style={{ background: '#0068FF', color: '#FFFFFF', borderColor: '#0068FF' }}>
                             <MessageCircle size={14} /> Nhắn Zalo Chuyên viên
                           </a>
