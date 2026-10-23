@@ -1,0 +1,493 @@
+/* ==========================================================================
+   BIENSOVIP LUXURY LIGHT FOOTER STYLES
+   Chân trang cao cấp: Tông Light Luxury thanh lịch, hài hòa với màu nền web,
+   dải nhấn vàng cam thương hiệu Duy Đinh, các thẻ kênh tương tác cao & trợ năng chuẩn WCAG.
+   ========================================================================== */
+
+.vip-footer {
+  position: relative;
+  background: radial-gradient(circle at 85% 0%, rgba(241, 151, 32, 0.05) 0%, transparent 55%),
+              radial-gradient(circle at 10% 25%, rgba(37, 99, 235, 0.03) 0%, transparent 45%),
+              #F8FAFC;
+  color: #1E293B;
+  border-top: 1px solid #E2E8F0;
+  overflow: hidden;
+}
+
+/* Dải viền sáng trên cùng mang màu nhận diện vàng cam Duy Đinh */
+.vip-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(241, 151, 32, 0.3) 15%,
+    #F19720 50%,
+    rgba(245, 158, 11, 0.7) 75%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+.vip-footer-inner {
+  max-width: var(--width-content, 1216px);
+  margin: 0 auto;
+  padding: clamp(32px, 5vw, 56px) var(--pad-page, 24px) 28px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 4vw, 44px);
+}
+
+/* ==========================================================================
+   1. KHỐI THẺ KÊNH LIÊN HỆ NHANH (QUICK CONTACT CARDS BAR)
+   ========================================================================== */
+
+.vip-contact-bar {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+}
+
+.vip-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.vip-contact-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.vip-contact-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 10% 50%, var(--card-glow, rgba(241, 151, 32, 0.08)), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+  pointer-events: none;
+}
+
+.vip-contact-card:hover {
+  background: #FFFFFF;
+  border-color: var(--card-border, #F19720);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 0 14px -2px var(--card-glow, rgba(241, 151, 32, 0.15));
+}
+
+.vip-contact-card:hover::before {
+  opacity: 1;
+}
+
+/* Icon Box */
+.vip-contact-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--icon-bg, #FFF7ED);
+  color: var(--icon-color, #F19720);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  transition: transform 0.24s ease;
+}
+
+.vip-contact-card:hover .vip-contact-icon-box {
+  transform: scale(1.08);
+}
+
+.vip-contact-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vip-contact-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--label-color, #64748B);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vip-contact-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.vip-contact-sub {
+  font-size: 12px;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chấm xanh nhấp nháy giờ mở cửa */
+.vip-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  display: inline-block;
+  animation: vip-pulse-green 2s infinite;
+}
+
+@keyframes vip-pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ==========================================================================
+   2. KHỐI THÂN CHÂN TRANG (BRAND & SITEMAP COLUMNS)
+   ========================================================================== */
+
+.vip-footer-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(24px, 4vw, 48px);
+}
+
+.vip-footer-brand-col {
+  flex: 1 1 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vip-footer-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vip-footer-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(241, 151, 32, 0.25));
+}
+
+.vip-footer-brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0F172A;
+}
+
+.vip-footer-brand-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #475569;
+  max-width: 360px;
+}
+
+/* Huy hiệu cam kết bảo chứng E-E-A-T */
+.vip-footer-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  max-width: 360px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.vip-footer-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.vip-footer-badge-item svg {
+  color: #F19720;
+  flex-shrink: 0;
+}
+
+/* Khối Newsletter trong footer */
+.vip-footer-newsletter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+}
+
+.vip-footer-newsletter-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1E293B;
+}
+
+/* Đảm bảo ô input newsletter ăn nhập hoàn hảo với light theme */
+.vip-footer .vip-footer-newsletter input {
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #0F172A !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  border-radius: 8px !important;
+}
+
+.vip-footer .vip-footer-newsletter input::placeholder {
+  color: #94A3B8 !important;
+}
+
+.vip-footer .vip-footer-newsletter input:focus {
+  border-color: #F19720 !important;
+  box-shadow: 0 0 0 3px rgba(241, 151, 32, 0.15) !important;
+}
+
+.vip-footer .vip-footer-newsletter button {
+  background: #F19720 !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(241, 151, 32, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.vip-footer .vip-footer-newsletter button:hover {
+  background: #EA580C !important;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   3. CÁC CỘT LIÊN KẾT ĐIỀU HƯỚNG (SITEMAP COLUMNS)
+   ========================================================================== */
+
+.vip-footer-columns {
+  flex: 2 1 600px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: clamp(20px, 3vw, 36px);
+}
+
+.vip-footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vip-footer-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0F172A;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+
+.vip-footer-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 24px;
+  height: 2px;
+  background: #F19720;
+  border-radius: 2px;
+}
+
+.vip-footer-link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vip-footer-link {
+  font-size: 13.5px;
+  color: #475569;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+}
+
+.vip-footer-link:hover {
+  color: #D97706;
+  transform: translateX(4px);
+}
+
+.vip-footer-link.highlight {
+  color: #0F172A;
+  font-weight: 600;
+}
+
+.vip-footer-link.highlight:hover {
+  color: #D97706;
+}
+
+/* ==========================================================================
+   4. CHÂN ĐÁY (BOTTOM BAR: COPYRIGHT, PHÁP LÝ & BACK TO TOP)
+   ========================================================================== */
+
+.vip-footer-bottom {
+  padding-top: 24px;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.vip-footer-copyright {
+  font-size: 12.5px;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vip-footer-copyright strong {
+  color: #1E293B;
+  font-weight: 600;
+}
+
+.vip-footer-trust-tags {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vip-footer-tag {
+  font-size: 11.5px;
+  color: #475569;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.vip-back-to-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 20px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.vip-back-to-top:hover {
+  background: #FFF7ED;
+  border-color: #F19720;
+  color: #C2410C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(241, 151, 32, 0.18);
+}
+
+/* ==========================================================================
+   5. TỐI ƯU RESPONSIVE MOBILE & TABLET
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .vip-contact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .vip-contact-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .vip-footer-main {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .vip-footer-columns {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .vip-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vip-footer-columns {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .vip-contact-card {
+    padding: 12px 14px;
+  }
+
+  .vip-contact-icon-box {
+    width: 40px;
+    height: 40px;
+  }
+
+  .vip-contact-value {
+    font-size: 14px;
+  }
+}

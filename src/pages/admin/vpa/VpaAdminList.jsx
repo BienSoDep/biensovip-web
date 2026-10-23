@@ -31,6 +31,8 @@ import { registerApproveRun } from '../../../lib/runWatcher.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 import Modal from '../../../components/Modal.jsx';
+import { useExportWithProgress } from '../../../hooks/useExportWithProgress.js';
+import ExportProgressModal from '../../../components/ExportProgressModal.jsx';
 
 const MAX_BULK = 500;
 const COL_KEY = 'bsv.admin.vpaColumns';
@@ -415,8 +417,15 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const [mobileView, setMobileView] = useState('card');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [drawer, setDrawer] = useState(null); // null | { plate? }
-  const [cell, setCell] = useState(null);
-  const [exporting, setExporting] = useState(false);
+  const {
+    isOpen: exportModalOpen,
+    progress: exportProgress,
+    startExport: runExportWithProgress,
+    cancelDownload: cancelExportDownload,
+    closeModal: closeExportModal,
+  } = useExportWithProgress();
+  const [exportMenu, setExportMenu] = useState(null); // null | 'xlsx' | 'docx' | 'csv'
+  const exporting = exportModalOpen && exportProgress.phase !== 'completed' && exportProgress.phase !== 'error';
   const [integrity, setIntegrity] = useState(() => !!openIntegrityCode);
   useEffect(() => { if (openIntegrityCode) setIntegrity(true); }, [openIntegrityCode]);
   const [bulkSeedOpen, setBulkSeedOpen] = useState(false);
@@ -593,18 +602,23 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const bulkMsg = (verb) => (r) => `${verb} ${r.affected} biển${r.skipped ? ` (bỏ qua ${r.skipped})` : ''}`;
   const bulkEdit = (body, verb) => run(() => bulk.mutateAsync({ ids: bulkIds, ...body }), bulkMsg(verb), true);
 
-  const doExport = async () => {
-    setExporting(true);
-    try { await exportVpaCsv({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
+  const handleExportChoice = (format, isCurrentPageOnly = false) => {
+    setExportMenu(null);
+    const exportParams = isCurrentPageOnly
+      ? { ...params, page, limit }
+      : { ...params, page: undefined, limit: undefined };
+
+    runExportWithProgress({
+      url: '/api/admin/vpa/plates/export',
+      params: exportParams,
+      format,
+      defaultFileName: isCurrentPageOnly ? `bien-vpa-trang-${page}` : 'bien-vpa',
+    });
   };
-  const doExportXlsx = async () => {
-    setExporting(true);
-    try { await exportVpaXlsx({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
-  };
-  const doExportDocx = async () => {
-    setExporting(true);
-    try { await exportVpaDocx({ ...params, page: undefined, limit: undefined }); } catch (e) { notify?.(e.message); } finally { setExporting(false); }
-  };
+
+  const doExport = () => handleExportChoice('csv', false);
+  const doExportXlsx = () => handleExportChoice('xlsx', false);
+  const doExportDocx = () => handleExportChoice('docx', false);
 
   const quickAdd = async () => {
     const price = quick.price === '' ? null : Number(quick.price);
@@ -1161,9 +1175,167 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             </Button>
           )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
-          <Button variant="ghost" size="md" disabled={exporting} onClick={doExport}>{exporting ? 'Đang xuất…' : 'Xuất CSV'}</Button>
-          <Button variant="ghost" size="md" disabled={exporting} title="Xuất Excel có trang trí — dùng gửi khách hàng" onClick={doExportXlsx}>{exporting ? 'Đang xuất…' : 'Xuất Excel'}</Button>
-          <Button variant="ghost" size="md" disabled={exporting} title="Xuất Word dạng bảng giá gọn — dùng gửi khách hàng" onClick={doExportDocx}>{exporting ? 'Đang xuất…' : 'Xuất Word'}</Button>
+          {/* Nút Xuất dữ liệu thống nhất (Excel, Word, CSV) */}
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="ghost"
+              size="md"
+              disabled={exporting}
+              title="Xuất danh sách biển số ra file Excel (.xlsx), Word (.docx) hoặc CSV (.csv)"
+              onClick={() => setExportMenu((m) => (m ? null : 'open'))}
+              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Download size={14} />
+              <span>Xuất dữ liệu</span>
+              <span style={{ fontSize: 10, opacity: 0.7 }}>▾</span>
+            </Button>
+            {exportMenu && (
+              <>
+                <div
+                  onClick={() => setExportMenu(null)}
+                  style={{ position: 'fixed', inset: 0, zIndex: 29 }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: 4,
+                    background: 'var(--white)',
+                    border: '1px solid var(--grey-200, #e2e8f0)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-4, 0 20px 25px -5px rgba(0,0,0,0.15))',
+                    zIndex: 30,
+                    minWidth: 290,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '6px',
+                  }}
+                >
+                  {/* Nhóm Excel */}
+                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#107c41', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>📗 File Excel (.xlsx)</span>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('xlsx', true)}
+                  >
+                    <span>📄</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất trang hiện tại</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Trang {page} • {items.length} biển</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('xlsx', false)}
+                  >
+                    <span>📑</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} biển • tự động chia sheets</span>
+                    </div>
+                  </button>
+
+                  <div style={{ height: 1, background: 'var(--grey-100, #f1f5f9)', margin: '4px 0' }} />
+
+                  {/* Nhóm Word */}
+                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#2b579a', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>📘 File Word (.docx)</span>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('docx', true)}
+                  >
+                    <span>📄</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất trang hiện tại</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} biển đang xem</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('docx', false)}
+                  >
+                    <span>📑</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} biển • chia phần & ngắt trang</span>
+                    </div>
+                  </button>
+
+                  <div style={{ height: 1, background: 'var(--grey-100, #f1f5f9)', margin: '4px 0' }} />
+
+                  {/* Nhóm CSV */}
+                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>📙 File CSV (.csv)</span>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('csv', true)}
+                  >
+                    <span>📄</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất CSV trang hiện tại</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} dòng</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => handleExportChoice('csv', false)}
+                  >
+                    <span>📑</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xuất CSV toàn bộ</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{data?.total?.toLocaleString('vi-VN') || 0} dòng</span>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           {queue && (
             <>
               <Button
@@ -1287,7 +1459,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                       gap: 4,
                     }}
                   >
-                    <span>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu cùng tỉnh` : 'Giá khởi điểm'})` : '—'}</span>
+                    <span>Gợi ý: {p.suggestedPrice ? `${money(p.suggestedPrice)} (${(p.sampleCount || 0) > 0 ? `${p.sampleCount} mẫu${p.sampleAvgPrice ? ` • TB ${money(p.sampleAvgPrice)}` : ''}` : `Giá sàn ${money(p.startingPrice)}`})` : '—'}</span>
                   </button>
                 </div>
               </div>
@@ -1502,20 +1674,35 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
                           padding: '1px 5px',
                           borderRadius: '4px',
                           fontWeight: 600,
-                          background: (p.sampleCount || 0) > 0 ? '#F0FAF6' : '#fffbeb',
-                          color: (p.sampleCount || 0) > 0 ? '#3FBF8F' : '#d97706',
-                          border: (p.sampleCount || 0) > 0 ? '1px solid #D6F0E5' : '1px solid #fde68a',
+                          background: p.suggestedPrice > 0 ? ((p.sampleCount || 0) > 0 ? '#F0FAF6' : '#fffbeb') : 'var(--surface-sunken)',
+                          color: p.suggestedPrice > 0 ? ((p.sampleCount || 0) > 0 ? '#3FBF8F' : '#d97706') : 'var(--text-muted)',
+                          border: p.suggestedPrice > 0 ? ((p.sampleCount || 0) > 0 ? '1px solid #D6F0E5' : '1px solid #fde68a') : '1px solid var(--border-hairline)',
                         }}
+                        title={p.suggestedPrice > 0
+                          ? ((p.sampleCount || 0) > 0
+                              ? `Giá gợi ý = TB ${p.sampleCount} mẫu cùng tỉnh (${money(p.sampleAvgPrice)}) × hệ số 2.5`
+                              : `Chưa có mẫu cùng tỉnh — dùng Giá sàn (${money(p.startingPrice)}) × hệ số 2.5`)
+                          : (p.startingPrice > 0
+                              ? `Biển có giá khởi điểm ${money(p.startingPrice)}. Bấm "Duyệt tất cả" hoặc "Tính lại giá" để sinh giá gợi ý tự động.`
+                              : 'Chưa có mẫu kết quả và chưa có giá khởi điểm.')
+                        }
                       >
-                        {(p.sampleCount || 0) > 0 ? (
-                          <>
-                            <CheckCircle2 size={10} />
-                            Cùng tỉnh ({p.sampleCount} mẫu)
-                          </>
+                        {p.suggestedPrice > 0 ? (
+                          (p.sampleCount || 0) > 0 ? (
+                            <>
+                              <CheckCircle2 size={10} />
+                              Cùng tỉnh ({p.sampleCount} mẫu{p.sampleAvgPrice ? ` • TB ${money(p.sampleAvgPrice)}` : ''})
+                            </>
+                          ) : (
+                            <>
+                              <Info size={10} />
+                              Giá sàn ({money(p.startingPrice)})
+                            </>
+                          )
                         ) : (
                           <>
                             <Info size={10} />
-                            Giá khởi điểm
+                            {p.startingPrice > 0 ? `Chờ tính giá (${money(p.startingPrice)})` : 'Chưa có giá'}
                           </>
                         )}
                       </span>
@@ -1561,6 +1748,13 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
         data={priceRefQuery.data}
         isLoading={priceRefQuery.isLoading}
         onOpenPlate={(plateNumber) => { setPriceRefId(null); setQ(plateNumber); }}
+      />
+
+      <ExportProgressModal
+        open={exportModalOpen}
+        progress={exportProgress}
+        onCancel={cancelExportDownload}
+        onClose={closeExportModal}
       />
 
       {sel.size > 0 && (
@@ -1733,29 +1927,30 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
 
           {/* Cụm 5: ĐÁNH DẤU (Nổi bật / Ghim) */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            {[
-              ['Nổi bật', { isFeatured: true }, 'Đã đánh dấu nổi bật'],
-              ['Bỏ nổi bật', { isFeatured: false }, 'Đã bỏ nổi bật'],
-              ['Ghim', { isPinned: true }, 'Đã ghim'],
-              ['Bỏ ghim', { isPinned: false }, 'Đã bỏ ghim'],
-            ].map(([text, body, verb]) => (
-              <button
-                key={text}
-                type="button"
-                onClick={() => bulkEdit(body, verb)}
-                disabled={bulk.isPending}
-                style={{
-                  ...bulkBtn,
-                  background: 'rgba(255, 255, 255, 0.12)',
-                  color: '#e2e8f0',
-                  padding: '5px 8px',
-                  fontSize: '11px',
-                }}
-              >
-                {text}
-              </button>
-            ))}
+          <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <select
+              defaultValue=""
+              aria-label="Đánh dấu hàng loạt"
+              disabled={bulk.isPending}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === 'featured_on') bulkEdit({ isFeatured: true }, 'Đã đánh dấu nổi bật');
+                else if (v === 'featured_off') bulkEdit({ isFeatured: false }, 'Đã bỏ nổi bật');
+                else if (v === 'pinned_on') bulkEdit({ isPinned: true }, 'Đã ghim');
+                else if (v === 'pinned_off') bulkEdit({ isPinned: false }, 'Đã bỏ ghim');
+                e.target.value = '';
+              }}
+              style={{
+                border: 'none', background: 'rgba(255, 255, 255, 0.95)', borderRadius: 'var(--radius-sm)',
+                padding: '5px 8px', fontSize: '12px', color: 'var(--text-strong)', cursor: 'pointer', outline: 'none',
+              }}
+            >
+              <option value="" disabled>Đánh dấu ▾</option>
+              <option value="featured_on">⭐ Gắn nổi bật</option>
+              <option value="featured_off">Bỏ nổi bật</option>
+              <option value="pinned_on">📌 Ghim lên đầu</option>
+              <option value="pinned_off">Bỏ ghim</option>
+            </select>
           </div>
 
           <div style={{ width: 1, height: 20, background: 'rgba(255, 255, 255, 0.15)' }} />
@@ -1820,7 +2015,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           }
           message={
             confirmAction === 'all'
-              ? `Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc — không chỉ trang đang xem. Có thể mất một lúc với số lượng lớn.`
+              ? `Duyệt giá gợi ý cho TẤT CẢ ${total.toLocaleString('vi-VN')} biển đang khớp bộ lọc — không chỉ trang đang xem. Hệ thống sẽ tự động gán & tính giá gợi ý theo công thức (khớp mẫu đấu giá hoặc fallback giá khởi điểm) cho các biển mới trước khi duyệt. Có thể mất một lúc với số lượng lớn.`
               : confirmAction === 'matched-samples'
                 ? 'Rà soát các biển đã được duyệt giá dựa trên giá khởi điểm mặc định (chưa có mẫu đấu giá). Hệ thống sẽ tìm trong dữ liệu kết quả đấu giá thực tế vừa cào về; nếu tìm thấy kết quả đấu giá thật, hệ thống sẽ tính lại giá gợi ý chuẩn theo giá trúng thật và tự động cập nhật giá duyệt mới cho biển.'
                 : confirmAction === 'drifted'

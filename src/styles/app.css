@@ -11,6 +11,8 @@
 
 /* 3. Thành phần giao diện dùng chung (Button, Card, Pill, Lightbox, Marquee) */
 @import './components.css';
+@import './chatbot.css';
+@import './footer.css';
 
 /* 4. Hệ thống bài viết Blog & Biên tập (Typography, Bảng, Trích dẫn, Infographic) */
 @import './article.css';

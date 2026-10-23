@@ -245,9 +245,10 @@ export default function PriceReferenceModal({
                           style={{
                             fontWeight: "var(--fw-bold, 700)",
                             color: "var(--action-primary, #3FBF8F)",
+                            fontSize: "13px",
                           }}
                         >
-                          {fmt(it.auctionPrice)}
+                          Giá trúng: {fmt(it.auctionPrice)}
                         </span>
                         <span
                           style={{

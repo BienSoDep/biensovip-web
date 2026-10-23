@@ -112,17 +112,18 @@ export function NotificationBell({ go, openPlate, openPost, user }) {
         aria-controls="notif-panel"
         onClick={handleToggle}
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
+          width: 36,
+          height: 36,
+          borderRadius: 'var(--radius-pill)',
           border: 'none',
-          background: 'var(--surface-muted)',
-          display: 'flex',
+          background: 'transparent',
+          display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: 'var(--text-body)',
           cursor: 'pointer',
           flexShrink: 0,
+          transition: 'background 120ms ease',
         }}
       >
         <Bell size={18} />
@@ -156,7 +157,7 @@ export function NotificationBell({ go, openPlate, openPost, user }) {
           aria-label="Danh sách thông báo"
           style={{
             position: 'absolute',
-            top: 50,
+            top: 42,
             right: 0,
             width: 320,
             maxWidth: 'calc(100vw - 32px)',

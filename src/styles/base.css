@@ -110,9 +110,11 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Ô ngày/tháng/năm trong DateInputVN: khung ngoài (span cha) đã tự vẽ viền khi focus,
-   outline riêng từng ô con gây cảm giác 2 khung lồng nhau — tắt riêng cho input con này. */
-.date-vn-input:focus-visible {
+/* Ô ngày/tháng/năm trong DateInputVN & Claude composer: khung ngoài (cha) đã tự vẽ viền khi focus,
+   outline riêng từng ô con gây cảm giác 2 khung lồng nhau — tắt riêng cho input/textarea con này. */
+.date-vn-input:focus-visible,
+.claude-composer-textarea:focus,
+.claude-composer-textarea:focus-visible {
   outline: none !important;
 }
 

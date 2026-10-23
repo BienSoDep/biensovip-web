@@ -1,0 +1,602 @@
+[
+  {
+    "id": 1,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Biển số định danh là gì?",
+    "answer": "Biển số định danh là biển số xe được cấp và quản lý theo mã định danh cá nhân của chủ xe (đối với cá nhân là người Việt Nam là số Căn cước công dân/VNeID mức 2, đối với người nước ngoài là số thẻ thường trú/tạm trú, đối với tổ chức là mã số thuế). Biển số định danh đi theo người chứ không đi theo xe."
+  },
+  {
+    "id": 2,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Biển số 5 số trước ngày 15/08/2023 có tự động chuyển thành biển định danh không?",
+    "answer": "Có. Đối với xe đã đăng ký biển 5 số trước ngày 15/08/2023 mà chưa làm thủ tục thu hồi thì số biển số đó được mặc định là biển số định danh của chủ xe đứng tên trên Cà-vẹt (Giấy đăng ký xe)."
+  },
+  {
+    "id": 3,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Biển 3 số, 4 số có được coi là biển số định danh không?",
+    "answer": "Không. Biển 3 số, 4 số không phải là biển định danh. Chủ xe vẫn được phép tham gia giao thông bình thường. Nếu chủ xe có nhu cầu hoặc khi làm thủ tục mua bán, sang tên, chuyển vùng, cấp đổi thì cơ quan công an sẽ tiến hành thu hồi biển 3 số, 4 số đó và cấp đổi sang biển số 5 số định danh mới."
+  },
+  {
+    "id": 4,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Khi bán xe thì biển số định danh có bán kèm theo xe được không?",
+    "answer": "Đối với xe gắn biển thông thường, khi bán xe, chủ xe PHẢI giữ lại Giấy đăng ký xe và biển số xe (làm thủ tục thu hồi), nộp lại cho cơ quan đăng ký xe. Biển số định danh này sẽ được giữ lại cho chủ xe trong 5 năm, KHÔNG được chuyển nhượng kèm theo xe (trừ trường hợp duy nhất là xe gắn biển số trúng đấu giá)."
+  },
+  {
+    "id": 5,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Trường hợp nào được chuyển quyền sở hữu xe kèm theo biển số?",
+    "answer": "Theo khoản 3 Điều 28 Thông tư 24/2023/TT-BCA, chỉ duy nhất xe ô tô gắn biển số trúng đấu giá mới được phép chuyển quyền sở hữu xe kèm theo biển số trúng đấu giá. Người mua xe kèm biển đấu giá sau đó sẽ được định danh biển số đó theo tên của mình."
+  },
+  {
+    "id": 6,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Một người được sở hữu tối đa bao nhiêu biển số định danh?",
+    "answer": "Pháp luật hiện hành không giới hạn số lượng biển số định danh của một cá nhân hay tổ chức. Mỗi phương tiện hợp pháp mà bạn đứng tên sở hữu sẽ được cấp 1 biển số định danh riêng biệt."
+  },
+  {
+    "id": 7,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Biển số định danh sau khi làm thủ tục thu hồi được giữ trong bao lâu?",
+    "answer": "Cơ quan đăng ký xe sẽ lưu giữ biển số định danh trong kho dữ liệu cho chủ xe trong thời hạn 05 năm kể từ ngày làm thủ tục thu hồi. Trong thời hạn 5 năm này, khi bạn đăng ký xe mới, cơ quan công an sẽ cấp lại đúng số biển số đó cho xe của bạn."
+  },
+  {
+    "id": 8,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Sau 5 năm nếu chủ xe không đăng ký xe mới thì biển định danh sẽ ra sao?",
+    "answer": "Quá thời hạn 05 năm kể từ ngày thu hồi, nếu chủ xe không đăng ký cho xe mới, biển số định danh đó sẽ được chuyển vào kho biển số của Cục Cảnh sát giao thông để cấp cho tổ chức, cá nhân khác theo quy định hoặc đưa vào kho đấu giá VPA."
+  },
+  {
+    "id": 9,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Người ở tỉnh này có được mua xe và đăng ký biển số ở tỉnh khác không?",
+    "answer": "Theo Thông tư 24, cá nhân được đăng ký xe tại nơi cư trú (bao gồm cả nơi đăng ký thường trú hoặc nơi đăng ký tạm trú đã được cập nhật xác thực trên cơ sở dữ liệu quốc gia về dân cư VNeID mức 2). Vì vậy, bạn hoàn toàn có thể đăng ký biển tại tỉnh nơi bạn có tạm trú hợp pháp."
+  },
+  {
+    "id": 10,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Quy trình làm thủ tục thu hồi biển số xe gồm những bước nào?",
+    "answer": "Quy trình thu hồi gồm 3 bước: 1) Chủ xe kê khai Giấy khai thu hồi đăng ký, biển số xe trực tuyến trên Cổng dịch vụ công; 2) Nộp lại biển số xe vật lý và Cà-vẹt gốc tại cơ quan Công an đăng ký xe; 3) Cơ quan Công an kiểm tra hồ sơ và cấp Chứng nhận thu hồi đăng ký, biển số xe."
+  },
+  {
+    "id": 11,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Mất bao lâu để hoàn tất thủ tục thu hồi biển số?",
+    "answer": "Thời gian giải quyết thủ tục thu hồi thông thường từ 1 đến 2 ngày làm việc kể từ khi cơ quan đăng ký xe nhận đủ hồ sơ hợp lệ. Biensovip hỗ trợ xử lý nhanh gọn chỉ trong 24h làm việc."
+  },
+  {
+    "id": 12,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Đăng ký xe mới bằng biển số định danh cũ đã thu hồi mất bao lâu?",
+    "answer": "Thủ tục cấp đăng ký xe mới khi sử dụng lại biển số định danh cũ mất khoảng 2 ngày làm việc để nhận giấy hẹn trả kết quả đăng ký và bấm in Cà-vẹt xe mới."
+  },
+  {
+    "id": 13,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Xe trúng đấu giá đã chuyển nhượng 1 lần kèm xe, người mua sau có được bán tiếp kèm biển nữa không?",
+    "answer": "Không. Theo quy định, người nhận chuyển nhượng xe kèm theo biển số trúng đấu giá KHÔNG ĐƯỢC tiếp tục chuyển nhượng xe kèm biển trúng đấu giá cho người thứ ba. Nếu người này bán xe, biển số đó đã trở thành biển định danh của họ và bắt buộc phải thu hồi để giữ lại cho cá nhân họ."
+  },
+  {
+    "id": 14,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Biển số định danh có bị thu hồi khi chủ xe vi phạm giao thông chưa nộp phạt nguội không?",
+    "answer": "Theo quy định, nếu phương tiện có thông báo vi phạm trật tự an toàn giao thông (phạt nguội) chưa giải quyết, cơ quan đăng ký xe sẽ tạm dừng giải quyết các thủ tục đăng ký, cấp đổi, thu hồi cho đến khi chủ xe chấp hành xong quyết định xử phạt."
+  },
+  {
+    "id": 15,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Tôi có thể chuyển biển số xe máy định danh sang lắp cho xe ô tô được không?",
+    "answer": "Không. Biển số định danh của phương tiện nào chỉ được phép cấp lại cho phương tiện cùng loại (biển ô tô cấp lại cho xe ô tô, biển xe máy cấp lại cho xe máy cùng phân khối/loại hình tương ứng)."
+  },
+  {
+    "id": 16,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Người nước ngoài tại Việt Nam có được cấp biển số định danh không?",
+    "answer": "Có. Người nước ngoài cư trú hợp pháp tại Việt Nam (có thẻ thường trú hoặc tạm trú từ 06 tháng trở lên) được cấp biển số định danh dựa trên mã số định danh người nước ngoài do Bộ Công an cấp."
+  },
+  {
+    "id": 17,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Khi chuyển hộ khẩu sang tỉnh khác, biển số định danh có phải đổi lại đầu số tỉnh mới không?",
+    "answer": "Không. Khi chủ xe thay đổi nơi thường trú từ tỉnh này sang tỉnh khác, biển số định danh đã cấp vẫn được giữ nguyên, không bắt buộc phải làm thủ tục đổi biển số theo đầu số tỉnh mới."
+  },
+  {
+    "id": 18,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Lệ phí cấp lại biển số định danh cũ cho xe mới là bao nhiêu?",
+    "answer": "Khi đăng ký xe mới bằng biển số định danh đã thu hồi trước đó, chủ xe không phải nộp tiền mua biển số mới mà chỉ nộp lệ phí cấp chứng nhận đăng ký và biển số theo mức phí quy định của Bộ Tài chính (thường chỉ từ 100.000 – 150.000 đ)."
+  },
+  {
+    "id": 19,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Doanh nghiệp giải thể, phá sản thì biển số định danh của doanh nghiệp xử lý ra sao?",
+    "answer": "Khi tổ chức, doanh nghiệp giải thể hoặc phá sản, cơ quan đăng ký xe sẽ tiến hành thủ tục thu hồi đăng ký, biển số xe và đưa số biển đó vào kho dữ liệu biển số chung, không giữ lại thời hạn 5 năm như cá nhân."
+  },
+  {
+    "id": 20,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Giấy chứng nhận thu hồi biển số xe có thời hạn sử dụng bao lâu?",
+    "answer": "Chứng nhận thu hồi đăng ký, biển số xe có giá trị tương ứng với thời hạn giữ biển số định danh là 05 năm kể từ ngày cấp đối với cá nhân."
+  },
+  {
+    "id": 21,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Làm thế nào để kiểm tra một biển số đã được định danh chính chủ hay chưa?",
+    "answer": "Chủ xe có thể tra cứu trực tiếp trên ứng dụng VNeID (mục Ví giấy tờ > Phương tiện giao thông) hoặc trên Cổng dịch vụ công Bộ Công an bằng tài khoản định danh mức 2."
+  },
+  {
+    "id": 22,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Mua bán xe có biển số đẹp qua hợp đồng ủy quyền có an toàn không?",
+    "answer": "Sau Thông tư 24, việc mua bán xe chỉ làm hợp đồng ủy quyền tiềm ẩn rủi ro rất lớn vì chủ đứng tên hợp pháp trên hệ thống định danh vẫn là chủ cũ. Khi có phạt nguội, tai nạn hoặc thủ tục pháp lý, quyền định đoạt thuộc về chủ cũ. Biensovip luôn khuyến nghị và thực hiện thủ tục mua bán công chứng, sang tên chính chủ 100%."
+  },
+  {
+    "id": 23,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Biển số trúng đấu giá có được chuyển từ xe này sang xe khác của cùng một người không?",
+    "answer": "Hoàn toàn được. Bạn có thể làm thủ tục thu hồi biển đấu giá trên xe hiện tại và đăng ký lắp sang một xe khác thuộc quyền sở hữu của chính bạn bất cứ lúc nào."
+  },
+  {
+    "id": 24,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Một chiếc xe có thể đăng ký 2 biển số định danh không?",
+    "answer": "Không. Tại một thời điểm, mỗi phương tiện giao thông chỉ được gắn một chứng nhận đăng ký và một bộ biển số duy nhất."
+  },
+  {
+    "id": 25,
+    "category": "Pháp lý & Thông tư 24",
+    "question": "Địa chỉ làm thủ tục đăng ký xe theo Thông tư 24 ở đâu?",
+    "answer": "Công an cấp huyện/quận nơi cư trú đăng ký xe ô tô (hoặc Phòng Cảnh sát giao thông Công an cấp tỉnh đối với các thành phố trực thuộc Trung ương); Công an xã/phường có thẩm quyền đăng ký xe mô tô, xe máy."
+  },
+  {
+    "id": 26,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "VPA là gì?",
+    "answer": "VPA là viết tắt của Công ty Đấu giá Hợp danh Việt Nam (Vietnam Partnership Auction Company) — đơn vị tổ chức đấu giá trực tuyến biển số xe ô tô và mô tô chính thức được Bộ Công an lựa chọn theo Nghị quyết của Quốc hội."
+  },
+  {
+    "id": 27,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Giá khởi điểm của một biển số xe ô tô đấu giá VPA là bao nhiêu?",
+    "answer": "Giá khởi điểm của một biển số xe ô tô đưa ra đấu giá theo quy định hiện hành là 40.000.000 VNĐ (bốn mươi triệu đồng)."
+  },
+  {
+    "id": 28,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Tiền đặt trước (tiền cọc) để tham gia đấu giá biển ô tô là bao nhiêu?",
+    "answer": "Tiền đặt trước khi đăng ký đấu giá 1 biển số ô tô bằng đúng giá khởi điểm là 40.000.000 VNĐ, cộng thêm 100.000 VNĐ chi phí hồ sơ tham gia đấu giá."
+  },
+  {
+    "id": 29,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Nếu tham gia đấu giá nhưng không trả giá hoặc không trúng thì có được hoàn tiền cọc không?",
+    "answer": "Có. Nếu bạn đã nộp tiền đặt trước hợp lệ nhưng không trúng đấu giá (và không vi phạm quy chế đấu giá), tổ chức đấu giá VPA sẽ hoàn trả lại 40.000.000 VNĐ tiền đặt trước vào tài khoản ngân hàng của bạn trong vòng 03 ngày làm việc kể từ ngày kết thúc phiên."
+  },
+  {
+    "id": 30,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Trường hợp nào người tham gia đấu giá bị mất tiền cọc 40 triệu?",
+    "answer": "Bạn sẽ bị mất tiền cọc nếu: 1) Đã vào phòng đấu giá nhưng không bấm trả giá hợp lệ tối thiểu 1 lần; 2) Trúng đấu giá nhưng sau đó từ chối ký biên bản hoặc không nộp đủ số tiền trúng đấu giá đúng thời hạn; 3) Có hành vi thông đồng, móc ngoặc, phá hoại cuộc đấu giá."
+  },
+  {
+    "id": 31,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Bước giá trong phiên đấu giá biển số xe là bao nhiêu?",
+    "answer": "Bước giá áp dụng trong các phiên đấu giá biển số xe ô tô hiện tại là 5.000.000 VNĐ (năm triệu đồng) cho mỗi lần trả giá tăng lên."
+  },
+  {
+    "id": 32,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Thời gian diễn ra một cuộc đấu giá biển số là bao lâu?",
+    "answer": "Mỗi cuộc đấu giá biển số ô tô thường diễn ra trong thời gian 25 đến 30 phút (kèm theo thời gian gia hạn vòng phụ nếu có trả giá trong những giây cuối cùng)."
+  },
+  {
+    "id": 33,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Sau khi trúng đấu giá, thời hạn nộp đủ số tiền trúng đấu giá là bao lâu?",
+    "answer": "Trong thời hạn 15 ngày kể từ ngày có thông báo kết quả phê duyệt trúng đấu giá của Bộ Công an, người trúng đấu giá phải nộp toàn bộ số tiền trúng đấu giá còn lại (sau khi đã trừ đi 40 triệu tiền đặt trước) vào tài khoản chuyên thu của Bộ Công an."
+  },
+  {
+    "id": 34,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Nếu quá 15 ngày không nộp đủ tiền trúng đấu giá thì xử lý thế nào?",
+    "answer": "Nếu quá 15 ngày không nộp đủ tiền, kết quả trúng đấu giá sẽ bị hủy bỏ, số tiền 40 triệu đặt trước không được hoàn lại và sẽ sung công quỹ nhà nước, đồng thời biển số đó sẽ được đưa vào phiên đấu giá lại."
+  },
+  {
+    "id": 35,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Người trúng đấu giá có bao nhiêu thời gian để đăng ký lắp biển số vào xe?",
+    "answer": "Trong thời hạn 12 tháng kể từ ngày được cấp Văn bản xác nhận biển số xe trúng đấu giá, người trúng đấu giá phải làm thủ tục đăng ký xe để gắn biển số. Trường hợp bất khả kháng hoặc trở ngại khách quan thì được gia hạn không quá 06 tháng."
+  },
+  {
+    "id": 36,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Nếu quá thời hạn đăng ký xe mà chưa gắn biển trúng đấu giá thì sao?",
+    "answer": "Quá thời hạn quy định (12 tháng + thời gian gia hạn nếu có) mà người trúng đấu giá chưa đăng ký gắn biển vào xe, biển số trúng đấu giá sẽ bị thu hồi vào kho số công và người trúng không được hoàn lại số tiền đã nộp."
+  },
+  {
+    "id": 37,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Người chưa có xe ô tô có được tham gia đấu giá biển số không?",
+    "answer": "Hoàn toàn được. Bất kỳ công dân Việt Nam đủ điều kiện dân sự đều có thể tham gia đấu giá biển số xe. Bạn có thể đấu giá giữ biển trước, sau đó mua xe và làm thủ tục đăng ký trong vòng 12 đến 18 tháng sau."
+  },
+  {
+    "id": 38,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Biển số trúng đấu giá có phải chịu lệ phí đăng ký trước bạ khi mua không?",
+    "answer": "Tiền trúng đấu giá là tiền mua quyền sở hữu biển số nộp cho Bộ Công an. Khi đăng ký lắp biển vào xe ô tô, bạn vẫn phải nộp lệ phí trước bạ xe (thuế trước bạ theo giá trị xe) theo quy định của pháp luật thuế."
+  },
+  {
+    "id": 39,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Doanh nghiệp có được đứng tên tham gia đấu giá biển số xe không?",
+    "answer": "Có. Tổ chức, doanh nghiệp được thành lập và hoạt động hợp pháp tại Việt Nam có đầy đủ quyền tham gia đấu giá biển số xe bằng mã số doanh nghiệp và tài khoản định danh tổ chức."
+  },
+  {
+    "id": 40,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Giá gợi ý (Estimated Price) của Biensovip được tính toán dựa trên căn cứ nào?",
+    "answer": "Giá gợi ý của Biensovip được tính toán tự động bằng thuật toán AI Price Engine dựa trên dữ liệu lịch sử đấu giá thực tế của VPA trong 12 tháng gần nhất, lọc theo cùng phân khúc số, cùng đầu tỉnh, kết hợp hệ số nhân thị trường và so sánh giá sàn khởi điểm."
+  },
+  {
+    "id": 41,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Tại sao cùng một dãy số đẹp nhưng biển Hà Nội/TP.HCM thường có giá cao hơn các tỉnh khác?",
+    "answer": "Giá trị biển số phụ thuộc vào tính thanh khoản và quy mô thị trường. Hà Nội (đầu số 30) và TP.HCM (đầu số 51) có mật độ xe sang, siêu xe và lượng doanh nhân tập trung lớn nhất cả nước, nhu cầu săn biển đỉnh cao luôn vượt xa nguồn cung, tạo nên mức giá đấu giá vượt trội."
+  },
+  {
+    "id": 42,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "\\\"Phiên tuần\\\", \\\"Phiên tháng\\\" trên hệ thống VPA Admin là gì?",
+    "answer": "Đó là phân loại danh sách biển số theo thời gian dự kiến mở đấu giá chính thức: \\\"Phiên tuần\\\" là danh sách các biển sắp lên sàn đấu giá trong 7 ngày tới; \\\"Phiên tháng\\\" là danh sách biển đã công bố kế hoạch trong vòng 30 ngày tiếp theo."
+  },
+  {
+    "id": 43,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Biển số VPA đã hết hạn đấu giá mà không có ai trả giá thì sẽ ra sao?",
+    "answer": "Biển số đưa ra đấu giá nhưng không có người đăng ký hoặc không có người trả giá sẽ được chuyển về kho biển số của Cục CSGT để phân bổ bấm ngẫu nhiên theo hệ thống hoặc đưa vào danh sách đấu giá lại ở các kỳ kế tiếp."
+  },
+  {
+    "id": 44,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Người trúng đấu giá có thể chuyển nhượng riêng biển số cho người khác mà không kèm xe không?",
+    "answer": "Không. Pháp luật quy định không được phép mua bán, chuyển nhượng riêng lẻ biển số trúng đấu giá. Muốn chuyển quyền sở hữu biển đấu giá cho người khác, BẮT BUỘC phải làm thủ tục chuyển quyền sở hữu kèm theo xe ô tô đã gắn biển đó."
+  },
+  {
+    "id": 45,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Một người có thể ủy quyền cho người khác tham gia phiên đấu giá thay mình không?",
+    "answer": "Có thể ủy quyền hợp pháp theo quy định của pháp luật dân sự bằng văn bản ủy quyền có công chứng, chứng thực. Tuy nhiên trên hệ thống VPA, tài khoản đấu giá phải đúng thông tin của người đứng tên ủy quyền."
+  },
+  {
+    "id": 46,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Xem lịch sử kết quả trúng đấu giá VPA ở đâu chuẩn xác nhất?",
+    "answer": "Quý khách có thể tra cứu trực tiếp trên Cổng đấu giá chính thức của VPA hoặc trên mục \\\"Tra cứu kết quả VPA\\\" của Biensovip với đầy đủ bộ lọc theo tỉnh, dòng số, mức giá và ngày trúng."
+  },
+  {
+    "id": 47,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Có hiện tượng can thiệp làm sai lệch kết quả đấu giá trên hệ thống VPA không?",
+    "answer": "Hệ thống đấu giá VPA hoạt động trên nền tảng an ninh mạng cấp độ cao do Cục An ninh mạng và Phòng chống tội phạm sử dụng công nghệ cao (A05) giám sát chặt chẽ, tự động hóa 100% lệnh trả giá nên đảm bảo tính khách quan, minh bạch tuyệt đối."
+  },
+  {
+    "id": 48,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Giá trúng đấu giá VPA có bao gồm thuế GTGT (VAT) không?",
+    "answer": "Tiền trúng đấu giá biển số xe ô tô không thuộc đối tượng chịu thuế giá trị gia tăng (VAT). Số tiền hiển thị khi trúng đấu giá là số tiền thực nộp vào ngân sách nhà nước."
+  },
+  {
+    "id": 49,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Nếu hệ thống VPA bị nghẽn mạng lúc đang đấu giá thì xử lý thế nào?",
+    "answer": "Theo quy chế, nếu xảy ra sự cố kỹ thuật bất khả kháng từ phía hệ thống đấu giá dẫn đến phiên đấu giá bị gián đoạn, tổ chức đấu giá sẽ lập biên bản sự cố và công bố lịch đấu giá lại cho biển số đó."
+  },
+  {
+    "id": 50,
+    "category": "Đấu giá VPA & Định giá",
+    "question": "Làm thế nào để đấu giá biển số với mức giá hợp lý nhất không bị hớ?",
+    "answer": "Trước khi đấu giá, quý khách nên tham khảo bảng lịch sử giá trúng của các biển số cùng phân khúc (như Ngũ quý, Tứ quý, Thần tài) tại chuyên mục Định giá VPA của Biensovip, đồng thời đặt ra mức giá trần ngân sách cho bản thân trước khi vào phiên."
+  },
+  {
+    "id": 51,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Thuật số chia 80 trong luận phong thủy biển số là gì?",
+    "answer": "Phương pháp chia 80 (còn gọi là số học Khổng Minh / Tiền Định Bát Quái) lấy 4 hoặc 5 số cuối của biển số chia cho 80, lấy phần thập phân lẻ nhân ngược lại với 80 để ra một số kết quả từ 01 đến 80. Con số này đối chiếu với bảng ý nghĩa Hán Việt để xác định quẻ Đại Cát, Cát, Bình hay Hung."
+  },
+  {
+    "id": 52,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Biển số xe được coi là hợp mệnh dựa trên những nguyên tắc nào?",
+    "answer": "Một biển số hợp mệnh toàn diện dựa trên 4 yếu tố cốt lõi: 1) Ngũ hành của các con số tương sinh với bản mệnh chủ xe; 2) Cân bằng Âm Dương (tỷ lệ số chẵn - số lẻ xấp xỉ 50/50); 3) Quẻ Kinh Dịch đại cát; 4) Ý nghĩa dãy số theo phát âm Hán Việt mang lại năng lượng tài lộc, bình an."
+  },
+  {
+    "id": 53,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Người mệnh Kim nên chọn những con số nào trên biển số?",
+    "answer": "Người mệnh Kim tương hợp với số **6, 7** (Kim) và tương sinh tuyệt vời với số **2, 5, 8** (Thổ sinh Kim). Cần tránh hoặc hạn chế số **9** (Hỏa khắc Kim)."
+  },
+  {
+    "id": 54,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Người mệnh Mộc nên ưu tiên những số nào?",
+    "answer": "Người mệnh Mộc hợp nhất với số **1** (Thủy sinh Mộc) và số **3, 4** (bản mệnh Mộc). Cần hạn chế các số thuộc hành Kim như **6, 7** (Kim khắc Mộc)."
+  },
+  {
+    "id": 55,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Người mệnh Thủy hợp với những số nào nhất?",
+    "answer": "Người mệnh Thủy tương sinh với số **6, 7** (Kim sinh Thủy) và tương hợp với số **1** (Thủy). Nên tránh các số thuộc hành Thổ như **2, 5, 8** (Thổ khắc Thủy)."
+  },
+  {
+    "id": 56,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Người mệnh Hỏa nên chọn biển số có đuôi số mấy?",
+    "answer": "Người mệnh Hỏa hợp nhất với số **3, 4** (Mộc sinh Hỏa) và số **9** (bản mệnh Hỏa). Tránh các số thuộc hành Thủy như số **1** (Thủy khắc Hỏa)."
+  },
+  {
+    "id": 57,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Người mệnh Thổ phù hợp với những con số nào?",
+    "answer": "Người mệnh Thổ tương sinh với số **9** (Hỏa sinh Thổ) và tương hợp với số **2, 5, 8** (Thổ). Cần tránh các số thuộc hành Mộc như **3, 4** (Mộc khắc Thổ)."
+  },
+  {
+    "id": 58,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Ý nghĩa phong thủy của cặp số 68 - 86 là gì?",
+    "answer": "Số 6 đọc là \\\"Lục\\\" (chệch thành \\\"Lộc\\\"), số 8 đọc là \\\"Bát\\\" (chệch thành \\\"Phát\\\"). Cặp số 68 mang ý nghĩa \\\"Lộc Phát\\\", 86 mang ý nghĩa \\\"Phát Lộc\\\", biểu trưng cho tài lộc dồi dào, kinh doanh phát đạt."
+  },
+  {
+    "id": 59,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Cặp số 39 - 79 có ý nghĩa gì trong giới chơi xe?",
+    "answer": "Số 39 được gọi là \\\"Thần Tài Nhỏ\\\", số 79 được gọi là \\\"Thần Tài Lớn\\\". Biển số mang đuôi 39, 79 được các doanh nhân đặc biệt ưa chuộng với mong ước được quý nhân phù trợ, tiền tài gõ cửa."
+  },
+  {
+    "id": 60,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Cặp số 38 - 78 mang lại thông điệp gì?",
+    "answer": "Số 38 là \\\"Ông Địa Nhỏ\\\", số 78 là \\\"Ông Địa Lớn\\\". Bộ số này rất được người làm trong ngành bất động sản, xây dựng, nhà đất săn lùng vì tượng trưng cho đất đai phì nhiêu, an cư lạc nghiệp."
+  },
+  {
+    "id": 61,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Số 4 và số 7 có thực sự xấu như định kiến dân gian không?",
+    "answer": "Dân gian hay e ngại 4 (\\\"Tứ\\\" chệch \\\"Tử\\\") và 7 (\\\"Thất\\\"). Tuy nhiên trong phong thủy chuyên sâu: Số 4 là biểu tượng của sự vững chãi (Tứ phương, Tứ quý), số 7 là quyền năng tâm linh vũ trụ (Thất tinh, 7 sắc cầu vồng). Khi kết hợp đúng như 04.04 (không chết, trường thọ) hay 77.77 (tiền hô hậu ủng), dãy số lại trở thành bảo vật vô giá."
+  },
+  {
+    "id": 62,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Biển số \\\"Sảnh tiến\\\" (như 567.89 hay 123.45) có ý nghĩa gì?",
+    "answer": "Sảnh tiến tượng trưng cho sự thăng tiến không ngừng, công việc hanh thông, bước sau vững chắc và cao hơn bước trước. Đặc biệt sảnh rồng đuôi \\\"567.89\\\" được mệnh danh là vua sảnh tiến: \\\"San bằng tất cả - Vươn tới đỉnh cao\\\"."
+  },
+  {
+    "id": 63,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Biển Ngũ quý (như 888.88 hay 999.99) mang năng lượng gì?",
+    "answer": "Ngũ quý gồm 5 chữ số trùng nhau hoàn toàn, tạo nên sự đồng nhất và sức mạnh năng lượng ở mức cực đại. Ngũ quý 8 tượng trưng cho đại phát vô tận; Ngũ quý 9 (Cửu ngũ chí tôn) thể hiện quyền lực tối cao, trường thọ và đẳng cấp thượng lưu."
+  },
+  {
+    "id": 64,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Thế nào là biển số có tính \\\"Âm Dương cân bằng\\\"?",
+    "answer": "Trong phong thủy số, số lẻ (1, 3, 5, 7, 9) đại diện cho tính Dương (hành động, năng động); số chẵn (0, 2, 4, 6, 8) đại diện cho tính Âm (ổn định, tích lũy). Biển số có 2 số chẵn 3 số lẻ hoặc 3 số chẵn 2 số lẻ được coi là đạt trạng thái cân bằng thái hòa, mang lại sự điềm tĩnh và an toàn trên mọi hành trình."
+  },
+  {
+    "id": 65,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Biển \\\"Tứ quý giữa\\\" hay \\\"Tam hoa\\\" có được ưa chuộng không?",
+    "answer": "Rất được ưa chuộng. Tam hoa (3 số giống nhau như 999) hoặc Tứ quý giữa (như 8888x) có mức giá tiếp cận hợp lý hơn nhiều so với Ngũ quý nguyên bản nhưng vẫn mang đầy đủ dấu ấn sang trọng và tính nhận diện cao trên đường phố."
+  },
+  {
+    "id": 66,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Tổng điểm (Nút biển số) tính như thế nào?",
+    "answer": "Nút biển số được tính bằng cách cộng tất cả 5 con số trên biển lại, lấy hàng đơn vị làm số điểm (ví dụ: biển 345.67 có tổng 3+4+5+6+7 = 25 → 5 nút; biển 234.56 có tổng = 20 → 10 nút / Bù / Tịt). Điểm từ 7 đến 9 được coi là đẹp, 10 điểm (9 nút tròn) là điểm trọn vẹn nhất."
+  },
+  {
+    "id": 67,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Có nên dùng biển số xe trùng với ngày tháng năm sinh không?",
+    "answer": "Rất nên. Biển số trùng năm sinh hoặc ngày kỷ niệm mang dấu ấn cá nhân hóa độc bản cao, tạo sự gắn kết mật thiết giữa chủ nhân và chiếc xe, giúp chủ xe luôn cảm thấy tự tin và may mắn."
+  },
+  {
+    "id": 68,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Dãy số \\\"Gánh đảo\\\" là gì?",
+    "answer": "Gánh đảo là cấu trúc số đối xứng hoặc lặp vòng như 2882, 3993, 6886, hay cặp ABA - BAB. Ý nghĩa phong thủy của số gánh là vượt qua gian khó, có người nâng đỡ hai đầu, giữ vững sự nghiệp trước sóng gió."
+  },
+  {
+    "id": 69,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Ý nghĩa của bộ số 1102 là gì?",
+    "answer": "Dãy số 1102 được dịch nghĩa là \\\"Nhất Nhất Không Nhì\\\" (Độc nhất vô nhị), thể hiện cá tính riêng biệt, tự tôn và vị thế độc tôn của người sở hữu."
+  },
+  {
+    "id": 70,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Biển số \\\"Hoa rơi cửa phật\\\" có cấu trúc thế nào?",
+    "answer": "Đây là cách gọi những dãy số có sự kết hợp đặc biệt thanh nhã, không ồn ào nhưng mang chiều sâu triết lý như đuôi 0404, 4078, thường mang lại tâm thái an yên, xua tan thị phi cho người lái."
+  },
+  {
+    "id": 71,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Có phải ai cũng hợp với biển Ngũ quý 9 không?",
+    "answer": "Không hẳn. Ngũ quý 9 mang năng lượng thuần Dương và tính Hỏa cực mạnh. Những người có bản mệnh yếu hoặc mệnh Thủy (Thủy khắc Hỏa) nếu không đủ bản lĩnh hoặc năng lượng cân bằng thì nên chọn những biển dung hòa, tương sinh nhẹ nhàng hơn."
+  },
+  {
+    "id": 72,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Biển số đuôi 53 hoặc 49 có xấu tuyệt đối không?",
+    "answer": "Dân gian có câu \\\"49 chưa qua 53 đã tới\\\" ám chỉ hạn tuổi. Tuy nhiên trong phong thủy số chia 80, nhiều kết hợp chứa 49 hoặc 53 lại ứng vào quẻ Cát Linh, giúp chủ nhân vượt qua tai ương hiểm cảnh. Quan trọng là cấu trúc tổng thể 5 số chứ không thể quy chụp 2 số lẻ."
+  },
+  {
+    "id": 73,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Thế nào là một biển số \\\"Đầu đuôi tương hợp\\\"?",
+    "answer": "Là biển có sự ăn khớp giữa 2 số đầu tiên và 2 số cuối cùng, hoặc đầu số tỉnh thành hòa quyện với đuôi (ví dụ: biển Đà Nẵng 43 kết hợp đuôi 4343, hoặc đầu 30 đuôi 30). Cấu trúc này tạo thế cân bằng vững chắc như kiềng ba chân."
+  },
+  {
+    "id": 74,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Tại sao các đại gia thích sưu tầm biển đuôi \\\"777.77\\\"?",
+    "answer": "Ngũ quý 7 được mệnh danh là số của quyền uy vũ trụ. Theo phong thủy Trung Hoa và Tây Tạng, số 7 là biểu tượng của ánh sáng và sự thành tựu tối thượng. Đối với các chủ doanh nghiệp lớn, ngũ quý 7 khẳng định vị thế dẫn đầu không thể lay chuyển."
+  },
+  {
+    "id": 75,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Ý nghĩa đuôi 222.22 (Ngũ quý 2) là gì?",
+    "answer": "Số 2 là \\\"Mãi Mãi\\\", tượng trưng cho hạnh phúc lứa đôi và sự song hành bền vững. Ngũ quý 2 mang thông điệp sự nghiệp thăng hoa trường tồn, gia đạo hòa hợp, hạnh phúc viên mãn."
+  },
+  {
+    "id": 76,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Ý nghĩa đuôi 333.33 (Ngũ quý 3) là gì?",
+    "answer": "Số 3 tượng trưng cho Tam đa (Phúc - Lộc - Thọ) và sự vững như kiềng ba chân. Ngũ quý 3 mang lại trí tuệ tinh thông, ý chí kiên định và tài năng sáng tạo cho người kinh doanh."
+  },
+  {
+    "id": 77,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Ý nghĩa đuôi 555.55 (Ngũ quý 5) là gì?",
+    "answer": "Số 5 là trung tâm của ngũ hành (Ngũ Phúc Lâm Môn: Phú - Quý - Thọ - Khang - Ninh). Ngũ quý 5 tượng trưng cho sự ổn định quyền lực tối thượng và cuộc sống viên mãn đủ đầy."
+  },
+  {
+    "id": 78,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Ý nghĩa cặp số 1368 là gì?",
+    "answer": "Dãy số 1368 được xem là số tài lộc đỉnh cao: 1 là Sinh, 3 là Tài, 6 là Lộc, 8 là Phát → \\\"Sinh Tài Lộc Phát\\\". Ngoài ra tổng của các cặp số liên tiếp (1+2+3... = 1368) tượng trưng cho tài lộc hanh thông từ đời này sang đời khác."
+  },
+  {
+    "id": 79,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Biển số xe màu vàng khác gì biển số xe màu trắng?",
+    "answer": "Biển số nền màu vàng, chữ và số màu đen được cấp cho xe hoạt động kinh doanh vận tải (như taxi, xe dịch vụ, xe tải kinh doanh). Biển số nền màu trắng cấp cho xe cá nhân và doanh nghiệp không đăng ký kinh doanh vận tải. Cả hai loại đều có thể sở hữu biển số đẹp định danh."
+  },
+  {
+    "id": 80,
+    "category": "Phong thủy & Luận giải số",
+    "question": "Luận phong thủy biển số trên Biensovip có chính xác không?",
+    "answer": "Trang /luan-bien-so của Biensovip kết hợp chuẩn mực 7 trường phái phong thủy: Ngũ hành nạp âm, Quẻ dịch 64 quẻ Khổng Minh, Thuật số 80, Cân bằng Âm Dương và Hán tự truyền thống, đảm bảo tính khoa học, khách quan và minh bạch nhất."
+  },
+  {
+    "id": 81,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Biensovip là ai và hoạt động trong lĩnh vực gì?",
+    "answer": "Biensovip là sàn giao dịch và thẩm định biển số xe đẹp uy tín hàng đầu Việt Nam, được sáng lập và bảo trợ chuyên môn bởi Chuyên gia Duy Đinh. Hệ thống chuyên cung cấp giải pháp mua bán, đấu giá, sang tên định danh trọn gói các dòng biển VIP trên toàn quốc."
+  },
+  {
+    "id": 82,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Mua biển số tại Biensovip có được bảo đảm sang tên chính chủ không?",
+    "answer": "Cam kết 100%. Tất cả các giao dịch tại Biensovip đều có hợp đồng công chứng pháp lý rõ ràng, cam kết sang tên chính chủ trên Cà-vẹt và định danh chuẩn theo mã định danh của khách hàng. Nếu sai phạm cam kết, hoàn tiền 100% kèm bồi thường."
+  },
+  {
+    "id": 83,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Quy trình đặt cọc giữ biển số tại Biensovip như thế nào?",
+    "answer": "Quy trình gồm 3 bước: 1) Khách hàng chọn biển ưng ý và chốt mức giá với tư vấn viên; 2) Đặt cọc 30–50% giá trị qua tài khoản ngân hàng chính thức có mã VietQR định danh; 3) Biensovip lập phiếu thu/hợp đồng đặt cọc có dấu pháp lý và lập tức khóa biển trên hệ thống để chuẩn bị hồ sơ công chứng."
+  },
+  {
+    "id": 84,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Khách hàng ở xa (Hà Nội, TP.HCM, miền Tây...) có mua được biển của Biensovip tại Đà Nẵng không?",
+    "answer": "Hoàn toàn được. Biensovip có hệ thống đối tác pháp lý và dịch vụ giao xe/rút hồ sơ tận nơi trên toàn quốc. Khách hàng chỉ cần cung cấp thông tin CCCD và xác thực VNeID, mọi thủ tục rút hồ sơ gốc và chuyển vùng đều do Biensovip phụ trách trọn gói."
+  },
+  {
+    "id": 85,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Thời gian hoàn tất trọn gói từ lúc cọc đến khi nhận xe/biển là bao lâu?",
+    "answer": "Thời gian trung bình chỉ từ 2 đến 5 ngày làm việc tùy theo tỉnh thành chuyển vùng. Với các giao dịch cùng tỉnh, thời gian hoàn thành chỉ trong vòng 24 đến 48 giờ."
+  },
+  {
+    "id": 86,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Chi phí sang tên trọn gói đã bao gồm những khoản gì?",
+    "answer": "Dịch vụ trọn gói của Biensovip bao gồm: Phí công chứng hợp đồng mua bán, thuế trước bạ sang tên, lệ phí đăng ký cấp biển mới tại cơ quan Công an và phí dịch vụ xử lý hồ sơ tận nơi. Mọi chi phí được thông báo minh bạch từ đầu, không phát sinh."
+  },
+  {
+    "id": 87,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Tôi muốn bán lại hoặc ký gửi biển số trên Biensovip thì làm thế nào?",
+    "answer": "Bạn chỉ cần chụp hình Giấy đăng ký xe (Cà-vẹt) và gửi qua Zalo Hotline Duy Đinh (0815 792 699). Đội ngũ chuyên gia sẽ định giá miễn phí trong 15 phút, tư vấn phương án bán thanh khoản nhanh hoặc ký gửi tiếp cận hơn 100.000 khách hàng VIP của hệ thống."
+  },
+  {
+    "id": 88,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Biensovip có nhận tìm biển số theo yêu cầu riêng (ngày sinh, số điện thoại, phong thủy) không?",
+    "answer": "Có. Quý khách chỉ cần để lại yêu cầu tại form \\\"Đặt tìm biển số theo yêu cầu\\\" hoặc chat với trợ lý AI. Biensovip sẽ quét kho dữ liệu hơn 50.000 biển số có sẵn và kho đấu giá VPA để săn đúng dãy số bạn mong muốn trong thời gian nhanh nhất."
+  },
+  {
+    "id": 89,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Biensovip có dịch vụ ép biển số Mica chống nước tận nhà không?",
+    "answer": "Có. Sau khi hoàn tất bấm biển, Biensovip hỗ trợ thợ ép biển số khung Inox / Mica gò viền chống nước cao cấp theo tiêu chuẩn quân đội, giao và lắp đặt tận nhà đảm bảo thẩm mỹ và độ bền tuyệt đối."
+  },
+  {
+    "id": 90,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Thông tin giao dịch của khách hàng tại Biensovip có được bảo mật không?",
+    "answer": "Tuyệt đối bảo mật. Biensovip áp dụng chính sách bảo mật thông tin khách hàng nghiêm ngặt theo tiêu chuẩn GDPR. Danh tính chủ nhân và giá trị thực tế của các giao dịch biển số VIP không bao giờ được tiết lộ cho bên thứ ba nếu chưa có sự đồng ý của khách hàng."
+  },
+  {
+    "id": 91,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Giá biển số trên website Biensovip đã phải là giá chốt cuối cùng chưa?",
+    "answer": "Hầu hết giá niêm yết là giá tham khảo thị trường chính xác. Tuy nhiên, đối với khách hàng thiện chí hoặc mua combo nhiều biển/xe, Biensovip luôn có chính sách chiết khấu tốt và quà tặng phong thủy giá trị."
+  },
+  {
+    "id": 92,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Nếu biển số bị dính phạt nguội trước thời điểm bàn giao thì ai chịu trách nhiệm?",
+    "answer": "Biensovip cam kết bằng văn bản: Kiểm tra sạch 100% phạt nguội trước khi ký công chứng. Mọi lỗi vi phạm xảy ra trước thời điểm bàn giao xe sẽ do chủ cũ/Biensovip chịu trách nhiệm nộp phạt dứt điểm."
+  },
+  {
+    "id": 93,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Làm sao để liên hệ trực tiếp với Chuyên gia Duy Đinh?",
+    "answer": "Quý khách có thể kết nối trực tiếp qua Hotline/Zalo: **0815 792 699** hoặc ghé thăm văn phòng giao dịch Biensovip tại TP. Đà Nẵng."
+  },
+  {
+    "id": 94,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Biensovip có xuất hóa đơn GTGT khi mua xe kèm biển số không?",
+    "answer": "Có. Đối với các xe đứng tên công ty hoặc doanh nghiệp ủy quyền bán, Biensovip hỗ trợ xuất hóa đơn GTGT hợp lệ theo đúng quy định tài chính của pháp luật."
+  },
+  {
+    "id": 95,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Xe gắn biển trúng đấu giá có được chuyển vùng giữa các tỉnh không giới hạn không?",
+    "answer": "Có. Xe gắn biển trúng đấu giá có đầy đủ quyền chuyển vùng, sang tên như mọi phương tiện thông thường trên toàn lãnh thổ Việt Nam."
+  },
+  {
+    "id": 96,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Phương thức thanh toán khi mua biển số tại Biensovip như thế nào?",
+    "answer": "Thanh toán linh hoạt qua chuyển khoản ngân hàng (VietQR định danh 24/7) hoặc nộp tiền mặt trực tiếp tại Phòng công chứng khi ký kết hợp đồng mua bán chuyển nhượng."
+  },
+  {
+    "id": 97,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Có được xem xe và kiểm tra hồ sơ thực tế trước khi thanh toán không?",
+    "answer": "Biensovip luôn khuyến khích khách hàng trực tiếp xem xe, kiểm tra số khung, số máy và đối soát hồ sơ gốc tại văn phòng hoặc tại phòng công chứng trước khi hoàn tất thanh toán đợt cuối."
+  },
+  {
+    "id": 98,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Chương trình Cộng tác viên (CTV) của Biensovip có quyền lợi gì?",
+    "answer": "CTV của Biensovip được hưởng mức hoa hồng hấp dẫn từ 2% đến 5% trên mỗi giao dịch thành công, được cấp dashboard theo dõi khách hàng và doanh thu theo thời gian thực, kèm tài liệu đào tạo phong thủy bài bản."
+  },
+  {
+    "id": 99,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Biển số đã bán trên website có bị chào bán lại không?",
+    "answer": "Tuyệt đối không. Hệ thống tự động chuyển trạng thái \\\"Đã bán\\\" và ẩn biển ngay khi giao dịch thành công để bảo vệ độc quyền tài sản của khách hàng mới."
+  },
+  {
+    "id": 100,
+    "category": "Quy trình & Dịch vụ Biensovip",
+    "question": "Tại sao nên chọn mua biển số đẹp tại Biensovip thay vì tự tìm kiếm trôi nổi trên mạng?",
+    "answer": "Bởi 4 giá trị vượt trội: 1) Pháp lý sạch 100%, bảo hành định danh trọn đời; 2) Giá cả minh bạch, sát thực tế đấu giá VPA; 3) Thủ tục nhanh gọn chỉ trong 24–48h; 4) Được Chuyên gia Duy Đinh trực tiếp tư vấn phong thủy tương sinh đắc tài đắc lộc."
+  }
+]

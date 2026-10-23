@@ -58,9 +58,8 @@ export default function AdminPlates({ go, notify, st }) {
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('');
   const [provinceFilter, setProvinceFilter] = useState('');
   const [hotFilter, setHotFilter] = useState('');
-  const { exportCsv, exportXlsx, exportDocx, loading: exporting } = useExportCsv('/api/admin/plates');
-  const { exportPlateDocx: exportPlateDocxRaw } = useExportPlateDocx();
-  const exportPlateDocx = (id, plateNumber) => exportPlateDocxRaw(id, plateNumber).catch((e) => toast.error(e.message));
+  const { exportCsv, exportXlsx, exportDocx, loading: exporting, exportModal } = useExportCsv('/api/admin/plates');
+  const { exportPlateDocx, exportModal: singleDocxModal } = useExportPlateDocx();
   const [sort, setSort] = useState(null); // { key, dir: 'asc' | 'desc' }
   const [mobileView, setMobileView] = useState('card'); // 'card' | 'table'
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -896,6 +895,9 @@ export default function AdminPlates({ go, notify, st }) {
         isLoading={priceRefQuery.isLoading}
         onOpenPlate={(plateNumber) => { setPriceRefPlateId(null); openVpaWithSearch(go, plateNumber); }}
       />
+
+      {exportModal}
+      {singleDocxModal}
 
       {/* 3. Add/Edit Plate Form Drawer */}
       {editId != null && (

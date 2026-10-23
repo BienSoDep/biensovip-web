@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Bell, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock } from 'lucide-react';
+import { Menu, Bell, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock, MessageSquare } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { IconButton, Avatar } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
@@ -22,7 +22,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const thangCount = vpaCounts?.monthly || 829407;
   const { history } = usePlateHistory(user);
   const historyCount = history?.length || 0;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['aiChat', T('common.nav.aiChat'), Sparkles], ['chat', T('common.nav.contact')], ['collab', T('common.nav.collab')]];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['aiChat', T('common.nav.aiChat'), MessageSquare], ['chat', T('common.nav.contact')], ['collab', 'Cộng tác']];
   const navRef = useRef(null);
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [platesOpen, setPlatesOpen] = useState(false);
@@ -94,7 +94,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             <span className="header-logo-tagline" style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', letterSpacing: 'var(--ls-eyebrow)', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{T('common.brand.tagline_header')}</span>
           </div>
         </a>
-        <nav ref={navRef} className="header-nav-pills" style={{ display: 'flex', flex: '1 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', gap: 6, marginLeft: 'var(--space-2)', overflowX: 'auto', overflowY: 'visible', padding: '4px', scrollbarWidth: 'none', minWidth: 0 }}>
+        <nav ref={navRef} className="header-nav-pills" style={{ display: 'flex', flex: '0 1 auto', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', gap: 6, marginLeft: 'var(--space-2)', overflowX: 'auto', overflowY: 'visible', padding: '4px', scrollbarWidth: 'none', minWidth: 0 }}>
           {nav.map(([key, label, Icon]) => {
             if (key === 'list') {
               const isListActive = s === 'list';
@@ -371,9 +371,15 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             return (
               <NavBtn key={key} onClick={go(String(key))} aria-current={s === key ? 'page' : undefined} {...pill(s === key)}>
                 {Icon && <Icon size={15} style={{ flexShrink: 0 }} />}
-                {label}
-                {key === 'compare' && compareCount > 0 && (
-                  <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 5px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: '11px', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginLeft: 2 }}>{compareCount}</span>
+                {key === 'compare' ? (
+                  <>
+                    <span className="nav-compare-text">{label}</span>
+                    {compareCount > 0 && (
+                      <span aria-label={`${compareCount} biển đang so sánh`} style={{ padding: '0 5px', height: 18, minWidth: 18, borderRadius: 'var(--radius-pill)', background: s === key ? 'var(--white)' : 'var(--status-danger)', color: s === key ? 'var(--status-danger)' : 'var(--white)', font: 'var(--type-caption)', fontSize: '11px', fontWeight: 'var(--fw-bold)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginLeft: 2 }}>{compareCount}</span>
+                    )}
+                  </>
+                ) : (
+                  label
                 )}
               </NavBtn>
             );

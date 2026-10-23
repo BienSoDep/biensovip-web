@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import {
   CarFront, ArrowUpDown, ArrowUp, ArrowDown, TriangleAlert, Star, Gift,
   SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, RefreshCw, ArrowRight,
+  Download, Sparkles, Image, Trash2,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -63,6 +65,8 @@ export default function PlateTable({
   notify,
   openPriceReference,
 }) {
+  const [exportOpen, setExportOpen] = useState(false);
+  const [aiMenuOpen, setAiMenuOpen] = useState(false);
   const setDatePreset = (preset) => {
     const d = new Date();
     const pad = (n) => String(n).padStart(2, '0');
@@ -323,24 +327,203 @@ export default function PlateTable({
             <span>Làm mới</span>
           </Button>
           <div style={{ flex: 1 }} />
-          <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống toàn bộ danh sách biển số đang lọc dưới dạng file CSV" onClick={() => exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
-            {exporting ? 'Đang xuất…' : 'Xuất CSV'}
-          </Button>
-          <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống danh sách biển số đang lọc dưới dạng file Excel có trang trí — dùng gửi khách hàng" onClick={() => exportXlsx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
-            {exporting ? 'Đang xuất…' : 'Xuất Excel'}
-          </Button>
-          <Button variant="ghost" size="md" disabled={exporting} title="Tải xuống catalogue Word (có ảnh biển số) dễ gửi khách qua Zalo/email" onClick={() => exportDocx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message))}>
-            {exporting ? 'Đang xuất…' : 'Xuất Word'}
-          </Button>
-          <Button variant="ghost" size="md" disabled={checkingMissingInfo} title="Dùng AI tự động phân tích ý nghĩa phong thủy và tạo mô tả cho các biển số còn trống dữ liệu" onClick={openMissingInfoModal}>
-            {checkingMissingInfo ? 'Đang kiểm tra…' : 'Sinh thông tin hàng loạt'}
-          </Button>
-          <Button variant="ghost" size="md" disabled={checkingMissingImage} title="Hệ thống tự động vẽ ảnh mockup biển số gắn xe thực tế cho các biển chưa có ảnh" onClick={openMissingImageModal}>
-            {checkingMissingImage ? 'Đang kiểm tra…' : 'Sinh ảnh hàng loạt'}
-          </Button>
-          <Button variant="ghost" size="md" disabled={checkingGeneratedImage} title="Xóa toàn bộ các ảnh mockup đã sinh tự động để tạo lại mẫu mới" onClick={openPurgeImageModal}>
-            {checkingGeneratedImage ? 'Đang kiểm tra…' : 'Xóa ảnh sinh cũ'}
-          </Button>
+          {/* Nút Xuất dữ liệu Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="ghost"
+              size="md"
+              disabled={exporting}
+              title="Xuất danh sách biển số ra file Excel (.xlsx), Word (.docx) hoặc CSV (.csv)"
+              onClick={() => { setExportOpen((o) => !o); setAiMenuOpen(false); }}
+              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Download size={14} />
+              <span>{exporting ? 'Đang xuất…' : 'Xuất dữ liệu'}</span>
+              <span style={{ fontSize: 10, opacity: 0.7 }}>▾</span>
+            </Button>
+            {exportOpen && (
+              <>
+                <div onClick={() => setExportOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: 4,
+                    background: 'var(--white)',
+                    border: '1px solid var(--grey-200, #e2e8f0)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-4, 0 20px 25px -5px rgba(0,0,0,0.15))',
+                    zIndex: 20,
+                    minWidth: 260,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '6px',
+                  }}
+                >
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '8px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => {
+                      setExportOpen(false);
+                      exportXlsx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message));
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>📗</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600, color: '#107c41' }}>Xuất Excel (.xlsx)</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Bảng tính có trang trí, gửi khách</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '8px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => {
+                      setExportOpen(false);
+                      exportDocx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message));
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>📘</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600, color: '#2b579a' }}>Xuất Word (.docx)</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Catalogue có ảnh biển số xe</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none', border: 'none', padding: '8px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => {
+                      setExportOpen(false);
+                      exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message));
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>📙</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600, color: '#c2410c' }}>Xuất CSV (.csv)</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Dữ liệu thô gọn nhẹ</span>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Nút Tiện ích AI Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <Button
+              variant="ghost"
+              size="md"
+              disabled={checkingMissingInfo || checkingMissingImage || checkingGeneratedImage}
+              title="Các công cụ trí tuệ nhân tạo (AI) tự động phân tích phong thủy và tạo ảnh mockup"
+              onClick={() => { setAiMenuOpen((o) => !o); setExportOpen(false); }}
+              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <Sparkles size={14} color="var(--amber-500)" />
+              <span>Tiện ích AI</span>
+              <span style={{ fontSize: 10, opacity: 0.7 }}>▾</span>
+            </Button>
+            {aiMenuOpen && (
+              <>
+                <div onClick={() => setAiMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: 4,
+                    background: 'var(--white)',
+                    border: '1px solid var(--grey-200, #e2e8f0)',
+                    borderRadius: 'var(--radius-md)',
+                    boxShadow: 'var(--shadow-4, 0 20px 25px -5px rgba(0,0,0,0.15))',
+                    zIndex: 20,
+                    minWidth: 290,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '6px',
+                  }}
+                >
+                  <button
+                    type="button"
+                    disabled={checkingMissingInfo}
+                    style={{
+                      background: 'none', border: 'none', padding: '8px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => { setAiMenuOpen(false); openMissingInfoModal(); }}
+                  >
+                    <Sparkles size={16} color="var(--amber-500)" style={{ flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Sinh thông tin & phong thủy</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>AI tự động phân tích quẻ kinh dịch và mô tả</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={checkingMissingImage}
+                    style={{
+                      background: 'none', border: 'none', padding: '8px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 10,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => { setAiMenuOpen(false); openMissingImageModal(); }}
+                  >
+                    <Image size={16} color="var(--action-primary)" style={{ flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Sinh ảnh mockup hàng loạt</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Vẽ ảnh mockup biển số gắn xe thực tế</span>
+                    </div>
+                  </button>
+
+                  <div style={{ height: 1, background: 'var(--grey-100, #f1f5f9)', margin: '4px 0' }} />
+
+                  <button
+                    type="button"
+                    disabled={checkingGeneratedImage}
+                    style={{
+                      background: 'none', border: 'none', padding: '8px 10px', textAlign: 'left',
+                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
+                      color: 'var(--status-danger)', display: 'flex', alignItems: 'center', gap: 10,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                    onClick={() => { setAiMenuOpen(false); openPurgeImageModal(); }}
+                  >
+                    <Trash2 size={16} color="var(--status-danger)" style={{ flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>Xóa ảnh mockup sinh cũ</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Xóa các ảnh tự động để tạo lại mẫu mới</span>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <Button variant="primary" size="md" onClick={openAdd}>Thêm biển số (đầy đủ)</Button>
         </div>
 

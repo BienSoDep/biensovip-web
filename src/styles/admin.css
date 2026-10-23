@@ -134,12 +134,12 @@ button[aria-expanded]:hover {
    -------------------------------------------------------------------------- */
 @media (min-width: 769px) and (max-width: 1024px) {
   .admin-sidebar {
-    flex: 0 0 188px !important;
-    min-width: 188px !important;
+    flex: 0 0 250px !important;
+    min-width: 250px !important;
   }
   .admin-sidebar nav button {
-    padding: 10px 10px !important;
-    font-size: 13px !important;
+    padding: 8px 12px !important;
+    font-size: 13.5px !important;
   }
   .tablet-stack {
     flex-direction: column !important;

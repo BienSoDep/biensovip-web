@@ -113,7 +113,7 @@ export default function Dashboard({ go, st, patch }) {
   const searchInsights = useSearchInsights({ ...range, limit: 10 });
   const compareInsights = useCompareInsights({ ...range, limit: 10 });
   const heatmap = useTrafficHeatmap(range);
-  const { exportReport, loading: exportingReport } = useExportReport('/api/admin/dashboard/export');
+  const { exportReport, loading: exportingReport, exportModal: reportExportModal } = useExportReport('/api/admin/dashboard/export');
 
   // Business Insights tổng hợp (Cung cầu, Phân khúc giá, Tương tác vi mô, Sức khỏe Lead)
   const fromIso = useMemo(() => format(range.from, 'yyyy-MM-dd'), [range.from]);
@@ -803,6 +803,7 @@ export default function Dashboard({ go, st, patch }) {
       {searchInsights.isError && <ErrorBlock onRetry={() => searchInsights.refetch()} />}
       {compareInsights.isError && <ErrorBlock onRetry={() => compareInsights.refetch()} />}
       {heatmap.isError && <ErrorBlock onRetry={() => heatmap.refetch()} />}
+      {reportExportModal}
     </div>
   );
 }
