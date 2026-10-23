@@ -91,7 +91,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
               src={optimizeImageUrl('https://res.cloudinary.com/dvwt6npcl/image/upload/v1789878145/biensovip/branding/home.png')}
               alt="Biển số đẹp Biensovip"
               loading="eager"
-              fetchpriority="high"
+              fetchPriority="high"
               style={{ width: '100%', maxWidth: 420, height: 'auto', borderRadius: 'var(--radius-surface)' }}
             />
           </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, Maximize2 } from 'lucide-react';
 import { useChatbotWidgetEnabled } from '../services/chatbotService.js';
 import { useHideOnScroll } from '../hooks/useHideOnScroll.js';
 import { useChatConversation, ChatConversationView } from './ChatConversation.jsx';
@@ -7,7 +7,6 @@ import { useChatConversation, ChatConversationView } from './ChatConversation.js
 export default function AiChatbot({ go }) {
   const { data: widgetFlag } = useChatbotWidgetEnabled();
   const [open, setOpen] = useState(false);
-  // Ẩn tạm nút FAB lúc cuộn — chỉ khi panel đang đóng, tránh gián đoạn lúc đang chat/cuộn trong panel.
   const scrolling = useHideOnScroll();
   const panelRef = useRef(null);
   const fabRef = useRef(null);
@@ -37,8 +36,7 @@ export default function AiChatbot({ go }) {
 
   const handleAction = (action) => {
     setOpen(false);
-    if (action === 'chat_with_staff') go?.('chat')();
-    else if (action === 'contact_form') go?.('chat')();
+    if (action === 'chat_with_staff' || action === 'contact_form') go?.('chat')();
   };
 
   const openPlate = (slugOrId) => {
@@ -57,30 +55,85 @@ export default function AiChatbot({ go }) {
     <>
       {!open && (
         <button
-          ref={fabRef} aria-label="Mở trợ lý" onClick={() => setOpen(true)} className="chatbot-fab"
+          ref={fabRef}
+          aria-label="Mở Trợ lý AI Claude"
+          onClick={() => setOpen(true)}
+          className="chatbot-fab"
           style={{
-            position: 'fixed', bottom: 14, right: 10, zIndex: 'var(--z-chatbot)', width: 42, height: 42, borderRadius: 'var(--radius-pill)', border: 'none', background: 'var(--action-primary)', color: 'var(--white)', cursor: 'pointer', boxShadow: 'var(--shadow-3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            opacity: scrolling ? 0 : 1, transform: scrolling ? 'translateX(72px)' : 'translateX(0)', pointerEvents: scrolling ? 'none' : 'auto',
-            transition: 'opacity 160ms var(--ease-standard), transform 160ms var(--ease-standard)',
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            zIndex: 'var(--z-chatbot, 70)',
+            width: 44,
+            height: 44,
+            borderRadius: '999px',
+            border: '1.5px solid rgba(241, 151, 32, 0.4)',
+            background: 'linear-gradient(135deg, #F19720 0%, #D97706 100%)',
+            color: '#0E0F12',
+            cursor: 'pointer',
+            boxShadow: '0 8px 24px rgba(241, 151, 32, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: scrolling ? 0 : 1,
+            transform: scrolling ? 'translateX(72px)' : 'translateX(0)',
+            pointerEvents: scrolling ? 'none' : 'auto',
+            transition: 'opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease',
           }}
+          title="Trợ lý AI Claude-style Biensovip"
         >
-          <Sparkles size={19} />
+          <Sparkles size={22} color="#FFFFFF" />
         </button>
       )}
+
       {open && (
-        <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Trợ lý Biensovip" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 'var(--z-filter-overlay)', width: 360, maxWidth: 'calc(100vw - 32px)', height: 480, maxHeight: 'calc(100vh - 80px)', background: 'var(--white)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-4)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'modalIn 200ms var(--ease-out)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-4)', background: 'var(--action-primary)', color: 'var(--white)' }}>
-            <Sparkles size={20} />
-            <div style={{ flex: 1 }}><span style={{ font: 'var(--type-title-3)', color: 'var(--white)' }}>Trợ lý Biensovip</span></div>
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Trợ lý AI Biensovip"
+          className="claude-widget-popup"
+        >
+          {/* Claude Header Bar */}
+          <div className="claude-widget-header">
+            <div className="claude-bot-avatar" style={{ width: 34, height: 34 }}>
+              <Sparkles size={18} />
+            </div>
+            <div className="claude-widget-header-title">
+              <span className="claude-widget-header-name">Trợ lý AI Biensovip</span>
+              <span className="claude-widget-header-sub">DeepSeek v2 • Trực tuyến</span>
+            </div>
             <button
-              aria-label="Mở trang trợ lý đầy đủ"
+              type="button"
+              aria-label="Mở trang toàn màn hình"
               onClick={() => { setOpen(false); go?.('aiChat')(); }}
-              title="Mở trang trợ lý đầy đủ"
-              style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--white)', padding: 4, font: 'var(--type-caption)', opacity: 0.85 }}
-            >Mở rộng</button>
-            <button aria-label="Đóng trợ lý" onClick={() => setOpen(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--white)', padding: 4 }}><X size={20} /></button>
+              title="Mở toàn màn hình"
+              className="claude-action-btn"
+              style={{ padding: '6px 8px' }}
+            >
+              <Maximize2 size={16} />
+            </button>
+            <button
+              type="button"
+              aria-label="Đóng trợ lý"
+              onClick={() => setOpen(false)}
+              className="claude-action-btn"
+              style={{ padding: '6px 8px' }}
+            >
+              <X size={18} />
+            </button>
           </div>
-          <ChatConversationView conv={conv} onOpenPlate={openPlate} onOpenPost={openPost} onAction={handleAction} autoFocusInput={open} />
+
+          {/* Claude Viewport */}
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <ChatConversationView
+              conv={conv}
+              onOpenPlate={openPlate}
+              onOpenPost={openPost}
+              onAction={handleAction}
+              autoFocusInput={open}
+            />
+          </div>
         </div>
       )}
     </>
