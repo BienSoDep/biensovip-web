@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Sparkles, Plus, MessageSquare, RotateCcw, ShieldCheck, PanelLeftClose, PanelLeftOpen, Trash2, LogIn, Clock, X } from 'lucide-react';
+import { Sparkles, Plus, MessageSquare, RotateCcw, ShieldCheck, PanelLeftClose, PanelLeftOpen, Trash2, LogIn, Clock, X, Headphones } from 'lucide-react';
 import {
   useChatConversation,
   ChatConversationView,
@@ -262,9 +262,31 @@ function ChatbotPageInner({
             >
               {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
             </button>
-            <div className="claude-model-badge">
-              <span className="claude-status-dot" />
-              <span>Trợ lý AI Biensovip • DeepSeek v2</span>
+            <div className="claude-mode-segmented">
+              <button
+                type="button"
+                onClick={conv.switchToBot}
+                className={`claude-mode-pill ${!conv.isLiveMode ? 'active' : ''}`}
+                title="Hỏi đáp & tra cứu tự động cùng Trợ lý AI DeepSeek v2 (24/7)"
+              >
+                <Sparkles size={14} color={!conv.isLiveMode ? '#D97706' : '#94A3B8'} />
+                <span>Trợ lý AI 24/7</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!conv.isLiveMode) {
+                    window.dispatchEvent(new CustomEvent('bsv_open_live_chat_modal'));
+                  }
+                }}
+                className={`claude-mode-pill ${conv.isLiveMode ? 'active live' : ''}`}
+                title="Kết nối trực tiếp chuyên viên tư vấn hỗ trợ thủ tục & giữ chỗ biển số"
+              >
+                <span className="live-dot-pulse" />
+                <Headphones size={14} color={conv.isLiveMode ? '#059669' : '#94A3B8'} />
+                <span>{conv.liveStaffName ? `Tư vấn viên: ${conv.liveStaffName}` : 'Tư vấn viên trực tiếp'}</span>
+                <span className="claude-mode-badge-live">Online</span>
+              </button>
             </div>
           </div>
 

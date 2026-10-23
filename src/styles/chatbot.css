@@ -237,6 +237,130 @@
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
+/* --- Segmented Mode Switcher (AI vs Tư vấn viên) --- */
+.claude-mode-segmented {
+  display: inline-flex;
+  align-items: center;
+  background: #F1F5F9;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid #E2E8F0;
+  gap: 3px;
+}
+
+.claude-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #64748B;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 160ms ease;
+  white-space: nowrap;
+}
+
+.claude-mode-pill:hover {
+  color: #0F172A;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.claude-mode-pill.active {
+  background: #FFFFFF;
+  color: #D97706;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.claude-mode-pill.active.live {
+  background: #FFFFFF;
+  color: #059669;
+}
+
+.live-dot-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+  animation: pulseLive 1.8s infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.claude-mode-badge-live {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #DCFCE7;
+  color: #15803D;
+  text-transform: uppercase;
+}
+
+/* Card chọn chế độ lớn ở Empty Hero Screen */
+.claude-hero-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  max-width: 680px;
+  margin: 20px 0 26px;
+}
+
+@media (max-width: 640px) {
+  .claude-hero-modes {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.claude-hero-mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  cursor: pointer;
+  transition: all 180ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.claude-hero-mode-card:hover {
+  border-color: #F59E0B;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.12);
+}
+
+.claude-hero-mode-card.active {
+  border-color: #F59E0B;
+  background: linear-gradient(180deg, #FFFDF9 0%, #FFFFFF 100%);
+  box-shadow: 0 0 0 1px #F59E0B, 0 4px 14px rgba(245, 158, 11, 0.1);
+}
+
+.claude-hero-mode-card.live-card:hover {
+  border-color: #10B981;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.12);
+}
+
+.claude-hero-mode-card.live-card.active {
+  border-color: #10B981;
+  background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%);
+  box-shadow: 0 0 0 1px #10B981, 0 4px 14px rgba(16, 185, 129, 0.1);
+}
+
 /* Vùng cuộn tin nhắn */
 .claude-messages-viewport {
   flex: 1;
@@ -253,11 +377,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
   max-width: 680px;
-  margin: auto;
-  padding: 32px 16px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 16px 28px;
 }
 
 .claude-empty-avatar {
@@ -886,7 +1011,23 @@
 
   /* Header thanh đàm thoại */
   .claude-chat-header {
-    padding: 10px 12px;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .claude-mode-segmented {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .claude-mode-pill {
+    padding: 5px 8px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+
+  .claude-mode-badge-live {
+    display: none;
   }
 
   .claude-model-badge span:last-child {

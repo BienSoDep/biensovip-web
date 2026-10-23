@@ -341,7 +341,13 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
   const [guestPhoneInput, setGuestPhoneInput] = useState('');
 
   useEffect(() => {
-    if (viewportRef.current) {
+    const handleOpenModal = () => setShowConnectModal(true);
+    window.addEventListener('bsv_open_live_chat_modal', handleOpenModal);
+    return () => window.removeEventListener('bsv_open_live_chat_modal', handleOpenModal);
+  }, []);
+
+  useEffect(() => {
+    if (viewportRef.current && msgs.length > 1) {
       viewportRef.current.scrollTo({
         top: viewportRef.current.scrollHeight,
         behavior: 'smooth',
@@ -395,22 +401,29 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
 
   return (
     <>
-      {/* Subheader trạng thái kết nối Live Chat */}
-      {isLiveMode ? (
+      {/* Banner thông báo trạng thái khi đang kết nối trực tiếp với Chuyên viên */}
+      {isLiveMode && (
         <div style={{
-          padding: '8px 14px',
-          background: '#ECFDF5',
-          borderBottom: '1px solid #A7F3D0',
+          padding: '10px 18px',
+          background: 'linear-gradient(90deg, #ECFDF5 0%, #F0FDF4 100%)',
+          borderBottom: '1.5px solid #A7F3D0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          fontSize: 12.5,
-          color: '#065F46',
+          gap: 12,
           zIndex: 5,
+          flexWrap: 'wrap',
+          boxShadow: '0 2px 6px rgba(16, 185, 129, 0.08)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: isWaitingStaff ? '#F59E0B' : '#10B981', display: 'inline-block' }} />
-            <strong>{isWaitingStaff ? 'Đang chờ tư vấn viên nhận phiên...' : `Trực tiếp với CSKH (${liveStaffName || 'Tư vấn viên'})`}</strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#065F46' }}>
+            <span className="live-dot-pulse" style={{ width: 8, height: 8 }} />
+            <span>
+              {isWaitingStaff ? (
+                <span>Đang kết nối chuyên viên tư vấn... <em>Vui lòng chờ trong giây lát.</em></span>
+              ) : (
+                <span>Đang trò chuyện 1:1 với Chuyên viên CSKH: <strong style={{ color: '#047857' }}>{liveStaffName || 'Biensovip Support'}</strong></span>
+              )}
+            </span>
           </div>
           <button
             type="button"
@@ -419,46 +432,20 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
               border: '1px solid #6EE7B7',
               background: '#FFFFFF',
               color: '#065F46',
-              borderRadius: 6,
-              padding: '3px 8px',
-              fontSize: 11.5,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              fontWeight: 600,
-            }}
-          >
-            <ArrowLeft size={12} /> Về Trợ lý AI
-          </button>
-        </div>
-      ) : (
-        <div style={{
-          padding: '6px 14px',
-          background: 'var(--grey-50)',
-          borderBottom: '1px solid var(--grey-100)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          zIndex: 5,
-        }}>
-          <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>Hỗ trợ 24/7 bởi AI & Chuyên viên</span>
-          <button
-            type="button"
-            onClick={() => setShowConnectModal(true)}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--action-primary)',
+              borderRadius: 8,
+              padding: '5px 12px',
               fontSize: 12,
-              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: 4,
+              gap: 5,
+              fontWeight: 600,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              transition: 'all 140ms ease',
             }}
+            title="Quay lại trò chuyện tự động cùng Trợ lý AI"
           >
-            <Headphones size={13} /> Gặp tư vấn viên trực tiếp
+            <ArrowLeft size={13} /> Chuyển về Trợ lý AI
           </button>
         </div>
       )}
@@ -471,7 +458,8 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
+          background: 'rgba(15, 23, 42, 0.45)',
+          backdropFilter: 'blur(3px)',
           zIndex: 50,
           display: 'flex',
           alignItems: 'center',
@@ -480,44 +468,71 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
         }}>
           <div style={{
             background: 'var(--white)',
-            borderRadius: 12,
-            padding: 20,
+            borderRadius: 16,
+            padding: 24,
             width: '100%',
-            maxWidth: 320,
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            maxWidth: 360,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.18)',
+            border: '1px solid #E2E8F0',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Headphones size={20} color="var(--action-primary)" />
-              <strong style={{ fontSize: 15, color: 'var(--text-title)' }}>Kết nối Chuyên viên tư vấn</strong>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                background: '#DCFCE7',
+                color: '#059669',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <Headphones size={22} />
+              </div>
+              <div>
+                <strong style={{ fontSize: 16, color: '#0F172A', display: 'block' }}>Gặp Chuyên viên tư vấn</strong>
+                <span style={{ fontSize: 12, color: '#059669', fontWeight: 600 }}>● Đội ngũ CSKH đang trực tuyến</span>
+              </div>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 14, lineHeight: 1.4 }}>
-              Nhập thông tin để chuyên viên tiện xưng hô và hỗ trợ hồ sơ biển số xe nhanh nhất:
+            <p style={{ fontSize: 12.5, color: '#64748B', marginBottom: 16, lineHeight: 1.5 }}>
+              Quý khách vui lòng để lại thông tin để nhân viên tư vấn xưng hô và hỗ trợ trực tiếp nhanh nhất:
             </p>
-            <form onSubmit={handleConfirmConnect} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input
-                value={guestNameInput}
-                onChange={(e) => setGuestNameInput(e.target.value)}
-                placeholder="Tên của bạn (VD: Anh Tuấn)..."
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--grey-300)', fontSize: 13 }}
-              />
-              <input
-                value={guestPhoneInput}
-                onChange={(e) => setGuestPhoneInput(e.target.value)}
-                placeholder="Số điện thoại / Zalo..."
-                style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid var(--grey-300)', fontSize: 13 }}
-              />
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <form onSubmit={handleConfirmConnect} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  Tên của bạn
+                </label>
+                <input
+                  value={guestNameInput}
+                  onChange={(e) => setGuestNameInput(e.target.value)}
+                  placeholder="VD: Anh Nam, Chị Linh..."
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  Số điện thoại / Zalo
+                </label>
+                <input
+                  value={guestPhoneInput}
+                  onChange={(e) => setGuestPhoneInput(e.target.value)}
+                  placeholder="Nhập số điện thoại để tiện gửi hình ảnh biển số..."
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
                 <button
                   type="button"
                   onClick={() => setShowConnectModal(false)}
                   style={{
                     flex: 1,
-                    padding: '8px 0',
-                    borderRadius: 6,
-                    border: '1px solid var(--grey-300)',
-                    background: 'var(--white)',
-                    fontSize: 12,
+                    padding: '9px 0',
+                    borderRadius: 8,
+                    border: '1px solid #CBD5E1',
+                    background: '#FFFFFF',
+                    fontSize: 13,
+                    fontWeight: 500,
                     cursor: 'pointer',
+                    color: '#64748B',
                   }}
                 >
                   Hủy
@@ -525,18 +540,22 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
                 <button
                   type="submit"
                   style={{
-                    flex: 1,
-                    padding: '8px 0',
-                    borderRadius: 6,
+                    flex: 1.4,
+                    padding: '9px 0',
+                    borderRadius: 8,
                     border: 'none',
-                    background: 'var(--action-primary)',
-                    color: 'var(--white)',
-                    fontSize: 12,
+                    background: '#059669',
+                    color: '#FFFFFF',
+                    fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
                   }}
                 >
-                  Bắt đầu kết nối
+                  <Headphones size={15} /> Bắt đầu tư vấn
                 </button>
               </div>
             </form>
@@ -552,8 +571,103 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
             </div>
             <h2 className="claude-empty-title">Chào bạn, hôm nay tôi có thể hỗ trợ gì về biển số?</h2>
             <p className="claude-empty-subtitle">
-              Trợ lý AI Biensovip sẵn sàng hỗ trợ định giá, tra cứu biển số VIP, thẩm định phong thủy bản mệnh và giải đáp thủ tục đấu giá Thông tư 24/2023/TT-BCA.
+              Hệ thống hỗ trợ song song giữa Trợ lý AI thế hệ mới và Đội ngũ Chuyên viên tư vấn trực tiếp 1:1.
             </p>
+
+            {/* Hai thẻ chọn chế độ lớn ở màn hình chính */}
+            <div className="claude-hero-modes">
+              {/* Thẻ AI */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={switchToBot}
+                className="claude-hero-mode-card active"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
+                  <div style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: 'rgba(241, 151, 32, 0.12)',
+                    color: '#D97706',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Sparkles size={20} />
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#D97706', background: 'rgba(241, 151, 32, 0.1)', padding: '3px 10px', borderRadius: 999 }}>
+                    ✓ Đang sử dụng
+                  </span>
+                </div>
+                <strong style={{ fontSize: 15.5, color: '#0F172A', marginBottom: 6 }}>
+                  Hỏi Trợ lý AI Thông Minh
+                </strong>
+                <p style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, margin: '0 0 12px 0' }}>
+                  Tra cứu tình trạng biển số, định giá tự động, phân tích phong thủy hợp tuổi và giải đáp thủ tục đấu giá 24/7.
+                </p>
+                <div style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#D97706' }}>
+                  <span>Nhập câu hỏi bên dưới để hỏi ngay</span> ↓
+                </div>
+              </div>
+
+              {/* Thẻ Tư vấn viên */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setShowConnectModal(true)}
+                className="claude-hero-mode-card live-card"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
+                  <div style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    background: 'rgba(16, 185, 129, 0.12)',
+                    color: '#059669',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Headphones size={20} />
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#DCFCE7', padding: '3px 10px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <span className="live-dot-pulse" style={{ width: 6, height: 6 }} /> Chuyên viên 1:1
+                  </span>
+                </div>
+                <strong style={{ fontSize: 15.5, color: '#0F172A', marginBottom: 6 }}>
+                  Gặp Tư vấn viên Trực tiếp
+                </strong>
+                <p style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, margin: '0 0 12px 0' }}>
+                  Kết nối chuyên viên hỗ trợ đàm phán giá tốt, đặt cọc giữ chỗ độc quyền, hỗ trợ đấu giá và sang tên trọn gói.
+                </p>
+                <div style={{
+                  marginTop: 'auto',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  background: '#059669',
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
+                }}>
+                  <span>Gặp Chuyên viên ngay</span> →
+                </div>
+              </div>
+            </div>
+
+            <div style={{ width: '100%', maxWidth: 680, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 4 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-700)' }}>
+                Hoặc bắt đầu nhanh với câu hỏi mẫu:
+              </span>
+              <span style={{ fontSize: 11.5, color: 'var(--grey-400)' }}>
+                Bấm vào để hỏi AI ngay
+              </span>
+            </div>
+
             <div className="claude-prompt-grid">
               {STARTER_PROMPTS.map((p, idx) => {
                 const IconComponent = p.icon;
