@@ -21,9 +21,10 @@ import { useVpaCounts } from '../../../services/vpa.js';
 import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useStartRecomputeVpaSuggestions, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
-  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, exportVpaCsv, exportVpaXlsx, exportVpaDocx, useVpaPlatePriceReference, useStartApproveDriftedVpa,
+  useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, useVpaPlatePriceReference, useStartApproveDriftedVpa,
   useResumeVpaApproveRun,
 } from '../../../services/adminVpa.js';
+import { useExportWithProgress } from '../../../hooks/useExportWithProgress.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { formatDate } from '../../../lib/date.js';
@@ -280,7 +281,7 @@ function ApproveDropdownMenu({ onSelect }) {
   );
 }
 
-function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, onTogglePin, onCopy, notify }) {
+function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, onTogglePin, onCopy }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ position: 'relative' }}>
@@ -426,7 +427,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     cancelDownload: cancelExportDownload,
     closeModal: closeExportModal,
   } = useExportWithProgress();
-  const [exportMenu, setExportMenu] = useState(null); // null | 'xlsx' | 'docx' | 'csv'
   const [exportOptionOpen, setExportOptionOpen] = useState(false);
   const exporting = exportModalOpen && exportProgress.phase !== 'completed' && exportProgress.phase !== 'error';
   const [integrity, setIntegrity] = useState(() => !!openIntegrityCode);
@@ -619,7 +619,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const bulkEdit = (body, verb) => run(() => bulk.mutateAsync({ ids: bulkIds, ...body }), bulkMsg(verb), true);
 
   const handleExportChoice = (optionsOrFormat, isCurrentPageOnly = false, scope = 'all') => {
-    setExportMenu(null);
     let targetFormat = 'xlsx';
     let targetPageOnly = false;
     let targetScope = 'all';
@@ -650,10 +649,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
       defaultFileName: fileName,
     });
   };
-
-  const doExport = () => handleExportChoice('csv', false);
-  const doExportXlsx = () => handleExportChoice('xlsx', false);
-  const doExportDocx = () => handleExportChoice('docx', false);
 
   const quickAdd = async () => {
     const price = quick.price === '' ? null : Number(quick.price);

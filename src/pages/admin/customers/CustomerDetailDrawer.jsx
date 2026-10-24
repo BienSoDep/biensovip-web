@@ -30,14 +30,14 @@ const ELEMENT_LABEL = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', 
 
 export function formatRegistrationSource(src) {
   const s = src || 'direct';
-  if (s === 'google') return '🌐 Google OAuth';
-  if (s === 'referral') return '🤝 Giới thiệu CTV';
-  if (s === 'quote_lead' || s === 'contact') return '📋 Báo giá / Tư vấn';
-  if (s === 'chat_lead' || s === 'chatbot') return '💬 Trợ lý AI / Chat';
-  if (s === 'newsletter' || s === 'subscriber') return '📧 Bản tin / Tin tức';
-  if (s === 'admin') return '🛡️ Admin tạo';
-  if (s === 'seed') return '🧪 Dữ liệu mẫu';
-  return '✍️ Đăng ký trực tiếp';
+  if (s === 'google') return 'Google OAuth';
+  if (s === 'referral') return 'Giới thiệu CTV';
+  if (s === 'quote_lead' || s === 'contact') return 'Báo giá / Tư vấn';
+  if (s === 'chat_lead' || s === 'chatbot') return 'Trợ lý AI / Chat';
+  if (s === 'newsletter' || s === 'subscriber') return 'Bản tin / Tin tức';
+  if (s === 'admin') return 'Admin tạo';
+  if (s === 'seed') return 'Dữ liệu mẫu';
+  return 'Đăng ký trực tiếp';
 }
 
 function getAvatarBg(str = '') {
@@ -289,7 +289,10 @@ export default function CustomerDetailDrawer({ id, onClose, notify }) {
           borderBottom: '1px solid var(--border-hairline)',
           background: 'var(--white)',
           padding: '0 20px',
-          gap: 16
+          gap: 16,
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none'
         }}>
           {[
             { id: 'profile', label: 'Hồ sơ & Bảo mật' },
@@ -312,7 +315,9 @@ export default function CustomerDetailDrawer({ id, onClose, notify }) {
                   color: active ? 'var(--action-primary)' : 'var(--text-muted)',
                   borderBottom: active ? '2px solid var(--action-primary)' : '2px solid transparent',
                   cursor: 'pointer',
-                  transition: 'all 120ms ease'
+                  transition: 'all 120ms ease',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap'
                 }}
               >
                 {tab.label}

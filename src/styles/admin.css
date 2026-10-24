@@ -257,6 +257,41 @@ button[aria-expanded]:hover {
     display: block !important;
   }
 
+  /* Admin Customers mobile card view & collapsible filters */
+  .admin-customers-mobile-bar {
+    display: flex !important;
+  }
+  .admin-customers-filters {
+    display: none !important;
+  }
+  .admin-customers-filters.admin-filters-mobile-open {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    background: var(--white);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-inset-hairline);
+    gap: var(--space-3);
+  }
+  .admin-customers-desktop-search {
+    display: none !important;
+  }
+  .admin-customers-cards-container {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .admin-customers-cards-container.is-active {
+    display: flex !important;
+  }
+  .admin-customers-table-container {
+    display: none !important;
+  }
+  .admin-customers-table-container.force-mobile-table {
+    display: block !important;
+  }
+
   .admin-rows {
     display: flex;
     flex-direction: column;
@@ -361,16 +396,22 @@ button[aria-expanded]:hover {
 .admin-simple-cards { display: none; flex-direction: column; gap: var(--space-3); padding: var(--space-3); background: var(--surface-sunken); }
 
 .admin-plates-mobile-bar,
-.admin-contacts-mobile-bar {
+.admin-contacts-mobile-bar,
+.admin-customers-mobile-bar {
   display: none;
 }
 .admin-plates-cards-container,
-.admin-contacts-cards-container {
+.admin-contacts-cards-container,
+.admin-customers-cards-container {
   display: none;
 }
 .admin-plates-table-container,
-.admin-contacts-table-container {
+.admin-contacts-table-container,
+.admin-customers-table-container {
   display: block;
+}
+.admin-customers-desktop-search {
+  display: flex;
 }
 
 /* --------------------------------------------------------------------------

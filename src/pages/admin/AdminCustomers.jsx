@@ -27,8 +27,16 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
-  Filter,
-  Sparkles
+  Handshake,
+  FileText,
+  Bot,
+  Mail,
+  Shield,
+  FlaskConical,
+  PenTool,
+  SlidersHorizontal,
+  LayoutGrid,
+  List as ListIcon
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -120,7 +128,7 @@ function renderSourceBadge(source) {
           <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.97 0 12s.45 3.84 1.25 5.42l4.03-3.15z"/>
           <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
         </svg>
-        Google
+        Google OAuth
       </span>
     );
   }
@@ -129,7 +137,7 @@ function renderSourceBadge(source) {
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
         fontSize: 'var(--fs-caption)',
         fontWeight: 600,
         padding: '3px 8px',
@@ -139,7 +147,7 @@ function renderSourceBadge(source) {
         border: '1px solid #fde68a',
         whiteSpace: 'nowrap'
       }}>
-        🤝 Giới thiệu CTV
+        <Handshake size={12} strokeWidth={2.2} /> Giới thiệu CTV
       </span>
     );
   }
@@ -148,7 +156,7 @@ function renderSourceBadge(source) {
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
         fontSize: 'var(--fs-caption)',
         fontWeight: 600,
         padding: '3px 8px',
@@ -158,7 +166,7 @@ function renderSourceBadge(source) {
         border: '1px solid #a7f3d0',
         whiteSpace: 'nowrap'
       }}>
-        📋 Báo giá / Tư vấn
+        <FileText size={12} strokeWidth={2.2} /> Báo giá / Tư vấn
       </span>
     );
   }
@@ -167,7 +175,7 @@ function renderSourceBadge(source) {
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
         fontSize: 'var(--fs-caption)',
         fontWeight: 600,
         padding: '3px 8px',
@@ -177,7 +185,7 @@ function renderSourceBadge(source) {
         border: '1px solid #99f6e4',
         whiteSpace: 'nowrap'
       }}>
-        💬 Trợ lý AI
+        <Bot size={12} strokeWidth={2.2} /> Trợ lý AI
       </span>
     );
   }
@@ -186,7 +194,7 @@ function renderSourceBadge(source) {
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
         fontSize: 'var(--fs-caption)',
         fontWeight: 600,
         padding: '3px 8px',
@@ -196,7 +204,7 @@ function renderSourceBadge(source) {
         border: '1px solid #fbcfe8',
         whiteSpace: 'nowrap'
       }}>
-        📧 Bản tin
+        <Mail size={12} strokeWidth={2.2} /> Bản tin
       </span>
     );
   }
@@ -205,7 +213,7 @@ function renderSourceBadge(source) {
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
         fontSize: 'var(--fs-caption)',
         fontWeight: 600,
         padding: '3px 8px',
@@ -215,7 +223,7 @@ function renderSourceBadge(source) {
         border: '1px solid #e9d5ff',
         whiteSpace: 'nowrap'
       }}>
-        🛡️ Admin tạo
+        <Shield size={12} strokeWidth={2.2} /> Admin tạo
       </span>
     );
   }
@@ -224,7 +232,7 @@ function renderSourceBadge(source) {
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
         fontSize: 'var(--fs-caption)',
         fontWeight: 500,
         padding: '3px 8px',
@@ -234,7 +242,7 @@ function renderSourceBadge(source) {
         border: '1px solid #cbd5e1',
         whiteSpace: 'nowrap'
       }}>
-        🧪 Dữ liệu mẫu
+        <FlaskConical size={12} strokeWidth={2.2} /> Dữ liệu mẫu
       </span>
     );
   }
@@ -242,7 +250,7 @@ function renderSourceBadge(source) {
     <span style={{
       display: 'inline-flex',
       alignItems: 'center',
-      gap: 4,
+      gap: 5,
       fontSize: 'var(--fs-caption)',
       fontWeight: 500,
       padding: '3px 8px',
@@ -252,7 +260,7 @@ function renderSourceBadge(source) {
       border: '1px solid var(--border-hairline)',
       whiteSpace: 'nowrap'
     }}>
-      ✍️ Trực tiếp
+      <PenTool size={12} strokeWidth={2.2} /> Trực tiếp
     </span>
   );
 }
@@ -310,6 +318,8 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const [deleteCode, setDeleteCode] = useState('');
   const [deleteErr, setDeleteErr] = useState('');
   const [showCharts, setShowCharts] = useState(true);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileView, setMobileView] = useState('card'); // 'card' | 'table'
   const isSuperAdmin = st.user?.role === 'super-admin';
 
   const { data, isLoading, isError, refetch, isFetching } = useAdminCustomers({
@@ -319,7 +329,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
     page,
     perPage: 20
   });
-  const { data: statsData, isLoading: statsLoading } = useAdminCustomerStats();
+  const { data: statsData } = useAdminCustomerStats();
   const updateStatus = useUpdateCustomerStatus();
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/customers');
   const requestDeleteOtp = useRequestDeleteUserOtp();
@@ -398,7 +408,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
     const locked = items.filter((i) => i.status === 'locked').length;
     const unverified = items.filter((i) => !i.isVerified || i.status === 'unverified').length;
     return { total: result.total, active, locked, unverified };
-  }, [result]);
+  }, [result.items, result.total]);
 
   const copyText = (e, text, id, label) => {
     e.stopPropagation();
@@ -490,6 +500,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
   };
 
   const hasActiveFilters = !!adminQ || status !== 'all' || sourceFilter !== 'all' || phoneFilter !== 'all' || verifiedFilter !== 'all';
+  const activeFiltersCount = (adminQ ? 1 : 0) + (status !== 'all' ? 1 : 0) + (sourceFilter !== 'all' ? 1 : 0) + (phoneFilter !== 'all' ? 1 : 0) + (verifiedFilter !== 'all' ? 1 : 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -975,29 +986,173 @@ export default function AdminCustomers({ st, setSt, notify }) {
         )}
       </div>
 
-      {/* Control Bar: Tìm kiếm, Bộ lọc & Công cụ */}
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 'var(--space-3)',
-        alignItems: 'center',
-        background: 'var(--white)',
-        padding: '12px 16px',
-        borderRadius: 'var(--radius-card)',
-        boxShadow: 'var(--shadow-inset-hairline)'
-      }}>
-        {/* Search input with icon */}
-        <div style={{
-          position: 'relative',
+      {/* Mobile-only control bar (≤ 768px) */}
+      <div className="admin-customers-mobile-bar" style={{ flexDirection: 'column', gap: 'var(--space-2)' }}>
+        {/* Row 1: Search + Quick Refresh */}
+        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <div style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            flex: 1,
+            background: 'var(--surface-sunken)',
+            borderRadius: 'var(--radius-field)',
+            border: '1px solid var(--border-hairline)',
+            padding: '0 10px'
+          }}>
+            <Search size={16} style={{ color: 'var(--text-muted)', flexShrink: 0, marginRight: 8 }} />
+            <input
+              type="text"
+              placeholder="Tìm nhanh SĐT, tên, email…"
+              value={st.adminQ || ''}
+              onChange={(e) => {
+                setSt((s) => ({ ...s, adminQ: e.target.value }));
+                setPage(1);
+              }}
+              style={{
+                width: '100%',
+                height: 38,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                font: 'var(--type-body-sm)',
+                color: 'var(--text-strong)'
+              }}
+            />
+            {adminQ && (
+              <button
+                type="button"
+                onClick={() => { setSt((s) => ({ ...s, adminQ: '' })); setPage(1); }}
+                style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: 'var(--text-muted)', display: 'inline-flex' }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            disabled={isFetching}
+            onClick={() => refetch()}
+            title="Tải lại danh sách"
+            style={{
+              height: 38,
+              width: 38,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--radius-field)',
+              border: '1px solid var(--border-hairline)',
+              background: 'var(--white)',
+              cursor: 'pointer',
+              color: 'var(--text-strong)',
+              flexShrink: 0
+            }}
+          >
+            <RotateCw size={15} className={isFetching ? 'bsd-spin' : ''} />
+          </button>
+        </div>
+
+        {/* Row 2: Filter Toggle + Quick Export + View Mode Switch */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <Button
+              variant={mobileFiltersOpen ? 'dark' : 'ghost'}
+              size="sm"
+              onClick={() => setMobileFiltersOpen((v) => !v)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32 }}
+            >
+              <SlidersHorizontal size={14} />
+              <span>Bộ lọc {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ''}</span>
+              {mobileFiltersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={exporting}
+              onClick={() => exportCsv({ status, source: sourceFilter !== 'all' ? sourceFilter : undefined, q: adminQ || undefined }).catch((e) => notify?.(e.message))}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, height: 32, padding: '0 8px' }}
+              title="Xuất CSV"
+            >
+              <Download size={13} />
+              <span style={{ fontSize: 12 }}>CSV</span>
+            </Button>
+          </div>
+
+          <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-pill)', padding: 2, border: '1px solid var(--grey-200)' }}>
+            <button
+              type="button"
+              onClick={() => setMobileView('card')}
+              style={{
+                border: 'none',
+                background: mobileView === 'card' ? 'var(--white)' : 'none',
+                boxShadow: mobileView === 'card' ? 'var(--shadow-1)' : 'none',
+                borderRadius: 'var(--radius-pill)',
+                padding: '4px 10px',
+                font: 'var(--type-caption)',
+                fontWeight: mobileView === 'card' ? 'var(--fw-semibold)' : 'var(--fw-regular)',
+                color: mobileView === 'card' ? 'var(--text-strong)' : 'var(--text-muted)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer',
+              }}
+            >
+              <LayoutGrid size={13} /> Thẻ
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileView('table')}
+              style={{
+                border: 'none',
+                background: mobileView === 'table' ? 'var(--white)' : 'none',
+                boxShadow: mobileView === 'table' ? 'var(--shadow-1)' : 'none',
+                borderRadius: 'var(--radius-pill)',
+                padding: '4px 10px',
+                font: 'var(--type-caption)',
+                fontWeight: mobileView === 'table' ? 'var(--fw-semibold)' : 'var(--fw-regular)',
+                color: mobileView === 'table' ? 'var(--text-strong)' : 'var(--text-muted)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer',
+              }}
+            >
+              <ListIcon size={13} /> Bảng
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Control Bar: Tìm kiếm, Bộ lọc & Công cụ (Collapsible trên Mobile, Trải rộng trên Desktop) */}
+      <div
+        className={`admin-customers-filters ${mobileFiltersOpen ? 'admin-filters-mobile-open' : ''}`}
+        style={{
           display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'var(--space-3)',
           alignItems: 'center',
-          flex: '1 1 240px',
-          maxWidth: 380,
-          background: 'var(--surface-sunken)',
-          borderRadius: 'var(--radius-field)',
-          border: '1px solid var(--border-hairline)',
-          padding: '0 10px'
-        }}>
+          background: 'var(--white)',
+          padding: '12px 16px',
+          borderRadius: 'var(--radius-card)',
+          boxShadow: 'var(--shadow-inset-hairline)'
+        }}
+      >
+        {/* Search input with icon (Desktop) */}
+        <div
+          className="admin-customers-desktop-search"
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            flex: '1 1 240px',
+            maxWidth: 380,
+            background: 'var(--surface-sunken)',
+            borderRadius: 'var(--radius-field)',
+            border: '1px solid var(--border-hairline)',
+            padding: '0 10px'
+          }}
+        >
           <Search size={16} style={{ color: 'var(--text-muted)', flexShrink: 0, marginRight: 8 }} />
           <input
             type="text"
@@ -1029,7 +1184,16 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </div>
 
         {/* Tab lọc trạng thái */}
-        <div style={{ display: 'inline-flex', background: 'var(--surface-sunken)', padding: 3, borderRadius: 'var(--radius-pill)', gap: 2 }}>
+        <div style={{
+          display: 'inline-flex',
+          background: 'var(--surface-sunken)',
+          padding: 3,
+          borderRadius: 'var(--radius-pill)',
+          gap: 2,
+          overflowX: 'auto',
+          maxWidth: '100%',
+          WebkitOverflowScrolling: 'touch'
+        }}>
           {STATUS_OPTS.map((opt) => {
             const active = status === opt.value;
             return (
@@ -1047,7 +1211,9 @@ export default function AdminCustomers({ st, setSt, notify }) {
                   color: active ? 'var(--text-strong)' : 'var(--text-muted)',
                   boxShadow: active ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                   fontWeight: active ? 600 : 500,
-                  transition: 'all 120ms ease'
+                  transition: 'all 120ms ease',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap'
                 }}
               >
                 {opt.label}
@@ -1057,7 +1223,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </div>
 
         {/* Lọc danh mục: Nguồn đăng ký */}
-        <div style={{ minWidth: 155 }}>
+        <div style={{ minWidth: 155, flex: '1 1 155px' }}>
           <Select
             label=""
             value={sourceFilter}
@@ -1067,7 +1233,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </div>
 
         {/* Lọc danh mục: Số điện thoại */}
-        <div style={{ minWidth: 120 }}>
+        <div style={{ minWidth: 120, flex: '1 1 120px' }}>
           <Select
             label=""
             value={phoneFilter}
@@ -1077,7 +1243,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </div>
 
         {/* Lọc danh mục: Xác thực email */}
-        <div style={{ minWidth: 150 }}>
+        <div style={{ minWidth: 150, flex: '1 1 150px' }}>
           <Select
             label=""
             value={verifiedFilter}
@@ -1135,8 +1301,335 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </span>
       </div>
 
-      {/* Danh sách Khách hàng */}
-      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
+      {/* Mobile Card View Container (<= 768px, active when mobileView === 'card') */}
+      <div className={`admin-customers-cards-container ${mobileView === 'card' ? 'is-active' : ''}`}>
+        {isLoading ? (
+          <div style={{ padding: '24px 0' }}><SkeletonTable rows={4} cols={1} /></div>
+        ) : isError ? (
+          <div style={{ padding: '32px 16px', textAlign: 'center', background: 'var(--white)', borderRadius: 'var(--radius-card)', color: 'var(--intent-danger)', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+            <span>Lỗi tải dữ liệu khách hàng.</span>
+            <Button variant="ghost" size="sm" onClick={() => refetch()}>Thử lại</Button>
+          </div>
+        ) : processedItems.length === 0 ? (
+          <div style={{ padding: '40px 16px', textAlign: 'center', background: 'var(--white)', borderRadius: 'var(--radius-card)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <Users size={32} style={{ color: 'var(--text-faint)' }} />
+            <div style={{ font: 'var(--type-body-strong)', color: 'var(--text-strong)' }}>
+              {hasActiveFilters ? 'Không có khách hàng nào khớp bộ lọc' : 'Chưa có khách hàng nào đăng ký'}
+            </div>
+            <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              {hasActiveFilters ? 'Hãy thử đổi từ khóa tìm kiếm hoặc bỏ các tiêu chí lọc.' : 'Khách hàng mới tạo tài khoản sẽ tự động xuất hiện tại đây.'}
+            </div>
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters} style={{ marginTop: 4 }}>Xóa bộ lọc tìm kiếm</Button>
+            )}
+          </div>
+        ) : (
+          processedItems.map((c) => {
+            const avatarBg = getAvatarBg(c.email || c.fullName || String(c.id));
+            const firstLetter = (c.fullName?.[0] || c.email?.[0] || 'K').toUpperCase();
+            const zaloUrl = toZaloUrl(c.phone);
+
+            return (
+              <div
+                key={c.id}
+                style={{
+                  background: 'var(--white)',
+                  borderRadius: 'var(--radius-card)',
+                  boxShadow: 'var(--shadow-inset-hairline)',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  border: '1px solid var(--border-hairline)'
+                }}
+              >
+                {/* Header: Avatar, Name/Email, Status Badge */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      background: avatarBg,
+                      color: '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 700,
+                      fontSize: 15,
+                      flexShrink: 0,
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                    }}>
+                      {firstLetter}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        font: 'var(--type-label)',
+                        fontWeight: 700,
+                        color: 'var(--text-strong)',
+                        lineHeight: 1.3
+                      }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.fullName || c.email || 'Chưa đặt tên'}
+                        </span>
+                        {c.fullName && (
+                          <button
+                            type="button"
+                            onClick={(e) => copyText(e, c.fullName, `card-name-${c.id}`, 'họ tên')}
+                            title="Sao chép họ tên"
+                            style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: copiedId === `card-name-${c.id}` ? 'var(--intent-success)' : 'var(--text-muted)', display: 'inline-flex', flexShrink: 0 }}
+                          >
+                            {copiedId === `card-name-${c.id}` ? <Check size={12} /> : <Copy size={12} />}
+                          </button>
+                        )}
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        font: 'var(--type-caption)',
+                        color: 'var(--text-muted)',
+                        fontSize: 12,
+                        marginTop: 2
+                      }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.email || 'Chưa có email'}
+                        </span>
+                        {c.email && (
+                          <button
+                            type="button"
+                            onClick={(e) => copyText(e, c.email, `card-email-${c.id}`, 'email')}
+                            title="Sao chép email"
+                            style={{ border: 'none', background: 'none', padding: 2, cursor: 'pointer', color: copiedId === `card-email-${c.id}` ? 'var(--intent-success)' : 'var(--text-muted)', display: 'inline-flex', flexShrink: 0 }}
+                          >
+                            {copiedId === `card-email-${c.id}` ? <Check size={12} /> : <Copy size={12} />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Pill */}
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    fontSize: 'var(--fs-caption)',
+                    fontWeight: 600,
+                    padding: '3px 8px',
+                    borderRadius: 'var(--radius-pill)',
+                    background: (STATUS_COLOR[c.status] || 'var(--grey-400)') + '15',
+                    color: STATUS_COLOR[c.status] || 'var(--text-muted)',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: STATUS_COLOR[c.status] || 'var(--text-muted)' }} />
+                    {STATUS_LABEL[c.status] || c.status}
+                  </span>
+                </div>
+
+                {/* Metadata Row: Nguồn, SĐT + Call/Zalo, Xác thực, Yêu thích, Ngày tạo */}
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px 12px',
+                  alignItems: 'center',
+                  padding: '8px 10px',
+                  background: 'var(--surface-sunken)',
+                  borderRadius: 'var(--radius-field)',
+                  fontSize: 12
+                }}>
+                  {/* Nguồn */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {renderSourceBadge(c.registrationSource)}
+                  </div>
+
+                  {/* SĐT */}
+                  {c.phone ? (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{c.phone}</span>
+                      <a
+                        href={`tel:${c.phone}`}
+                        title="Gọi điện"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          padding: '2px 7px',
+                          borderRadius: 4,
+                          background: 'rgba(199, 91, 0, 0.12)',
+                          color: 'var(--action-primary)',
+                          textDecoration: 'none',
+                          fontSize: 11,
+                          fontWeight: 600
+                        }}
+                      >
+                        <Phone size={11} /> Gọi
+                      </a>
+                      {zaloUrl && (
+                        <a
+                          href={zaloUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Chat Zalo"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            padding: '2px 7px',
+                            borderRadius: 4,
+                            background: 'rgba(0, 104, 255, 0.12)',
+                            color: '#0068ff',
+                            textDecoration: 'none',
+                            fontSize: 11,
+                            fontWeight: 600
+                          }}
+                        >
+                          <MessageSquare size={11} /> Zalo
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>Chưa có SĐT</span>
+                  )}
+
+                  {/* Xác thực email */}
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: c.isVerified ? 'var(--intent-success)' : '#d97706' }}>
+                    {c.isVerified ? <Check size={13} /> : <MailQuestion size={13} />}
+                    <span>{c.isVerified ? 'Email đã xác thực' : 'Email chưa xác thực'}</span>
+                  </div>
+
+                  {/* Yêu thích */}
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: c.favoritesCount > 0 ? 'var(--intent-danger)' : 'var(--text-muted)' }}>
+                    <Heart size={13} fill={c.favoritesCount > 0 ? 'var(--intent-danger)' : 'none'} />
+                    <span>{c.favoritesCount || 0} biển thích</span>
+                  </div>
+
+                  {/* Ngày tạo */}
+                  <div style={{ color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                    {formatDate(c.createdAt)}
+                  </div>
+                </div>
+
+                {/* Action Buttons: Đầy đủ các nút và các tính năng cho mobile */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingTop: 2 }}>
+                  {/* Xem chi tiết */}
+                  <button
+                    type="button"
+                    onClick={() => setDetailId(c.id)}
+                    style={{
+                      flex: '1 1 auto',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 5,
+                      height: 34,
+                      padding: '0 12px',
+                      borderRadius: 'var(--radius-field)',
+                      border: '1px solid var(--border-hairline)',
+                      background: 'var(--white)',
+                      color: 'var(--text-strong)',
+                      font: 'var(--type-label)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Eye size={14} /> Chi tiết
+                  </button>
+
+                  {/* Khóa / Mở khóa */}
+                  {updatingId === c.id ? (
+                    <div style={{ width: 70, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Loader2 size={16} className="bsd-spin" style={{ color: 'var(--text-muted)' }} />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(c)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 5,
+                        height: 34,
+                        padding: '0 12px',
+                        borderRadius: 'var(--radius-field)',
+                        border: '1px solid var(--border-hairline)',
+                        background: c.status === 'locked' ? 'rgba(16, 185, 129, 0.08)' : 'var(--white)',
+                        color: c.status === 'locked' ? 'var(--intent-success)' : 'var(--text-strong)',
+                        font: 'var(--type-label)',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {c.status === 'locked' ? <Unlock size={14} /> : <Lock size={14} />}
+                      {c.status === 'locked' ? 'Mở khóa' : 'Khóa'}
+                    </button>
+                  )}
+
+                  {/* Đổi MK */}
+                  <button
+                    type="button"
+                    onClick={() => openResetPassword(c)}
+                    title="Đặt lại mật khẩu hộ khách hàng"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 5,
+                      height: 34,
+                      padding: '0 10px',
+                      borderRadius: 'var(--radius-field)',
+                      border: '1px solid var(--border-hairline)',
+                      background: 'var(--white)',
+                      color: 'var(--text-strong)',
+                      font: 'var(--type-label)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <KeyRound size={14} /> Đổi MK
+                  </button>
+
+                  {/* Xóa (SuperAdmin) */}
+                  {isSuperAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => openDelete(c)}
+                      title="Xóa vĩnh viễn tài khoản (Super admin)"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: 34,
+                        width: 34,
+                        padding: 0,
+                        borderRadius: 'var(--radius-field)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        background: 'rgba(239, 68, 68, 0.06)',
+                        color: 'var(--intent-danger)',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Danh sách Khách hàng (Desktop Table & Mobile Table Mode) */}
+      <div className={`admin-customers-table-container ${mobileView === 'table' ? 'force-mobile-table' : ''}`} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
         <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ minWidth: 1060 }}>
             {/* Table Header với SortHeader */}
@@ -1256,7 +1749,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
                       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ font: 'var(--type-body-strong)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {c.fullName || c.email}
+                            {displayName}
                           </span>
                           {c.email && (
                             <button
