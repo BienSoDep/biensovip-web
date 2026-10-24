@@ -20,8 +20,8 @@ export default function AdminVpa({ notify, isSuperAdmin, go }) {
   const openPlatesIntegrity = (code) => { setOpenIntegrityCode(code); setTabKey('plates'); };
 
   const tabs = [
-    { key: 'plates', label: 'Danh sách biển VPA', info: 'Danh sách toàn bộ biển đấu giá VPA (công bố, chính thức, sắp đấu giá hoặc hết hạn)', render: () => <VpaAdminList key="plates" notify={notify} onOpenGuide={() => setTabKey('guide')} openIntegrityCode={openIntegrityCode} /> },
-    { key: 'queue', label: 'Duyệt giá', info: 'Hàng đợi duyệt giá: các biển có mức giá gợi ý AI chờ admin phê duyệt trước khi công khai', render: () => <VpaAdminList key="queue" queue notify={notify} onOpenGuide={() => setTabKey('guide')} /> },
+    { key: 'plates', label: 'Danh sách biển VPA', info: 'Danh sách toàn bộ biển đấu giá VPA (công bố, chính thức, sắp đấu giá hoặc hết hạn)', render: () => <VpaAdminList key="plates" notify={notify} onOpenGuide={() => setTabKey('guide')} openIntegrityCode={openIntegrityCode} go={go} /> },
+    { key: 'queue', label: 'Duyệt giá', info: 'Hàng đợi duyệt giá: các biển có mức giá gợi ý AI chờ admin phê duyệt trước khi công khai', render: () => <VpaAdminList key="queue" queue notify={notify} onOpenGuide={() => setTabKey('guide')} go={go} /> },
     { key: 'auction-results', label: 'Kết quả đấu giá', info: 'Kho dữ liệu kết quả các phiên đấu giá đã kết thúc, dùng phân tích thị trường và định giá', render: () => <VpaAuctionResults /> },
     { key: 'sync', label: 'Đồng bộ & cấu hình', info: 'Cấu hình lịch trình tự động cào dữ liệu VPA, kiểm tra nguồn crawler và tính liêm chính', render: () => <VpaOverview notify={notify} isSuperAdmin={isSuperAdmin} onOpenPlatesIntegrity={openPlatesIntegrity} /> },
     { key: 'guide', label: 'Hướng dẫn quy trình & nút bấm', info: 'Cẩm nang hướng dẫn chi tiết quy trình duyệt giá, mã màu trạng thái và chức năng nút bấm', render: () => <VpaWorkflowGuide onNavigateTab={(k) => setTabKey(k)} /> },

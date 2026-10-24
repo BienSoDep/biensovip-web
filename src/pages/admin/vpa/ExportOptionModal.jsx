@@ -59,7 +59,7 @@ export default function ExportOptionModal({
     {
       id: 'xlsx',
       title: 'Excel (.xlsx)',
-      sub: 'Đa sheet, tự động chia tỉnh',
+      sub: 'Tối đa 1.000.000 biển (đa sheet)',
       icon: FileSpreadsheet,
       color: '#107c41',
       badge: 'Tối ưu quản lý',
@@ -67,7 +67,7 @@ export default function ExportOptionModal({
     {
       id: 'docx',
       title: 'Word (.docx)',
-      sub: 'Catalogue in ấn & báo cáo',
+      sub: 'Tối đa 50.000 biển (in ấn)',
       icon: FileText,
       color: '#2b579a',
       badge: 'Gửi đối tác / Khách',
@@ -75,7 +75,7 @@ export default function ExportOptionModal({
     {
       id: 'csv',
       title: 'CSV (.csv)',
-      sub: 'Dữ liệu thô UTF-8',
+      sub: 'Không giới hạn (1.000.000+ biển)',
       icon: FileCode,
       color: '#c2410c',
       badge: 'Tương thích CRM',
@@ -235,9 +235,7 @@ export default function ExportOptionModal({
                 Toàn bộ theo bộ lọc
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                {totalCount > 100000
-                  ? `Tối đa 100.000 biển (trên tổng ${totalCount.toLocaleString('vi-VN')})`
-                  : `${totalCount.toLocaleString('vi-VN')} biển phù hợp`}
+                {totalCount.toLocaleString('vi-VN')} biển phù hợp • Chạy ngầm & theo dõi %
               </div>
             </div>
 

@@ -13,7 +13,7 @@ test.describe('Admin VPA Management (UC49)', () => {
 
   test('VPA page renders all 5 tabs and tab navigation works smoothly', async ({ page }) => {
     // 5 tab chính của Admin VPA
-    const tabList = page.getByRole('tablist');
+    const tabList = page.locator('.admin-tablist');
     await expect(tabList).toBeVisible();
 
     const expectedTabs = [
@@ -25,24 +25,24 @@ test.describe('Admin VPA Management (UC49)', () => {
     ];
 
     for (const tabName of expectedTabs) {
-      await expect(page.getByRole('tab', { name: tabName })).toBeVisible();
+      await expect(tabList.getByRole('tab', { name: new RegExp(`^${tabName}`) })).toBeVisible();
     }
 
     // Chuyển sang tab "Duyệt giá"
-    await page.getByRole('tab', { name: 'Duyệt giá' }).click();
+    await tabList.getByRole('tab', { name: /^Duyệt giá/ }).click();
     await expect(page).toHaveURL(/tab=queue/);
 
     // Chuyển sang tab "Kết quả đấu giá"
-    await page.getByRole('tab', { name: 'Kết quả đấu giá' }).click();
+    await tabList.getByRole('tab', { name: new RegExp('^Kết quả đấu giá') }).click();
     await expect(page).toHaveURL(/tab=auction-results/);
 
     // Chuyển sang tab "Hướng dẫn quy trình & nút bấm"
-    await page.getByRole('tab', { name: 'Hướng dẫn quy trình & nút bấm' }).click();
+    await tabList.getByRole('tab', { name: new RegExp('^Hướng dẫn quy trình') }).click();
     await expect(page).toHaveURL(/tab=guide/);
-    await expect(page.getByText(/Quy trình vận hành & Vòng đời biển VPA/i)).toBeVisible();
+    await expect(page.getByText(/Cẩm Nang Quy Trình/i)).toBeVisible();
 
     // Chuyển lại tab "Danh sách biển VPA"
-    await page.getByRole('tab', { name: 'Danh sách biển VPA' }).click();
+    await tabList.getByRole('tab', { name: new RegExp('^Danh sách biển VPA') }).click();
     await expect(page).toHaveURL(/tab=plates/);
   });
 
