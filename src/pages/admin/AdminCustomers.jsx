@@ -21,11 +21,32 @@ import {
   Eye,
   Heart,
   ShieldAlert,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  PieChart as PieChartIcon,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  Sparkles
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+} from 'recharts';
 import toast from 'react-hot-toast';
 import {
   useAdminCustomers,
+  useAdminCustomerStats,
   useUpdateCustomerStatus,
   useResetCustomerPassword,
   useRequestDeleteUserOtp,
@@ -44,6 +65,7 @@ import { useExportCsv } from '../../hooks/useExportCsv.js';
 
 const CUSTOMER_COLUMNS = [
   { key: 'customer', label: 'Khách hàng / Email', default: true },
+  { key: 'source', label: 'Nguồn đăng ký', default: true },
   { key: 'phone', label: 'Số điện thoại', default: true },
   { key: 'verified', label: 'Xác thực email', default: true },
   { key: 'favorites', label: 'Yêu thích', default: true },
@@ -51,6 +73,189 @@ const CUSTOMER_COLUMNS = [
   { key: 'status', label: 'Trạng thái', default: true },
   { key: 'actions', label: 'Hành động', default: true },
 ];
+
+const SOURCE_FILTER_OPTS = [
+  { value: 'all', label: 'Mọi nguồn đăng ký' },
+  { value: 'direct', label: 'Đăng ký trực tiếp' },
+  { value: 'google', label: 'Google OAuth' },
+  { value: 'referral', label: 'Giới thiệu CTV' },
+  { value: 'quote_lead', label: 'Báo giá / Tư vấn' },
+  { value: 'chat_lead', label: 'Trợ lý AI / Chat' },
+  { value: 'newsletter', label: 'Bản tin / Tin tức' },
+  { value: 'admin', label: 'Admin tạo' },
+  { value: 'seed', label: 'Dữ liệu mẫu' },
+];
+
+const SOURCE_COLORS = {
+  google: '#4285F4',
+  direct: '#6B7280',
+  referral: '#F59E0B',
+  quote_lead: '#10B981',
+  chat_lead: '#06B6D4',
+  newsletter: '#EC4899',
+  admin: '#8B5CF6',
+  seed: '#64748B',
+};
+
+function renderSourceBadge(source) {
+  const s = source || 'direct';
+  if (s === 'google') {
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        fontSize: 'var(--fs-caption)',
+        fontWeight: 600,
+        padding: '3px 8px',
+        borderRadius: 'var(--radius-pill)',
+        background: '#eef2ff',
+        color: '#4338ca',
+        border: '1px solid #c7d2fe',
+        whiteSpace: 'nowrap'
+      }}>
+        <svg width="12" height="12" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.97 0 12s.45 3.84 1.25 5.42l4.03-3.15z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+        </svg>
+        Google
+      </span>
+    );
+  }
+  if (s === 'referral') {
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 'var(--fs-caption)',
+        fontWeight: 600,
+        padding: '3px 8px',
+        borderRadius: 'var(--radius-pill)',
+        background: '#fffbeb',
+        color: '#b45309',
+        border: '1px solid #fde68a',
+        whiteSpace: 'nowrap'
+      }}>
+        🤝 Giới thiệu CTV
+      </span>
+    );
+  }
+  if (s === 'quote_lead' || s === 'contact') {
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 'var(--fs-caption)',
+        fontWeight: 600,
+        padding: '3px 8px',
+        borderRadius: 'var(--radius-pill)',
+        background: '#ecfdf5',
+        color: '#065f46',
+        border: '1px solid #a7f3d0',
+        whiteSpace: 'nowrap'
+      }}>
+        📋 Báo giá / Tư vấn
+      </span>
+    );
+  }
+  if (s === 'chat_lead' || s === 'chatbot') {
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 'var(--fs-caption)',
+        fontWeight: 600,
+        padding: '3px 8px',
+        borderRadius: 'var(--radius-pill)',
+        background: '#f0fdfa',
+        color: '#0f766e',
+        border: '1px solid #99f6e4',
+        whiteSpace: 'nowrap'
+      }}>
+        💬 Trợ lý AI
+      </span>
+    );
+  }
+  if (s === 'newsletter' || s === 'subscriber') {
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 'var(--fs-caption)',
+        fontWeight: 600,
+        padding: '3px 8px',
+        borderRadius: 'var(--radius-pill)',
+        background: '#fdf2f8',
+        color: '#9d174d',
+        border: '1px solid #fbcfe8',
+        whiteSpace: 'nowrap'
+      }}>
+        📧 Bản tin
+      </span>
+    );
+  }
+  if (s === 'admin') {
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 'var(--fs-caption)',
+        fontWeight: 600,
+        padding: '3px 8px',
+        borderRadius: 'var(--radius-pill)',
+        background: '#f3e8ff',
+        color: '#7e22ce',
+        border: '1px solid #e9d5ff',
+        whiteSpace: 'nowrap'
+      }}>
+        🛡️ Admin tạo
+      </span>
+    );
+  }
+  if (s === 'seed') {
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 'var(--fs-caption)',
+        fontWeight: 500,
+        padding: '3px 8px',
+        borderRadius: 'var(--radius-pill)',
+        background: '#f1f5f9',
+        color: '#475569',
+        border: '1px solid #cbd5e1',
+        whiteSpace: 'nowrap'
+      }}>
+        🧪 Dữ liệu mẫu
+      </span>
+    );
+  }
+  return (
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 4,
+      fontSize: 'var(--fs-caption)',
+      fontWeight: 500,
+      padding: '3px 8px',
+      borderRadius: 'var(--radius-pill)',
+      background: 'var(--surface-sunken)',
+      color: 'var(--text-muted)',
+      border: '1px solid var(--border-hairline)',
+      whiteSpace: 'nowrap'
+    }}>
+      ✍️ Trực tiếp
+    </span>
+  );
+}
 
 const PHONE_FILTER_OPTS = [
   { value: 'all', label: 'Mọi SĐT' },
@@ -92,6 +297,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const adminQ = (st.adminQ || '').trim();
   const [debouncedQ] = useDebouncedValue(adminQ, 300);
   const [status, setStatus] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [confirmLock, setConfirmLock] = useState(null);
   const [lockReason, setLockReason] = useState('');
@@ -103,14 +309,17 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const [deletePhase, setDeletePhase] = useState('warn'); // 'warn' → gửi mã; 'otp' → nhập mã
   const [deleteCode, setDeleteCode] = useState('');
   const [deleteErr, setDeleteErr] = useState('');
+  const [showCharts, setShowCharts] = useState(true);
   const isSuperAdmin = st.user?.role === 'super-admin';
 
   const { data, isLoading, isError, refetch, isFetching } = useAdminCustomers({
     status,
+    source: sourceFilter,
     q: debouncedQ || undefined,
     page,
     perPage: 20
   });
+  const { data: statsData, isLoading: statsLoading } = useAdminCustomerStats();
   const updateStatus = useUpdateCustomerStatus();
   const { exportCsv, loading: exporting } = useExportCsv('/api/admin/customers');
   const requestDeleteOtp = useRequestDeleteUserOtp();
@@ -173,6 +382,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
     if (verifiedFilter === 'unverified') list = list.filter((c) => !c.isVerified);
     return sortTableItems(list, sort.key, sort.dir, {
       customer: (c) => c.fullName || c.email || '',
+      source: (c) => c.registrationSource || 'direct',
       phone: (c) => c.phone || '',
       verified: (c) => (c.isVerified ? 1 : 0),
       favorites: (c) => c.favoritesCount || 0,
@@ -273,12 +483,13 @@ export default function AdminCustomers({ st, setSt, notify }) {
   const clearFilters = () => {
     setSt((s) => ({ ...s, adminQ: '' }));
     setStatus('all');
+    setSourceFilter('all');
     setPhoneFilter('all');
     setVerifiedFilter('all');
     setPage(1);
   };
 
-  const hasActiveFilters = !!adminQ || status !== 'all' || phoneFilter !== 'all' || verifiedFilter !== 'all';
+  const hasActiveFilters = !!adminQ || status !== 'all' || sourceFilter !== 'all' || phoneFilter !== 'all' || verifiedFilter !== 'all';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -397,6 +608,373 @@ export default function AdminCustomers({ st, setSt, notify }) {
         </div>
       </div>
 
+      {/* Analytics & Charts Section */}
+      <div style={{
+        background: 'var(--white)',
+        borderRadius: 'var(--radius-card)',
+        boxShadow: 'var(--shadow-inset-hairline)',
+        border: '1px solid var(--border-hairline)',
+        overflow: 'hidden',
+        transition: 'all 200ms ease'
+      }}>
+        {/* Analytics Header Bar */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 18px',
+          borderBottom: showCharts ? '1px solid var(--border-hairline)' : 'none',
+          background: 'var(--surface-sunken)',
+          flexWrap: 'wrap',
+          gap: 10
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(66, 133, 244, 0.12)',
+              color: '#4285F4',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <BarChart3 size={17} />
+            </div>
+            <div>
+              <div style={{ font: 'var(--type-label)', fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                Phân tích Nguồn Khách hàng & Xu hướng Đăng ký
+                <span style={{
+                  fontSize: 'var(--fs-micro)',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'rgba(16, 185, 129, 0.12)',
+                  color: '#065f46',
+                  fontWeight: 600
+                }}>
+                  Thời gian thực
+                </span>
+              </div>
+              <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                Nắm bắt chi tiết tỷ trọng nguồn đưa khách đến và tốc độ tăng trưởng 14 ngày qua
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {sourceFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setSourceFilter('all')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--white)',
+                  border: '1px solid var(--border-hairline)',
+                  font: 'var(--type-caption)',
+                  color: 'var(--action-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={12} /> Bỏ lọc nguồn: <strong>{SOURCE_FILTER_OPTS.find(o => o.value === sourceFilter)?.label}</strong>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowCharts(s => !s)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-field)',
+                background: 'var(--white)',
+                border: '1px solid var(--border-hairline)',
+                font: 'var(--type-caption)',
+                color: 'var(--text-strong)',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              {showCharts ? (
+                <>
+                  <ChevronUp size={14} /> Thu gọn biểu đồ
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={14} /> Mở rộng biểu đồ
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Charts Body */}
+        {showCharts && (
+          <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Quick Metrics Bar */}
+            {statsData && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                gap: 12,
+                padding: '10px 14px',
+                background: 'var(--surface-sunken)',
+                borderRadius: 'var(--radius-card)',
+                border: '1px solid var(--border-hairline)'
+              }}>
+                <div>
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Khách đã có SĐT</div>
+                  <div style={{ font: 'var(--type-title-3)', fontWeight: 700, color: '#10B981', display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    {statsData.withPhone}
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      ({statsData.total > 0 ? Math.round((statsData.withPhone * 100) / statsData.total) : 0}%)
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Đăng ký qua Google</div>
+                  <div style={{ font: 'var(--type-title-3)', fontWeight: 700, color: '#4285F4', display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    {statsData.sources?.find(s => s.source === 'google')?.count || 0}
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      ({statsData.sources?.find(s => s.source === 'google')?.percentage || 0}%)
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Qua giới thiệu CTV</div>
+                  <div style={{ font: 'var(--type-title-3)', fontWeight: 700, color: '#F59E0B', display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    {statsData.sources?.find(s => s.source === 'referral')?.count || 0}
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      ({statsData.sources?.find(s => s.source === 'referral')?.percentage || 0}%)
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Từ Lead Báo giá / Tư vấn</div>
+                  <div style={{ font: 'var(--type-title-3)', fontWeight: 700, color: '#065f46', display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    {(statsData.sources?.find(s => s.source === 'quote_lead')?.count || 0) + (statsData.sources?.find(s => s.source === 'chat_lead')?.count || 0)}
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      tài khoản
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Charts Row */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+              gap: 24,
+              alignItems: 'stretch'
+            }}>
+              {/* Chart 1: Donut breakdown theo nguồn */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+                padding: '16px',
+                borderRadius: 'var(--radius-card)',
+                background: 'var(--surface-sunken)',
+                border: '1px solid var(--border-hairline)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <PieChartIcon size={16} style={{ color: 'var(--action-primary)' }} />
+                    <span style={{ font: 'var(--type-label)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                      Cơ cấu nguồn người dùng
+                    </span>
+                  </div>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                    Bấm nguồn để lọc nhanh
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
+                  {/* Pie Graphic */}
+                  <div style={{ width: 180, height: 180, position: 'relative', flexShrink: 0, margin: '0 auto' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={statsData?.sources || []}
+                          dataKey="count"
+                          nameKey="label"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={80}
+                          paddingAngle={3}
+                        >
+                          {(statsData?.sources || []).map((entry) => (
+                            <Cell key={`cell-${entry.source}`} fill={SOURCE_COLORS[entry.source] || '#6B7280'} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          formatter={(value, name) => [`${value} khách hàng`, name]}
+                          contentStyle={{
+                            background: '#1F2937',
+                            border: 'none',
+                            borderRadius: 8,
+                            color: '#F9FAFB',
+                            fontSize: 12,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      pointerEvents: 'none'
+                    }}>
+                      <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: 10 }}>TỔNG</span>
+                      <span style={{ font: 'var(--type-title-2)', fontWeight: 800, color: 'var(--text-strong)', lineHeight: 1 }}>
+                        {statsData?.total || result.total}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sources List & Progress */}
+                  <div style={{ flex: '1 1 180px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {(statsData?.sources || []).map((s) => {
+                      const color = SOURCE_COLORS[s.source] || '#6B7280';
+                      const isSelected = sourceFilter === s.source;
+                      return (
+                        <div
+                          key={s.source}
+                          onClick={() => {
+                            setSourceFilter(prev => prev === s.source ? 'all' : s.source);
+                            setPage(1);
+                          }}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 3,
+                            padding: '6px 8px',
+                            borderRadius: 'var(--radius-field)',
+                            background: isSelected ? 'var(--white)' : 'transparent',
+                            border: isSelected ? `1.5px solid ${color}` : '1px solid transparent',
+                            cursor: 'pointer',
+                            transition: 'all 120ms ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block' }} />
+                              <span style={{ font: 'var(--type-caption)', fontWeight: isSelected ? 700 : 500, color: 'var(--text-strong)' }}>
+                                {s.label}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                              <span style={{ font: 'var(--type-caption)', fontWeight: 700, color: 'var(--text-strong)' }}>{s.count}</span>
+                              <span style={{ fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>({s.percentage}%)</span>
+                            </div>
+                          </div>
+                          <div style={{ width: '100%', height: 4, borderRadius: 2, background: 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                            <div style={{ width: `${s.percentage}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 300ms ease' }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Chart 2: Xu hướng 14 ngày */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+                padding: '16px',
+                borderRadius: 'var(--radius-card)',
+                background: 'var(--surface-sunken)',
+                border: '1px solid var(--border-hairline)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <TrendingUp size={16} style={{ color: '#10B981' }} />
+                    <span style={{ font: 'var(--type-label)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                      Tốc độ đăng ký 14 ngày qua
+                    </span>
+                  </div>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+                    Tổng khách mới theo ngày
+                  </span>
+                </div>
+
+                <div style={{ width: '100%', height: 210 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={statsData?.trends || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorGoogle" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4285F4" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#4285F4" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorDirect" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6B7280" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#6B7280" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorReferral" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-hairline)" />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(v) => v ? v.slice(5).replace('-', '/') : ''}
+                        tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+                        axisLine={{ stroke: 'var(--border-hairline)' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <RechartsTooltip
+                        labelFormatter={(v) => `Ngày ${v}`}
+                        contentStyle={{
+                          background: '#1F2937',
+                          border: 'none',
+                          borderRadius: 8,
+                          color: '#F9FAFB',
+                          fontSize: 12,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                        }}
+                      />
+                      <Legend
+                        verticalAlign="top"
+                        height={30}
+                        iconSize={10}
+                        wrapperStyle={{ fontSize: 11 }}
+                      />
+                      <Area type="monotone" dataKey="google" name="Google" stroke="#4285F4" fillOpacity={1} fill="url(#colorGoogle)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="referral" name="CTV" stroke="#F59E0B" fillOpacity={1} fill="url(#colorReferral)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="leads" name="Leads" stroke="#10B981" fillOpacity={1} fill="url(#colorLeads)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="direct" name="Trực tiếp" stroke="#6B7280" fillOpacity={1} fill="url(#colorDirect)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Control Bar: Tìm kiếm, Bộ lọc & Công cụ */}
       <div style={{
         display: 'flex',
@@ -478,6 +1056,16 @@ export default function AdminCustomers({ st, setSt, notify }) {
           })}
         </div>
 
+        {/* Lọc danh mục: Nguồn đăng ký */}
+        <div style={{ minWidth: 155 }}>
+          <Select
+            label=""
+            value={sourceFilter}
+            options={SOURCE_FILTER_OPTS}
+            onChange={(v) => { setSourceFilter(v); setPage(1); }}
+          />
+        </div>
+
         {/* Lọc danh mục: Số điện thoại */}
         <div style={{ minWidth: 120 }}>
           <Select
@@ -535,7 +1123,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
           variant="outline"
           size="sm"
           disabled={exporting}
-          onClick={() => exportCsv({ status, q: adminQ || undefined }).catch((e) => notify?.(e.message))}
+          onClick={() => exportCsv({ status, source: sourceFilter !== 'all' ? sourceFilter : undefined, q: adminQ || undefined }).catch((e) => notify?.(e.message))}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
           <Download size={14} />
@@ -550,7 +1138,7 @@ export default function AdminCustomers({ st, setSt, notify }) {
       {/* Danh sách Khách hàng */}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
         <div className="admin-table-scroll" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div style={{ minWidth: 990 }}>
+          <div style={{ minWidth: 1060 }}>
             {/* Table Header với SortHeader */}
             <div style={{
               display: 'flex',
@@ -567,6 +1155,11 @@ export default function AdminCustomers({ st, setSt, notify }) {
               {isVisible('customer') && (
                 <span style={{ flex: '1 1 200px' }}>
                   <TableSortHeader sort={sort} onSort={toggleSort} sortKey="customer" label="Khách hàng / Email" />
+                </span>
+              )}
+              {isVisible('source') && (
+                <span style={{ flex: '0 0 130px' }}>
+                  <TableSortHeader sort={sort} onSort={toggleSort} sortKey="source" label="Nguồn" />
                 </span>
               )}
               {isVisible('phone') && (
@@ -686,6 +1279,13 @@ export default function AdminCustomers({ st, setSt, notify }) {
                           {c.fullName ? c.email : `ID: #${c.id}`}
                         </span>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Nguồn đăng ký */}
+                  {isVisible('source') && (
+                    <div style={{ flex: '0 0 130px' }}>
+                      {renderSourceBadge(c.registrationSource)}
                     </div>
                   )}
 

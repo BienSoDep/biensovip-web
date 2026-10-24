@@ -31,8 +31,8 @@ import { registerApproveRun } from '../../../lib/runWatcher.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 import Modal from '../../../components/Modal.jsx';
-import { useExportWithProgress } from '../../../hooks/useExportWithProgress.js';
 import ExportProgressModal from '../../../components/ExportProgressModal.jsx';
+import ExportOptionModal from './ExportOptionModal.jsx';
 
 const MAX_BULK = 500;
 const COL_KEY = 'bsv.admin.vpaColumns';
@@ -41,6 +41,7 @@ const PER_PAGE = [{ value: 20, label: '20/trang' }, { value: 50, label: '50/tran
 const ALL = { value: '', label: 'Tất cả' };
 const VPA_FILTER_TABS = [
   { value: '', label: 'Tất cả biển VPA', note: 'Toàn bộ danh sách', countKey: 'all' },
+  { value: 'available', label: 'Biển có sẵn', note: 'Đã duyệt giá sẵn sàng bán', countKey: 'available' },
   { value: '2', label: 'Biển số tuần', note: 'Biển chính thức', countKey: 'weekly' },
   { value: '1', label: 'Biển số tháng', note: 'Biển công bố', countKey: 'monthly' },
   { value: '3', label: 'Biển hết hạn', note: 'Biển hết hạn', countKey: 'expired' },
@@ -426,6 +427,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     closeModal: closeExportModal,
   } = useExportWithProgress();
   const [exportMenu, setExportMenu] = useState(null); // null | 'xlsx' | 'docx' | 'csv'
+  const [exportOptionOpen, setExportOptionOpen] = useState(false);
   const exporting = exportModalOpen && exportProgress.phase !== 'completed' && exportProgress.phase !== 'error';
   const [integrity, setIntegrity] = useState(() => !!openIntegrityCode);
   useEffect(() => { if (openIntegrityCode) setIntegrity(true); }, [openIntegrityCode]);
@@ -469,9 +471,22 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const plateTypes = catOpts(typeData?.items);
   const provinces = catOpts(provData?.items);
 
-  const params = { queue: queue || undefined, ...f, q: dq, page, limit, sort: sort?.key, dir: sort?.dir };
+  const isAvailableTab = f.tab === 'available';
+  const params = {
+    queue: queue || undefined,
+    ...f,
+    tab: isAvailableTab ? '' : f.tab,
+    priceState: isAvailableTab ? (f.priceState || 2) : f.priceState,
+    hidden: isAvailableTab ? (f.hidden !== '' ? f.hidden : false) : f.hidden,
+    q: dq,
+    page,
+    limit,
+    sort: sort?.key,
+    dir: sort?.dir,
+  };
   const { data, isLoading, isError, refetch } = useVpaAdminPlates(params);
-  const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: f.tab, page: 1, limit: 1 }); // tổng của tab, không lọc khác
+  const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: isAvailableTab ? '' : f.tab, priceState: isAvailableTab ? 2 : undefined, page: 1, limit: 1 }); // tổng của tab, không lọc khác
+  const { data: availableCountData } = useVpaAdminPlates({ priceState: 2, hidden: false, vehicle: f.vehicle || undefined, page: 1, limit: 1 });
   const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
   const { data: vpaCounts } = useVpaCounts(f.vehicle);
   // Tổng mỗi tab là CẢ Ô TÔ + XE MÁY cộng lại — hiện rõ breakdown để không nhầm với số trên trang VPA gốc (họ tách
@@ -603,17 +618,36 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const bulkMsg = (verb) => (r) => `${verb} ${r.affected} biển${r.skipped ? ` (bỏ qua ${r.skipped})` : ''}`;
   const bulkEdit = (body, verb) => run(() => bulk.mutateAsync({ ids: bulkIds, ...body }), bulkMsg(verb), true);
 
-  const handleExportChoice = (format, isCurrentPageOnly = false) => {
+  const handleExportChoice = (optionsOrFormat, isCurrentPageOnly = false, scope = 'all') => {
     setExportMenu(null);
-    const exportParams = isCurrentPageOnly
-      ? { ...params, page, limit }
-      : { ...params, page: undefined, limit: undefined };
+    let targetFormat = 'xlsx';
+    let targetPageOnly = false;
+    let targetScope = 'all';
+
+    if (typeof optionsOrFormat === 'object' && optionsOrFormat !== null) {
+      targetFormat = optionsOrFormat.format || 'xlsx';
+      targetPageOnly = !!optionsOrFormat.isCurrentPageOnly;
+      targetScope = optionsOrFormat.scope || 'all';
+    } else {
+      targetFormat = optionsOrFormat || 'xlsx';
+      targetPageOnly = !!isCurrentPageOnly;
+      targetScope = scope || 'all';
+    }
+
+    const exportParams = targetPageOnly
+      ? { ...params, page, limit, scope: targetScope }
+      : { ...params, page: undefined, limit: undefined, scope: targetScope };
+
+    const scopePrefix = targetScope === 'available'
+      ? 'danh-sach-bien-so-co-san'
+      : (targetScope === 'vpa' ? 'bien-dau-gia-vpa' : (isAvailableTab ? 'bien-vpa-co-san' : 'tong-kho-bien-vpa-va-co-san'));
+    const fileName = targetPageOnly ? `${scopePrefix}-trang-${page}` : scopePrefix;
 
     runExportWithProgress({
       url: '/api/admin/vpa/plates/export',
       params: exportParams,
-      format,
-      defaultFileName: isCurrentPageOnly ? `bien-vpa-trang-${page}` : 'bien-vpa',
+      format: targetFormat,
+      defaultFileName: fileName,
     });
   };
 
@@ -928,6 +962,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             if (t.countKey === 'weekly') { count = vpaCounts?.weekly; carCount = vpaCountsCar?.weekly; motoCount = vpaCountsMoto?.weekly; }
             else if (t.countKey === 'monthly') { count = vpaCounts?.monthly; carCount = vpaCountsCar?.monthly; motoCount = vpaCountsMoto?.monthly; }
             else if (t.countKey === 'expired') { count = vpaCounts?.expired; carCount = vpaCountsCar?.expired; motoCount = vpaCountsMoto?.expired; }
+            else if (t.countKey === 'available') { count = availableCountData?.total; }
             else if (t.countKey === 'all') {
               count = (vpaCounts?.weekly != null && vpaCounts?.monthly != null && vpaCounts?.expired != null)
                 ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
@@ -1176,179 +1211,18 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             </Button>
           )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
-          {/* Nút Xuất dữ liệu thống nhất (Excel, Word, CSV) */}
-          <div style={{ position: 'relative' }}>
-            <Button
-              variant="ghost"
-              size="md"
-              disabled={exporting}
-              title="Xuất danh sách biển số ra file Excel (.xlsx), Word (.docx) hoặc CSV (.csv)"
-              onClick={() => setExportMenu((m) => (m ? null : 'open'))}
-              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              <Download size={14} />
-              <span>Xuất dữ liệu</span>
-              <span style={{ fontSize: 10, opacity: 0.7 }}>▾</span>
-            </Button>
-            {exportMenu && (
-              <>
-                <div
-                  onClick={() => setExportMenu(null)}
-                  style={{ position: 'fixed', inset: 0, zIndex: 29 }}
-                />
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    marginTop: 4,
-                    background: 'var(--white)',
-                    border: '1px solid var(--grey-200, #e2e8f0)',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-4, 0 20px 25px -5px rgba(0,0,0,0.15))',
-                    zIndex: 30,
-                    minWidth: 290,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    padding: '6px',
-                  }}
-                >
-                  {/* Nhóm Excel */}
-                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#107c41', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span>📗 File Excel (.xlsx)</span>
-                  </div>
-                  <button
-                    type="button"
-                    style={{
-                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
-                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                    onClick={() => handleExportChoice('xlsx', true)}
-                  >
-                    <span>📄</span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 600 }}>Xuất trang hiện tại</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Trang {page} • {items.length} biển</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
-                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                    onClick={() => handleExportChoice('xlsx', false)}
-                  >
-                    <span>📑</span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {(data?.total || 0) > 100000
-                          ? `Tối đa 100.000 biển (trên tổng ${(data?.total || 0).toLocaleString('vi-VN')}) • tự động chia sheets`
-                          : `${(data?.total || 0).toLocaleString('vi-VN')} biển • tự động chia sheets`}
-                      </span>
-                    </div>
-                  </button>
-
-                  <div style={{ height: 1, background: 'var(--grey-100, #f1f5f9)', margin: '4px 0' }} />
-
-                  {/* Nhóm Word */}
-                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#2b579a', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span>📘 File Word (.docx)</span>
-                  </div>
-                  <button
-                    type="button"
-                    style={{
-                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
-                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                    onClick={() => handleExportChoice('docx', true)}
-                  >
-                    <span>📄</span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 600 }}>Xuất trang hiện tại</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} biển đang xem</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
-                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                    onClick={() => handleExportChoice('docx', false)}
-                  >
-                    <span>📑</span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 600 }}>Xuất toàn bộ theo bộ lọc</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {(data?.total || 0) > 3000
-                          ? `Tối đa 3.000 biển (trên tổng ${(data?.total || 0).toLocaleString('vi-VN')}) • ngắt trang in ấn`
-                          : `${(data?.total || 0).toLocaleString('vi-VN')} biển • ngắt trang in ấn`}
-                      </span>
-                    </div>
-                  </button>
-
-                  <div style={{ height: 1, background: 'var(--grey-100, #f1f5f9)', margin: '4px 0' }} />
-
-                  {/* Nhóm CSV */}
-                  <div style={{ padding: '6px 8px 3px', fontSize: 11, fontWeight: 700, color: '#c2410c', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span>📙 File CSV (.csv)</span>
-                  </div>
-                  <button
-                    type="button"
-                    style={{
-                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
-                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                    onClick={() => handleExportChoice('csv', true)}
-                  >
-                    <span>📄</span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 600 }}>Xuất CSV trang hiện tại</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{items.length} dòng</span>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      background: 'none', border: 'none', padding: '6px 10px', textAlign: 'left',
-                      borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-caption)',
-                      color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                    onClick={() => handleExportChoice('csv', false)}
-                  >
-                    <span>📑</span>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 600 }}>Xuất CSV toàn bộ</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {(data?.total || 0) > 100000
-                          ? `Tối đa 100.000 dòng (trên tổng ${(data?.total || 0).toLocaleString('vi-VN')})`
-                          : `${(data?.total || 0).toLocaleString('vi-VN')} dòng`}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          {/* Nút Xuất dữ liệu mở Modal tùy chọn 3 chế độ (VPA, Có sẵn, Gộp) & 3 định dạng (Excel, Word, CSV) */}
+          <Button
+            variant="ghost"
+            size="md"
+            disabled={exporting}
+            title="Tùy chọn xuất danh sách biển số ra file Excel (.xlsx), Word (.docx) hoặc CSV (.csv)"
+            onClick={() => setExportOptionOpen(true)}
+            style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <Download size={14} />
+            <span>Xuất dữ liệu</span>
+          </Button>
           {queue && (
             <>
               <Button
@@ -1768,6 +1642,16 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
         progress={exportProgress}
         onCancel={cancelExportDownload}
         onClose={closeExportModal}
+      />
+
+      <ExportOptionModal
+        open={exportOptionOpen}
+        onClose={() => setExportOptionOpen(false)}
+        onExport={handleExportChoice}
+        page={page}
+        pageSize={limit}
+        currentPageCount={items.length}
+        totalCount={data?.total || 0}
       />
 
       {sel.size > 0 && (

@@ -28,6 +28,18 @@ const GENDER_LABEL = { male: 'Nam', female: 'Nữ', other: 'Khác' };
 const CONTACT_STATUS_LABEL = { new: 'Mới', consulting: 'Đang tư vấn', closed: 'Đã chốt', found: 'Đã chốt (cũ)', cancelled: 'Hủy' };
 const ELEMENT_LABEL = { kim: 'Kim', moc: 'Mộc', thuy: 'Thủy', hoa: 'Hỏa', tho: 'Thổ' };
 
+export function formatRegistrationSource(src) {
+  const s = src || 'direct';
+  if (s === 'google') return '🌐 Google OAuth';
+  if (s === 'referral') return '🤝 Giới thiệu CTV';
+  if (s === 'quote_lead' || s === 'contact') return '📋 Báo giá / Tư vấn';
+  if (s === 'chat_lead' || s === 'chatbot') return '💬 Trợ lý AI / Chat';
+  if (s === 'newsletter' || s === 'subscriber') return '📧 Bản tin / Tin tức';
+  if (s === 'admin') return '🛡️ Admin tạo';
+  if (s === 'seed') return '🧪 Dữ liệu mẫu';
+  return '✍️ Đăng ký trực tiếp';
+}
+
 function getAvatarBg(str = '') {
   const colors = [
     'linear-gradient(135deg, #C75B00, #C75B00)',
@@ -343,6 +355,9 @@ export default function CustomerDetailDrawer({ id, onClose, notify }) {
                       <Badge tone={data.status === 'active' ? 'mint' : 'rose'}>{data.status === 'active' ? 'Hoạt động' : 'Đã khóa'}</Badge>
                       <Badge tone={data.emailVerified ? 'mint' : 'neutral'}>{data.emailVerified ? 'Email đã xác thực' : 'Email chưa xác thực'}</Badge>
                       {data.fengShuiElement && <Badge tone="amber">Mệnh {ELEMENT_LABEL[data.fengShuiElement] || data.fengShuiElement}</Badge>}
+                      <Badge tone="slate">
+                        {formatRegistrationSource(data.registrationSource)}
+                      </Badge>
                     </div>
 
                     {!data.emailVerified && data.email && (
@@ -393,6 +408,12 @@ export default function CustomerDetailDrawer({ id, onClose, notify }) {
                         <div>
                           <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Số điện thoại</div>
                           <div style={{ color: 'var(--text-strong)', fontWeight: 500 }}>{data.phone || '—'}</div>
+                        </div>
+                        <div>
+                          <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Nguồn đăng ký</div>
+                          <div style={{ color: 'var(--text-strong)', fontWeight: 500 }}>
+                            {formatRegistrationSource(data.registrationSource)}
+                          </div>
                         </div>
                         <div>
                           <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Ngày sinh</div>
