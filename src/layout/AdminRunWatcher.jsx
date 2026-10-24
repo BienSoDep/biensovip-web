@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
-import { Loader2, X, ChevronUp } from 'lucide-react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { Loader2, X, ChevronUp, Download, Ban, FileSpreadsheet, Layers, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useVpaOverview } from '../services/adminVpa.js';
-import { getActiveApproveRuns, subscribeApproveRuns, unregisterApproveRun } from '../lib/runWatcher.js';
+import {
+  getActiveApproveRuns,
+  subscribeApproveRuns,
+  unregisterApproveRun,
+  getActiveExportJobs,
+  subscribeExportJobs,
+  unregisterExportJob,
+} from '../lib/runWatcher.js';
 
-// Widget góc màn hình: hiện khi có lượt duyệt giá (approve-run) hoặc lượt cào (crawl-run) VPA đang chạy,
-// sống qua mọi trang admin (mount 1 lần ở AdminShell) — không chặn thao tác trang, chỉ thu nhỏ/phóng to.
+// Quản lý trạng thái lượt duyệt giá (approve-run)
 function useApproveRunsStatus() {
   const [ids, setIds] = useState(() => getActiveApproveRuns());
   useEffect(() => subscribeApproveRuns(setIds), []);
@@ -15,14 +21,18 @@ function useApproveRunsStatus() {
     queries: ids.map((runId) => ({
       queryKey: ['admin-vpa', 'approve-run', runId],
       queryFn: () => apiClient.get(`/api/admin/vpa/plates/price/approve-runs/${runId}`),
-      refetchInterval: (q) => (q.state.data?.status === 'running' ? 1500 : false),
+      refetchInterval: (q) => (q.state.data?.status === 'running' ? 1200 : false),
     })),
   });
 
   useEffect(() => {
     results.forEach((r, i) => {
       const status = r.data?.status;
-      if (status && status !== 'running') unregisterApproveRun(ids[i]);
+      if (status && status !== 'running') {
+        // Tự động gỡ sau 10 giây nếu đã kết thúc thành công hoặc hủy
+        const timer = setTimeout(() => unregisterApproveRun(ids[i]), 10000);
+        return () => clearTimeout(timer);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results.map((r) => r.data?.status).join(',')]);
@@ -30,52 +40,151 @@ function useApproveRunsStatus() {
   return ids.map((runId, i) => ({ runId, kind: 'approve', data: results[i]?.data }));
 }
 
-export default function AdminRunWatcher() {
-  const approveRuns = useApproveRunsStatus();
-  const { data: overview } = useVpaOverview({ poll: true, enabled: true });
-  const crawlRuns = (overview?.running || []).map((r) => ({ runId: r.runId || r.id, kind: 'crawl', data: r }));
+// Quản lý trạng thái tiến trình xuất file ngầm (export-job)
+function useExportJobsStatus() {
+  const [ids, setIds] = useState(() => getActiveExportJobs());
+  useEffect(() => subscribeExportJobs(setIds), []);
 
-  const running = [...approveRuns.filter((r) => !r.data || r.data.status === 'running'), ...crawlRuns];
+  const results = useQueries({
+    queries: ids.map((jobId) => ({
+      queryKey: ['admin-vpa', 'export-job', jobId],
+      queryFn: () => apiClient.get(`/api/admin/vpa/plates/export/jobs/${jobId}`),
+      refetchInterval: (q) => (q.state.data?.status === 'running' ? 1200 : false),
+    })),
+  });
+
+  return ids.map((jobId, i) => ({ runId: jobId, kind: 'export', data: results[i]?.data }));
+}
+
+export default function AdminRunWatcher() {
+  const qc = useQueryClient();
+  const approveRuns = useApproveRunsStatus();
+  const exportJobs = useExportJobsStatus();
+  const { data: overview, refetch: refetchOverview } = useVpaOverview({ poll: true, enabled: true });
+
+  // Nguồn crawl đang chạy từ overview.sources (kèm chi tiết activeRun)
+  const activeSources = (overview?.sources || []).filter((s) => s.running);
+  const crawlRuns = activeSources.map((s) => ({
+    runId: s.activeRun?.id || `crawl-${s.source}`,
+    kind: 'crawl',
+    source: s.source,
+    data: s.activeRun || { source: s.source },
+  }));
+
+  const runningApprove = approveRuns.filter((r) => !r.data || r.data.status === 'running');
+  const finishedApprove = approveRuns.filter((r) => r.data && r.data.status !== 'running');
+
+  const runningExport = exportJobs.filter((r) => !r.data || r.data.status === 'running');
+  const finishedExport = exportJobs.filter((r) => r.data && r.data.status !== 'running');
+
+  const allItems = [...runningApprove, ...crawlRuns, ...runningExport, ...finishedExport, ...finishedApprove];
+  const runningCount = runningApprove.length + crawlRuns.length + runningExport.length;
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (running.length === 0) setExpanded(false);
-  }, [running.length]);
+    if (allItems.length === 0) setExpanded(false);
+  }, [allItems.length]);
 
-  if (running.length === 0) return null;
+  if (allItems.length === 0) return null;
 
   return (
-    <div style={{ position: 'fixed', right: 'var(--space-5)', bottom: 'var(--space-5)', zIndex: 60 }}>
+    <div style={{ position: 'fixed', right: 'var(--space-5, 20px)', bottom: 'var(--space-5, 20px)', zIndex: 9999 }}>
       {expanded ? (
-        <div style={{
-          width: 320, maxWidth: '88vw', background: 'var(--white)', borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-4)', border: '1px solid var(--border-subtle)', overflow: 'hidden',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
-            <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>
-              Tiến trình đang chạy ({running.length})
-            </span>
-            <button type="button" onClick={() => setExpanded(false)} aria-label="Thu gọn" style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}>
+        <div
+          style={{
+            width: 360,
+            maxWidth: '90vw',
+            background: 'var(--white, #ffffff)',
+            borderRadius: 'var(--radius-lg, 12px)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            border: '1px solid var(--border-subtle, #e2e8f0)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '12px 16px',
+              background: '#0f172a',
+              color: '#ffffff',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {runningCount > 0 ? (
+                <Loader2 size={16} color="#38bdf8" style={{ animation: 'adminRunWatcherSpin 1s linear infinite' }} />
+              ) : (
+                <CheckCircle2 size={16} color="#4ade80" />
+              )}
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc' }}>
+                Tiến trình chạy ngầm ({allItems.length})
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-label="Thu gọn"
+              style={{
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                color: '#94a3b8',
+                display: 'flex',
+                padding: 4,
+                borderRadius: 4,
+              }}
+            >
               <X size={16} />
             </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxHeight: 320, overflowY: 'auto' }}>
-            {running.map((r) => <RunRow key={`${r.kind}-${r.runId}`} run={r} />)}
+
+          {/* List */}
+          <div style={{ display: 'flex', flexDirection: 'column', maxHeight: 380, overflowY: 'auto' }}>
+            {allItems.map((r) => (
+              <RunRow
+                key={`${r.kind}-${r.runId}`}
+                run={r}
+                onRefresh={() => {
+                  refetchOverview();
+                  qc.invalidateQueries({ queryKey: ['admin-vpa'] });
+                }}
+              />
+            ))}
           </div>
         </div>
       ) : (
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          title="Có tiến trình đang chạy — bấm để xem chi tiết"
+          title="Có tiến trình ngầm — bấm để xem chi tiết & hủy/tải file"
           style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 'var(--radius-pill)',
-            border: 'none', background: 'var(--action-primary)', color: 'var(--white)', boxShadow: 'var(--shadow-3)',
-            cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-medium)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 18px',
+            borderRadius: 'var(--radius-pill, 9999px)',
+            border: 'none',
+            background: runningCount > 0 ? '#0f172a' : '#107c41',
+            color: '#ffffff',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            transition: 'transform 0.15s ease',
           }}
         >
-          <Loader2 size={16} style={{ animation: 'adminRunWatcherSpin 1s linear infinite' }} />
-          <span>{running.length} tiến trình đang chạy</span>
+          {runningCount > 0 ? (
+            <Loader2 size={16} color="#38bdf8" style={{ animation: 'adminRunWatcherSpin 1s linear infinite' }} />
+          ) : (
+            <Download size={16} color="#ffffff" />
+          )}
+          <span>
+            {runningCount > 0 ? `${runningCount} tiến trình đang chạy…` : `${allItems.length} tiến trình hoàn tất`}
+          </span>
           <ChevronUp size={14} />
         </button>
       )}
@@ -84,27 +193,258 @@ export default function AdminRunWatcher() {
   );
 }
 
-function RunRow({ run }) {
-  const { kind, data } = run;
-  const label = kind === 'approve' ? 'Duyệt giá VPA' : `Cào dữ liệu VPA${data?.source ? ` — ${data.source}` : ''}`;
-  const hasTotal = kind === 'approve' && data?.total > 0;
-  const pct = hasTotal ? Math.min(100, Math.round((data.done * 100) / data.total)) : null;
-  const text = kind === 'approve'
-    ? (hasTotal ? `Đã xét ${data.done.toLocaleString('vi-VN')}/${data.total.toLocaleString('vi-VN')}` : 'Đang xử lý…')
-    : (data?.itemsSeen != null ? `Đã quét ${data.itemsSeen.toLocaleString('vi-VN')} biển` : 'Đang cào…');
+function RunRow({ run, onRefresh }) {
+  const qc = useQueryClient();
+  const { kind, data, source, runId } = run;
+  const [cancelling, setCancelling] = useState(false);
+
+  // 1. Phân loại & Tiêu đề
+  let label = 'Tiến trình';
+  let Icon = RefreshCw;
+  let iconColor = '#0284c7';
+  if (kind === 'approve') {
+    label = 'Duyệt giá VPA';
+    Icon = Layers;
+    iconColor = '#d97706';
+  } else if (kind === 'crawl') {
+    const srcName = source || data?.source || '';
+    label = `Cào dữ liệu VPA (${srcName})`;
+    Icon = RefreshCw;
+    iconColor = '#2563eb';
+  } else if (kind === 'export') {
+    label = `Xuất file ${data?.format?.toUpperCase() || 'Excel'}`;
+    Icon = FileSpreadsheet;
+    iconColor = '#107c41';
+  }
+
+  // 2. Tính toán % tiến độ chính xác
+  let pct = null;
+  let text = 'Đang xử lý…';
+  const status = data?.status || 'running';
+  const isRunning = status === 'running';
+
+  if (kind === 'approve') {
+    const hasTotal = data?.total > 0;
+    if (hasTotal) {
+      pct = Math.min(100, Math.round(((data.done || 0) * 100) / data.total));
+      text = `Đã duyệt ${Number(data.done || 0).toLocaleString('vi-VN')} / ${Number(data.total).toLocaleString('vi-VN')} biển (${pct}%)`;
+    } else {
+      text = isRunning ? 'Đang duyệt danh sách biển…' : 'Đã kết thúc';
+    }
+  } else if (kind === 'crawl') {
+    if (data?.slicesTotal > 0) {
+      pct = Math.min(100, Math.round(((data.slicesDone || 0) * 100) / data.slicesTotal));
+      text = `Lát cắt: ${data.slicesDone} / ${data.slicesTotal} (${pct}%) • ${Number(data.itemsSeen || 0).toLocaleString('vi-VN')} biển`;
+    } else if (data?.itemsExpected > 0) {
+      pct = Math.min(100, Math.round(((data.itemsSeen || 0) * 100) / data.itemsExpected));
+      text = `Đã quét: ${Number(data.itemsSeen || 0).toLocaleString('vi-VN')} / ${Number(data.itemsExpected).toLocaleString('vi-VN')} (${pct}%)`;
+    } else {
+      text = `Đã quét ${Number(data?.itemsSeen || 0).toLocaleString('vi-VN')} biển`;
+    }
+  } else if (kind === 'export') {
+    if (status === 'completed') {
+      pct = 100;
+      text = `Đã xuất ${Number(data?.processedRows || 0).toLocaleString('vi-VN')} biển thành công (100%)`;
+    } else if (status === 'cancelled') {
+      text = 'Đã hủy bởi quản trị viên';
+    } else if (status === 'error') {
+      text = `Lỗi: ${data?.error || 'Không thể tạo file'}`;
+    } else {
+      pct = data?.percent != null ? data.percent : (data?.totalRows > 0 ? Math.min(100, Math.round(((data.processedRows || 0) * 100) / data.totalRows)) : 5);
+      text = data?.totalRows > 0
+        ? `Đã xử lý ${Number(data.processedRows || 0).toLocaleString('vi-VN')} / ${Number(data.totalRows).toLocaleString('vi-VN')} (${pct}%)`
+        : `Đang khởi tạo file ${data?.format?.toUpperCase() || ''}… (${pct}%)`;
+    }
+  }
+
+  // 3. Xử lý Hủy tiến trình
+  const handleCancel = async () => {
+    if (!window.confirm('Bạn có chắc muốn dừng / hủy tiến trình này không?')) return;
+    setCancelling(true);
+    try {
+      if (kind === 'approve') {
+        await apiClient.post(`/api/admin/vpa/plates/price/approve-runs/${runId}/cancel`);
+        qc.invalidateQueries({ queryKey: ['admin-vpa', 'approve-run', runId] });
+      } else if (kind === 'crawl') {
+        const src = source || data?.source;
+        await apiClient.post(`/api/admin/vpa/crawl/${src}/stop`);
+      } else if (kind === 'export') {
+        await apiClient.post(`/api/admin/vpa/plates/export/jobs/${runId}/cancel`);
+        qc.invalidateQueries({ queryKey: ['admin-vpa', 'export-job', runId] });
+      }
+      onRefresh?.();
+    } catch (err) {
+      alert('Không thể hủy tiến trình: ' + (err.message || 'Lỗi'));
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // 4. Xử lý Gỡ / Tải về
+  const handleDismiss = () => {
+    if (kind === 'approve') unregisterApproveRun(runId);
+    if (kind === 'export') unregisterExportJob(runId);
+  };
+
+  const handleDownload = () => {
+    const url = `/api/admin/vpa/plates/export/jobs/${runId}/download`;
+    const token = localStorage.getItem('auth_token');
+    // Mở file tải về kèm Authorization nếu cần hoặc dùng window.open
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', data?.fileName || 'du-lieu.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
-      <div style={{ height: 6, borderRadius: 3, background: 'var(--grey-200)', overflow: 'hidden' }}>
+    <div
+      style={{
+        padding: '12px 14px',
+        borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        background: isRunning ? '#ffffff' : '#f8fafc',
+      }}
+    >
+      {/* Top Header Row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <Icon size={15} color={iconColor} style={{ flexShrink: 0 }} />
+          <span
+            style={{
+              fontSize: '12.5px',
+              fontWeight: 700,
+              color: 'var(--text-strong, #1e293b)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {label}
+          </span>
+          {pct != null && (
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: isRunning ? '#0284c7' : '#16a34a',
+                background: isRunning ? '#e0f2fe' : '#dcfce7',
+                padding: '1px 6px',
+                borderRadius: 4,
+              }}
+            >
+              {pct}%
+            </span>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          {kind === 'export' && status === 'completed' && (
+            <button
+              type="button"
+              onClick={handleDownload}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '4px 8px',
+                borderRadius: 4,
+                border: 'none',
+                background: '#107c41',
+                color: '#ffffff',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <Download size={12} />
+              <span>Tải về</span>
+            </button>
+          )}
+
+          {isRunning ? (
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={cancelling}
+              title="Hủy tiến trình đang chạy"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+                padding: '3px 7px',
+                borderRadius: 4,
+                border: '1px solid #fecaca',
+                background: '#fef2f2',
+                color: '#dc2626',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: cancelling ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {cancelling ? <Loader2 size={11} style={{ animation: 'adminRunWatcherSpin 1s linear infinite' }} /> : <Ban size={11} />}
+              <span>Hủy</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDismiss}
+              title="Đóng thông báo"
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                padding: 3,
+                borderRadius: 4,
+                display: 'flex',
+              }}
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div style={{ height: 6, borderRadius: 3, background: 'var(--grey-200, #e2e8f0)', overflow: 'hidden' }}>
         {pct == null ? (
-          <div style={{ width: '35%', height: '100%', background: 'var(--action-primary)', borderRadius: 3, animation: 'adminRunWatcherIndeterminate 1.1s ease-in-out infinite' }} />
+          <div
+            style={{
+              width: '35%',
+              height: '100%',
+              background: iconColor,
+              borderRadius: 3,
+              animation: 'adminRunWatcherIndeterminate 1.2s ease-in-out infinite',
+            }}
+          />
         ) : (
-          <div style={{ width: `${pct}%`, height: '100%', background: 'var(--action-primary)', transition: 'width 300ms var(--ease-standard)' }} />
+          <div
+            style={{
+              width: `${pct}%`,
+              height: '100%',
+              background: status === 'completed' ? '#16a34a' : (status === 'error' ? '#ef4444' : iconColor),
+              transition: 'width 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
         )}
       </div>
-      <span style={{ font: 'var(--type-caption)', fontSize: '11px', color: 'var(--text-muted)' }}>{text}</span>
-      <style>{'@keyframes adminRunWatcherIndeterminate { 0% { margin-left: 0%; } 50% { margin-left: 60%; } 100% { margin-left: 0%; } }'}</style>
+
+      {/* Detail Text */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text-muted, #64748b)' }}>{text}</span>
+        {data?.fileName && (
+          <span style={{ fontSize: '10px', color: '#94a3b8', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {data.fileName}
+          </span>
+        )}
+      </div>
+
+      <style>{'@keyframes adminRunWatcherIndeterminate { 0% { margin-left: 0%; } 50% { margin-left: 65%; } 100% { margin-left: 0%; } }'}</style>
     </div>
   );
 }

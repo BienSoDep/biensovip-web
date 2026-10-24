@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import {
   CarFront, Check, X, Users, ArrowUpDown, ArrowUp, ArrowDown, Star, Pin, Eye, EyeOff, Lock, SlidersHorizontal, LayoutGrid, List as ListIcon, ChevronDown, ChevronUp, Sparkles,
-  Copy, ExternalLink, MoreHorizontal, Plus, TrendingUp, TrendingDown, RefreshCw, RotateCcw, AlertTriangle, ArrowRight, CheckCircle2, Info, CheckCheck, Download, BookOpen,
+  Copy, ExternalLink, MoreHorizontal, Plus, TrendingUp, TrendingDown, RefreshCw, RotateCcw, AlertTriangle, ArrowRight, CheckCircle2, Info, CheckCheck, Download, BookOpen, BarChart3,
 } from 'lucide-react';
 import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
@@ -24,7 +24,6 @@ import {
   useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, useVpaPlatePriceReference, useStartApproveDriftedVpa,
   useResumeVpaApproveRun,
 } from '../../../services/adminVpa.js';
-import { useExportWithProgress } from '../../../hooks/useExportWithProgress.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { formatDate } from '../../../lib/date.js';
@@ -32,8 +31,6 @@ import { registerApproveRun } from '../../../lib/runWatcher.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 import Modal from '../../../components/Modal.jsx';
-import ExportProgressModal from '../../../components/ExportProgressModal.jsx';
-import ExportOptionModal from './ExportOptionModal.jsx';
 
 const MAX_BULK = 500;
 const COL_KEY = 'bsv.admin.vpaColumns';
@@ -405,7 +402,7 @@ function RowMoreMenu({ plate, pending, onReject, onGroupApprove, onToggleHide, o
 
 // Danh sách biển VPA cho Admin — cùng bố cục và công cụ với trang Biển số (lọc, cột, sắp xếp, sửa nhanh, hàng loạt, CSV, ngăn kéo).
 // queue = hàng đợi Duyệt giá (chỉ biển Có gợi ý / Đề xuất đổi giá).
-export default function VpaAdminList({ queue = false, notify, onOpenGuide, openIntegrityCode }) {
+export default function VpaAdminList({ queue = false, notify, onOpenGuide, openIntegrityCode, go }) {
   const [f, setF] = useState({ tab: '', vehicle: '', priceState: '', hidden: '', featured: '', manual: '', from: '', to: '', ...(queue ? { plateTypeIds: [], provinceIds: [] } : loadSavedFilters()) });
   const [q, setQ] = useState(queue ? '' : consumeDeepLinkQ);
   const [dq] = useDebouncedValue(q, 300);
@@ -420,15 +417,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [drawer, setDrawer] = useState(null); // null | { plate? }
   const [cell, setCell] = useState(null); // inline editing price cell { id, value }
-  const {
-    isOpen: exportModalOpen,
-    progress: exportProgress,
-    startExport: runExportWithProgress,
-    cancelDownload: cancelExportDownload,
-    closeModal: closeExportModal,
-  } = useExportWithProgress();
-  const [exportOptionOpen, setExportOptionOpen] = useState(false);
-  const exporting = exportModalOpen && exportProgress.phase !== 'completed' && exportProgress.phase !== 'error';
   const [integrity, setIntegrity] = useState(() => !!openIntegrityCode);
   useEffect(() => { if (openIntegrityCode) setIntegrity(true); }, [openIntegrityCode]);
   const [bulkSeedOpen, setBulkSeedOpen] = useState(false);
@@ -617,38 +605,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   };
   const bulkMsg = (verb) => (r) => `${verb} ${r.affected} biển${r.skipped ? ` (bỏ qua ${r.skipped})` : ''}`;
   const bulkEdit = (body, verb) => run(() => bulk.mutateAsync({ ids: bulkIds, ...body }), bulkMsg(verb), true);
-
-  const handleExportChoice = (optionsOrFormat, isCurrentPageOnly = false, scope = 'all') => {
-    let targetFormat = 'xlsx';
-    let targetPageOnly = false;
-    let targetScope = 'all';
-
-    if (typeof optionsOrFormat === 'object' && optionsOrFormat !== null) {
-      targetFormat = optionsOrFormat.format || 'xlsx';
-      targetPageOnly = !!optionsOrFormat.isCurrentPageOnly;
-      targetScope = optionsOrFormat.scope || 'all';
-    } else {
-      targetFormat = optionsOrFormat || 'xlsx';
-      targetPageOnly = !!isCurrentPageOnly;
-      targetScope = scope || 'all';
-    }
-
-    const exportParams = targetPageOnly
-      ? { ...params, page, limit, scope: targetScope }
-      : { ...params, page: undefined, limit: undefined, scope: targetScope };
-
-    const scopePrefix = targetScope === 'available'
-      ? 'danh-sach-bien-so-co-san'
-      : (targetScope === 'vpa' ? 'bien-dau-gia-vpa' : (isAvailableTab ? 'bien-vpa-co-san' : 'tong-kho-bien-vpa-va-co-san'));
-    const fileName = targetPageOnly ? `${scopePrefix}-trang-${page}` : scopePrefix;
-
-    runExportWithProgress({
-      url: '/api/admin/vpa/plates/export',
-      params: exportParams,
-      format: targetFormat,
-      defaultFileName: fileName,
-    });
-  };
 
   const quickAdd = async () => {
     const price = quick.price === '' ? null : Number(quick.price);
@@ -1206,17 +1162,16 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             </Button>
           )}
           {!queue && <Button variant={integrity ? 'dark' : 'ghost'} size="md" onClick={() => setIntegrity((v) => !v)}>Kiểm tra dữ liệu</Button>}
-          {/* Nút Xuất dữ liệu mở Modal tùy chọn 3 chế độ (VPA, Có sẵn, Gộp) & 3 định dạng (Excel, Word, CSV) */}
+          {/* Nút điều hướng sang Trung tâm Thống kê & Xuất dữ liệu biển số toàn diện */}
           <Button
             variant="ghost"
             size="md"
-            disabled={exporting}
-            title="Tùy chọn xuất danh sách biển số ra file Excel (.xlsx), Word (.docx) hoặc CSV (.csv)"
-            onClick={() => setExportOptionOpen(true)}
+            title="Mở Trung tâm Thống kê & Xuất dữ liệu biển số toàn diện (Excel, Word, CSV ngầm)"
+            onClick={go ? go('avpastats') : null}
             style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            <Download size={14} />
-            <span>Xuất dữ liệu</span>
+            <BarChart3 size={14} color="var(--action-primary)" />
+            <span>Thống kê &amp; Xuất file</span>
           </Button>
           {queue && (
             <>
@@ -1632,22 +1587,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
         onOpenPlate={(plateNumber) => { setPriceRefId(null); setQ(plateNumber); }}
       />
 
-      <ExportProgressModal
-        open={exportModalOpen}
-        progress={exportProgress}
-        onCancel={cancelExportDownload}
-        onClose={closeExportModal}
-      />
 
-      <ExportOptionModal
-        open={exportOptionOpen}
-        onClose={() => setExportOptionOpen(false)}
-        onExport={handleExportChoice}
-        page={page}
-        pageSize={limit}
-        currentPageCount={items.length}
-        totalCount={data?.total || 0}
-      />
 
       {sel.size > 0 && (
         <div

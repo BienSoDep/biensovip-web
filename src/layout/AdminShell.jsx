@@ -183,7 +183,7 @@ const ADMIN_INFO = {
   actvtemplates: 'Soạn sẵn mẫu tin nhắn để CTV copy gửi khách qua Zalo/Facebook/SMS riêng — dùng {plateNumber}/{referralUrl} trong nội dung để tự điền khi CTV copy.',
   ainsights: 'Báo cáo chuyên sâu: Phễu chuyển đổi toàn diện, radar phát hiện điểm nghẽn, đối soát cung - cầu kho biển, sức khỏe nguồn lead và danh sách biển số tồn đọng cần kích cầu.',
   avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật — so kỳ 7 ngày, chuỗi xu hướng 12 tuần & MA 4 tuần, xếp hạng biến động và đối chiếu giá shop.',
-  avpastats: 'Báo cáo toàn diện kho biển VPA và phân tích thị trường đấu giá. Chuyển đổi giữa 2 tab: "Thống kê Kho & Tiến độ duyệt" (kho biển, cơ cấu giá, giám sát crawler) và "Phân tích Thị trường & Dự báo" (giá trúng thật, chuỗi xu hướng 12 tuần & MA 4 tuần, biến động tỉnh/loại biển, đối chiếu giá shop).',
+  avpastats: 'Báo cáo toàn diện kho biển số hệ thống và dữ liệu đấu giá VPA toàn quốc. Bao gồm dải KPI chung, xuất dữ liệu đa định dạng (Excel/Word/CSV), cùng 2 phân hệ thống kê: Biển đấu giá VPA và Kho biển số hiện tại của shop.',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
