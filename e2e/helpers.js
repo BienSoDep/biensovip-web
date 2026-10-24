@@ -10,9 +10,18 @@ export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'admin@123';
 export async function loginAdmin(page) {
   await page.goto('/dang-nhap');
   await page.getByLabel('Email hoặc số điện thoại').fill(ADMIN_EMAIL);
-  await page.getByLabel('Mật khẩu', { exact: true }).fill(ADMIN_PASSWORD);
-  await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
+  await page.locator('input[type="password"]').first().fill(ADMIN_PASSWORD);
+  await page.locator('form').getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Tổng quan' })).toBeVisible({ timeout: 10000 });
+}
+
+export async function goToAdminScreen(page, screenName) {
+  const mobileMenuBtn = page.getByRole('button', { name: 'Mở menu quản trị' });
+  if (await mobileMenuBtn.isVisible()) {
+    await mobileMenuBtn.click();
+    await page.waitForTimeout(200);
+  }
+  await page.getByRole('button', { name: screenName, exact: true }).last().click();
 }
 
 // Register tự động đăng nhập luôn (không cần bước /dang-nhap riêng) và điều hướng sang

@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './apiClient.js';
 
-function buildQuery({ status, q, page, perPage }) {
+function buildQuery({ status, source, q, page, perPage }) {
   const params = new URLSearchParams();
   if (status && status !== 'all') params.set('status', status);
+  if (source && source !== 'all') params.set('source', source);
   if (q) params.set('q', q);
   params.set('page', String(page || 1));
   params.set('perPage', String(perPage || 20));
@@ -16,6 +17,14 @@ export function useAdminCustomers(filters) {
     queryKey: ['admin-customers', qs],
     queryFn: () => apiClient.get(`/api/admin/customers?${qs}`),
     placeholderData: (prev) => prev,
+  });
+}
+
+export function useAdminCustomerStats() {
+  return useQuery({
+    queryKey: ['admin-customers-stats'],
+    queryFn: () => apiClient.get('/api/admin/customers/stats'),
+    staleTime: 30000,
   });
 }
 

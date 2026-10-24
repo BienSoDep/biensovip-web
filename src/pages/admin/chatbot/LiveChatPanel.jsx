@@ -2,7 +2,9 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   MessageSquare, Send, User, Bot, Headphones, CheckCircle2,
   Clock, Phone, Car, AlertCircle, Sparkles, Zap, RotateCcw,
-  FileText, Search, ThumbsDown, ThumbsUp, ChevronRight
+  FileText, Search, ThumbsDown, ThumbsUp, ChevronRight,
+  PanelRightClose, PanelRightOpen, X, ExternalLink, CornerDownLeft,
+  Loader2, Radio
 } from 'lucide-react';
 import {
   useLiveChatSessions, useLiveChatSessionDetail, useSendStaffLiveMessage,
@@ -11,13 +13,14 @@ import {
 } from '../../../services/adminChatbot.js';
 import { useAdminLiveChatRealtime } from '../../../services/liveChatRealtime.js';
 import { formatDateTime } from '../../../lib/date.js';
+import { toZaloUrl } from '../../../lib/zaloMessage.js';
 
 const TABS = [
   { key: 'all', label: 'Tất cả' },
-  { key: 'waiting', label: 'Chờ hỗ trợ', badgeColor: '#ef4444' },
-  { key: 'active', label: 'Đang tư vấn', badgeColor: '#10b981' },
+  { key: 'waiting', label: 'Chờ hỗ trợ', dotColor: '#ef4444' },
+  { key: 'active', label: 'Đang tư vấn', dotColor: '#10b981' },
   { key: 'leads', label: 'Có SĐT/Lead' },
-  { key: 'dislikes', label: 'Không hài lòng' },
+  { key: 'dislikes', label: 'Cần cải thiện' },
   { key: 'resolved', label: 'Đã hoàn tất' },
 ];
 
@@ -27,9 +30,10 @@ export default function LiveChatPanel({ notify }) {
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const [showCannedMenu, setShowCannedMenu] = useState(false);
+  const [showCrmPanel, setShowCrmPanel] = useState(true);
 
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
+  const textareaRef = useRef(null);
 
   // Queries
   const { data: sessionsData, isLoading: loadingSessions, refetch: refetchSessions } = useLiveChatSessions({
@@ -84,7 +88,7 @@ export default function LiveChatPanel({ notify }) {
 
     try {
       await sendStaffMsg.mutateAsync({ sessionId: selectedSessionId, content });
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
     } catch (err) {
       notify?.(err.message || 'Lỗi gửi tin nhắn');
     }
@@ -124,7 +128,7 @@ export default function LiveChatPanel({ notify }) {
     if (!selectedSessionId) return;
     try {
       await convertToContact.mutateAsync(selectedSessionId);
-      notify?.('Đã chuyển thành Lead CRM trong Quản lý Liên hệ!');
+      notify?.('Đã tạo Lead CRM thành công trong Quản lý Liên hệ!');
     } catch (err) {
       notify?.(err.message || 'Lỗi tạo Contact Lead');
     }
@@ -133,7 +137,7 @@ export default function LiveChatPanel({ notify }) {
   const insertCanned = (content) => {
     setInputMessage(content);
     setShowCannedMenu(false);
-    inputRef.current?.focus();
+    textareaRef.current?.focus();
   };
 
   const filteredCanned = useMemo(() => {
@@ -142,54 +146,105 @@ export default function LiveChatPanel({ notify }) {
     return cannedList.filter(c => c.shortcut.toLowerCase().includes(filter) || c.title.toLowerCase().includes(filter));
   }, [cannedList, inputMessage]);
 
+  const zaloUrl = sessionDetail?.guestPhone ? toZaloUrl(sessionDetail.guestPhone) : null;
+
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: '320px 1fr 280px',
-      gap: 'var(--space-3)',
-      height: 'calc(100vh - 190px)',
-      minHeight: 650,
-      background: 'var(--grey-50)',
+      gridTemplateColumns: showCrmPanel ? '320px minmax(400px, 1fr) 290px' : '320px minmax(400px, 1fr)',
+      height: 'calc(100vh - 185px)',
+      minHeight: 640,
+      background: 'var(--white)',
       borderRadius: 'var(--radius-card)',
       overflow: 'hidden',
-      border: '1px solid var(--grey-200)',
+      border: '1px solid var(--border-hairline)',
+      boxShadow: 'var(--shadow-card)',
+      transition: 'grid-template-columns 200ms ease',
     }}>
+      <style>{`
+        @keyframes bsd-pulse-red {
+          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+          50% { opacity: 0.85; transform: scale(1.1); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+        }
+        .bsd-chat-session-item:hover {
+          background: var(--surface-sunken) !important;
+        }
+        .bsd-custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+          height: 5px;
+        }
+        .bsd-custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .bsd-custom-scrollbar::-webkit-scrollbar-thumb {
+          background: var(--grey-300, #cbd5e1);
+          border-radius: 4px;
+        }
+        .bsd-canned-item:hover {
+          background: var(--surface-sunken) !important;
+        }
+      `}</style>
+
       {/* ================= CỘT 1: DANH SÁCH PHIÊN ================= */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         background: 'var(--white)',
-        borderRight: '1px solid var(--grey-200)',
+        borderRight: '1px solid var(--border-hairline)',
         overflow: 'hidden',
       }}>
-        {/* Search */}
-        <div style={{ padding: 'var(--space-3)', borderBottom: '1px solid var(--grey-100)' }}>
+        {/* Search Bar */}
+        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-hairline)', background: 'var(--surface-sunken)' }}>
           <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-faint)' }} />
+            <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm tên, SĐT, biển số..."
+              placeholder="Tìm theo tên, SĐT, biển số..."
               style={{
                 width: '100%',
-                padding: '8px 10px 8px 34px',
+                padding: '8px 30px 8px 32px',
                 borderRadius: 'var(--radius-field)',
-                border: '1px solid var(--grey-200)',
+                border: '1px solid var(--border-hairline)',
                 font: 'var(--type-body-sm)',
+                background: 'var(--white)',
+                color: 'var(--text-strong)',
                 boxSizing: 'border-box',
+                outline: 'none',
               }}
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  padding: 2,
+                  display: 'flex',
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Filter Tabs */}
-        <div style={{
+        <div className="bsd-custom-scrollbar" style={{
           display: 'flex',
           gap: 4,
-          padding: '6px 8px',
-          background: 'var(--grey-50)',
-          borderBottom: '1px solid var(--grey-200)',
+          padding: '8px 10px',
+          background: 'var(--white)',
+          borderBottom: '1px solid var(--border-hairline)',
           overflowX: 'auto',
+          flexShrink: 0,
         }}>
           {TABS.map((t) => {
             const isSelected = activeTab === t.key;
@@ -203,25 +258,30 @@ export default function LiveChatPanel({ notify }) {
                   borderRadius: 'var(--radius-pill)',
                   padding: '5px 10px',
                   font: 'var(--type-caption)',
-                  fontWeight: isSelected ? 'var(--fw-semibold)' : 'var(--fw-normal)',
-                  background: isSelected ? 'var(--action-primary)' : 'transparent',
-                  color: isSelected ? 'var(--white)' : 'var(--text-body)',
+                  fontWeight: isSelected ? 600 : 500,
+                  background: isSelected ? 'var(--action-primary)' : 'var(--surface-sunken)',
+                  color: isSelected ? '#ffffff' : 'var(--text-body)',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 4,
+                  gap: 5,
+                  transition: 'all 120ms ease',
                 }}
               >
+                {t.dotColor && !isSelected && (
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.dotColor }} />
+                )}
                 <span>{t.label}</span>
                 {t.key === 'waiting' && waitingCount > 0 && (
                   <span style={{
-                    background: isSelected ? 'var(--white)' : '#ef4444',
-                    color: isSelected ? '#ef4444' : 'var(--white)',
+                    background: isSelected ? '#ffffff' : '#ef4444',
+                    color: isSelected ? '#ef4444' : '#ffffff',
                     fontSize: 10,
                     fontWeight: 700,
                     borderRadius: 10,
-                    padding: '1px 5px',
+                    padding: '1px 6px',
+                    animation: isSelected ? 'none' : 'bsd-pulse-red 1.6s infinite ease-in-out',
                   }}>
                     {waitingCount}
                   </span>
@@ -232,14 +292,16 @@ export default function LiveChatPanel({ notify }) {
         </div>
 
         {/* List items */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="bsd-custom-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
           {loadingSessions ? (
-            <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-faint)', font: 'var(--type-body-sm)' }}>
-              Đang tải danh sách...
+            <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>
+              <Loader2 size={20} className="animate-spin" style={{ margin: '0 auto 8px', color: 'var(--action-primary)' }} />
+              <div>Đang tải danh sách...</div>
             </div>
           ) : sessions.length === 0 ? (
-            <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-faint)', font: 'var(--type-body-sm)' }}>
-              Không có phiên chat nào
+            <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>
+              <MessageSquare size={28} strokeWidth={1.5} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+              <div>Không tìm thấy phiên chat nào</div>
             </div>
           ) : (
             sessions.map((s) => {
@@ -250,71 +312,97 @@ export default function LiveChatPanel({ notify }) {
               return (
                 <div
                   key={s.id}
+                  className="bsd-chat-session-item"
                   onClick={() => setSelectedSessionId(s.id)}
                   style={{
-                    padding: '12px var(--space-3)',
-                    borderBottom: '1px solid var(--grey-100)',
+                    padding: '12px 14px',
+                    borderBottom: '1px solid var(--border-hairline)',
                     cursor: 'pointer',
-                    background: isSelected ? 'rgba(234, 88, 12, 0.08)' : (isWaiting ? 'rgba(239, 68, 68, 0.04)' : 'transparent'),
-                    borderLeft: isSelected ? '4px solid var(--action-primary)' : (isWaiting ? '4px solid #ef4444' : '4px solid transparent'),
+                    background: isSelected
+                      ? 'rgba(234, 88, 12, 0.08)'
+                      : (isWaiting ? 'rgba(239, 68, 68, 0.04)' : 'transparent'),
+                    borderLeft: isSelected
+                      ? '3.5px solid var(--action-primary)'
+                      : (isWaiting ? '3.5px solid #ef4444' : '3.5px solid transparent'),
                     transition: 'all 120ms ease',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                       <div style={{
                         width: 32,
                         height: 32,
                         borderRadius: '50%',
-                        background: isWaiting ? '#ef4444' : (isActive ? 'var(--action-primary)' : 'var(--grey-200)'),
-                        color: isWaiting || isActive ? 'var(--white)' : 'var(--text-body)',
+                        background: isWaiting ? '#fee2e2' : (isActive ? 'rgba(234, 88, 12, 0.15)' : 'var(--surface-sunken)'),
+                        color: isWaiting ? '#ef4444' : (isActive ? 'var(--action-primary)' : 'var(--text-strong)'),
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: 700,
                         flexShrink: 0,
+                        position: 'relative',
                       }}>
                         {s.guestName ? s.guestName.charAt(0).toUpperCase() : 'K'}
+                        {/* Status beacon indicator */}
+                        <span style={{
+                          position: 'absolute',
+                          bottom: -1,
+                          right: -1,
+                          width: 9,
+                          height: 9,
+                          borderRadius: '50%',
+                          border: '1.5px solid #ffffff',
+                          background: isWaiting ? '#ef4444' : (isActive ? '#10b981' : (s.status === 'resolved' ? '#94a3b8' : '#3b82f6')),
+                        }} />
                       </div>
-                      <div>
-                        <div style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-title)' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{
+                          font: 'var(--type-body-sm)',
+                          fontWeight: 600,
+                          color: 'var(--text-strong)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
                           {s.guestName || 'Khách vãng lai'}
                         </div>
                         {s.guestPhone && (
                           <div style={{ font: 'var(--type-caption)', color: '#0284c7', display: 'flex', alignItems: 'center', gap: 3 }}>
-                            <Phone size={11} /> {s.guestPhone}
+                            <Phone size={10} /> {s.guestPhone}
                           </div>
                         )}
                       </div>
                     </div>
-                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontSize: 11 }}>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: 11, flexShrink: 0 }}>
                       {formatDateTime(s.lastMessageAt || s.createdAt).split(' ')[1] || ''}
                     </span>
                   </div>
 
                   {s.detectedPlate && (
-                    <div style={{ marginTop: 4, marginBottom: 4 }}>
+                    <div style={{ marginTop: 5, marginBottom: 4 }}>
                       <span style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: 3,
-                        background: '#fef3c7',
-                        color: '#92400e',
-                        padding: '1px 6px',
+                        gap: 4,
+                        background: 'var(--surface-sunken)',
+                        color: 'var(--text-strong)',
+                        padding: '2px 7px',
                         borderRadius: 4,
                         fontSize: 11,
                         fontWeight: 700,
-                        border: '1px solid #fde68a',
+                        border: '1px solid var(--border-hairline)',
+                        fontFamily: 'monospace',
+                        letterSpacing: '0.04em',
                       }}>
-                        <Car size={11} /> {s.detectedPlate}
+                        <Car size={11} style={{ color: 'var(--action-primary)' }} /> {s.detectedPlate}
                       </span>
                     </div>
                   )}
 
                   <div style={{
                     font: 'var(--type-caption)',
-                    color: 'var(--text-faint)',
+                    color: 'var(--text-muted)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -323,30 +411,60 @@ export default function LiveChatPanel({ notify }) {
                     {s.lastMessagePreview || 'Chưa có tin nhắn'}
                   </div>
 
-                  <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     {isWaiting && (
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#fee2e2', color: '#b91c1c', fontWeight: 600 }}>
+                      <span style={{
+                        fontSize: 10.5,
+                        padding: '2px 7px',
+                        borderRadius: 'var(--radius-pill)',
+                        background: '#fee2e2',
+                        color: '#b91c1c',
+                        fontWeight: 600,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 3
+                      }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ef4444' }} />
                         Cần gặp tư vấn
                       </span>
                     )}
                     {isActive && (
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: '#dcfce7', color: '#15803d', fontWeight: 600 }}>
-                        {s.assignedStaffName || 'Đang hỗ trợ'}
+                      <span style={{
+                        fontSize: 10.5,
+                        padding: '2px 7px',
+                        borderRadius: 'var(--radius-pill)',
+                        background: '#dcfce7',
+                        color: '#15803d',
+                        fontWeight: 600,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 3
+                      }}>
+                        <Headphones size={11} /> {s.assignedStaffName || 'Đang hỗ trợ'}
                       </span>
                     )}
                     {s.status === 'bot' && (
-                      <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: 'var(--grey-100)', color: 'var(--text-faint)' }}>
-                        AI Bot
+                      <span style={{
+                        fontSize: 10.5,
+                        padding: '2px 7px',
+                        borderRadius: 'var(--radius-pill)',
+                        background: 'var(--surface-sunken)',
+                        color: 'var(--text-muted)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 3
+                      }}>
+                        <Bot size={11} /> AI Bot
                       </span>
                     )}
                     {s.hasDislike && (
-                      <span title="Có tin nhắn bị chấm không hữu ích" style={{ display: 'inline-flex', alignItems: 'center', color: '#ef4444' }}>
-                        <ThumbsDown size={11} />
+                      <span title="Có câu trả lời khách chưa hài lòng" style={{ display: 'inline-flex', alignItems: 'center', color: '#ef4444' }}>
+                        <ThumbsDown size={12} />
                       </span>
                     )}
                     {s.ledToContact && (
-                      <span title="Đã chuyển thành Contact Lead" style={{ display: 'inline-flex', alignItems: 'center', color: '#10b981' }}>
-                        <CheckCircle2 size={11} />
+                      <span title="Đã chuyển thành Lead CRM" style={{ display: 'inline-flex', alignItems: 'center', color: '#10b981' }}>
+                        <CheckCircle2 size={12} />
                       </span>
                     )}
                   </div>
@@ -368,57 +486,61 @@ export default function LiveChatPanel({ notify }) {
           <>
             {/* Header chat */}
             <div style={{
-              padding: '12px var(--space-4)',
-              borderBottom: '1px solid var(--grey-200)',
+              padding: '12px 18px',
+              borderBottom: '1px solid var(--border-hairline)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               background: 'var(--white)',
+              flexShrink: 0,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   borderRadius: '50%',
                   background: 'var(--action-primary)',
-                  color: 'var(--white)',
+                  color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 700,
-                  fontSize: 14,
+                  fontSize: 15,
+                  boxShadow: '0 2px 6px rgba(234, 88, 12, 0.25)',
                 }}>
                   {sessionDetail.guestName ? sessionDetail.guestName.charAt(0).toUpperCase() : 'K'}
                 </div>
                 <div>
-                  <div style={{ font: 'var(--type-body-md)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-title)' }}>
-                    {sessionDetail.guestName || 'Khách hàng'}
+                  <div style={{ font: 'var(--type-body-md)', fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>{sessionDetail.guestName || 'Khách hàng'}</span>
                     {sessionDetail.detectedPlate && (
                       <span style={{
-                        marginLeft: 8,
-                        fontSize: 12,
-                        padding: '2px 6px',
+                        fontSize: 11.5,
+                        padding: '1px 7px',
                         borderRadius: 4,
-                        background: '#fef3c7',
-                        color: '#92400e',
+                        background: 'var(--surface-sunken)',
+                        color: 'var(--text-strong)',
                         fontWeight: 700,
+                        border: '1px solid var(--border-hairline)',
+                        fontFamily: 'monospace',
+                        letterSpacing: '0.04em'
                       }}>
                         {sessionDetail.detectedPlate}
                       </span>
                     )}
                   </div>
-                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', display: 'flex', gap: 8 }}>
-                    <span>Trạng thái: <strong>{
-                      sessionDetail.status === 'waiting_staff' ? 'Chờ tư vấn viên' :
-                      sessionDetail.status === 'staff_active' ? `Đang chat với ${sessionDetail.assignedStaffName || 'Nhân viên'}` :
-                      sessionDetail.status === 'resolved' ? 'Đã hoàn tất' : 'Trợ lý AI'
+                  <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'flex', gap: 8, alignItems: 'center', marginTop: 1 }}>
+                    <span>Phụ trách: <strong>{
+                      sessionDetail.status === 'waiting_staff' ? 'Đang đợi nhân viên vào' :
+                      sessionDetail.status === 'staff_active' ? (sessionDetail.assignedStaffName || 'Tư vấn viên') :
+                      sessionDetail.status === 'resolved' ? 'Đã kết thúc' : 'Trợ lý AI tự động'
                     }</strong></span>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {sessionDetail.status !== 'staff_active' ? (
                   <button
                     type="button"
@@ -427,15 +549,17 @@ export default function LiveChatPanel({ notify }) {
                     style={{
                       border: 'none',
                       borderRadius: 'var(--radius-field)',
-                      padding: '8px 12px',
+                      padding: '7px 14px',
                       background: 'var(--action-primary)',
-                      color: 'var(--white)',
+                      color: '#ffffff',
                       font: 'var(--type-body-sm)',
-                      fontWeight: 'var(--fw-semibold)',
+                      fontWeight: 600,
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6,
+                      boxShadow: '0 2px 6px rgba(234, 88, 12, 0.25)',
+                      transition: 'all 120ms ease',
                     }}
                   >
                     <Headphones size={15} /> Tiếp nhận tư vấn
@@ -446,19 +570,20 @@ export default function LiveChatPanel({ notify }) {
                     onClick={handleReturnToBot}
                     disabled={returnToBot.isPending}
                     style={{
-                      border: '1px solid var(--grey-300)',
+                      border: '1px solid var(--border-hairline)',
                       borderRadius: 'var(--radius-field)',
-                      padding: '8px 12px',
+                      padding: '7px 12px',
                       background: 'var(--white)',
-                      color: 'var(--text-body)',
+                      color: 'var(--text-strong)',
                       font: 'var(--type-body-sm)',
+                      fontWeight: 500,
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6,
                     }}
                   >
-                    <Bot size={15} /> Chuyển lại cho AI
+                    <Bot size={15} style={{ color: 'var(--action-primary)' }} /> Chuyển lại cho AI
                   </button>
                 )}
 
@@ -467,31 +592,53 @@ export default function LiveChatPanel({ notify }) {
                     type="button"
                     onClick={handleResolve}
                     disabled={resolve.isPending}
+                    title="Đóng phiên tư vấn này"
                     style={{
-                      border: '1px solid var(--grey-300)',
+                      border: '1px solid var(--border-hairline)',
                       borderRadius: 'var(--radius-field)',
-                      padding: '8px 12px',
+                      padding: '7px 12px',
                       background: 'var(--white)',
-                      color: 'var(--text-body)',
+                      color: 'var(--text-strong)',
                       font: 'var(--type-body-sm)',
+                      fontWeight: 500,
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6,
                     }}
                   >
-                    <CheckCircle2 size={15} /> Hoàn tất phiên
+                    <CheckCircle2 size={15} style={{ color: '#10b981' }} /> Hoàn tất
                   </button>
                 )}
+
+                {/* Nút ẩn/hiện Panel CRM */}
+                <button
+                  type="button"
+                  onClick={() => setShowCrmPanel(!showCrmPanel)}
+                  title={showCrmPanel ? 'Thu gọn panel CRM' : 'Mở rộng panel CRM'}
+                  style={{
+                    border: '1px solid var(--border-hairline)',
+                    borderRadius: 'var(--radius-field)',
+                    padding: '7px 10px',
+                    background: showCrmPanel ? 'var(--surface-sunken)' : 'var(--white)',
+                    color: 'var(--text-strong)',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  {showCrmPanel ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+                </button>
               </div>
             </div>
 
             {/* Khung tin nhắn */}
-            <div style={{
+            <div className="bsd-custom-scrollbar" style={{
               flex: 1,
-              padding: 'var(--space-4)',
+              padding: '16px 20px',
               overflowY: 'auto',
-              background: '#f8fafc',
+              background: 'var(--surface-sunken)',
               display: 'flex',
               flexDirection: 'column',
               gap: 12,
@@ -508,12 +655,12 @@ export default function LiveChatPanel({ notify }) {
                       <span style={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: 4,
-                        padding: '4px 12px',
-                        background: 'rgba(0,0,0,0.05)',
-                        borderRadius: 12,
-                        fontSize: 11,
-                        color: 'var(--text-faint)',
+                        gap: 5,
+                        padding: '4px 14px',
+                        background: 'rgba(0,0,0,0.06)',
+                        borderRadius: 14,
+                        fontSize: 11.5,
+                        color: 'var(--text-muted)',
                       }}>
                         <AlertCircle size={12} /> {m.content}
                       </span>
@@ -528,41 +675,65 @@ export default function LiveChatPanel({ notify }) {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: isStaff ? 'flex-end' : 'flex-start',
-                      maxWidth: '75%',
+                      maxWidth: '78%',
                       alignSelf: isStaff ? 'flex-end' : 'flex-start',
                     }}
                   >
                     <div style={{
                       fontSize: 11,
-                      color: 'var(--text-faint)',
-                      marginBottom: 2,
+                      color: 'var(--text-muted)',
+                      marginBottom: 3,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
+                      padding: '0 4px'
                     }}>
                       {isStaff && <span>Tư vấn viên: <strong>{m.senderName || 'Bạn'}</strong></span>}
                       {isUser && <span>Khách: <strong>{m.senderName || 'Khách hàng'}</strong></span>}
-                      {isAssistant && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Bot size={12} /> Trợ lý AI</span>}
+                      {isAssistant && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#0284c7' }}>
+                          <Bot size={12} /> Trợ lý AI
+                        </span>
+                      )}
                       <span>• {formatDateTime(m.createdAt).split(' ')[1]}</span>
                     </div>
 
                     <div style={{
                       padding: '10px 14px',
-                      borderRadius: isStaff ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
-                      background: isStaff ? 'var(--action-primary)' : (isAssistant ? 'var(--white)' : '#e2e8f0'),
-                      color: isStaff ? 'var(--white)' : 'var(--text-body)',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                      borderRadius: isStaff ? '14px 14px 3px 14px' : '14px 14px 14px 3px',
+                      background: isStaff ? 'var(--action-primary)' : (isAssistant ? 'var(--white)' : 'var(--white)'),
+                      color: isStaff ? '#ffffff' : 'var(--text-strong)',
+                      boxShadow: isStaff ? '0 2px 8px rgba(234, 88, 12, 0.2)' : '0 1px 3px rgba(0,0,0,0.06)',
                       font: 'var(--type-body-sm)',
                       lineHeight: 1.5,
                       whiteSpace: 'pre-wrap',
-                      border: isAssistant ? '1px solid var(--grey-200)' : 'none',
+                      wordBreak: 'break-word',
+                      border: isStaff ? 'none' : '1px solid var(--border-hairline)',
                     }}>
                       {m.content}
                     </div>
 
                     {m.rating !== null && m.rating !== undefined && (
-                      <div style={{ marginTop: 2, fontSize: 11, color: m.rating === 1 ? '#10b981' : '#ef4444' }}>
-                        {m.rating === 1 ? '👍 Khách đánh giá hữu ích' : '👎 Khách đánh giá chưa hài lòng'}
+                      <div style={{
+                        marginTop: 3,
+                        fontSize: 11,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '1px 6px',
+                        borderRadius: 4,
+                        background: m.rating === 1 ? '#dcfce7' : '#fee2e2',
+                        color: m.rating === 1 ? '#15803d' : '#b91c1c'
+                      }}>
+                        {m.rating === 1 ? (
+                          <>
+                            <ThumbsUp size={11} /> Khách thấy hữu ích
+                          </>
+                        ) : (
+                          <>
+                            <ThumbsDown size={11} /> Khách chưa hài lòng
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -573,90 +744,152 @@ export default function LiveChatPanel({ notify }) {
 
             {/* Menu Canned Responses gợi ý khi gõ / */}
             {showCannedMenu && (
-              <div style={{
+              <div className="bsd-custom-scrollbar" style={{
                 background: 'var(--white)',
-                borderTop: '1px solid var(--grey-200)',
-                maxHeight: 180,
+                borderTop: '1px solid var(--border-hairline)',
+                maxHeight: 200,
                 overflowY: 'auto',
-                boxShadow: '0 -4px 12px rgba(0,0,0,0.05)',
+                boxShadow: '0 -6px 16px rgba(0,0,0,0.08)',
                 padding: '6px 0',
               }}>
-                <div style={{ padding: '4px 12px', fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
-                  Gợi ý câu trả lời mẫu (Nhấn để chèn)
-                </div>
-                {filteredCanned.map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => insertCanned(c.content)}
-                    style={{
-                      padding: '6px 12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      fontSize: 13,
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--grey-50)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                <div style={{
+                  padding: '4px 14px',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span>Mẫu câu trả lời nhanh (Nhấp để chèn)</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCannedMenu(false)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}
                   >
-                    <div>
-                      <strong style={{ color: 'var(--action-primary)' }}>{c.shortcut}</strong> - {c.title}
-                    </div>
-                    <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{c.category}</span>
+                    <X size={13} />
+                  </button>
+                </div>
+                {filteredCanned.length === 0 ? (
+                  <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)' }}>
+                    Không tìm thấy câu mẫu phù hợp với từ khóa này.
                   </div>
-                ))}
+                ) : (
+                  filteredCanned.map((c) => (
+                    <div
+                      key={c.id}
+                      className="bsd-canned-item"
+                      onClick={() => insertCanned(c.content)}
+                      style={{
+                        padding: '7px 14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: 13,
+                        transition: 'background 100ms ease',
+                      }}
+                    >
+                      <div style={{ minWidth: 0, paddingRight: 10 }}>
+                        <span style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          color: 'var(--action-primary)',
+                          background: 'rgba(234, 88, 12, 0.1)',
+                          padding: '1px 6px',
+                          borderRadius: 4,
+                          marginRight: 8
+                        }}>
+                          {c.shortcut}
+                        </span>
+                        <strong style={{ color: 'var(--text-strong)' }}>{c.title}</strong>
+                        <span style={{ color: 'var(--text-muted)', marginLeft: 8, fontSize: 12 }}>
+                          — {c.content.slice(0, 50)}...
+                        </span>
+                      </div>
+                      <span style={{
+                        fontSize: 10.5,
+                        color: 'var(--text-muted)',
+                        background: 'var(--surface-sunken)',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        flexShrink: 0
+                      }}>
+                        {c.category}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             )}
 
-            {/* Composer Input */}
+            {/* Composer Input - Hỗ trợ gõ nhiều dòng */}
             <form onSubmit={handleSend} style={{
-              padding: 'var(--space-3) var(--space-4)',
+              padding: '10px 16px',
               background: 'var(--white)',
-              borderTop: '1px solid var(--grey-200)',
+              borderTop: '1px solid var(--border-hairline)',
               display: 'flex',
               gap: 8,
-              alignItems: 'center',
+              alignItems: 'flex-end',
             }}>
               <button
                 type="button"
                 onClick={() => setShowCannedMenu(!showCannedMenu)}
                 title="Mẫu trả lời nhanh (hoặc gõ / trong ô nhập)"
                 style={{
-                  border: '1px solid var(--grey-300)',
+                  border: '1px solid var(--border-hairline)',
                   borderRadius: 'var(--radius-field)',
-                  padding: '8px 10px',
-                  background: showCannedMenu ? 'var(--grey-100)' : 'var(--white)',
-                  color: 'var(--text-body)',
+                  padding: '9px 12px',
+                  background: showCannedMenu ? 'var(--surface-sunken)' : 'var(--white)',
+                  color: 'var(--text-strong)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 4,
-                  fontSize: 12,
+                  gap: 5,
+                  fontSize: 12.5,
                   fontWeight: 600,
+                  height: 38,
+                  boxSizing: 'border-box'
                 }}
               >
-                <Zap size={15} color="var(--action-primary)" /> Mẫu /
+                <Zap size={14} style={{ color: 'var(--action-primary)' }} />
+                <span>Mẫu /</span>
               </button>
 
-              <input
-                ref={inputRef}
+              <textarea
+                ref={textareaRef}
+                rows={1}
                 value={inputMessage}
                 onChange={(e) => {
                   setInputMessage(e.target.value);
                   if (e.target.value.startsWith('/')) {
                     setShowCannedMenu(true);
-                  } else if (showCannedMenu) {
+                  } else if (showCannedMenu && !e.target.value.includes('/')) {
                     setShowCannedMenu(false);
                   }
                 }}
-                placeholder="Nhập tin nhắn trả lời (hoặc gõ / để chọn mẫu)..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend(e);
+                  }
+                }}
+                placeholder="Nhập tin nhắn... (Enter gửi, Shift+Enter xuống dòng, / gọi mẫu câu)"
                 style={{
                   flex: 1,
-                  padding: '10px 14px',
+                  minHeight: 38,
+                  maxHeight: 110,
+                  padding: '8px 12px',
                   borderRadius: 'var(--radius-field)',
-                  border: '1px solid var(--grey-300)',
+                  border: '1px solid var(--border-hairline)',
                   font: 'var(--type-body-sm)',
+                  color: 'var(--text-strong)',
+                  background: 'var(--white)',
                   outline: 'none',
+                  resize: 'none',
+                  lineHeight: 1.45,
+                  boxSizing: 'border-box'
                 }}
               />
 
@@ -666,18 +899,21 @@ export default function LiveChatPanel({ notify }) {
                 style={{
                   border: 'none',
                   borderRadius: 'var(--radius-field)',
-                  padding: '10px 16px',
+                  padding: '9px 16px',
                   background: inputMessage.trim() ? 'var(--action-primary)' : 'var(--grey-300)',
-                  color: 'var(--white)',
+                  color: '#ffffff',
                   cursor: inputMessage.trim() ? 'pointer' : 'default',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
                   fontWeight: 600,
+                  fontSize: 13,
+                  height: 38,
                   transition: 'background 120ms ease',
                 }}
               >
-                <Send size={15} /> Gửi
+                {sendStaffMsg.isPending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                <span>Gửi</span>
               </button>
             </form>
           </>
@@ -688,128 +924,225 @@ export default function LiveChatPanel({ notify }) {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--text-faint)',
+            color: 'var(--text-muted)',
             gap: 12,
+            background: 'var(--surface-sunken)',
           }}>
-            <MessageSquare size={48} strokeWidth={1.2} />
-            <div style={{ font: 'var(--type-body-md)' }}>Chọn một phiên chat từ danh sách để bắt đầu tư vấn</div>
+            <MessageSquare size={44} strokeWidth={1.3} style={{ opacity: 0.35 }} />
+            <div style={{ font: 'var(--type-body-md)', fontWeight: 500 }}>Chọn một phiên chat từ danh sách bên trái để bắt đầu</div>
           </div>
         )}
       </div>
 
       {/* ================= CỘT 3: THÔNG TIN KHÁCH & CRM ================= */}
-      <div style={{
-        background: 'var(--white)',
-        borderLeft: '1px solid var(--grey-200)',
-        padding: 'var(--space-4)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-4)',
-        overflowY: 'auto',
-      }}>
-        {selectedSessionId && sessionDetail ? (
-          <>
-            <div>
-              <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-faint)', fontWeight: 700, marginBottom: 8 }}>
-                Khách hàng
-              </div>
-              <div style={{ background: 'var(--grey-50)', padding: 12, borderRadius: 'var(--radius-card)', border: '1px solid var(--grey-200)' }}>
-                <div style={{ font: 'var(--type-body-md)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-title)' }}>
-                  {sessionDetail.guestName || 'Chưa cung cấp tên'}
+      {showCrmPanel && (
+        <div className="bsd-custom-scrollbar" style={{
+          background: 'var(--white)',
+          borderLeft: '1px solid var(--border-hairline)',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 18,
+          overflowY: 'auto',
+        }}>
+          {selectedSessionId && sessionDetail ? (
+            <>
+              {/* Customer Box */}
+              <div>
+                <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, letterSpacing: '0.04em' }}>
+                  Thông tin khách hàng
                 </div>
-                <div style={{ font: 'var(--type-body-sm)', color: '#0284c7', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Phone size={14} /> {sessionDetail.guestPhone || 'Chưa có SĐT'}
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-faint)', fontWeight: 700, marginBottom: 8 }}>
-                Biển số xe quan tâm
-              </div>
-              {sessionDetail.detectedPlate ? (
                 <div style={{
-                  background: '#fef3c7',
-                  border: '1px solid #fde68a',
+                  background: 'var(--surface-sunken)',
                   padding: 12,
                   borderRadius: 'var(--radius-card)',
-                  textAlign: 'center',
+                  border: '1px solid var(--border-hairline)'
                 }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: '#92400e', letterSpacing: 1 }}>
-                    {sessionDetail.detectedPlate}
+                  <div style={{ font: 'var(--type-body-md)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                    {sessionDetail.guestName || 'Chưa cung cấp tên'}
                   </div>
-                  <div style={{ fontSize: 11, color: '#b45309', marginTop: 4 }}>
-                    Trích xuất tự động qua hội thoại
+                  <div style={{ font: 'var(--type-body-sm)', color: '#0284c7', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Phone size={13} /> {sessionDetail.guestPhone || 'Chưa có số điện thoại'}
                   </div>
-                </div>
-              ) : (
-                <div style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', fontStyle: 'italic' }}>
-                  Khách chưa đề cập biển số cụ thể
-                </div>
-              )}
-            </div>
 
-            <div>
-              <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-faint)', fontWeight: 700, marginBottom: 8 }}>
-                Chuyển đổi CRM
-              </div>
-              {sessionDetail.ledToContact ? (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: 10,
-                  background: '#dcfce7',
-                  color: '#15803d',
-                  borderRadius: 'var(--radius-card)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}>
-                  <CheckCircle2 size={16} /> Đã tạo Lead trong Contact CRM
+                  {/* Call & Zalo Quick Actions */}
+                  {sessionDetail.guestPhone && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+                      <a
+                        href={`tel:${sessionDetail.guestPhone}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 5,
+                          padding: '6px 8px',
+                          borderRadius: 'var(--radius-field)',
+                          background: 'var(--action-primary)',
+                          color: '#ffffff',
+                          fontSize: 11.5,
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <Phone size={12} /> Gọi ngay
+                      </a>
+                      {zaloUrl && (
+                        <a
+                          href={zaloUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 5,
+                            padding: '6px 8px',
+                            borderRadius: 'var(--radius-field)',
+                            background: '#0068FF',
+                            color: '#ffffff',
+                            fontSize: 11.5,
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <ExternalLink size={12} /> Nhắn Zalo
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleConvertToContact}
-                  disabled={convertToContact.isPending}
-                  style={{
-                    width: '100%',
-                    border: 'none',
-                    borderRadius: 'var(--radius-field)',
-                    padding: '10px 14px',
-                    background: '#10b981',
-                    color: 'var(--white)',
-                    font: 'var(--type-body-sm)',
-                    fontWeight: 600,
-                    cursor: 'pointer',
+              </div>
+
+              {/* Plate Showcase */}
+              <div>
+                <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, letterSpacing: '0.04em' }}>
+                  Biển số xe quan tâm
+                </div>
+                {sessionDetail.detectedPlate ? (
+                  <div style={{
+                    background: '#ffffff',
+                    border: '2px solid #000000',
+                    borderRadius: 8,
+                    padding: '12px 8px',
+                    textAlign: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    position: 'relative'
+                  }}>
+                    <div style={{
+                      fontFamily: 'monospace',
+                      fontSize: 20,
+                      fontWeight: 800,
+                      color: '#000000',
+                      letterSpacing: 2
+                    }}>
+                      {sessionDetail.detectedPlate}
+                    </div>
+                    <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 4 }}>
+                      Trích xuất tự động qua ngữ cảnh chat
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: 12,
+                    background: 'var(--surface-sunken)',
+                    borderRadius: 'var(--radius-card)',
+                    fontSize: 12,
+                    color: 'var(--text-muted)',
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                    border: '1px solid var(--border-hairline)'
+                  }}>
+                    Khách chưa nhắc đến biển số cụ thể
+                  </div>
+                )}
+              </div>
+
+              {/* CRM Lead Conversion */}
+              <div>
+                <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, letterSpacing: '0.04em' }}>
+                  Chuyển đổi CRM
+                </div>
+                {sessionDetail.ledToContact ? (
+                  <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                  }}
-                >
-                  <FileText size={16} /> Tạo Lead CRM ngay
-                </button>
-              )}
-            </div>
+                    gap: 8,
+                    padding: 10,
+                    background: '#dcfce7',
+                    color: '#15803d',
+                    borderRadius: 'var(--radius-card)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    border: '1px solid #bbf7d0'
+                  }}>
+                    <CheckCircle2 size={16} /> Đã lưu thành Lead CRM
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleConvertToContact}
+                    disabled={convertToContact.isPending}
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      borderRadius: 'var(--radius-field)',
+                      padding: '9px 14px',
+                      background: '#10b981',
+                      color: '#ffffff',
+                      font: 'var(--type-body-sm)',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      boxShadow: '0 2px 6px rgba(16, 185, 129, 0.25)'
+                    }}
+                  >
+                    {convertToContact.isPending ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
+                    <span>Tạo Lead CRM ngay</span>
+                  </button>
+                )}
+              </div>
 
-            <div>
-              <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-faint)', fontWeight: 700, marginBottom: 8 }}>
-                Chi tiết phiên
+              {/* Session Timeline */}
+              <div>
+                <div style={{ font: 'var(--type-caption)', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, letterSpacing: '0.04em' }}>
+                  Thông số phiên
+                </div>
+                <div style={{
+                  font: 'var(--type-caption)',
+                  color: 'var(--text-body)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                  padding: 10,
+                  background: 'var(--surface-sunken)',
+                  borderRadius: 'var(--radius-card)',
+                  border: '1px solid var(--border-hairline)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Bắt đầu:</span>
+                    <span>{formatDateTime(sessionDetail.createdAt)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Cập nhật:</span>
+                    <span>{formatDateTime(sessionDetail.lastMessageAt)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Tổng tin:</span>
+                    <strong style={{ color: 'var(--text-strong)' }}>{sessionDetail.messages?.length || 0} tin nhắn</strong>
+                  </div>
+                </div>
               </div>
-              <div style={{ font: 'var(--type-caption)', color: 'var(--text-body)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div>Bắt đầu: {formatDateTime(sessionDetail.createdAt)}</div>
-                <div>Gần nhất: {formatDateTime(sessionDetail.lastMessageAt)}</div>
-                <div>Tổng tin nhắn: {sessionDetail.messages?.length || 0}</div>
-              </div>
+            </>
+          ) : (
+            <div style={{ color: 'var(--text-muted)', font: 'var(--type-caption)', textAlign: 'center', marginTop: 40 }}>
+              Chưa chọn phiên
             </div>
-          </>
-        ) : (
-          <div style={{ color: 'var(--text-faint)', font: 'var(--type-caption)', textAlign: 'center', marginTop: 40 }}>
-            Chưa chọn phiên
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

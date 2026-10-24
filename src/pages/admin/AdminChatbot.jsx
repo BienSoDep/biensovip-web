@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import {
   Trash2, ChevronLeft, ChevronRight, BookOpen, Search, Copy, Check,
-  Download, ChevronDown, ChevronUp, Sparkles, Filter, HelpCircle
+  Download, ChevronDown, ChevronUp, Sparkles, Filter, HelpCircle,
+  Headphones, Zap, History, GitBranch, FlaskConical, Sliders, BarChart3
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -20,14 +21,14 @@ import LiveChatPanel from './chatbot/LiveChatPanel.jsx';
 import CannedResponsesPanel from './chatbot/CannedResponsesPanel.jsx';
 
 const TABS = [
-  { value: 'live', label: '🔴 Live Chat Realtime', info: 'Tiếp nhận và tư vấn trực tiếp 2 chiều theo thời gian thực giữa nhân viên và khách hàng.' },
-  { value: 'canned', label: 'Mẫu trả lời nhanh', info: 'Quản lý kho câu trả lời mẫu soạn sẵn (Canned Responses) kèm phím tắt gõ nhanh cho tư vấn viên.' },
-  { value: 'sessions', label: 'Lịch sử hội thoại', info: 'Xem lại các đoạn chat thực tế giữa khách hàng và trợ lý AI để cải thiện kịch bản tư vấn.' },
-  { value: 'scenarios', label: 'Kịch bản liên tục (Multi-turn)', info: '10 chuỗi kịch bản kiểm thử hội thoại đa lượt liên tục (50 turns): Phễu bán hàng, TT24, Đấu giá VPA, Jailbreak, Khiếu nại...' },
-  { value: 'testing', label: '100 câu kiểm thử (Testing Suite)', info: 'Bộ 100 câu hỏi test benchmark phân loại tự động (Blocked, DirectPlate, DirectFilter, NeedsLlm).' },
-  { value: 'kb', label: 'Kho 100 câu hỏi mẫu (KB)', info: 'Bộ 100 câu hỏi - đáp chuyên sâu chuẩn hóa về Pháp lý Thông tư 24, Đấu giá VPA, Phong thủy và Dịch vụ.' },
-  { value: 'settings', label: 'Cấu hình trợ lý', info: 'Thiết lập System Prompt ngữ cảnh, độ sáng tạo Temperature và giới hạn Token.' },
-  { value: 'stats', label: 'Thống kê', info: 'Báo cáo số lượt hội thoại và tần suất sử dụng chatbot theo ngày.' },
+  { value: 'live', label: 'Live Chat Realtime', isLive: true, icon: Headphones, info: 'Tiếp nhận và tư vấn trực tiếp 2 chiều theo thời gian thực giữa nhân viên và khách hàng.' },
+  { value: 'canned', label: 'Mẫu trả lời nhanh', icon: Zap, info: 'Quản lý kho câu trả lời mẫu soạn sẵn (Canned Responses) kèm phím tắt gõ nhanh cho tư vấn viên.' },
+  { value: 'sessions', label: 'Lịch sử hội thoại', icon: History, info: 'Xem lại các đoạn chat thực tế giữa khách hàng và trợ lý AI để cải thiện kịch bản tư vấn.' },
+  { value: 'scenarios', label: 'Kịch bản liên tục', icon: GitBranch, badge: '50 turns', info: '10 chuỗi kịch bản kiểm thử hội thoại đa lượt liên tục (50 turns): Phễu bán hàng, TT24, Đấu giá VPA, Jailbreak, Khiếu nại...' },
+  { value: 'testing', label: '100 câu kiểm thử', icon: FlaskConical, info: 'Bộ 100 câu hỏi test benchmark phân loại tự động (Blocked, DirectPlate, DirectFilter, NeedsLlm).' },
+  { value: 'kb', label: 'Kho 100 câu mẫu', icon: BookOpen, info: 'Bộ 100 câu hỏi - đáp chuyên sâu chuẩn hóa về Pháp lý Thông tư 24, Đấu giá VPA, Phong thủy và Dịch vụ.' },
+  { value: 'settings', label: 'Cấu hình trợ lý', icon: Sliders, info: 'Thiết lập System Prompt ngữ cảnh, độ sáng tạo Temperature và giới hạn Token.' },
+  { value: 'stats', label: 'Báo cáo thống kê', icon: BarChart3, info: 'Báo cáo số lượt hội thoại và tần suất sử dụng chatbot theo ngày.' },
 ];
 
 export default function AdminChatbot({ notify }) {
@@ -35,25 +36,77 @@ export default function AdminChatbot({ notify }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
-        {TABS.map((t) => (
-          <button key={t.value} type="button" onClick={() => setTab(t.value)}
-            style={{
-              border: 'none', borderRadius: 'var(--radius-pill)', padding: '8px 16px', cursor: 'pointer',
-              font: 'var(--type-body-sm)', fontWeight: tab === t.value ? 'var(--fw-semibold)' : 'var(--fw-medium)',
-              background: tab === t.value ? 'var(--action-primary)' : 'var(--white)',
-              color: tab === t.value ? 'var(--white)' : 'var(--text-body)',
-              boxShadow: tab === t.value ? 'none' : 'var(--shadow-inset-hairline)',
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-            }}>
-            <span>{t.label}</span>
-            {t.info && (
-              <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
-                <InfoTip text={t.info} size={13} style={{ color: tab === t.value ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
-              </span>
-            )}
-          </button>
-        ))}
+      <style>{`
+        @keyframes bsd-pulse-dot {
+          0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+          50% { transform: scale(1.15); opacity: 0.85; box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+        }
+        .bsd-live-beacon {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #ef4444;
+          display: inline-block;
+          animation: bsd-pulse-dot 1.6s infinite ease-in-out;
+        }
+      `}</style>
+      <div style={{
+        display: 'flex',
+        gap: 6,
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        background: 'var(--surface-sunken)',
+        padding: '5px 6px',
+        borderRadius: 'var(--radius-pill)',
+        border: '1px solid var(--border-hairline)'
+      }}>
+        {TABS.map((t) => {
+          const isActive = tab === t.value;
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setTab(t.value)}
+              style={{
+                border: 'none',
+                borderRadius: 'var(--radius-pill)',
+                padding: '7px 14px',
+                cursor: 'pointer',
+                font: 'var(--type-body-sm)',
+                fontWeight: isActive ? 600 : 500,
+                background: isActive ? 'var(--action-primary)' : 'transparent',
+                color: isActive ? 'var(--white)' : 'var(--text-body)',
+                boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all 140ms ease',
+              }}
+            >
+              {t.isLive && <span className="bsd-live-beacon" />}
+              {Icon && <Icon size={14} style={{ opacity: isActive ? 1 : 0.7 }} />}
+              <span>{t.label}</span>
+              {t.badge && (
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: '1px 6px',
+                  borderRadius: 8,
+                  background: isActive ? 'rgba(255,255,255,0.22)' : 'var(--grey-200)',
+                  color: isActive ? '#fff' : 'var(--text-muted)'
+                }}>
+                  {t.badge}
+                </span>
+              )}
+              {t.info && (
+                <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <InfoTip text={t.info} size={13} style={{ color: isActive ? 'rgba(255,255,255,0.85)' : 'var(--text-faint)' }} />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
       {tab === 'live' && <LiveChatPanel notify={notify} />}
       {tab === 'canned' && <CannedResponsesPanel notify={notify} />}
