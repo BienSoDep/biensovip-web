@@ -118,20 +118,42 @@
     flex-direction: column !important;
     width: 100% !important;
     border-radius: var(--radius-card) !important;
-    padding: 6px !important;
+    padding: 6px 10px !important;
+    min-height: 0 !important;
+    gap: 4px !important;
   }
   .plate-search-bar > span,
   .plate-search-bar > input,
   .plate-search-bar > button,
-  .plate-search-bar > div,
+  .plate-search-bar > div {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+  }
+  .plate-search-bar > span {
+    height: 44px !important;
+  }
   .plate-search-bar > span > input {
     width: 100% !important;
+    height: 44px !important;
+  }
+  .plate-search-bar > div > input {
+    width: 100% !important;
+    height: 44px !important;
   }
   .plate-search-divider {
     width: 100% !important;
     height: 1px !important;
     align-self: stretch !important;
-    margin: 4px 0 !important;
+    margin: 2px 0 !important;
+  }
+  .plate-search-bar > div:last-child {
+    display: flex !important;
+    width: 100% !important;
+  }
+  .plate-search-bar > div:last-child button {
+    flex: 1 1 0 !important;
+    justify-content: center !important;
   }
 
   /* Compare: mobile xếp 1 cột dọc */
