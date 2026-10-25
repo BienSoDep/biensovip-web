@@ -62,7 +62,7 @@ function TikTokRail() {
   const renderItem = (v) => (
     <div key={v.id} className={`promo-rail__item${v.platform === 'tiktok' ? ' promo-rail__item--tiktok' : ''}`}>
       {v.platform === 'tiktok' ? (
-        <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+        <TikTokEmbed videoUrl={v.videoUrl} title={v.title} compact={true} />
       ) : v.thumbnailUrl ? (
         <img src={v.thumbnailUrl} alt={v.title || 'Video quảng cáo'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       ) : (
