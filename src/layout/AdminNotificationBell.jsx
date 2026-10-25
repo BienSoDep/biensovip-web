@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell } from 'lucide-react';
 import { useAdminNotificationFeed } from '../services/systemHealth.js';
 import { timeAgo } from '../lib/date.js';
@@ -87,8 +88,27 @@ export default function AdminNotificationBell({ go }) {
       {unreadCount > 0 && (
         <span style={{ position: 'absolute', top: -3, right: -4, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--status-danger)', color: '#fff', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', fontWeight: 'var(--fw-bold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unreadCount > 99 ? '99+' : unreadCount}</span>
       )}
-      {open && pos && (
-        <div ref={panelRef} id="admin-notif-panel" role="menu" aria-label="Danh sách thông báo quản trị" style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, maxHeight: 420, overflowY: 'auto', background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-4)', zIndex: 95, animation: 'modalIn 150ms var(--ease-out)' }}>
+      {open && pos && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={panelRef}
+          id="admin-notif-panel"
+          role="menu"
+          aria-label="Danh sách thông báo quản trị"
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            left: pos.left,
+            width: pos.width,
+            maxHeight: Math.min(420, typeof window !== 'undefined' ? window.innerHeight - pos.top - 16 : 420),
+            overflowY: 'auto',
+            background: 'var(--white)',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: 'var(--shadow-4), 0 12px 32px -4px rgba(14, 15, 18, 0.16)',
+            border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
+            zIndex: 1000,
+            animation: 'modalIn 150ms var(--ease-out)',
+          }}
+        >
           <div style={{ padding: 'var(--space-3) var(--space-4)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Thông báo</div>
           {items.length === 0 ? (
             <div style={{ padding: 'var(--space-6)', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Chưa có thông báo nào.</div>
@@ -107,7 +127,8 @@ export default function AdminNotificationBell({ go }) {
               );
             })
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

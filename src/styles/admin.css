@@ -87,6 +87,7 @@ button[aria-expanded]:hover {
   top: 0;
   max-height: 100vh;
   overflow-y: auto;
+  z-index: 40;
 }
 
 /* Admin dense tables scroll shadow */
