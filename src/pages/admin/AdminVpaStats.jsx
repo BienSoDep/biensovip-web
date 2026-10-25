@@ -125,7 +125,7 @@ export default function AdminVpaStats({ go, patch, st }) {
               variant="primary"
               size="md"
               disabled={exporting}
-              title="Xuất dữ liệu biển số ra Excel, Word hoặc CSV (xử lý ngầm, hỗ trợ toàn bộ kho 1.000.000+ biển)"
+              title="Xuất dữ liệu biển số ra Excel, Word hoặc CSV (xử lý ngầm, không giới hạn số lượng biển)"
               onClick={() => setExportModalOpen(true)}
               style={{
                 display: 'inline-flex',
