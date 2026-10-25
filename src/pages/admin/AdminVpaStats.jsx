@@ -48,7 +48,7 @@ export default function AdminVpaStats({ go, patch, st }) {
 
     try {
       setExporting(true);
-      const res = await apiClient.post('/api/admin/vpa/plates/export/jobs', null, {
+      const res = await apiClient.post(`/api/admin/vpa/plates/export/jobs?format=${encodeURIComponent(targetFormat)}&scope=${encodeURIComponent(targetScope)}`, null, {
         params: {
           format: targetFormat,
           scope: targetScope,
@@ -418,6 +418,12 @@ export default function AdminVpaStats({ go, patch, st }) {
         onClose={() => setExportModalOpen(false)}
         onExport={handleExportChoice}
         totalCount={totalVpa + totalShop}
+        counts={{
+          all: totalVpa + totalShop,
+          vpa: totalVpa,
+          available: approvedVpa + availableShop,
+          shop: totalShop,
+        }}
       />
     </div>
   );

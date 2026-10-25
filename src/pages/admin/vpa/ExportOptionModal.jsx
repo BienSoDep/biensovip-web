@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Download, FileSpreadsheet, FileText, FileCode, CheckCircle2, Layers, Landmark, CarFront, Filter, Layers2 } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
+import { useVpaExportCounts } from '../../../services/adminVpa.js';
 
 export default function ExportOptionModal({
   open,
@@ -11,12 +12,25 @@ export default function ExportOptionModal({
   pageSize = 50,
   currentPageCount = 0,
   totalCount = 0,
+  counts = {},
+  filter = {},
 }) {
   const [scope, setScope] = useState('all'); // 'all' | 'vpa' | 'available'
   const [format, setFormat] = useState('xlsx'); // 'xlsx' | 'docx' | 'csv'
   const [range, setRange] = useState('all'); // 'all' | 'page'
 
+  const { data: serverCounts } = useVpaExportCounts(filter, { enabled: !!open });
+
   if (!open) return null;
+
+  const effectiveCounts = {
+    all: serverCounts?.all ?? counts?.all ?? totalCount,
+    vpa: serverCounts?.vpa ?? counts?.vpa ?? totalCount,
+    available: serverCounts?.available ?? counts?.available ?? 0,
+    shop: serverCounts?.shop ?? counts?.shop ?? 0,
+  };
+
+  const currentCount = effectiveCounts[scope] ?? totalCount;
 
   const handleSubmit = (e) => {
     e?.preventDefault();
@@ -32,26 +46,29 @@ export default function ExportOptionModal({
     {
       id: 'all',
       title: 'Gộp cả hai (VPA & Biển có sẵn)',
+      count: effectiveCounts.all,
       badge: 'Khuyên dùng',
       icon: Layers,
       color: '#0284c7',
-      desc: 'Mỗi Tỉnh/Thành phố là 1 Sheet riêng, trong đó gộp cả biển VPA và biển có sẵn của tỉnh đó.',
+      desc: 'Mỗi Tỉnh/Thành phố là 1 Sheet riêng, trong đó xếp kho biển có sẵn lên đầu sheet, tiếp nối là toàn bộ biển VPA của tỉnh đó.',
     },
     {
       id: 'vpa',
       title: 'Riêng biển đấu giá VPA',
+      count: effectiveCounts.vpa,
       badge: 'VPA Only',
       icon: Landmark,
       color: '#d97706',
-      desc: 'Chỉ xuất biển đấu giá VPA, chia Sheet riêng theo từng Tỉnh/Thành phố dễ dàng theo dõi và gửi đối tác.',
+      desc: 'Chỉ xuất biển đấu giá VPA (phiên tuần, phiên tháng, đã đấu giá), chia Sheet theo từng Tỉnh/Thành phố.',
     },
     {
       id: 'available',
       title: 'Riêng biển số có sẵn',
+      count: effectiveCounts.available,
       badge: 'Có sẵn',
       icon: CarFront,
       color: '#16a34a',
-      desc: 'Chỉ xuất biển có sẵn (đã duyệt giá / kho hệ thống), chia Sheet riêng theo từng Tỉnh/Thành phố.',
+      desc: 'Chỉ xuất biển số có sẵn (biển VPA đã duyệt giá bán & biển kho hệ thống sẵn sàng giao dịch), chia Sheet theo Tỉnh/Thành phố.',
     },
   ];
 
@@ -82,8 +99,12 @@ export default function ExportOptionModal({
     },
   ];
 
+  const currentScopeTitle = scope === 'all'
+    ? 'Toàn bộ kho (VPA & Sẵn)'
+    : (scope === 'vpa' ? 'Riêng biển đấu giá VPA' : 'Riêng biển số có sẵn');
+
   return (
-    <Modal open={open} onClose={onClose} title="Tùy chọn xuất dữ liệu biển số" maxWidth="580px">
+    <Modal open={open} onClose={onClose} title="Tùy chọn xuất dữ liệu biển số" maxWidth="600px">
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Section 1: Phạm vi kho dữ liệu */}
         <div>
@@ -103,7 +124,7 @@ export default function ExportOptionModal({
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 12,
-                    padding: '10px 14px',
+                    padding: '11px 14px',
                     borderRadius: 'var(--radius-md, 8px)',
                     border: `1.5px solid ${active ? opt.color : 'var(--grey-200, #e2e8f0)'}`,
                     background: active ? `${opt.color}0a` : 'var(--surface-raised, #ffffff)',
@@ -113,8 +134,8 @@ export default function ExportOptionModal({
                 >
                   <div
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 34,
+                      height: 34,
                       borderRadius: 6,
                       background: active ? opt.color : 'var(--surface-sunken, #f1f5f9)',
                       color: active ? '#ffffff' : opt.color,
@@ -125,11 +146,11 @@ export default function ExportOptionModal({
                       marginTop: 2,
                     }}
                   >
-                    <Icon size={17} />
+                    <Icon size={18} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: active ? opt.color : 'var(--text-strong)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: active ? opt.color : 'var(--text-strong)' }}>
                         {opt.title}
                       </span>
                       {opt.badge && (
@@ -139,23 +160,37 @@ export default function ExportOptionModal({
                             fontWeight: 600,
                             padding: '1px 6px',
                             borderRadius: 4,
-                            background: active ? `${opt.color}20` : 'var(--surface-sunken)',
-                            color: active ? opt.color : 'var(--text-muted)',
+                            background: active ? `${opt.color}20` : 'var(--surface-sunken, #f1f5f9)',
+                            color: active ? opt.color : 'var(--text-muted, #64748b)',
                           }}
                         >
                           {opt.badge}
                         </span>
                       )}
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: '1px 8px',
+                          borderRadius: 99,
+                          background: active ? opt.color : 'var(--surface-sunken, #f1f5f9)',
+                          color: active ? '#ffffff' : 'var(--text-strong, #334155)',
+                          marginLeft: 'auto',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {Number(opt.count || 0).toLocaleString('vi-VN')} biển
+                      </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-muted, #64748b)', lineHeight: 1.4 }}>
+                    <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-muted, #64748b)', lineHeight: 1.45 }}>
                       {opt.desc}
                     </p>
                   </div>
                   <div style={{ paddingTop: 3 }}>
                     <div
                       style={{
-                        width: 16,
-                        height: 16,
+                        width: 17,
+                        height: 17,
                         borderRadius: '50%',
                         border: `1.5px solid ${active ? opt.color : 'var(--grey-300, #cbd5e1)'}`,
                         display: 'flex',
@@ -164,7 +199,7 @@ export default function ExportOptionModal({
                         background: active ? opt.color : 'transparent',
                       }}
                     >
-                      {active && <CheckCircle2 size={12} color="#ffffff" />}
+                      {active && <CheckCircle2 size={13} color="#ffffff" />}
                     </div>
                   </div>
                 </div>
@@ -232,10 +267,13 @@ export default function ExportOptionModal({
               }}
             >
               <div style={{ fontSize: 12.5, fontWeight: 700, color: range === 'all' ? 'var(--primary)' : 'var(--text-strong)', marginBottom: 2 }}>
-                Toàn bộ theo bộ lọc
+                Toàn bộ theo bộ lọc ({currentScopeTitle})
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                {totalCount.toLocaleString('vi-VN')} biển phù hợp (không giới hạn số lượng) • Chạy ngầm & theo dõi %
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                <strong style={{ color: 'var(--primary, #0284c7)', fontSize: 12.5, fontWeight: 800 }}>
+                  {Number(currentCount || 0).toLocaleString('vi-VN')}
+                </strong>{' '}
+                biển phù hợp dự kiến xuất • Chạy ngầm &amp; theo dõi %
               </div>
             </div>
 
@@ -252,7 +290,7 @@ export default function ExportOptionModal({
               <div style={{ fontSize: 12.5, fontWeight: 700, color: range === 'page' ? 'var(--primary)' : 'var(--text-strong)', marginBottom: 2 }}>
                 Chỉ trang hiện tại
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
                 Trang {page} • {currentPageCount || pageSize} biển đang xem
               </div>
             </div>
