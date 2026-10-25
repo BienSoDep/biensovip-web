@@ -1,16 +1,8 @@
 import { useEffect, useState } from 'react';
-import { loadAuth } from '../lib/authStore.js';
+import { loadAuth, clearAuth, tokenExpired } from '../lib/authStore.js';
 import { tryRefreshToken } from '../services/apiClient.js';
 
-// Kiểm tra hết hạn JWT client-side (payload exp, giây). Không verify chữ ký — server làm việc đó.
-function tokenExpired(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return !payload.exp || payload.exp * 1000 < Date.now();
-  } catch { return true; }
-}
-
-export default function RequireAuth({ st, go, children }) {
+export default function RequireAuth({ st, go, patch, children }) {
   // UC08 — guard cần token hợp lệ, không chỉ cờ client st.isAdmin (có thể bị cũ/giả).
   const auth = loadAuth();
   const accessExpired = !auth?.accessToken || tokenExpired(auth.accessToken);
@@ -27,18 +19,28 @@ export default function RequireAuth({ st, go, children }) {
     setChecking(true);
     tryRefreshToken().then((token) => {
       if (cancelled) return;
-      setRefreshed(!!token);
+      if (token) {
+        setRefreshed(true);
+      } else {
+        clearAuth();
+        patch?.({ user: null, isAdmin: false });
+      }
       setChecking(false);
     });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy lại khi accessExpired đổi, không theo auth object mới mỗi render
-  }, [accessExpired, st.isAdmin]);
+  }, [accessExpired, st.isAdmin, patch]);
 
   const authed = !!st.isAdmin && !checking && (!accessExpired || refreshed);
 
   useEffect(() => {
-    if (!checking && !authed) go('login')();
-  }, [checking, authed, go]);
+    if (!checking && !authed) {
+      clearAuth();
+      patch?.({ user: null, isAdmin: false });
+      go('login')();
+    }
+  }, [checking, authed, go, patch]);
 
   return authed ? children : null;
 }
+
