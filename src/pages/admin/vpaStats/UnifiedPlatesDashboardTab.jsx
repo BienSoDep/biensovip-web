@@ -24,6 +24,7 @@ export default function UnifiedPlatesDashboardTab({
   onSwitchTab,
   onOpenExport,
   onQuickExport,
+  onOpenHistory,
   go,
 }) {
   const [activeMetricTab, setActiveMetricTab] = useState('all'); // 'all' | 'volume' | 'price' | 'vehicle'
@@ -619,6 +620,7 @@ export default function UnifiedPlatesDashboardTab({
         vpaTotal={totalVpa}
         onOpenExport={onOpenExport}
         onQuickExport={onQuickExport}
+        onOpenHistory={onOpenHistory}
         go={go}
       />
     </div>

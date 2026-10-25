@@ -167,6 +167,19 @@ export function useVpaExportCounts(params, options) {
   });
 }
 
+export function useVpaExportHistory(params, options) {
+  return useQuery({
+    queryKey: [KEY, 'export-history', params],
+    queryFn: () => apiClient.get('/api/admin/vpa/plates/export/history', { params }),
+    staleTime: 15 * 1000,
+    ...options,
+  });
+}
+
+export const useDeleteVpaExportHistory = () =>
+  useVpaMutation((id) => apiClient.delete(`/api/admin/vpa/plates/export/history/${id}`));
+
+
 export async function exportVpaAuctionResultsCsv(params) {
   const auth = loadAuth();
   const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/auction-results/export?${toQuery(params)}`, {

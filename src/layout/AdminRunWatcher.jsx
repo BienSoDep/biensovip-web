@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { Loader2, X, ChevronUp, Download, Ban, FileSpreadsheet, Layers, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Loader2, X, ChevronUp, Download, Ban, FileSpreadsheet, Layers, RefreshCw, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useVpaOverview } from '../services/adminVpa.js';
 import { loadAuth } from '../lib/authStore.js';
+import ExportHistoryModal from '../pages/admin/vpa/ExportHistoryModal.jsx';
 import {
   getActiveApproveRuns,
   subscribeApproveRuns,
@@ -106,12 +107,13 @@ export default function AdminRunWatcher() {
   const allItems = [...runningApprove, ...crawlRuns, ...runningExport, ...finishedExport, ...finishedApprove];
   const runningCount = runningApprove.length + crawlRuns.length + runningExport.length;
   const [expanded, setExpanded] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     if (allItems.length === 0) setExpanded(false);
   }, [allItems.length]);
 
-  if (allItems.length === 0) return null;
+  if (allItems.length === 0 && !historyOpen) return null;
 
   return (
     <div style={{ position: 'fixed', right: 'var(--space-5, 20px)', bottom: 'var(--space-5, 20px)', zIndex: 9999 }}>
@@ -181,6 +183,37 @@ export default function AdminRunWatcher() {
               />
             ))}
           </div>
+
+          {/* Footer */}
+          <div
+            style={{
+              padding: '8px 12px',
+              background: '#f8fafc',
+              borderTop: '1px solid var(--border-subtle, #e2e8f0)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: '#0284c7',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+              }}
+            >
+              <Clock size={13} />
+              <span>Xem lịch sử file đã xuất (30 ngày)</span>
+            </button>
+          </div>
         </div>
       ) : (
         <button
@@ -214,6 +247,7 @@ export default function AdminRunWatcher() {
           <ChevronUp size={14} />
         </button>
       )}
+      <ExportHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} />
       <style>{'@keyframes adminRunWatcherSpin { to { transform: rotate(360deg); } }'}</style>
     </div>
   );

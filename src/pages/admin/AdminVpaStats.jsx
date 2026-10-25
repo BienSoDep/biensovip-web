@@ -6,6 +6,7 @@ import {
 import toast from 'react-hot-toast';
 import Button from '../../components/Button.jsx';
 import ExportOptionModal from './vpa/ExportOptionModal.jsx';
+import ExportHistoryModal from './vpa/ExportHistoryModal.jsx';
 import InventoryOverviewTab from './vpaStats/InventoryOverviewTab.jsx';
 import PricingManagementTab from './vpaStats/PricingManagementTab.jsx';
 import GeographyAndPlateTypesTab from './vpaStats/GeographyAndPlateTypesTab.jsx';
@@ -23,6 +24,7 @@ export default function AdminVpaStats({ go, patch, st }) {
   // 3 tab chính: 'overview' (Dashboard Tổng Hợp & So Sánh Tỉ Lệ), 'vpa' (Biển đấu giá VPA) và 'shop' (Kho biển số của chúng ta)
   const [activeMainTab, setActiveMainTab] = useState('overview');
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   // Sub-tabs bên trong VPA
@@ -139,6 +141,26 @@ export default function AdminVpaStats({ go, patch, st }) {
             >
               <Download size={15} />
               <span>Xuất dữ liệu biển số</span>
+            </Button>
+
+            {/* Nút Lịch sử xuất file 30 ngày */}
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              title="Xem và tải lại các file đã xuất trong vòng 30 ngày qua"
+              onClick={() => setHistoryModalOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontWeight: 600,
+                color: '#0369a1',
+                borderColor: 'rgba(2, 132, 199, 0.3)',
+              }}
+            >
+              <Clock size={14} />
+              <span>Lịch sử xuất (30 ngày)</span>
             </Button>
 
             {/* Chuyển trang nhanh: Quản lý Biển VPA */}
@@ -355,6 +377,7 @@ export default function AdminVpaStats({ go, patch, st }) {
           onSwitchTab={(tab) => setActiveMainTab(tab)}
           onOpenExport={() => setExportModalOpen(true)}
           onQuickExport={(options) => handleExportChoice(options)}
+          onOpenHistory={() => setHistoryModalOpen(true)}
           go={go}
         />
       )}
@@ -417,6 +440,7 @@ export default function AdminVpaStats({ go, patch, st }) {
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
         onExport={handleExportChoice}
+        onOpenHistory={() => setHistoryModalOpen(true)}
         totalCount={totalVpa + totalShop}
         counts={{
           all: totalVpa + totalShop,
@@ -424,6 +448,12 @@ export default function AdminVpaStats({ go, patch, st }) {
           available: approvedVpa + availableShop,
           shop: totalShop,
         }}
+      />
+
+      {/* 5. Modal Lịch sử xuất file biển số (Lưu trữ 30 ngày) */}
+      <ExportHistoryModal
+        open={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
       />
     </div>
   );
