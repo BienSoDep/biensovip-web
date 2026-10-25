@@ -81,4 +81,31 @@ test.describe('Admin VPA Management (UC49)', () => {
       await expect(bulkBar).not.toBeVisible();
     }
   });
+
+  test('Admin VPA Stats renders sidebar order, unified inventory table, download button, and all tabs without errors', async ({ page }) => {
+    // 1. Kiểm tra vị trí menu Thống kê Biển số & VPA trên đầu nhóm Kho biển số & VPA
+    const statsNav = page.getByRole('button', { name: /Thống kê Biển số & VPA/i });
+    await expect(statsNav).toBeVisible();
+    await statsNav.click();
+    await page.waitForLoadState('networkidle');
+
+    // 2. Tab 1 Dashboard Tổng Hợp & Bảng Danh Sách Gộp
+    await expect(page.getByText('Danh Sách Kho Biển Số Gộp (Shop & Đấu Giá VPA)')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: /Xuất file Excel kho gộp/i })).toBeVisible();
+
+    // 3. Tab 2: Thống kê Biển đấu giá VPA
+    const tabVpa = page.getByRole('tab', { name: /2\. Thống kê Biển đấu giá VPA/i });
+    await tabVpa.click();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(/Đã xảy ra lỗi/i)).not.toBeVisible();
+
+    // 4. Tab 3: Kho biển số của chúng ta hiện tại (đã sửa lỗi .slice is not a function)
+    const tabShop = page.getByRole('tab', { name: /3\. Kho biển số của chúng ta/i });
+    await tabShop.click();
+    await page.waitForLoadState('networkidle');
+    // Đảm bảo không gặp error boundary đỏ
+    await expect(page.getByText(/Đã xảy ra lỗi/i)).not.toBeVisible();
+    await expect(page.getByText(/TypeError/i)).not.toBeVisible();
+  });
 });
+

@@ -22,6 +22,7 @@ export default function ShopPlatesStatsTab({ go }) {
 
   const { data: plateTypes } = useAdminCategories('plate_type');
   const { data: provinces } = useAdminCategories('province');
+  const plateTypesList = Array.isArray(plateTypes) ? plateTypes : (plateTypes?.items || []);
 
   // Trạng thái kho biển
   const statusItems = useMemo(() => statusDist?.items || [], [statusDist]);
@@ -198,7 +199,7 @@ export default function ShopPlatesStatsTab({ go }) {
         </SectionTitle>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-2)' }}>
-          {(plateTypes || []).slice(0, 8).map((t, idx) => (
+          {plateTypesList.slice(0, 8).map((t, idx) => (
             <div
               key={t.id}
               onClick={() => go?.('aplates')}

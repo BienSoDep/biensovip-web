@@ -13,6 +13,7 @@ import Button from '../../../components/Button.jsx';
 import Skeleton from '../../../components/Skeleton.jsx';
 import { CARD, num, SectionTitle, StatCard } from './vpaStatsShared.jsx';
 import { usePlateDistribution } from '../../../services/adminDashboard.js';
+import UnifiedPlatesListSection from './UnifiedPlatesListSection.jsx';
 
 export default function UnifiedPlatesDashboardTab({
   vpaStats,
@@ -22,6 +23,7 @@ export default function UnifiedPlatesDashboardTab({
   shopHot = 0,
   onSwitchTab,
   onOpenExport,
+  onQuickExport,
   go,
 }) {
   const [activeMetricTab, setActiveMetricTab] = useState('all'); // 'all' | 'volume' | 'price' | 'vehicle'
@@ -610,6 +612,15 @@ export default function UnifiedPlatesDashboardTab({
           </div>
         </div>
       </div>
+
+      {/* 5. DANH SÁCH BIỂN SỐ GỘP (SHOP & ĐẤU GIÁ VPA) KÈM NÚT XUẤT EXCEL / DOWNLOAD */}
+      <UnifiedPlatesListSection
+        shopTotal={totalShop}
+        vpaTotal={totalVpa}
+        onOpenExport={onOpenExport}
+        onQuickExport={onQuickExport}
+        go={go}
+      />
     </div>
   );
 }

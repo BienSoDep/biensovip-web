@@ -76,7 +76,7 @@ export default function GeographyAndPlateTypesTab({ go, patch }) {
               gap: 8,
               marginTop: 8
             }}>
-              {stats.byProvince.slice(0, 8).map((p, idx) => {
+              {(Array.isArray(stats?.byProvince) ? stats.byProvince : []).slice(0, 8).map((p, idx) => {
                 const percent = totalPlatesInStats > 0 ? Math.round((p.count / totalPlatesInStats) * 100) : 0;
                 return (
                   <div

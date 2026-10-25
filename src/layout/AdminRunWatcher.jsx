@@ -3,6 +3,7 @@ import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { Loader2, X, ChevronUp, Download, Ban, FileSpreadsheet, Layers, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../services/apiClient.js';
 import { useVpaOverview } from '../services/adminVpa.js';
+import { loadAuth } from '../lib/authStore.js';
 import {
   getActiveApproveRuns,
   subscribeApproveRuns,
@@ -322,16 +323,37 @@ function RunRow({ run, onRefresh }) {
     if (kind === 'export') unregisterExportJob(runId);
   };
 
-  const handleDownload = () => {
-    const url = `/api/admin/vpa/plates/export/jobs/${runId}/download`;
-    const token = localStorage.getItem('auth_token');
-    // Mở file tải về kèm Authorization nếu cần hoặc dùng window.open
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', data?.fileName || 'du-lieu.xlsx');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const auth = loadAuth();
+      const token = auth?.accessToken;
+      const downloadUrl = `${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/plates/export/jobs/${runId}/download`;
+
+      const res = await fetch(downloadUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) {
+        throw new Error(`Máy chủ phản hồi mã ${res.status}`);
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.setAttribute('download', data?.fileName || 'du-lieu.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+    } catch (err) {
+      alert('Không thể tải file: ' + (err.message || 'Lỗi hệ thống'));
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (

@@ -354,6 +354,7 @@ export default function AdminVpaStats({ go, patch, st }) {
           shopHot={hotShop}
           onSwitchTab={(tab) => setActiveMainTab(tab)}
           onOpenExport={() => setExportModalOpen(true)}
+          onQuickExport={(options) => handleExportChoice(options)}
           go={go}
         />
       )}
