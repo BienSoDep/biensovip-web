@@ -142,200 +142,43 @@ export default function UnifiedPlatesDashboardTab({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
-      {/* 1. HERO STRIP: Dải 4 Thẻ KPI Đối Soát Nhanh */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
-        {/* Card 1: Tổng quy mô 2 kho */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-            borderRadius: 'var(--radius-card, 12px)',
-            padding: '16px 18px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-muted)' }}>Tổng quy mô hệ thống</span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: 9999,
-                background: 'rgba(2, 132, 199, 0.1)',
-                color: '#0284c7',
-              }}
-            >
-              Gộp 2 nguồn
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <strong style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-strong)', letterSpacing: '-0.5px' }}>
-              {num(totalCombined)}
-            </strong>
-            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>biển số</span>
-          </div>
-          {/* Dual Multi-color Progress bar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <div style={{ height: 8, borderRadius: 9999, background: '#e2e8f0', overflow: 'hidden', display: 'flex' }}>
-              <div
-                style={{
-                  width: `${vpaSharePct}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #f59e0b, #d97706)',
-                  borderRadius: '9999px 0 0 9999px',
-                }}
-                title={`VPA: ${vpaSharePct}%`}
-              />
-              <div
-                style={{
-                  width: `${shopSharePct}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #0284c7, #2563eb)',
-                  borderRadius: '0 9999px 9999px 0',
-                }}
-                title={`Shop: ${shopSharePct}%`}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#d97706' }} />
-                <span>VPA: <strong>{vpaSharePct}%</strong> ({num(totalVpa)})</span>
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#0284c7' }} />
-                <span>Shop: <strong>{shopSharePct}%</strong> ({num(totalShop)})</span>
-              </span>
-            </div>
-          </div>
-        </div>
+      {/* 1. HERO STRIP: Dải 4 Thẻ KPI Đối Soát Nhanh (Đồng bộ chuẩn hệ thống) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-3)' }}>
+        <StatCard
+          label="Tổng quy mô hệ thống"
+          value={num(totalCombined)}
+          sub={`VPA: ${vpaSharePct}% (${num(totalVpa)}) • Shop: ${shopSharePct}% (${num(totalShop)})`}
+          tone="var(--text-strong)"
+          badge="Gộp 2 nguồn"
+          icon={Layers}
+        />
 
-        {/* Card 2: Biển Sẵn Sàng Giao Dịch & Mở Bán */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)',
-            borderRadius: 'var(--radius-card, 12px)',
-            padding: '16px 18px',
-            border: '1px solid #bbf7d0',
-            boxShadow: '0 2px 8px rgba(22, 163, 74, 0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: '#166534' }}>Sẵn sàng mở bán &amp; Giao dịch</span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: 9999,
-                background: 'rgba(22, 163, 74, 0.15)',
-                color: '#16a34a',
-              }}
-            >
-              Khả dụng cao
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <strong style={{ fontSize: 26, fontWeight: 900, color: '#15803d', letterSpacing: '-0.5px' }}>
-              {num(totalLiquid)}
-            </strong>
-            <span style={{ fontSize: 13, color: '#166534' }}>
-              ({liquidityPct}% toàn kho)
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#166534', paddingTop: 4 }}>
-            <span>Đã duyệt VPA: <strong>{num(approvedVpa)}</strong></span>
-            <span>•</span>
-            <span>Shop sẵn sàng: <strong>{num(availableShop)}</strong></span>
-          </div>
-        </div>
+        <StatCard
+          label="Sẵn sàng mở bán & Giao dịch"
+          value={num(totalLiquid)}
+          sub={`Đã duyệt VPA: ${num(approvedVpa)} • Shop có sẵn: ${num(availableShop)}`}
+          tone="var(--status-success-ink, #16a34a)"
+          badge={`${liquidityPct}% khả dụng`}
+          icon={CheckCircle2}
+        />
 
-        {/* Card 3: Cơ cấu Loại Xe (Ô tô vs Xe máy) */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, #faf5ff 100%)',
-            borderRadius: 'var(--radius-card, 12px)',
-            padding: '16px 18px',
-            border: '1px solid #e9d5ff',
-            boxShadow: '0 2px 8px rgba(139, 92, 246, 0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: '#6b21a8' }}>Tỉ lệ Phương tiện (Xe)</span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: 9999,
-                background: 'rgba(139, 92, 246, 0.15)',
-                color: '#8b5cf6',
-              }}
-            >
-              Ô tô / Xe máy
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <strong style={{ fontSize: 26, fontWeight: 900, color: '#7e22ce', letterSpacing: '-0.5px' }}>
-              {carRatio}%
-            </strong>
-            <span style={{ fontSize: 13, color: '#6b21a8' }}>Ô tô ({num(combinedCar)})</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, color: '#6b21a8' }}>
-            <span>Xe máy: <strong>{motoRatio}%</strong> ({num(combinedMoto)})</span>
-            <span style={{ fontWeight: 600 }}>Tỷ lệ: {carRatio}:{motoRatio}</span>
-          </div>
-        </div>
+        <StatCard
+          label="Tỉ lệ phương tiện"
+          value={`${carRatio}% Ô tô`}
+          sub={`Ô tô: ${num(combinedCar)} • Xe máy: ${num(combinedMoto)} (${motoRatio}%)`}
+          tone="var(--text-strong)"
+          badge="Ô tô / Xe máy"
+          icon={CarFront}
+        />
 
-        {/* Card 4: Độ Phủ & Biển VIP / Nổi bật */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)',
-            borderRadius: 'var(--radius-card, 12px)',
-            padding: '16px 18px',
-            border: '1px solid #fef3c7',
-            boxShadow: '0 2px 8px rgba(217, 119, 6, 0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: '#92400e' }}>Độ phủ &amp; Biển VIP Hot</span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: 9999,
-                background: 'rgba(217, 119, 6, 0.15)',
-                color: '#d97706',
-              }}
-            >
-              Toàn quốc
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <strong style={{ fontSize: 26, fontWeight: 900, color: '#b45309', letterSpacing: '-0.5px' }}>
-              63 / 63
-            </strong>
-            <span style={{ fontSize: 13, color: '#92400e' }}>Tỉnh / Thành phố</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#92400e' }}>
-            <span>Biển Shop VIP: <strong>{num(shopHot)}</strong></span>
-            <span>•</span>
-            <span>VPA đa dạng tỉnh: <strong>100%</strong></span>
-          </div>
-        </div>
+        <StatCard
+          label="Độ phủ & Biển VIP Hot"
+          value="63 / 63 Tỉnh"
+          sub={`Biển Shop VIP: ${num(shopHot)} • VPA: 100% phủ sóng`}
+          tone="var(--action-primary, #F19720)"
+          badge="Toàn quốc"
+          icon={Sparkles}
+        />
       </div>
 
       {/* 2. KHỐI BIỂU ĐỒ SO SÁNH TỈ LỆ CHÍNH (2 Cột trực quan) */}
@@ -350,7 +193,7 @@ export default function UnifiedPlatesDashboardTab({
                 variant="outline"
                 size="sm"
                 onClick={onOpenExport}
-                style={{ fontSize: 12, gap: 5, color: '#107c41', borderColor: '#bbf7d0' }}
+                style={{ fontSize: 12, gap: 5 }}
               >
                 <Download size={13} />
                 <span>Xuất dữ liệu</span>

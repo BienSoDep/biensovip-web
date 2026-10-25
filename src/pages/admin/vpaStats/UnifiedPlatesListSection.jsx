@@ -12,7 +12,7 @@ import PlateVisual from '../../../components/PlateVisual.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { useAdminPlates } from '../../../services/adminPlates.js';
 import { useVpaAdminPlates } from '../../../services/adminVpa.js';
-import { CARD, num, SectionTitle } from './vpaStatsShared.jsx';
+import { CARD, num } from './vpaStatsShared.jsx';
 
 const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)} ₫`);
 
@@ -76,7 +76,6 @@ export default function UnifiedPlatesListSection({
     // 1. Dữ liệu từ Kho Shop
     if (scope !== 'vpa' && shopData?.items?.length) {
       shopData.items.forEach((p) => {
-        // Lọc xe cho shop nếu có chọn
         const isCarVehicle = !p.vehicleTypeName?.toLowerCase()?.includes('máy') && !p.vehicleType?.name?.toLowerCase()?.includes('máy');
         if (vehicleFilter === 'Car' && !isCarVehicle) return;
         if (vehicleFilter === 'MotorBike' && isCarVehicle) return;
@@ -84,7 +83,7 @@ export default function UnifiedPlatesListSection({
         list.push({
           id: p.id,
           source: 'shop',
-          sourceLabel: 'Kho Biển Shop',
+          sourceLabel: 'Kho Shop',
           plateNumber: p.plateNumber,
           vehicleType: isCarVehicle ? 'Ô tô' : 'Xe máy',
           isCar: isCarVehicle,
@@ -94,7 +93,7 @@ export default function UnifiedPlatesListSection({
           priceDisplay: p.price ? money(p.price) : 'Liên hệ',
           priceSub: p.suggestedPrice ? `Gợi ý: ${money(p.suggestedPrice)}` : null,
           status: p.status,
-          statusText: p.status === 'available' ? 'Sẵn sàng bán' : p.status === 'reserved' ? 'Đã giữ chỗ / cọc' : 'Đã bán',
+          statusText: p.status === 'available' ? 'Còn hàng' : p.status === 'reserved' ? 'Đã giữ chỗ / cọc' : 'Đã bán',
           statusTone: p.status === 'available' ? 'green' : p.status === 'reserved' ? 'purple' : 'gray',
           isHot: !!p.isHot,
           raw: p,
@@ -123,17 +122,13 @@ export default function UnifiedPlatesListSection({
           priceSub: isApproved ? 'Đã duyệt giá bán' : 'Giá khởi điểm / dự kiến',
           status: isApproved ? 'approved' : p.priceState === 1 ? 'suggested' : 'pending',
           statusText: isApproved ? 'Đã duyệt giá' : p.priceState === 1 ? 'Chờ duyệt giá' : 'Chờ đấu giá',
-          statusTone: isApproved ? 'green' : p.priceState === 1 ? 'amber' : 'blue',
+          statusTone: isApproved ? 'green' : p.priceState === 1 ? 'amber' : 'gray',
           isHot: !!p.isPin,
           raw: p,
         });
       });
     }
 
-    // Nếu chọn gộp "Tất cả", ta xếp xen kẽ hoặc xếp Shop trước
-    if (scope === 'all') {
-      return list;
-    }
     return list;
   }, [scope, shopData, vpaData, vehicleFilter]);
 
@@ -164,8 +159,8 @@ export default function UnifiedPlatesListSection({
                 gap: 5,
                 padding: '2px 8px',
                 borderRadius: 4,
-                background: 'rgba(2, 132, 199, 0.1)',
-                color: '#0284c7',
+                background: 'rgba(241, 151, 32, 0.08)',
+                color: 'var(--action-primary, #F19720)',
                 fontSize: 11,
                 fontWeight: 700,
               }}
@@ -198,9 +193,6 @@ export default function UnifiedPlatesListSection({
               alignItems: 'center',
               gap: 7,
               fontWeight: 700,
-              background: '#107c41',
-              borderColor: '#107c41',
-              boxShadow: '0 2px 4px rgba(16, 124, 65, 0.2)',
             }}
           >
             <FileSpreadsheet size={15} />
@@ -226,7 +218,7 @@ export default function UnifiedPlatesListSection({
               size="md"
               title="Xem danh sách các file đã xuất trong vòng 30 ngày để tải lại ngay"
               onClick={onOpenHistory}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#0369a1', borderColor: 'rgba(2, 132, 199, 0.3)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
             >
               <Clock size={14} />
               <span>Lịch sử tải về (30 ngày)</span>
@@ -256,75 +248,57 @@ export default function UnifiedPlatesListSection({
             gap: 4,
             background: 'var(--surface-sunken)',
             padding: 3,
-            borderRadius: 8,
+            borderRadius: 'var(--radius-sm, 6px)',
             border: '1px solid var(--border-subtle)',
           }}
         >
-          <button
-            type="button"
-            onClick={() => { setScope('all'); setPage(1); }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '6px 12px',
-              borderRadius: 6,
-              border: 'none',
-              background: scope === 'all' ? '#0f172a' : 'transparent',
-              color: scope === 'all' ? '#ffffff' : 'var(--text-muted)',
-              fontSize: 12.5,
-              fontWeight: scope === 'all' ? 700 : 500,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Layers size={13} />
-            <span>Tất cả (Kho gộp)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setScope('shop'); setPage(1); }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '6px 12px',
-              borderRadius: 6,
-              border: 'none',
-              background: scope === 'shop' ? '#0284c7' : 'transparent',
-              color: scope === 'shop' ? '#ffffff' : 'var(--text-muted)',
-              fontSize: 12.5,
-              fontWeight: scope === 'shop' ? 700 : 500,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <CarFront size={13} />
-            <span>Kho Shop ({num(shopTotal)})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setScope('vpa'); setPage(1); }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '6px 12px',
-              borderRadius: 6,
-              border: 'none',
-              background: scope === 'vpa' ? '#d97706' : 'transparent',
-              color: scope === 'vpa' ? '#ffffff' : 'var(--text-muted)',
-              fontSize: 12.5,
-              fontWeight: scope === 'vpa' ? 700 : 500,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Landmark size={13} />
-            <span>Đấu giá VPA ({num(vpaTotal)})</span>
-          </button>
+          {[
+            { id: 'all', label: 'Tất cả (Kho gộp)', count: null, icon: Layers },
+            { id: 'shop', label: 'Kho Shop', count: shopTotal, icon: CarFront },
+            { id: 'vpa', label: 'Đấu giá VPA', count: vpaTotal, icon: Landmark },
+          ].map((tab) => {
+            const active = scope === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => { setScope(tab.id); setPage(1); }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  border: active ? '1px solid var(--border-subtle)' : '1px solid transparent',
+                  background: active ? 'var(--white, #ffffff)' : 'transparent',
+                  color: active ? 'var(--action-primary, #F19720)' : 'var(--text-muted, #64748b)',
+                  fontSize: 12.5,
+                  fontWeight: active ? 700 : 500,
+                  cursor: 'pointer',
+                  boxShadow: active ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Icon size={13} />
+                <span>{tab.label}</span>
+                {tab.count != null && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      padding: '1px 6px',
+                      borderRadius: 9999,
+                      background: active ? 'rgba(241,151,32,0.12)' : 'var(--surface-sunken)',
+                      color: active ? 'var(--action-primary, #F19720)' : 'var(--text-muted)',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {num(tab.count)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Thanh tìm kiếm & Dropdown lọc */}
@@ -339,7 +313,7 @@ export default function UnifiedPlatesListSection({
               placeholder="Tìm biển số (VD: 30K, 999.99)..."
               style={{
                 width: '100%',
-                height: 34,
+                height: 36,
                 padding: '0 10px 0 32px',
                 borderRadius: 'var(--radius-sm, 6px)',
                 border: '1px solid var(--border-subtle)',
@@ -356,8 +330,8 @@ export default function UnifiedPlatesListSection({
             value={vehicleFilter}
             onChange={(e) => { setVehicleFilter(e.target.value); setPage(1); }}
             style={{
-              height: 34,
-              padding: '0 8px',
+              height: 36,
+              padding: '0 10px',
               borderRadius: 'var(--radius-sm, 6px)',
               border: '1px solid var(--border-subtle)',
               background: 'var(--white)',
@@ -376,8 +350,8 @@ export default function UnifiedPlatesListSection({
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
             style={{
-              height: 34,
-              padding: '0 8px',
+              height: 36,
+              padding: '0 10px',
               borderRadius: 'var(--radius-sm, 6px)',
               border: '1px solid var(--border-subtle)',
               background: 'var(--white)',
@@ -395,7 +369,7 @@ export default function UnifiedPlatesListSection({
             value={perPage}
             onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
             style={{
-              height: 34,
+              height: 36,
               padding: '0 8px',
               borderRadius: 'var(--radius-sm, 6px)',
               border: '1px solid var(--border-subtle)',
@@ -412,223 +386,322 @@ export default function UnifiedPlatesListSection({
         </div>
       </div>
 
-      {/* 3. Bảng Dữ Liệu Biển Số Hợp Nhất */}
+      {/* 3. Bảng Dữ Liệu Biển Số Hợp Nhất (Đồng bộ cấu trúc & màu sắc với tab Biển số & Biển VPA) */}
       <div
         style={{
           border: '1px solid var(--border-subtle)',
           borderRadius: 'var(--radius-card, 10px)',
           overflow: 'hidden',
           background: 'var(--white)',
+          boxShadow: 'var(--shadow-inset-hairline)',
         }}
       >
         <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <table style={{ width: '100%', minWidth: 920, borderCollapse: 'collapse', textAlign: 'left', fontSize: 12.5 }}>
-            <thead>
-              <tr style={{ background: 'var(--surface-sunken)', borderBottom: '1px solid var(--border-subtle)' }}>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 130 }}>Nguồn kho</th>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 170 }}>Biển số</th>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 110 }}>Phương tiện</th>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 130 }}>Loại biển</th>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 130 }}>Tỉnh / Thành</th>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 160, textAlign: 'right' }}>Giá niêm yết / KĐ</th>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 130, textAlign: 'center' }}>Trạng thái</th>
-                <th style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--text-muted)', width: 110, textAlign: 'right' }}>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={8} style={{ padding: '24px 12px' }}>
-                    <Skeleton height={180} />
-                  </td>
-                </tr>
-              )}
+          <div style={{ minWidth: 1080 }}>
+            {/* Header row đồng bộ chuẩn hệ thống */}
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--space-3, 12px)',
+                padding: 'var(--space-3, 12px) var(--gutter-card, 16px)',
+                background: 'var(--surface-sunken, #f8fafc)',
+                font: 'var(--type-caption)',
+                fontSize: 'var(--fs-micro, 11px)',
+                letterSpacing: '.06em',
+                textTransform: 'uppercase',
+                color: 'var(--text-muted, #64748b)',
+                fontWeight: 700,
+                borderBottom: '1px solid var(--border-subtle, #e2e8f0)',
+              }}
+            >
+              <span style={{ flex: '0 0 56px' }}>Ảnh</span>
+              <span style={{ flex: '1 1 140px' }}>Biển số</span>
+              <span style={{ flex: '0 0 110px' }}>Nguồn kho</span>
+              <span style={{ flex: '1 1 100px' }}>Loại biển</span>
+              <span style={{ flex: '0 0 80px' }}>Loại xe</span>
+              <span style={{ flex: '1 1 100px' }}>Tỉnh / Thành</span>
+              <span style={{ flex: '1 1 130px', textAlign: 'right' }}>Giá niêm yết / KĐ</span>
+              <span style={{ flex: '0 0 120px', textAlign: 'center' }}>Trạng thái</span>
+              <span style={{ flex: '0 0 90px', textAlign: 'right' }}>Thao tác</span>
+            </div>
 
-              {!isLoading && unifiedList.length === 0 && (
-                <tr>
-                  <td colSpan={8} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                      <CarFront size={32} style={{ color: 'var(--text-faint)' }} />
-                      <span style={{ fontWeight: 600 }}>Không tìm thấy biển số nào khớp với bộ lọc hiện tại</span>
-                      <span style={{ fontSize: 12 }}>Thử thay đổi từ khóa tìm kiếm hoặc chọn nguồn kho khác</span>
+            {/* Loading state */}
+            {isLoading && (
+              <div style={{ padding: 'var(--space-4, 16px)' }}>
+                <Skeleton height={180} />
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!isLoading && unifiedList.length === 0 && (
+              <div style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  <CarFront size={36} style={{ color: 'var(--text-faint, #cbd5e1)' }} />
+                  <span style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--text-strong)' }}>
+                    Không tìm thấy biển số nào khớp với bộ lọc hiện tại
+                  </span>
+                  <span style={{ fontSize: 12 }}>Thử thay đổi từ khóa tìm kiếm hoặc chọn nguồn kho khác</span>
+                </div>
+              </div>
+            )}
+
+            {/* Rows list */}
+            {!isLoading && unifiedList.map((item, idx) => {
+              const parsed = parsePlateNumber(item.plateNumber);
+              const isShop = item.source === 'shop';
+
+              return (
+                <div
+                  key={`${item.source}-${item.id || idx}`}
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--space-3, 12px)',
+                    alignItems: 'center',
+                    padding: 'var(--space-2, 8px) var(--gutter-card, 16px)',
+                    boxShadow: 'inset 0 -1px 0 var(--border-subtle, #f1f5f9)',
+                    background: idx % 2 === 1 ? 'rgba(248, 250, 252, 0.4)' : '#ffffff',
+                    transition: 'background 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken, #f8fafc)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = idx % 2 === 1 ? 'rgba(248, 250, 252, 0.4)' : '#ffffff'; }}
+                >
+                  {/* Cột 1: ẢNH (Khung biển số chuẩn Việt Nam mô phỏng chân thực) */}
+                  <span style={{ flex: '0 0 56px', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ width: 56 }}>
+                      <PlateVisual
+                        size="sm"
+                        prov={parsed.prov}
+                        seri={parsed.seri}
+                        num={parsed.num}
+                        shape={item.isCar ? 'long' : 'short'}
+                      />
                     </div>
-                  </td>
-                </tr>
-              )}
+                  </span>
 
-              {!isLoading && unifiedList.map((item, idx) => {
-                const parsed = parsePlateNumber(item.plateNumber);
-                const isShop = item.source === 'shop';
-
-                return (
-                  <tr
-                    key={`${item.source}-${item.id || idx}`}
+                  {/* Cột 2: BIỂN SỐ */}
+                  <span
                     style={{
-                      borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
-                      background: idx % 2 === 1 ? 'rgba(248, 250, 252, 0.4)' : '#ffffff',
-                      transition: 'background 0.15s ease',
+                      flex: '1 1 140px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      font: 'var(--type-body-sm)',
+                      fontWeight: 700,
+                      color: 'var(--text-strong)',
+                      minWidth: 0,
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(2, 132, 199, 0.03)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = idx % 2 === 1 ? 'rgba(248, 250, 252, 0.4)' : '#ffffff'; }}
                   >
-                    {/* Cột 1: Nguồn kho */}
-                    <td style={{ padding: '10px 12px' }}>
-                      {isShop ? (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            padding: '3px 8px',
-                            borderRadius: 6,
-                            background: 'rgba(2, 132, 199, 0.1)',
-                            color: '#0284c7',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            border: '1px solid rgba(2, 132, 199, 0.25)',
-                          }}
-                        >
-                          <CarFront size={12} />
-                          <span>Kho Shop</span>
-                        </span>
-                      ) : (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            padding: '3px 8px',
-                            borderRadius: 6,
-                            background: 'rgba(217, 119, 6, 0.1)',
-                            color: '#d97706',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            border: '1px solid rgba(217, 119, 6, 0.25)',
-                          }}
-                        >
-                          <Landmark size={12} />
-                          <span>Đấu giá VPA</span>
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Cột 2: Biển số */}
-                    <td style={{ padding: '10px 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ flexShrink: 0 }}>
-                          <PlateVisual size="sm" prov={parsed.prov} seri={parsed.seri} num={parsed.num} />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 800, fontSize: 13, letterSpacing: '0.04em', color: 'var(--text-strong)' }}>
-                            {item.plateNumber}
-                          </span>
-                          {item.isHot && (
-                            <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                              <Sparkles size={10} /> VIP Nổi bật
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Cột 3: Phương tiện */}
-                    <td style={{ padding: '10px 12px', color: 'var(--text-strong)' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                        {item.isCar ? <Car size={13} color="#64748b" /> : <Bike size={13} color="#64748b" />}
-                        <span>{item.vehicleType}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.plateNumber}
+                    </span>
+                    {item.isHot && (
+                      <span
+                        title="Biển nổi bật / VIP"
+                        style={{
+                          fontSize: 10,
+                          color: '#f59e0b',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 2,
+                        }}
+                      >
+                        <Sparkles size={11} fill="#f59e0b" />
                       </span>
-                    </td>
+                    )}
+                  </span>
 
-                    {/* Cột 4: Loại biển */}
-                    <td style={{ padding: '10px 12px' }}>
+                  {/* Cột 3: NGUỒN KHO (Badge chuẩn màu thương hiệu) */}
+                  <span style={{ flex: '0 0 110px' }}>
+                    {isShop ? (
                       <span
                         style={{
-                          background: 'var(--surface-sunken)',
-                          color: 'var(--text-body)',
-                          padding: '2px 7px',
-                          borderRadius: 4,
-                          fontSize: 11.5,
-                          fontWeight: 500,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm, 4px)',
+                          background: 'rgba(5, 150, 105, 0.08)',
+                          color: '#059669',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          border: '1px solid rgba(5, 150, 105, 0.2)',
                         }}
                       >
-                        {item.plateTypeName}
+                        <CarFront size={11} />
+                        <span>Kho Shop</span>
                       </span>
-                    </td>
-
-                    {/* Cột 5: Tỉnh / Thành */}
-                    <td style={{ padding: '10px 12px', color: 'var(--text-strong)', fontWeight: 500 }}>
-                      {item.provinceName}
-                    </td>
-
-                    {/* Cột 6: Giá niêm yết / khởi điểm */}
-                    <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <span style={{ fontWeight: 800, fontSize: 13, color: isShop ? '#0284c7' : '#16a34a' }}>
-                          {item.priceDisplay}
-                        </span>
-                        {item.priceSub && (
-                          <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
-                            {item.priceSub}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Cột 7: Trạng thái */}
-                    <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                      {item.statusTone === 'green' && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#dcfce7', color: '#15803d', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          <CheckCircle2 size={11} />
-                          <span>{item.statusText}</span>
-                        </span>
-                      )}
-                      {item.statusTone === 'amber' && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#fef3c7', color: '#b45309', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          <Clock size={11} />
-                          <span>{item.statusText}</span>
-                        </span>
-                      )}
-                      {item.statusTone === 'purple' && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ede9fe', color: '#6d28d9', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          <span>{item.statusText}</span>
-                        </span>
-                      )}
-                      {item.statusTone === 'blue' && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#e0f2fe', color: '#0369a1', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          <span>{item.statusText}</span>
-                        </span>
-                      )}
-                      {item.statusTone === 'gray' && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f1f5f9', color: '#64748b', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>
-                          <span>{item.statusText}</span>
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Cột 8: Thao tác */}
-                    <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        title={isShop ? 'Xem biển này trong trang Quản lý Kho Biển Shop' : 'Xem biển này trong trang Quản lý Biển VPA'}
-                        onClick={() => {
-                          if (isShop) {
-                            go ? go('aplates')() : null;
-                          } else {
-                            go ? go('avpa')() : null;
-                          }
+                    ) : (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm, 4px)',
+                          background: 'rgba(241, 151, 32, 0.08)',
+                          color: 'var(--action-primary, #F19720)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          border: '1px solid rgba(241, 151, 32, 0.25)',
                         }}
-                        style={{ fontSize: 11.5, padding: '3px 7px', gap: 3 }}
                       >
-                        <span>Quản lý</span>
-                        <ExternalLink size={11} />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        <Landmark size={11} />
+                        <span>Đấu giá VPA</span>
+                      </span>
+                    )}
+                  </span>
+
+                  {/* Cột 4: LOẠI BIỂN */}
+                  <span
+                    style={{
+                      flex: '1 1 100px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span
+                      style={{
+                        background: 'var(--surface-sunken)',
+                        color: 'var(--text-body)',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-sm, 4px)',
+                        fontSize: 11.5,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {item.plateTypeName}
+                    </span>
+                  </span>
+
+                  {/* Cột 5: LOẠI XE */}
+                  <span style={{ flex: '0 0 80px', fontSize: 12, color: 'var(--text-body)', fontWeight: 500 }}>
+                    {item.vehicleType}
+                  </span>
+
+                  {/* Cột 6: TỈNH / THÀNH */}
+                  <span style={{ flex: '1 1 100px', fontSize: 12.5, color: 'var(--text-body)', fontWeight: 500 }}>
+                    {item.provinceName}
+                  </span>
+
+                  {/* Cột 7: GIÁ NIÊM YẾT / KĐ (Đồng bộ font & màu chữ tiêu chuẩn hệ thống) */}
+                  <div style={{ flex: '1 1 130px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums' }}>
+                      {item.priceDisplay}
+                    </span>
+                    {item.priceSub && (
+                      <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                        {item.priceSub}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Cột 8: TRẠNG THÁI (Pill ngữ nghĩa chuẩn) */}
+                  <span style={{ flex: '0 0 120px', display: 'flex', justifyContent: 'center' }}>
+                    {item.statusTone === 'green' && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          background: 'var(--mint-100, #dcfce7)',
+                          color: 'var(--status-success-ink, #15803d)',
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm, 4px)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <CheckCircle2 size={11} />
+                        <span>{item.statusText}</span>
+                      </span>
+                    )}
+                    {item.statusTone === 'amber' && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          background: 'rgba(241, 151, 32, 0.1)',
+                          color: 'var(--action-primary, #F19720)',
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm, 4px)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Clock size={11} />
+                        <span>{item.statusText}</span>
+                      </span>
+                    )}
+                    {item.statusTone === 'purple' && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          background: '#ede9fe',
+                          color: '#6d28d9',
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm, 4px)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <span>{item.statusText}</span>
+                      </span>
+                    )}
+                    {item.statusTone === 'gray' && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          background: 'var(--surface-sunken)',
+                          color: 'var(--text-muted)',
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm, 4px)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <span>{item.statusText}</span>
+                      </span>
+                    )}
+                  </span>
+
+                  {/* Cột 9: THAO TÁC */}
+                  <span style={{ flex: '0 0 90px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      title={isShop ? 'Xem biển này trong trang Quản lý Kho Biển Shop' : 'Xem biển này trong trang Quản lý Biển VPA'}
+                      onClick={() => {
+                        if (isShop) {
+                          go ? go('aplates')() : null;
+                        } else {
+                          go ? go('avpa')() : null;
+                        }
+                      }}
+                      style={{
+                        fontSize: 11.5,
+                        padding: '3px 8px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        color: 'var(--action-primary, #F19720)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      <span>Chi tiết</span>
+                      <ExternalLink size={12} />
+                    </Button>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* 4. Footer & Phân Trang */}
@@ -639,9 +712,9 @@ export default function UnifiedPlatesListSection({
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: 12,
-            padding: '10px 14px',
-            background: 'var(--surface-sunken)',
-            borderTop: '1px solid var(--border-subtle)',
+            padding: '10px 16px',
+            background: 'var(--surface-sunken, #f8fafc)',
+            borderTop: '1px solid var(--border-subtle, #e2e8f0)',
           }}
         >
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
