@@ -43,19 +43,39 @@ export default function AdminVpaStats({ go, patch, st }) {
   const availableShop = shopAvailableData?.total || 0;
   const hotShop = shopHotData?.total || 0;
 
-  // Xử lý xuất file ngầm cho toàn bộ kho (VPA, Có sẵn, hoặc Gộp cả hai)
+  // Xử lý xuất file ngầm cho toàn bộ kho (VPA, Có sẵn, hoặc Gộp cả hai với cấu hình nguồn & bộ lọc)
   const handleExportChoice = async (options) => {
     const targetFormat = options?.format || 'xlsx';
     const targetScope = options?.scope || 'all';
+    const sources = options?.sources;
+    const vehicle = options?.vehicle;
+    const provinceId = options?.provinceId;
+    const priceState = options?.priceState;
 
     try {
       setExporting(true);
-      const res = await apiClient.post(`/api/admin/vpa/plates/export/jobs?format=${encodeURIComponent(targetFormat)}&scope=${encodeURIComponent(targetScope)}`, null, {
-        params: {
-          format: targetFormat,
-          scope: targetScope,
-        },
-      });
+      const params = {
+        format: targetFormat,
+        scope: targetScope,
+      };
+      if (sources && sources.length > 0) {
+        params.sources = Array.isArray(sources) ? sources.join(',') : sources;
+      }
+      if (vehicle !== undefined && vehicle !== null && vehicle !== '') {
+        params.vehicle = vehicle;
+      }
+      if (provinceId) {
+        params.provinceId = provinceId;
+      }
+      if (priceState !== undefined && priceState !== null && priceState !== '') {
+        params.priceState = priceState;
+      }
+      if (options?.isCurrentPageOnly) {
+        params.page = options.page || 1;
+        params.limit = options.pageSize || 50;
+      }
+
+      const res = await apiClient.post('/api/admin/vpa/plates/export/jobs', null, { params });
       const jobId = res?.jobId || res?.data?.jobId;
       if (jobId) {
         registerExportJob(jobId);
