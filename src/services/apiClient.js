@@ -116,9 +116,9 @@ export const tryRefreshToken = tryRefresh;
 
 export const apiClient = {
   get: (path, opts) => request(withParams(path, opts?.params)),
-  post: (path, data) => request(path, { method: 'POST', body: data != null ? JSON.stringify(data) : undefined }),
-  put: (path, data) => request(path, { method: 'PUT', body: data != null ? JSON.stringify(data) : undefined }),
-  patch: (path, data) => request(path, { method: 'PATCH', body: data != null ? JSON.stringify(data) : undefined }),
-  delete: (path) => request(path, { method: 'DELETE' }),
+  post: (path, data, opts) => request(withParams(path, opts?.params), { method: 'POST', body: data != null ? JSON.stringify(data) : undefined, ...opts }),
+  put: (path, data, opts) => request(withParams(path, opts?.params), { method: 'PUT', body: data != null ? JSON.stringify(data) : undefined, ...opts }),
+  patch: (path, data, opts) => request(withParams(path, opts?.params), { method: 'PATCH', body: data != null ? JSON.stringify(data) : undefined, ...opts }),
+  delete: (path, opts) => request(withParams(path, opts?.params), { method: 'DELETE', ...opts }),
   upload: (path, formData) => uploadRequest(path, formData),
 };

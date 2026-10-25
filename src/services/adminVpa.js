@@ -158,6 +158,15 @@ export const exportVpaCsv = (params) => doExportVpaPlates(params, 'csv');
 export const exportVpaXlsx = (params) => doExportVpaPlates(params, 'xlsx');
 export const exportVpaDocx = (params) => doExportVpaPlates(params, 'docx');
 
+export function useVpaExportCounts(params, options) {
+  return useQuery({
+    queryKey: [KEY, 'export-counts', params],
+    queryFn: () => apiClient.get('/api/admin/vpa/plates/export/counts', { params }),
+    staleTime: 60 * 1000,
+    ...options,
+  });
+}
+
 export async function exportVpaAuctionResultsCsv(params) {
   const auth = loadAuth();
   const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/vpa/auction-results/export?${toQuery(params)}`, {
