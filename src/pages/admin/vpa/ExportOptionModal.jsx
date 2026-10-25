@@ -35,7 +35,7 @@ export default function ExportOptionModal({
       badge: 'Khuyên dùng',
       icon: Layers,
       color: '#0284c7',
-      desc: 'Xuất gộp toàn bộ kho: Sheet 1 chứa Biển có sẵn, các Sheet tiếp theo phân theo Tỉnh/Phiên đấu giá VPA.',
+      desc: 'Mỗi Tỉnh/Thành phố là 1 Sheet riêng, trong đó gộp cả biển VPA và biển có sẵn của tỉnh đó.',
     },
     {
       id: 'vpa',
@@ -43,7 +43,7 @@ export default function ExportOptionModal({
       badge: 'VPA Only',
       icon: Landmark,
       color: '#d97706',
-      desc: 'Chỉ xuất các biển đấu giá từ cổng VPA (phiên tuần, phiên tháng, đã đấu giá), phân chia sheet theo tỉnh/phiên.',
+      desc: 'Chỉ xuất biển đấu giá VPA, chia Sheet riêng theo từng Tỉnh/Thành phố dễ dàng theo dõi và gửi đối tác.',
     },
     {
       id: 'available',
@@ -51,7 +51,7 @@ export default function ExportOptionModal({
       badge: 'Có sẵn',
       icon: CarFront,
       color: '#16a34a',
-      desc: 'Chỉ xuất các biển sẵn sàng giao dịch (gồm biển VPA đã duyệt giá niêm yết và kho biển sẵn sàng bán của hệ thống).',
+      desc: 'Chỉ xuất biển có sẵn (đã duyệt giá / kho hệ thống), chia Sheet riêng theo từng Tỉnh/Thành phố.',
     },
   ];
 
@@ -59,7 +59,7 @@ export default function ExportOptionModal({
     {
       id: 'xlsx',
       title: 'Excel (.xlsx)',
-      sub: 'Không giới hạn (tự động chia sheet)',
+      sub: 'Tự động chia Sheet theo từng Tỉnh thành',
       icon: FileSpreadsheet,
       color: '#107c41',
       badge: 'Toàn bộ kho',
