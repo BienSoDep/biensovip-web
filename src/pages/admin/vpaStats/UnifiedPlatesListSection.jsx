@@ -12,9 +12,20 @@ import PlateVisual from '../../../components/PlateVisual.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
 import { useAdminPlates } from '../../../services/adminPlates.js';
 import { useVpaAdminPlates } from '../../../services/adminVpa.js';
+import { useTableColumns, TableColumnMenu } from '../../../components/table/TableColumnMenu.jsx';
 import { CARD, num } from './vpaStatsShared.jsx';
 
 const money = (v) => (v == null ? '—' : `${new Intl.NumberFormat('vi-VN').format(v)} ₫`);
+
+export const UNIFIED_COLUMNS = [
+  { key: 'source', label: 'Nguồn kho', default: true },
+  { key: 'plateType', label: 'Loại biển', default: true },
+  { key: 'vehicleType', label: 'Loại xe', default: true },
+  { key: 'province', label: 'Tỉnh / Thành', default: true },
+  { key: 'price', label: 'Giá niêm yết / KĐ', default: true },
+  { key: 'status', label: 'Trạng thái', default: true },
+];
+export const UNIFIED_COLUMN_KEY = 'bsv.admin.unifiedPlateColumns';
 
 export default function UnifiedPlatesListSection({
   shopTotal = 0,
@@ -31,6 +42,11 @@ export default function UnifiedPlatesListSection({
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'available'
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
+
+  const { isVisible, colMenuProps } = useTableColumns({
+    storageKey: UNIFIED_COLUMN_KEY,
+    columns: UNIFIED_COLUMNS,
+  });
 
   // Tham số cho Shop
   const shopPerPage = scope === 'all' ? Math.ceil(perPage / 2) : perPage;
@@ -383,6 +399,21 @@ export default function UnifiedPlatesListSection({
             <option value={20}>20 dòng/trang</option>
             <option value={50}>50 dòng/trang</option>
           </select>
+
+          {/* Nút Cột hiển thị đồng bộ chuẩn VPA */}
+          <TableColumnMenu {...colMenuProps} />
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="md"
+            onClick={() => { refetchShop?.(); refetchVpa?.(); }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            title="Tải lại danh sách biển"
+          >
+            <RefreshCw size={14} />
+            <span>Làm mới</span>
+          </Button>
         </div>
       </div>
 
@@ -416,12 +447,12 @@ export default function UnifiedPlatesListSection({
             >
               <span style={{ flex: '0 0 56px' }}>Ảnh</span>
               <span style={{ flex: '1 1 140px' }}>Biển số</span>
-              <span style={{ flex: '0 0 110px' }}>Nguồn kho</span>
-              <span style={{ flex: '1 1 100px' }}>Loại biển</span>
-              <span style={{ flex: '0 0 80px' }}>Loại xe</span>
-              <span style={{ flex: '1 1 100px' }}>Tỉnh / Thành</span>
-              <span style={{ flex: '1 1 130px', textAlign: 'right' }}>Giá niêm yết / KĐ</span>
-              <span style={{ flex: '0 0 120px', textAlign: 'center' }}>Trạng thái</span>
+              {isVisible('source') && <span style={{ flex: '0 0 110px' }}>Nguồn kho</span>}
+              {isVisible('plateType') && <span style={{ flex: '1 1 100px' }}>Loại biển</span>}
+              {isVisible('vehicleType') && <span style={{ flex: '0 0 80px' }}>Loại xe</span>}
+              {isVisible('province') && <span style={{ flex: '1 1 100px' }}>Tỉnh / Thành</span>}
+              {isVisible('price') && <span style={{ flex: '1 1 130px', textAlign: 'right' }}>Giá niêm yết / KĐ</span>}
+              {isVisible('status') && <span style={{ flex: '0 0 120px', textAlign: 'center' }}>Trạng thái</span>}
               <span style={{ flex: '0 0 90px', textAlign: 'right' }}>Thao tác</span>
             </div>
 
@@ -512,164 +543,176 @@ export default function UnifiedPlatesListSection({
                   </span>
 
                   {/* Cột 3: NGUỒN KHO (Badge chuẩn màu thương hiệu) */}
-                  <span style={{ flex: '0 0 110px' }}>
-                    {isShop ? (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-sm, 4px)',
-                          background: 'rgba(5, 150, 105, 0.08)',
-                          color: '#059669',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          border: '1px solid rgba(5, 150, 105, 0.2)',
-                        }}
-                      >
-                        <CarFront size={11} />
-                        <span>Kho Shop</span>
-                      </span>
-                    ) : (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-sm, 4px)',
-                          background: 'rgba(241, 151, 32, 0.08)',
-                          color: 'var(--action-primary, #F19720)',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          border: '1px solid rgba(241, 151, 32, 0.25)',
-                        }}
-                      >
-                        <Landmark size={11} />
-                        <span>Đấu giá VPA</span>
-                      </span>
-                    )}
-                  </span>
+                  {isVisible('source') && (
+                    <span style={{ flex: '0 0 110px' }}>
+                      {isShop ? (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm, 4px)',
+                            background: 'rgba(5, 150, 105, 0.08)',
+                            color: '#059669',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            border: '1px solid rgba(5, 150, 105, 0.2)',
+                          }}
+                        >
+                          <CarFront size={11} />
+                          <span>Kho Shop</span>
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm, 4px)',
+                            background: 'rgba(241, 151, 32, 0.08)',
+                            color: 'var(--action-primary, #F19720)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            border: '1px solid rgba(241, 151, 32, 0.25)',
+                          }}
+                        >
+                          <Landmark size={11} />
+                          <span>Đấu giá VPA</span>
+                        </span>
+                      )}
+                    </span>
+                  )}
 
                   {/* Cột 4: LOẠI BIỂN */}
-                  <span
-                    style={{
-                      flex: '1 1 100px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
+                  {isVisible('plateType') && (
                     <span
                       style={{
-                        background: 'var(--surface-sunken)',
-                        color: 'var(--text-body)',
-                        padding: '2px 8px',
-                        borderRadius: 'var(--radius-sm, 4px)',
-                        fontSize: 11.5,
-                        fontWeight: 500,
+                        flex: '1 1 100px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {item.plateTypeName}
+                      <span
+                        style={{
+                          background: 'var(--surface-sunken)',
+                          color: 'var(--text-body)',
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-sm, 4px)',
+                          fontSize: 11.5,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {item.plateTypeName}
+                      </span>
                     </span>
-                  </span>
+                  )}
 
                   {/* Cột 5: LOẠI XE */}
-                  <span style={{ flex: '0 0 80px', fontSize: 12, color: 'var(--text-body)', fontWeight: 500 }}>
-                    {item.vehicleType}
-                  </span>
+                  {isVisible('vehicleType') && (
+                    <span style={{ flex: '0 0 80px', fontSize: 12, color: 'var(--text-body)', fontWeight: 500 }}>
+                      {item.vehicleType}
+                    </span>
+                  )}
 
                   {/* Cột 6: TỈNH / THÀNH */}
-                  <span style={{ flex: '1 1 100px', fontSize: 12.5, color: 'var(--text-body)', fontWeight: 500 }}>
-                    {item.provinceName}
-                  </span>
+                  {isVisible('province') && (
+                    <span style={{ flex: '1 1 100px', fontSize: 12.5, color: 'var(--text-body)', fontWeight: 500 }}>
+                      {item.provinceName}
+                    </span>
+                  )}
 
                   {/* Cột 7: GIÁ NIÊM YẾT / KĐ (Đồng bộ font & màu chữ tiêu chuẩn hệ thống) */}
-                  <div style={{ flex: '1 1 130px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums' }}>
-                      {item.priceDisplay}
-                    </span>
-                    {item.priceSub && (
-                      <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
-                        {item.priceSub}
+                  {isVisible('price') && (
+                    <div style={{ flex: '1 1 130px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums' }}>
+                        {item.priceDisplay}
                       </span>
-                    )}
-                  </div>
+                      {item.priceSub && (
+                        <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                          {item.priceSub}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Cột 8: TRẠNG THÁI (Pill ngữ nghĩa chuẩn) */}
-                  <span style={{ flex: '0 0 120px', display: 'flex', justifyContent: 'center' }}>
-                    {item.statusTone === 'green' && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          background: 'var(--mint-100, #dcfce7)',
-                          color: 'var(--status-success-ink, #15803d)',
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-sm, 4px)',
-                          fontSize: 11,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <CheckCircle2 size={11} />
-                        <span>{item.statusText}</span>
-                      </span>
-                    )}
-                    {item.statusTone === 'amber' && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          background: 'rgba(241, 151, 32, 0.1)',
-                          color: 'var(--action-primary, #F19720)',
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-sm, 4px)',
-                          fontSize: 11,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <Clock size={11} />
-                        <span>{item.statusText}</span>
-                      </span>
-                    )}
-                    {item.statusTone === 'purple' && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          background: '#ede9fe',
-                          color: '#6d28d9',
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-sm, 4px)',
-                          fontSize: 11,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <span>{item.statusText}</span>
-                      </span>
-                    )}
-                    {item.statusTone === 'gray' && (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          background: 'var(--surface-sunken)',
-                          color: 'var(--text-muted)',
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-sm, 4px)',
-                          fontSize: 11,
-                          fontWeight: 600,
-                        }}
-                      >
-                        <span>{item.statusText}</span>
-                      </span>
-                    )}
-                  </span>
+                  {isVisible('status') && (
+                    <span style={{ flex: '0 0 120px', display: 'flex', justifyContent: 'center' }}>
+                      {item.statusTone === 'green' && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: 'var(--mint-100, #dcfce7)',
+                            color: 'var(--status-success-ink, #15803d)',
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm, 4px)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <CheckCircle2 size={11} />
+                          <span>{item.statusText}</span>
+                        </span>
+                      )}
+                      {item.statusTone === 'amber' && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: 'rgba(241, 151, 32, 0.1)',
+                            color: 'var(--action-primary, #F19720)',
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm, 4px)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <Clock size={11} />
+                          <span>{item.statusText}</span>
+                        </span>
+                      )}
+                      {item.statusTone === 'purple' && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: '#ede9fe',
+                            color: '#6d28d9',
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm, 4px)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <span>{item.statusText}</span>
+                        </span>
+                      )}
+                      {item.statusTone === 'gray' && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            background: 'var(--surface-sunken)',
+                            color: 'var(--text-muted)',
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-sm, 4px)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <span>{item.statusText}</span>
+                        </span>
+                      )}
+                    </span>
+                  )}
 
                   {/* Cột 9: THAO TÁC */}
                   <span style={{ flex: '0 0 90px', display: 'flex', justifyContent: 'flex-end' }}>

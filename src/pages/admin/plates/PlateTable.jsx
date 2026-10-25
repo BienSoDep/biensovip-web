@@ -8,6 +8,7 @@ import Button from '../../../components/Button.jsx';
 import Pagination from '../../../components/Pagination.jsx';
 import AuditHistoryButton from '../../../components/AuditHistoryButton.jsx';
 import { Select, IconButton, SearchField, InfoTip, PlateIssueTip } from '../../../components/index.jsx';
+import { TableColumnMenu } from '../../../components/table/TableColumnMenu.jsx';
 import PlateVisual from '../../../components/PlateVisual.jsx';
 import Skeleton from '../../../components/Skeleton.jsx';
 import { formatDate } from '../../../lib/date.js';
@@ -42,6 +43,7 @@ export default function PlateTable({
 
   // Column prefs
   colPrefs, toggleCol,
+  colMenuProps,
   colMenuOpen, setColMenuOpen,
 
   // Top action handlers
@@ -300,22 +302,26 @@ export default function PlateTable({
             </div>
           </div>
           <Select label="Hiển thị" value={perPage} options={PER_PAGE_OPTIONS} onChange={(v) => { setPerPage(Number(v)); setPage(1); }} />
-          <div style={{ position: 'relative' }}>
-            <Button variant="ghost" size="md" onClick={() => setColMenuOpen((o) => !o)}>Cột hiển thị</Button>
-            {colMenuOpen && (
-              <>
-                <div onClick={() => setColMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
-                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 10, background: 'var(--white)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-2)', minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {TOGGLEABLE_COLUMNS.map((c) => (
-                    <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
-                      <input type="checkbox" checked={!!colPrefs[c.key]} onChange={() => toggleCol(c.key)} style={{ width: 14, height: 14, accentColor: 'var(--action-primary)', cursor: 'pointer' }} />
-                      {c.label}
-                    </label>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          {colMenuProps ? (
+            <TableColumnMenu {...colMenuProps} />
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <Button variant="ghost" size="md" onClick={() => setColMenuOpen?.((o) => !o)}>Cột hiển thị</Button>
+              {colMenuOpen && (
+                <>
+                  <div onClick={() => setColMenuOpen?.(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
+                  <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 10, background: 'var(--white)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-2)', minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {TOGGLEABLE_COLUMNS.map((c) => (
+                      <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
+                        <input type="checkbox" checked={!!colPrefs[c.key]} onChange={() => toggleCol(c.key)} style={{ width: 14, height: 14, accentColor: 'var(--action-primary)', cursor: 'pointer' }} />
+                        {c.label}
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <Button
             variant="ghost"
             size="md"
@@ -749,13 +755,13 @@ export default function PlateTable({
               {colPrefs.province && <SortHeader label="Tỉnh" sortKey="provinceName" style={{ flex: '1 1 88px' }} />}
               {colPrefs.price && (
                 <span style={{ flex: '1 1 110px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <SortHeader label="Giá bán" sortKey="price" />
+                  <SortHeader label="Giá niêm yết" sortKey="price" />
                   <InfoTip size={12} text="Giá bán công khai trên website (VND). Bấm trực tiếp vào ô giá để sửa nhanh mà không cần mở form." />
                 </span>
               )}
               {colPrefs.suggestedPrice && (
-                <span style={{ flex: '1 1 125px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <SortHeader label="Giá TT tham khảo" sortKey="suggestedPrice" />
+                <span style={{ flex: '1 1 135px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <SortHeader label="Giá gợi ý / tham khảo" sortKey="suggestedPrice" />
                   <InfoTip size={12} text="Giá thị trường tham khảo (gợi ý từ VPA dựa trên kết quả đấu giá các mẫu tương đồng × hệ số). Bấm vào giá để xem chi tiết mẫu và công thức." />
                 </span>
               )}
