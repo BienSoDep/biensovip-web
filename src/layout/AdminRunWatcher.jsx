@@ -50,10 +50,35 @@ function useExportJobsStatus() {
       queryKey: ['admin-vpa', 'export-job', jobId],
       queryFn: () => apiClient.get(`/api/admin/vpa/plates/export/jobs/${jobId}`),
       refetchInterval: (q) => (q.state.data?.status === 'running' ? 1200 : false),
+      retry: false,
     })),
   });
 
-  return ids.map((jobId, i) => ({ runId: jobId, kind: 'export', data: results[i]?.data }));
+  // Tự động gỡ các jobId bị lỗi 404 (do server khởi động lại) hoặc đã kết thúc
+  useEffect(() => {
+    results.forEach((r, i) => {
+      const jobId = ids[i];
+      if (!jobId) return;
+      if (r.isError) {
+        // Job không còn tồn tại trên server (ví dụ backend restart) -> tự dọn khỏi localStorage sau 1s
+        const timer = setTimeout(() => unregisterExportJob(jobId), 1000);
+        return () => clearTimeout(timer);
+      }
+      if (r.data?.status === 'cancelled') {
+        const timer = setTimeout(() => unregisterExportJob(jobId), 4000);
+        return () => clearTimeout(timer);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results.map((r) => `${r.isError}-${r.data?.status}`).join(',')]);
+
+  return ids.map((jobId, i) => ({
+    runId: jobId,
+    kind: 'export',
+    data: results[i]?.data,
+    isError: results[i]?.isError,
+    error: results[i]?.error,
+  }));
 }
 
 export default function AdminRunWatcher() {
@@ -71,11 +96,11 @@ export default function AdminRunWatcher() {
     data: s.activeRun || { source: s.source },
   }));
 
-  const runningApprove = approveRuns.filter((r) => !r.data || r.data.status === 'running');
-  const finishedApprove = approveRuns.filter((r) => r.data && r.data.status !== 'running');
+  const runningApprove = approveRuns.filter((r) => !r.isError && (!r.data || r.data.status === 'running'));
+  const finishedApprove = approveRuns.filter((r) => r.isError || (r.data && r.data.status !== 'running'));
 
-  const runningExport = exportJobs.filter((r) => !r.data || r.data.status === 'running');
-  const finishedExport = exportJobs.filter((r) => r.data && r.data.status !== 'running');
+  const runningExport = exportJobs.filter((r) => !r.isError && (!r.data || r.data.status === 'running'));
+  const finishedExport = exportJobs.filter((r) => r.isError || (r.data && r.data.status !== 'running'));
 
   const allItems = [...runningApprove, ...crawlRuns, ...runningExport, ...finishedExport, ...finishedApprove];
   const runningCount = runningApprove.length + crawlRuns.length + runningExport.length;
@@ -220,8 +245,8 @@ function RunRow({ run, onRefresh }) {
   // 2. Tính toán % tiến độ chính xác
   let pct = null;
   let text = 'Đang xử lý…';
-  const status = data?.status || 'running';
-  const isRunning = status === 'running';
+  const status = run.isError ? 'error' : (data?.status || 'running');
+  const isRunning = !run.isError && status === 'running';
 
   if (kind === 'approve') {
     const hasTotal = data?.total > 0;
@@ -229,7 +254,7 @@ function RunRow({ run, onRefresh }) {
       pct = Math.min(100, Math.round(((data.done || 0) * 100) / data.total));
       text = `Đã duyệt ${Number(data.done || 0).toLocaleString('vi-VN')} / ${Number(data.total).toLocaleString('vi-VN')} biển (${pct}%)`;
     } else {
-      text = isRunning ? 'Đang duyệt danh sách biển…' : 'Đã kết thúc';
+      text = isRunning ? 'Đang duyệt danh sách biển…' : (status === 'error' ? 'Không thể kết nối tiến trình' : 'Đã kết thúc');
     }
   } else if (kind === 'crawl') {
     if (data?.slicesTotal > 0) {
@@ -242,7 +267,10 @@ function RunRow({ run, onRefresh }) {
       text = `Đã quét ${Number(data?.itemsSeen || 0).toLocaleString('vi-VN')} biển`;
     }
   } else if (kind === 'export') {
-    if (status === 'completed') {
+    if (run.isError) {
+      pct = 0;
+      text = 'Tiến trình đã kết thúc hoặc không còn trên máy chủ';
+    } else if (status === 'completed') {
       pct = 100;
       text = `Đã xuất ${Number(data?.processedRows || 0).toLocaleString('vi-VN')} biển thành công (100%)`;
     } else if (status === 'cancelled') {
@@ -250,7 +278,7 @@ function RunRow({ run, onRefresh }) {
     } else if (status === 'error') {
       text = `Lỗi: ${data?.error || 'Không thể tạo file'}`;
     } else {
-      pct = data?.percent != null ? data.percent : (data?.totalRows > 0 ? Math.min(100, Math.round(((data.processedRows || 0) * 100) / data.totalRows)) : 5);
+      pct = data?.percent != null ? data.percent : (data?.totalRows > 0 ? Math.min(100, Math.round(((data.processedRows || 0) * 100) / data.totalRows)) : 1);
       text = data?.totalRows > 0
         ? `Đã xử lý ${Number(data.processedRows || 0).toLocaleString('vi-VN')} / ${Number(data.totalRows).toLocaleString('vi-VN')} (${pct}%)`
         : `Đang khởi tạo file ${data?.format?.toUpperCase() || ''}… (${pct}%)`;
@@ -263,18 +291,26 @@ function RunRow({ run, onRefresh }) {
     setCancelling(true);
     try {
       if (kind === 'approve') {
-        await apiClient.post(`/api/admin/vpa/plates/price/approve-runs/${runId}/cancel`);
+        try {
+          await apiClient.post(`/api/admin/vpa/plates/price/approve-runs/${runId}/cancel`);
+        } catch { /* ignored */ }
+        unregisterApproveRun(runId);
         qc.invalidateQueries({ queryKey: ['admin-vpa', 'approve-run', runId] });
       } else if (kind === 'crawl') {
         const src = source || data?.source;
         await apiClient.post(`/api/admin/vpa/crawl/${src}/stop`);
       } else if (kind === 'export') {
-        await apiClient.post(`/api/admin/vpa/plates/export/jobs/${runId}/cancel`);
+        try {
+          await apiClient.post(`/api/admin/vpa/plates/export/jobs/${runId}/cancel`);
+        } catch { /* ignored */ }
+        unregisterExportJob(runId);
         qc.invalidateQueries({ queryKey: ['admin-vpa', 'export-job', runId] });
       }
       onRefresh?.();
     } catch (err) {
       alert('Không thể hủy tiến trình: ' + (err.message || 'Lỗi'));
+      if (kind === 'export') unregisterExportJob(runId);
+      if (kind === 'approve') unregisterApproveRun(runId);
     } finally {
       setCancelling(false);
     }
