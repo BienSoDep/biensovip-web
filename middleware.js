@@ -1,4 +1,4 @@
-const BOT_UA = /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|zalo|whatsapp|telegrambot|slackbot|discordbot|oai-searchbot|perplexitybot|applebot/i;
+const BOT_UA = /googlebot|bingbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|zalobot|whatsapp|telegrambot|slackbot|discordbot|oai-searchbot|perplexitybot|applebot/i;
 
 export const config = {
   matcher: ['/bien/:path*', '/bai-viet/:path*'],
