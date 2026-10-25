@@ -819,8 +819,9 @@ export default function PlateList({
             style={{
               position: "relative",
               display: "flex",
-              flex: "1 1 260px",
+              flex: "1 1 auto",
               minWidth: 0,
+              height: 44,
             }}
           >
             <Search
@@ -929,9 +930,10 @@ export default function PlateList({
             <div
               style={{
                 display: "flex",
-                flex: "1 1 260px",
+                flex: "1 1 auto",
                 minWidth: 0,
                 alignItems: "center",
+                height: 44,
               }}
             >
               <input
