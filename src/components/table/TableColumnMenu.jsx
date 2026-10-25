@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Columns3, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 /**
@@ -74,7 +75,7 @@ export function useTableColumns({ storageKey, columns = [] }) {
 }
 
 /**
- * Nút dropdown chọn ẩn / hiện cột trên bảng dữ liệu.
+ * Nút dropdown chọn ẩn / hiện cột trên bảng dữ liệu (sử dụng createPortal chống đè).
  */
 export function TableColumnMenu({
   columns = [],
@@ -85,13 +86,59 @@ export function TableColumnMenu({
   resetDefault = () => {},
 }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+  const panelRef = useRef(null);
   const safeColumns = Array.isArray(columns) ? columns : [];
   const safeCols = cols || {};
   const visibleCount = safeColumns.filter((c) => safeCols[c.key] !== false).length;
 
+  useEffect(() => {
+    if (!open) return;
+    const updatePos = () => {
+      const r = btnRef.current?.getBoundingClientRect();
+      if (!r) return;
+      const width = 230;
+      let left = r.right - width;
+      if (left < 16) left = Math.max(16, r.left);
+      if (left + width > window.innerWidth - 16) left = window.innerWidth - width - 16;
+      setPos({
+        top: r.bottom + 4,
+        left,
+        width,
+        maxHeight: Math.min(380, window.innerHeight - r.bottom - 20)
+      });
+    };
+    updatePos();
+    window.addEventListener('resize', updatePos);
+    window.addEventListener('scroll', updatePos, true);
+    return () => {
+      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', updatePos, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e) => {
+      if (btnRef.current?.contains(e.target) || panelRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         title="Tùy chọn ẩn/hiện cột dữ liệu"
@@ -116,28 +163,28 @@ export function TableColumnMenu({
         <span>Cột hiển thị ({visibleCount}/{safeColumns.length})</span>
       </button>
 
-      {open && (
-        <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />
-          <div
-            style={{
-              position: 'absolute',
-              top: 'calc(100% + 4px)',
-              right: 0,
-              zIndex: 100,
-              background: 'var(--white)',
-              borderRadius: 'var(--radius-card)',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-              border: '1px solid var(--border-hairline)',
-              padding: '8px',
-              minWidth: 220,
-              maxHeight: 380,
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-            }}
-          >
+      {open && pos && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={panelRef}
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            left: pos.left,
+            width: pos.width,
+            maxHeight: Math.max(160, pos.maxHeight),
+            zIndex: 1000,
+            background: 'var(--white)',
+            borderRadius: 'var(--radius-card)',
+            boxShadow: '0 12px 32px -4px rgba(14, 15, 18, 0.18)',
+            border: '1px solid var(--border-hairline)',
+            padding: '8px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            animation: 'modalIn 140ms var(--ease-out)',
+          }}
+        >
             {/* Thanh thao tác nhanh */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 6px 8px', borderBottom: '1px solid var(--border-hairline)', marginBottom: 4 }}>
               <button
@@ -196,9 +243,9 @@ export function TableColumnMenu({
                 </label>
               );
             })}
-          </div>
-        </>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

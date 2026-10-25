@@ -1418,7 +1418,7 @@ export default function PlateDetail({
 
       {tab === "info" && (
         <>
-          {plate.description && (
+          {(plate.description || plate.source === 'vpa') && (
             <section
               style={{
                 maxWidth: "var(--width-content)",
@@ -1435,7 +1435,7 @@ export default function PlateDetail({
                   color: "var(--text-strong)",
                 }}
               >
-                Mô tả
+                Mô tả {plate.source === 'vpa' && !plate.description ? 'nguồn gốc biển đấu giá VPA' : ''}
               </span>
               <p
                 style={{
@@ -1443,9 +1443,10 @@ export default function PlateDetail({
                   font: "var(--type-body)",
                   color: "var(--text-body)",
                   whiteSpace: "pre-line",
+                  lineHeight: 1.6,
                 }}
               >
-                {plate.description}
+                {plate.description || `Biển số ${plate.plateNumber} thuộc kho biển đấu giá VPA (${plate.vehicleType || 'Ô tô'}), được công bố và đấu giá chính thức theo quy định của Bộ Công an. Khách hàng giao dịch qua Biensovip được cam kết hỗ trợ trọn gói thủ tục sang tên, thu hồi biển và đăng ký định danh chính chủ theo Thông tư 24/2023/TT-BCA nhanh chóng, an toàn và chuẩn pháp lý.`}
               </p>
             </section>
           )}

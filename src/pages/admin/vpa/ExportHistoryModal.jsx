@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Download, Trash2, FileSpreadsheet, FileText, FileCode,
   Clock, AlertCircle, RefreshCw, CheckCircle2, ShieldCheck,
-  Calendar, Database, HardDrive, User, ArrowDownToLine
+  Calendar, Database, HardDrive, User, ArrowDownToLine, Loader2
 } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
@@ -299,7 +299,11 @@ export default function ExportHistoryModal({ open, onClose }) {
                         borderColor: '#107c41',
                       }}
                     >
-                      <ArrowDownToLine size={13} className={isDownloading ? 'animate-bounce' : ''} />
+                      {isDownloading ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        <ArrowDownToLine size={13} />
+                      )}
                       <span>{isDownloading ? 'Đang tải…' : 'Tải về'}</span>
                     </Button>
 

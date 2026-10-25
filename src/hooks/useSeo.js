@@ -94,9 +94,11 @@ export function useSeo(screen, data) {
       title = `Biển ${p.plateNumber} — ${priceText} | ${BRAND}`;
       // truncateAtWordBoundary — fengShuiMeaning có thể dài hàng nghìn ký tự, nhồi nguyên vào meta
       // description làm Google/mạng xã hội tự cắt xấu khi share link.
-      desc = truncateAtWordBoundary(`Biển số đẹp ${p.vehicleType || ''} tại ${p.province || ''}. ${p.fengShuiMeaning || ''} Liên hệ Duy Đinh để giữ chỗ.`.trim(), 160);
+      const vpaDefaultMeaning = p.source === 'vpa' ? `Biển số ${p.plateNumber} đấu giá VPA chính thức theo Thông tư 24/2023/TT-BCA, thế số đẹp hanh thông tài lộc.` : '';
+      const meaningSnippet = p.fengShuiMeaning || p.description || vpaDefaultMeaning;
+      desc = truncateAtWordBoundary(`Biển số đẹp ${p.vehicleType || ''} tại ${p.province || ''}. ${meaningSnippet} Liên hệ Duy Đinh để giữ chỗ.`.trim(), 160);
       canonical = SITE + '/bien/' + (p.slug || p.id);
-      image = p.images?.[0] || null;
+      image = p.images?.[0] || `${SITE}/assets/logo-mark.png`;
       const productLd = {
         '@type': 'Product',
         name: `Biển số ${p.plateNumber}`,

@@ -31,6 +31,7 @@ import { registerApproveRun } from '../../../lib/runWatcher.js';
 import { VPA_TAB_LABELS, VPA_PRICE_STATES, VPA_HELP, formatDateTime, isCar } from '../../../lib/vpaFormat.js';
 import PriceReferenceModal from '../../../components/PriceReferenceModal.jsx';
 import Modal from '../../../components/Modal.jsx';
+import { useTableColumns, TableColumnMenu } from '../../../components/table/TableColumnMenu.jsx';
 
 const MAX_BULK = 500;
 const COL_KEY = 'bsv.admin.vpaColumns';
@@ -411,8 +412,10 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const [sort, setSort] = useState(null);
   const [sel, setSel] = useState(() => new Set());
   const [quickSelectOpen, setQuickSelectOpen] = useState(false);
-  const [cols, setCols] = useState(loadCols);
-  const [colMenu, setColMenu] = useState(false);
+  const { cols, toggleCol, colMenuProps } = useTableColumns({
+    storageKey: COL_KEY,
+    columns: COLUMNS,
+  });
   const [mobileView, setMobileView] = useState('card');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [drawer, setDrawer] = useState(null); // null | { plate? }
@@ -532,11 +535,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     setPage(1); setSel(new Set());
   };
   const clearCats = () => { setFilter('plateTypeIds')([]); setFilter('provinceIds')([]); };
-  const toggleCol = (key) => setCols((p) => {
-    const n = { ...p, [key]: !p[key] };
-    try { localStorage.setItem(COL_KEY, JSON.stringify(n)); } catch { /* ignore */ }
-    return n;
-  });
   const toggleSort = (key) => { setSort((s) => (s?.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' })); setPage(1); };
   const toggleOne = (id) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const allSelected = items.length > 0 && items.every((i) => sel.has(i.id));
@@ -1091,22 +1089,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             </div>
           </div>
           <Select label="Hiển thị" value={limit} options={PER_PAGE} onChange={(v) => { setLimit(Number(v)); setPage(1); }} />
-          <div style={{ position: 'relative' }}>
-            <Button variant="ghost" size="md" onClick={() => setColMenu((o) => !o)}>Cột hiển thị</Button>
-            {colMenu && (
-              <>
-                <div onClick={() => setColMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
-                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 10, background: 'var(--white)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-4)', padding: 'var(--space-2)', minWidth: 200, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {COLUMNS.map((c) => (
-                    <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', font: 'var(--type-body-sm)', color: 'var(--text-strong)' }}>
-                      <input type="checkbox" checked={!!cols[c.key]} onChange={() => toggleCol(c.key)} style={{ width: 14, height: 14, accentColor: 'var(--action-primary)', cursor: 'pointer' }} />
-                      {c.label}
-                    </label>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <TableColumnMenu {...colMenuProps} />
           <Button
             variant="ghost"
             size="md"

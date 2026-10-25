@@ -43,19 +43,39 @@ export default function AdminVpaStats({ go, patch, st }) {
   const availableShop = shopAvailableData?.total || 0;
   const hotShop = shopHotData?.total || 0;
 
-  // Xử lý xuất file ngầm cho toàn bộ kho (VPA, Có sẵn, hoặc Gộp cả hai)
+  // Xử lý xuất file ngầm cho toàn bộ kho (VPA, Có sẵn, hoặc Gộp cả hai với cấu hình nguồn & bộ lọc)
   const handleExportChoice = async (options) => {
     const targetFormat = options?.format || 'xlsx';
     const targetScope = options?.scope || 'all';
+    const sources = options?.sources;
+    const vehicle = options?.vehicle;
+    const provinceId = options?.provinceId;
+    const priceState = options?.priceState;
 
     try {
       setExporting(true);
-      const res = await apiClient.post(`/api/admin/vpa/plates/export/jobs?format=${encodeURIComponent(targetFormat)}&scope=${encodeURIComponent(targetScope)}`, null, {
-        params: {
-          format: targetFormat,
-          scope: targetScope,
-        },
-      });
+      const params = {
+        format: targetFormat,
+        scope: targetScope,
+      };
+      if (sources && sources.length > 0) {
+        params.sources = Array.isArray(sources) ? sources.join(',') : sources;
+      }
+      if (vehicle !== undefined && vehicle !== null && vehicle !== '') {
+        params.vehicle = vehicle;
+      }
+      if (provinceId) {
+        params.provinceId = provinceId;
+      }
+      if (priceState !== undefined && priceState !== null && priceState !== '') {
+        params.priceState = priceState;
+      }
+      if (options?.isCurrentPageOnly) {
+        params.page = options.page || 1;
+        params.limit = options.pageSize || 50;
+      }
+
+      const res = await apiClient.post('/api/admin/vpa/plates/export/jobs', null, { params });
       const jobId = res?.jobId || res?.data?.jobId;
       if (jobId) {
         registerExportJob(jobId);
@@ -101,8 +121,8 @@ export default function AdminVpaStats({ go, patch, st }) {
                   gap: 5,
                   padding: '3px 8px',
                   borderRadius: 4,
-                  background: 'rgba(2, 132, 199, 0.08)',
-                  color: '#0284c7',
+                  background: 'rgba(241, 151, 32, 0.1)',
+                  color: 'var(--action-primary, #F19720)',
                   fontSize: 11,
                   fontWeight: 700,
                 }}
@@ -134,9 +154,6 @@ export default function AdminVpaStats({ go, patch, st }) {
                 alignItems: 'center',
                 gap: 7,
                 fontWeight: 700,
-                background: '#107c41',
-                borderColor: '#107c41',
-                boxShadow: '0 2px 4px rgba(16, 124, 65, 0.2)',
               }}
             >
               <Download size={15} />
@@ -155,8 +172,6 @@ export default function AdminVpaStats({ go, patch, st }) {
                 alignItems: 'center',
                 gap: 6,
                 fontWeight: 600,
-                color: '#0369a1',
-                borderColor: 'rgba(2, 132, 199, 0.3)',
               }}
             >
               <Clock size={14} />
@@ -172,7 +187,7 @@ export default function AdminVpaStats({ go, patch, st }) {
               onClick={go ? go('avpa') : null}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
             >
-              <Landmark size={14} color="#d97706" />
+              <Landmark size={14} color="var(--action-primary, #F19720)" />
               <span>Quản lý Biển VPA</span>
             </Button>
 
@@ -185,7 +200,7 @@ export default function AdminVpaStats({ go, patch, st }) {
               onClick={go ? go('aplates') : null}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
             >
-              <CarFront size={14} color="#0284c7" />
+              <CarFront size={14} color="var(--action-primary, #F19720)" />
               <span>Kho Biển Số Shop</span>
             </Button>
           </div>
@@ -207,14 +222,14 @@ export default function AdminVpaStats({ go, patch, st }) {
             <span style={{ fontSize: 11, color: 'var(--text-muted, #64748b)' }}>Tổng kho biển VPA</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
               <strong style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-strong)' }}>{num(totalVpa)}</strong>
-              <span style={{ fontSize: 11, color: '#d97706', fontWeight: 600 }}>Đấu giá VPA</span>
+              <span style={{ fontSize: 11, color: 'var(--action-primary, #F19720)', fontWeight: 600 }}>Đấu giá VPA</span>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted, #64748b)' }}>Biển VPA đã duyệt giá</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <strong style={{ fontSize: 17, fontWeight: 800, color: '#16a34a' }}>{num(approvedVpa)}</strong>
+              <strong style={{ fontSize: 17, fontWeight: 800, color: 'var(--status-success-ink, #16a34a)' }}>{num(approvedVpa)}</strong>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                 {totalVpa > 0 ? `(${Math.round((approvedVpa / totalVpa) * 100)}%)` : ''}
               </span>
@@ -225,14 +240,14 @@ export default function AdminVpaStats({ go, patch, st }) {
             <span style={{ fontSize: 11, color: 'var(--text-muted, #64748b)' }}>Kho biển số hệ thống</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
               <strong style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-strong)' }}>{num(totalShop)}</strong>
-              <span style={{ fontSize: 11, color: '#0284c7', fontWeight: 600 }}>Cửa hàng</span>
+              <span style={{ fontSize: 11, color: 'var(--action-primary, #F19720)', fontWeight: 600 }}>Cửa hàng</span>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted, #64748b)' }}>Biển Shop sẵn sàng bán</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <strong style={{ fontSize: 17, fontWeight: 800, color: '#16a34a' }}>{num(availableShop)}</strong>
+              <strong style={{ fontSize: 17, fontWeight: 800, color: 'var(--status-success-ink, #16a34a)' }}>{num(availableShop)}</strong>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                 {totalShop > 0 ? `(${Math.round((availableShop / totalShop) * 100)}%)` : ''}
               </span>
@@ -269,8 +284,8 @@ export default function AdminVpaStats({ go, patch, st }) {
               cursor: 'pointer',
               fontSize: 14,
               fontWeight: activeMainTab === 'overview' ? 700 : 500,
-              color: activeMainTab === 'overview' ? '#10b981' : 'var(--text-muted, #64748b)',
-              borderBottom: `2.5px solid ${activeMainTab === 'overview' ? '#10b981' : 'transparent'}`,
+              color: activeMainTab === 'overview' ? 'var(--action-primary, #F19720)' : 'var(--text-muted, #64748b)',
+              borderBottom: `2.5px solid ${activeMainTab === 'overview' ? 'var(--action-primary, #F19720)' : 'transparent'}`,
               marginBottom: -2,
               transition: 'all 0.15s ease',
             }}
@@ -282,8 +297,8 @@ export default function AdminVpaStats({ go, patch, st }) {
                 fontSize: 11,
                 padding: '1px 6px',
                 borderRadius: 9999,
-                background: activeMainTab === 'overview' ? 'rgba(16,185,129,0.15)' : 'var(--surface-sunken)',
-                color: activeMainTab === 'overview' ? '#10b981' : 'var(--text-muted)',
+                background: activeMainTab === 'overview' ? 'rgba(241,151,32,0.15)' : 'var(--surface-sunken)',
+                color: activeMainTab === 'overview' ? 'var(--action-primary)' : 'var(--text-muted)',
               }}
             >
               {num(totalVpa + totalShop)}
@@ -343,8 +358,8 @@ export default function AdminVpaStats({ go, patch, st }) {
               cursor: 'pointer',
               fontSize: 14,
               fontWeight: activeMainTab === 'shop' ? 700 : 500,
-              color: activeMainTab === 'shop' ? '#0284c7' : 'var(--text-muted, #64748b)',
-              borderBottom: `2.5px solid ${activeMainTab === 'shop' ? '#0284c7' : 'transparent'}`,
+              color: activeMainTab === 'shop' ? 'var(--action-primary, #F19720)' : 'var(--text-muted, #64748b)',
+              borderBottom: `2.5px solid ${activeMainTab === 'shop' ? 'var(--action-primary, #F19720)' : 'transparent'}`,
               marginBottom: -2,
               transition: 'all 0.15s ease',
             }}
@@ -356,8 +371,8 @@ export default function AdminVpaStats({ go, patch, st }) {
                 fontSize: 11,
                 padding: '1px 6px',
                 borderRadius: 9999,
-                background: activeMainTab === 'shop' ? 'rgba(2, 132, 199, 0.15)' : 'var(--surface-sunken)',
-                color: activeMainTab === 'shop' ? '#0284c7' : 'var(--text-muted)',
+                background: activeMainTab === 'shop' ? 'rgba(241,151,32,0.15)' : 'var(--surface-sunken)',
+                color: activeMainTab === 'shop' ? 'var(--action-primary)' : 'var(--text-muted)',
               }}
             >
               {num(totalShop)}
@@ -410,11 +425,12 @@ export default function AdminVpaStats({ go, patch, st }) {
                     padding: '6px 14px',
                     borderRadius: 'var(--radius-pill, 9999px)',
                     border: 'none',
-                    background: active ? '#0f172a' : 'transparent',
+                    background: active ? 'var(--action-primary, #F19720)' : 'transparent',
                     color: active ? '#ffffff' : 'var(--text-muted, #64748b)',
                     cursor: 'pointer',
                     fontSize: 12.5,
                     fontWeight: active ? 700 : 500,
+                    boxShadow: active ? '0 1px 3px rgba(241,151,32,0.3)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >

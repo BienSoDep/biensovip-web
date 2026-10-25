@@ -35,10 +35,12 @@ import {
   codeMatches,
   loadColumnPrefs,
   COLUMN_PREFS_KEY,
+  TOGGLEABLE_COLUMNS,
   detectPlateTypeId,
   detectVehicleTypeId,
   num,
 } from './plates/plateUtils.js';
+import { useTableColumns } from '../../components/table/TableColumnMenu.jsx';
 import PlateCountSummary from './PlateCountSummary.jsx';
 
 import PlateQuickAddBar from './plates/PlateQuickAddBar.jsx';
@@ -65,12 +67,9 @@ export default function AdminPlates({ go, notify, st }) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [debouncedKeyword] = useDebouncedValue(keyword, 250);
 
-  const [colPrefs, setColPrefs] = useState(loadColumnPrefs);
-  const [colMenuOpen, setColMenuOpen] = useState(false);
-  const toggleCol = (key) => setColPrefs((prev) => {
-    const next = { ...prev, [key]: !prev[key] };
-    try { localStorage.setItem(COLUMN_PREFS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-    return next;
+  const { cols: colPrefs, toggleCol, colMenuProps } = useTableColumns({
+    storageKey: COLUMN_PREFS_KEY,
+    columns: TOGGLEABLE_COLUMNS,
   });
 
   // Modal: Sinh thông tin hàng loạt
@@ -868,7 +867,7 @@ export default function AdminPlates({ go, notify, st }) {
         mobileView={mobileView} setMobileView={setMobileView}
         activeFiltersCount={activeFiltersCount}
         colPrefs={colPrefs} toggleCol={toggleCol}
-        colMenuOpen={colMenuOpen} setColMenuOpen={setColMenuOpen}
+        colMenuProps={colMenuProps}
         exportCsv={exportCsv} exportXlsx={exportXlsx} exportDocx={exportDocx} exportPlateDocx={exportPlateDocx} exporting={exporting}
         checkingMissingInfo={checkingMissingInfo} openMissingInfoModal={openMissingInfoModal}
         checkingMissingImage={checkingMissingImage} openMissingImageModal={openMissingImageModal}
