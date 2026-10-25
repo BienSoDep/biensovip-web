@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileSpreadsheet, FileText, FileCode, CheckCircle2, Layers, Landmark, CarFront, Filter, Layers2 } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText, FileCode, CheckCircle2, Layers, Landmark, CarFront, Filter, Layers2, Clock } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
 import { useVpaExportCounts } from '../../../services/adminVpa.js';
@@ -8,6 +8,7 @@ export default function ExportOptionModal({
   open,
   onClose,
   onExport,
+  onOpenHistory,
   page = 1,
   pageSize = 50,
   currentPageCount = 0,
@@ -298,26 +299,53 @@ export default function ExportOptionModal({
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10, paddingTop: 14, borderTop: '1px solid var(--grey-100, #f1f5f9)' }}>
-          <Button type="button" variant="outline" onClick={onClose} style={{ minWidth: 80 }}>
-            Hủy bỏ
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              minWidth: 160,
-              fontWeight: 600,
-              background: format === 'xlsx' ? '#107c41' : (format === 'docx' ? '#2b579a' : '#c2410c'),
-              borderColor: 'transparent',
-            }}
-          >
-            <Download size={15} />
-            <span>Tải dữ liệu ngay</span>
-          </Button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginTop: 10, paddingTop: 14, borderTop: '1px solid var(--grey-100, #f1f5f9)', flexWrap: 'wrap' }}>
+          <div>
+            {onOpenHistory && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onClose();
+                  onOpenHistory();
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: '#0284c7',
+                  fontWeight: 600,
+                  fontSize: 12.5,
+                  padding: '6px 10px',
+                }}
+              >
+                <Clock size={14} />
+                <span>Xem lịch sử tải về (30 ngày)</span>
+              </Button>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Button type="button" variant="outline" onClick={onClose} style={{ minWidth: 80 }}>
+              Hủy bỏ
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                minWidth: 160,
+                fontWeight: 600,
+                background: format === 'xlsx' ? '#107c41' : (format === 'docx' ? '#2b579a' : '#c2410c'),
+                borderColor: 'transparent',
+              }}
+            >
+              <Download size={15} />
+              <span>Tải dữ liệu ngay</span>
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>

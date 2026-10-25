@@ -21,6 +21,7 @@ export default function UnifiedPlatesListSection({
   vpaTotal = 0,
   onOpenExport,
   onQuickExport,
+  onOpenHistory,
   go,
 }) {
   const [scope, setScope] = useState('all'); // 'all' | 'shop' | 'vpa'
@@ -217,6 +218,20 @@ export default function UnifiedPlatesListSection({
             <Download size={14} />
             <span>Tùy chọn tải về…</span>
           </Button>
+
+          {onOpenHistory && (
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              title="Xem danh sách các file đã xuất trong vòng 30 ngày để tải lại ngay"
+              onClick={onOpenHistory}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, color: '#0369a1', borderColor: 'rgba(2, 132, 199, 0.3)' }}
+            >
+              <Clock size={14} />
+              <span>Lịch sử tải về (30 ngày)</span>
+            </Button>
+          )}
 
           <Button
             type="button"
