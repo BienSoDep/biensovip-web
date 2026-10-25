@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { validatePhone } from './lib/phone.js';
-import { loadAuth, saveAuth } from './lib/authStore.js';
+import { loadAuth, saveAuth, tokenExpired } from './lib/authStore.js';
 import { prefillFromUser, maybeSavePhoneToProfile } from './lib/contactPrefill.js';
 import * as authApi from './services/authService.js';
 import { apiClient } from './services/apiClient.js';
@@ -90,17 +90,19 @@ export default function App() {
     initRoute.screen = 'list';
   }
   const [favItems, setFavItems] = useState([]);
+  const initialAuth = loadAuth();
+  const initialIsAdmin = !!(initialAuth?.isAdmin && (initialAuth?.accessToken ? !tokenExpired(initialAuth.accessToken) : !!initialAuth?.refreshToken));
   const [st, setSt] = useState({
     screen: initRoute.screen || 'home',
     favs: {}, curId: initRoute.detailId || 'p1', typeSlug: initRoute.typeSlug || 'tu-quy', provinceCode: initRoute.provinceCode || '43',
     modal: false, sent: false, mName: '', mPhone: '', mEmail: '', mNote: '', mIntent: 'deposit_request', mCouponCode: '', mSubscribe: false, mErr: {},
-    redirectTo: null, user: loadAuth()?.user || null,
+    redirectTo: null, user: initialAuth?.user || null,
     adminQ: '',
     postId: initRoute.postId || 'a1',
     editPostId: null,
     listNotice: null,
     drawerOpen: false,
-    isAdmin: !!(loadAuth()?.isAdmin),
+    isAdmin: initialIsAdmin,
     settings: null,
   });
   const patch = (p) => setSt((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
@@ -138,12 +140,13 @@ export default function App() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-redirect admin away from login page when already logged in
+  // Auto-redirect admin away from login page only when truly authenticated with valid token
   useEffect(() => {
-    if (st.screen === 'login' && st.isAdmin) {
+    const auth = loadAuth();
+    if (st.screen === 'login' && st.isAdmin && st.user && auth?.accessToken && !tokenExpired(auth.accessToken)) {
       patch({ screen: 'dash' });
     }
-  }, [st.screen, st.isAdmin]);
+  }, [st.screen, st.isAdmin, st.user]);
 
   // UC05+UC06 — fetch public settings for chat widget + Zalo
   useEffect(() => {
@@ -669,9 +672,14 @@ export default function App() {
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
   // Admin đang đăng nhập (staff/super-admin) không được lạc sang site khách hàng — luôn đưa về Dashboard.
+  // Không đá về dash nếu đang ở màn auth (login/register/forgot) hoặc phiên chưa có token hợp lệ.
   useEffect(() => {
-    if (st.isAdmin && isPublic) go('dash')();
-  }, [st.isAdmin, isPublic, go]);
+    const auth = loadAuth();
+    const isAuthScreen = ['login', 'register', 'forgot', 'adminForgot', 'adminReset'].includes(s);
+    if (st.isAdmin && isPublic && !isAuthScreen && st.user && auth?.accessToken && !tokenExpired(auth.accessToken)) {
+      go('dash')();
+    }
+  }, [st.isAdmin, isPublic, s, st.user, go]);
 
   // Guest: fetch plate data for localStorage favorite ids via the compare endpoint.
   // Logged-in: use favItems returned by the favorites API.
@@ -850,7 +858,7 @@ export default function App() {
             {s === 'notfound' && <NotFound go={go} notify={notify} />}
 
             {isAdminShell && (
-              <RequireAuth st={st} go={go}>
+              <RequireAuth st={st} go={go} patch={patch}>
                 <AdminShell
                   s={s} st={st} setSt={setSt} patch={patch} go={go} notify={notify} setField={setField}
                   adminMeta={adminMeta}
