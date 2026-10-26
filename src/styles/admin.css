@@ -480,3 +480,22 @@ button[aria-expanded]:hover {
 .compose-column-right::-webkit-scrollbar-thumb:hover {
   background: var(--grey-400, #9ca3af);
 }
+
+/* --------------------------------------------------------------------------
+   7. GENTELELLA DASHBOARD WIDGETS & RESPONSIVE LAYOUT
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .gentelella-network-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (max-width: 768px) {
+  .gentelella-tile {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-hairline, rgba(0, 0, 0, 0.08)) !important;
+  }
+  .gentelella-tile:last-child {
+    border-bottom: none !important;
+  }
+}
+
