@@ -12,19 +12,21 @@ export default function StatCard({
     <div
       onClick={isClickable ? onClick : undefined}
       style={{
-        background: 'var(--surface-card)',
-        borderRadius: 'var(--radius-card)',
+        background: 'var(--surface-card, #ffffff)',
+        border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
+        boxShadow: 'var(--shadow-inset-hairline, inset 0 0 0 1px rgba(0, 0, 0, 0.04))',
+        borderRadius: 'var(--radius-card, 8px)',
         padding: '16px 18px',
-        boxShadow: 'var(--shadow-inset-hairline)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         gap: 'var(--space-2)',
-        transition: 'var(--transition-card)',
+        transition: 'transform 140ms ease, box-shadow 140ms ease',
         minWidth: 0,
         cursor: isClickable ? 'pointer' : 'default',
         userSelect: 'none',
       }}
+      className="gentelella-tile"
       onMouseEnter={(e) => {
         if (isClickable) {
           e.currentTarget.style.transform = 'translateY(-1px)';
@@ -39,22 +41,34 @@ export default function StatCard({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-        <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--text-muted)' }}>
+        <span
+          style={{
+            font: 'var(--type-caption)',
+            fontSize: '11px',
+            fontWeight: 600,
+            color: 'var(--text-muted, #6b7280)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
           {label}
         </span>
         {Icon && (
           <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: 'var(--radius-pill)',
-            background: `color-mix(in srgb, ${color} 10%, transparent)`,
+            width: 28,
+            height: 28,
+            borderRadius: '6px',
+            background: `color-mix(in srgb, ${color} 12%, transparent)`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: color,
             flexShrink: 0,
           }}>
-            <Icon size={16} />
+            <Icon size={15} />
           </div>
         )}
       </div>
@@ -62,18 +76,19 @@ export default function StatCard({
       <div>
         <div style={{
           font: 'var(--type-title-1)',
-          fontSize: '1.45rem',
-          fontWeight: 'var(--fw-bold)',
-          color: 'var(--text-strong)',
-          letterSpacing: 'var(--ls-tight)',
-          lineHeight: 1.2,
+          fontSize: '24px',
+          fontWeight: 700,
+          color: 'var(--text-strong, #111827)',
+          letterSpacing: '-0.02em',
+          lineHeight: 1.15,
         }}>
           {value}
         </div>
         {sub && (
           <div style={{
             font: 'var(--type-caption)',
-            color: 'var(--text-muted)',
+            fontSize: '11.5px',
+            color: 'var(--text-muted, #6b7280)',
             marginTop: 4,
             lineHeight: 1.35,
           }}>

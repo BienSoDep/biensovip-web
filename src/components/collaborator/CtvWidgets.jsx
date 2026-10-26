@@ -29,7 +29,7 @@ export function HotPlatesWidget({ referralUrl }) {
   if (isLoading || items.length === 0) return null;
 
   return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+    <div style={{ background: 'var(--white)', border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Biển đang được quan tâm</span>
       <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Ưu tiên giới thiệu các biển này — khách đang hỏi nhiều nhất.</span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 'var(--gutter-section)' }}>
@@ -71,7 +71,7 @@ export function ClickStatsSection() {
   const totalClicks = byDay.reduce((s, x) => s + x.count, 0);
 
   return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+    <div style={{ background: 'var(--white)', border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -144,7 +144,7 @@ export function TopReferredPlates() {
   const items = data || [];
   if (isLoading || items.length === 0) return null;
   return (
-    <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+    <div style={{ background: 'var(--white)', border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Biển hay giới thiệu nhất</span>
       {items.map((p) => (
         <div key={p.plateId} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: '1px solid var(--grey-100)' }}>

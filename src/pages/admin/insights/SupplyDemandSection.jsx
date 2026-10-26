@@ -11,6 +11,7 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
       {/* Cột A: Cung Cầu Theo Loại Biển */}
       <section style={{
         background: 'var(--surface-card)',
+        border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
         borderRadius: 'var(--radius-card)',
         padding: 'var(--gutter-card)',
         boxShadow: 'var(--shadow-inset-hairline)',
@@ -159,6 +160,7 @@ export default function SupplyDemandSection({ categorySupplyDemand = [], priceSe
       {/* Cột B: Phân Khúc Giá & Sức Mua Khách Hàng */}
       <section style={{
         background: 'var(--surface-card)',
+        border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
         borderRadius: 'var(--radius-card)',
         padding: 'var(--gutter-card)',
         boxShadow: 'var(--shadow-inset-hairline)',

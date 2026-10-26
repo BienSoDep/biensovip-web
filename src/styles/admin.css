@@ -499,3 +499,17 @@ button[aria-expanded]:hover {
   }
 }
 
+.gentelella-tile {
+  transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+.gentelella-tile:hover {
+  background-color: var(--surface-hover, rgba(0, 0, 0, 0.012));
+}
+
+.dash-panel {
+  border-radius: var(--radius-card, 8px);
+}
+.dash-panel:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+

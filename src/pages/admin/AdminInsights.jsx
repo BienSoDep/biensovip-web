@@ -157,6 +157,7 @@ export default function AdminInsights({ go, patch, st }) {
         justifyContent: 'space-between',
         gap: 'var(--space-4)',
         background: 'var(--surface-card)',
+        border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
         padding: 'var(--gutter-card)',
         borderRadius: 'var(--radius-card)',
         boxShadow: 'var(--shadow-inset-hairline)',

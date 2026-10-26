@@ -14,6 +14,7 @@ export default function LeadHealthAndGapsSection({ leadHealth, searchGaps = [], 
       {/* Cột A: Sức Khỏe Tư Vấn & Phản Hồi Khách */}
       <section style={{
         background: 'var(--surface-card)',
+        border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
         borderRadius: 'var(--radius-card)',
         padding: 'var(--gutter-card)',
         boxShadow: 'var(--shadow-inset-hairline)',
@@ -195,6 +196,7 @@ export default function LeadHealthAndGapsSection({ leadHealth, searchGaps = [], 
       {/* Cột B: Khách Tìm Kiếm Gì Mà Kho Chưa Có? */}
       <section style={{
         background: 'var(--surface-card)',
+        border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
         borderRadius: 'var(--radius-card)',
         padding: 'var(--gutter-card)',
         boxShadow: 'var(--shadow-inset-hairline)',
