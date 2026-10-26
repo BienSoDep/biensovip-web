@@ -4,7 +4,7 @@ import { useDebouncedValue } from '@mantine/hooks';
 import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
 import {
   CreditCard, FileText, Users, BadgeCheck, ArrowRight, Activity,
-  Layers, BarChart2, Server, Globe, Sparkles, Filter, PieChart as PieIcon
+  Layers, BarChart2, Server, Globe, Sparkles, Filter, PieChart as PieIcon, TrendingUp
 } from 'lucide-react';
 import { routeFor } from '../../config/routes.js';
 import { InfoTip } from '../../components/index.jsx';

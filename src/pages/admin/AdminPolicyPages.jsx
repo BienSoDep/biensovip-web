@@ -48,44 +48,6 @@ function slugify(s) {
     .replace(/^-|-$/g, '');
 }
 
-// Bộ phân tích HTML siêu nhẹ khớp Terms.jsx/Privacy.jsx (hỗ trợ <strong>)
-function Rich({ html }) {
-  const parts = String(html || '').split(/(<strong>.*?<\/strong>)/g);
-  return parts.map((p, i) =>
-    p.startsWith('<strong>') ? (
-      <strong key={i}>{p.replace(/<\/?strong>/g, '')}</strong>
-    ) : (
-      p
-    )
-  );
-}
-
-// Body đoạn văn hoặc danh sách bullet
-function SectionBody({ s }) {
-  if (s.type === 'list' || s.type === 'mixed') {
-    const items = String(s.body || '')
-      .split(/(<li>.*?<\/li>)/g)
-      .filter((x) => x.startsWith('<li>'));
-    const lead = String(s.body || '')
-      .replace(/(<li>.*?<\/li>)/g, '')
-      .trim();
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, font: 'var(--type-body)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)' }}>
-        {lead && <p style={{ margin: 0 }}><Rich html={lead} /></p>}
-        <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {items.map((li, i) => (
-            <li key={i}><Rich html={li.replace(/<\/?li>/g, '')} /></li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
-  return (
-    <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)' }}>
-      <Rich html={s.body} />
-    </p>
-  );
-}
 
 // LIVE PREVIEW: Render 100% chuẩn xác theo giao diện thật của khách ngoài trang chủ — HỖ TRỢ CHỈNH SỬA 2 CHIỀU TRỰC TIẾP
 function PolicyLivePreview({

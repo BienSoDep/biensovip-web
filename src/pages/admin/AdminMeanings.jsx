@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Compass, Hash, Layers, Sparkles, Plus, Pencil, Trash2,
-  RotateCw, Search, X, CheckCircle2, Car, Eye, SlidersHorizontal,
-  ChevronRight, RefreshCw, FileText
+  RotateCw, Search, X, CheckCircle2, Car, Eye,
+  ChevronRight, RefreshCw
 } from 'lucide-react';
 import {
   useMeaningTemplates, useCreateTemplate, useUpdateTemplate, useDeleteTemplate,
@@ -10,7 +10,7 @@ import {
   previewSeedPlateMeanings,
 } from '../../services/meanings.js';
 import { useAdminPlates } from '../../services/adminPlates.js';
-import { Select, SearchField, Switch, InfoTip, Badge } from '../../components/index.jsx';
+import { Select, Switch, InfoTip } from '../../components/index.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
 import ConfirmModal from '../../components/ConfirmModal.jsx';
@@ -615,7 +615,7 @@ function PlatesTab({ notify }) {
   });
   const plates = (plateData?.items || []).filter((p) => p.id);
 
-  const { data: meaningsData, isLoading: meaningsLoading, refetch: refetchMeanings } = usePlateMeanings(plate?.id);
+  const { data: meaningsData, isLoading: meaningsLoading } = usePlateMeanings(plate?.id);
   const meanings = meaningsData?.items || [];
 
   const createMut = useCreatePlateMeaning(plate?.id);

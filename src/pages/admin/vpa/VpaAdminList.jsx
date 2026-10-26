@@ -95,10 +95,6 @@ const loadSavedFilters = () => {
     return { plateTypeIds: Array.isArray(s.plateTypeIds) ? s.plateTypeIds : [], provinceIds: Array.isArray(s.provinceIds) ? s.provinceIds : [] };
   } catch { return { plateTypeIds: [], provinceIds: [] }; }
 };
-const loadCols = () => {
-  const base = Object.fromEntries(COLUMNS.map((c) => [c.key, c.default]));
-  try { return { ...base, ...(JSON.parse(localStorage.getItem(COL_KEY) || 'null') || {}) }; } catch { return base; }
-};
 const dateField = { height: 32, border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--surface-sunken)', padding: '0 8px', font: 'var(--type-caption)' };
 const catOpts = (list) => (list || []).map((c) => ({ value: c.id, label: c.name }));
 const chip = { background: 'var(--surface-sunken)', color: 'var(--text-body)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', font: 'var(--type-caption)' };
@@ -412,7 +408,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const [sort, setSort] = useState(null);
   const [sel, setSel] = useState(() => new Set());
   const [quickSelectOpen, setQuickSelectOpen] = useState(false);
-  const { cols, toggleCol, colMenuProps } = useTableColumns({
+  const { cols, colMenuProps } = useTableColumns({
     storageKey: COL_KEY,
     columns: COLUMNS,
   });
