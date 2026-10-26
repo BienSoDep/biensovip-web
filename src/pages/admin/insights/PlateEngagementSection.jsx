@@ -8,6 +8,7 @@ export default function PlateEngagementSection({ plateEngagement, topInteracted 
   return (
     <section style={{
       background: 'var(--surface-card)',
+      border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
       borderRadius: 'var(--radius-card)',
       padding: 'var(--gutter-card)',
       boxShadow: 'var(--shadow-inset-hairline)',

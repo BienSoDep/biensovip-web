@@ -33,7 +33,6 @@ import {
   isSoldMarker,
   detectVehicleTypeOverride,
   codeMatches,
-  loadColumnPrefs,
   COLUMN_PREFS_KEY,
   TOGGLEABLE_COLUMNS,
   detectPlateTypeId,

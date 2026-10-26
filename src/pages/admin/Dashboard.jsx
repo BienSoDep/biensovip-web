@@ -1,10 +1,17 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useDebouncedValue } from '@mantine/hooks';
 import { startOfMonth, subDays, startOfDay, format, parseISO } from 'date-fns';
-import { CreditCard, FileText, Users, BadgeCheck, ExternalLink, Edit3, ArrowRight } from 'lucide-react';
+import {
+  CreditCard, FileText, Users, BadgeCheck, ArrowRight, Activity,
+  Layers, BarChart2, Server, Globe, Sparkles, Filter, PieChart as PieIcon, TrendingUp
+} from 'lucide-react';
 import { routeFor } from '../../config/routes.js';
 import { InfoTip } from '../../components/index.jsx';
+import AdminTabbedPage from '../../components/AdminTabbedPage.jsx';
+import DashboardPanel from './dashboard/DashboardPanel.jsx';
+import GentelellaTileStats from './dashboard/GentelellaTileStats.jsx';
+import NetworkActivityWidget from './dashboard/NetworkActivityWidget.jsx';
 import {
   useDashboardSummary, useActionsChart, useTrafficSources, useFunnel, usePlateDistribution,
   useTopInterested, usePlateConversion, useConvertedOrders, useTopContent, useRatings, useIntent,
@@ -15,7 +22,6 @@ import GoogleAnalyticsPanel from './GoogleAnalyticsPanel.jsx';
 import { useExportReport } from '../../hooks/useExportCsv.js';
 import {
   ExecutiveSummaryBanner,
-  EnhancedActionsChart,
   MultiDimensionPlateDistributionMatrix,
   SupplyDemandComparisonChart,
   PriceSegmentsSweetSpotChart,
@@ -28,10 +34,9 @@ import {
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
-import KpiCard from './dashboard/DashboardKpiCard.jsx';
 import {
   PIE_COLORS, TrafficSourcesPie, TopPlatesTable,
-  FunnelView, DistributionCard, EmptyBlock, ErrorBlock
+  FunnelView, EmptyBlock, ErrorBlock
 } from './dashboard/DashboardWidgets.jsx';
 
 const KPI_CARDS = [
@@ -52,23 +57,30 @@ const PRESETS = [
 ];
 
 function fmtPct(n) {
-  if (n == null) return '--';
+  if (n == null) return null;
   const sign = n > 0 ? '+' : '';
   return `${sign}${n}%`;
 }
 
 export default function Dashboard({ go, st, patch }) {
   const isSuperAdmin = st?.user?.role === 'super-admin';
-  const [rangeIdx, setRangeIdx] = useState(1); // default 30 days; null nếu đang dùng custom range
+  const [rangeIdx, setRangeIdx] = useState(1); // default 30 days
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
+
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('tab') || 'overview';
+    }
+    return 'overview';
+  });
 
   const reduceMotion = useMemo(
     () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     []
   );
 
-  // Debounce custom date range 400ms — đổi 1 ô ngày không gọi lại ~17 API ngay lập tức.
   const [debouncedFrom] = useDebouncedValue(customFrom, 400);
   const [debouncedTo] = useDebouncedValue(customTo, 400);
 
@@ -80,20 +92,18 @@ export default function Dashboard({ go, st, patch }) {
     return { from: p.from(), to: new Date() };
   }, [rangeIdx, debouncedFrom, debouncedTo]);
 
-  // Granularity tự suy ra theo độ dài khoảng thời gian: ≤14 ngày → ngày, ≤90 ngày → tuần, còn lại → tháng
   const granularity = useMemo(() => {
     const days = Math.max(1, Math.round((range.to - range.from) / 86400000));
     return days <= 14 ? 'day' : days <= 90 ? 'week' : 'month';
   }, [range]);
 
-  // So sánh kỳ trước — cùng độ dài, liền kề trước range hiện tại (áp dụng cho Funnel trước, tránh gọi thêm
-  // API cho mọi bảng phân tích — xem ADMIN-PANEL-AUDIT.md mục "so sánh 2 khoảng thời gian").
   const [compareFunnel, setCompareFunnel] = useState(false);
   const prevRange = useMemo(() => {
     const spanMs = range.to - range.from;
     return { from: new Date(range.from.getTime() - spanMs), to: new Date(range.from.getTime()) };
   }, [range]);
 
+  // Queries API
   const summary = useDashboardSummary(range);
   const chart = useActionsChart({ ...range, granularity });
   const traffic = useTrafficSources(range);
@@ -115,13 +125,11 @@ export default function Dashboard({ go, st, patch }) {
   const heatmap = useTrafficHeatmap(range);
   const { exportReport, loading: exportingReport, exportModal: reportExportModal } = useExportReport('/api/admin/dashboard/export');
 
-  // Business Insights tổng hợp (Cung cầu, Phân khúc giá, Tương tác vi mô, Sức khỏe Lead)
   const fromIso = useMemo(() => format(range.from, 'yyyy-MM-dd'), [range.from]);
   const toIso = useMemo(() => format(range.to, 'yyyy-MM-dd'), [range.to]);
   const businessInsights = useBusinessInsights(fromIso, toIso);
   const bData = businessInsights.data;
 
-  // Phân bổ kho biển đa chiều (Dòng số đẹp, Tỉnh thành, Loại xe, Phân khúc giá, Vùng miền, Tình trạng)
   const [distTab, setDistTab] = useState('plate_type');
   const [distChartType, setDistChartType] = useState('bar');
   const activeDistData = usePlateDistribution(distTab);
@@ -136,8 +144,6 @@ export default function Dashboard({ go, st, patch }) {
       queryString = parts[1];
     }
     const params = new URLSearchParams(queryString);
-    const qParam = extraParams.adminQ || params.get('q');
-    const statusParam = extraParams.status || params.get('status');
 
     if (targetPath.startsWith('/admin/')) {
       const part = targetPath.replace('/admin/', '');
@@ -167,7 +173,7 @@ export default function Dashboard({ go, st, patch }) {
   const applyCustomRange = (from, to) => {
     if (!from || !to) { setCustomFrom(from); setCustomTo(to); return; }
     let f = from, t = to;
-    if (f > t) [f, t] = [t, f]; // auto-swap from>to
+    if (f > t) [f, t] = [t, f];
     if ((new Date(t) - new Date(f)) / 86400000 > 365) {
       f = new Date(new Date(t).getTime() - 365 * 86400000).toISOString().slice(0, 10);
       toast('Khoảng thời gian tối đa 365 ngày — đã tự thu hẹp');
@@ -177,178 +183,206 @@ export default function Dashboard({ go, st, patch }) {
     setRangeIdx(null);
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }}>
+  // Chuẩn bị dữ liệu cho Gentelella Tile Stats
+  const tileCards = useMemo(() => {
+    return KPI_CARDS.map((c) => {
+      const val = c.access(kpis) || 0;
+      const dNum = c.delta ? c.delta(kpis) : null;
+      return {
+        key: c.key,
+        icon: c.icon,
+        color: c.color,
+        label: c.label,
+        info: c.info,
+        value: val,
+        delta: fmtPct(dNum),
+        deltaNumeric: dNum,
+        spark: (chart.data?.points || []).map((p) => p[c.series] ?? 0),
+      };
+    });
+  }, [kpis, chart.data]);
 
-      {isSuperAdmin && <SystemHealthWidget />}
-      <GoogleAnalyticsPanel />
-
-      {/* Date range + granularity */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
-        {PRESETS.map((p, i) => (
-          <button
-            key={p.label}
-            type="button"
-            className="pill-btn"
-            data-on={String(rangeIdx === i)}
-            data-dark="false"
-            onClick={() => selectPreset(i)}
-            style={{ padding: '6px 16px', border: 'none', borderRadius: 'var(--radius-pill)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', background: rangeIdx === i ? 'var(--text-strong)' : 'var(--grey-100)', color: rangeIdx === i ? 'var(--white)' : 'var(--text-muted)' }}
-          >
-            {p.label}
-          </button>
-        ))}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: rangeIdx === null ? 'var(--action-primary)' + '18' : 'transparent', border: rangeIdx === null ? '1px solid var(--action-primary)' : '1px solid var(--border-hairline)' }}>
-          <input type="date" value={customFrom} max={customTo || format(new Date(), 'yyyy-MM-dd')}
-            onChange={(e) => applyCustomRange(e.target.value, customTo)}
-            style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
-          <ArrowRight size={12} color="var(--text-faint)" />
-          <input type="date" value={customTo} min={customFrom} max={format(new Date(), 'yyyy-MM-dd')}
-            onChange={(e) => applyCustomRange(customFrom, e.target.value)}
-            style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
-        </div>
-        <div style={{ flex: 1 }} />
+  // Thanh công cụ lọc ngày dùng chung
+  const renderDateToolbar = () => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', background: 'var(--white)', padding: '10px 14px', border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-card)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <Filter size={14} color="var(--text-muted)" />
+        <span style={{ fontSize: '12px', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Kỳ báo cáo:</span>
+      </div>
+      {PRESETS.map((p, i) => (
+        <button
+          key={p.label}
+          type="button"
+          onClick={() => selectPreset(i)}
+          style={{
+            padding: '5px 14px',
+            border: 'none',
+            borderRadius: 'var(--radius-pill)',
+            font: 'var(--type-caption)',
+            fontWeight: 'var(--fw-semibold)',
+            cursor: 'pointer',
+            background: rangeIdx === i ? 'var(--action-primary, #C75B00)' : 'var(--grey-100)',
+            color: rangeIdx === i ? '#ffffff' : 'var(--text-muted)',
+            transition: 'all 120ms ease',
+          }}
+        >
+          {p.label}
+        </button>
+      ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: rangeIdx === null ? 'rgba(199,91,0,0.1)' : 'transparent', border: rangeIdx === null ? '1px solid var(--action-primary)' : '1px solid var(--border-hairline)' }}>
+        <input type="date" value={customFrom} max={customTo || format(new Date(), 'yyyy-MM-dd')}
+          onChange={(e) => applyCustomRange(e.target.value, customTo)}
+          style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
+        <ArrowRight size={12} color="var(--text-faint)" />
+        <input type="date" value={customTo} min={customFrom} max={format(new Date(), 'yyyy-MM-dd')}
+          onChange={(e) => applyCustomRange(customFrom, e.target.value)}
+          style={{ font: 'var(--type-caption)', border: 'none', background: 'transparent', color: 'var(--text-body)' }} />
+      </div>
+      <div style={{ flex: 1 }} />
+      <div style={{ display: 'flex', gap: 6 }}>
         <button type="button" disabled={exportingReport}
           onClick={() => exportReport('xlsx', { from: range.from.toISOString(), to: range.to.toISOString() }).catch(() => toast.error('Xuất báo cáo thất bại, vui lòng thử lại.'))}
-          style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--surface-muted)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
+          style={{ height: 30, padding: '0 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-hairline)', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--white)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
           {exportingReport ? 'Đang xuất…' : 'Xuất Excel'}
         </button>
         <button type="button" disabled={exportingReport}
           onClick={() => exportReport('pdf', { from: range.from.toISOString(), to: range.to.toISOString() }).catch(() => toast.error('Xuất báo cáo thất bại, vui lòng thử lại.'))}
-          style={{ height: 32, padding: '0 14px', borderRadius: 'var(--radius-pill)', border: 'none', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--surface-muted)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
+          style={{ height: 30, padding: '0 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-hairline)', cursor: exportingReport ? 'default' : 'pointer', background: 'var(--white)', color: 'var(--text-body)', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)' }}>
           {exportingReport ? 'Đang xuất…' : 'Xuất PDF'}
         </button>
       </div>
+    </div>
+  );
 
-      {/* Banner Tóm tắt điều hành kinh doanh tổng hợp */}
+  // TAB 1: TỔNG QUAN KINH DOANH (Executive Overview)
+  const renderOverviewTab = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      {renderDateToolbar()}
+
+      {/* Banner Tóm tắt điều hành kinh doanh */}
       <ExecutiveSummaryBanner summary={bData?.executiveSummary} leadHealth={bData?.leadHealth} isSuperAdmin={isSuperAdmin} />
 
-      {/* KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
-        {summary.isLoading ? (
-          [1, 2, 3, 4].map((i) => <SkeletonBase key={i} height={116} />)
-        ) : (
-          KPI_CARDS.map((c) => (
-            <KpiCard
-              key={c.key}
-              icon={c.icon}
-              color={c.color}
-              label={c.label}
-              info={c.info}
-              value={c.access(kpis)}
-              delta={c.delta != null ? fmtPct(c.delta(kpis)) : null}
-              deltaColor={c.delta != null ? ((c.delta(kpis) ?? 0) >= 0 ? 'var(--status-success)' : 'var(--status-danger)') : 'var(--text-muted)'}
-              spark={(chart.data?.points || []).map((p) => p[c.series] ?? 0)}
-              animate={!reduceMotion}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Funnel */}
-      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)', margin: '0 0 var(--space-4)' }}>
-          <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Funnel chuyển đổi<InfoTip size={12} text="Phễu chuyển đổi: bao nhiêu khách Xem biển → Lưu yêu thích → Liên hệ → Chốt giao dịch. Mỗi bậc nhỏ dần cho thấy điểm khách bỏ lại." /></h3>
-          <div style={{ flex: 1 }} />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-            <input type="checkbox" checked={compareFunnel} onChange={(e) => setCompareFunnel(e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--action-primary)' }} />
-            So sánh với kỳ trước
-          </label>
+      {/* Top Tile Stats phong cách Gentelella v4 */}
+      {summary.isLoading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 'var(--space-3)' }}>
+          {[1, 2, 3, 4].map((i) => <SkeletonBase key={i} height={120} />)}
         </div>
-        {funnel.isLoading ? (
-          <SkeletonBase height={240} />
-        ) : funnel.data ? (
-          compareFunnel ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-6)' }}>
-              <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-                <span style={{ display: 'block', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', marginBottom: 8 }}>Kỳ hiện tại</span>
-                <FunnelView data={funnel.data} />
+      ) : (
+        <GentelellaTileStats cards={tileCards} animate={!reduceMotion} />
+      )}
+
+      {/* Cụm biểu đồ hoạt động trung tâm (Tỷ lệ vàng 65% : 35%) */}
+      <NetworkActivityWidget
+        chartData={chart.data}
+        trafficData={traffic.data}
+        distData={activeDistData.data}
+        granularity={granularity}
+        reduceMotion={reduceMotion}
+      />
+
+      {/* Grid 2 cột: Phễu chuyển đổi + Nguồn truy cập */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 'var(--gutter-section, 20px)' }}>
+        <DashboardPanel
+          title="Phễu chuyển đổi khách hàng"
+          icon={Activity}
+          info="Phễu chuyển đổi: bao nhiêu khách Xem biển → Lưu yêu thích → Liên hệ → Chốt giao dịch. Giúp phát hiện điểm rơi của khách hàng."
+          actions={
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              <input type="checkbox" checked={compareFunnel} onChange={(e) => setCompareFunnel(e.target.checked)} style={{ width: 14, height: 14, accentColor: 'var(--action-primary)' }} />
+              <span>So sánh kỳ trước</span>
+            </label>
+          }
+        >
+          {funnel.isLoading ? (
+            <SkeletonBase height={230} />
+          ) : funnel.data ? (
+            compareFunnel ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <span style={{ display: 'block', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', marginBottom: 6 }}>Kỳ này</span>
+                  <FunnelView data={funnel.data} />
+                </div>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <span style={{ display: 'block', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', marginBottom: 6 }}>Kỳ trước</span>
+                  {funnelPrev.isLoading ? <SkeletonBase height={180} /> : funnelPrev.data ? <FunnelView data={funnelPrev.data} /> : <EmptyBlock>Không có dữ liệu</EmptyBlock>}
+                </div>
               </div>
-              <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-                <span style={{ display: 'block', font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)', marginBottom: 8 }}>Kỳ trước ({format(prevRange.from, 'dd/MM')} – {format(prevRange.to, 'dd/MM')})</span>
-                {funnelPrev.isLoading ? <SkeletonBase height={200} /> : funnelPrev.data ? <FunnelView data={funnelPrev.data} /> : <EmptyBlock>Không có dữ liệu kỳ trước</EmptyBlock>}
-              </div>
-            </div>
+            ) : (
+              <FunnelView data={funnel.data} />
+            )
           ) : (
-            <FunnelView data={funnel.data} />
-          )
-        ) : (
-          <EmptyBlock>Chưa có dữ liệu funnel</EmptyBlock>
-        )}
-      </div>
+            <EmptyBlock>Chưa có dữ liệu funnel</EmptyBlock>
+          )}
+        </DashboardPanel>
 
-      {/* Views chart + Traffic sources */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <EnhancedActionsChart chartData={chart.data} reduceMotion={reduceMotion} />
-
-        <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            Nguồn truy cập
-            <InfoTip size={12} text="Tỷ lệ phân bổ khách hàng đến từ các kênh: Tìm kiếm tự nhiên Google (Organic), Mạng xã hội, Quảng cáo hoặc truy cập trực tiếp." />
-          </h3>
+        <DashboardPanel
+          title="Phân bổ nguồn truy cập"
+          icon={Globe}
+          info="Tỷ lệ phân bổ khách hàng đến từ các kênh: Tìm kiếm tự nhiên Google (Organic), Mạng xã hội, Zalo, hoặc truy cập trực tiếp."
+        >
           {traffic.isLoading ? (
-            <SkeletonBase height={280} />
+            <SkeletonBase height={230} />
           ) : traffic.data?.items?.length > 0 ? (
             <TrafficSourcesPie items={traffic.data.items} animate={!reduceMotion} />
           ) : (
             <EmptyBlock>Chưa có dữ liệu nguồn truy cập</EmptyBlock>
           )}
-        </div>
+        </DashboardPanel>
       </div>
 
-      {/* Top interested plates + Lead pipeline health */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <div style={{ flex: '1 1 500px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-          <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              Biển số được quan tâm nhất
-              <InfoTip size={12} text="Bảng xếp hạng các biển số có lượt xem, lưu vào danh sách yêu thích và liên hệ hỏi mua nhiều nhất trong kỳ." />
-            </h3>
-          </div>
+      {/* Grid 2 cột: Biển số được quan tâm nhất + Sức khỏe luồng tư vấn */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--gutter-section, 20px)' }}>
+        <DashboardPanel
+          title="Biển số được quan tâm nhất"
+          icon={Sparkles}
+          badge="Top lượt xem"
+          badgeTone="brand"
+          info="Bảng xếp hạng các biển số có lượt xem, lưu vào danh sách yêu thích và liên hệ hỏi mua nhiều nhất trong kỳ."
+        >
           {interested.isLoading ? (
-            <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
+            <SkeletonBase height={220} />
           ) : interested.data?.items?.length > 0 ? (
             <TopPlatesTable items={interested.data.items} />
           ) : (
-            <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có dữ liệu</EmptyBlock></div>
+            <EmptyBlock>Chưa có dữ liệu</EmptyBlock>
           )}
-        </div>
+        </DashboardPanel>
 
         <LeadPipelineHealthCard leadHealth={bData?.leadHealth} intentData={intent.data} onActionClick={handleActionClick} />
       </div>
 
-      {/* Plate conversion + trending */}
-      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-          <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Tỉ lệ chuyển đổi & xu hướng</h3>
-        </div>
+      {/* Bảng: Tỉ lệ chuyển đổi & Xu hướng */}
+      <DashboardPanel
+        title="Tỉ lệ chuyển đổi & Xu hướng quan tâm theo biển"
+        icon={TrendingUp}
+        info="Theo dõi chuyển đổi từ lượt xem sang yêu cầu gọi lại và chốt giao dịch của từng mã biển số."
+      >
         {conversion.isLoading ? (
-          <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={220} /></div>
+          <SkeletonBase height={200} />
         ) : conversion.data?.items?.length > 0 ? (
-          <>
           <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
               <thead>
-                <tr style={{ color: 'var(--text-faint)', textAlign: 'left' }}>
-                  <th style={{ padding: 'var(--space-2) var(--gutter-card)', fontWeight: 'var(--fw-semibold)' }}>Biển số</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Xem</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Lưu</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Liên hệ</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Chốt</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Đổi l/hệ<InfoTip size={12} text="Tỉ lệ chuyển đổi = số lần chốt giao dịch trên số lần liên hệ. Cao = khách hỏi là mua." /></th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Xu hướng</th>
+                <tr style={{ color: 'var(--text-faint)', textAlign: 'left', borderBottom: '1px solid var(--border-hairline)' }}>
+                  <th style={{ padding: '8px 12px', fontWeight: 'var(--fw-semibold)' }}>Biển số</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Xem</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Lưu</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Liên hệ</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Chốt</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Tỷ lệ đổi</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Xu hướng</th>
                 </tr>
               </thead>
               <tbody>
                 {conversion.data.items.map((p) => (
-                  <tr key={p.plateId} style={{ boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-                    <td style={{ padding: 'var(--space-2) var(--gutter-card)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-muted)' }}>{p.views}</td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-muted)' }}>{p.favorites}</td>
-                    <td style={{ padding: 'var(--space-2)', color: p.contacts > 0 ? 'var(--status-success)' : 'var(--text-muted)' }}>{p.contacts}</td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-muted)' }}>{p.closed}</td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-muted)' }}>{p.contactRate}%</td>
-                    <td style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-bold)', color: p.trending > 0 ? 'var(--status-success)' : p.trending < 0 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
+                  <tr key={p.plateId} style={{ borderBottom: '1px solid var(--grey-100)' }}>
+                    <td style={{ padding: '8px 12px', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumber}</td>
+                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.views}</td>
+                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.favorites}</td>
+                    <td style={{ padding: '8px', color: p.contacts > 0 ? 'var(--status-success)' : 'var(--text-muted)', fontWeight: p.contacts > 0 ? 600 : 400 }}>{p.contacts}</td>
+                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.closed}</td>
+                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{p.contactRate}%</td>
+                    <td style={{ padding: '8px', fontWeight: 'var(--fw-bold)', color: p.trending > 0 ? 'var(--status-success)' : p.trending < 0 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
                       {p.trending > 0 ? `+${p.trending}%` : `${p.trending}%`}
                     </td>
                   </tr>
@@ -356,420 +390,355 @@ export default function Dashboard({ go, st, patch }) {
               </tbody>
             </table>
           </div>
-          <div className="admin-simple-cards">
-            {conversion.data.items.map((p) => (
-              <div key={p.plateId} className="admin-row">
-                <div data-label="Biển số"><b>{p.plateNumber}</b></div>
-                <div data-label="Xem">{p.views}</div>
-                <div data-label="Lưu">{p.favorites}</div>
-                <div data-label="Liên hệ" style={{ color: p.contacts > 0 ? 'var(--status-success)' : 'var(--text-muted)' }}>{p.contacts}</div>
-                <div data-label="Chốt">{p.closed}</div>
-                <div data-label="Đổi l/hệ">{p.contactRate}%</div>
-                <div data-label="Xu hướng" style={{ fontWeight: 'var(--fw-bold)', color: p.trending > 0 ? 'var(--status-success)' : p.trending < 0 ? 'var(--status-danger)' : 'var(--text-faint)' }}>
-                  {p.trending > 0 ? `+${p.trending}%` : `${p.trending}%`}
-                </div>
-              </div>
-            ))}
-          </div>
-          </>
         ) : (
-          <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có dữ liệu chuyển đổi</EmptyBlock></div>
+          <EmptyBlock>Chưa có dữ liệu chuyển đổi</EmptyBlock>
         )}
-      </div>
+      </DashboardPanel>
 
-      {/* Converted orders */}
-      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-          <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Đơn chuyển đổi</h3>
-        </div>
+      {/* Bảng: Đơn chuyển đổi gần đây */}
+      <DashboardPanel
+        title="Giao dịch chuyển đổi gần đây"
+        icon={BadgeCheck}
+        badge="Khách đặt cọc / Chốt"
+        badgeTone="success"
+      >
         {orders.isLoading ? (
-          <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={220} /></div>
+          <SkeletonBase height={200} />
         ) : orders.data?.items?.length > 0 ? (
-          <>
           <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', font: 'var(--type-caption)' }}>
               <thead>
-                <tr style={{ color: 'var(--text-faint)', textAlign: 'left' }}>
-                  <th style={{ padding: 'var(--space-2) var(--gutter-card)', fontWeight: 'var(--fw-semibold)' }}>Biển số</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Khách hàng</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Mục đích</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Trạng thái</th>
-                  <th style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)' }}>Ngày</th>
+                <tr style={{ color: 'var(--text-faint)', textAlign: 'left', borderBottom: '1px solid var(--border-hairline)' }}>
+                  <th style={{ padding: '8px 12px', fontWeight: 'var(--fw-semibold)' }}>Biển số</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Khách hàng</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Mục đích</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Trạng thái</th>
+                  <th style={{ padding: '8px', fontWeight: 'var(--fw-semibold)' }}>Ngày yêu cầu</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.data.items.map((o) => (
-                  <tr key={o.contactId} style={{ boxShadow: 'inset 0 -1px 0 var(--grey-100)' }}>
-                    <td style={{ padding: 'var(--space-2) var(--gutter-card)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{o.plateNumber || '—'}</td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-muted)' }}>
-                      <div>{o.fullName}</div>
-                      <div style={{ color: 'var(--text-faint)' }}>{o.phone}</div>
+                  <tr key={o.contactId} style={{ borderBottom: '1px solid var(--grey-100)' }}>
+                    <td style={{ padding: '8px 12px', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>{o.plateNumber || '—'}</td>
+                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-strong)' }}>{o.fullName}</div>
+                      <div style={{ color: 'var(--text-faint)', fontSize: '11px' }}>{o.phone}</div>
                     </td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-muted)' }}>{INTENT_LABEL[o.intent] || o.intent}</td>
-                    <td style={{ padding: 'var(--space-2)', fontWeight: 'var(--fw-semibold)', color: o.status === 'closed' ? 'var(--status-success)' : 'var(--text-muted)' }}>{ORDER_STATUS_LABEL[o.status] || o.status}</td>
-                    <td style={{ padding: 'var(--space-2)', color: 'var(--text-faint)' }}>{format(new Date(o.createdAt), 'dd/MM/yyyy')}</td>
+                    <td style={{ padding: '8px', color: 'var(--text-body)' }}>{INTENT_LABEL[o.intent] || o.intent}</td>
+                    <td style={{ padding: '8px' }}>
+                      <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: '11px', fontWeight: 600, background: o.status === 'closed' ? 'rgba(63,191,143,0.15)' : 'rgba(199,91,0,0.12)', color: o.status === 'closed' ? 'var(--status-success)' : 'var(--action-primary)' }}>
+                        {ORDER_STATUS_LABEL[o.status] || o.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '8px', color: 'var(--text-faint)' }}>{format(new Date(o.createdAt), 'dd/MM/yyyy')}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="admin-simple-cards">
-            {orders.data.items.map((o) => (
-              <div key={o.contactId} className="admin-row">
-                <div data-label="Biển số"><b>{o.plateNumber || '—'}</b></div>
-                <div data-label="Khách hàng">{o.fullName} · {o.phone}</div>
-                <div data-label="Mục đích">{INTENT_LABEL[o.intent] || o.intent}</div>
-                <div data-label="Trạng thái" style={{ fontWeight: 'var(--fw-semibold)', color: o.status === 'closed' ? 'var(--status-success)' : 'var(--text-muted)' }}>{ORDER_STATUS_LABEL[o.status] || o.status}</div>
-                <div data-label="Ngày">{format(new Date(o.createdAt), 'dd/MM/yyyy')}</div>
-              </div>
-            ))}
-          </div>
-          </>
         ) : (
-          <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có đơn chuyển đổi</EmptyBlock></div>
+          <EmptyBlock>Chưa có đơn chuyển đổi</EmptyBlock>
         )}
+      </DashboardPanel>
+    </div>
+  );
+
+  // TAB 2: CUNG - CẦU & KHO BIỂN (Supply & Demand)
+  const renderSupplyDemandTab = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      {renderDateToolbar()}
+
+      {/* Phân bổ kho biển đa chiều */}
+      <MultiDimensionPlateDistributionMatrix
+        distTab={distTab}
+        onTabChange={setDistTab}
+        distData={activeDistData}
+        chartType={distChartType}
+        onChartTypeChange={setDistChartType}
+        ratingsData={ratings}
+        onActionClick={handleActionClick}
+      />
+
+      {/* Cân bằng Cung - Cầu */}
+      <SupplyDemandComparisonChart
+        categorySupplyDemand={bData?.categorySupplyDemand || []}
+        onActionClick={handleActionClick}
+      />
+
+      {/* Điểm ngọt phân khúc giá + Tương tác vi mô */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--gutter-section, 20px)' }}>
+        <PriceSegmentsSweetSpotChart
+          priceSegments={bData?.priceSegments || []}
+          onActionClick={handleActionClick}
+        />
+        <MicroEngagementsChart
+          plateEngagement={bData?.plateEngagement}
+        />
+      </div>
+    </div>
+  );
+
+  // TAB 3: KHÁCH HÀNG & THỊ TRƯỜNG (Audience & Market)
+  const renderAudienceTab = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      {renderDateToolbar()}
+
+      {/* 3 Panel nhân khẩu học khách hàng */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--gutter-section, 20px)' }}>
+        <DashboardPanel
+          title="Khách hàng theo ngũ hành"
+          icon={PieIcon}
+          info="Phân loại khách theo bản mệnh Kim/Mộc/Thủy/Hỏa/Thổ suy từ ngày sinh — giúp chủ sàn tối ưu chiến lược nhập biển số hợp phong thủy."
+        >
+          {demographics.isLoading ? (
+            <SkeletonBase height={230} />
+          ) : demographics.data?.byElement?.length > 0 ? (
+            <>
+              <div style={{ height: 210 }}>
+                <ResponsiveContainer width="100%" height={210}>
+                  <PieChart>
+                    <Pie data={demographics.data.byElement} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={75} label={({ label, count }) => `${label}: ${count}`}>
+                      {demographics.data.byElement.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {demographics.data && (
+                <p style={{ margin: '8px 0 0', font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'center' }}>
+                  {demographics.data.totalUsersWithBirthDate}/{demographics.data.totalUsers} khách hàng đã điền ngày sinh
+                </p>
+              )}
+            </>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu ngày sinh khách hàng</EmptyBlock>
+          )}
+        </DashboardPanel>
+
+        <DashboardPanel
+          title="Khách hàng theo độ tuổi"
+          icon={BarChart2}
+        >
+          {demographics.isLoading ? (
+            <SkeletonBase height={230} />
+          ) : demographics.data?.byAgeGroup?.length > 0 ? (
+            <div style={{ height: 230 }}>
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={demographics.data.byAgeGroup} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-hairline, #e5e7eb)" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" name="Số khách" fill="#C75B00" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu độ tuổi</EmptyBlock>
+          )}
+        </DashboardPanel>
+
+        <DashboardPanel
+          title="Khách hàng theo giới tính"
+          icon={Users}
+        >
+          {demographics.isLoading ? (
+            <SkeletonBase height={230} />
+          ) : demographics.data?.byGender?.length > 0 ? (
+            <div style={{ height: 230 }}>
+              <ResponsiveContainer width="100%" height={230}>
+                <PieChart>
+                  <Pie data={demographics.data.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={75} label={({ label, count }) => `${label}: ${count}`}>
+                    {demographics.data.byGender.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu giới tính</EmptyBlock>
+          )}
+        </DashboardPanel>
       </div>
 
-      {/* Top content */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <div style={{ flex: '1 1 500px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-          <div style={{ padding: 'var(--space-4) var(--gutter-card)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Bài viết xem nhiều</h3>
-          </div>
+      {/* Grid 2 cột: Từ khóa tìm kiếm + Cặp biển so sánh */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--gutter-section, 20px)' }}>
+        <DashboardPanel
+          title="Từ khóa tìm kiếm nhiều nhất"
+          icon={Sparkles}
+          badge={searchInsights.data ? `${searchInsights.data.totalSearches} lượt tìm` : null}
+        >
+          {searchInsights.isLoading ? (
+            <SkeletonBase height={200} />
+          ) : searchInsights.data?.topKeywords?.length > 0 ? (
+            searchInsights.data.topKeywords.map((k, i) => (
+              <div key={k.keyword} style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 10, borderBottom: i < searchInsights.data.topKeywords.length - 1 ? '1px solid var(--grey-100)' : 'none' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 20 }}>{i + 1}</span>
+                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{k.keyword}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>~{k.avgResultCount} kết quả</span>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>{k.count} lượt</span>
+              </div>
+            ))
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu tìm kiếm</EmptyBlock>
+          )}
+        </DashboardPanel>
+
+        <DashboardPanel
+          title="Cặp biển được so sánh nhiều nhất"
+          icon={Layers}
+          badge={compareInsights.data ? `${compareInsights.data.totalCompareSessions} phiên so sánh` : null}
+        >
+          {compareInsights.isLoading ? (
+            <SkeletonBase height={200} />
+          ) : compareInsights.data?.topPairs?.length > 0 ? (
+            compareInsights.data.topPairs.map((p, i) => (
+              <div key={`${p.plateNumberA}-${p.plateNumberB}`} style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 10, borderBottom: i < compareInsights.data.topPairs.length - 1 ? '1px solid var(--grey-100)' : 'none' }}>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 20 }}>{i + 1}</span>
+                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumberA} ↔ {p.plateNumberB}</span>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>{p.count} lần</span>
+              </div>
+            ))
+          ) : (
+            <EmptyBlock>Chưa có lượt so sánh</EmptyBlock>
+          )}
+        </DashboardPanel>
+      </div>
+
+      {/* Grid 2 cột: Traffic Heatmap theo giờ & theo ngày trong tuần */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--gutter-section, 20px)' }}>
+        <DashboardPanel
+          title="Lưu lượng truy cập theo giờ trong ngày"
+          icon={Activity}
+        >
+          {heatmap.isLoading ? (
+            <SkeletonBase height={200} />
+          ) : heatmap.data?.byHour?.some((h) => h.count > 0) ? (
+            <div style={{ height: 200 }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={heatmap.data.byHour} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-hairline, #e5e7eb)" vertical={false} />
+                  <XAxis dataKey="hour" tick={{ fontSize: 10 }} tickFormatter={(h) => `${h}h`} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip labelFormatter={(h) => `${h}h`} />
+                  <Bar dataKey="count" name="Lượt xem" fill="#C75B00" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu traffic theo giờ</EmptyBlock>
+          )}
+        </DashboardPanel>
+
+        <DashboardPanel
+          title="Lưu lượng theo các ngày trong tuần"
+          icon={Activity}
+        >
+          {heatmap.isLoading ? (
+            <SkeletonBase height={200} />
+          ) : heatmap.data?.byWeekday?.some((d) => d.count > 0) ? (
+            <div style={{ height: 200 }}>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={heatmap.data.byWeekday.map((d) => ({ ...d, label: WEEKDAY_LABEL[d.weekday] }))} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-hairline, #e5e7eb)" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" name="Lượt xem" fill="#C75B00" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <EmptyBlock>Chưa có dữ liệu theo ngày trong tuần</EmptyBlock>
+          )}
+        </DashboardPanel>
+      </div>
+
+      {/* Grid 2 cột: Bài viết xem nhiều + Hiệu suất CTV / Nhu cầu */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 'var(--gutter-section, 20px)' }}>
+        <DashboardPanel
+          title="Bài viết hướng dẫn & phong thủy xem nhiều"
+          icon={FileText}
+        >
           {topContent.isLoading ? (
-            <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
+            <SkeletonBase height={180} />
           ) : topContent.data?.items?.length > 0 ? (
             topContent.data.items.map((c, i) => {
               const postUrl = routeFor('post', c.slug || c.contentId);
               return (
-                <div
-                  key={c.contentId}
-                  style={{
-                    padding: 'var(--space-3) var(--gutter-card)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-3)',
-                    boxShadow: i < topContent.data.items.length - 1 ? 'inset 0 -1px 0 var(--border-hairline, var(--grey-100))' : 'none',
-                  }}
-                >
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24, flexShrink: 0, fontWeight: 'var(--fw-semibold)' }}>
-                    {i + 1}
-                  </span>
-                  <a
-                    href={postUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={`Mở bài viết: ${c.title}`}
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      font: 'var(--type-body-sm)',
-                      fontWeight: 'var(--fw-medium)',
-                      color: 'var(--text-strong)',
-                      textDecoration: 'none',
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      transition: 'color 140ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = 'var(--action-primary, #F19720)';
-                      const icon = e.currentTarget.querySelector('.dash-ext-link');
-                      if (icon) icon.style.opacity = '1';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'var(--text-strong)';
-                      const icon = e.currentTarget.querySelector('.dash-ext-link');
-                      if (icon) icon.style.opacity = '0.35';
-                    }}
-                  >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {c.title}
-                    </span>
-                    <ExternalLink
-                      className="dash-ext-link"
-                      size={13}
-                      style={{ flexShrink: 0, opacity: 0.35, transition: 'opacity 140ms ease' }}
-                      aria-hidden="true"
-                    />
+                <div key={c.contentId} style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 10, borderBottom: i < topContent.data.items.length - 1 ? '1px solid var(--grey-100)' : 'none' }}>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 20 }}>{i + 1}</span>
+                  <a href={postUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 0, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--text-strong)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {c.title}
                   </a>
-                  {patch && (
-                    <button
-                      type="button"
-                      onClick={() => patch({ screen: 'compose', editPostId: c.contentId })}
-                      title="Chỉnh sửa bài viết trong Admin"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        padding: 4,
-                        cursor: 'pointer',
-                        color: 'var(--text-muted)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        borderRadius: 'var(--radius-sm, 4px)',
-                        transition: 'color 140ms ease, background-color 140ms ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = 'var(--action-primary, #F19720)';
-                        e.currentTarget.style.background = 'var(--surface-subtle, rgba(0,0,0,0.05))';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = 'var(--text-muted)';
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <Edit3 size={13} aria-hidden="true" />
-                    </button>
-                  )}
-                  <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                    {c.views} xem
-                  </span>
+                  <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{c.views} xem</span>
                 </div>
               );
             })
           ) : (
-            <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có dữ liệu bài viết</EmptyBlock></div>
+            <EmptyBlock>Chưa có bài viết</EmptyBlock>
           )}
-        </div>
+        </DashboardPanel>
+
+        <DashboardPanel
+          title="Nhu cầu săn biển & Bộ lọc người dùng"
+          icon={Filter}
+          badge={demand.data ? `${demand.data.total} bộ lọc bật` : null}
+          info="Khách hàng tự thiết lập tiêu chí tìm kiếm và nhận thông báo khi có biển tương ứng xuất hiện."
+        >
+          {demand.isLoading ? (
+            <SkeletonBase height={180} />
+          ) : demand.data?.items?.length > 0 ? (
+            demand.data.items.map((d, i) => (
+              <div key={d.name} style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 10, borderBottom: i < demand.data.items.length - 1 ? '1px solid var(--grey-100)' : 'none' }}>
+                <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name || '—'}</span>
+                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)' }}>{d.count} người theo dõi</span>
+              </div>
+            ))
+          ) : (
+            <EmptyBlock>Chưa có bộ lọc đã lưu</EmptyBlock>
+          )}
+        </DashboardPanel>
       </div>
+    </div>
+  );
 
-      {/* Multi-Dimension Distribution & Supply vs Demand Balance */}
-      <details className="dash-fold" open>
-      <summary>Phân bổ kho biển đa chiều &amp; Cân bằng Cung - Cầu</summary>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gutter-section)' }}>
-        <MultiDimensionPlateDistributionMatrix
-          distTab={distTab}
-          onTabChange={setDistTab}
-          distData={activeDistData}
-          chartType={distChartType}
-          onChartTypeChange={setDistChartType}
-          ratingsData={ratings}
-          onActionClick={handleActionClick}
-        />
+  // TAB 4: SỨC KHỎE HỆ THỐNG & KỸ THUẬT (System Health)
+  const renderSystemTab = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      {isSuperAdmin && <SystemHealthWidget />}
+      <GoogleAnalyticsPanel />
 
-        <SupplyDemandComparisonChart
-          categorySupplyDemand={bData?.categorySupplyDemand || []}
-          onActionClick={handleActionClick}
-        />
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-          <PriceSegmentsSweetSpotChart
-            priceSegments={bData?.priceSegments || []}
-            onActionClick={handleActionClick}
-          />
-          <MicroEngagementsChart
-            plateEngagement={bData?.plateEngagement}
-          />
-        </div>
-      </div>
-      </details>
-
-
-      {/* Collaborator performance (SuperAdmin only) + demand */}
-      <details className="dash-fold" open>
-      <summary>Hiệu suất cộng tác viên &amp; nhu cầu</summary>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        {isSuperAdmin && <div style={{ flex: '1 1 420px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Top cộng tác viên (hoa hồng)</h3>
+      {/* Hiệu suất CTV nếu là SuperAdmin */}
+      {isSuperAdmin && (
+        <DashboardPanel
+          title="Top cộng tác viên xuất sắc (Hoa hồng chi trả)"
+          icon={Users}
+          badge="SuperAdmin"
+          badgeTone="brand"
+        >
           {collabPerf.isLoading ? (
             <SkeletonBase height={220} />
           ) : collabPerf.data?.items?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={collabPerf.data.items} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="fullName" width={110} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="paid" name="Đã trả" stackId="a" fill="#3FBF8F" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="pending" name="Chờ trả" stackId="a" fill="#8A6100" />
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ height: 220 }}>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={collabPerf.data.items} layout="vertical" margin={{ left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
+                  <XAxis type="number" tick={{ fontSize: 11 }} />
+                  <YAxis type="category" dataKey="fullName" width={110} tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="paid" name="Đã trả" stackId="a" fill="#3FBF8F" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="pending" name="Chờ trả" stackId="a" fill="#8A6100" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <EmptyBlock>Chưa có dữ liệu CTV</EmptyBlock>
           )}
-        </div>}
+        </DashboardPanel>
+      )}
 
-        <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-          <div style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Nhu cầu săn biển<InfoTip size={12} text="Khách tự đặt 'bộ lọc săn biển' (VD: tứ quý, tổng nút cao). Khi biển khớp xuất hiện hệ thống nhắc họ. Đây là tín hiệu khách đang muốn gì." /></h3>
-            {demand.data && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{demand.data.total} bộ lọc đang bật</span>}
-          </div>
-          {demand.isLoading ? (
-            <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={180} /></div>
-          ) : demand.data?.items?.length > 0 ? (
-            demand.data.items.map((d, i) => (
-              <div key={d.name} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < demand.data.items.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
-                <span style={{ flex: 1, font: 'var(--type-body-sm)', color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name || '—'}</span>
-                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{d.count}</span>
-              </div>
-            ))
-          ) : (
-            <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có saved search</EmptyBlock></div>
-          )}
-        </div>
-      </div>
-      </details>
-
-      {/* Nhân khẩu học khách hàng */}
-      <details className="dash-fold" open>
-      <summary>Nhân khẩu học khách hàng</summary>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Khách hàng theo mệnh phong thủy<InfoTip size={12} text="Phân loại khách theo ngũ hành (Kim/Mộc/Thủy/Hỏa/Thổ) suy từ ngày sinh họ khai khi đăng ký — để hiểu khách thích biển hợp mệnh nào." /></h3>
-          {demographics.isLoading ? (
-            <SkeletonBase height={240} />
-          ) : demographics.data?.byElement?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={demographics.data.byElement} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={80} label={({ label, count }) => `${label}: ${count}`}>
-                  {demographics.data.byElement.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyBlock>Chưa có khách hàng có ngày sinh</EmptyBlock>
-          )}
-          {demographics.data && (
-            <p style={{ margin: 'var(--space-2) 0 0', font: 'var(--type-caption)', color: 'var(--text-faint)', textAlign: 'center' }}>
-              {demographics.data.totalUsersWithBirthDate}/{demographics.data.totalUsers} khách đã điền ngày sinh
-            </p>
-          )}
-        </div>
-
-        <div style={{ flex: '1 1 300px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng theo độ tuổi</h3>
-          {demographics.isLoading ? (
-            <SkeletonBase height={240} />
-          ) : demographics.data?.byAgeGroup?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={demographics.data.byAgeGroup}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name="Số khách" fill="#F19720" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyBlock>Chưa có dữ liệu độ tuổi</EmptyBlock>
-          )}
-        </div>
-
-        <div style={{ flex: '1 1 240px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Khách hàng theo giới tính</h3>
-          {demographics.isLoading ? (
-            <SkeletonBase height={240} />
-          ) : demographics.data?.byGender?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={demographics.data.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" outerRadius={80} label={({ label, count }) => `${label}: ${count}`}>
-                  {demographics.data.byGender.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyBlock>Chưa có dữ liệu giới tính</EmptyBlock>
-          )}
-        </div>
-      </div>
-      </details>
-
-      {/* Search insights + Compare insights */}
-      <details className="dash-fold" open>
-      <summary>Tìm kiếm &amp; so sánh</summary>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <div style={{ flex: '1 1 400px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-          <div style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Từ khóa tìm kiếm nhiều nhất</h3>
-            {searchInsights.data && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{searchInsights.data.totalSearches} lượt tìm · {searchInsights.data.zeroResultSearches} không có kết quả</span>}
-          </div>
-          {searchInsights.isLoading ? (
-            <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
-          ) : searchInsights.data?.topKeywords?.length > 0 ? (
-            searchInsights.data.topKeywords.map((k, i) => (
-              <div key={k.keyword} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < searchInsights.data.topKeywords.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24 }}>{i + 1}</span>
-                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{k.keyword}</span>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>~{k.avgResultCount} kết quả</span>
-                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{k.count} lượt</span>
-              </div>
-            ))
-          ) : (
-            <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có tìm kiếm bằng từ khóa</EmptyBlock></div>
-          )}
-        </div>
-
-        <div style={{ flex: '1 1 360px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-          <div style={{ padding: 'var(--space-4) var(--gutter-card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
-            <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Cặp biển hay được so sánh cùng nhau</h3>
-            {compareInsights.data && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{compareInsights.data.totalCompareSessions} lượt so sánh</span>}
-          </div>
-          {compareInsights.isLoading ? (
-            <div style={{ padding: 'var(--gutter-card)' }}><SkeletonBase height={200} /></div>
-          ) : compareInsights.data?.topPairs?.length > 0 ? (
-            compareInsights.data.topPairs.map((p, i) => (
-              <div key={`${p.plateNumberA}-${p.plateNumberB}`} style={{ padding: 'var(--space-3) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', boxShadow: i < compareInsights.data.topPairs.length - 1 ? 'inset 0 -1px 0 var(--grey-100)' : 'none' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)', minWidth: 24 }}>{i + 1}</span>
-                <span style={{ flex: 1, font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{p.plateNumberA} ↔ {p.plateNumberB}</span>
-                <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-muted)' }}>{p.count} lần</span>
-              </div>
-            ))
-          ) : (
-            <div style={{ padding: 'var(--gutter-card)' }}><EmptyBlock>Chưa có lượt so sánh biển</EmptyBlock></div>
-          )}
-        </div>
-      </div>
-      </details>
-
-      {/* Traffic heatmap */}
-      <details className="dash-fold" open>
-      <summary>Lưu lượng theo thời gian</summary>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--gutter-section)', alignItems: 'stretch' }}>
-        <div style={{ flex: '1 1 400px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Traffic theo giờ trong ngày</h3>
-          {heatmap.isLoading ? (
-            <SkeletonBase height={220} />
-          ) : heatmap.data?.byHour?.some((h) => h.count > 0) ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={heatmap.data.byHour}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
-                <XAxis dataKey="hour" tick={{ fontSize: 10 }} tickFormatter={(h) => `${h}h`} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip labelFormatter={(h) => `${h}h`} />
-                <Bar dataKey="count" name="Lượt xem" fill="#C75B00" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyBlock>Chưa có dữ liệu traffic theo giờ</EmptyBlock>
-          )}
-        </div>
-
-        <div style={{ flex: '1 1 320px', minWidth: 0, background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)' }}>
-          <h3 style={{ margin: '0 0 var(--space-4)', font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Traffic theo ngày trong tuần</h3>
-          {heatmap.isLoading ? (
-            <SkeletonBase height={220} />
-          ) : heatmap.data?.byWeekday?.some((d) => d.count > 0) ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={heatmap.data.byWeekday.map((d) => ({ ...d, label: WEEKDAY_LABEL[d.weekday] }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--grey-200)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name="Lượt xem" fill="#C75B00" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <EmptyBlock>Chưa có dữ liệu traffic theo ngày trong tuần</EmptyBlock>
-          )}
-        </div>
-      </div>
-      </details>
-
-      {/* Bulk retry — khi nhiều block lỗi cùng lúc (vd mất mạng), tránh phải cuộn click "Thử lại" từng cái */}
+      {/* Bulk retry khi mạng lỗi */}
       {(() => {
         const allQueries = [summary, chart, traffic, funnel, distProvince, distVehicle, activeDistData, businessInsights, interested, conversion,
           orders, topContent, ratings, intent, ...(isSuperAdmin ? [collabPerf] : []), demand, demographics,
@@ -777,34 +746,48 @@ export default function Dashboard({ go, st, patch }) {
         const failedCount = allQueries.filter((q) => q.isError).length;
         if (failedCount < 2) return null;
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--gutter-card)', background: 'var(--surface-tint-rose)', borderRadius: 'var(--radius-card)' }}>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger)' }}>{failedCount} mục tải lỗi.</span>
-            <button type="button" onClick={() => allQueries.forEach((q) => q.isError && q.refetch())} style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', textDecoration: 'underline' }}>Thử lại tất cả</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: '12px 18px', background: 'var(--surface-tint-rose, #fee2e2)', border: '1px solid var(--status-danger, #ef4444)', borderRadius: 'var(--radius-card)' }}>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--status-danger)', fontWeight: 600 }}>{failedCount} khối truy vấn bị lỗi mạng.</span>
+            <button type="button" onClick={() => allQueries.forEach((q) => q.isError && q.refetch())} style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--link)', cursor: 'pointer', border: 'none', background: 'none', textDecoration: 'underline' }}>Thử lại tất cả ngay</button>
           </div>
         );
       })()}
+    </div>
+  );
 
-      {/* Error states */}
-      {summary.isError && <ErrorBlock onRetry={() => summary.refetch()} />}
-      {chart.isError && <ErrorBlock onRetry={() => chart.refetch()} />}
-      {traffic.isError && <ErrorBlock onRetry={() => traffic.refetch()} />}
-      {funnel.isError && <ErrorBlock onRetry={() => funnel.refetch()} />}
-      {distProvince.isError && <ErrorBlock onRetry={() => distProvince.refetch()} />}
-      {distVehicle.isError && <ErrorBlock onRetry={() => distVehicle.refetch()} />}
-      {interested.isError && <ErrorBlock onRetry={() => interested.refetch()} />}
-      {conversion.isError && <ErrorBlock onRetry={() => conversion.refetch()} />}
-      {orders.isError && <ErrorBlock onRetry={() => orders.refetch()} />}
-      {topContent.isError && <ErrorBlock onRetry={() => topContent.refetch()} />}
-      {ratings.isError && <ErrorBlock onRetry={() => ratings.refetch()} />}
-      {intent.isError && <ErrorBlock onRetry={() => intent.refetch()} />}
-      {isSuperAdmin && collabPerf.isError && <ErrorBlock onRetry={() => collabPerf.refetch()} />}
-      {demand.isError && <ErrorBlock onRetry={() => demand.refetch()} />}
-      {demographics.isError && <ErrorBlock onRetry={() => demographics.refetch()} />}
-      {searchInsights.isError && <ErrorBlock onRetry={() => searchInsights.refetch()} />}
-      {compareInsights.isError && <ErrorBlock onRetry={() => compareInsights.refetch()} />}
-      {heatmap.isError && <ErrorBlock onRetry={() => heatmap.refetch()} />}
+  // Danh sách các Tabs chính
+  const tabs = [
+    {
+      key: 'overview',
+      label: 'Tổng quan kinh doanh',
+      info: 'Chỉ số KPI cốt lõi, biểu đồ hoạt động, phễu chuyển đổi và đơn hàng',
+      render: renderOverviewTab,
+    },
+    {
+      key: 'supply-demand',
+      label: 'Cung - Cầu & Kho biển',
+      info: 'Phân bổ kho biển đa chiều, cán cân cung cầu và phân khúc giá',
+      render: renderSupplyDemandTab,
+    },
+    {
+      key: 'audience',
+      label: 'Khách hàng & Thị trường',
+      info: 'Nhân khẩu học ngũ hành/độ tuổi, từ khóa tìm kiếm, heatmap và CTV',
+      render: renderAudienceTab,
+    },
+    ...(isSuperAdmin ? [{
+      key: 'system',
+      label: 'Sức khỏe hệ thống',
+      info: 'Giám sát tài nguyên máy chủ, database, worker và Google Analytics',
+      render: renderSystemTab,
+    }] : []),
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', animation: 'pageIn 180ms var(--ease-out)' }}>
+      {/* Tab bar điều hướng Gentelella v4 */}
+      <AdminTabbedPage activeTab={activeTab} tabs={tabs} onTabChange={setActiveTab} />
       {reportExportModal}
     </div>
   );
 }
-

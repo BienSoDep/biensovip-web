@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Ngày sinh kiểu Việt Nam: dd/mm/yyyy hiển thị, giá trị ra/vào vẫn ISO yyyy-mm-dd
 // (native <input type="date"> hiển thị theo locale trình duyệt, không ép được dd/mm/yyyy mọi máy).
@@ -12,7 +12,14 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   const errId = error && inputId ? inputId + '-err' : undefined;
 
-  const digits = (s) => s.replace(/\D/g, '');
+  useEffect(() => {
+    const [nyv, nmv, ndv] = (value || '').split('-');
+    setD(ndv || '');
+    setM(nmv || '');
+    setY(nyv || '');
+  }, [value]);
+
+  const digits = (s) => (s || '').replace(/\D/g, '');
   const emit = (dd, mm, yyyy) => {
     // Zero-pad ngày/tháng — backend nhận JSON DateTime chuẩn ISO (yyyy-MM-dd), "1990-5-15" (thiếu
     // pad) làm System.Text.Json từ chối parse → 500. Cho phép gõ dở 1 chữ số, chỉ emit khi đủ 2 số.
@@ -52,19 +59,25 @@ export function DateInputVN({ id, label, value, error, onChange, hint }) {
   const onDay = (e) => {
     const v = digits(e.target.value).slice(0, 2);
     setD(v);
-    emit(v, m, y);
+    const mm = mRef.current ? digits(mRef.current.value) : m;
+    const yyyy = yRef.current ? digits(yRef.current.value) : y;
+    emit(v, mm, yyyy);
     if (v.length === 2) mRef.current?.focus();
   };
   const onMonth = (e) => {
     const v = digits(e.target.value).slice(0, 2);
     setM(v);
-    emit(d, v, y);
+    const dd = dRef.current ? digits(dRef.current.value) : d;
+    const yyyy = yRef.current ? digits(yRef.current.value) : y;
+    emit(dd, v, yyyy);
     if (v.length === 2) yRef.current?.focus();
   };
   const onYear = (e) => {
     const v = digits(e.target.value).slice(0, 4);
     setY(v);
-    emit(d, m, v);
+    const dd = dRef.current ? digits(dRef.current.value) : d;
+    const mm = mRef.current ? digits(mRef.current.value) : m;
+    emit(dd, mm, v);
   };
 
   const boxStyle = {

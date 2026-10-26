@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { HelpCircle } from 'lucide-react';
+import {
+  HelpCircle,
+  MousePointerClick,
+  Users,
+  CheckCircle2,
+  Percent,
+  Clock,
+  Wallet,
+  Coins,
+  TrendingUp,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../Button.jsx';
 import { Badge, InfoTip } from '../index.jsx';
@@ -137,28 +147,155 @@ export function DashboardBody({ data, onReset, go }) {
 
       {tab === 'overview' && (
         <>
-          <div data-tour="ctv-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 'var(--gutter-section)' }}>
+          <div
+            data-tour="ctv-kpi-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 'var(--space-3)',
+            }}
+          >
             {[
-              ['Lượt click', String(data.clicks), 'var(--text-strong)', 'Số lần khách bấm vào link/mã giới thiệu của bạn, tính cả khách chưa để lại thông tin gì.'],
-              ['Khách đã giới thiệu', String(data.referredUserCount ?? 0), 'var(--status-success)', 'Số khách đã đăng ký tài khoản hoặc để lại liên hệ qua link của bạn — chưa chắc đã mua.'],
-              ['Giao dịch thành công', String(data.successfulDeals), 'var(--status-success)', 'Số đơn khách đã đặt cọc/mua thành công qua link của bạn, admin đã xác nhận thanh toán.'],
-              ['Tỷ lệ chuyển đổi', data.clicks > 0 ? `${((data.successfulDeals / data.clicks) * 100).toFixed(1)}%` : '—', 'var(--text-strong)', 'Giao dịch thành công chia cho lượt click — % khách bấm link rồi thực sự mua.'],
-              ['Chờ duyệt', money(data.pending), 'var(--status-warning)', 'Tổng hoa hồng của các giao dịch đang chờ admin xác nhận đã nhận tiền — chưa được chuyển khoản.'],
-              ['Đã duyệt / đã chi trả', money(data.approved + data.paid), 'var(--status-success)', 'Tổng hoa hồng admin đã duyệt (sắp chuyển) cộng với phần đã chuyển khoản vào tài khoản ngân hàng của bạn.'],
-              ['Tổng hoa hồng tích lũy', money(data.pending + data.approved + data.paid), 'var(--text-strong)', 'Toàn bộ hoa hồng bạn từng được tính — cộng cả 3 trạng thái Chờ duyệt, Đã duyệt và Đã chi trả.'],
-              ['Hoa hồng TB/giao dịch', data.successfulDeals > 0 ? money((data.pending + data.approved + data.paid) / data.successfulDeals) : '—', 'var(--text-strong)', 'Tổng hoa hồng tích lũy chia cho số giao dịch thành công — mức trung bình bạn nhận mỗi đơn.'],
-            ].map(([label, value, color, tip]) => (
-              <div key={label} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', minWidth: 0, containerType: 'inline-size' }}>
-                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {label}
+              {
+                label: 'Lượt click',
+                value: String(data.clicks),
+                color: '#0284c7',
+                icon: MousePointerClick,
+                tip: 'Số lần khách bấm vào link/mã giới thiệu của bạn, tính cả khách chưa để lại thông tin gì.',
+              },
+              {
+                label: 'Khách đã giới thiệu',
+                value: String(data.referredUserCount ?? 0),
+                color: '#8b5cf6',
+                icon: Users,
+                tip: 'Số khách đã đăng ký tài khoản hoặc để lại liên hệ qua link của bạn — chưa chắc đã mua.',
+              },
+              {
+                label: 'Giao dịch thành công',
+                value: String(data.successfulDeals),
+                color: '#16a34a',
+                icon: CheckCircle2,
+                tip: 'Số đơn khách đã đặt cọc/mua thành công qua link của bạn, admin đã xác nhận thanh toán.',
+              },
+              {
+                label: 'Tỷ lệ chuyển đổi',
+                value: data.clicks > 0 ? `${((data.successfulDeals / data.clicks) * 100).toFixed(1)}%` : '—',
+                color: '#d97706',
+                icon: Percent,
+                tip: 'Giao dịch thành công chia cho lượt click — % khách bấm link rồi thực sự mua.',
+              },
+              {
+                label: 'Chờ duyệt',
+                value: money(data.pending),
+                color: '#f59e0b',
+                icon: Clock,
+                tip: 'Tổng hoa hồng của các giao dịch đang chờ admin xác nhận đã nhận tiền — chưa được chuyển khoản.',
+              },
+              {
+                label: 'Đã duyệt / đã chi trả',
+                value: money(data.approved + data.paid),
+                color: '#10b981',
+                icon: Wallet,
+                tip: 'Tổng hoa hồng admin đã duyệt (sắp chuyển) cộng với phần đã chuyển khoản vào tài khoản ngân hàng của bạn.',
+              },
+              {
+                label: 'Tổng hoa hồng tích lũy',
+                value: money(data.pending + data.approved + data.paid),
+                color: '#C75B00',
+                icon: Coins,
+                tip: 'Toàn bộ hoa hồng bạn từng được tính — cộng cả 3 trạng thái Chờ duyệt, Đã duyệt và Đã chi trả.',
+              },
+              {
+                label: 'Hoa hồng TB/giao dịch',
+                value: data.successfulDeals > 0 ? money((data.pending + data.approved + data.paid) / data.successfulDeals) : '—',
+                color: '#4f46e5',
+                icon: TrendingUp,
+                tip: 'Tổng hoa hồng tích lũy chia cho số giao dịch thành công — mức trung bình bạn nhận mỗi đơn.',
+              },
+            ].map(({ label, value, color, icon: Icon, tip }) => (
+              <div
+                key={label}
+                style={{
+                  background: 'var(--white, #ffffff)',
+                  border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
+                  boxShadow: 'var(--shadow-inset-hairline, inset 0 0 0 1px rgba(0, 0, 0, 0.04))',
+                  borderRadius: 'var(--radius-card, 8px)',
+                  padding: '16px 18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  position: 'relative',
+                  minWidth: 0,
+                  transition: 'transform 140ms ease, box-shadow 140ms ease',
+                }}
+                className="gentelella-tile"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 28,
+                        height: 28,
+                        borderRadius: '6px',
+                        background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                        color: color,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon size={15} />
+                    </span>
+                    <span
+                      style={{
+                        font: 'var(--type-caption)',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: 'var(--text-muted, #6b7280)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </div>
                   <InfoTip text={tip} />
-                </span>
-                <span style={{ font: 'var(--fw-semibold) clamp(18px,9cqi,28px)/var(--lh-title) var(--font-display)', letterSpacing: 'var(--ls-title)', color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
+                </div>
+                <div
+                  style={{
+                    font: 'var(--type-title-1)',
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    color: color,
+                    lineHeight: 1.15,
+                    letterSpacing: '-0.02em',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {value}
+                </div>
               </div>
             ))}
           </div>
 
-          <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div
+            style={{
+              background: 'var(--white, #ffffff)',
+              border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
+              boxShadow: 'var(--shadow-inset-hairline, inset 0 0 0 1px rgba(0, 0, 0, 0.04))',
+              borderRadius: 'var(--radius-card, 8px)',
+              padding: 'var(--space-6) var(--gutter-card)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-4)',
+            }}
+          >
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
               <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Link giới thiệu của bạn</span>
@@ -192,7 +329,19 @@ export function DashboardBody({ data, onReset, go }) {
           </div>
 
           {allCommissions?.length > 0 && (
-            <div data-tour="ctv-commission-history" style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <div
+              data-tour="ctv-commission-history"
+              style={{
+                background: 'var(--white, #ffffff)',
+                border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))',
+                borderRadius: 'var(--radius-card, 8px)',
+                boxShadow: 'var(--shadow-inset-hairline, inset 0 0 0 1px rgba(0, 0, 0, 0.04))',
+                padding: 'var(--gutter-card)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-3)',
+              }}
+            >
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
                 <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   Lịch sử hoa hồng ({allCommissions.length})

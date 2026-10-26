@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
-  MessageSquare, Send, User, Bot, Headphones, CheckCircle2,
-  Clock, Phone, Car, AlertCircle, Sparkles, Zap, RotateCcw,
-  FileText, Search, ThumbsDown, ThumbsUp, ChevronRight,
-  PanelRightClose, PanelRightOpen, X, ExternalLink, CornerDownLeft,
-  Loader2, Radio
+  MessageSquare, Send, Bot, Headphones, CheckCircle2,
+  Phone, Car, AlertCircle, Zap,
+  FileText, Search, ThumbsDown, ThumbsUp,
+  PanelRightClose, PanelRightOpen, X, ExternalLink,
+  Loader2
 } from 'lucide-react';
 import {
   useLiveChatSessions, useLiveChatSessionDetail, useSendStaffLiveMessage,
@@ -36,14 +36,14 @@ export default function LiveChatPanel({ notify }) {
   const textareaRef = useRef(null);
 
   // Queries
-  const { data: sessionsData, isLoading: loadingSessions, refetch: refetchSessions } = useLiveChatSessions({
+  const { data: sessionsData, isLoading: loadingSessions } = useLiveChatSessions({
     tab: activeTab,
     q: search,
     page: 1,
     pageSize: 50,
   });
 
-  const { data: sessionDetail, isLoading: loadingDetail, refetch: refetchDetail } = useLiveChatSessionDetail(selectedSessionId);
+  const { data: sessionDetail, refetch: refetchDetail } = useLiveChatSessionDetail(selectedSessionId);
   const { data: cannedList = [] } = useCannedResponses();
 
   // Mutations

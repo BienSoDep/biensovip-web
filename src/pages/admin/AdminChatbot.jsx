@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   Trash2, ChevronLeft, ChevronRight, BookOpen, Search, Copy, Check,
-  Download, ChevronDown, ChevronUp, Sparkles, Filter, HelpCircle,
+  Download, ChevronDown, ChevronUp, Sparkles, Filter,
   Headphones, Zap, History, GitBranch, FlaskConical, Sliders, BarChart3
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';

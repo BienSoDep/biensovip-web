@@ -32,7 +32,7 @@ export default function TechnicalAnalyticsSection({
       </div>
 
       {/* Bảng theo trang */}
-      <section style={{ background: 'var(--surface-card)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+      <section style={{ background: 'var(--surface-card)', border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
         <h2 style={{ font: 'var(--type-title-2)', margin: '0 0 var(--space-3)', fontWeight: 'var(--fw-bold)' }}>Chi tiết lượt xem theo màn hình (Pages)</h2>
         <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
@@ -75,7 +75,7 @@ export default function TechnicalAnalyticsSection({
       </section>
 
       {/* Luồng đi kỹ thuật */}
-      <section style={{ background: 'var(--surface-card)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+      <section style={{ background: 'var(--surface-card)', border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
         <h2 style={{ font: 'var(--type-title-2)', margin: '0 0 var(--space-3)', fontWeight: 'var(--fw-bold)' }}>Luồng vào / thoát (Screen Transitions)</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
           <div>
@@ -111,7 +111,7 @@ export default function TechnicalAnalyticsSection({
       </section>
 
       {/* Sự kiện CTA & Event Log */}
-      <section style={{ background: 'var(--surface-card)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+      <section style={{ background: 'var(--surface-card)', border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
         <h2 style={{ font: 'var(--type-title-2)', margin: '0 0 var(--space-3)', fontWeight: 'var(--fw-bold)' }}>Nhật ký sự kiện (Raw Analytics Events)</h2>
         <div className="admin-simple-table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', font: 'var(--type-body-sm)' }}>
@@ -153,7 +153,7 @@ export default function TechnicalAnalyticsSection({
       </section>
 
       {/* Thiết bị & Nguồn */}
-      <section style={{ background: 'var(--surface-card)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+      <section style={{ background: 'var(--surface-card)', border: '1px solid var(--border-hairline, rgba(0, 0, 0, 0.08))', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', boxShadow: 'var(--shadow-inset-hairline)' }}>
         <h2 style={{ font: 'var(--type-title-2)', margin: '0 0 var(--space-3)', fontWeight: 'var(--fw-bold)' }}>Thiết bị & Nguồn truy cập</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
           <div style={{ height: 240 }}>

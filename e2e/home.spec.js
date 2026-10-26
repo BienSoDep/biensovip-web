@@ -2,6 +2,21 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Home', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/categories*', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            items: [
+              { id: 1, name: 'Ngũ quý' },
+              { id: 2, name: 'Tứ quý' },
+            ],
+          },
+        }),
+      })
+    );
     await page.goto('/');
   });
 
