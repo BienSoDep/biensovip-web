@@ -7,7 +7,7 @@ test.describe('Terms', () => {
     await expect(page.getByRole('heading', { name: '1. Giới thiệu' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '4. Giao dịch' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '8. Liên hệ' })).toBeVisible();
-    await expect(page.getByText('lienhe@biensovip.com')).toBeVisible();
+    await expect(page.getByText(/duymc64@gmail\.com|lienhe@biensovip\.com/).first()).toBeVisible();
   });
 });
 
@@ -25,10 +25,10 @@ test.describe('Privacy', () => {
 test.describe('TransferGuide', () => {
   test('renders 4 steps and notes', async ({ page }) => {
     await page.goto('/sang-ten');
-    await expect(page.getByRole('heading', { name: 'Hướng dẫn sang tên' })).toBeVisible();
-    await expect(page.getByText('1. Kiểm tra hồ sơ')).toBeVisible();
-    await expect(page.getByText('4. Nhận biển & thanh toán')).toBeVisible();
-    await expect(page.getByText('Lưu ý quan trọng')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Hướng dẫn.*sang tên/ })).toBeVisible();
+    await expect(page.getByText(/1\.\s*Thẩm định/)).toBeVisible();
+    await expect(page.getByText(/4\.\s*Đăng ký/)).toBeVisible();
+    await expect(page.getByText(/Lưu ý.*quan trọng/)).toBeVisible();
   });
 
   test('CTA buttons navigate / open zalo', async ({ page }) => {
@@ -45,12 +45,12 @@ test.describe('Faq', () => {
     const firstQuestion = page.getByText('Biển số đẹp có sang tên được không?');
     await expect(firstQuestion).toBeVisible();
     // answer collapsed initially
-    await expect(page.getByText(/Xem thêm tại trang Hướng dẫn sang tên/)).not.toBeVisible();
+    await expect(page.getByText(/Thông tư 24\/2023\/TT-BCA/)).not.toBeVisible();
     await firstQuestion.click();
-    await expect(page.getByText(/Xem thêm tại trang Hướng dẫn sang tên/)).toBeVisible();
+    await expect(page.getByText(/Thông tư 24\/2023\/TT-BCA/)).toBeVisible();
     // click again to collapse
     await firstQuestion.click();
-    await expect(page.getByText(/Xem thêm tại trang Hướng dẫn sang tên/)).not.toBeVisible();
+    await expect(page.getByText(/Thông tư 24\/2023\/TT-BCA/)).not.toBeVisible();
   });
 
   test('not-found CTA navigates to contact page', async ({ page }) => {

@@ -22,6 +22,8 @@ import {
   SlidersHorizontal,
   Zap,
   PhoneCall,
+  Car,
+  Bike,
 } from 'lucide-react';
 
 const CARD = {
@@ -118,7 +120,9 @@ function OverviewBody({ data, notify, onOpenPlatesIntegrity }) {
         publishedWindowStartHour: num(form.publishedWindowStartHour), publishedWindowEndHour: num(form.publishedWindowEndHour),
         officialWindowStartHour: num(form.officialWindowStartHour), officialWindowEndHour: num(form.officialWindowEndHour),
         resultsWindowStartHour: num(form.resultsWindowStartHour), resultsWindowEndHour: num(form.resultsWindowEndHour),
-        forcePriceContact: !!form.forcePriceContact,
+        forcePriceContact: !!(form.forcePriceContactCar && form.forcePriceContactMotorbike),
+        forcePriceContactCar: !!form.forcePriceContactCar,
+        forcePriceContactMotorbike: !!form.forcePriceContactMotorbike,
       });
       notify?.('Đã lưu cấu hình (tham số vận hành có hiệu lực từ lượt crawl kế tiếp; đổi tham số giá sẽ tính lại toàn bộ nhóm)');
     } catch (e) {
@@ -126,13 +130,77 @@ function OverviewBody({ data, notify, onOpenPlatesIntegrity }) {
     }
   };
 
-  const onToggleForcePriceContact = async (value) => {
+  const onToggleForcePriceContactCar = async (value) => {
     const msg = value
-      ? 'BẬT CHẾ ĐỘ KHẨN CẤP: Toàn bộ biển số VPA trên trang web công khai sẽ hiển thị là "Giá liên hệ" thay vì giá niêm yết (không thay đổi bất kỳ dữ liệu giá nào trong DB). Bạn có chắc chắn muốn bật?'
-      : 'Tắt chế độ khẩn cấp: Các biển số VPA sẽ hiển thị lại giá niêm yết đã duyệt bình thường. Tiếp tục?';
+      ? 'BẬT GIÁ LIÊN HỆ CHO Ô TÔ: Toàn bộ biển số VPA Ô tô trên trang web công khai sẽ hiển thị là "Giá liên hệ" thay vì giá niêm yết (không thay đổi dữ liệu giá trong DB). Bạn có chắc chắn muốn bật?'
+      : 'Tắt chế độ Giá liên hệ cho Ô tô: Các biển số VPA Ô tô sẽ hiển thị lại giá niêm yết đã duyệt bình thường. Tiếp tục?';
     if (!window.confirm(msg)) return;
     try {
-      const next = { ...form, forcePriceContact: value };
+      const nextCar = value;
+      const nextBike = !!form.forcePriceContactMotorbike;
+      const nextBoth = nextCar && nextBike;
+      const next = { ...form, forcePriceContactCar: nextCar, forcePriceContact: nextBoth };
+      setForm(next);
+      await save.mutateAsync({
+        officialEnabled: !!next.officialEnabled, officialIntervalMinutes: num(next.officialIntervalMinutes),
+        publishedEnabled: !!next.publishedEnabled, publishedIntervalMinutes: num(next.publishedIntervalMinutes),
+        resultsEnabled: !!next.resultsEnabled, resultsIntervalMinutes: num(next.resultsIntervalMinutes),
+        windowMonths: num(next.windowMonths), minSamples: num(next.minSamples), factor: num(next.factor),
+        includeFloorPrice: !!next.includeFloorPrice, driftPercent: num(next.driftPercent), roundStep: num(next.roundStep),
+        minDelayMs: num(next.minDelayMs), maxDelayMs: num(next.maxDelayMs), timeoutSeconds: num(next.timeoutSeconds), maxRetries: num(next.maxRetries),
+        suddenDropPercent: num(next.suddenDropPercent), resultsFullEveryDays: num(next.resultsFullEveryDays), alertCooldownMinutes: num(next.alertCooldownMinutes),
+        publishedWindowStartHour: num(next.publishedWindowStartHour), publishedWindowEndHour: num(next.publishedWindowEndHour),
+        officialWindowStartHour: num(next.officialWindowStartHour), officialWindowEndHour: num(next.officialWindowEndHour),
+        resultsWindowStartHour: num(next.resultsWindowStartHour), resultsWindowEndHour: num(next.resultsWindowEndHour),
+        forcePriceContact: nextBoth,
+        forcePriceContactCar: nextCar,
+        forcePriceContactMotorbike: nextBike,
+      });
+      notify?.(value ? 'Đã BẬT: Biển VPA Ô tô đang hiển thị "Giá liên hệ"' : 'Đã TẮT: Đã khôi phục giá niêm yết cho biển VPA Ô tô');
+    } catch (e) {
+      notify?.(e.message || 'Lưu cấu hình thất bại');
+    }
+  };
+
+  const onToggleForcePriceContactMotorbike = async (value) => {
+    const msg = value
+      ? 'BẬT GIÁ LIÊN HỆ CHO XE MÁY: Toàn bộ biển số VPA Xe máy trên trang web công khai sẽ hiển thị là "Giá liên hệ" thay vì giá niêm yết (không thay đổi dữ liệu giá trong DB). Bạn có chắc chắn muốn bật?'
+      : 'Tắt chế độ Giá liên hệ cho Xe máy: Các biển số VPA Xe máy sẽ hiển thị lại giá niêm yết đã duyệt bình thường. Tiếp tục?';
+    if (!window.confirm(msg)) return;
+    try {
+      const nextCar = !!form.forcePriceContactCar;
+      const nextBike = value;
+      const nextBoth = nextCar && nextBike;
+      const next = { ...form, forcePriceContactMotorbike: nextBike, forcePriceContact: nextBoth };
+      setForm(next);
+      await save.mutateAsync({
+        officialEnabled: !!next.officialEnabled, officialIntervalMinutes: num(next.officialIntervalMinutes),
+        publishedEnabled: !!next.publishedEnabled, publishedIntervalMinutes: num(next.publishedIntervalMinutes),
+        resultsEnabled: !!next.resultsEnabled, resultsIntervalMinutes: num(next.resultsIntervalMinutes),
+        windowMonths: num(next.windowMonths), minSamples: num(next.minSamples), factor: num(next.factor),
+        includeFloorPrice: !!next.includeFloorPrice, driftPercent: num(next.driftPercent), roundStep: num(next.roundStep),
+        minDelayMs: num(next.minDelayMs), maxDelayMs: num(next.maxDelayMs), timeoutSeconds: num(next.timeoutSeconds), maxRetries: num(next.maxRetries),
+        suddenDropPercent: num(next.suddenDropPercent), resultsFullEveryDays: num(next.resultsFullEveryDays), alertCooldownMinutes: num(next.alertCooldownMinutes),
+        publishedWindowStartHour: num(next.publishedWindowStartHour), publishedWindowEndHour: num(next.publishedWindowEndHour),
+        officialWindowStartHour: num(next.officialWindowStartHour), officialWindowEndHour: num(next.officialWindowEndHour),
+        resultsWindowStartHour: num(next.resultsWindowStartHour), resultsWindowEndHour: num(next.resultsWindowEndHour),
+        forcePriceContact: nextBoth,
+        forcePriceContactCar: nextCar,
+        forcePriceContactMotorbike: nextBike,
+      });
+      notify?.(value ? 'Đã BẬT: Biển VPA Xe máy đang hiển thị "Giá liên hệ"' : 'Đã TẮT: Đã khôi phục giá niêm yết cho biển VPA Xe máy');
+    } catch (e) {
+      notify?.(e.message || 'Lưu cấu hình thất bại');
+    }
+  };
+
+  const onToggleForcePriceContactBoth = async (value) => {
+    const msg = value
+      ? 'BẬT GIÁ LIÊN HỆ CHO CẢ HAI: Toàn bộ biển số VPA (cả Ô tô & Xe máy) trên trang web công khai sẽ hiển thị là "Giá liên hệ" thay vì giá niêm yết. Bạn có chắc chắn muốn bật?'
+      : 'Khôi phục giá niêm yết cho tất cả biển VPA (cả Ô tô & Xe máy). Tiếp tục?';
+    if (!window.confirm(msg)) return;
+    try {
+      const next = { ...form, forcePriceContact: value, forcePriceContactCar: value, forcePriceContactMotorbike: value };
       setForm(next);
       await save.mutateAsync({
         officialEnabled: !!next.officialEnabled, officialIntervalMinutes: num(next.officialIntervalMinutes),
@@ -146,8 +214,10 @@ function OverviewBody({ data, notify, onOpenPlatesIntegrity }) {
         officialWindowStartHour: num(next.officialWindowStartHour), officialWindowEndHour: num(next.officialWindowEndHour),
         resultsWindowStartHour: num(next.resultsWindowStartHour), resultsWindowEndHour: num(next.resultsWindowEndHour),
         forcePriceContact: value,
+        forcePriceContactCar: value,
+        forcePriceContactMotorbike: value,
       });
-      notify?.(value ? 'Đã BẬT: Toàn bộ biển VPA đang hiển thị "Giá liên hệ"' : 'Đã TẮT: Đã khôi phục hiển thị giá niêm yết VPA bình thường');
+      notify?.(value ? 'Đã BẬT: Toàn bộ biển VPA (Ô tô & Xe máy) đang hiển thị "Giá liên hệ"' : 'Đã TẮT: Đã khôi phục hiển thị giá niêm yết VPA cho cả Ô tô & Xe máy');
     } catch (e) {
       notify?.(e.message || 'Lưu cấu hình thất bại');
     }
@@ -265,51 +335,222 @@ function OverviewBody({ data, notify, onOpenPlatesIntegrity }) {
         />
       </div>
 
-      {/* Công tắc khẩn cấp: Toàn bộ biển VPA hiển thị Giá liên hệ */}
-      <div
-        style={{
-          ...CARD,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          background: form.forcePriceContact ? '#FFFBEB' : 'var(--white)',
-          borderColor: form.forcePriceContact ? '#F59E0B' : 'var(--border-hairline)',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <PhoneCall size={18} style={{ color: form.forcePriceContact ? '#D97706' : 'var(--action-primary)' }} />
-            <span style={{ font: 'var(--type-title-3)', color: form.forcePriceContact ? '#B45309' : 'var(--text-strong)' }}>
-              Chế độ khẩn cấp: Hiển thị "Giá liên hệ" cho biển VPA
-            </span>
-            {form.forcePriceContact && (
-              <span
+      {/* Công tắc khẩn cấp: Hiển thị Giá liên hệ cho biển VPA (riêng Ô tô, riêng Xe máy, hoặc cả 2) */}
+      {(() => {
+        const isCarActive = !!form.forcePriceContactCar;
+        const isMotorbikeActive = !!form.forcePriceContactMotorbike;
+        const isAnyActive = isCarActive || isMotorbikeActive;
+        const isBothActive = isCarActive && isMotorbikeActive;
+
+        return (
+          <div
+            style={{
+              ...CARD,
+              flexDirection: 'column',
+              gap: 'var(--space-3)',
+              background: isAnyActive ? '#FFFBEB' : 'var(--white)',
+              borderColor: isAnyActive ? '#F59E0B' : 'var(--border-hairline)',
+              transition: 'background 200ms ease, border-color 200ms ease',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <PhoneCall size={18} style={{ color: isAnyActive ? '#D97706' : 'var(--action-primary)' }} />
+                  <span style={{ font: 'var(--type-title-3)', color: isAnyActive ? '#B45309' : 'var(--text-strong)' }}>
+                    Chế độ khẩn cấp: Hiển thị "Giá liên hệ" cho biển VPA
+                  </span>
+                  {isBothActive ? (
+                    <span
+                      style={{
+                        background: '#FEF3C7',
+                        color: '#92400E',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        border: '1px solid #FCD34D',
+                      }}
+                    >
+                      ĐANG KÍCH HOẠT (CẢ Ô TÔ & XE MÁY)
+                    </span>
+                  ) : isCarActive ? (
+                    <span
+                      style={{
+                        background: '#FEF3C7',
+                        color: '#92400E',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        border: '1px solid #FCD34D',
+                      }}
+                    >
+                      ĐANG KÍCH HOẠT (CHỈ Ô TÔ)
+                    </span>
+                  ) : isMotorbikeActive ? (
+                    <span
+                      style={{
+                        background: '#FEF3C7',
+                        color: '#92400E',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        border: '1px solid #FCD34D',
+                      }}
+                    >
+                      ĐANG KÍCH HOẠT (CHỈ XE MÁY)
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic' }}>
+                      Đang hiển thị giá niêm yết chuẩn
+                    </span>
+                  )}
+                </div>
+                <span style={caption}>
+                  Khi bật, biển số VPA trên website công khai (danh sách, tìm kiếm, trang chi tiết) sẽ tạm thời hiển thị là "Giá liên hệ". <strong>Không thay đổi hay mất bất kỳ dữ liệu giá gốc nào trong hệ thống</strong>. Bạn có thể bật tắt độc lập cho riêng xe máy, riêng ô tô hoặc cả hai.
+                </span>
+              </div>
+
+              {/* Nút thao tác nhanh cả hai */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                {!isBothActive && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onToggleForcePriceContactBoth(true)}
+                    style={{
+                      borderColor: '#F59E0B',
+                      color: '#B45309',
+                      fontWeight: 'var(--fw-semibold)',
+                    }}
+                  >
+                    Bật cả 2 (Ô tô & Xe máy)
+                  </Button>
+                )}
+                {isAnyActive && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onToggleForcePriceContactBoth(false)}
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    Khôi phục tất cả về giá chuẩn
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Bảng 2 công tắc độc lập: Ô tô & Xe máy */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: 12,
+                marginTop: 6,
+                paddingTop: 10,
+                borderTop: '1px solid',
+                borderColor: isAnyActive ? 'rgba(245, 158, 11, 0.2)' : 'var(--border-hairline)',
+              }}
+            >
+              {/* Box Ô tô */}
+              <div
                 style={{
-                  background: '#FEF3C7',
-                  color: '#92400E',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  border: '1px solid #FCD34D',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  background: isCarActive ? '#FFFBEB' : 'var(--surface-muted)',
+                  border: '1px solid',
+                  borderColor: isCarActive ? '#FCD34D' : 'var(--border-hairline)',
+                  gap: 12,
                 }}
               >
-                ĐANG KÍCH HOẠT
-              </span>
-            )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 'var(--radius-sm)',
+                      background: isCarActive ? '#FEF3C7' : 'var(--white)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: isCarActive ? '#B45309' : 'var(--text-muted)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Car size={18} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: isCarActive ? '#92400E' : 'var(--text-strong)' }}>
+                      Biển VPA Ô tô
+                    </span>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: '11px' }}>
+                      {isCarActive ? 'Đang ép hiển thị "Giá liên hệ"' : 'Hiển thị giá niêm yết chuẩn'}
+                    </span>
+                  </div>
+                </div>
+                <SwitchRow
+                  checked={isCarActive}
+                  onChange={onToggleForcePriceContactCar}
+                  label={isCarActive ? 'BẬT' : 'Tắt'}
+                  info="Chuyển đổi hiển thị biển số Ô tô nguồn VPA sang 'Giá liên hệ'"
+                />
+              </div>
+
+              {/* Box Xe máy */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  background: isMotorbikeActive ? '#FFFBEB' : 'var(--surface-muted)',
+                  border: '1px solid',
+                  borderColor: isMotorbikeActive ? '#FCD34D' : 'var(--border-hairline)',
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 'var(--radius-sm)',
+                      background: isMotorbikeActive ? '#FEF3C7' : 'var(--white)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: isMotorbikeActive ? '#B45309' : 'var(--text-muted)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Bike size={18} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-bold)', color: isMotorbikeActive ? '#92400E' : 'var(--text-strong)' }}>
+                      Biển VPA Xe máy
+                    </span>
+                    <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: '11px' }}>
+                      {isMotorbikeActive ? 'Đang ép hiển thị "Giá liên hệ"' : 'Hiển thị giá niêm yết chuẩn'}
+                    </span>
+                  </div>
+                </div>
+                <SwitchRow
+                  checked={isMotorbikeActive}
+                  onChange={onToggleForcePriceContactMotorbike}
+                  label={isMotorbikeActive ? 'BẬT' : 'Tắt'}
+                  info="Chuyển đổi hiển thị biển số Xe máy nguồn VPA sang 'Giá liên hệ'"
+                />
+              </div>
+            </div>
           </div>
-          <span style={caption}>
-            Khi bật, toàn bộ biển VPA trên website công khai (danh sách, tìm kiếm, trang chi tiết) sẽ tạm thời hiển thị là "Giá liên hệ". <strong>Không thay đổi hay mất bất kỳ dữ liệu giá gốc nào trong hệ thống</strong>. Tắt công tắc sẽ hiển thị lại bình thường.
-          </span>
-        </div>
-        <SwitchRow
-          checked={!!form.forcePriceContact}
-          onChange={onToggleForcePriceContact}
-          label={form.forcePriceContact ? 'ĐANG BẬT GIÁ LIÊN HỆ' : 'Hiển thị giá niêm yết chuẩn'}
-          info="Chuyển đổi tức thì trạng thái hiển thị giá của toàn bộ biển số nguồn VPA sang 'Giá liên hệ' mà không cần chạy lại crawler hay cập nhật cơ sở dữ liệu."
-        />
-      </div>
+        );
+      })()}
 
       {/* 3 Nguồn crawl chính */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
