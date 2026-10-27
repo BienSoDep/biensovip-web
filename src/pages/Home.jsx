@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SearchX } from 'lucide-react';
+import { Play, SearchX } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { SearchField, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
@@ -283,15 +283,51 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.video.featured_title')}</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-            {featuredVideoItems.map((v) => (
-              <div key={v.id} className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }}>
-                {v.platform === 'tiktok' ? (
-                  <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
-                ) : (
-                  <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 200, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Xem video</a>
-                )}
-              </div>
-            ))}
+            {featuredVideoItems.map((v) => {
+              // Tự động lấy YouTube thumbnail nếu không có thumbnailUrl trong DB
+              let thumbSrc = v.thumbnailUrl || null;
+              if (!thumbSrc && v.platform === 'youtube') {
+                const ytMatch = v.videoUrl?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([\w-]{11})/);
+                if (ytMatch) thumbSrc = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+              }
+              return (
+                <div key={v.id} className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+                  {v.platform === 'tiktok' ? (
+                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+                  ) : (
+                    <a
+                      href={v.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ position: 'relative', display: 'block', width: '100%', minHeight: 220, background: 'var(--surface-card)', textDecoration: 'none' }}
+                    >
+                      {thumbSrc ? (
+                        <img
+                          src={thumbSrc}
+                          alt={v.title || 'Video'}
+                          loading="lazy"
+                          style={{ width: '100%', height: '100%', minHeight: 220, objectFit: 'cover', display: 'block' }}
+                        />
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 220, color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Xem video</div>
+                      )}
+                      {/* Play button overlay */}
+                      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(14,15,18,0.72)', backdropFilter: 'blur(6px)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.45)', border: '1.5px solid rgba(255,255,255,0.25)' }}>
+                          <Play size={24} fill="currentColor" style={{ marginLeft: 3 }} />
+                        </span>
+                      </span>
+                      {/* Title overlay at bottom */}
+                      {v.title && (
+                        <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 14px 12px', background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)', font: 'var(--type-caption)', fontWeight: 600, color: '#fff', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+                          {v.title}
+                        </span>
+                      )}
+                    </a>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

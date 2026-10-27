@@ -59,17 +59,31 @@ function TikTokRail() {
   // TikTok: thumbnailUrl lưu tĩnh trong DB là link CDN có x-expires ngắn hạn (hết hạn → 403) —
   // luôn fetch oEmbed runtime qua TikTokEmbed thay vì dùng field DB (giống Home.jsx "Video nổi bật").
   // Nền tảng khác (chưa hỗ trợ oEmbed công khai, vd Facebook): dùng thumbnailUrl tĩnh nếu có.
-  const renderItem = (v) => (
-    <div key={v.id} className={`promo-rail__item${v.platform === 'tiktok' ? ' promo-rail__item--tiktok' : ''}`}>
-      {v.platform === 'tiktok' ? (
-        <TikTokEmbed videoUrl={v.videoUrl} title={v.title} compact={true} />
-      ) : v.thumbnailUrl ? (
-        <img src={v.thumbnailUrl} alt={v.title || 'Video quảng cáo'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-      ) : (
-        <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Xem video</a>
-      )}
-    </div>
-  );
+  const renderItem = (v) => {
+    let thumbSrc = v.thumbnailUrl || null;
+    if (!thumbSrc && v.platform === 'youtube') {
+      const ytMatch = v.videoUrl?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([\w-]{11})/);
+      if (ytMatch) thumbSrc = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+    }
+    return (
+      <div key={v.id} className={`promo-rail__item${v.platform === 'tiktok' ? ' promo-rail__item--tiktok' : ''}`}>
+        {v.platform === 'tiktok' ? (
+          <TikTokEmbed videoUrl={v.videoUrl} title={v.title} compact={true} />
+        ) : thumbSrc ? (
+          <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ position: 'relative', display: 'block', width: '100%', height: '100%', overflow: 'hidden' }}>
+            <img src={thumbSrc} alt={v.title || 'Video quảng cáo'} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(14,15,18,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+              </span>
+            </span>
+          </a>
+        ) : (
+          <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Xem video</a>
+        )}
+      </div>
+    );
+  };
 
   return (
     <aside className="promo-rail promo-rail--right">

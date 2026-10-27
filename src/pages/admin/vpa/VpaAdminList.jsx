@@ -471,13 +471,14 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     sort: sort?.key,
     dir: sort?.dir,
   };
+  const filterCount = Object.values(f).filter((v) => (Array.isArray(v) ? v.length : v)).length;
+
   const { data, isLoading, isError, refetch } = useVpaAdminPlates(params);
-  const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: isAvailableTab ? '' : f.tab, priceState: isAvailableTab ? 2 : undefined, page: 1, limit: 1 }); // tổng của tab, không lọc khác
-  const { data: availableCountData } = useVpaAdminPlates({ priceState: 2, hidden: false, vehicle: f.vehicle || undefined, page: 1, limit: 1 });
-  const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
+  const { data: facets } = useVpaAdminFacets(
+    { queue: queue || undefined, ...f, q: dq },
+    { enabled: filterCount > 0 }
+  );
   const { data: vpaCounts } = useVpaCounts(f.vehicle);
-  // Tổng mỗi tab là CẢ Ô TÔ + XE MÁY cộng lại — hiện rõ breakdown để không nhầm với số trên trang VPA gốc (họ tách
-  // riêng từng loại xe theo tab, ví dụ "Danh sách chính thức" > "Xe mô tô, xe gắn máy" chỉ hiện phần xe máy).
   const { data: vpaCountsCar } = useVpaCounts('Car');
   const { data: vpaCountsMoto } = useVpaCounts('MotorBike');
   const setPrice = useSetVpaPrice();
@@ -519,7 +520,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const items = data?.items || [];
   const total = data?.total || 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  const filterCount = Object.values(f).filter((v) => (Array.isArray(v) ? v.length : v)).length;
   const setFilter = (k) => (v) => {
     setF((x) => {
       const n = { ...x, [k]: v };
@@ -821,7 +821,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           ].map((t) => {
             const active = f.priceState === t.value;
             const count = t.value === ''
-              ? baseData?.total
+              ? (active ? data?.total : null)
               : facets?.priceStates?.[t.value] != null
               ? facets.priceStates[t.value]
               : (active ? data?.total : null);
@@ -907,11 +907,11 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             if (t.countKey === 'weekly') { count = vpaCounts?.weekly; carCount = vpaCountsCar?.weekly; motoCount = vpaCountsMoto?.weekly; }
             else if (t.countKey === 'monthly') { count = vpaCounts?.monthly; carCount = vpaCountsCar?.monthly; motoCount = vpaCountsMoto?.monthly; }
             else if (t.countKey === 'expired') { count = vpaCounts?.expired; carCount = vpaCountsCar?.expired; motoCount = vpaCountsMoto?.expired; }
-            else if (t.countKey === 'available') { count = availableCountData?.total; }
+            else if (t.countKey === 'available') { count = vpaCounts?.available; carCount = vpaCountsCar?.available; motoCount = vpaCountsMoto?.available; }
             else if (t.countKey === 'all') {
               count = (vpaCounts?.weekly != null && vpaCounts?.monthly != null && vpaCounts?.expired != null)
                 ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
-                : (f.tab === '' ? baseData?.total : null);
+                : null;
               const sum3 = (c) => (c?.weekly != null && c?.monthly != null && c?.expired != null ? c.weekly + c.monthly + c.expired : null);
               carCount = sum3(vpaCountsCar);
               motoCount = sum3(vpaCountsMoto);
@@ -993,7 +993,19 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
 
       <PlateCountSummary
         matched={data?.total}
-        all={baseData?.total}
+        all={
+          f.tab === '1'
+            ? vpaCounts?.monthly
+            : f.tab === '2'
+            ? vpaCounts?.weekly
+            : f.tab === '3'
+            ? vpaCounts?.expired
+            : f.tab === 'available'
+            ? vpaCounts?.available
+            : vpaCounts?.monthly != null
+            ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
+            : data?.total
+        }
         filtered={filterCount > 0 || !!dq}
         scope={
           f.tab

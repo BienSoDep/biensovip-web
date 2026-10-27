@@ -15,7 +15,7 @@ import ShopPlatesStatsTab from './vpaStats/ShopPlatesStatsTab.jsx';
 import UnifiedPlatesDashboardTab from './vpaStats/UnifiedPlatesDashboardTab.jsx';
 import { useVpaStats } from '../../services/adminVpa.js';
 import { useVpaCounts } from '../../services/vpa.js';
-import { usePlates } from '../../services/plates.js';
+import { useShopPlateSummary } from '../../services/plates.js';
 import { apiClient } from '../../services/apiClient.js';
 import { registerExportJob } from '../../lib/runWatcher.js';
 import { num } from './vpaStats/vpaStatsShared.jsx';
@@ -30,18 +30,16 @@ export default function AdminVpaStats({ go, patch, st }) {
   // Sub-tabs bên trong VPA
   const [vpaSubTab, setVpaSubTab] = useState('inventory');
 
-  // Dữ liệu thống kê tổng hợp để hiển thị dải KPI chung
+  // Dữ liệu thống kê tổng hợp để hiển thị dải KPI chung (đã gom tối ưu thành 3 request có cache)
   const { data: vpaStats } = useVpaStats(true);
   const { data: vpaCounts } = useVpaCounts();
-  const { data: shopPlatesData } = usePlates({ perPage: 1 });
-  const { data: shopAvailableData } = usePlates({ status: 'available', perPage: 1 });
-  const { data: shopHotData } = usePlates({ isHot: true, perPage: 1 });
+  const { data: shopCounts } = useShopPlateSummary();
 
   const totalVpa = vpaCounts?.all || vpaStats?.totalCount || 0;
   const approvedVpa = vpaStats?.approvedCount || 0;
-  const totalShop = shopPlatesData?.total || 0;
-  const availableShop = shopAvailableData?.total || 0;
-  const hotShop = shopHotData?.total || 0;
+  const totalShop = shopCounts?.total || 0;
+  const availableShop = shopCounts?.available || 0;
+  const hotShop = shopCounts?.hot || 0;
 
   // Xử lý xuất file ngầm cho toàn bộ kho (VPA, Có sẵn, hoặc Gộp cả hai với cấu hình nguồn & bộ lọc)
   const handleExportChoice = async (options) => {
@@ -66,6 +64,9 @@ export default function AdminVpaStats({ go, patch, st }) {
       }
       if (provinceId) {
         params.provinceId = provinceId;
+      }
+      if (options?.provinceIds && options.provinceIds.length > 0) {
+        params.provinceIds = Array.isArray(options.provinceIds) ? options.provinceIds.join(',') : options.provinceIds;
       }
       if (priceState !== undefined && priceState !== null && priceState !== '') {
         params.priceState = priceState;

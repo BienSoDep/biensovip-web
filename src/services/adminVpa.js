@@ -3,13 +3,14 @@ import { apiClient } from './apiClient.js';
 import { loadAuth } from '../lib/authStore.js';
 
 // Số biển theo loại biển / tỉnh (tính theo bộ lọc hiện tại, bỏ chính chiều đó).
-export function useVpaAdminFacets(params) {
+export function useVpaAdminFacets(params, { enabled = true } = {}) {
   const qs = toQuery(params);
   return useQuery({
     queryKey: [KEY, 'facets', qs],
     queryFn: () => apiClient.get(`/api/admin/vpa/plates/facets?${qs}`),
     placeholderData: (prev) => prev,
-    staleTime: 30_000,
+    staleTime: 60_000,
+    enabled,
   });
 }
 

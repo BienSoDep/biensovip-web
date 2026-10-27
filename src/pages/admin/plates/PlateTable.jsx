@@ -378,7 +378,17 @@ export default function PlateTable({
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                     onClick={() => {
                       setExportOpen(false);
-                      exportXlsx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message));
+                      const exportParams = {
+                        status,
+                        keyword,
+                        ...(fromDate && { fromDate }),
+                        ...(toDate && { toDate }),
+                        ...(vehicleTypeFilter && { vehicleTypeId: vehicleTypeFilter }),
+                        ...(provinceFilter && { provinceId: provinceFilter }),
+                        ...(plateTypeFilter && { plateTypeId: plateTypeFilter }),
+                        ...(hotFilter === 'true' ? { isHot: true } : hotFilter === 'false' ? { isHot: false } : {}),
+                      };
+                      exportXlsx(exportParams).catch((e) => notify(e.message));
                     }}
                   >
                     <span style={{ fontSize: 16 }}>📗</span>
@@ -399,7 +409,17 @@ export default function PlateTable({
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                     onClick={() => {
                       setExportOpen(false);
-                      exportDocx({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message));
+                      const exportParams = {
+                        status,
+                        keyword,
+                        ...(fromDate && { fromDate }),
+                        ...(toDate && { toDate }),
+                        ...(vehicleTypeFilter && { vehicleTypeId: vehicleTypeFilter }),
+                        ...(provinceFilter && { provinceId: provinceFilter }),
+                        ...(plateTypeFilter && { plateTypeId: plateTypeFilter }),
+                        ...(hotFilter === 'true' ? { isHot: true } : hotFilter === 'false' ? { isHot: false } : {}),
+                      };
+                      exportDocx(exportParams).catch((e) => notify(e.message));
                     }}
                   >
                     <span style={{ fontSize: 16 }}>📘</span>
@@ -420,7 +440,17 @@ export default function PlateTable({
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                     onClick={() => {
                       setExportOpen(false);
-                      exportCsv({ status, keyword, ...(fromDate && { fromDate }), ...(toDate && { toDate }) }).catch((e) => notify(e.message));
+                      const exportParams = {
+                        status,
+                        keyword,
+                        ...(fromDate && { fromDate }),
+                        ...(toDate && { toDate }),
+                        ...(vehicleTypeFilter && { vehicleTypeId: vehicleTypeFilter }),
+                        ...(provinceFilter && { provinceId: provinceFilter }),
+                        ...(plateTypeFilter && { plateTypeId: plateTypeFilter }),
+                        ...(hotFilter === 'true' ? { isHot: true } : hotFilter === 'false' ? { isHot: false } : {}),
+                      };
+                      exportCsv(exportParams).catch((e) => notify(e.message));
                     }}
                   >
                     <span style={{ fontSize: 16 }}>📙</span>

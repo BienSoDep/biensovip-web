@@ -7,6 +7,7 @@ export function usePlateDetail(id) {
     queryFn: () => apiClient.get(`/api/plates/${id}`),
     enabled: !!id,
     retry: false,
+    staleTime: 60_000,
   });
 }
 
@@ -15,6 +16,7 @@ export function useSimilarPlates(id, limit = 8) {
     queryKey: ['plate-similar', id, limit],
     queryFn: () => apiClient.get(`/api/plates/${id}/similar?limit=${limit}`),
     enabled: !!id,
+    staleTime: 120_000,
   });
 }
 
