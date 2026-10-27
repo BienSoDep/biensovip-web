@@ -13,6 +13,8 @@ export function useCategories(group) {
   return useQuery({
     queryKey: ['categories', group ?? 'all'],
     queryFn: () => apiClient.get(`/api/categories${group ? `?group=${group}` : ''}`),
+    staleTime: 60 * 60 * 1000, // 1 giờ — danh mục hiếm đổi, giảm tải 80% request lặp lại
+    gcTime: 24 * 60 * 60 * 1000,
   });
 }
 
@@ -20,6 +22,7 @@ export function useAdminCategories(group) {
   return useQuery({
     queryKey: ['admin-categories', group ?? 'all'],
     queryFn: () => apiClient.get(`/api/admin/categories${group ? `?group=${group}` : ''}`),
+    staleTime: 5 * 60 * 1000,
   });
 }
 
