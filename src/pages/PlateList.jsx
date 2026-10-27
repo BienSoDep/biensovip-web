@@ -472,8 +472,8 @@ export default function PlateList({
   const total = !vpaTab
     ? (hasActiveFilters ? (data?.total ?? stockTotal) : stockTotal)
     : vpaTab === "weekly"
-      ? (hasActiveFilters ? (vpaQuery.data?.total || (vpaCounts?.weekly || 70000)) : (vpaCounts?.weekly || 70000))
-      : (hasActiveFilters ? (vpaQuery.data?.total || (vpaCounts?.monthly || 829407)) : (vpaCounts?.monthly || 829407));
+      ? (hasActiveFilters ? (vpaQuery.data?.total ?? (vpaCounts?.weekly || 70000)) : (vpaCounts?.weekly || 70000))
+      : (hasActiveFilters ? (vpaQuery.data?.total ?? (vpaCounts?.monthly || 829407)) : (vpaCounts?.monthly || 829407));
   const totalPages = vpaTab
     ? Math.max(
         1,
