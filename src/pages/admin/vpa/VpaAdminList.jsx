@@ -22,7 +22,7 @@ import {
   useVpaAdminPlates, useVpaAdminFacets, useSetVpaPrice, useApproveVpaSuggested, useStartApproveAllVpaSuggested, useStartApproveRecomputedVpa, useStartApproveMatchedSamplesVpa, useStartRecomputeVpaSuggestions, useVpaApproveRun,
   useRejectVpaPrice, useApproveVpaGroup, useHideVpaPlate, usePinVpaPlate,
   useUpdateVpaPlate, useCreateVpaPlate, useBulkEditVpa, useVpaPlatePriceReference, useStartApproveDriftedVpa,
-  useResumeVpaApproveRun,
+  useResumeVpaApproveRun, useVpaExportCounts,
 } from '../../../services/adminVpa.js';
 import ConfirmModal from '../../../components/ConfirmModal.jsx';
 import { parsePlateNumber } from '../../../lib/plateFormat.js';
@@ -471,15 +471,28 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
     sort: sort?.key,
     dir: sort?.dir,
   };
+  const filterCount = Object.values(f).filter((v) => (Array.isArray(v) ? v.length : v)).length;
+
   const { data, isLoading, isError, refetch } = useVpaAdminPlates(params);
-  const { data: baseData } = useVpaAdminPlates({ queue: queue || undefined, tab: isAvailableTab ? '' : f.tab, priceState: isAvailableTab ? 2 : undefined, page: 1, limit: 1 }); // tổng của tab, không lọc khác
-  const { data: availableCountData } = useVpaAdminPlates({ priceState: 2, hidden: false, vehicle: f.vehicle || undefined, page: 1, limit: 1 });
-  const { data: facets } = useVpaAdminFacets({ queue: queue || undefined, ...f, q: dq });
+  const facetParams = {
+    queue: queue || undefined,
+    ...f,
+    tab: isAvailableTab ? '' : f.tab,
+    priceState: isAvailableTab ? (f.priceState || 2) : f.priceState,
+    hidden: isAvailableTab ? (f.hidden !== '' ? f.hidden : false) : f.hidden,
+    q: dq,
+  };
+
+  const { data: facets } = useVpaAdminFacets(
+    facetParams,
+    { enabled: filterCount > 0 }
+  );
+  // Đếm theo đúng phạm vi admin (Filtered() — gồm cả biển ẩn tùy filter) thay vì API công khai
+  // (chỉ đếm biển không ẩn) để card tổng khớp với danh sách bên dưới, không lệch Ô tô/Xe máy.
+  const { data: vpaExportCountsAll } = useVpaExportCounts({});
+  const { data: vpaExportCountsCar } = useVpaExportCounts({ vehicle: 'Car' });
+  const { data: vpaExportCountsMoto } = useVpaExportCounts({ vehicle: 'MotorBike' });
   const { data: vpaCounts } = useVpaCounts(f.vehicle);
-  // Tổng mỗi tab là CẢ Ô TÔ + XE MÁY cộng lại — hiện rõ breakdown để không nhầm với số trên trang VPA gốc (họ tách
-  // riêng từng loại xe theo tab, ví dụ "Danh sách chính thức" > "Xe mô tô, xe gắn máy" chỉ hiện phần xe máy).
-  const { data: vpaCountsCar } = useVpaCounts('Car');
-  const { data: vpaCountsMoto } = useVpaCounts('MotorBike');
   const setPrice = useSetVpaPrice();
   const approve = useApproveVpaSuggested();
   const startApproveAll = useStartApproveAllVpaSuggested();
@@ -519,7 +532,6 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
   const items = data?.items || [];
   const total = data?.total || 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  const filterCount = Object.values(f).filter((v) => (Array.isArray(v) ? v.length : v)).length;
   const setFilter = (k) => (v) => {
     setF((x) => {
       const n = { ...x, [k]: v };
@@ -821,7 +833,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
           ].map((t) => {
             const active = f.priceState === t.value;
             const count = t.value === ''
-              ? baseData?.total
+              ? (active ? data?.total : null)
               : facets?.priceStates?.[t.value] != null
               ? facets.priceStates[t.value]
               : (active ? data?.total : null);
@@ -904,17 +916,14 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
             let count = null;
             let carCount = null;
             let motoCount = null;
-            if (t.countKey === 'weekly') { count = vpaCounts?.weekly; carCount = vpaCountsCar?.weekly; motoCount = vpaCountsMoto?.weekly; }
-            else if (t.countKey === 'monthly') { count = vpaCounts?.monthly; carCount = vpaCountsCar?.monthly; motoCount = vpaCountsMoto?.monthly; }
-            else if (t.countKey === 'expired') { count = vpaCounts?.expired; carCount = vpaCountsCar?.expired; motoCount = vpaCountsMoto?.expired; }
-            else if (t.countKey === 'available') { count = availableCountData?.total; }
+            if (t.countKey === 'weekly') { count = vpaExportCountsAll?.week; carCount = vpaExportCountsCar?.week; motoCount = vpaExportCountsMoto?.week; }
+            else if (t.countKey === 'monthly') { count = vpaExportCountsAll?.month; carCount = vpaExportCountsCar?.month; motoCount = vpaExportCountsMoto?.month; }
+            else if (t.countKey === 'expired') { count = vpaExportCountsAll?.expired; carCount = vpaExportCountsCar?.expired; motoCount = vpaExportCountsMoto?.expired; }
+            else if (t.countKey === 'available') { count = vpaCounts?.available; carCount = null; motoCount = null; }
             else if (t.countKey === 'all') {
-              count = (vpaCounts?.weekly != null && vpaCounts?.monthly != null && vpaCounts?.expired != null)
-                ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
-                : (f.tab === '' ? baseData?.total : null);
-              const sum3 = (c) => (c?.weekly != null && c?.monthly != null && c?.expired != null ? c.weekly + c.monthly + c.expired : null);
-              carCount = sum3(vpaCountsCar);
-              motoCount = sum3(vpaCountsMoto);
+              count = vpaExportCountsAll?.vpa ?? null;
+              carCount = vpaExportCountsCar?.vpa ?? null;
+              motoCount = vpaExportCountsMoto?.vpa ?? null;
             }
 
             return (
@@ -993,7 +1002,19 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
 
       <PlateCountSummary
         matched={data?.total}
-        all={baseData?.total}
+        all={
+          f.tab === '1'
+            ? vpaCounts?.monthly
+            : f.tab === '2'
+            ? vpaCounts?.weekly
+            : f.tab === '3'
+            ? vpaCounts?.expired
+            : f.tab === 'available'
+            ? vpaCounts?.available
+            : vpaCounts?.monthly != null
+            ? (vpaCounts.weekly + vpaCounts.monthly + vpaCounts.expired)
+            : data?.total
+        }
         filtered={filterCount > 0 || !!dq}
         scope={
           f.tab

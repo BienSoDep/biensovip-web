@@ -24,6 +24,8 @@ export function useAdminPlates(filters, enabled = true) {
     queryKey: ['admin-plates', qs],
     queryFn: () => apiClient.get(`/api/admin/plates?${qs}`),
     enabled,
+    placeholderData: (previousData) => previousData,
+    staleTime: 30_000,
   });
 }
 

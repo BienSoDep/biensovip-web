@@ -23,6 +23,15 @@ export function usePlates(filters, options) {
     queryKey: ['plates', qs],
     queryFn: () => apiClient.get(`/api/plates${qs ? `?${qs}` : ''}`),
     enabled: options?.enabled,
+    staleTime: options?.staleTime ?? 30_000,
+  });
+}
+
+export function useShopPlateSummary() {
+  return useQuery({
+    queryKey: ['shop-plates-summary'],
+    queryFn: () => apiClient.get('/api/plates/summary'),
+    staleTime: 5 * 60 * 1000,
   });
 }
 

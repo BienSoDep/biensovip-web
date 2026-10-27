@@ -2,38 +2,50 @@ import { useState, useMemo } from 'react';
 import {
   Download, FileSpreadsheet, FileText, FileCode, Check,
   CarFront, Gavel, Calendar, Landmark, Filter, Layers2,
-  Clock, SlidersHorizontal, AlertCircle, Store, CheckCircle2, ChevronDown, ChevronUp
+  Clock, SlidersHorizontal, AlertCircle, Store, CheckCircle2,
+  ChevronDown, ChevronUp, Bike, Car, MapPin, Search, Sparkles, X
 } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
 import { useVpaExportCounts } from '../../../services/adminVpa.js';
-import { useVpaProvinces } from '../../../services/vpa.js';
+import { useAdminCategories } from '../../../services/categories.js';
 
 // Các cấu hình định sẵn (Presets)
 const PRESETS = [
   {
     id: 'all',
-    label: 'Tất cả (VPA & Kho riêng)',
-    desc: 'Bao gồm toàn bộ biển VPA và kho biển riêng Duy Đinh',
+    label: 'Tất cả (VPA & Kho)',
+    desc: 'Bao gồm toàn bộ biển VPA và kho biển riêng Duy Đinh (cả ô tô & xe máy)',
     sources: ['shop', 'month', 'week', 'expired'],
+    vehicle: null,
   },
   {
-    id: 'vpa',
-    label: 'Toàn bộ VPA',
-    desc: 'Phiên tháng, phiên tuần & kết quả đấu giá',
-    sources: ['month', 'week', 'expired'],
+    id: 'moto',
+    label: 'Chỉ Xe máy 🛵',
+    desc: 'Chỉ xuất các biển số xe máy trên toàn hệ thống (VPA & kho riêng)',
+    sources: ['shop', 'month', 'week', 'expired'],
+    vehicle: 2,
+  },
+  {
+    id: 'car',
+    label: 'Chỉ Ô tô 🚗',
+    desc: 'Chỉ xuất các biển số ô tô trên toàn hệ thống (VPA & kho riêng)',
+    sources: ['shop', 'month', 'week', 'expired'],
+    vehicle: 1,
   },
   {
     id: 'shop',
-    label: 'Chỉ kho riêng Duy Đinh',
-    desc: 'Biển có sẵn showroom, không nằm trong VPA',
+    label: 'Kho riêng Duy Đinh',
+    desc: 'Biển có sẵn showroom, sẵn sàng sang tên ngay',
     sources: ['shop'],
+    vehicle: null,
   },
   {
     id: 'open',
-    label: 'Phiên đang mở',
-    desc: 'Biển sắp & đang đấu giá (Tháng & Tuần)',
+    label: 'Phiên VPA đang mở',
+    desc: 'Biển sắp & đang đấu giá trên sàn VPA (Tháng & Tuần)',
     sources: ['month', 'week'],
+    vehicle: null,
   },
 ];
 
@@ -51,19 +63,49 @@ export default function ExportOptionModal({
 }) {
   // Lựa chọn nguồn dữ liệu (Checkboxes) - Mặc định chọn cả 4 nguồn
   const [selectedSources, setSelectedSources] = useState(['shop', 'month', 'week', 'expired']);
-  
-  // Bộ lọc phụ bổ trợ
+
+  // Phân loại phương tiện (Xe máy vs Ô tô vs Cả 2)
   const [vehicle, setVehicle] = useState(null); // null = Tất cả, 1 = Ô tô, 2 = Xe máy
-  const [provinceId, setProvinceId] = useState(''); // '' = Toàn quốc
+
+  // Chế độ tỉnh thành: 'all' = Toàn bộ 63 tỉnh/thành, 'custom' = Tùy biến chọn từng tỉnh
+  const [provinceMode, setProvinceMode] = useState('all');
+  const [selectedProvinceIds, setSelectedProvinceIds] = useState([]);
+  const [provinceSearch, setProvinceSearch] = useState('');
+
+  // Bộ lọc phụ bổ trợ
   const [priceState, setPriceState] = useState(null); // null = Tất cả, 1 = Đã duyệt giá bán, 2 = Chờ định giá
-  const [showFilters, setShowFilters] = useState(false);
 
   // Định dạng file & Phạm vi số lượng
   const [format, setFormat] = useState('xlsx'); // 'xlsx' | 'docx' | 'csv'
   const [range, setRange] = useState('all'); // 'all' | 'page'
 
-  // Lấy danh mục tỉnh thành
-  const { data: provinces = [] } = useVpaProvinces();
+  // Lấy toàn bộ danh mục tỉnh thành hệ thống
+  const { data: rawProvinces = [], isLoading: provincesLoading } = useAdminCategories('province');
+
+  // Danh sách các thành phố lớn ưu tiên
+  const TOP_5_NAMES = ['Hà Nội', 'Hồ Chí Minh', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'];
+
+  const provinces = useMemo(() => {
+    if (!Array.isArray(rawProvinces)) return [];
+    return [...rawProvinces].sort((a, b) => {
+      const aTop = TOP_5_NAMES.some((n) => a.name?.includes(n));
+      const bTop = TOP_5_NAMES.some((n) => b.name?.includes(n));
+      if (aTop && !bTop) return -1;
+      if (!aTop && bTop) return 1;
+      return (a.name || '').localeCompare(b.name || '', 'vi');
+    });
+  }, [rawProvinces]);
+
+  // Lọc tỉnh thành theo ô tìm kiếm
+  const filteredProvinces = useMemo(() => {
+    const q = (provinceSearch || '').trim().toLowerCase();
+    if (!q) return provinces;
+    return provinces.filter(
+      (p) =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.code && p.code.toLowerCase().includes(q))
+    );
+  }, [provinces, provinceSearch]);
 
   // Tạo query filter gửi lên server để đếm số lượng real-time
   const countParams = useMemo(() => {
@@ -72,10 +114,12 @@ export default function ExportOptionModal({
       sources: selectedSources.join(','),
     };
     if (vehicle != null && vehicle !== '') p.vehicle = vehicle;
-    if (provinceId) p.provinceId = provinceId;
+    if (provinceMode === 'custom' && selectedProvinceIds.length > 0) {
+      p.provinceIds = selectedProvinceIds.join(',');
+    }
     if (priceState != null && priceState !== '') p.priceState = priceState;
     return p;
-  }, [filter, selectedSources, vehicle, provinceId, priceState]);
+  }, [filter, selectedSources, vehicle, provinceMode, selectedProvinceIds, priceState]);
 
   const { data: serverCounts, isLoading: countsLoading } = useVpaExportCounts(countParams, {
     enabled: !!open,
@@ -98,17 +142,50 @@ export default function ExportOptionModal({
   const activePreset = PRESETS.find(
     (p) =>
       p.sources.length === selectedSources.length &&
-      p.sources.every((s) => selectedSources.includes(s))
+      p.sources.every((s) => selectedSources.includes(s)) &&
+      (p.vehicle === undefined || p.vehicle === vehicle)
   )?.id;
 
   const handleApplyPreset = (preset) => {
     setSelectedSources([...preset.sources]);
+    if (preset.vehicle !== undefined) {
+      setVehicle(preset.vehicle);
+    }
   };
 
   const handleToggleSource = (srcId) => {
     setSelectedSources((prev) =>
       prev.includes(srcId) ? prev.filter((s) => s !== srcId) : [...prev, srcId]
     );
+  };
+
+  // Xử lý chọn tỉnh thành
+  const handleToggleProvince = (pId) => {
+    setSelectedProvinceIds((prev) =>
+      prev.includes(pId) ? prev.filter((id) => id !== pId) : [...prev, pId]
+    );
+  };
+
+  const handleSelectAllProvinces = () => {
+    setSelectedProvinceIds(provinces.map((p) => p.id));
+  };
+
+  const handleClearProvinces = () => {
+    setSelectedProvinceIds([]);
+  };
+
+  const handleSelectTop5 = () => {
+    const topIds = provinces
+      .filter((p) => TOP_5_NAMES.some((n) => p.name?.includes(n)))
+      .map((p) => p.id);
+    setSelectedProvinceIds(topIds);
+  };
+
+  const handleSelectRegion = (regionKey) => {
+    const regionIds = provinces
+      .filter((p) => (p.region || '').toLowerCase() === regionKey.toLowerCase())
+      .map((p) => p.id);
+    setSelectedProvinceIds(regionIds);
   };
 
   // Xác định scope gửi đi
@@ -119,13 +196,14 @@ export default function ExportOptionModal({
   const handleSubmit = (e) => {
     e?.preventDefault();
     if (selectedSources.length === 0) return;
+    if (provinceMode === 'custom' && selectedProvinceIds.length === 0) return;
 
     onExport({
       format,
       scope: effectiveScope,
       sources: selectedSources,
-      vehicle: vehicle || undefined,
-      provinceId: provinceId || undefined,
+      vehicle: vehicle != null ? vehicle : undefined,
+      provinceIds: provinceMode === 'custom' && selectedProvinceIds.length > 0 ? selectedProvinceIds : undefined,
       priceState: priceState || undefined,
       isCurrentPageOnly: range === 'page',
       page,
@@ -139,7 +217,7 @@ export default function ExportOptionModal({
       id: 'shop',
       title: 'Kho riêng Duy Đinh',
       sub: 'Biển số có sẵn showroom',
-      badge: 'Kho riêng • Có sẵn giao dịch',
+      badge: 'Kho riêng • Sẵn sàng giao dịch',
       badgeBg: 'rgba(5, 150, 105, 0.1)',
       badgeColor: '#059669',
       count: sourceStats.shop,
@@ -189,7 +267,7 @@ export default function ExportOptionModal({
     {
       id: 'xlsx',
       title: 'Excel (.xlsx)',
-      sub: 'Chia Sheet theo từng Tỉnh thành',
+      sub: provinceMode === 'custom' && selectedProvinceIds.length === 1 ? '1 sheet tỉnh đã chọn' : 'Tự động chia Sheet từng Tỉnh',
       icon: FileSpreadsheet,
       color: '#107c41',
       badge: 'Khuyên dùng',
@@ -197,7 +275,7 @@ export default function ExportOptionModal({
     {
       id: 'docx',
       title: 'Word (.docx)',
-      sub: 'Bảng biểu chuẩn văn bản in ấn',
+      sub: vehicle === 2 ? 'Catalogue Xe máy in ấn' : vehicle === 1 ? 'Catalogue Ô tô in ấn' : 'Bảng biểu chuẩn in ấn',
       icon: FileText,
       color: '#2b579a',
       badge: 'In / Gửi khách',
@@ -213,19 +291,19 @@ export default function ExportOptionModal({
   ];
 
   return (
-    <Modal open={open} onClose={onClose} title="Tùy chọn xuất dữ liệu biển số" maxWidth="680px">
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Modal open={open} onClose={onClose} title="Tùy chọn xuất dữ liệu biển số" maxWidth="720px">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {/* Presets Bar */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Chọn nhanh cấu hình:
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Cấu hình nhanh:
             </span>
-            <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
               Đã chọn: <strong style={{ color: 'var(--text-strong)' }}>{selectedSources.length}/4</strong> nguồn
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
             {PRESETS.map((preset) => {
               const active = activePreset === preset.id;
               return (
@@ -235,12 +313,12 @@ export default function ExportOptionModal({
                   onClick={() => handleApplyPreset(preset)}
                   title={preset.desc}
                   style={{
-                    padding: '8px 6px',
+                    padding: '7px 4px',
                     borderRadius: 'var(--radius-sm, 6px)',
-                    border: `1px solid ${active ? 'var(--primary, #0284c7)' : 'var(--grey-200, #e2e8f0)'}`,
-                    background: active ? 'rgba(2, 132, 199, 0.08)' : 'var(--surface-sunken, #f8fafc)',
-                    color: active ? 'var(--primary, #0284c7)' : 'var(--text-strong, #334155)',
-                    fontSize: 11.5,
+                    border: `1px solid ${active ? 'var(--action-primary, #F19720)' : 'var(--border-subtle, #e2e8f0)'}`,
+                    background: active ? 'rgba(241, 151, 32, 0.1)' : 'var(--surface-sunken, #f8fafc)',
+                    color: active ? 'var(--action-primary, #d97706)' : 'var(--text-strong, #334155)',
+                    fontSize: 11,
                     fontWeight: active ? 700 : 500,
                     cursor: 'pointer',
                     textAlign: 'center',
@@ -255,14 +333,340 @@ export default function ExportOptionModal({
           </div>
         </div>
 
-        {/* Section 1: Checkboxes Nguồn biển số */}
+        {/* MỤC 1: PHÂN LOẠI PHƯƠNG TIỆN (XE MÁY / Ô TÔ / TẤT CẢ) */}
+        <div
+          style={{
+            background: 'var(--surface-sunken, #f8fafc)',
+            border: '1.5px solid var(--border-subtle, #e2e8f0)',
+            borderRadius: 'var(--radius-md, 10px)',
+            padding: '10px 14px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: 'var(--action-primary, #F19720)' }}>🛵/🚗</span>
+              <span>1. Phân loại xe xuất file:</span>
+            </label>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {vehicle === 2 ? 'Đang lọc riêng Xe máy' : vehicle === 1 ? 'Đang lọc riêng Ô tô' : 'Đang lấy cả Ô tô & Xe máy'}
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {[
+              {
+                val: null,
+                label: 'Tất cả (Ô tô & Xe máy)',
+                sub: 'Xuất gộp toàn bộ xe',
+                icon: Layers2,
+                color: '#64748b',
+              },
+              {
+                val: 2,
+                label: 'Chỉ Xe máy 🛵',
+                sub: 'Biển số xe máy 2 bánh',
+                icon: Bike,
+                color: '#d97706',
+                highlight: true,
+              },
+              {
+                val: 1,
+                label: 'Chỉ Ô tô 🚗',
+                sub: 'Biển số ô tô các loại',
+                icon: Car,
+                color: '#2563eb',
+              },
+            ].map((vOpt) => {
+              const active = vehicle === vOpt.val;
+              const Icon = vOpt.icon;
+              return (
+                <button
+                  key={String(vOpt.val)}
+                  type="button"
+                  data-testid={`vehicle-option-${vOpt.val ?? 'all'}`}
+                  onClick={() => setVehicle(vOpt.val)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '8px 10px',
+                    borderRadius: 'var(--radius-sm, 8px)',
+                    border: `1.5px solid ${active ? (vOpt.color || 'var(--action-primary)') : 'var(--border-subtle, #e2e8f0)'}`,
+                    background: active ? (vOpt.color ? `${vOpt.color}12` : 'rgba(241,151,32,0.1)') : '#ffffff',
+                    color: active ? (vOpt.color || 'var(--action-primary)') : 'var(--text-strong)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <Icon size={16} color={active ? (vOpt.color || 'var(--action-primary)') : '#64748b'} />
+                    <span style={{ fontSize: 12.5, fontWeight: active ? 700 : 600 }}>{vOpt.label}</span>
+                  </div>
+                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>{vOpt.sub}</span>
+                  {active && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: vOpt.color || '#F19720',
+                      }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* MỤC 2: TÙY BIẾN TỈNH THÀNH (TOÀN BỘ 63 TỈNH HOẶC CHỌN TỪNG TỈNH) */}
+        <div
+          style={{
+            background: 'var(--surface-sunken, #f8fafc)',
+            border: '1.5px solid var(--border-subtle, #e2e8f0)',
+            borderRadius: 'var(--radius-md, 10px)',
+            padding: '10px 14px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <MapPin size={15} style={{ color: '#0284c7' }} />
+              <span>2. Tùy biến Tỉnh / Thành phố:</span>
+            </label>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {provinceMode === 'all'
+                ? 'Toàn bộ 63 Tỉnh/Thành'
+                : `Đã chọn: ${selectedProvinceIds.length}/${provinces.length} tỉnh`}
+            </span>
+          </div>
+
+          {/* Toggle Chế độ Tỉnh thành */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+            <button
+              type="button"
+              data-testid="province-mode-all"
+              onClick={() => {
+                setProvinceMode('all');
+                setSelectedProvinceIds([]);
+              }}
+              style={{
+                padding: '8px 10px',
+                borderRadius: 'var(--radius-sm, 6px)',
+                border: `1.5px solid ${provinceMode === 'all' ? '#0284c7' : 'var(--border-subtle, #cbd5e1)'}`,
+                background: provinceMode === 'all' ? 'rgba(2, 132, 199, 0.08)' : '#ffffff',
+                color: provinceMode === 'all' ? '#0284c7' : 'var(--text-strong)',
+                fontSize: 12,
+                fontWeight: provinceMode === 'all' ? 700 : 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span>🏛️ Toàn bộ 63 Tỉnh/Thành phố</span>
+              {provinceMode === 'all' && <Check size={14} strokeWidth={2.5} />}
+            </button>
+
+            <button
+              type="button"
+              data-testid="province-mode-custom"
+              onClick={() => {
+                setProvinceMode('custom');
+                if (selectedProvinceIds.length === 0 && provinces.length > 0) {
+                  // Mặc định chọn top 5 nếu chưa chọn gì
+                  handleSelectTop5();
+                }
+              }}
+              style={{
+                padding: '8px 10px',
+                borderRadius: 'var(--radius-sm, 6px)',
+                border: `1.5px solid ${provinceMode === 'custom' ? '#0284c7' : 'var(--border-subtle, #cbd5e1)'}`,
+                background: provinceMode === 'custom' ? 'rgba(2, 132, 199, 0.08)' : '#ffffff',
+                color: provinceMode === 'custom' ? '#0284c7' : 'var(--text-strong)',
+                fontSize: 12,
+                fontWeight: provinceMode === 'custom' ? 700 : 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span>📍 Tùy chọn từng Tỉnh/Thành</span>
+              {provinceMode === 'custom' && <Check size={14} strokeWidth={2.5} />}
+            </button>
+          </div>
+
+          {/* Chi tiết chọn từng tỉnh */}
+          {provinceMode === 'custom' && (
+            <div style={{ background: '#ffffff', borderRadius: 8, border: '1px solid var(--border-subtle, #e2e8f0)', padding: 10 }}>
+              {/* Quick Select Actions */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>Chọn nhanh:</span>
+                  {[
+                    { label: '⭐ Top 5 TP lớn', action: handleSelectTop5 },
+                    { label: '🏔️ Miền Bắc', action: () => handleSelectRegion('bac') },
+                    { label: '🌊 Miền Trung', action: () => handleSelectRegion('trung') },
+                    { label: '🌴 Miền Nam', action: () => handleSelectRegion('nam') },
+                    { label: 'Chọn hết (63)', action: handleSelectAllProvinces },
+                    { label: 'Bỏ chọn', action: handleClearProvinces },
+                  ].map((btn, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={btn.action}
+                      style={{
+                        padding: '3px 7px',
+                        fontSize: 10.5,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        border: '1px solid var(--border-subtle, #cbd5e1)',
+                        background: 'var(--surface-sunken, #f8fafc)',
+                        color: 'var(--text-strong)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tìm kiếm tỉnh */}
+                <div style={{ position: 'relative', minWidth: 160, flex: 1, maxWidth: 220 }}>
+                  <Search size={13} style={{ position: 'absolute', left: 7, top: 7, color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    value={provinceSearch}
+                    onChange={(e) => setProvinceSearch(e.target.value)}
+                    placeholder="Tìm tỉnh (Hà Nội, 29...)"
+                    style={{
+                      width: '100%',
+                      padding: '4px 24px 4px 24px',
+                      fontSize: 11,
+                      borderRadius: 4,
+                      border: '1px solid var(--border-subtle, #cbd5e1)',
+                      outline: 'none',
+                    }}
+                  />
+                  {provinceSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setProvinceSearch('')}
+                      style={{ position: 'absolute', right: 5, top: 5, border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      <X size={12} color="#94a3b8" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Grid các tỉnh thành */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                  gap: 5,
+                  maxHeight: 140,
+                  overflowY: 'auto',
+                  paddingRight: 4,
+                }}
+              >
+                {filteredProvinces.map((prov) => {
+                  const isChecked = selectedProvinceIds.includes(prov.id);
+                  return (
+                    <div
+                      key={prov.id}
+                      onClick={() => handleToggleProvince(prov.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 6px',
+                        borderRadius: 4,
+                        border: `1px solid ${isChecked ? '#0284c7' : 'var(--border-subtle, #e2e8f0)'}`,
+                        background: isChecked ? 'rgba(2, 132, 199, 0.08)' : '#ffffff',
+                        cursor: 'pointer',
+                        fontSize: 11,
+                        color: isChecked ? '#0284c7' : 'var(--text-strong)',
+                        fontWeight: isChecked ? 600 : 400,
+                        userSelect: 'none',
+                        transition: 'all 0.1s ease',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 13,
+                          height: 13,
+                          borderRadius: 3,
+                          border: `1px solid ${isChecked ? '#0284c7' : '#94a3b8'}`,
+                          background: isChecked ? '#0284c7' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isChecked && <Check size={10} color="#ffffff" strokeWidth={3} />}
+                      </div>
+                      {prov.code && (
+                        <span
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 700,
+                            padding: '1px 3px',
+                            borderRadius: 3,
+                            background: isChecked ? 'rgba(2, 132, 199, 0.2)' : '#f1f5f9',
+                            color: isChecked ? '#0284c7' : '#64748b',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {prov.code}
+                        </span>
+                      )}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {prov.name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Thông báo số sheet Excel xuất tương ứng */}
+              <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px dashed var(--border-subtle, #e2e8f0)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
+                <span style={{ color: selectedProvinceIds.length === 0 ? '#dc2626' : 'var(--text-muted)' }}>
+                  {selectedProvinceIds.length === 0 ? (
+                    '⚠️ Vui lòng chọn ít nhất 1 tỉnh/thành để xuất file.'
+                  ) : selectedProvinceIds.length === 1 ? (
+                    `💡 File Excel sẽ xuất duy nhất 1 sheet của tỉnh: "${provinces.find((p) => p.id === selectedProvinceIds[0])?.name || ''}"`
+                  ) : (
+                    `💡 File Excel sẽ phân tách riêng ${selectedProvinceIds.length} sheet tương ứng với ${selectedProvinceIds.length} tỉnh thành đã chọn.`
+                  )}
+                </span>
+                <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>
+                  {selectedProvinceIds.length}/{provinces.length} tỉnh
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* MỤC 3: NGUỒN DỮ LIỆU BIỂN SỐ (CHECKBOXES) */}
         <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <Layers2 size={15} style={{ color: 'var(--primary, #0284c7)' }} />
-            <span>1. Chọn các nguồn biển số cần xuất:</span>
+          <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Layers2 size={15} style={{ color: 'var(--action-primary, #F19720)' }} />
+            <span>3. Chọn các nguồn biển số cần xuất:</span>
           </label>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {sourceCards.map((card) => {
               const checked = selectedSources.includes(card.id);
               const Icon = card.icon;
@@ -274,39 +678,38 @@ export default function ExportOptionModal({
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: 12,
-                    padding: '11px 14px',
+                    gap: 10,
+                    padding: '9px 11px',
                     borderRadius: 'var(--radius-md, 8px)',
-                    border: `1.5px solid ${checked ? card.color : 'var(--grey-200, #e2e8f0)'}`,
+                    border: `1.5px solid ${checked ? card.color : 'var(--border-subtle, #e2e8f0)'}`,
                     background: checked ? `${card.color}0a` : 'var(--surface-raised, #ffffff)',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {/* Custom Checkbox */}
-                  <div style={{ paddingTop: 3, flexShrink: 0 }}>
+                  {/* Checkbox */}
+                  <div style={{ paddingTop: 2, flexShrink: 0 }}>
                     <div
                       style={{
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         borderRadius: 4,
                         border: `1.5px solid ${checked ? card.color : 'var(--grey-400, #94a3b8)'}`,
                         background: checked ? card.color : 'transparent',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        transition: 'all 0.15s ease',
                       }}
                     >
-                      {checked && <Check size={13} color="#ffffff" strokeWidth={3} />}
+                      {checked && <Check size={11} color="#ffffff" strokeWidth={3} />}
                     </div>
                   </div>
 
                   {/* Icon */}
                   <div
                     style={{
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       borderRadius: 6,
                       background: checked ? `${card.color}15` : 'var(--surface-sunken, #f1f5f9)',
                       color: card.color,
@@ -316,43 +719,31 @@ export default function ExportOptionModal({
                       flexShrink: 0,
                     }}
                   >
-                    <Icon size={17} />
+                    <Icon size={15} />
                   </div>
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 13.5, fontWeight: 700, color: checked ? card.color : 'var(--text-strong)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: checked ? card.color : 'var(--text-strong)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {card.title}
                       </span>
                       <span
                         style={{
                           fontSize: 10.5,
-                          fontWeight: 600,
-                          padding: '1px 6px',
-                          borderRadius: 4,
-                          background: card.badgeBg,
-                          color: card.badgeColor,
-                        }}
-                      >
-                        {card.badge}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11,
                           fontWeight: 700,
-                          padding: '2px 8px',
+                          padding: '1px 6px',
                           borderRadius: 99,
                           background: checked ? card.color : 'var(--surface-sunken, #f1f5f9)',
                           color: checked ? '#ffffff' : 'var(--text-strong, #334155)',
-                          marginLeft: 'auto',
                           fontVariantNumeric: 'tabular-nums',
+                          flexShrink: 0,
                         }}
                       >
-                        {countsLoading ? '…' : Number(card.count || 0).toLocaleString('vi-VN')} biển
+                        {countsLoading ? '…' : Number(card.count || 0).toLocaleString('vi-VN')}
                       </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: 11.5, color: 'var(--text-muted, #64748b)', lineHeight: 1.45 }}>
+                    <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted, #64748b)', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {card.desc}
                     </p>
                   </div>
@@ -364,265 +755,131 @@ export default function ExportOptionModal({
           {selectedSources.length === 0 && (
             <div
               style={{
-                marginTop: 8,
-                padding: '8px 12px',
+                marginTop: 6,
+                padding: '6px 10px',
                 borderRadius: 'var(--radius-sm, 6px)',
                 background: '#fef2f2',
                 border: '1px solid #fecaca',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
+                gap: 6,
                 color: '#b91c1c',
-                fontSize: 12,
+                fontSize: 11.5,
               }}
             >
-              <AlertCircle size={15} />
+              <AlertCircle size={14} />
               <span>Vui lòng chọn ít nhất 1 nguồn dữ liệu để có thể xuất file.</span>
             </div>
           )}
         </div>
 
-        {/* Section Bổ trợ: Bộ lọc phụ */}
-        <div
-          style={{
-            borderRadius: 'var(--radius-md, 8px)',
-            border: '1px solid var(--grey-200, #e2e8f0)',
-            background: 'var(--surface-sunken, #f8fafc)',
-            overflow: 'hidden',
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '9px 12px',
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer',
-              color: 'var(--text-strong)',
-              fontSize: 12.5,
-              fontWeight: 600,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <SlidersHorizontal size={14} style={{ color: 'var(--primary, #0284c7)' }} />
-              <span>Bộ lọc bổ trợ (thu hẹp theo Loại xe / Tỉnh thành / Giá)</span>
-              {(vehicle != null || provinceId || priceState != null) && (
-                <span style={{ fontSize: 10.5, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'var(--primary, #0284c7)', color: '#ffffff' }}>
-                  Đang lọc
-                </span>
-              )}
-            </div>
-            {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-
-          {showFilters && (
-            <div style={{ padding: '10px 12px 14px', borderTop: '1px solid var(--grey-200, #e2e8f0)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {/* Row 1: Loại xe & Trạng thái giá */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {/* Loại xe */}
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
-                    Loại phương tiện:
-                  </label>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {[
-                      { val: null, label: 'Tất cả' },
-                      { val: 1, label: 'Ô tô' },
-                      { val: 2, label: 'Xe máy' },
-                    ].map((btn) => {
-                      const active = vehicle === btn.val;
-                      return (
-                        <button
-                          key={String(btn.val)}
-                          type="button"
-                          onClick={() => setVehicle(btn.val)}
-                          style={{
-                            flex: 1,
-                            padding: '5px 8px',
-                            fontSize: 11,
-                            fontWeight: active ? 700 : 500,
-                            borderRadius: 4,
-                            border: `1px solid ${active ? 'var(--primary, #0284c7)' : 'var(--grey-300, #cbd5e1)'}`,
-                            background: active ? 'var(--primary, #0284c7)' : '#ffffff',
-                            color: active ? '#ffffff' : 'var(--text-strong)',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                          }}
-                        >
-                          {btn.label}
-                        </button>
-                      );
-                    })}
+        {/* MỤC 4: ĐỊNH DẠNG FILE & PHẠM VI XUẤT */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 10 }}>
+          {/* Định dạng */}
+          <div>
+            <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <FileSpreadsheet size={15} style={{ color: 'var(--action-primary, #F19720)' }} />
+              <span>4. Định dạng file:</span>
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              {formatOptions.map((opt) => {
+                const active = format === opt.id;
+                const Icon = opt.icon;
+                return (
+                  <div
+                    key={opt.id}
+                    onClick={() => setFormat(opt.id)}
+                    style={{
+                      padding: '8px 6px',
+                      borderRadius: 'var(--radius-md, 8px)',
+                      border: `1.5px solid ${active ? opt.color : 'var(--border-subtle, #e2e8f0)'}`,
+                      background: active ? `${opt.color}0a` : 'var(--surface-raised, #ffffff)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 3,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <Icon size={18} color={opt.color} />
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: active ? opt.color : 'var(--text-strong)' }}>
+                      {opt.title}
+                    </span>
+                    <span style={{ fontSize: 9.5, color: 'var(--text-muted)', lineHeight: 1.2 }}>
+                      {opt.sub}
+                    </span>
                   </div>
-                </div>
-
-                {/* Trạng thái định giá */}
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
-                    Trạng thái giá:
-                  </label>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {[
-                      { val: null, label: 'Tất cả' },
-                      { val: 1, label: 'Đã duyệt giá' },
-                      { val: 2, label: 'Chờ định giá' },
-                    ].map((btn) => {
-                      const active = priceState === btn.val;
-                      return (
-                        <button
-                          key={String(btn.val)}
-                          type="button"
-                          onClick={() => setPriceState(btn.val)}
-                          style={{
-                            flex: 1,
-                            padding: '5px 8px',
-                            fontSize: 11,
-                            fontWeight: active ? 700 : 500,
-                            borderRadius: 4,
-                            border: `1px solid ${active ? 'var(--primary, #0284c7)' : 'var(--grey-300, #cbd5e1)'}`,
-                            background: active ? 'var(--primary, #0284c7)' : '#ffffff',
-                            color: active ? '#ffffff' : 'var(--text-strong)',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {btn.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 2: Tỉnh / Thành phố */}
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
-                  Tỉnh / Thành phố:
-                </label>
-                <select
-                  value={provinceId}
-                  onChange={(e) => setProvinceId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '6px 10px',
-                    fontSize: 12,
-                    borderRadius: 4,
-                    border: '1px solid var(--grey-300, #cbd5e1)',
-                    background: '#ffffff',
-                    color: 'var(--text-strong)',
-                  }}
-                >
-                  <option value="">Toàn quốc (Tất cả 63 Tỉnh/Thành)</option>
-                  {provinces.map((prov) => (
-                    <option key={prov.id || prov.code} value={prov.id || prov.code}>
-                      {prov.name} ({prov.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
+                );
+              })}
             </div>
-          )}
-        </div>
-
-        {/* Section 2: Chọn định dạng file */}
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <FileSpreadsheet size={15} style={{ color: 'var(--primary, #0284c7)' }} />
-            <span>2. Chọn định dạng tải về:</span>
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-            {formatOptions.map((opt) => {
-              const active = format === opt.id;
-              const Icon = opt.icon;
-              return (
-                <div
-                  key={opt.id}
-                  onClick={() => setFormat(opt.id)}
-                  style={{
-                    padding: '10px 10px',
-                    borderRadius: 'var(--radius-md, 8px)',
-                    border: `1.5px solid ${active ? opt.color : 'var(--grey-200, #e2e8f0)'}`,
-                    background: active ? `${opt.color}0a` : 'var(--surface-raised, #ffffff)',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 5,
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <Icon size={22} color={opt.color} />
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: active ? opt.color : 'var(--text-strong)' }}>
-                    {opt.title}
-                  </span>
-                  <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
-                    {opt.sub}
-                  </span>
-                </div>
-              );
-            })}
           </div>
-        </div>
 
-        {/* Section 3: Phạm vi số lượng */}
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <Filter size={15} style={{ color: 'var(--primary, #0284c7)' }} />
-            <span>3. Số lượng xuất:</span>
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div
-              onClick={() => setRange('all')}
-              style={{
-                padding: '10px 12px',
-                borderRadius: 'var(--radius-md, 8px)',
-                border: `1.5px solid ${range === 'all' ? 'var(--primary, #0284c7)' : 'var(--grey-200, #e2e8f0)'}`,
-                background: range === 'all' ? 'rgba(2, 132, 199, 0.05)' : 'var(--surface-raised, #ffffff)',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: range === 'all' ? 'var(--primary)' : 'var(--text-strong)', marginBottom: 2 }}>
-                Toàn bộ theo bộ lọc đã chọn
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
-                <strong style={{ color: 'var(--primary, #0284c7)', fontSize: 12.5, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+          {/* Phạm vi */}
+          <div>
+            <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <Filter size={15} style={{ color: 'var(--action-primary, #F19720)' }} />
+              <span>5. Số lượng biển:</span>
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div
+                onClick={() => setRange('all')}
+                style={{
+                  padding: '7px 10px',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  border: `1.5px solid ${range === 'all' ? 'var(--action-primary, #F19720)' : 'var(--border-subtle, #e2e8f0)'}`,
+                  background: range === 'all' ? 'rgba(241, 151, 32, 0.08)' : 'var(--surface-raised, #ffffff)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: range === 'all' ? 'var(--action-primary, #d97706)' : 'var(--text-strong)' }}>
+                    Toàn bộ theo bộ lọc
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                    Tự động tạo job chạy ngầm
+                  </div>
+                </div>
+                <strong style={{ color: 'var(--action-primary, #d97706)', fontSize: 12.5, fontWeight: 800 }}>
                   {countsLoading ? '…' : Number(totalSelectedPlates).toLocaleString('vi-VN')}
-                </strong>{' '}
-                biển dự kiến xuất • Chạy ngầm &amp; theo dõi %
+                </strong>
               </div>
-            </div>
 
-            <div
-              onClick={() => setRange('page')}
-              style={{
-                padding: '10px 12px',
-                borderRadius: 'var(--radius-md, 8px)',
-                border: `1.5px solid ${range === 'page' ? 'var(--primary, #0284c7)' : 'var(--grey-200, #e2e8f0)'}`,
-                background: range === 'page' ? 'rgba(2, 132, 199, 0.05)' : 'var(--surface-raised, #ffffff)',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: range === 'page' ? 'var(--primary)' : 'var(--text-strong)', marginBottom: 2 }}>
-                Chỉ trang hiện tại
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.45 }}>
-                Trang {page} • {currentPageCount || pageSize} biển đang xem
+              <div
+                onClick={() => setRange('page')}
+                style={{
+                  padding: '7px 10px',
+                  borderRadius: 'var(--radius-sm, 6px)',
+                  border: `1.5px solid ${range === 'page' ? 'var(--action-primary, #F19720)' : 'var(--border-subtle, #e2e8f0)'}`,
+                  background: range === 'page' ? 'rgba(241, 151, 32, 0.08)' : 'var(--surface-raised, #ffffff)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: range === 'page' ? 'var(--action-primary, #d97706)' : 'var(--text-strong)' }}>
+                    Chỉ trang hiện tại
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                    Trang {page}
+                  </div>
+                </div>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)' }}>
+                  {currentPageCount || pageSize} biển
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginTop: 4, paddingTop: 14, borderTop: '1px solid var(--grey-100, #f1f5f9)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--border-subtle, #f1f5f9)', flexWrap: 'wrap' }}>
           <div>
             {onOpenHistory && (
               <Button
@@ -639,36 +896,46 @@ export default function ExportOptionModal({
                   gap: 6,
                   color: '#0284c7',
                   fontWeight: 600,
-                  fontSize: 12.5,
-                  padding: '6px 10px',
+                  fontSize: 12,
+                  padding: '5px 8px',
                 }}
               >
-                <Clock size={14} />
-                <span>Xem lịch sử tải về (30 ngày)</span>
+                <Clock size={13} />
+                <span>Lịch sử xuất file (30 ngày)</span>
               </Button>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Button type="button" variant="outline" onClick={onClose} style={{ minWidth: 80 }}>
-              Hủy bỏ
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Button type="button" variant="outline" size="sm" onClick={onClose} style={{ minWidth: 70 }}>
+              Hủy
             </Button>
             <Button
               type="submit"
+              data-testid="export-submit-btn"
               variant="primary"
-              disabled={selectedSources.length === 0}
+              size="md"
+              disabled={selectedSources.length === 0 || (provinceMode === 'custom' && selectedProvinceIds.length === 0)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 8,
+                gap: 7,
                 minWidth: 160,
-                fontWeight: 600,
-                background: selectedSources.length === 0 ? 'var(--grey-400)' : (format === 'xlsx' ? '#107c41' : (format === 'docx' ? '#2b579a' : '#c2410c')),
+                fontWeight: 700,
+                background: selectedSources.length === 0 || (provinceMode === 'custom' && selectedProvinceIds.length === 0)
+                  ? 'var(--grey-400)'
+                  : (format === 'xlsx' ? '#107c41' : (format === 'docx' ? '#2b579a' : '#c2410c')),
                 borderColor: 'transparent',
-                cursor: selectedSources.length === 0 ? 'not-allowed' : 'pointer',
+                cursor: selectedSources.length === 0 || (provinceMode === 'custom' && selectedProvinceIds.length === 0) ? 'not-allowed' : 'pointer',
               }}
             >
               <Download size={15} />
-              <span>Tải dữ liệu ngay</span>
+              <span>
+                {format === 'xlsx'
+                  ? `Xuất Excel ${provinceMode === 'custom' && selectedProvinceIds.length > 0 ? `(${selectedProvinceIds.length} tỉnh)` : '(63 tỉnh)'}`
+                  : format === 'docx'
+                  ? `Xuất Word ${vehicle === 2 ? '(Xe máy)' : vehicle === 1 ? '(Ô tô)' : ''}`
+                  : 'Xuất CSV (.csv)'}
+              </span>
             </Button>
           </div>
         </div>
