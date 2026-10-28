@@ -3,7 +3,7 @@ import {
   Download, FileSpreadsheet, FileText, FileCode, Check,
   Gavel, Calendar, Landmark, Filter, Layers2,
   Clock, AlertCircle, Store,
-  Bike, Car, MapPin, Search, X
+  Bike, Car, MapPin, Search, X, Eye, EyeOff
 } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
@@ -64,6 +64,10 @@ export default function ExportOptionModal({
   const [format, setFormat] = useState('xlsx'); // 'xlsx' | 'docx' | 'csv'
   const [range, setRange] = useState('all'); // 'all' | 'page'
 
+  // Chế độ xem trước thành phẩm (Preview Mockup)
+  const [showPreview, setShowPreview] = useState(true);
+  const [previewTab, setPreviewTab] = useState('xlsx'); // 'xlsx' | 'docx'
+
   // Lấy toàn bộ danh mục tỉnh thành hệ thống
   const { data: rawProvinces = [], isLoading: _provincesLoading } = useAdminCategories('province');
 
@@ -111,6 +115,41 @@ export default function ExportOptionModal({
   const { data: serverCounts, isLoading: countsLoading } = useVpaExportCounts(countParams, {
     enabled: !!open,
   });
+
+  // Danh sách các Sheet mẫu cho preview Excel dựa trên chế độ tỉnh thành
+  const previewSheets = useMemo(() => {
+    if (provinceMode === 'custom' && selectedProvinceIds.length > 0) {
+      const names = provinces
+        .filter((p) => selectedProvinceIds.includes(p.id))
+        .map((p) => p.name);
+      return names.length > 0 ? names : ['Hà Nội'];
+    }
+    return ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'];
+  }, [provinceMode, selectedProvinceIds, provinces]);
+
+  // Danh sách biển số mẫu phản ánh đúng loại xe và nguồn đang chọn
+  const previewPlates = useMemo(() => {
+    if (vehicle === 2) {
+      return [
+        { id: 1, plate: '29-AA 888.88', vehicle: 'Xe máy', type: 'Ngũ quý 8', prov: 'Hà Nội', source: 'Kho riêng', price: '185.000.000 đ', state: 'Sẵn sàng bán' },
+        { id: 2, plate: '59-P1 686.88', vehicle: 'Xe máy', type: 'Lộc phát', prov: 'TP. Hồ Chí Minh', source: 'Phiên tuần', price: '75.000.000 đ', state: 'Sắp lên sàn' },
+        { id: 3, plate: '43-B1 999.99', vehicle: 'Xe máy', type: 'Ngũ quý 9', prov: 'Đà Nẵng', source: 'Phiên tháng', price: '120.000.000 đ', state: 'Công bố VPA' },
+      ];
+    }
+    if (vehicle === 1) {
+      return [
+        { id: 1, plate: '30K-999.99', vehicle: 'Ô tô', type: 'Ngũ quý 9', prov: 'Hà Nội', source: 'Kho riêng', price: '1.250.000.000 đ', state: 'Sẵn sàng bán' },
+        { id: 2, plate: '51K-888.88', vehicle: 'Ô tô', type: 'Ngũ quý 8', prov: 'TP. Hồ Chí Minh', source: 'Phiên tuần', price: '980.000.000 đ', state: 'Sắp lên sàn' },
+        { id: 3, plate: '43A-688.88', vehicle: 'Ô tô', type: 'Lộc phát', prov: 'Đà Nẵng', source: 'Phiên tháng', price: '350.000.000 đ', state: 'Công bố VPA' },
+      ];
+    }
+    return [
+      { id: 1, plate: '30K-999.99', vehicle: 'Ô tô', type: 'Ngũ quý 9', prov: 'Hà Nội', source: 'Kho riêng', price: '1.250.000.000 đ', state: 'Sẵn sàng bán' },
+      { id: 2, plate: '29-AA 888.88', vehicle: 'Xe máy', type: 'Ngũ quý 8', prov: 'Hà Nội', source: 'Kho riêng', price: '185.000.000 đ', state: 'Sẵn sàng bán' },
+      { id: 3, plate: '51K-888.88', vehicle: 'Ô tô', type: 'Ngũ quý 8', prov: 'TP. Hồ Chí Minh', source: 'Phiên tuần', price: '980.000.000 đ', state: 'Sắp lên sàn' },
+      { id: 4, plate: '43-B1 999.99', vehicle: 'Xe máy', type: 'Ngũ quý 9', prov: 'Đà Nẵng', source: 'Phiên tháng', price: '120.000.000 đ', state: 'Công bố VPA' },
+    ];
+  }, [vehicle]);
 
   if (!open) return null;
 
@@ -779,7 +818,11 @@ export default function ExportOptionModal({
                 return (
                   <div
                     key={opt.id}
-                    onClick={() => setFormat(opt.id)}
+                    onClick={() => {
+                      setFormat(opt.id);
+                      if (opt.id === 'docx') setPreviewTab('docx');
+                      else if (opt.id === 'xlsx') setPreviewTab('xlsx');
+                    }}
                     style={{
                       padding: '8px 6px',
                       borderRadius: 'var(--radius-md, 8px)',
@@ -867,6 +910,314 @@ export default function ExportOptionModal({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* MỤC 6: XEM TRƯỚC THÀNH PHẨM (PREVIEW EXCEL & WORD) */}
+        <div
+          style={{
+            background: 'var(--surface-sunken, #f8fafc)',
+            border: '1.5px solid var(--border-subtle, #e2e8f0)',
+            borderRadius: 'var(--radius-md, 10px)',
+            padding: '10px 14px',
+          }}
+        >
+          {/* Header Preview & Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPreview ? 8 : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Eye size={15} style={{ color: previewTab === 'xlsx' ? '#107c41' : '#2b579a' }} />
+              <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)' }}>
+                6. Xem trước mẫu thành phẩm ({previewTab === 'xlsx' ? 'Bảng tính Excel .xlsx' : 'Tài liệu in ấn Word .docx'}):
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Tab Selector Excel vs Word */}
+              <div style={{ display: 'inline-flex', background: '#ffffff', borderRadius: 6, padding: 2, border: '1px solid var(--border-subtle, #cbd5e1)' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewTab('xlsx');
+                    setShowPreview(true);
+                  }}
+                  style={{
+                    padding: '3px 9px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    borderRadius: 4,
+                    border: 'none',
+                    background: previewTab === 'xlsx' ? '#107c41' : 'transparent',
+                    color: previewTab === 'xlsx' ? '#ffffff' : 'var(--text-strong)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <FileSpreadsheet size={13} />
+                  <span>Excel (.xlsx)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewTab('docx');
+                    setShowPreview(true);
+                  }}
+                  style={{
+                    padding: '3px 9px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    borderRadius: 4,
+                    border: 'none',
+                    background: previewTab === 'docx' ? '#2b579a' : 'transparent',
+                    color: previewTab === 'docx' ? '#ffffff' : 'var(--text-strong)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <FileText size={13} />
+                  <span>Word (.docx)</span>
+                </button>
+              </div>
+
+              {/* Nút Ẩn/Hiện */}
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '3px 8px',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  borderRadius: 4,
+                  border: '1px solid var(--border-subtle, #cbd5e1)',
+                  background: '#ffffff',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                {showPreview ? <EyeOff size={12} /> : <Eye size={12} />}
+                <span>{showPreview ? 'Thu gọn' : 'Xem mẫu'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Khung Hiển Thị Preview */}
+          {showPreview && (
+            <div style={{ marginTop: 6 }}>
+              {previewTab === 'xlsx' ? (
+                /* EXCEL MOCKUP */
+                <div style={{ border: '1px solid #cbd5e1', borderRadius: 6, overflow: 'hidden', background: '#ffffff', fontSize: 11 }}>
+                  {/* Excel Window Header */}
+                  <div style={{ background: '#107c41', color: '#ffffff', padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <FileSpreadsheet size={14} color="#ffffff" />
+                      <strong style={{ fontSize: 11 }}>
+                        bien-so-vpa-{vehicle === 2 ? 'xe-may' : vehicle === 1 ? 'o-to' : 'tat-ca'}-{provinceMode === 'custom' && selectedProvinceIds.length === 1 ? 'tinh-thanh' : 'toan-quoc'}.xlsx
+                      </strong>
+                    </div>
+                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 6px', borderRadius: 3 }}>
+                      Microsoft Excel Spreadsheet
+                    </span>
+                  </div>
+
+                  {/* Formula Bar */}
+                  <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5 }}>
+                    <span style={{ fontWeight: 700, color: '#64748b', background: '#e2e8f0', padding: '1px 6px', borderRadius: 3 }}>A1</span>
+                    <span style={{ fontStyle: 'italic', fontWeight: 700, color: '#94a3b8' }}>fx</span>
+                    <span style={{ color: '#334155', fontWeight: 600 }}>
+                      DANH SÁCH BIỂN SỐ XE {vehicle === 2 ? 'XE MÁY 🛵' : vehicle === 1 ? 'Ô TÔ 🚗' : 'HỆ THỐNG'} — BIENSOVIP.COM
+                    </span>
+                  </div>
+
+                  {/* Spreadsheet Grid */}
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, textAlign: 'left', minWidth: 540 }}>
+                      <thead>
+                        {/* Column Index Row */}
+                        <tr style={{ background: '#f1f5f9', color: '#64748b', fontSize: 9.5 }}>
+                          <th style={{ width: 28, padding: '2px 4px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>#</th>
+                          <th style={{ width: 100, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>A</th>
+                          <th style={{ width: 70, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>B</th>
+                          <th style={{ width: 85, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>C</th>
+                          <th style={{ width: 95, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>D</th>
+                          <th style={{ width: 80, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>E</th>
+                          <th style={{ width: 110, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>F</th>
+                          <th style={{ padding: '2px 6px', textAlign: 'center', borderBottom: '1px solid #cbd5e1' }}>G</th>
+                        </tr>
+                        {/* Data Header Row */}
+                        <tr style={{ background: '#e8f5e9', color: '#166534', fontWeight: 700, fontSize: 10.5 }}>
+                          <th style={{ padding: '4px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>1</th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Biển số</th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Loại xe</th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Loại thế số</th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Tỉnh/Thành</th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Nguồn gốc</th>
+                          <th style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Giá niêm yết</th>
+                          <th style={{ padding: '4px 6px', borderBottom: '1px solid #cbd5e1' }}>Trạng thái</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewPlates.map((row, idx) => (
+                          <tr key={row.id} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfc' }}>
+                            <td style={{ padding: '4px 6px', textAlign: 'center', color: '#94a3b8', fontSize: 10, borderRight: '1px solid #cbd5e1', background: '#f8fafc' }}>
+                              {idx + 2}
+                            </td>
+                            <td style={{ padding: '4px 6px', fontWeight: 800, fontFamily: 'monospace', color: '#0f172a', borderRight: '1px solid #e2e8f0' }}>
+                              {row.plate}
+                            </td>
+                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: row.vehicle === 'Xe máy' ? '#d97706' : '#2563eb', fontWeight: 600 }}>
+                              {row.vehicle}
+                            </td>
+                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: '#475569' }}>
+                              {row.type}
+                            </td>
+                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: '#334155', fontWeight: 500 }}>
+                              {row.prov}
+                            </td>
+                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0' }}>
+                              <span style={{ fontSize: 9.5, padding: '1px 5px', borderRadius: 3, background: row.source === 'Kho riêng' ? '#dcfce7' : '#eff6ff', color: row.source === 'Kho riêng' ? '#15803d' : '#1d4ed8', fontWeight: 600 }}>
+                                {row.source}
+                              </span>
+                            </td>
+                            <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700, color: '#b45309', fontVariantNumeric: 'tabular-nums', borderRight: '1px solid #e2e8f0' }}>
+                              {row.price}
+                            </td>
+                            <td style={{ padding: '4px 6px', color: '#059669', fontWeight: 600, fontSize: 10 }}>
+                              {row.state}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Excel Sheet Tabs Bar */}
+                  <div style={{ background: '#f1f5f9', borderTop: '1px solid #cbd5e1', padding: '3px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10.5 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflowX: 'auto', maxWidth: '75%' }}>
+                      <span style={{ color: '#94a3b8', fontSize: 10, marginRight: 2 }}>◀ ▶</span>
+                      {previewSheets.slice(0, 5).map((sh, idx) => (
+                        <div
+                          key={sh}
+                          style={{
+                            padding: '3px 8px',
+                            background: idx === 0 ? '#ffffff' : 'transparent',
+                            borderTop: idx === 0 ? '2px solid #107c41' : 'none',
+                            borderLeft: '1px solid #cbd5e1',
+                            borderRight: '1px solid #cbd5e1',
+                            fontWeight: idx === 0 ? 700 : 500,
+                            color: idx === 0 ? '#107c41' : '#64748b',
+                            borderRadius: '3px 3px 0 0',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          📄 {sh}
+                        </div>
+                      ))}
+                      {previewSheets.length > 5 && (
+                        <span style={{ color: '#64748b', padding: '0 4px' }}>+{previewSheets.length - 5} tỉnh...</span>
+                      )}
+                    </div>
+                    <span style={{ color: '#64748b', fontSize: 10 }}>
+                      ⚡ Tự động chia Sheet từng Tỉnh
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                /* WORD MOCKUP */
+                <div style={{ border: '1px solid #cbd5e1', borderRadius: 6, overflow: 'hidden', background: '#e2e8f0', fontSize: 11 }}>
+                  {/* Word Window Header */}
+                  <div style={{ background: '#2b579a', color: '#ffffff', padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <FileText size={14} color="#ffffff" />
+                      <strong style={{ fontSize: 11 }}>
+                        catalogue-bien-so-{vehicle === 2 ? 'xe-may' : vehicle === 1 ? 'o-to' : 'tat-ca'}.docx
+                      </strong>
+                    </div>
+                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 6px', borderRadius: 3 }}>
+                      Microsoft Word (Bảng biểu in ấn & Báo giá)
+                    </span>
+                  </div>
+
+                  {/* Word Paper Document Simulator */}
+                  <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'center' }}>
+                    <div
+                      style={{
+                        width: '100%',
+                        maxWidth: 640,
+                        background: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        boxShadow: '0 3px 10px rgba(0,0,0,0.07)',
+                        padding: '10px 14px',
+                        borderRadius: 3,
+                      }}
+                    >
+                      {/* Brand Header */}
+                      <div style={{ textAlign: 'center', borderBottom: '1.5px solid #2b579a', paddingBottom: 5, marginBottom: 6 }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          BIENSOVIP.COM — HỆ THỐNG BIỂN SỐ XE VIP & ĐẤU GIÁ VPA
+                        </div>
+                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#1e293b', marginTop: 1 }}>
+                          DANH MỤC & BẢNG BÁO GIÁ BIỂN SỐ {vehicle === 2 ? 'XE MÁY 🛵' : vehicle === 1 ? 'Ô TÔ 🚗' : 'XE VIP'}
+                        </div>
+                      </div>
+
+                      {/* Summary Box */}
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 4, padding: '5px 8px', marginBottom: 6, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, fontSize: 10 }}>
+                        <div>• <strong>Phạm vi:</strong> {provinceMode === 'custom' && selectedProvinceIds.length > 0 ? `${selectedProvinceIds.length} tỉnh thành đã chọn` : 'Toàn quốc (63 tỉnh/thành)'}</div>
+                        <div>• <strong>Chủng loại:</strong> {vehicle === 2 ? 'Chỉ Xe máy 🛵' : vehicle === 1 ? 'Chỉ Ô tô 🚗' : 'Cả Ô tô & Xe máy'}</div>
+                        <div>• <strong>Nguồn dữ liệu:</strong> {selectedSources.length === 4 ? 'Toàn bộ 4 nguồn' : `${selectedSources.length} nguồn đã chọn`}</div>
+                        <div>• <strong>Định dạng in:</strong> A4 Tiêu chuẩn (Portrait)</div>
+                      </div>
+
+                      {/* Print-ready Table */}
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ background: '#1e293b', color: '#ffffff', fontWeight: 700 }}>
+                            <th style={{ padding: '3px 5px', width: 28, textAlign: 'center' }}>STT</th>
+                            <th style={{ padding: '3px 5px', width: 110 }}>Biển số</th>
+                            <th style={{ padding: '3px 5px', width: 90 }}>Tỉnh / Loại</th>
+                            <th style={{ padding: '3px 5px' }}>Thế số / Phong thủy</th>
+                            <th style={{ padding: '3px 5px', textAlign: 'right', width: 110 }}>Giá niêm yết</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {previewPlates.slice(0, 3).map((row, idx) => (
+                            <tr key={row.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                              <td style={{ padding: '3px 5px', textAlign: 'center', color: '#64748b' }}>{idx + 1}</td>
+                              <td style={{ padding: '3px 5px', fontWeight: 800, fontFamily: 'monospace', fontSize: 11, color: '#0f172a' }}>
+                                {row.plate}
+                              </td>
+                              <td style={{ padding: '3px 5px', color: '#475569' }}>
+                                {row.prov} • {row.vehicle}
+                              </td>
+                              <td style={{ padding: '3px 5px', color: '#334155' }}>
+                                <strong>{row.type}</strong>
+                              </td>
+                              <td style={{ padding: '3px 5px', textAlign: 'right', fontWeight: 800, color: '#b45309' }}>
+                                {row.price}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+
+                      {/* Word Document Footer */}
+                      <div style={{ marginTop: 6, paddingTop: 3, borderTop: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, color: '#94a3b8' }}>
+                        <span>Biên bản báo giá chuẩn in ấn • Hỗ trợ sang tên toàn quốc</span>
+                        <span>Trang 1 / 1 • Hotline: 09xx.xxx.xxx</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}
