@@ -32,6 +32,8 @@ import {
 import Modal from "../components/Modal.jsx";
 import PlateVisual from "../components/PlateVisual.jsx";
 import PlateCard from "../components/PlateCard.jsx";
+import MotionFavButton from "../components/MotionFavButton.jsx";
+import MotionCompareButton from "../components/MotionCompareButton.jsx";
 import { splitPlateNumber, formatPrice } from "../lib/plateFormat.js";
 import { VPA_EXPIRED_LABELS, formatDateTime } from "../lib/vpaFormat.js";
 import { validatePhone, normalizePhone } from "../lib/phone.js";
@@ -1151,27 +1153,33 @@ export default function PlateDetail({
                 Nhắn Zalo
               </LinkButton>
             )}
-            <IconButton
-              name="heart"
-              label="Lưu yêu thích"
-              size="lg"
+            <MotionFavButton
+              fav={isFav}
+              size={48}
+              iconSize={22}
               onClick={() => {
                 onFav?.(plate.id);
                 notify(isFav ? "Đã bỏ khỏi yêu thích" : "Đã lưu vào yêu thích");
               }}
-              style={isFav ? { color: "var(--status-danger)" } : undefined}
+              style={{
+                boxShadow: "inset 0 0 0 1.5px var(--border-strong)",
+                borderRadius: "var(--radius-sm)",
+              }}
             />
-            <IconButton
-              name={inCompare ? "check-circle" : "scale"}
-              label={inCompare ? "Bỏ khỏi so sánh" : "Thêm vào so sánh"}
-              size="lg"
+            <MotionCompareButton
+              inCompare={inCompare}
+              size={48}
+              iconSize={22}
               onClick={() => {
                 (inCompare ? removeCompare : addCompare)(plate.id);
                 notify(
                   inCompare ? "Đã bỏ khỏi so sánh" : "Đã thêm vào so sánh",
                 );
               }}
-              style={inCompare ? { color: "var(--action-primary)" } : undefined}
+              style={{
+                boxShadow: "inset 0 0 0 1.5px var(--border-strong)",
+                borderRadius: "var(--radius-sm)",
+              }}
             />
           </div>
           <div
@@ -2221,15 +2229,19 @@ export default function PlateDetail({
         >
           {sold ? "Tìm biển tương tự" : "Chốt biển này"}
         </Button>
-        <IconButton
-          name="heart"
-          label="Lưu yêu thích"
-          size="lg"
+        <MotionFavButton
+          fav={isFav}
+          size={48}
+          iconSize={22}
           onClick={() => {
             onFav?.(plate.id);
             notify(isFav ? "Đã bỏ khỏi yêu thích" : "Đã lưu vào yêu thích");
           }}
-          style={isFav ? { color: "var(--status-danger)" } : undefined}
+          style={{
+            boxShadow: "inset 0 0 0 1.5px var(--border-strong)",
+            borderRadius: "var(--radius-sm)",
+            flexShrink: 0,
+          }}
         />
       </div>
 

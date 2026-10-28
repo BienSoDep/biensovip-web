@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Play, SearchX, BadgeCheck } from 'lucide-react';
+import { Play, SearchX, BadgeCheck, GalleryThumbnails, LayoutGrid } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { SearchField, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import SpotlightCard from '../components/SpotlightCard.jsx';
+import MotionPlateGallery from '../components/MotionPlateGallery.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
@@ -30,10 +31,11 @@ import { useDebounce } from '../hooks/useDebounce.js';
 export default function Home({ settings, go, notify, _heroAnim, openPlate, openBuy, favs, onFav, contact, user }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Tất cả');
+  const [viewMode, setViewMode] = useState('gallery');
   const stagger = useStaggeredReveal();
   const T = contentGet;
   const { data: plateTypes } = useCategories('plate_type');
-  const { data: featured, isLoading: featuredLoading } = useFeaturedPlates(6);
+  const { data: featured, isLoading: featuredLoading } = useFeaturedPlates(8);
   const featuredItems = featured || [];
   const { data: siteRating } = useSiteRating();
   const { data: plateCountData } = usePlates({ perPage: 1 });
@@ -161,7 +163,33 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             {isSearching ? [debouncedQ.trim() && `đuôi "${debouncedQ.trim()}"`, selectedCatId && cat].filter(Boolean).join(' · ') : T('home.featured.desc')}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={go('list')}>{isSearching ? 'Xem tất cả →' : T('home.featured.all')}</Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {!isSearching && (
+            <div className="home-featured-view-toggle" role="group" aria-label="Chế độ hiển thị">
+              <button
+                type="button"
+                className={`home-featured-toggle-btn ${viewMode === 'gallery' ? 'home-featured-toggle-btn--active' : ''}`}
+                onClick={() => setViewMode('gallery')}
+                aria-pressed={viewMode === 'gallery'}
+                title="Hiển thị chuỗi lướt Gallery"
+              >
+                <GalleryThumbnails size={14} />
+                <span>Lướt Gallery</span>
+              </button>
+              <button
+                type="button"
+                className={`home-featured-toggle-btn ${viewMode === 'grid' ? 'home-featured-toggle-btn--active' : ''}`}
+                onClick={() => setViewMode('grid')}
+                aria-pressed={viewMode === 'grid'}
+                title="Hiển thị dạng lưới danh sách"
+              >
+                <LayoutGrid size={14} />
+                <span>Lưới</span>
+              </button>
+            </div>
+          )}
+          <Button variant="ghost" size="sm" onClick={go('list')}>{isSearching ? 'Xem tất cả →' : T('home.featured.all')}</Button>
+        </div>
       </section>
       <section className="home-featured-grid-wrap" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', animation: 'fadeIn 180ms var(--ease-out)' }}>
         {displayLoading ? (
@@ -195,6 +223,18 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
             <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>{T('home.featured.empty')} <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>{T('home.featured.empty_link')}</button></p>
           </div>
+        ) : viewMode === 'gallery' && !isSearching ? (
+          <MotionPlateGallery
+            items={displayItems}
+            favs={favs}
+            onFav={onFav}
+            isInList={isInList}
+            addCompare={addCompare}
+            removeCompare={removeCompare}
+            openPlate={openPlate}
+            openBuy={openBuy}
+            contact={contact}
+          />
         ) : (
           <div className="home-featured-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {displayItems.map((p, i) => (

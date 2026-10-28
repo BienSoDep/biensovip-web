@@ -17,6 +17,7 @@ import Breadcrumb from './components/Breadcrumb.jsx';
 import CompareBar from './components/CompareBar.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
+import CommandPalette from './components/CommandPalette.jsx';
 import Header from './layout/Header.jsx';
 import Footer from './layout/Footer.jsx';
 import MobileDrawer from './layout/MobileDrawer.jsx';
@@ -764,7 +765,7 @@ export default function App() {
 
         <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative' }}>
 
-          {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost} />}
+          {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost} onOpenSearch={() => patch({ searchPaletteOpen: true })} />}
 
           {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={favCards.length} compareCount={compareIds.length} patch={patch} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
@@ -887,6 +888,15 @@ export default function App() {
           )}
 
           {isPublic && st.screen !== 'compare' && <CompareBar go={go} />}
+
+          {isPublic && (
+            <CommandPalette
+              open={!!st.searchPaletteOpen}
+              onClose={() => patch({ searchPaletteOpen: false })}
+              go={go}
+              openPlate={openPlate}
+            />
+          )}
 
         </div>
         </main>

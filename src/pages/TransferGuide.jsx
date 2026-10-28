@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { PhoneCall, ChevronDown, HelpCircle, ShieldCheck } from 'lucide-react';
+import { PhoneCall, HelpCircle, ShieldCheck } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import SpotlightCard from '../components/SpotlightCard.jsx';
+import MotionAccordion from '../components/MotionAccordion.jsx';
 import { PageHeader } from '../components/index.jsx';
 import AuthorBox from '../components/AuthorBox.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
@@ -9,7 +9,6 @@ import { usePolicyPage } from '../services/policyPages.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
 
 export default function TransferGuide({ go, zalo }) {
-  const [openFaq, setOpenFaq] = useState(null);
   const { data: db } = usePolicyPage('transfer');
   const dbContent = db ? (() => { try { return JSON.parse(db.contentJson); } catch { return null; } })() : null;
   const steps = dbContent?.steps || contentItems('transfer.steps');
@@ -76,29 +75,7 @@ export default function TransferGuide({ go, zalo }) {
             <HelpCircle size={22} style={{ color: 'var(--action-primary)' }} />
             <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{faqsTitle || 'Hỏi đáp thủ tục sang tên (Thông tư 24)'}</h2>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            {faqs.map((item, i) => (
-              <div key={i} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-                <button
-                  type="button"
-                  id={`transfer-faq-q-${i}`}
-                  aria-expanded={openFaq === i}
-                  aria-controls={`transfer-faq-a-${i}`}
-                  className="faq-accordion-btn"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  style={{ width: '100%', border: 'none', background: 'transparent', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', textAlign: 'left', outline: 'none' }}
-                >
-                  <span style={{ flex: 1, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{item.q}</span>
-                  <ChevronDown size={18} style={{ color: openFaq === i ? 'var(--action-primary)' : 'var(--text-muted)', transform: openFaq === i ? 'rotate(180deg)' : 'none', transition: 'transform 180ms var(--ease-out)', flexShrink: 0 }} />
-                </button>
-                {openFaq === i && (
-                  <div id={`transfer-faq-a-${i}`} role="region" aria-labelledby={`transfer-faq-q-${i}`} style={{ padding: '12px var(--gutter-card) var(--space-4)', borderTop: '1px solid var(--border-hairline)', font: 'var(--type-body)', color: 'var(--text-body)', lineHeight: 1.6, animation: 'fadeIn 140ms var(--ease-out)' }}>
-                    {item.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <MotionAccordion items={faqs} />
         </div>
       )}
 

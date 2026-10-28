@@ -1,8 +1,10 @@
-import { Phone, Heart, GitCompareArrows, CheckCircle2, Flame, Sparkles } from 'lucide-react';
-import { Badge, IconButton } from './index.jsx';
+import { Phone, Flame, Sparkles } from 'lucide-react';
+import { Badge } from './index.jsx';
 import SpotlightCard from './SpotlightCard.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
+import MotionFavButton from './MotionFavButton.jsx';
+import MotionCompareButton from './MotionCompareButton.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { buildConsultMessage, openZaloWithMessage, callOrCopyPhone, isMobileDevice } from '../lib/zaloMessage.js';
@@ -93,12 +95,20 @@ export default function PlateCard({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               {onFav && (
-                <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
-                  <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }} style={fav ? { color: 'var(--status-danger)' } : undefined} />
-                </span>
+                <MotionFavButton
+                  fav={fav}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }}
+                  size={32}
+                  iconSize={18}
+                />
               )}
               {onCompare && (
-                <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+                <MotionCompareButton
+                  inCompare={inCompare}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }}
+                  size={32}
+                  iconSize={18}
+                />
               )}
             </div>
           </a>
@@ -159,57 +169,20 @@ export default function PlateCard({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               {onFav && (
-                <button
-                  type="button"
-                  aria-label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'}
-                  title={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'}
+                <MotionFavButton
+                  fav={fav}
                   onClick={() => { if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    border: 'none',
-                    background: 'transparent',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: fav ? 'var(--status-danger)' : 'var(--text-muted)',
-                    padding: 0,
-                    animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined,
-                    transition: 'background-color 140ms ease, color 140ms ease',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <Heart size={16} fill={fav ? 'currentColor' : 'none'} />
-                </button>
+                  size={28}
+                  iconSize={16}
+                />
               )}
               {onCompare && (
-                <button
-                  type="button"
-                  aria-label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'}
-                  title={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'}
+                <MotionCompareButton
+                  inCompare={inCompare}
                   onClick={() => { if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    border: 'none',
-                    background: 'transparent',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: inCompare ? 'var(--action-primary)' : 'var(--text-muted)',
-                    padding: 0,
-                    transition: 'background-color 140ms ease, color 140ms ease',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  {inCompare ? <CheckCircle2 size={16} /> : <GitCompareArrows size={16} />}
-                </button>
+                  size={28}
+                  iconSize={16}
+                />
               )}
             </div>
           </div>

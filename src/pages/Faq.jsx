@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useEffect } from 'react';
 import Button from '../components/Button.jsx';
+import MotionAccordion from '../components/MotionAccordion.jsx';
 import { PageHeader } from '../components/index.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
 import { usePolicyPage } from '../services/policyPages.js';
@@ -8,7 +8,6 @@ import { useFaqSets } from '../services/faqHowTo.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
 
 export default function Faq({ go, zalo }) {
-  const [open, setOpen] = useState(null);
   const { data: db } = usePolicyPage('faq');
   const dbContent = db ? (() => { try { return JSON.parse(db.contentJson); } catch { return null; } })() : null;
   const policyQA = dbContent?.items || contentItems('faq.items');
@@ -46,29 +45,7 @@ export default function Faq({ go, zalo }) {
         subtitle={subtitle}
       />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-        {QA.map((item, i) => (
-          <div key={i} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden' }}>
-            <button
-              type="button"
-              id={`faq-q-${i}`}
-              aria-expanded={open === i}
-              aria-controls={`faq-a-${i}`}
-              className="faq-accordion-btn"
-              onClick={() => setOpen(open === i ? null : i)}
-              style={{ width: '100%', border: 'none', background: 'transparent', padding: 'var(--space-4) var(--gutter-card)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', textAlign: 'left', outline: 'none' }}
-            >
-              <span style={{ flex: 1, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{item.q}</span>
-              <ChevronDown size={18} style={{ color: open === i ? 'var(--action-primary)' : 'var(--text-muted)', transform: open === i ? 'rotate(180deg)' : 'none', transition: 'transform 180ms var(--ease-out)', flexShrink: 0 }} />
-            </button>
-            {open === i && (
-              <div id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} style={{ padding: '12px var(--gutter-card) var(--space-4)', borderTop: '1px solid var(--border-hairline)', font: 'var(--type-body)', color: 'var(--text-body)', lineHeight: 1.6, animation: 'fadeIn 140ms var(--ease-out)' }}>
-                {item.a}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      <MotionAccordion items={QA} />
 
       <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
         <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{contentGet('faq.not_found_title')}</h3>

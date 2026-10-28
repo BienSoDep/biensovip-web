@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import SpotlightCard from '../components/SpotlightCard.jsx';
+import MotionAccordion from '../components/MotionAccordion.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
@@ -37,7 +38,6 @@ import {
 export default function About({ go }) {
   const { data: videosData } = useFeaturedPromoVideos(6);
   const videos = videosData?.items || [];
-  const [openFaq, setOpenFaq] = useState(null);
 
   return (
     <div className="about-page-wrap">
@@ -472,63 +472,7 @@ export default function About({ go }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {faqs.map((f, i) => {
-            const isOpen = openFaq === i;
-            return (
-              <div
-                key={i}
-                style={{
-                  background: 'var(--surface-card)',
-                  border: '1px solid var(--border-hairline)',
-                  borderRadius: 'var(--radius-card)',
-                  overflow: 'hidden',
-                  transition: 'border-color 0.15s ease',
-                  boxShadow: 'var(--shadow-1)',
-                }}
-              >
-                <button
-                  type="button"
-                  className="faq-accordion-btn"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpenFaq(isOpen ? null : i)}
-                  style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    font: 'var(--type-title-3)',
-                    color: 'var(--text-strong)',
-                    fontWeight: '700',
-                    outline: 'none',
-                  }}
-                >
-                  <span>{f.q}</span>
-                  <ChevronDown
-                    size={20}
-                    style={{
-                      flexShrink: 0,
-                      color: 'var(--brand-600)',
-                      transition: 'transform 0.2s ease',
-                      transform: isOpen ? 'rotate(180deg)' : 'none',
-                    }}
-                  />
-                </button>
-                {isOpen && (
-                  <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.75 }}>
-                    {f.a}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <MotionAccordion items={faqs} />
       </section>
 
       {/* 11. Showroom Đà Nẵng & Multi-channel Contact Hub */}
