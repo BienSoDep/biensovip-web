@@ -37,8 +37,8 @@ export function Badge({ tone = 'neutral', children, title, style: customStyle, c
   );
 }
 
-export function Eyebrow({ tone = 'blue', children, className }) {
-  const color = tone === 'inverse' ? 'rgba(255,255,255,.7)' : 'var(--blue-600)';
+export function Eyebrow({ tone = 'brand', children, className }) {
+  const color = tone === 'inverse' ? 'rgba(255,255,255,.7)' : tone === 'blue' ? 'var(--brand-600)' : 'var(--brand-600, #a3610a)';
   return (
     <span
       className={className}

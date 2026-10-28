@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { Share2, Link2, MessageCircle, Minus, Plus, ChevronDown } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import MotionAccordion from '../components/MotionAccordion.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
 import { contentGet } from '../lib/content/index.js';
@@ -137,7 +138,6 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   const { data: relatedPlatesData } = useRelatedPlates(postId, 12);
   const { data: commentsData } = useBlogComments(post?.id);
   const submitComment = useSubmitBlogComment(post?.id);
-  const [openFaqIdx, setOpenFaqIdx] = useState(null);
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -442,74 +442,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       {postFaqItems.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           <h2 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
-          {postFaqItems.map((item, i) => {
-            const isOpen = openFaqIdx === i;
-            return (
-              <div
-                key={i}
-                style={{
-                  background: 'var(--surface-sunken)',
-                  borderRadius: 'var(--radius-card)',
-                  border: isOpen ? '1px solid var(--border-hairline)' : '1px solid transparent',
-                  overflow: 'hidden',
-                  transition: 'border-color 160ms ease',
-                }}
-              >
-                <button
-                  type="button"
-                  className="faq-accordion-btn"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpenFaqIdx((cur) => (cur === i ? null : i))}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    padding: '14px 16px',
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    font: 'var(--type-body)',
-                    fontWeight: 'var(--fw-semibold)',
-                    color: 'var(--text-strong)',
-                    outline: 'none',
-                  }}
-                >
-                  <span>{item.question}</span>
-                  <ChevronDown
-                    size={18}
-                    style={{
-                      transform: isOpen ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 160ms var(--ease-out)',
-                      flexShrink: 0,
-                      color: isOpen ? 'var(--action-primary)' : 'var(--text-muted)',
-                    }}
-                  />
-                </button>
-                {isOpen && (
-                  <div
-                    style={{
-                      padding: '10px 16px 16px',
-                      borderTop: '1px solid var(--border-hairline)',
-                    }}
-                  >
-                    <p
-                      style={{
-                        margin: 0,
-                        font: 'var(--type-body-sm)',
-                        color: 'var(--text-body)',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {item.answer}
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <MotionAccordion items={postFaqItems} />
         </div>
       )}
 
@@ -551,7 +484,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', paddingTop: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-        <Button variant="primary" size="md" onClick={go('list')}>{contentGet('posts.ui.cta_match')}</Button>
+        <Button variant="primary" size="md" shimmer rollingText onClick={go('list')}>{contentGet('posts.ui.cta_match')}</Button>
         <Button variant="outline" size="md" onClick={shareFacebook}><Share2 size={16} style={{ marginRight: 6 }} />Facebook</Button>
         <Button variant="outline" size="md" onClick={shareZalo}><MessageCircle size={16} style={{ marginRight: 6 }} />Zalo</Button>
         <Button variant="outline" size="md" onClick={copyLink}><Link2 size={16} style={{ marginRight: 6 }} />{copied ? contentGet('posts.ui.copied') : contentGet('posts.ui.cta_share')}</Button>

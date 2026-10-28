@@ -147,6 +147,16 @@
     align-self: stretch !important;
     margin: 2px 0 !important;
   }
+  .plate-birth-container {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .plate-birth-inputs-wrapper {
+    max-width: none !important;
+    flex: 1 1 auto !important;
+  }
   .plate-search-bar > div:last-child {
     display: flex !important;
     width: 100% !important;

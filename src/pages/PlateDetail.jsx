@@ -1,3 +1,4 @@
+import { useFlyEffect } from '../contexts/FlyEffectContext.jsx';
 import { useEffect, useState, useMemo } from "react";
 import {
   ArrowRight,
@@ -19,6 +20,7 @@ import {
   Check,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
+import { motion } from "motion/react";
 import {
   Badge,
   IconButton,
@@ -30,6 +32,8 @@ import {
 import Modal from "../components/Modal.jsx";
 import PlateVisual from "../components/PlateVisual.jsx";
 import PlateCard from "../components/PlateCard.jsx";
+import MotionFavButton from "../components/MotionFavButton.jsx";
+import MotionCompareButton from "../components/MotionCompareButton.jsx";
 import { splitPlateNumber, formatPrice } from "../lib/plateFormat.js";
 import { VPA_EXPIRED_LABELS, formatDateTime } from "../lib/vpaFormat.js";
 import { validatePhone, normalizePhone } from "../lib/phone.js";
@@ -141,18 +145,24 @@ function LinkButton({
   style,
 }) {
   const bg = variant === "outline" ? "transparent" : "var(--action-primary)";
-  const color = variant === "outline" ? "var(--text-strong)" : "var(--white)";
+  const color =
+    variant === "outline"
+      ? "var(--text-strong)"
+      : "var(--action-primary-text, var(--ink-900))";
   const shadow =
     variant === "outline"
       ? "inset 0 0 0 1.5px var(--border-strong)"
       : "var(--shadow-blue)";
   return (
-    <a
+    <motion.a
       href={disabled ? undefined : href}
       target={target}
       rel={rel}
       onClick={disabled ? (e) => e.preventDefault() : onClick}
       aria-disabled={disabled}
+      whileHover={disabled ? undefined : { scale: 1.025, y: -1 }}
+      whileTap={disabled ? undefined : { scale: 0.975, y: 1 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
       style={{
         height: 48,
         padding: "0 20px",
@@ -174,7 +184,7 @@ function LinkButton({
       }}
     >
       {children}
-    </a>
+    </motion.a>
   );
 }
 
@@ -330,6 +340,7 @@ export default function PlateDetail({
   onUserUpdate,
   fromScreen,
 }) {
+  const { triggerFly } = useFlyEffect();
   const { data: plate, isLoading, isError } = usePlateDetail(plateId);
   const { data: similar } = useSimilarPlates(plateId, 8);
   const { data: settings } = useSiteSettings();
@@ -393,7 +404,12 @@ export default function PlateDetail({
   const [checkingCoupon, setCheckingCoupon] = useState(false);
 
   const [lightbox, setLightbox] = useState(-1);
+  const [imageError, setImageError] = useState(false);
   const images = plate?.images || [];
+
+  useEffect(() => {
+    setImageError(false);
+  }, [plate?.id, plate?.plateNumber]);
 
   useEffect(() => {
     if (lightbox < 0) return;
@@ -652,22 +668,28 @@ export default function PlateDetail({
               padding: "clamp(20px,4vw,52px)",
               display: "flex",
               justifyContent: "center",
+              boxShadow: "var(--shadow-card, 0 10px 30px -10px rgba(0,0,0,0.06))",
             }}
           >
             <div
+              className="plate-detail-preview"
               style={{
                 width: "100%",
                 maxWidth: 560,
+                margin: "0 auto",
                 background: "var(--white)",
                 borderRadius: "var(--radius-surface)",
                 padding: 24,
+                boxShadow: "0 10px 30px -10px rgba(0,0,0,0.06)",
+                boxSizing: "border-box",
               }}
             >
-              {shouldShowGeneratedImage(settings, plate.images) ? (
+              {shouldShowGeneratedImage(settings, plate.images) && !imageError ? (
                 <img
                   src={optimizeImageUrl(plate.images[0])}
                   alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(" tại ")}`}
                   onClick={() => setLightbox(0)}
+                  onError={() => setImageError(true)}
                   loading="eager"
                   fetchPriority="high"
                   style={{
@@ -731,6 +753,7 @@ export default function PlateDetail({
             </div>
           </div>
           {shouldShowGeneratedImage(settings, plate.images) &&
+            !imageError &&
             plate.images.length > 1 && (
               <div
                 style={{
@@ -1081,6 +1104,8 @@ export default function PlateDetail({
             <Button
               variant="primary"
               size="lg"
+              shimmer={!sold}
+              rollingText={!sold}
               onClick={() => {
                 if (sold) {
                   setContactOpen(true);
@@ -1133,27 +1158,53 @@ export default function PlateDetail({
                 Nhắn Zalo
               </LinkButton>
             )}
-            <IconButton
-              name="heart"
-              label="Lưu yêu thích"
-              size="lg"
-              onClick={() => {
+            <MotionFavButton
+              fav={isFav}
+              size={48}
+              iconSize={22}
+              onClick={(e) => {
+                if (!isFav) {
+                  const stageEl = document.querySelector('.plate-detail-preview') || e?.currentTarget;
+                  if (stageEl) {
+                    triggerFly({
+                      startRect: stageEl.getBoundingClientRect(),
+                      type: 'favorite',
+                      plate: { prov, seri, num, plateNumber: plate.plateNumber },
+                    });
+                  }
+                }
                 onFav?.(plate.id);
                 notify(isFav ? "Đã bỏ khỏi yêu thích" : "Đã lưu vào yêu thích");
               }}
-              style={isFav ? { color: "var(--status-danger)" } : undefined}
+              style={{
+                boxShadow: "inset 0 0 0 1.5px var(--border-strong)",
+                borderRadius: "var(--radius-sm)",
+              }}
             />
-            <IconButton
-              name={inCompare ? "check-circle" : "scale"}
-              label={inCompare ? "Bỏ khỏi so sánh" : "Thêm vào so sánh"}
-              size="lg"
-              onClick={() => {
+            <MotionCompareButton
+              inCompare={inCompare}
+              size={48}
+              iconSize={22}
+              onClick={(e) => {
+                if (!inCompare) {
+                  const stageEl = document.querySelector('.plate-detail-preview') || e?.currentTarget;
+                  if (stageEl) {
+                    triggerFly({
+                      startRect: stageEl.getBoundingClientRect(),
+                      type: 'compare',
+                      plate: { prov, seri, num, plateNumber: plate.plateNumber },
+                    });
+                  }
+                }
                 (inCompare ? removeCompare : addCompare)(plate.id);
                 notify(
                   inCompare ? "Đã bỏ khỏi so sánh" : "Đã thêm vào so sánh",
                 );
               }}
-              style={inCompare ? { color: "var(--action-primary)" } : undefined}
+              style={{
+                boxShadow: "inset 0 0 0 1.5px var(--border-strong)",
+                borderRadius: "var(--radius-sm)",
+              }}
             />
           </div>
           <div
@@ -2197,20 +2248,25 @@ export default function PlateDetail({
         <Button
           variant="primary"
           size="lg"
+          shimmer={!sold}
           onClick={() => setContactOpen(true)}
           style={{ flex: "1 1 0" }}
         >
           {sold ? "Tìm biển tương tự" : "Chốt biển này"}
         </Button>
-        <IconButton
-          name="heart"
-          label="Lưu yêu thích"
-          size="lg"
+        <MotionFavButton
+          fav={isFav}
+          size={48}
+          iconSize={22}
           onClick={() => {
             onFav?.(plate.id);
             notify(isFav ? "Đã bỏ khỏi yêu thích" : "Đã lưu vào yêu thích");
           }}
-          style={isFav ? { color: "var(--status-danger)" } : undefined}
+          style={{
+            boxShadow: "inset 0 0 0 1.5px var(--border-strong)",
+            borderRadius: "var(--radius-sm)",
+            flexShrink: 0,
+          }}
         />
       </div>
 

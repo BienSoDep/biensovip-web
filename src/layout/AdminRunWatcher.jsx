@@ -4,6 +4,7 @@ import { Loader2, X, ChevronUp, Download, Ban, FileSpreadsheet, Layers, RefreshC
 import { apiClient } from '../services/apiClient.js';
 import { useVpaOverview } from '../services/adminVpa.js';
 import { loadAuth } from '../lib/authStore.js';
+import { crawlProgressView, VPA_SOURCES } from '../lib/vpaFormat.js';
 import ExportHistoryModal from '../pages/admin/vpa/ExportHistoryModal.jsx';
 import {
   getActiveApproveRuns,
@@ -95,6 +96,7 @@ export default function AdminRunWatcher() {
     runId: s.activeRun?.id || `crawl-${s.source}`,
     kind: 'crawl',
     source: s.source,
+    progress: s.progress,
     data: s.activeRun || { source: s.source },
   }));
 
@@ -255,7 +257,7 @@ export default function AdminRunWatcher() {
 
 function RunRow({ run, onRefresh }) {
   const qc = useQueryClient();
-  const { kind, data, source, runId } = run;
+  const { kind, data, source, runId, progress } = run;
   const [cancelling, setCancelling] = useState(false);
 
   // 1. Phân loại & Tiêu đề
@@ -267,8 +269,9 @@ function RunRow({ run, onRefresh }) {
     Icon = Layers;
     iconColor = '#d97706';
   } else if (kind === 'crawl') {
-    const srcName = source || data?.source || '';
-    label = `Cào dữ liệu VPA (${srcName})`;
+    const srcId = source || data?.source || '';
+    const srcName = VPA_SOURCES.find((s) => s.id === srcId || s.key === String(srcId).toLowerCase())?.label || srcId;
+    label = `Cào: ${srcName}`;
     Icon = RefreshCw;
     iconColor = '#2563eb';
   } else if (kind === 'export') {
@@ -292,15 +295,7 @@ function RunRow({ run, onRefresh }) {
       text = isRunning ? 'Đang duyệt danh sách biển…' : (status === 'error' ? 'Không thể kết nối tiến trình' : 'Đã kết thúc');
     }
   } else if (kind === 'crawl') {
-    if (data?.slicesTotal > 0) {
-      pct = Math.min(100, Math.round(((data.slicesDone || 0) * 100) / data.slicesTotal));
-      text = `Lát cắt: ${data.slicesDone} / ${data.slicesTotal} (${pct}%) • ${Number(data.itemsSeen || 0).toLocaleString('vi-VN')} biển`;
-    } else if (data?.itemsExpected > 0) {
-      pct = Math.min(100, Math.round(((data.itemsSeen || 0) * 100) / data.itemsExpected));
-      text = `Đã quét: ${Number(data.itemsSeen || 0).toLocaleString('vi-VN')} / ${Number(data.itemsExpected).toLocaleString('vi-VN')} (${pct}%)`;
-    } else {
-      text = `Đã quét ${Number(data?.itemsSeen || 0).toLocaleString('vi-VN')} biển`;
-    }
+    ({ pct, text } = crawlProgressView(data, progress));
   } else if (kind === 'export') {
     if (run.isError) {
       pct = 0;

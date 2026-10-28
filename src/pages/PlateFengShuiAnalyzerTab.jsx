@@ -1032,7 +1032,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                     Loại xe: {vehicle}
                   </Badge>
                   {analyzedData.provinceCode && (
-                    <Badge tone="blue">
+                    <Badge tone="amber">
                       Mã tỉnh/thành: {analyzedData.provinceCode}
                     </Badge>
                   )}
@@ -1251,7 +1251,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'var(--fw-medium)' }}>2. Quẻ Kinh Dịch Mai Hoa</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                     <strong style={{ fontSize: '18px', color: 'var(--text-strong)' }}>Quẻ {analyzedData.queDich.queName}</strong>
-                    <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: 'var(--radius-xs)', background: analyzedData.queDich.tone === 'dai-cat' ? '#dcfce7' : analyzedData.queDich.tone === 'cat' ? '#e0f2fe' : '#fef3c7', color: analyzedData.queDich.tone === 'dai-cat' ? '#15803d' : analyzedData.queDich.tone === 'cat' ? '#0369a1' : '#b45309', fontWeight: 'var(--fw-bold)' }}>
+                    <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: 'var(--radius-xs)', background: analyzedData.queDich.tone === 'dai-cat' ? '#dcfce7' : analyzedData.queDich.tone === 'cat' ? '#fff7ed' : '#fef3c7', color: analyzedData.queDich.tone === 'dai-cat' ? '#15803d' : analyzedData.queDich.tone === 'cat' ? '#c2410c' : '#b45309', fontWeight: 'var(--fw-bold)' }}>
                       {analyzedData.queDich.tone === 'dai-cat' ? 'Đại Cát' : analyzedData.queDich.tone === 'cat' ? 'Cát Hanh' : 'Bình Hòa'}
                     </span>
                   </div>
@@ -1385,7 +1385,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                     1. Ngũ hành Tiên Thiên Hà Đồ
                   </strong>
                 </div>
-                <Badge tone="blue">
+                <Badge tone="amber">
                   Số đuôi hành {analyzedData.lastElement}
                 </Badge>
               </div>
@@ -1660,7 +1660,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                     style={{
                       height: '100%',
                       width: `${(analyzedData.amDuongInfo.am / analyzedData.digits.length) * 100}%`,
-                      background: 'var(--blue-500, #3b82f6)',
+                      background: 'var(--surface-inverse, #1E293B)',
                     }}
                     title="Phần Âm (Chẵn)"
                   />

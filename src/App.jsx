@@ -1,3 +1,4 @@
+import { FlyEffectProvider } from './contexts/FlyEffectContext.jsx';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { validatePhone } from './lib/phone.js';
@@ -17,6 +18,7 @@ import Breadcrumb from './components/Breadcrumb.jsx';
 import CompareBar from './components/CompareBar.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import RequireAuth from './components/RequireAuth.jsx';
+import CommandPalette from './components/CommandPalette.jsx';
 import Header from './layout/Header.jsx';
 import Footer from './layout/Footer.jsx';
 import MobileDrawer from './layout/MobileDrawer.jsx';
@@ -32,6 +34,7 @@ import { useNotificationRealtime } from './services/notificationRealtime.js';
 import { usePathRouter } from './hooks/usePathRouter.js';
 import { useScrollDepthTracking } from './hooks/useScrollDepthTracking.js';
 import { useRageClickDetection } from './hooks/useRageClickDetection.js';
+import { useLenisSmoothScroll } from './hooks/useLenisSmoothScroll.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 import { usePublicMaintenance } from './services/maintenanceService.js';
@@ -221,6 +224,7 @@ export default function App() {
   usePathRouter(st, patch);
   useScrollDepthTracking(st.screen);
   useRageClickDetection();
+  useLenisSmoothScroll({ enabled: !st.isAdmin });
 
   const routeKey = getRouteKey(st);
   const prevRouteKeyRef = useRef(routeKey);
@@ -707,6 +711,9 @@ export default function App() {
         onBuy: () => openBuy(p.id),
       }));
 
+  // Đếm tức thì số lượng yêu thích thực tế từ state/localStorage (không bị trễ bởi network async)
+  const totalFavCount = Object.keys(st.favs || {}).length;
+
   const adminMeta = {
     dash: ['Tổng quan', 'Chào buổi sáng, đây là tình hình hôm nay.'],
     aguide: ['Hướng dẫn sử dụng', 'Các tính năng theo vai trò của bạn'],
@@ -756,15 +763,16 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
+      <FlyEffectProvider>
+        <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
         <Toaster position="top-right" toastOptions={{ role: 'alert', style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
         <main>
 
         <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative' }}>
 
-          {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost} />}
+          {isPublic && <Header s={s} go={go} favCount={totalFavCount} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost}  />}
 
-          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={favCards.length} compareCount={compareIds.length} patch={patch} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
+          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={totalFavCount} compareCount={compareIds.length} patch={patch} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
           {/* detail/post/provinceLanding/plateTypeLanding tự render breadcrumb riêng bên trong (cần dữ
               liệu tỉnh/category đã fetch — không có sẵn ở tầng App) — bỏ qua ở đây tránh render 2 lần. */}
@@ -886,9 +894,19 @@ export default function App() {
 
           {isPublic && st.screen !== 'compare' && <CompareBar go={go} />}
 
+          {isPublic && (
+            <CommandPalette
+              open={!!st.searchPaletteOpen}
+              onClose={() => patch({ searchPaletteOpen: false })}
+              go={go}
+              openPlate={openPlate}
+            />
+          )}
+
         </div>
         </main>
       </div>
+      </FlyEffectProvider>
     </ErrorBoundary>
   );
 }

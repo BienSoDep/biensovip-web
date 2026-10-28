@@ -51,9 +51,9 @@ const PROJECT_HIGHLIGHTS = [
   {
     id: 'phap-ly',
     badge: 'Pháp Lý Chuẩn 100%',
-    badgeColor: '#10B981',
-    badgeBg: 'rgba(16, 185, 129, 0.12)',
-    badgeBorder: 'rgba(16, 185, 129, 0.3)',
+    badgeColor: '#D97706',
+    badgeBg: 'rgba(241, 151, 32, 0.12)',
+    badgeBorder: 'rgba(241, 151, 32, 0.3)',
     icon: ShieldCheck,
     title: 'Bảo chứng pháp lý 100% – Sang tên chính chủ chỉ 1–2 ngày',
     desc: 'Duy Đinh hỗ trợ trọn gói thủ tục sang tên, thu hồi & cấp biển định danh theo Thông tư BCA. Hồ sơ gốc rõ ràng, cam kết pháp lý trọn đời.',
@@ -66,9 +66,9 @@ const PROJECT_HIGHLIGHTS = [
   {
     id: 'phong-thuy',
     badge: 'Phong Thủy Trợ Mệnh',
-    badgeColor: '#A855F7',
-    badgeBg: 'rgba(168, 85, 247, 0.12)',
-    badgeBorder: 'rgba(168, 85, 247, 0.3)',
+    badgeColor: '#D97706',
+    badgeBg: 'rgba(241, 151, 32, 0.12)',
+    badgeBorder: 'rgba(241, 151, 32, 0.3)',
     icon: Sparkles,
     title: 'Tra cứu phong thủy AI – Rước vượng khí tài lộc về xe',
     desc: 'Công cụ tính nút, quẻ Kinh Dịch và Ngũ hành bản mệnh tương sinh độc quyền giúp quý khách chọn đúng tấm biển trợ vận hanh thông, vạn dặm bình an.',
@@ -81,9 +81,9 @@ const PROJECT_HIGHLIGHTS = [
   {
     id: 'uy-tin',
     badge: 'Thương Hiệu Từ 2016',
-    badgeColor: '#38BDF8',
-    badgeBg: 'rgba(56, 189, 248, 0.12)',
-    badgeBorder: 'rgba(56, 189, 248, 0.3)',
+    badgeColor: '#D97706',
+    badgeBg: 'rgba(241, 151, 32, 0.12)',
+    badgeBorder: 'rgba(241, 151, 32, 0.3)',
     icon: Award,
     title: 'Hơn 10 năm kinh nghiệm – 5.000+ biển số trao tay',
     desc: 'Hỗ trợ giao dịch và hoàn tất thủ tục định danh trọn gói toàn quốc. Giá cả niêm yết công khai, không chi phí ẩn, đồng hành cùng khách hàng suốt quá trình sử dụng.',
@@ -99,9 +99,9 @@ const REGISTER_BENEFIT_SLIDES = [
   {
     id: 'favs',
     badge: 'Lưu & So Sánh Giá',
-    badgeColor: '#FB7185',
-    badgeBg: 'rgba(251, 113, 133, 0.12)',
-    badgeBorder: 'rgba(251, 113, 133, 0.3)',
+    badgeColor: '#D97706',
+    badgeBg: 'rgba(241, 151, 32, 0.12)',
+    badgeBorder: 'rgba(241, 151, 32, 0.3)',
     icon: Heart,
     title: 'Lưu biển số yêu thích & Theo dõi biến động giá',
     desc: 'Lưu trữ không giới hạn các tấm biển bạn đang quan tâm, so sánh giá trực quan và xem lại lịch sử đấu giá bất cứ lúc nào.',
@@ -129,9 +129,9 @@ const REGISTER_BENEFIT_SLIDES = [
   {
     id: 'ctv',
     badge: 'Mạng Lưới CTV VIP',
-    badgeColor: '#10B981',
-    badgeBg: 'rgba(16, 185, 129, 0.12)',
-    badgeBorder: 'rgba(16, 185, 129, 0.3)',
+    badgeColor: '#D97706',
+    badgeBg: 'rgba(241, 151, 32, 0.12)',
+    badgeBorder: 'rgba(241, 151, 32, 0.3)',
     icon: Star,
     title: 'Tham gia mạng lưới CTV – Hoa hồng hấp dẫn',
     desc: 'Nhận mã giới thiệu riêng, tiếp cận kho biển đẹp toàn quốc và nhận hoa hồng giao dịch minh bạch, chi trả nhanh gọn trong 24 giờ.',
@@ -1034,8 +1034,8 @@ const FALLBACK_PLATES = [
                   transition={CONTENT_FADE}
                   style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
                 >
-                  {s === 'forgot' && <Eyebrow tone="blue">{`Bước ${st.step}/3 · Khôi phục quyền truy cập`}</Eyebrow>}
-                  {otpMode && <Eyebrow tone="blue">{`Đăng nhập bằng OTP · Bước ${st.step}/2`}</Eyebrow>}
+                  {s === 'forgot' && <Eyebrow tone="brand">{`Bước ${st.step}/3 · Khôi phục quyền truy cập`}</Eyebrow>}
+                  {otpMode && <Eyebrow tone="brand">{`Đăng nhập bằng OTP · Bước ${st.step}/2`}</Eyebrow>}
 
                   <div>
                     <h1
@@ -1506,7 +1506,7 @@ const FALLBACK_PLATES = [
                     </div>
                     <span style={{ color: 'var(--border-hairline)' }}>•</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-faint)', fontSize: '11px' }}>
-                      <Sparkles size={13} style={{ color: '#3B82F6' }} />
+                      <Sparkles size={13} style={{ color: 'var(--brand-500, #F19720)' }} />
                       <span>Hỗ trợ 24/7</span>
                     </div>
                   </div>

@@ -1,22 +1,24 @@
 /* ==========================================================================
-   BIENSOVIP LUXURY LIGHT FOOTER STYLES
-   Chân trang cao cấp: Tông Light Luxury thanh lịch, hài hòa với màu nền web,
-   dải nhấn vàng cam thương hiệu Duy Đinh, các thẻ kênh tương tác cao & trợ năng chuẩn WCAG.
+   MOTION.DEV / LUXURY FOOTER STYLES (motion.dev/ui/footers)
+   Chân trang hệ thống chuẩn Motion UI:
+   - Hero Newsletter Banner với form đa trạng thái (idle, loading, success)
+   - Khối kênh liên hệ tương tác cao (Hotline, Zalo, Showroom, FB, Email, Giờ mở cửa)
+   - Khối Sitemap đa cột với hiệu ứng trượt mượt mà (staggered in-view & spring hover)
+   - Chân đáy với trạng thái vận hành trực tiếp và nút Motion Back-To-Top
    ========================================================================== */
 
-.vip-footer {
+.vip-footer.motion-footer {
   position: relative;
-  background: radial-gradient(circle at 85% 0%, rgba(241, 151, 32, 0.05) 0%, transparent 55%),
-              radial-gradient(circle at 10% 25%, rgba(37, 99, 235, 0.03) 0%, transparent 45%),
+  background: radial-gradient(circle at 85% 0%, rgba(241, 151, 32, 0.06) 0%, transparent 55%),
+              radial-gradient(circle at 10% 25%, rgba(241, 151, 32, 0.04) 0%, transparent 45%),
               #F8FAFC;
   color: #1E293B;
   border-top: 1px solid #E2E8F0;
   overflow: hidden;
 }
 
-/* Dải viền sáng trên cùng mang màu nhận diện vàng cam Duy Đinh */
-.vip-footer::before {
-  content: '';
+/* Dải viền sáng trên cùng mang màu nhận diện vàng cam thương hiệu Duy Đinh */
+.motion-footer-glow-line {
   position: absolute;
   top: 0;
   left: 0;
@@ -30,20 +32,391 @@
     rgba(245, 158, 11, 0.7) 75%,
     transparent 100%
   );
-  z-index: 1;
+  z-index: 2;
 }
 
 .vip-footer-inner {
   max-width: var(--width-content, 1216px);
   margin: 0 auto;
-  padding: clamp(32px, 5vw, 56px) var(--pad-page, 24px) 28px;
+  padding: clamp(36px, 5vw, 60px) var(--pad-page, 24px) 32px;
   display: flex;
   flex-direction: column;
   gap: clamp(28px, 4vw, 44px);
 }
 
 /* ==========================================================================
-   1. KHỐI THẺ KÊNH LIÊN HỆ NHANH (QUICK CONTACT CARDS BAR)
+   1. VIP CONCIERGE NEWSLETTER BANNER (Crafted with taste-skill)
+   Warm porcelain ivory surface with champagne gold chamfer & bespoke typography
+   ========================================================================== */
+
+.motion-footer-hero-banner {
+  position: relative;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FDFBF8 50%, #FFF8EE 100%);
+  border-radius: 20px;
+  padding: clamp(28px, 4.5vw, 42px);
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  gap: clamp(28px, 4vw, 56px);
+  border: 1px solid rgba(241, 151, 32, 0.28);
+  box-shadow: 0 20px 48px -12px rgba(241, 151, 32, 0.12),
+              0 4px 20px -4px rgba(15, 23, 42, 0.04),
+              inset 0 1px 0 rgba(255, 255, 255, 1);
+  overflow: hidden;
+}
+
+/* Luxury corner ambient illumination */
+.motion-footer-hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(241, 151, 32, 0.14) 0%, rgba(241, 151, 32, 0.03) 45%, transparent 70%);
+  pointer-events: none;
+  filter: blur(32px);
+}
+
+.motion-footer-hero-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(241, 151, 32, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(24px);
+}
+
+/* Background watermark plate frame (Dấu ấn độc bản) */
+.motion-footer-hero-watermark {
+  position: absolute;
+  right: -20px;
+  bottom: -16px;
+  pointer-events: none;
+  opacity: 0.045;
+  user-select: none;
+  transform: rotate(-6deg);
+}
+
+.watermark-plate-frame {
+  width: 240px;
+  height: 120px;
+  border: 5px solid #0F172A;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justifyContent: center;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1;
+}
+
+.watermark-prov {
+  font-size: 28px;
+  letter-spacing: 2px;
+}
+
+.watermark-num {
+  font-size: 46px;
+  letter-spacing: 3px;
+}
+
+/* Content Area */
+.motion-footer-hero-content {
+  flex: 1 1 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.motion-footer-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(241, 151, 32, 0.10);
+  border: 1px solid rgba(241, 151, 32, 0.28);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #B45309;
+  width: fit-content;
+}
+
+.badge-sparkle-icon {
+  color: #D97706;
+}
+
+.motion-footer-hero-title {
+  margin: 0;
+  font-size: clamp(22px, 2.5vw, 29px);
+  font-weight: 800;
+  line-height: 1.25;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+.hero-title-highlight {
+  color: #EA580C;
+  background: linear-gradient(135deg, #D97706 0%, #EA580C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.motion-footer-hero-sub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #475569;
+  max-width: 520px;
+}
+
+/* 3 Value Pillars */
+.motion-footer-hero-perks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 2px;
+}
+
+.hero-perk-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.hero-perk-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16A34A;
+  box-shadow: 0 0 6px rgba(22, 163, 74, 0.4);
+}
+
+/* Action Area */
+.motion-footer-hero-action {
+  flex: 0 1 430px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Form Container */
+.motion-footer-newsletter-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.motion-footer-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  padding: 5px 6px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.motion-footer-newsletter-form:focus-within {
+  border-color: #F19720;
+  box-shadow: 0 0 0 3px rgba(241, 151, 32, 0.16), 0 4px 14px rgba(241, 151, 32, 0.08);
+}
+
+.motion-footer-newsletter-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  padding-left: 10px;
+  min-width: 0;
+}
+
+.motion-footer-newsletter-input-icon {
+  color: #94A3B8;
+  flex-shrink: 0;
+}
+
+.motion-footer-newsletter-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #0F172A;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+}
+
+.motion-footer-newsletter-input::placeholder {
+  color: #94A3B8;
+}
+
+.motion-footer-newsletter-submit-btn {
+  background: linear-gradient(135deg, #F19720 0%, #EA580C 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 12px rgba(241, 151, 32, 0.35);
+  font-family: inherit;
+  transition: filter 0.18s ease;
+}
+
+.motion-footer-newsletter-submit-btn:hover {
+  filter: brightness(1.05);
+}
+
+.motion-footer-newsletter-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.motion-footer-spin {
+  animation: motion-spin 1s linear infinite;
+}
+
+@keyframes motion-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Success Card */
+.motion-footer-newsletter-success {
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 14px;
+}
+
+.motion-footer-newsletter-success-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #16A34A;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  flex-shrink: 0;
+}
+
+.motion-footer-newsletter-success-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  flex: 1;
+}
+
+.motion-footer-newsletter-success-text strong {
+  font-size: 13.5px;
+  color: #15803D;
+  font-weight: 700;
+}
+
+.motion-footer-newsletter-success-text span {
+  color: #166534;
+}
+
+.motion-footer-newsletter-reset-btn {
+  background: transparent;
+  border: 1px solid #86EFAC;
+  color: #15803D;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.motion-footer-newsletter-reset-btn:hover {
+  background: rgba(134, 239, 172, 0.2);
+}
+
+.motion-footer-newsletter-error {
+  font-size: 12px;
+  font-weight: 500;
+  color: #DC2626;
+  padding-left: 6px;
+}
+
+/* Social Proof Micro-strip */
+.motion-footer-social-proof {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 4px;
+}
+
+.proof-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.proof-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #FFFFFF;
+  margin-left: -6px;
+  display: flex;
+  align-items: center;
+  justifyContent: center;
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 800;
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.proof-avatar:first-child {
+  margin-left: 0;
+}
+
+.proof-text {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.proof-text strong {
+  color: #0F172A;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   2. KHỐI THẺ KÊNH LIÊN HỆ TƯƠNG TÁC CAO (QUICK CONTACT CARDS BAR)
    ========================================================================== */
 
 .vip-contact-bar {
@@ -61,6 +434,11 @@
 }
 
 .vip-contact-card {
+  --card-glow: rgba(241, 151, 32, 0.16);
+  --card-border: #F19720;
+  --icon-bg: #FFF7ED;
+  --icon-color: #EA580C;
+  --label-color: #D97706;
   position: relative;
   display: flex;
   align-items: center;
@@ -71,9 +449,9 @@
   border: 1px solid #E2E8F0;
   text-decoration: none;
   color: inherit;
-  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .vip-contact-card::before {
@@ -89,7 +467,6 @@
 .vip-contact-card:hover {
   background: #FFFFFF;
   border-color: var(--card-border, #F19720);
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 0 14px -2px var(--card-glow, rgba(241, 151, 32, 0.15));
 }
 
@@ -174,7 +551,7 @@
 }
 
 /* ==========================================================================
-   2. KHỐI THÂN CHÂN TRANG (BRAND & SITEMAP COLUMNS)
+   3. KHỐI THÂN CHÂN TRANG (BRAND & SITEMAP COLUMNS)
    ========================================================================== */
 
 .vip-footer-main {
@@ -184,7 +561,8 @@
 }
 
 .vip-footer-brand-col {
-  flex: 1 1 320px;
+  flex: 1 1 280px;
+  max-width: 330px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -197,10 +575,10 @@
 }
 
 .vip-footer-logo {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(241, 151, 32, 0.25));
+  filter: drop-shadow(0 2px 8px rgba(241, 151, 32, 0.28));
 }
 
 .vip-footer-brand-name {
@@ -227,15 +605,15 @@
   padding: 12px 14px;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 10px;
+  border-radius: 12px;
   max-width: 360px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .vip-footer-badge-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 12px;
   font-weight: 600;
   color: #334155;
@@ -246,64 +624,12 @@
   flex-shrink: 0;
 }
 
-/* Khối Newsletter trong footer */
-.vip-footer-newsletter {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 360px;
-}
-
-.vip-footer-newsletter-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #1E293B;
-}
-
-/* Đảm bảo ô input newsletter ăn nhập hoàn hảo với light theme */
-.vip-footer .vip-footer-newsletter input {
-  background: #FFFFFF !important;
-  border: 1px solid #CBD5E1 !important;
-  color: #0F172A !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
-  border-radius: 8px !important;
-}
-
-.vip-footer .vip-footer-newsletter input::placeholder {
-  color: #94A3B8 !important;
-}
-
-.vip-footer .vip-footer-newsletter input:focus {
-  border-color: #F19720 !important;
-  box-shadow: 0 0 0 3px rgba(241, 151, 32, 0.15) !important;
-}
-
-.vip-footer .vip-footer-newsletter button {
-  background: #F19720 !important;
-  color: #FFFFFF !important;
-  font-weight: 700 !important;
-  border: none !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(241, 151, 32, 0.25) !important;
-  transition: all 0.2s ease !important;
-}
-
-.vip-footer .vip-footer-newsletter button:hover {
-  background: #EA580C !important;
-  transform: translateY(-1px);
-}
-
-/* ==========================================================================
-   3. CÁC CỘT LIÊN KẾT ĐIỀU HƯỚNG (SITEMAP COLUMNS)
-   ========================================================================== */
-
+/* CÁC CỘT LIÊN KẾT ĐIỀU HƯỚNG */
 .vip-footer-columns {
-  flex: 2 1 600px;
+  flex: 3 1 720px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: clamp(20px, 3vw, 36px);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: clamp(16px, 2.5vw, 32px);
 }
 
 .vip-footer-section {
@@ -352,13 +678,42 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
   line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+
+.vip-footer-link span {
+  white-space: nowrap;
 }
 
 .vip-footer-link:hover {
   color: #D97706;
-  transform: translateX(4px);
+}
+
+.vip-footer-link-chevron {
+  opacity: 0.45;
+  flex-shrink: 0;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.vip-footer-link:hover .vip-footer-link-chevron {
+  opacity: 0.9;
+  transform: translateX(2px);
+}
+
+.vip-footer-link-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  margin-left: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .vip-footer-link.highlight {
@@ -401,7 +756,7 @@
 .vip-footer-trust-tags {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -413,6 +768,8 @@
   padding: 4px 10px;
   border-radius: 6px;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
 }
 
 .vip-back-to-top {
@@ -427,15 +784,14 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-family: inherit;
 }
 
 .vip-back-to-top:hover {
   background: #FFF7ED;
   border-color: #F19720;
   color: #C2410C;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(241, 151, 32, 0.18);
 }
 
@@ -446,6 +802,15 @@
 @media (max-width: 1024px) {
   .vip-contact-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .motion-footer-hero-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .motion-footer-hero-action {
+    flex: 1 1 100%;
   }
 }
 
@@ -469,6 +834,28 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 14px;
+  }
+
+  .motion-footer-newsletter-form {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .motion-footer-newsletter-input-wrap {
+    padding: 6px 8px;
+    min-height: 42px;
+  }
+
+  .motion-footer-newsletter-input {
+    font-size: 14px;
+  }
+
+  .motion-footer-newsletter-submit-btn {
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 13.5px;
   }
 }
 

@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Search } from 'lucide-react';
 import LazyImage from '../components/LazyImage.jsx';
 import Button from '../components/Button.jsx';
+import SpotlightCard from '../components/SpotlightCard.jsx';
 import Pagination from '../components/Pagination.jsx';
 import { PageHeader } from '../components/index.jsx';
 import PostCardSkeleton from '../components/skeletons/PostCardSkeleton.jsx';
@@ -105,7 +106,7 @@ export default function Blog({ patch }) {
             {categories.map((c) => (
               <button key={c || 'all'} type="button" onClick={() => { setCategory(c); setPage(1); }}
                 style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', flexShrink: 0,
-                  background: category === c ? 'var(--action-primary)' : 'var(--white)', color: category === c ? 'var(--white)' : 'var(--text-muted)', boxShadow: 'var(--shadow-inset-hairline)' }}>
+                  background: category === c ? 'var(--action-primary)' : 'var(--white)', color: category === c ? 'var(--action-primary-text, var(--ink-900))' : 'var(--text-muted)', boxShadow: 'var(--shadow-inset-hairline)' }}>
                 {c ? CATEGORY_LABEL[c] : 'Tất cả'}
               </button>
             ))}
@@ -138,7 +139,29 @@ export default function Blog({ patch }) {
             <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{items.length} bài viết</span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
               {items.map((p, i) => (
-                <article key={p.id} itemScope itemType="https://schema.org/Article" className="pressable" style={{ cursor: 'pointer', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'var(--transition-card)', ...stagger(i) }}>
+                <SpotlightCard
+                  key={p.id}
+                  as="article"
+                  itemScope
+                  itemType="https://schema.org/Article"
+                  className="pressable"
+                  size={360}
+                  spotlightColor="rgba(241, 151, 32, 0.14)"
+                  borderColor="rgba(241, 151, 32, 0.28)"
+                  tilt={true}
+                  maxTilt={3.5}
+                  style={{
+                    cursor: 'pointer',
+                    background: 'var(--white)',
+                    boxShadow: 'var(--shadow-inset-hairline)',
+                    borderRadius: 'var(--radius-card)',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'var(--transition-card)',
+                    ...stagger(i),
+                  }}
+                >
                   <a href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); saveStateBeforeLeave(); patch({ screen: 'post', postId: p.slug }); }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
                     <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 170, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={170} />
                     <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', flex: 1 }}>
@@ -150,7 +173,7 @@ export default function Blog({ patch }) {
                       <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }} itemProp="description">{p.excerpt}</p>
                     </div>
                   </a>
-                </article>
+                </SpotlightCard>
               ))}
             </div>
             {!isFiltering && totalPages > 1 && (

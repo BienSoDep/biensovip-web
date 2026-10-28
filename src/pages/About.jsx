@@ -21,6 +21,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import SpotlightCard from '../components/SpotlightCard.jsx';
+import MotionAccordion from '../components/MotionAccordion.jsx';
 import LazyImage from '../components/LazyImage.jsx';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
@@ -36,7 +38,6 @@ import {
 export default function About({ go }) {
   const { data: videosData } = useFeaturedPromoVideos(6);
   const videos = videosData?.items || [];
-  const [openFaq, setOpenFaq] = useState(null);
 
   return (
     <div className="about-page-wrap">
@@ -69,6 +70,8 @@ export default function About({ go }) {
               <Button
                 variant="primary"
                 size="md"
+                shimmer
+                rollingText
                 onClick={() => window.open('https://zalo.me/0815792699', '_blank')}
               >
                 <MessageCircle size={18} style={{ marginRight: 6 }} />
@@ -104,11 +107,19 @@ export default function About({ go }) {
       {/* 2. Stats Grid: Proof of Scale */}
       <section className="about-stats-grid">
         {stats.map((s, i) => (
-          <div key={i} className="about-stat-card">
+          <SpotlightCard
+            key={i}
+            className="about-stat-card"
+            size={280}
+            spotlightColor="rgba(241, 151, 32, 0.14)"
+            borderColor="rgba(241, 151, 32, 0.28)"
+            tilt={true}
+            maxTilt={3.5}
+          >
             <span className="about-stat-number">{s.num}</span>
             <span className="about-stat-label">{s.label}</span>
             <span className="about-stat-sub">{s.sub}</span>
-          </div>
+          </SpotlightCard>
         ))}
       </section>
 
@@ -163,14 +174,22 @@ export default function About({ go }) {
 
         <div className="about-timeline-grid">
           {timeline.map((item, idx) => (
-            <div key={idx} className="about-timeline-card">
+            <SpotlightCard
+              key={idx}
+              className="about-timeline-card"
+              size={320}
+              spotlightColor="rgba(241, 151, 32, 0.12)"
+              borderColor="rgba(241, 151, 32, 0.24)"
+              tilt={true}
+              maxTilt={3}
+            >
               <div className="about-timeline-year">
                 <Calendar size={18} />
                 <span>{item.year}</span>
               </div>
               <h3 className="about-timeline-card-title">{item.title}</h3>
               <p className="about-timeline-card-desc">{item.desc}</p>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
       </section>
@@ -187,11 +206,19 @@ export default function About({ go }) {
 
         <div className="about-values-grid">
           {values.map((v, i) => (
-            <div key={i} className="about-value-card">
+            <SpotlightCard
+              key={i}
+              className="about-value-card"
+              size={320}
+              spotlightColor="rgba(241, 151, 32, 0.14)"
+              borderColor="rgba(241, 151, 32, 0.28)"
+              tilt={true}
+              maxTilt={3.5}
+            >
               <div className="about-value-icon">{v.icon}</div>
               <h3 className="about-value-title">{v.title}</h3>
               <p className="about-value-desc">{v.desc}</p>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
       </section>
@@ -207,7 +234,14 @@ export default function About({ go }) {
         </div>
 
         <div className="about-guarantee-grid">
-          <div className="about-guarantee-card">
+          <SpotlightCard
+            className="about-guarantee-card"
+            size={360}
+            spotlightColor="rgba(241, 151, 32, 0.15)"
+            borderColor="rgba(241, 151, 32, 0.28)"
+            tilt={true}
+            maxTilt={3}
+          >
             <div className="about-guarantee-header">
               <div className="about-guarantee-icon-box">
                 <FileText size={22} />
@@ -220,9 +254,16 @@ export default function About({ go }) {
             <p className="about-guarantee-desc">
               100% biển số chuyển nhượng đều có hồ sơ gốc minh bạch, kiểm tra lịch sử đăng kiểm, rà soát phạt nguội trực tiếp trên cổng dữ liệu Bộ Công an trước khi tiến hành thủ tục thu hồi và cấp biển định danh.
             </p>
-          </div>
+          </SpotlightCard>
 
-          <div className="about-guarantee-card">
+          <SpotlightCard
+            className="about-guarantee-card"
+            size={360}
+            spotlightColor="rgba(241, 151, 32, 0.15)"
+            borderColor="rgba(241, 151, 32, 0.28)"
+            tilt={true}
+            maxTilt={3}
+          >
             <div className="about-guarantee-header">
               <div className="about-guarantee-icon-box">
                 <ShieldCheck size={22} />
@@ -235,9 +276,16 @@ export default function About({ go }) {
             <p className="about-guarantee-desc">
               Hợp đồng giao dịch có biên nhận rõ ràng. Nếu xảy ra bất kỳ vướng mắc nào về mặt pháp lý hoặc không thể sang tên định danh chính chủ do lỗi hồ sơ, Duy Đinh cam kết hoàn trả 100% tiền cọc ngay lập tức mà không giữ lại bất kỳ chi phí nào.
             </p>
-          </div>
+          </SpotlightCard>
 
-          <div className="about-guarantee-card">
+          <SpotlightCard
+            className="about-guarantee-card"
+            size={360}
+            spotlightColor="rgba(241, 151, 32, 0.15)"
+            borderColor="rgba(241, 151, 32, 0.28)"
+            tilt={true}
+            maxTilt={3}
+          >
             <div className="about-guarantee-header">
               <div className="about-guarantee-icon-box">
                 <Award size={22} />
@@ -250,7 +298,7 @@ export default function About({ go }) {
             <p className="about-guarantee-desc">
               Sau khi nhận biển, quý khách tiếp tục được hỗ trợ trọn đời: hỗ trợ thủ tục thu hồi để giữ số định danh khi bán xe cũ, đăng ký gán lại vào xe mới trong tương lai và bảo dưỡng khung biển ép chống nước cao cấp.
             </p>
-          </div>
+          </SpotlightCard>
         </div>
       </section>
 
@@ -364,11 +412,19 @@ export default function About({ go }) {
 
         <div className="about-process-grid">
           {steps.map((s, i) => (
-            <div key={i} className="about-process-card">
+            <SpotlightCard
+              key={i}
+              className="about-process-card"
+              size={300}
+              spotlightColor="rgba(241, 151, 32, 0.14)"
+              borderColor="rgba(241, 151, 32, 0.26)"
+              tilt={true}
+              maxTilt={3.5}
+            >
               <span className="about-process-num">{s.step}</span>
               <h3 className="about-process-title">{s.title}</h3>
               <p className="about-process-desc">{s.desc}</p>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
       </section>
@@ -385,7 +441,15 @@ export default function About({ go }) {
 
         <div className="about-testi-grid">
           {testimonials.map((t, idx) => (
-            <div key={idx} className="about-testi-card">
+            <SpotlightCard
+              key={idx}
+              className="about-testi-card"
+              size={340}
+              spotlightColor="rgba(241, 151, 32, 0.12)"
+              borderColor="rgba(241, 151, 32, 0.22)"
+              tilt={true}
+              maxTilt={2.5}
+            >
               <p className="about-testi-quote">“{t.quote}”</p>
               <div className="about-testi-author">
                 <div className="about-testi-meta">
@@ -393,7 +457,7 @@ export default function About({ go }) {
                   <span className="about-testi-plate">{t.plate}</span>
                 </div>
               </div>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
       </section>
@@ -408,63 +472,7 @@ export default function About({ go }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {faqs.map((f, i) => {
-            const isOpen = openFaq === i;
-            return (
-              <div
-                key={i}
-                style={{
-                  background: 'var(--surface-card)',
-                  border: '1px solid var(--border-hairline)',
-                  borderRadius: 'var(--radius-card)',
-                  overflow: 'hidden',
-                  transition: 'border-color 0.15s ease',
-                  boxShadow: 'var(--shadow-1)',
-                }}
-              >
-                <button
-                  type="button"
-                  className="faq-accordion-btn"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpenFaq(isOpen ? null : i)}
-                  style={{
-                    width: '100%',
-                    padding: '16px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    font: 'var(--type-title-3)',
-                    color: 'var(--text-strong)',
-                    fontWeight: '700',
-                    outline: 'none',
-                  }}
-                >
-                  <span>{f.q}</span>
-                  <ChevronDown
-                    size={20}
-                    style={{
-                      flexShrink: 0,
-                      color: 'var(--brand-600)',
-                      transition: 'transform 0.2s ease',
-                      transform: isOpen ? 'rotate(180deg)' : 'none',
-                    }}
-                  />
-                </button>
-                {isOpen && (
-                  <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border-hairline)', font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 1.75 }}>
-                    {f.a}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <MotionAccordion items={faqs} />
       </section>
 
       {/* 11. Showroom Đà Nẵng & Multi-channel Contact Hub */}
@@ -518,7 +526,14 @@ export default function About({ go }) {
           </div>
         </div>
 
-        <div className="about-showroom-cta-card">
+        <SpotlightCard
+          className="about-showroom-cta-card"
+          size={420}
+          spotlightColor="rgba(241, 151, 32, 0.16)"
+          borderColor="rgba(241, 151, 32, 0.32)"
+          tilt={true}
+          maxTilt={3}
+        >
           <div className="about-showroom-cta-avatar">
             <Compass size={32} />
           </div>
@@ -534,6 +549,8 @@ export default function About({ go }) {
             <Button
               variant="primary"
               size="md"
+              shimmer
+              rollingText
               style={{ width: '100%' }}
               onClick={() => window.open('https://zalo.me/0815792699', '_blank')}
             >
@@ -548,7 +565,7 @@ export default function About({ go }) {
               Tra cứu biển hợp mệnh online
             </Button>
           </div>
-        </div>
+        </SpotlightCard>
       </section>
 
       {/* 12. SEO Topic Cluster & Internal Links Hub */}

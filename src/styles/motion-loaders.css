@@ -1,0 +1,230 @@
+/* ==========================================================================
+   MOTION.DEV / LUXURY LOADERS & SKELETONS (motion.dev/ui/loaders)
+   Hiệu ứng tải dữ liệu chuẩn Motion UI cho cả Admin & Public:
+   - Staggered Wave Bars (4-5 thanh sóng nhịp nhàng)
+   - Concentric Orbit Rings (vòng xoay quỹ đạo đồng tâm)
+   - Radar Pulse (vòng sóng lan tỏa)
+   - Indeterminate Progress Beam (thanh trượt tiến độ gradient)
+   - Luxury Table & Card Skeletons với dải sáng ánh vàng hổ phách
+   ========================================================================== */
+
+/* 1. Thanh trượt tiến độ indeterminate trên đầu bảng / trang */
+.motion-loader-line-track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: rgba(241, 151, 32, 0.12);
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.motion-loader-line-beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(241, 151, 32, 0.5) 25%,
+    var(--action-primary, #F19720) 50%,
+    rgba(245, 158, 11, 0.9) 75%,
+    transparent 100%
+  );
+  border-radius: 999px;
+  filter: drop-shadow(0 0 6px rgba(241, 151, 32, 0.55));
+}
+
+/* 2. Khối bọc Motion Loader đa năng */
+.motion-loader-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-strong);
+  user-select: none;
+}
+
+.motion-loader-wrap--center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 32px 16px;
+  gap: 14px;
+}
+
+.motion-loader-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 3. Variant: Staggered Wave Bars */
+.motion-loader-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+}
+
+.motion-loader-bar {
+  width: 4px;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #F19720 0%, #EA580C 100%);
+  transform-origin: center;
+}
+
+/* Kích thước của Bars */
+.motion-loader--xs .motion-loader-bars { height: 16px; gap: 2.5px; }
+.motion-loader--xs .motion-loader-bar { width: 2.5px; }
+
+.motion-loader--sm .motion-loader-bars { height: 20px; gap: 3px; }
+.motion-loader--sm .motion-loader-bar { width: 3px; }
+
+.motion-loader--md .motion-loader-bars { height: 28px; gap: 4px; }
+.motion-loader--md .motion-loader-bar { width: 4px; }
+
+.motion-loader--lg .motion-loader-bars { height: 38px; gap: 5px; }
+.motion-loader--lg .motion-loader-bar { width: 5.5px; }
+
+/* 4. Variant: Concentric Orbit Rings */
+.motion-loader-orbit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.motion-loader-orbit-outer {
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--action-primary, #F19720);
+  border-right-color: rgba(241, 151, 32, 0.4);
+}
+
+.motion-loader-orbit-inner {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(241, 151, 32, 0.7);
+  border-bottom-color: transparent;
+}
+
+.motion-loader-orbit-core {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #F19720;
+  box-shadow: 0 0 8px #F19720;
+}
+
+/* 5. Variant: Radar Pulse */
+.motion-loader-pulse {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.motion-loader-pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--action-primary, #F19720);
+  pointer-events: none;
+}
+
+.motion-loader-pulse-dot {
+  border-radius: 50%;
+  background: var(--action-primary, #F19720);
+  box-shadow: 0 0 10px rgba(241, 151, 32, 0.6);
+}
+
+/* 6. Motion Luxury Table Skeleton */
+.motion-table-skeleton-wrap {
+  position: relative;
+  width: 100%;
+  background: var(--white, #ffffff);
+  border-radius: var(--radius-card, 12px);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+}
+
+.motion-table-skeleton-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--surface-sunken, #f8fafc);
+  border-bottom: 1px solid var(--border-hairline, #e2e8f0);
+}
+
+.motion-table-skeleton-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 18px;
+  background: var(--surface-muted, #f1f5f9);
+  border-bottom: 1px solid var(--border-hairline, #e2e8f0);
+  gap: 16px;
+}
+
+.motion-table-skeleton-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-hairline, #f1f5f9);
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.motion-table-skeleton-row:nth-child(even) {
+  background: rgba(248, 250, 252, 0.5);
+}
+
+/* Shimmer beam cải tiến cho Skeleton */
+.motion-shimmer-base {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-sunken, #f1f5f9);
+  border-radius: var(--radius-sm, 6px);
+}
+
+.motion-shimmer-base::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  animation: motion-shimmer-sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes motion-shimmer-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Reduced Motion Mode for Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .motion-loader-bar,
+  .motion-loader-line-beam,
+  .motion-shimmer-base::after {
+    animation: none !important;
+  }
+}

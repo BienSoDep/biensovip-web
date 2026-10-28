@@ -8,10 +8,12 @@ export function usePromoVideos({ enabled = true } = {}) {
   return useQuery({ queryKey: PUBLIC_KEY, queryFn: () => apiClient.get('/api/promo-videos'), enabled });
 }
 
-export function useFeaturedPromoVideos(limit = 3) {
+export function useFeaturedPromoVideos(limit = 3, options = {}) {
   return useQuery({
     queryKey: [...PUBLIC_KEY, 'featured', limit],
     queryFn: () => apiClient.get('/api/promo-videos/featured', { params: { limit } }),
+    staleTime: options.staleTime ?? 5 * 60 * 1000,
+    ...options,
   });
 }
 

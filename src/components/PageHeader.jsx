@@ -3,7 +3,7 @@ import { Eyebrow } from './ui/Badge.jsx';
 /**
  * Standard Page Header component
  * Matches the reference design in LuckyPlate:
- * - Eyebrow uppercase tag (brand tone="blue" / amber)
+ * - Eyebrow uppercase tag (brand tone="brand")
  * - H1 title with var(--type-display-1)
  * - Subtitle / description with var(--type-body) and var(--text-muted)
  * - Optional right-side actions
@@ -42,7 +42,7 @@ export default function PageHeader({
         }}
       >
         {eyebrow && (
-          <Eyebrow tone="blue">
+          <Eyebrow tone="brand">
             {eyebrow}
           </Eyebrow>
         )}

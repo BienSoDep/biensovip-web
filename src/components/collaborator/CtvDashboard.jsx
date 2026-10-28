@@ -159,14 +159,14 @@ export function DashboardBody({ data, onReset, go }) {
               {
                 label: 'Lượt click',
                 value: String(data.clicks),
-                color: '#0284c7',
+                color: '#D97706',
                 icon: MousePointerClick,
                 tip: 'Số lần khách bấm vào link/mã giới thiệu của bạn, tính cả khách chưa để lại thông tin gì.',
               },
               {
                 label: 'Khách đã giới thiệu',
                 value: String(data.referredUserCount ?? 0),
-                color: '#8b5cf6',
+                color: '#EA580C',
                 icon: Users,
                 tip: 'Số khách đã đăng ký tài khoản hoặc để lại liên hệ qua link của bạn — chưa chắc đã mua.',
               },
@@ -208,7 +208,7 @@ export function DashboardBody({ data, onReset, go }) {
               {
                 label: 'Hoa hồng TB/giao dịch',
                 value: data.successfulDeals > 0 ? money((data.pending + data.approved + data.paid) / data.successfulDeals) : '—',
-                color: '#4f46e5',
+                color: '#B45309',
                 icon: TrendingUp,
                 tip: 'Tổng hoa hồng tích lũy chia cho số giao dịch thành công — mức trung bình bạn nhận mỗi đơn.',
               },

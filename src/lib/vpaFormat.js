@@ -25,6 +25,37 @@ export function vpaBadge(p, now = Date.now()) {
 // Backend trả enum dạng số (không bật JsonStringEnumConverter) — chấp nhận cả tên để không vỡ nếu đổi cấu hình.
 export const isCar = (v) => v === 1 || v === 'Car';
 
+// Tiến độ tổng của một lượt crawl: gộp xe thứ mấy + giai đoạn (cào → cập nhật tab → tính giá → đồng bộ) thành một %
+// đơn điệu tăng. Trọng số là ước lượng để thanh không lùi lại khi qua giai đoạn/xe mới, không phải thời gian thật.
+const PHASE_BASE = { importing: 0, applying: 0.6, pricing: 0.6, finalizing: 0.97 };
+export function crawlProgressView(run, progress) {
+  const num = (n) => Number(n || 0).toLocaleString('vi-VN');
+  if (!progress) {
+    // Chưa có thông tin giai đoạn (backend cũ / lượt vừa khởi động): thanh chạy vô hạn, không đoán %.
+    return { pct: null, text: 'Đang xử lý…' };
+  }
+  const { phase, vehicleIndex: i = 0, vehicleCount: n = 1, vehicle, pricingDone = 0, pricingTotal = 0 } = progress;
+  // Dòng lượt đang "Đang chạy" có thể là của xe trước, chỉ lấy tiến độ tỉnh khi đúng xe đang cào.
+  const mine = run && run.vehicle != null && isCar(run.vehicle) === isCar(vehicle) ? run : null;
+  const slicesTotal = mine?.slicesTotal || 0;
+  const slicesDone = mine?.slicesDone || 0;
+  let frac = PHASE_BASE[phase] ?? 0;
+  let detail;
+  if (phase === 'importing') {
+    if (slicesTotal > 0) frac = 0.6 * Math.min(1, slicesDone / slicesTotal);
+    detail = slicesTotal > 0 ? `Đang cào ${slicesDone}/${slicesTotal} tỉnh · ${num(mine?.itemsSeen)} biển` : 'Đang kết nối nguồn dữ liệu…';
+  } else if (phase === 'applying') {
+    detail = 'Đang cập nhật tab và trạng thái biển…';
+  } else if (phase === 'pricing') {
+    if (pricingTotal > 0) frac = 0.6 + 0.37 * Math.min(1, pricingDone / pricingTotal);
+    detail = `Đang tính giá gợi ý ${num(pricingDone)}/${num(pricingTotal)} nhóm`;
+  } else {
+    detail = 'Đang đồng bộ trang biển…';
+  }
+  const pct = Math.min(99, Math.round((100 * (i + frac)) / Math.max(1, n)));
+  return { pct, text: `Xe ${i + 1}/${n} · ${isCar(vehicle) ? 'Ô tô' : 'Xe máy'} — ${detail}` };
+}
+
 // ---- Admin ----
 export const VPA_TAB_LABELS = { 1: 'Tháng', 2: 'Tuần', 3: 'Hết hạn', 4: 'Hết hạn nội bộ' };
 export const VPA_PRICE_STATES = {

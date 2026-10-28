@@ -11,6 +11,8 @@
 
 /* 3. Thành phần giao diện dùng chung (Button, Card, Pill, Lightbox, Marquee) */
 @import './components.css';
+@import './spotlightCard.css';
+@import './motionButtons.css';
 @import './chatbot.css';
 @import './footer.css';
 

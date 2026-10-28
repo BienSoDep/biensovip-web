@@ -1,8 +1,11 @@
-import { Phone, Heart, GitCompareArrows, CheckCircle2, Flame, Sparkles } from 'lucide-react';
-import { Card, Badge, IconButton } from './index.jsx';
+import { useFlyEffect } from '../contexts/FlyEffectContext.jsx';
+import { Phone, Flame, Sparkles } from 'lucide-react';
+import { Badge } from './index.jsx';
+import SpotlightCard from './SpotlightCard.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
-import ZaloIcon from './ZaloIcon.jsx';
+import MotionFavButton from './MotionFavButton.jsx';
+import MotionCompareButton from './MotionCompareButton.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { buildConsultMessage, openZaloWithMessage, callOrCopyPhone, isMobileDevice } from '../lib/zaloMessage.js';
@@ -25,8 +28,9 @@ export default function PlateCard({
   status = plate?.status,
   badge = plate?.badge,
   fav, onFav, onCompare, inCompare, onOpen, onSelect, href, onBuy, style, plateSize = 'md',
-  contact, salePrice = plate?.salePrice, layout = 'grid', priceOnRequestLabel, fengShui,
+  contact, salePrice = plate?.salePrice, layout = 'grid', priceOnRequestLabel, fengShui, tilt = true,
 }) {
+  const { triggerFly } = useFlyEffect();
   const handleOpen = onOpen || onSelect || (() => {});
   // Ảnh biển số sinh tự động chỉ hiện khi admin đã bật cờ toàn hệ thống (mặc định tắt — ưu tiên
   // PlateVisual). Xem AdminMaintenance > "Hiển thị biển số" hoặc trang cài đặt tương ứng.
@@ -44,7 +48,15 @@ export default function PlateCard({
 
   if (layout === 'row') {
     return (
-      <Card tone="sunken" pad="10px" className="plate-card" style={{ background: 'var(--surface-muted)', ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : fsRing), ...style }}>
+      <SpotlightCard
+        pad="10px"
+        tone="muted"
+        className="plate-card plate-card--row"
+        spotlightColor="rgba(241, 151, 32, 0.14)"
+        borderColor={isHot && !sold ? 'rgba(241, 151, 32, 0.70)' : 'rgba(241, 151, 32, 0.35)'}
+        tilt={false}
+        style={{ ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--brand-500), var(--shadow-2)' } : fsRing), ...style }}
+      >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
           <a href={href || '#'} onClick={(e) => { e.preventDefault(); handleOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer', flex: '1 1 260px', minWidth: 0 }}>
             <div style={{ position: 'relative', flexShrink: 0, width: 108, borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--white)' }}>
@@ -85,19 +97,57 @@ export default function PlateCard({
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               {onFav && (
-                <span style={{ display: 'inline-flex', animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined }}>
-                  <IconButton name="heart" label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }} style={fav ? { color: 'var(--status-danger)' } : undefined} />
-                </span>
+                <MotionFavButton
+                  fav={fav}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!fav) {
+                      trackCtaClick('yeu_thich', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'favorite',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onFav();
+                  }}
+                  size={32}
+                  iconSize={18}
+                />
               )}
               {onCompare && (
-                <IconButton name={inCompare ? 'check-circle' : 'scale'} label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }} style={inCompare ? { color: 'var(--action-primary)' } : undefined} />
+                <MotionCompareButton
+                  inCompare={inCompare}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!inCompare) {
+                      trackCtaClick('so_sanh', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'compare',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onCompare();
+                  }}
+                  size={32}
+                  iconSize={18}
+                />
               )}
             </div>
           </a>
           {!sold && (onBuy || contact?.phone || contact?.zalo) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" style={{ whiteSpace: 'nowrap' }}>Chốt biển này</Button>
+                <Button variant="primary" size="sm" shimmer onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" style={{ whiteSpace: 'nowrap' }}>Chốt biển này</Button>
               )}
               {contact?.phone && (
                 isMobileDevice() ? (
@@ -114,19 +164,22 @@ export default function PlateCard({
             </div>
           )}
         </div>
-      </Card>
+      </SpotlightCard>
     );
   }
 
   return (
-    <Card
-      tone="sunken"
+    <SpotlightCard
       pad="10px"
+      tone="muted"
       className="plate-card"
+      spotlightColor={isHot && !sold ? 'rgba(241, 151, 32, 0.22)' : 'rgba(241, 151, 32, 0.14)'}
+      borderColor={isHot && !sold ? 'rgba(241, 151, 32, 0.70)' : 'rgba(241, 151, 32, 0.35)'}
+      tilt={!sold && tilt}
+      maxTilt={4}
       style={{
         height: '100%',
-        background: 'var(--surface-muted)',
-        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : fsRing),
+        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--brand-500), var(--shadow-2)' } : fsRing),
         ...style,
       }}
     >
@@ -148,57 +201,46 @@ export default function PlateCard({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               {onFav && (
-                <button
-                  type="button"
-                  aria-label={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'}
-                  title={fav ? 'Bỏ lưu yêu thích' : 'Lưu yêu thích'}
-                  onClick={() => { if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    border: 'none',
-                    background: 'transparent',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: fav ? 'var(--status-danger)' : 'var(--text-muted)',
-                    padding: 0,
-                    animation: fav ? 'heartBeat 260ms var(--ease-out)' : undefined,
-                    transition: 'background-color 140ms ease, color 140ms ease',
+                <MotionFavButton
+                  fav={fav}
+                  onClick={(e) => {
+                    if (!fav) {
+                      trackCtaClick('yeu_thich', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'favorite',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onFav();
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <Heart size={16} fill={fav ? 'currentColor' : 'none'} />
-                </button>
+                  size={28}
+                  iconSize={16}
+                />
               )}
               {onCompare && (
-                <button
-                  type="button"
-                  aria-label={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'}
-                  title={inCompare ? 'Bỏ khỏi so sánh' : 'Thêm vào so sánh'}
-                  onClick={() => { if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    border: 'none',
-                    background: 'transparent',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: inCompare ? 'var(--action-primary)' : 'var(--text-muted)',
-                    padding: 0,
-                    transition: 'background-color 140ms ease, color 140ms ease',
+                <MotionCompareButton
+                  inCompare={inCompare}
+                  onClick={(e) => {
+                    if (!inCompare) {
+                      trackCtaClick('so_sanh', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'compare',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onCompare();
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  {inCompare ? <CheckCircle2 size={16} /> : <GitCompareArrows size={16} />}
-                </button>
+                  size={28}
+                  iconSize={16}
+                />
               )}
             </div>
           </div>
@@ -241,7 +283,7 @@ export default function PlateCard({
           {!sold ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" fullWidth style={{ paddingTop: 12, paddingBottom: 12 }}>Chốt biển này</Button>
+                <Button variant="primary" size="sm" shimmer onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" fullWidth style={{ paddingTop: 12, paddingBottom: 12 }}>Chốt biển này</Button>
               )}
               {(contact?.phone || contact?.zalo) && (
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -265,6 +307,6 @@ export default function PlateCard({
           )}
         </div>
       </div>
-    </Card>
+    </SpotlightCard>
   );
 }

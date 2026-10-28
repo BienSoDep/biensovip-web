@@ -1244,7 +1244,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
       </div>
 
       <div className={`admin-plates-cards-container ${mobileView === 'card' ? 'is-active' : ''}`}>
-        {isLoading && <div style={{ padding: 'var(--space-4)' }}><Skeleton variant="table" rows={6} /></div>}
+        {isLoading && <div style={{ padding: 'var(--space-4)' }}><Skeleton variant="table" rows={6} message="Đang tải danh sách biển số VPA..." /></div>}
         {errorBox}{emptyBox}
         {!isLoading && items.map((p) => {
           const parsed = parsePlateNumber(p.plateNumber);
@@ -1403,7 +1403,7 @@ export default function VpaAdminList({ queue = false, notify, onOpenGuide, openI
               <span style={{ flex: '0 0 160px' }}>Thao tác</span>
             </div>
 
-            {isLoading && <div style={{ padding: 'var(--space-4)' }}><Skeleton variant="table" rows={6} /></div>}
+            {isLoading && <div style={{ padding: 'var(--space-4)' }}><Skeleton variant="table" rows={6} message="Đang tải danh sách biển số VPA..." /></div>}
 
             {!isLoading && items.map((p) => {
               const parsed = parsePlateNumber(p.plateNumber);

@@ -1,13 +1,29 @@
-// Định dạng biển VN: 2 số tỉnh + 1-2 chữ seri + phần số (độ dài tùy loại: tứ quý, sảnh tiến, số đẹp khác...).
-// VD "43A1-999.99" -> {prov:'43', seri:'A1', num:'999.99'}; "37G1-830.7788" -> {prov:'37', seri:'G1', num:'830.7788'}
-const PLATE_RE = /^(\d{2})([A-Z]{1,2}\d?)-?(.+)$/;
-
+// Định dạng biển VN: 2 số tỉnh + 1-2 chữ seri (kèm số nếu là xe máy) + phần số (4-5 số hoặc có dấu chấm).
+// Hỗ trợ mọi biến thể đầu vào: có gạch ngang ("43B6-55667", "51A-999.99"), có dấu chấm ("43B6.55667"),
+// có dấu chấm giữa ("43B6 · 55667"), có khoảng trắng ("43-B6 55667") hoặc viết liền ("43B655667", "51A99999").
 export function splitPlateNumber(plateNumber) {
   const raw = String(plateNumber || '').trim().toUpperCase();
-  const m = raw.match(PLATE_RE);
-  if (!m) return { prov: '', seri: '', num: raw };
-  const [, prov, seri, num] = m;
-  return { prov, seri, num };
+  // TH1: Có dấu phân cách rõ ràng giữa tỉnh/seri và phần số
+  const m1 = raw.match(/^(\d{2})[-\s]?([A-Z]{1,2}\d?)[-\s.·]+(.+)$/);
+  if (m1) {
+    return { prov: m1[1], seri: m1[2], num: m1[3].trim() };
+  }
+  // TH2: Ô tô viết liền 5 số hoặc có chấm (VD: '51A99999', '51LD12345', '51A999.99')
+  const mCar5 = raw.match(/^(\d{2})([A-Z]{1,2})(\d{5}|\d{3}\.\d{2})$/);
+  if (mCar5) {
+    return { prov: mCar5[1], seri: mCar5[2], num: mCar5[3] };
+  }
+  // TH3: Xe máy 2 số tỉnh + 1 chữ + 1 số seri + 4-5 số viết liền (VD: '43B655667')
+  const mMoto = raw.match(/^(\d{2})([A-Z]\d)(\d{4,5})$/);
+  if (mMoto) {
+    return { prov: mMoto[1], seri: mMoto[2], num: mMoto[3] };
+  }
+  // TH4: Dự phòng regex chuẩn cũ
+  const mOld = raw.match(/^(\d{2})([A-Z]{1,2}\d?)-?(.+)$/);
+  if (mOld) {
+    return { prov: mOld[1], seri: mOld[2], num: mOld[3].replace(/^[\s.·-]+/, '').trim() };
+  }
+  return { prov: '', seri: '', num: raw };
 }
 
 // Parse lenient cho form admin (gõ tay, có thể chưa đúng chuẩn) — khác splitPlateNumber (strict, dùng

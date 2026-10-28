@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Badge, Checkbox, Input, Select, Switch, InfoTip } from '../../../components/index.jsx';
 import Button from '../../../components/Button.jsx';
-import { formatDateTime, formatDuration, formatInt, vpaRunNote } from '../../../lib/vpaFormat.js';
+import { formatDateTime, formatDuration, formatInt, vpaRunNote, crawlProgressView } from '../../../lib/vpaFormat.js';
 
 const CARD = { background: 'var(--white)', borderRadius: 'var(--radius-card)', padding: 'var(--space-4)', boxShadow: 'var(--shadow-inset-hairline)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' };
 const STATUS_TONE = { success: 'mint', partial: 'amber', failed: 'rose' };
@@ -161,8 +161,12 @@ export default function VpaSourceCard({ src, status, settings, form, setForm, se
         <span>Chạy kế tiếp: {settings.crawlPaused ? 'đang dừng khẩn' : status?.nextRunAt ? <b style={{ color: 'var(--action-primary, #C75B00)' }}>{formatDateTime(status.nextRunAt)}</b> : enabled ? 'theo lịch máy chủ (Vpa:Enabled tắt?)' : '—'}</span>
       </div>
 
+      {running && status?.progress && (() => {
+        const o = crawlProgressView(run, status.progress);
+        return <span style={caption}><b style={{ color: 'var(--text-strong)' }}>{o.pct}%</b> · {o.text}</span>;
+      })()}
       {running && run && <Progress run={run} now={now} stuck={status.stuck} />}
-      {running && !run && <span style={caption}>Đang chạy (chưa có bản ghi lượt — đang khởi động).</span>}
+      {running && !run && !status?.progress && <span style={caption}>Đang chạy (chưa có bản ghi lượt — đang khởi động).</span>}
       {!running && run?.note && <span style={caption}>{vpaRunNote(run.note)}</span>}
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>

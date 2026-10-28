@@ -16,8 +16,7 @@
   font-weight: var(--fw-semibold);
   white-space: nowrap;
   cursor: pointer;
-  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
+  transition: box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
               background-color 140ms var(--ease-standard),
               color 140ms var(--ease-standard),
               border-color 140ms var(--ease-standard),
@@ -156,16 +155,26 @@
    3. PLATE CARD, STAGE & ACTION BUTTONS
    -------------------------------------------------------------------------- */
 .plate-card {
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  --lift-y: 0px;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  transform: perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(var(--lift-y, 0px));
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
   will-change: transform;
 }
 .plate-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12), 0 0 0 1.5px rgba(217, 119, 6, 0.32) !important;
+  --lift-y: -4px;
+  box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12), 0 0 0 1.5px rgba(241, 151, 32, 0.35) !important;
+}
+.plate-card[data-hovered="true"] {
+  --lift-y: -4px;
+  transition: transform 80ms ease-out,
+              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 .plate-card:active {
-  transform: translateY(-1px) scale(0.995);
+  --lift-y: -1px;
+  transform: perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(var(--lift-y, -1px)) scale(0.995);
 }
 .plate-card .plate-card-stage {
   transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -184,7 +193,7 @@
   box-shadow: none;
 }
 
-/* Nút liên hệ nhanh Gọi điện & Zalo trên thẻ biển số — hiệu ứng hover nổi bật */
+/* Nút liên hệ nhanh Gọi điện & Zalo trên thẻ biển số — giữ màu nhận diện đặc trưng */
 .plate-btn-phone {
   background: var(--status-success-ink, #059669) !important;
   color: #fff !important;
@@ -623,4 +632,47 @@ a:not(.btn):not(.pressable):not(.plate-card):hover {
   color: var(--text-muted);
   text-align: center;
   margin-top: var(--space-2);
+}
+
+/* --------------------------------------------------------------------------
+   14. PLATE LIST SEARCH BAR FOCUS AFFORDANCE
+   Đảm bảo khi click/focus ô tìm kiếm không bị mất viền trái (tránh clipping overflow)
+   -------------------------------------------------------------------------- */
+.plate-search-bar .plate-search-input:focus,
+.plate-search-bar .plate-search-input:focus-visible,
+.plate-search-bar .plate-birth-input:focus,
+.plate-search-bar .plate-birth-input:focus-visible {
+  outline: 2px solid var(--action-primary) !important;
+  outline-offset: -1px !important;
+  border-radius: var(--radius-field, 8px) !important;
+  box-shadow: inset 0 0 0 1px var(--action-primary), 0 0 0 3px rgba(241, 151, 32, 0.12) !important;
+}
+
+.plate-search-bar .plate-birth-inputs-wrapper:focus-within {
+  outline: 2px solid var(--action-primary) !important;
+  outline-offset: -1px !important;
+  border-color: var(--action-primary) !important;
+  background: var(--surface-card, #fff) !important;
+  box-shadow: inset 0 0 0 1px var(--action-primary), 0 0 0 3px rgba(241, 151, 32, 0.12) !important;
+}
+.plate-search-bar .plate-birth-subinput:focus,
+.plate-search-bar .plate-birth-subinput:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   15. FLY-TO-TARGET BOUNCE FEEDBACK ANIMATION
+   -------------------------------------------------------------------------- */
+@keyframes flyTargetBounce {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.36); }
+  65% { transform: scale(0.92); }
+  85% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.fly-target-bounce {
+  animation: flyTargetBounce 480ms cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  transform-origin: center center;
 }

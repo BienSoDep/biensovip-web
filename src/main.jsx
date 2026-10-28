@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './styles/tokens.css'
 import './styles/app.css'
 import './styles/skeleton.css'
+import './styles/motion-loaders.css'
 import App from './App.jsx'
 
 // The sticky header overlaps page content instead of reserving space for it,

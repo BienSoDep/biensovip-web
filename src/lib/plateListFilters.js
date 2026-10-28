@@ -2,13 +2,30 @@
 // component để giữ PlateList.jsx ở mức fetch+compose.
 
 // Tab biển VPA trong trang Biển số: '' = Biển có sẵn (kho Duy Định). Giá trị URL ngắn gọn, tiếng Việt không dấu.
-export const VPA_TAB_PARAM = { monthly: 'thang', weekly: 'tuan', expired: 'het-han' };
-const VPA_TAB_BY_PARAM = Object.fromEntries(Object.entries(VPA_TAB_PARAM).map(([k, v]) => [v, k]));
+export const VPA_TAB_PARAM = { monthly: 'thang', weekly: 'tuan', available: 'co-san', expired: 'het-han' };
+const VPA_TAB_BY_PARAM = {
+  thang: 'monthly',
+  tuan: 'weekly',
+  'co-san': 'available',
+  'het-han': 'expired',
+  monthly: 'monthly',
+  weekly: 'weekly',
+  available: 'available',
+  expired: 'expired',
+};
 
 export function readFiltersFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const rawTab = params.get('tab');
-  const tab = VPA_TAB_BY_PARAM[rawTab] || (['weekly', 'monthly', 'expired'].includes(rawTab) ? rawTab : '');
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const rawTabParams = params.getAll('tab');
+  const rawTabs = rawTabParams.flatMap((t) => t.split(',')).map((s) => s.trim()).filter(Boolean);
+
+  const parsedTabs = rawTabs
+    .map((raw) => VPA_TAB_BY_PARAM[raw] || (['weekly', 'monthly', 'available', 'expired'].includes(raw) ? raw : ''))
+    .filter(Boolean);
+
+  const tabs = parsedTabs.length > 0 ? Array.from(new Set(parsedTabs)) : ['available'];
+  const tab = tabs.length === 1 && tabs[0] !== 'available' ? tabs[0] : (tabs.length === 1 && tabs[0] === 'available' ? '' : tabs.join(','));
+
   let q = params.get('q') || '';
   if (!q && typeof window !== 'undefined' && window.location.pathname.startsWith('/tim-kiem/')) {
     const raw = window.location.pathname.slice('/tim-kiem/'.length).split('/')[0];
@@ -28,6 +45,7 @@ export function readFiltersFromUrl() {
     priceMax: params.get('priceMax') || '',
     status: params.get('status') || '',
     tab,
+    tabs,
   };
 }
 
@@ -37,7 +55,15 @@ export function writeFiltersToUrl(filters) {
   filters.city.forEach((id) => params.append('city', id));
   filters.avoidNumbers.forEach((n) => params.append('avoidNumbers', n));
   if (filters.vehicle) params.set('vehicle', filters.vehicle);
-  if (filters.tab) params.set('tab', VPA_TAB_PARAM[filters.tab]);
+
+  const currentTabs = filters.tabs && filters.tabs.length > 0
+    ? filters.tabs
+    : (filters.tab ? filters.tab.split(',').map((s) => s.trim()).filter(Boolean) : ['available']);
+
+  if (!(currentTabs.length === 1 && currentTabs[0] === 'available')) {
+    const serialized = currentTabs.map((k) => VPA_TAB_PARAM[k] || k).join(',');
+    params.set('tab', serialized);
+  }
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const isSearchPath = pathname.startsWith('/tim-kiem/');
@@ -61,7 +87,9 @@ export function writeFiltersToUrl(filters) {
     base = '/danh-sach';
   }
   const next = qs ? `${base}?${qs}` : base;
-  if (next !== window.location.pathname + window.location.search) history.replaceState(null, '', next);
+  if (typeof window !== 'undefined' && next !== window.location.pathname + window.location.search) {
+    history.replaceState(null, '', next);
+  }
 }
 
 export function buildPageUrl(filters, targetPage) {
@@ -70,6 +98,15 @@ export function buildPageUrl(filters, targetPage) {
   filters.city?.forEach((id) => params.append('city', id));
   filters.avoidNumbers?.forEach((n) => params.append('avoidNumbers', n));
   if (filters.vehicle) params.set('vehicle', filters.vehicle);
+
+  const currentTabs = filters.tabs && filters.tabs.length > 0
+    ? filters.tabs
+    : (filters.tab ? filters.tab.split(',').map((s) => s.trim()).filter(Boolean) : ['available']);
+
+  if (!(currentTabs.length === 1 && currentTabs[0] === 'available')) {
+    const serialized = currentTabs.map((k) => VPA_TAB_PARAM[k] || k).join(',');
+    params.set('tab', serialized);
+  }
   if (filters.q) params.set('q', filters.q);
   if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
   if (targetPage > 1) params.set('page', String(targetPage));
@@ -80,4 +117,3 @@ export function buildPageUrl(filters, targetPage) {
   const qs = params.toString();
   return qs ? `/danh-sach?${qs}` : '/danh-sach';
 }
-

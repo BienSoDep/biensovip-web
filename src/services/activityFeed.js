@@ -6,6 +6,7 @@ export function useActivityFeed(limit = 8) {
   return useQuery({
     queryKey: ['activity-feed', limit],
     queryFn: () => apiClient.get(`/api/activity-feed?limit=${limit}`),
+    staleTime: 60 * 1000,
     refetchInterval: 60_000,
   });
 }

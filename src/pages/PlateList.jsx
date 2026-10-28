@@ -9,12 +9,15 @@ import {
   Car,
   Search,
   Sparkles,
+  Calendar,
+  Check,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
 import { Select, Checkbox, Radio, Input, Icon, PageHeader } from "../components/index.jsx";
 import PlateCard from "../components/PlateCard.jsx";
 import Pagination from "../components/Pagination.jsx";
 import PlateCardSkeleton from "../components/skeletons/PlateCardSkeleton.jsx";
+import MotionLoader from "../components/MotionLoader.jsx";
 import { useStaggeredReveal } from "../hooks/useStaggeredReveal.js";
 import { useCategories } from "../services/categories.js";
 import { usePlates, useInfinitePlates } from "../services/plates.js";
@@ -44,16 +47,6 @@ import {
   getScrollPosition,
 } from "../lib/scrollRestoration.js";
 import { validBirthDate } from "../lib/date.js";
-
-// Chuyển 'dd/mm/yyyy' sang 'yyyy-mm-dd'
-function parseVnDateToIso(vnDateStr) {
-  if (!vnDateStr) return null;
-  const parts = vnDateStr.trim().split('/');
-  if (parts.length !== 3) return null;
-  const [d, m, y] = parts;
-  if (!d || !m || !y || d.length !== 2 || m.length !== 2 || y.length !== 4) return null;
-  return `${y}-${m}-${d}`;
-}
 
 // Chuyển 'yyyy-mm-dd' sang 'dd/mm/yyyy'
 function parseIsoToVnDate(isoStr) {
@@ -139,7 +132,23 @@ export default function PlateList({
 }) {
   const [filters, setFilters] = useState(readFiltersFromUrl);
   const [provinceExpanded, setProvinceExpanded] = useState(false);
-  const vpaTab = filters.tab; // '' = Biển có sẵn
+
+  const selectedTabs = useMemo(() => {
+    if (Array.isArray(filters.tabs) && filters.tabs.length > 0) {
+      return filters.tabs;
+    }
+    if (filters.tab) {
+      const parts = filters.tab.split(',').map((s) => s.trim()).filter(Boolean);
+      return parts.length > 0 ? parts : ['available'];
+    }
+    return ['available'];
+  }, [filters.tabs, filters.tab]);
+
+  const isAvailableActive = selectedTabs.includes('available');
+  const isWeeklyActive = selectedTabs.includes('weekly');
+  const isMonthlyActive = selectedTabs.includes('monthly');
+  const hasVpa = isWeeklyActive || isMonthlyActive;
+  const isMultiTab = selectedTabs.length > 1;
   const { data: vpaCounts } = useVpaCounts("");
   const { data: stockData } = usePlates({ perPage: 1 }); // chỉ để lấy tổng biển kho Duy Định cho nhãn tab
   const stockTotal = stockData?.total && stockData.total >= 395 ? stockData.total : 395;
@@ -241,20 +250,20 @@ export default function PlateList({
   const activeFilterCount =
     filters.cat.length +
     filters.city.length +
-    (vpaTab ? 0 : filters.avoidNumbers.length) +
+    (!isAvailableActive ? 0 : filters.avoidNumbers.length) +
     (filters.vehicle ? 1 : 0) +
     (filters.q ? 1 : 0) +
-    (vpaTab ? 0 : filters.priceMin || filters.priceMax ? 1 : 0) +
-    (vpaTab ? 0 : filters.status ? 1 : 0);
+    (!isAvailableActive ? 0 : filters.priceMin || filters.priceMax ? 1 : 0) +
+    (!isAvailableActive ? 0 : filters.status ? 1 : 0);
 
   const hasActiveFilters =
     filters.cat.length > 0 ||
     filters.city.length > 0 ||
-    (!vpaTab && filters.avoidNumbers.length > 0) ||
+    (isAvailableActive && filters.avoidNumbers.length > 0) ||
     !!filters.vehicle ||
     !!filters.q ||
-    (!vpaTab && (!!filters.priceMin || !!filters.priceMax)) ||
-    (!vpaTab && !!filters.status);
+    (isAvailableActive && (!!filters.priceMin || !!filters.priceMax)) ||
+    (isAvailableActive && !!filters.status);
 
   const openSaveModal = () => {
     if (!isLoggedIn) {
@@ -316,13 +325,20 @@ export default function PlateList({
     [filters, qDebounced],
   );
 
-  const { data, isLoading, isError, isFetching, refetch } = usePlates(
-    apiFilters,
-    { enabled: !vpaTab && !infinite && filters.perPage !== 0 },
+    const activeTabCount = selectedTabs.length || 1;
+  const basePageSize = filters.perPage === 0 ? 100 : (filters.perPage || 18);
+  const sourcePageSize = Math.max(1, Math.ceil(basePageSize / activeTabCount));
+
+  const stockQuery = usePlates(
+    {
+      ...apiFilters,
+      perPage: sourcePageSize,
+    },
+    { enabled: isAvailableActive && !infinite && filters.perPage !== 0 },
   );
 
-  // Infinite scroll: bật khi toggle bật hoặc chọn "Xem tất cả" (bỏ cap 100).
-  const useInfinite = !vpaTab && (infinite || filters.perPage === 0);
+  // Infinite scroll: bật khi chỉ chọn kho Duy Định và bật toggle hoặc chọn "Xem tất cả"
+  const useInfinite = isAvailableActive && !hasVpa && (infinite || filters.perPage === 0);
   const infiniteFilters = useMemo(
     () => ({
       cat: filters.cat,
@@ -339,21 +355,22 @@ export default function PlateList({
     [filters, qDebounced],
   );
   const inf = useInfinitePlates(infiniteFilters, {
-    enabled: !vpaTab && useInfinite,
+    enabled: useInfinite,
   });
   const stagger = useStaggeredReveal();
 
-  // ---- 3 tab VPA dùng chung bố cục/bộ lọc với kho; chỉ khác nguồn dữ liệu ----
+  // ---- VPA tab logic (tuần/tháng) ----
   const { data: vpaProvinces } = useVpaProvinces();
   const [plateIds, setPlateIds] = useState({}); // vpaId → plateId đã tạo trong phiên
   const [opening, setOpening] = useState(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (vpaTab !== "weekly") return undefined;
+    if (!isWeeklyActive) return undefined;
     const t = setInterval(() => setNow(Date.now()), 30000); // đếm ngược tab Tuần
     return () => clearInterval(t);
-  }, [vpaTab]);
-  const vpaSorts = VPA_SORTS[vpaTab === "expired" ? "expired" : "soon"];
+  }, [isWeeklyActive]);
+
+  const vpaSorts = VPA_SORTS["soon"];
   const vpaSort = vpaSorts.some((o) => o.value === filters.sort)
     ? filters.sort
     : vpaSorts[0].value;
@@ -365,23 +382,42 @@ export default function PlateList({
     : vehicleName === "Xe máy"
       ? "MotorBike"
       : "Car";
-  const vpaQuery = useVpaPlates(
+
+  const vpaWeeklyQuery = useVpaPlates(
     {
-      tab: vpaTab || "monthly",
+      tab: "weekly",
       vehicle: vpaVehicle,
       province: filters.city[0] || "",
       type: filters.cat[0] || "",
       q: qDebounced,
       sort: vpaSort,
       page: filters.page,
-      pageSize: filters.perPage === 0 ? 100 : filters.perPage,
+      pageSize: sourcePageSize,
     },
-    { enabled: !!vpaTab },
+    { enabled: isWeeklyActive },
   );
-  const { data: vpaFacets } = useVpaFacets(vpaTab, vpaVehicle, {
-    enabled: !!vpaTab,
-  });
-  const provinceItems = vpaTab
+
+  const vpaMonthlyQuery = useVpaPlates(
+    {
+      tab: "monthly",
+      vehicle: vpaVehicle,
+      province: filters.city[0] || "",
+      type: filters.cat[0] || "",
+      q: qDebounced,
+      sort: vpaSort,
+      page: filters.page,
+      pageSize: sourcePageSize,
+    },
+    { enabled: isMonthlyActive },
+  );
+
+  const { data: vpaFacets } = useVpaFacets(
+    isMonthlyActive ? "monthly" : "weekly",
+    vpaVehicle,
+    { enabled: hasVpa },
+  );
+
+  const provinceItems = hasVpa
     ? (vpaProvinces || []).map((p) => ({
         id: p.code,
         name: p.name,
@@ -390,7 +426,8 @@ export default function PlateList({
           : undefined,
       }))
     : provinces?.items || [];
-  const typeItems = vpaTab
+
+  const typeItems = hasVpa
     ? (plateTypes?.items || []).map((t) => ({
         ...t,
         plateCount: vpaFacets ? (vpaFacets.types?.[t.id] ?? 0) : undefined,
@@ -412,15 +449,147 @@ export default function PlateList({
     return () => window.removeEventListener("scroll", onScroll);
   }, [useInfinite, inf.hasNextPage, inf.isFetchingNextPage, inf.fetchNextPage]);
 
-  const infiniteItems = inf.data?.pages?.flatMap((p) => p.items || []) || [];
-  const vpaItems = vpaQuery.data?.items || [];
-  const items = vpaTab
-    ? vpaItems
-    : useInfinite
-      ? infiniteItems
-      : data?.items || [];
+  const infiniteItems = useMemo(
+    () => inf.data?.pages?.flatMap((page) => page.items || []) || [],
+    [inf.data?.pages],
+  );
+
+  // Trộn các nguồn biển đã chọn xen kẽ (round-robin interleaving)
+  const items = useMemo(() => {
+    const pools = [];
+    if (isAvailableActive) {
+      const list = useInfinite ? infiniteItems : (stockQuery.data?.items || []);
+      pools.push(list.map((p) => ({ ...p, _source: "available" })));
+    }
+    if (isWeeklyActive) {
+      const list = vpaWeeklyQuery.data?.items || [];
+      pools.push(list.map((p) => ({ ...p, _source: "weekly" })));
+    }
+    if (isMonthlyActive) {
+      const list = vpaMonthlyQuery.data?.items || [];
+      pools.push(list.map((p) => ({ ...p, _source: "monthly" })));
+    }
+
+    if (pools.length === 0) return [];
+    if (pools.length === 1) return pools[0];
+
+    const result = [];
+    const maxLen = Math.max(...pools.map((p) => p.length));
+    for (let i = 0; i < maxLen; i++) {
+      for (const pool of pools) {
+        if (i < pool.length) {
+          result.push(pool[i]);
+        }
+      }
+    }
+    return result;
+  }, [
+    isAvailableActive,
+    isWeeklyActive,
+    isMonthlyActive,
+    useInfinite,
+    infiniteItems,
+    stockQuery.data?.items,
+    vpaWeeklyQuery.data?.items,
+    vpaMonthlyQuery.data?.items,
+  ]);
   const { year: birthYear, birthDate, fromProfile, setBirthDate, setYear } = useBirthYear();
-  const [birthDateDraft, setBirthDateDraft] = useState("");
+  const [birthDay, setBirthDay] = useState("");
+  const [birthMonth, setBirthMonth] = useState("");
+  const [birthYearDraft, setBirthYearDraft] = useState("");
+
+  const dayRef = useRef(null);
+  const monthRef = useRef(null);
+  const yearRef = useRef(null);
+
+  const clearDraft = () => {
+    setBirthDay("");
+    setBirthMonth("");
+    setBirthYearDraft("");
+  };
+
+  const handleDayChange = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setBirthDay(val);
+    if (val.length === 2) {
+      monthRef.current?.focus();
+    }
+  };
+
+  const handleMonthChange = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setBirthMonth(val);
+    if (val.length === 2) {
+      yearRef.current?.focus();
+    }
+  };
+
+  const handleYearChange = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setBirthYearDraft(val);
+  };
+
+  const handleKeyDown = (e, field) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitBirthDate();
+    } else if (e.key === "Backspace") {
+      if (field === "year" && !birthYearDraft) {
+        monthRef.current?.focus();
+      } else if (field === "month" && !birthMonth) {
+        dayRef.current?.focus();
+      }
+    } else if (e.key === "ArrowRight") {
+      if (field === "day" && (e.target.selectionStart === birthDay.length || birthDay.length === 2)) {
+        monthRef.current?.focus();
+      } else if (field === "month" && (e.target.selectionStart === birthMonth.length || birthMonth.length === 2)) {
+        yearRef.current?.focus();
+      }
+    } else if (e.key === "ArrowLeft") {
+      if (field === "year" && e.target.selectionStart === 0) {
+        monthRef.current?.focus();
+      } else if (field === "month" && e.target.selectionStart === 0) {
+        dayRef.current?.focus();
+      }
+    }
+  };
+
+  const handleDatePaste = (e) => {
+    const text = e.clipboardData?.getData("text") || "";
+    const digits = text.replace(/\D/g, "");
+    if (digits.length >= 8) {
+      e.preventDefault();
+      const d = digits.slice(0, 2);
+      const m = digits.slice(2, 4);
+      const y = digits.slice(4, 8);
+      setBirthDay(d);
+      setBirthMonth(m);
+      setBirthYearDraft(y);
+      yearRef.current?.focus();
+    }
+  };
+
+  const submitBirthDate = () => {
+    if (birthYearDraft && !birthDay && !birthMonth) {
+      const y = Number(birthYearDraft);
+      const currentYear = new Date().getFullYear();
+      if (y >= 1900 && y <= currentYear) {
+        setYear(y);
+        clearDraft();
+        return;
+      }
+    }
+    const d = birthDay.padStart(2, "0");
+    const m = birthMonth.padStart(2, "0");
+    const y = birthYearDraft;
+    const iso = `${y}-${m}-${d}`;
+    if (!validBirthDate(iso)) {
+      notify?.("Vui lòng nhập ngày, tháng, năm sinh hợp lệ (VD: 20/11/2005).");
+      return;
+    }
+    setBirthDate(iso);
+    clearDraft();
+  };
   const [fengshuiOnly, setFengshuiOnly] = useState(false);
   const scoreNumbers = useMemo(
     () => [...new Set(items.map((p) => p.plateNumber))],
@@ -442,63 +611,78 @@ export default function PlateList({
     ? sortedItems.filter((p) => fsFor(p))
     : sortedItems;
 
-  const handleBirthDateChange = (e) => {
-    const val = e.target.value;
-    let digits = val.replace(/\D/g, "").slice(0, 8);
-    // Nếu bấm Backspace ngay sau dấu '/', xóa lùi 1 chữ số
-    if (val.length < birthDateDraft.length && birthDateDraft.endsWith("/")) {
-      digits = digits.slice(0, -1);
-    }
-    let formatted = "";
-    if (digits.length <= 2) {
-      formatted = digits;
-    } else if (digits.length <= 4) {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    } else {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-    }
-    setBirthDateDraft(formatted);
-  };
 
-  const submitBirthDate = () => {
-    const iso = parseVnDateToIso(birthDateDraft);
-    if (!iso || !validBirthDate(iso)) {
-      notify?.("Vui lòng nhập đúng cấu trúc ngày/tháng/năm sinh (VD: 20/11/2005).");
-      return;
+    const total = useMemo(() => {
+    let sum = 0;
+    if (isAvailableActive) {
+      sum += hasActiveFilters ? (stockQuery.data?.total ?? stockTotal) : stockTotal;
     }
-    setBirthDate(iso);
-    setBirthDateDraft("");
-  };
-  const total = !vpaTab
-    ? (hasActiveFilters ? (data?.total ?? stockTotal) : stockTotal)
-    : vpaTab === "weekly"
-      ? (hasActiveFilters ? (vpaQuery.data?.total ?? (vpaCounts?.weekly || 70000)) : (vpaCounts?.weekly || 70000))
-      : (hasActiveFilters ? (vpaQuery.data?.total ?? (vpaCounts?.monthly || 829407)) : (vpaCounts?.monthly || 829407));
-  const totalPages = vpaTab
-    ? Math.max(
-        1,
-        Math.ceil(total / (filters.perPage === 0 ? 100 : filters.perPage)),
-      )
-    : useInfinite
-      ? inf.data?.pages?.[0]?.totalPages || 1
-      : data?.totalPages || 1;
-  const page = vpaTab
-    ? filters.page
-    : useInfinite
-      ? 0
-      : data?.page || filters.page;
+    if (isWeeklyActive) {
+      const base = vpaCounts?.weekly || 70000;
+      sum += hasActiveFilters ? (vpaWeeklyQuery.data?.total ?? base) : base;
+    }
+    if (isMonthlyActive) {
+      const base = vpaCounts?.monthly || 829407;
+      sum += hasActiveFilters ? (vpaMonthlyQuery.data?.total ?? base) : base;
+    }
+    return sum;
+  }, [
+    isAvailableActive,
+    isWeeklyActive,
+    isMonthlyActive,
+    hasActiveFilters,
+    stockQuery.data?.total,
+    stockTotal,
+    vpaCounts,
+    vpaWeeklyQuery.data?.total,
+    vpaMonthlyQuery.data?.total,
+  ]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(total / (filters.perPage === 0 ? 100 : filters.perPage)),
+  );
+  const page = filters.page;
 
   useEffect(() => {
     if (qDebounced) trackSearch(qDebounced);
   }, [qDebounced]);
 
-  const listReady = vpaTab
-    ? !vpaQuery.isLoading
-    : useInfinite
-      ? !inf.isLoading
-      : !isLoading;
+  const listReady = (
+    (!isAvailableActive || (useInfinite ? !inf.isLoading : !stockQuery.isLoading)) &&
+    (!isWeeklyActive || !vpaWeeklyQuery.isLoading) &&
+    (!isMonthlyActive || !vpaMonthlyQuery.isLoading)
+  );
+
+  const isErrorAll = (
+    (!isAvailableActive || (useInfinite ? inf.isError : stockQuery.isError)) &&
+    (!isWeeklyActive || vpaWeeklyQuery.isError) &&
+    (!isMonthlyActive || vpaMonthlyQuery.isError)
+  );
+
+  const showSkeleton = !listReady && items.length === 0;
+  const showError = isErrorAll && items.length === 0;
+
+  const handleRefetch = () => {
+    if (isAvailableActive) {
+      if (useInfinite) inf.refetch();
+      else stockQuery.refetch();
+    }
+    if (isWeeklyActive) vpaWeeklyQuery.refetch();
+    if (isMonthlyActive) vpaMonthlyQuery.refetch();
+  };
+
   useEffect(() => {
-    if (!listReady || vpaTab) return;
+    if (!listReady || !items.length) return;
+    const y = Number(sessionStorage.getItem("bsd_plate_list_scroll") || 0);
+    if (y > 0) {
+      restoreScrollPosition(y);
+      sessionStorage.removeItem("bsd_plate_list_scroll");
+    }
+  }, [listReady, items.length]);
+
+  useEffect(() => {
+    if (!listReady) return;
     if (items.length > 0) {
       trackViewItemList(filters.q ? "search_results" : "danh-sach", items);
     } else if (filters.q) {
@@ -513,38 +697,11 @@ export default function PlateList({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listReady, items.length, filters.q]);
 
-  // Khôi phục vị trí cuộn đã lưu (quay lại từ trang chi tiết biển) — chỉ chạy 1 lần sau khi có dữ liệu,
-  // tránh cuộn hụt trong lúc trang còn đang load skeleton.
-  const loading = vpaTab
-    ? vpaQuery.isLoading
-    : useInfinite
-      ? inf.isLoading
-      : isLoading;
-  useEffect(() => {
-    if (loading || !items.length) return;
-    const y = Number(sessionStorage.getItem("bsd_plate_list_scroll") || 0);
-    if (y > 0) {
-      restoreScrollPosition(y);
-      sessionStorage.removeItem("bsd_plate_list_scroll");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, items.length]);
-  const showSkeleton = vpaTab
-    ? vpaQuery.isLoading || vpaQuery.isFetching
-    : useInfinite
-      ? inf.isLoading
-      : isLoading || isFetching;
-  const showError = vpaTab
-    ? vpaQuery.isError
-    : useInfinite
-      ? inf.isError
-      : isError;
-
-  useSeo("list", { items: vpaTab ? [] : items });
+  useSeo("list", { items: hasVpa && !isAvailableActive ? [] : items });
 
   const toggleArrayFilter = (key, id) => {
     const isRemoving = filters[key].includes(id);
-    if (vpaTab && (key === "cat" || key === "city")) {
+    if (hasVpa && !isAvailableActive && (key === "cat" || key === "city")) {
       setFilter({ [key]: isRemoving ? [] : [id] });
       return;
     } // VPA chỉ lọc 1 giá trị
@@ -592,8 +749,31 @@ export default function PlateList({
     }
   };
 
+    const toggleTab = (key) => {
+    setFilters((f) => {
+      const current = selectedTabs;
+      let next;
+      if (current.includes(key)) {
+        if (current.length > 1) {
+          next = current.filter((k) => k !== key);
+        } else {
+          return f; // Giữ ít nhất 1 nguồn
+        }
+      } else {
+        next = [...current, key];
+      }
+      return {
+        ...f,
+        tabs: next,
+        tab: next.length === 1 && next[0] !== "available" ? next[0] : (next.length === 1 && next[0] === "available" ? "" : next.join(",")),
+        page: 1,
+      };
+    });
+  };
+
   const cardProps = (p) => ({
     ...p,
+    badge: p.badge || (isMultiTab ? "Có sẵn" : undefined),
     fav: !!favs?.[p.id],
     onFav: onFav ? () => onFav(p.id) : undefined,
     onCompare: () => (isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)),
@@ -725,8 +905,7 @@ export default function PlateList({
           }}
         >
           {TABS.map((t) => {
-            const key = t.key === "available" ? "" : t.key;
-            const active = filters.tab === key;
+            const active = selectedTabs.includes(t.key);
             const n =
               t.key === "available"
                 ? (stockTotal || 395)
@@ -739,16 +918,16 @@ export default function PlateList({
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() =>
-                  setFilters((f) => ({ ...f, tab: key, page: 1, city: [] }))
-                }
+                onClick={() => toggleTab(t.key)}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "flex-start",
-                  gap: 4,
+                  gap: 6,
                   padding: "var(--space-3) var(--space-4)",
-                  border: "none",
+                  border: active
+                    ? "2px solid var(--action-primary)"
+                    : "1.5px solid var(--border-subtle)",
                   borderRadius: "var(--radius-card)",
                   cursor: "pointer",
                   textAlign: "left",
@@ -760,24 +939,52 @@ export default function PlateList({
                     ? "var(--shadow-2)"
                     : "var(--shadow-inset-hairline)",
                   transition:
-                    "background-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard)",
+                    "all 160ms var(--ease-standard)",
                 }}
               >
-                <span
+                <div
                   style={{
-                    font: "var(--type-title-3)",
-                    fontWeight: "var(--fw-bold)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    gap: 8,
                   }}
                 >
-                  {t.label}
-                </span>
+                  <span
+                    style={{
+                      font: "var(--type-title-3)",
+                      fontWeight: "var(--fw-bold)",
+                    }}
+                  >
+                    {t.label}
+                  </span>
+                  {active && (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 18,
+                        height: 18,
+                        borderRadius: "50%",
+                        background: "rgba(255,255,255,0.28)",
+                        color: "#fff",
+                        flexShrink: 0,
+                      }}
+                      title="Đang chọn nguồn này"
+                    >
+                      <Check size={12} strokeWidth={3} />
+                    </span>
+                  )}
+                </div>
                 <span
                   style={{
                     font: "var(--type-caption)",
                     color: active
                       ? "var(--action-primary-text)"
                       : "var(--text-muted)",
-                    opacity: active ? 0.9 : 1,
+                    opacity: active ? 0.95 : 1,
                   }}
                 >
                   {n != null
@@ -810,7 +1017,7 @@ export default function PlateList({
             borderRadius: "var(--radius-card)",
             overflow: "hidden",
             boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-            padding: "4px 8px 4px 0",
+            padding: "4px 8px 4px 6px",
             minHeight: 52,
           }}
         >
@@ -829,7 +1036,7 @@ export default function PlateList({
               style={{
                 position: "absolute",
                 top: "50%",
-                left: 16,
+                left: 14,
                 transform: "translateY(-50%)",
                 color: "var(--text-faint)",
                 pointerEvents: "none",
@@ -837,6 +1044,7 @@ export default function PlateList({
             />
             <input
               type="search"
+              className="plate-search-input"
               placeholder="Tìm theo số, VD: 68, 51A, 999.99"
               aria-label="Tìm biển số"
               value={filters.q}
@@ -847,7 +1055,8 @@ export default function PlateList({
                 minWidth: 0,
                 border: "none",
                 background: "transparent",
-                padding: "0 16px 0 44px",
+                padding: "0 16px 0 40px",
+                borderRadius: "var(--radius-field, 8px)",
                 font: "var(--type-body-sm)",
                 color: "var(--text-strong)",
                 outline: "none",
@@ -895,7 +1104,7 @@ export default function PlateList({
                   aria-label="Bỏ lọc ngày sinh"
                   onClick={() => {
                     setBirthDate(null);
-                    setBirthDateDraft("");
+                    clearDraft();
                     if (filters.sort === "fengshui")
                       setFilter({ sort: "newest" });
                   }}
@@ -928,59 +1137,186 @@ export default function PlateList({
             </div>
           ) : (
             <div
+              className="plate-birth-container"
               style={{
                 display: "flex",
                 flex: "1 1 auto",
                 minWidth: 0,
                 alignItems: "center",
                 height: 44,
+                gap: 6,
+                padding: "0 4px",
               }}
             >
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="Nhập ngày tháng năm sinh (dd/mm/yyyy)"
-                value={birthDateDraft}
-                onChange={handleBirthDateChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") submitBirthDate();
-                }}
-                aria-label="Ngày tháng năm sinh"
+              <div
+                className="plate-birth-inputs-wrapper"
                 style={{
-                  height: 44,
-                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  flex: "1 1 auto",
                   minWidth: 0,
-                  border: "none",
-                  background: "transparent",
-                  padding: "0 16px",
-                  font: "var(--type-body-sm)",
-                  color: "var(--text-strong)",
-                  outline: "none",
+                  maxWidth: 340,
+                  height: 40,
+                  background: "var(--surface-sunken)",
+                  borderRadius: "var(--radius-field, 8px)",
+                  padding: "0 10px",
+                  border: "1px solid var(--border-hairline)",
+                  transition: "border-color 160ms ease, box-shadow 160ms ease",
                 }}
-              />
-              {birthDateDraft && (
+              >
+                <Calendar
+                  size={15}
+                  style={{
+                    color: "var(--action-primary)",
+                    flexShrink: 0,
+                    marginRight: 4,
+                  }}
+                />
+
+                {/* Ô 1: Ngày */}
+                <input
+                  ref={dayRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={2}
+                  className="plate-birth-subinput"
+                  placeholder="Ngày"
+                  value={birthDay}
+                  onChange={handleDayChange}
+                  onKeyDown={(e) => handleKeyDown(e, "day")}
+                  onPaste={handleDatePaste}
+                  aria-label="Ngày sinh (2 chữ số)"
+                  style={{
+                    flex: "1 1 0",
+                    width: 0,
+                    minWidth: 38,
+                    height: 34,
+                    textAlign: "center",
+                    border: "none",
+                    background: "transparent",
+                    font: "var(--type-body-sm)",
+                    fontWeight: "var(--fw-semibold)",
+                    color: "var(--text-strong)",
+                    outline: "none",
+                    padding: 0,
+                  }}
+                />
+
+                <span style={{ color: "var(--text-faint)", fontWeight: 700, userSelect: "none" }}>/</span>
+
+                {/* Ô 2: Tháng */}
+                <input
+                  ref={monthRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={2}
+                  className="plate-birth-subinput"
+                  placeholder="Tháng"
+                  value={birthMonth}
+                  onChange={handleMonthChange}
+                  onKeyDown={(e) => handleKeyDown(e, "month")}
+                  onPaste={handleDatePaste}
+                  aria-label="Tháng sinh (2 chữ số)"
+                  style={{
+                    flex: "1 1 0",
+                    width: 0,
+                    minWidth: 42,
+                    height: 34,
+                    textAlign: "center",
+                    border: "none",
+                    background: "transparent",
+                    font: "var(--type-body-sm)",
+                    fontWeight: "var(--fw-semibold)",
+                    color: "var(--text-strong)",
+                    outline: "none",
+                    padding: 0,
+                  }}
+                />
+
+                <span style={{ color: "var(--text-faint)", fontWeight: 700, userSelect: "none" }}>/</span>
+
+                {/* Ô 3: Năm */}
+                <input
+                  ref={yearRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  className="plate-birth-subinput"
+                  placeholder="Năm"
+                  value={birthYearDraft}
+                  onChange={handleYearChange}
+                  onKeyDown={(e) => handleKeyDown(e, "year")}
+                  onPaste={handleDatePaste}
+                  aria-label="Năm sinh (4 chữ số)"
+                  style={{
+                    flex: "1.4 1 0",
+                    width: 0,
+                    minWidth: 48,
+                    height: 34,
+                    textAlign: "center",
+                    border: "none",
+                    background: "transparent",
+                    font: "var(--type-body-sm)",
+                    fontWeight: "var(--fw-semibold)",
+                    color: "var(--text-strong)",
+                    outline: "none",
+                    padding: 0,
+                  }}
+                />
+
+                {(birthDay || birthMonth || birthYearDraft) && (
+                  <button
+                    type="button"
+                    onClick={clearDraft}
+                    title="Xóa ngày sinh đang nhập"
+                    aria-label="Xóa ngày sinh đang nhập"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      border: "none",
+                      background: "rgba(0,0,0,0.08)",
+                      color: "var(--text-body)",
+                      cursor: "pointer",
+                      padding: 0,
+                      flexShrink: 0,
+                      marginLeft: 2,
+                    }}
+                  >
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+
+              {(birthDay || birthMonth || birthYearDraft) && (
                 <button
                   type="button"
                   onClick={submitBirthDate}
                   style={{
-                    height: 36,
-                    padding: "0 16px",
-                    marginRight: 6,
-                    borderRadius: "var(--radius-xs)",
+                    height: 38,
+                    padding: "0 14px",
+                    borderRadius: "var(--radius-xs, 6px)",
                     border: "none",
                     cursor: "pointer",
                     font: "var(--type-body-sm)",
                     fontWeight: "var(--fw-semibold)",
                     background: "var(--action-primary)",
-                    color: "var(--action-primary-text)",
+                    color: "var(--action-primary-text, #fff)",
                     whiteSpace: "nowrap",
                     flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
                   }}
                 >
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <Sparkles size={13} /> Xem
-                  </span>
+                  <Sparkles size={13} /> Xem
                 </button>
               )}
             </div>
@@ -1372,7 +1708,7 @@ export default function PlateList({
                     }}
                   />
                 </div>
-                {!vpaTab && (
+                {isAvailableActive && (
                   <>
                     <div
                       style={{
@@ -1755,7 +2091,7 @@ export default function PlateList({
               }}
             />
           </div>
-          {!vpaTab && (
+          {isAvailableActive && (
             <>
               <div
                 style={{ height: 1, background: "var(--border-hairline)" }}
@@ -2071,7 +2407,7 @@ export default function PlateList({
                 gap: "var(--space-3)",
               }}
             >
-              {hasActiveFilters && !vpaTab && (
+              {hasActiveFilters && isAvailableActive && (
                 <Button
                   className="list-toolbar-secondary"
                   variant="outline"
@@ -2083,7 +2419,7 @@ export default function PlateList({
               )}
               <Select
                 value={
-                  vpaTab
+                  hasVpa && !isAvailableActive
                     ? birthYear && filters.sort === "fengshui"
                       ? "fengshui"
                       : vpaSort
@@ -2092,7 +2428,7 @@ export default function PlateList({
                       : filters.sort
                 }
                 options={[
-                  ...(vpaTab ? vpaSorts : SORT_OPTIONS),
+                  ...(hasVpa && !isAvailableActive ? vpaSorts : SORT_OPTIONS),
                   ...(birthYear ? [FENGSHUI_SORT] : []),
                 ]}
                 onChange={(v) => setFilter({ sort: v })}
@@ -2140,7 +2476,7 @@ export default function PlateList({
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => (useInfinite ? inf.refetch() : refetch())}
+                onClick={() => (useInfinite ? inf.refetch() : handleRefetch())}
               >
                 Thử lại
               </Button>
@@ -2176,8 +2512,10 @@ export default function PlateList({
               >
                 {shownItems.map((p, i) => (
                   <PlateCard
-                    key={p.id}
-                    {...(vpaTab ? vpaCardProps(p) : cardProps(p))}
+                    key={p._source ? `${p._source}-${p.id}` : p.id}
+                    {...(p._source === "available" || (!p._source && !p.isVpa && !p.vpaType && !p.auctionDate)
+                      ? cardProps(p)
+                      : vpaCardProps(p))}
                     fengShui={fsFor(p)}
                     plateSize={filters.view === "list" ? "listLg" : "md"}
                     layout={filters.view === "list" ? "row" : "grid"}
@@ -2240,12 +2578,14 @@ export default function PlateList({
               style={{
                 display: "flex",
                 justifyContent: "center",
-                padding: "var(--space-4) 0",
-                font: "var(--type-body-sm)",
-                color: "var(--text-muted)",
+                padding: "var(--space-6) 0 var(--space-4)",
               }}
             >
-              Đang tải thêm…
+              <MotionLoader
+                variant="bars"
+                size="sm"
+                label="Đang tải thêm biển số..."
+              />
             </div>
           )}
           {!useInfinite && totalPages > 1 && (

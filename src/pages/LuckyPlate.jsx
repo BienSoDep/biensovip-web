@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas';
 import { ChevronDown, Compass, LayoutGrid, List as ListIcon, Sparkles } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import PlateCard from '../components/PlateCard.jsx';
+import SpotlightCard from '../components/SpotlightCard.jsx';
 import { Input, Eyebrow, Badge, Icon, InfoTip, DateInputVN, Checkbox, PageHeader } from '../components/index.jsx';
 import PlateFengShuiAnalyzerTab from './PlateFengShuiAnalyzerTab.jsx';
 import { useFengShuiLookup, useSaveFengShuiHistory, useFengShuiHistory } from '../services/fengshuiService.js';
@@ -412,13 +413,20 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
             )}
           </div>
 
-          <Button variant="primary" type="submit" size="lg" fullWidth disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
+          <Button variant="primary" type="submit" size="lg" fullWidth shimmer rollingText disabled={lookup.isPending}>{lookup.isPending ? 'Đang tra cứu...' : 'Tra cứu mệnh của bạn'}</Button>
         </fieldset>
         </form>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', animation: 'fadeIn 180ms var(--ease-out)' }}>
           {/* Khối kết quả mệnh */}
-          <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <SpotlightCard
+            size={480}
+            spotlightColor="rgba(241, 151, 32, 0.16)"
+            borderColor="rgba(241, 151, 32, 0.28)"
+            tilt={true}
+            maxTilt={2.5}
+            style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}
+          >
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-4)' }}>
               <span style={{ width: 56, height: 56, borderRadius: '50%', background: `${el.color}26`, color: el.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name={el.icon} size={26} />
@@ -431,24 +439,38 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
               <Button variant="ghost" size="sm" onClick={reset}>← Sửa thông tin</Button>
             </div>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{el.desc}</p>
-          </div>
+          </SpotlightCard>
 
           {/* Số hợp / tránh */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 'var(--space-4)' }}>
-            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <SpotlightCard
+              size={320}
+              spotlightColor="rgba(241, 151, 32, 0.12)"
+              borderColor="rgba(241, 151, 32, 0.25)"
+              tilt={true}
+              maxTilt={3}
+              style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+            >
               <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Con số hợp mệnh {result.element}<InfoTip size={12} text="Con số tương sinh với mệnh của bạn. Chọn biển có các số này sẽ được xem là hợp phong thủy." /></span>
               <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                 {result.luckyDigits.map((d) => <Badge key={d} tone="mint" style={{ width: 40, height: 40, fontSize: 'var(--type-title-3)', justifyContent: 'center' }}>{d}</Badge>)}
               </div>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Nên chọn biển số chứa các số này</span>
-            </div>
-            <div style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            </SpotlightCard>
+            <SpotlightCard
+              size={320}
+              spotlightColor="rgba(241, 151, 32, 0.12)"
+              borderColor="rgba(241, 151, 32, 0.25)"
+              tilt={true}
+              maxTilt={3}
+              style={{ background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+            >
               <span style={{ font: 'var(--type-label)', color: 'var(--text-muted)' }}>Con số nên tránh</span>
               <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
                 {result.avoidDigits.map((d) => <Badge key={d} tone="rose" style={{ width: 40, height: 40, fontSize: 'var(--type-title-3)', justifyContent: 'center' }}>{d}</Badge>)}
               </div>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>Khắc mệnh — nên tránh đứng cuối</span>
-            </div>
+            </SpotlightCard>
           </div>
 
           {/* Chia sẻ */}
@@ -487,7 +509,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
                         </div>
                       )}
                       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
-                      <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}{r.source === 'vpa' && <Badge tone="blue" style={{ marginLeft: 8 }}>Biển VPA</Badge>}</span>
+                      <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}{r.source === 'vpa' && <Badge tone="amber" style={{ marginLeft: 8 }}>Biển VPA</Badge>}</span>
                       <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{(r.priceOnRequest || !r.price || Number(r.price) <= 0) ? 'Giá liên hệ' : `${Number(r.price).toLocaleString('vi-VN')}đ`}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, minWidth: 150 }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.score}% hợp mệnh</span>
@@ -522,7 +544,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
                         href={routeFor('detail', r.slug || r.plateId)}
                         onOpen={() => openPlate(r.slug || r.plateId, 'lucky')} contact={contact} plateSize="md" layout="grid"
                       />
-                      {r.source === 'vpa' && <Badge tone="blue" style={{ alignSelf: 'flex-start' }}>Biển VPA</Badge>}
+                      {r.source === 'vpa' && <Badge tone="amber" style={{ alignSelf: 'flex-start' }}>Biển VPA</Badge>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', flex: 1 }}>{r.score}% hợp mệnh</span>
@@ -548,7 +570,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
               <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử tra cứu</span>
               {history.data.map((h) => (
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                  <Badge tone="blue">Mệnh {elementAsciiLabel(h.element)}</Badge>
+                  <Badge tone="amber">Mệnh {elementAsciiLabel(h.element)}</Badge>
                   <span style={{ flex: 1 }}>{h.birthDate}</span>
                   <Button variant="ghost" size="sm" onClick={() => { setForm((f) => ({ ...f, birthDate: h.birthDate })); }}>Xem lại</Button>
                 </div>

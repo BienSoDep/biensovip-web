@@ -19,15 +19,15 @@ function getNotificationMeta(type) {
     case 'ai_pick':
       return { Icon: Sparkles, color: '#D97706', bg: '#FEF3C7', label: 'Gợi ý AI' };
     case 'plate_match':
-      return { Icon: Car, color: '#2563EB', bg: '#DBEAFE', label: 'Khớp biển số' };
+      return { Icon: Car, color: '#EA580C', bg: '#FFF7ED', label: 'Khớp biển số' };
     case 'price_drop':
-      return { Icon: TrendingDown, color: '#059669', bg: '#D1FAE5', label: 'Giảm giá' };
+      return { Icon: TrendingDown, color: '#D97706', bg: '#FEF3C7', label: 'Giảm giá' };
     case 'hot_alert':
-      return { Icon: Flame, color: '#DC2626', bg: '#FEE2E2', label: 'Biển số Hot' };
+      return { Icon: Flame, color: '#EA580C', bg: '#FFF7ED', label: 'Biển số Hot' };
     case 'fengshui_match':
-      return { Icon: Compass, color: '#7C3AED', bg: '#EDE9FE', label: 'Hợp mệnh' };
+      return { Icon: Compass, color: '#D97706', bg: '#FFF7ED', label: 'Hợp mệnh' };
     case 'contact_status':
-      return { Icon: FileText, color: '#0284C7', bg: '#E0F2FE', label: 'Yêu cầu liên hệ' };
+      return { Icon: FileText, color: '#D97706', bg: '#FEF3C7', label: 'Yêu cầu liên hệ' };
     case 'plate_sold':
       return { Icon: Tag, color: '#64748B', bg: '#F1F5F9', label: 'Đã bán' };
     case 'new_review':
