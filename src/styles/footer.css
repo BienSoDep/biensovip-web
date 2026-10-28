@@ -1,22 +1,24 @@
 /* ==========================================================================
-   BIENSOVIP LUXURY LIGHT FOOTER STYLES
-   Chân trang cao cấp: Tông Light Luxury thanh lịch, hài hòa với màu nền web,
-   dải nhấn vàng cam thương hiệu Duy Đinh, các thẻ kênh tương tác cao & trợ năng chuẩn WCAG.
+   MOTION.DEV / LUXURY FOOTER STYLES (motion.dev/ui/footers)
+   Chân trang hệ thống chuẩn Motion UI:
+   - Hero Newsletter Banner với form đa trạng thái (idle, loading, success)
+   - Khối kênh liên hệ tương tác cao (Hotline, Zalo, Showroom, FB, Email, Giờ mở cửa)
+   - Khối Sitemap đa cột với hiệu ứng trượt mượt mà (staggered in-view & spring hover)
+   - Chân đáy với trạng thái vận hành trực tiếp và nút Motion Back-To-Top
    ========================================================================== */
 
-.vip-footer {
+.vip-footer.motion-footer {
   position: relative;
-  background: radial-gradient(circle at 85% 0%, rgba(241, 151, 32, 0.05) 0%, transparent 55%),
-              radial-gradient(circle at 10% 25%, rgba(241, 151, 32, 0.03) 0%, transparent 45%),
+  background: radial-gradient(circle at 85% 0%, rgba(241, 151, 32, 0.06) 0%, transparent 55%),
+              radial-gradient(circle at 10% 25%, rgba(241, 151, 32, 0.04) 0%, transparent 45%),
               #F8FAFC;
   color: #1E293B;
   border-top: 1px solid #E2E8F0;
   overflow: hidden;
 }
 
-/* Dải viền sáng trên cùng mang màu nhận diện vàng cam Duy Đinh */
-.vip-footer::before {
-  content: '';
+/* Dải viền sáng trên cùng mang màu nhận diện vàng cam thương hiệu Duy Đinh */
+.motion-footer-glow-line {
   position: absolute;
   top: 0;
   left: 0;
@@ -30,20 +32,240 @@
     rgba(245, 158, 11, 0.7) 75%,
     transparent 100%
   );
-  z-index: 1;
+  z-index: 2;
 }
 
 .vip-footer-inner {
   max-width: var(--width-content, 1216px);
   margin: 0 auto;
-  padding: clamp(32px, 5vw, 56px) var(--pad-page, 24px) 28px;
+  padding: clamp(36px, 5vw, 60px) var(--pad-page, 24px) 32px;
   display: flex;
   flex-direction: column;
   gap: clamp(28px, 4vw, 44px);
 }
 
 /* ==========================================================================
-   1. KHỐI THẺ KÊNH LIÊN HỆ NHANH (QUICK CONTACT CARDS BAR)
+   1. MOTION HERO NEWSLETTER BANNER (motion.dev/ui/footers)
+   ========================================================================== */
+
+.motion-footer-hero-banner {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  border-radius: 20px;
+  padding: clamp(24px, 4vw, 36px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(24px, 4vw, 48px);
+  box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.motion-footer-hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(241, 151, 32, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(28px);
+}
+
+.motion-footer-hero-content {
+  flex: 1 1 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.motion-footer-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(241, 151, 32, 0.15);
+  border: 1px solid rgba(241, 151, 32, 0.35);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #FBBF24;
+  width: fit-content;
+}
+
+.motion-footer-hero-title {
+  margin: 0;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 800;
+  line-height: 1.25;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.motion-footer-hero-sub {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #94A3B8;
+  max-width: 520px;
+}
+
+.motion-footer-hero-action {
+  flex: 0 1 420px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Form đăng ký nhận tin đa trạng thái */
+.motion-footer-newsletter-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.motion-footer-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 5px 6px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.motion-footer-newsletter-form:focus-within {
+  border-color: #F19720;
+  box-shadow: 0 0 0 3px rgba(241, 151, 32, 0.22);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.motion-footer-newsletter-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  padding-left: 8px;
+}
+
+.motion-footer-newsletter-input-icon {
+  color: #94A3B8;
+  flex-shrink: 0;
+}
+
+.motion-footer-newsletter-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 13.5px;
+  outline: none;
+  font-family: inherit;
+}
+
+.motion-footer-newsletter-input::placeholder {
+  color: #64748B;
+}
+
+.motion-footer-newsletter-submit-btn {
+  background: linear-gradient(135deg, #F19720 0%, #EA580C 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(241, 151, 32, 0.35);
+  font-family: inherit;
+}
+
+.motion-footer-newsletter-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.motion-footer-spin {
+  animation: motion-spin 1s linear infinite;
+}
+
+@keyframes motion-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.motion-footer-newsletter-success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #D1FAE5;
+}
+
+.motion-footer-newsletter-success-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #10B981;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.motion-footer-newsletter-success-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  flex: 1;
+}
+
+.motion-footer-newsletter-success-text strong {
+  font-size: 13.5px;
+  color: #FFFFFF;
+}
+
+.motion-footer-newsletter-reset-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.motion-footer-newsletter-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.motion-footer-newsletter-error {
+  font-size: 12px;
+  color: #F87171;
+  padding-left: 4px;
+}
+
+/* ==========================================================================
+   2. KHỐI THẺ KÊNH LIÊN HỆ TƯƠNG TÁC CAO (QUICK CONTACT CARDS BAR)
    ========================================================================== */
 
 .vip-contact-bar {
@@ -76,9 +298,9 @@
   border: 1px solid #E2E8F0;
   text-decoration: none;
   color: inherit;
-  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .vip-contact-card::before {
@@ -94,7 +316,6 @@
 .vip-contact-card:hover {
   background: #FFFFFF;
   border-color: var(--card-border, #F19720);
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 0 14px -2px var(--card-glow, rgba(241, 151, 32, 0.15));
 }
 
@@ -179,7 +400,7 @@
 }
 
 /* ==========================================================================
-   2. KHỐI THÂN CHÂN TRANG (BRAND & SITEMAP COLUMNS)
+   3. KHỐI THÂN CHÂN TRANG (BRAND & SITEMAP COLUMNS)
    ========================================================================== */
 
 .vip-footer-main {
@@ -202,10 +423,10 @@
 }
 
 .vip-footer-logo {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(241, 151, 32, 0.25));
+  filter: drop-shadow(0 2px 8px rgba(241, 151, 32, 0.28));
 }
 
 .vip-footer-brand-name {
@@ -232,15 +453,15 @@
   padding: 12px 14px;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 10px;
+  border-radius: 12px;
   max-width: 360px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .vip-footer-badge-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 12px;
   font-weight: 600;
   color: #334155;
@@ -251,59 +472,7 @@
   flex-shrink: 0;
 }
 
-/* Khối Newsletter trong footer */
-.vip-footer-newsletter {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 360px;
-}
-
-.vip-footer-newsletter-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #1E293B;
-}
-
-/* Đảm bảo ô input newsletter ăn nhập hoàn hảo với light theme */
-.vip-footer .vip-footer-newsletter input {
-  background: #FFFFFF !important;
-  border: 1px solid #CBD5E1 !important;
-  color: #0F172A !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
-  border-radius: 8px !important;
-}
-
-.vip-footer .vip-footer-newsletter input::placeholder {
-  color: #94A3B8 !important;
-}
-
-.vip-footer .vip-footer-newsletter input:focus {
-  border-color: #F19720 !important;
-  box-shadow: 0 0 0 3px rgba(241, 151, 32, 0.15) !important;
-}
-
-.vip-footer .vip-footer-newsletter button {
-  background: #F19720 !important;
-  color: #FFFFFF !important;
-  font-weight: 700 !important;
-  border: none !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(241, 151, 32, 0.25) !important;
-  transition: all 0.2s ease !important;
-}
-
-.vip-footer .vip-footer-newsletter button:hover {
-  background: #EA580C !important;
-  transform: translateY(-1px);
-}
-
-/* ==========================================================================
-   3. CÁC CỘT LIÊN KẾT ĐIỀU HƯỚNG (SITEMAP COLUMNS)
-   ========================================================================== */
-
+/* CÁC CỘT LIÊN KẾT ĐIỀU HƯỚNG */
 .vip-footer-columns {
   flex: 2 1 600px;
   display: grid;
@@ -357,13 +526,36 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
   line-height: 1.4;
+  cursor: pointer;
+  transition: color 0.18s ease;
 }
 
 .vip-footer-link:hover {
   color: #D97706;
-  transform: translateX(4px);
+}
+
+.vip-footer-link-chevron {
+  opacity: 0.45;
+  flex-shrink: 0;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.vip-footer-link:hover .vip-footer-link-chevron {
+  opacity: 0.9;
+  transform: translateX(2px);
+}
+
+.vip-footer-link-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  margin-left: 4px;
+  white-space: nowrap;
 }
 
 .vip-footer-link.highlight {
@@ -406,7 +598,7 @@
 .vip-footer-trust-tags {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -418,6 +610,8 @@
   padding: 4px 10px;
   border-radius: 6px;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
 }
 
 .vip-back-to-top {
@@ -432,15 +626,14 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-family: inherit;
 }
 
 .vip-back-to-top:hover {
   background: #FFF7ED;
   border-color: #F19720;
   color: #C2410C;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(241, 151, 32, 0.18);
 }
 
@@ -451,6 +644,15 @@
 @media (max-width: 1024px) {
   .vip-contact-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .motion-footer-hero-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .motion-footer-hero-action {
+    flex: 1 1 100%;
   }
 }
 
@@ -474,6 +676,15 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 14px;
+  }
+
+  .motion-footer-newsletter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .motion-footer-newsletter-submit-btn {
+    justify-content: center;
   }
 }
 

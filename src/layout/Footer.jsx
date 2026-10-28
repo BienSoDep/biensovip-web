@@ -10,24 +10,158 @@ import {
   Copy,
   Check,
   ChevronRight,
+  Send,
+  Loader2,
+  Award,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
 import { contentGet } from '../lib/content/index.js';
 import { routeFor, parseRoute, PROVINCE_LANDINGS, PLATE_TYPE_LANDINGS } from '../config/routes.js';
-import EmailCapture from '../components/EmailCapture.jsx';
+import { useSubscribe } from '../services/subscribers.js';
 import ZaloIcon from '../components/ZaloIcon.jsx';
 import FacebookIcon from '../components/FacebookIcon.jsx';
 import { DEFAULT_CONTACT } from '../common/constants.js';
 import { toZaloUrl } from '../lib/zaloMessage.js';
 
-// UC06 — Zalo/contact đọc từ GET /api/settings (không hardcode tay). Fallback: thông tin doanh nghiệp thật.
-// Footer link href sinh từ routeFor() để không lệch slug (vd lucky: alias cũ tu-van → hop-menh).
+/**
+ * MotionFooterNewsletter - Animated newsletter form inspired by Motion UI (motion.dev/ui/footers)
+ * Multi-state feedback (idle -> loading -> success / error) with spring physics and accessible ARIA.
+ */
+function MotionFooterNewsletter() {
+  const subscribe = useSubscribe();
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErrorMessage('Vui lòng nhập địa chỉ email hợp lệ.');
+      setStatus('error');
+      return;
+    }
+
+    setStatus('loading');
+    setErrorMessage('');
+
+    try {
+      await subscribe.mutateAsync({ email: cleanEmail, source: 'footer_newsletter' });
+      setStatus('success');
+      setEmail('');
+      toast.success('Đăng ký nhận thông báo biển số thành công!');
+    } catch (err) {
+      setStatus('error');
+      setErrorMessage(err.message || 'Không thể đăng ký lúc này. Vui lòng thử lại sau.');
+    }
+  };
+
+  return (
+    <div className="motion-footer-newsletter-box">
+      <AnimatePresence mode="wait">
+        {status === 'success' ? (
+          <motion.div
+            key="success-banner"
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -8 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+            className="motion-footer-newsletter-success"
+          >
+            <div className="motion-footer-newsletter-success-icon">
+              <Check size={18} />
+            </div>
+            <div className="motion-footer-newsletter-success-text">
+              <strong>Đăng ký thành công!</strong>
+              <span>Bạn sẽ nhận được thông báo ngay khi có biển số đẹp mới về kho.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStatus('idle')}
+              className="motion-footer-newsletter-reset-btn"
+              title="Đăng ký thêm email khác"
+            >
+              Đăng ký thêm
+            </button>
+          </motion.div>
+        ) : (
+          <motion.form
+            key="input-form"
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="motion-footer-newsletter-form"
+          >
+            <div className="motion-footer-newsletter-input-wrap">
+              <Mail size={18} className="motion-footer-newsletter-input-icon" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (status === 'error') setStatus('idle');
+                }}
+                disabled={status === 'loading'}
+                placeholder="Nhập email của bạn (vd: duy@gmail.com)"
+                aria-label="Email nhận bản tin biển số VIP"
+                className="motion-footer-newsletter-input"
+              />
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={status === 'loading'}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+              className="motion-footer-newsletter-submit-btn"
+            >
+              {status === 'loading' ? (
+                <>
+                  <Loader2 size={16} className="motion-footer-spin" />
+                  <span>Đang gửi…</span>
+                </>
+              ) : (
+                <>
+                  <span>Nhận tin biển mới</span>
+                  <Send size={15} />
+                </>
+              )}
+            </motion.button>
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      {status === 'error' && errorMessage && (
+        <motion.span
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          role="alert"
+          className="motion-footer-newsletter-error"
+        >
+          {errorMessage}
+        </motion.span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Footer - Motion UI Inspired Modern Footer (motion.dev/ui/footers)
+ * Features:
+ * - Top Newsletter Hero Card with interactive multi-state feedback
+ * - Quick Contact Rail with high-affordance spring hover physics and preserved brand colors
+ * - Staggered In-View Sitemap Columns with sliding hover indicators
+ * - Elegant bottom bar with live status indicator and Motion spring Back-To-Top button
+ */
 export default function Footer({ settings, patch }) {
   const T = contentGet;
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  // Href thật giữ nguyên (SEO — crawler/mở tab mới/right-click vẫn dùng URL chuẩn).
-  // Click chuột trái thường thì điều hướng qua router SPA thay vì full-page reload (UX — tránh giật/trắng trang khi đổi route).
+  // Điều hướng SPA mượt mà, giữ URL chuẩn cho SEO & crawler
   const navClick = (e) => {
     if (!patch || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
@@ -67,35 +201,70 @@ export default function Footer({ settings, patch }) {
   };
 
   const exploreLinks = [
-    [routeFor('list'), T('common.footer.list') || 'Kho biển số'],
-    [routeFor('lucky'), T('common.footer.lucky') || 'Hợp mệnh'],
-    [routeFor('chat'), 'Nhắn tin tư vấn'],
-    [routeFor('compare'), T('common.footer.compare') || 'So sánh biển số'],
-    [routeFor('collab'), T('common.footer.collab') || 'Cộng tác viên'],
-    [routeFor('fav'), T('common.footer.fav') || 'Biển số yêu thích'],
-    [routeFor('blog'), T('common.footer.blog') || 'Tin phong thủy'],
+    { href: routeFor('list'), label: T('common.footer.list') || 'Kho biển số' },
+    { href: routeFor('lucky'), label: T('common.footer.lucky') || 'Hợp mệnh phong thủy' },
+    { href: routeFor('luanBien'), label: 'Luận giải biển số xe', badge: 'Mới' },
+    { href: routeFor('chat'), label: 'Nhắn tin tư vấn trực tiếp' },
+    { href: routeFor('compare'), label: T('common.footer.compare') || 'So sánh biển số' },
+    { href: routeFor('collab'), label: T('common.footer.collab') || 'Cộng tác viên', badge: 'Hoa hồng 10%' },
+    { href: routeFor('fav'), label: T('common.footer.fav') || 'Biển số yêu thích' },
+    { href: routeFor('blog'), label: T('common.footer.blog') || 'Tin phong thủy' },
   ];
 
   const policyLinks = [
-    [routeFor('terms'), T('common.footer.terms') || 'Điều khoản dịch vụ'],
-    [routeFor('privacy'), T('common.footer.privacy') || 'Chính sách bảo mật'],
-    [routeFor('transfer'), T('common.footer.transfer') || 'Hướng dẫn sang tên'],
-    [routeFor('faq'), T('common.footer.faq') || 'Câu hỏi thường gặp'],
+    { href: routeFor('transfer'), label: T('common.footer.transfer') || 'Hướng dẫn sang tên Thông tư 24' },
+    { href: routeFor('faq'), label: T('common.footer.faq') || 'Câu hỏi thường gặp (FAQ)' },
+    { href: routeFor('terms'), label: T('common.footer.terms') || 'Điều khoản dịch vụ' },
+    { href: routeFor('privacy'), label: T('common.footer.privacy') || 'Chính sách bảo mật & pháp lý' },
   ];
 
   return (
-    <footer className="vip-footer" role="contentinfo" aria-label="Chân trang Biensovip">
+    <footer className="vip-footer motion-footer" role="contentinfo" aria-label="Chân trang Biensovip">
+      {/* Glow highlight top line */}
+      <div className="motion-footer-glow-line" />
+
       <div className="vip-footer-inner">
         {/* ================================================================
-            1. KHỐI THẺ KÊNH LIÊN HỆ TƯƠNG TÁC CAO (QUICK CONTACT CARDS BAR)
+            1. MOTION HERO NEWSLETTER BANNER (motion.dev/ui/footers pattern)
+            ================================================================ */}
+        <motion.div
+          className="motion-footer-hero-banner"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="motion-footer-hero-content">
+            <div className="motion-footer-hero-badge">
+              <Sparkles size={14} />
+              <span>Bản Tin Định Kỳ Biển Số Đẹp</span>
+            </div>
+            <h2 className="motion-footer-hero-title">
+              Đăng ký nhận danh sách biển VIP &amp; giá đấu mới nhất
+            </h2>
+            <p className="motion-footer-hero-sub">
+              Cập nhật sớm các biển số ngũ quý, lộc phát vừa về kho và thông tin đấu giá VPA tuần này kèm phân tích ngũ hành phong thủy.
+            </p>
+          </div>
+
+          <div className="motion-footer-hero-action">
+            <MotionFooterNewsletter />
+          </div>
+        </motion.div>
+
+        {/* ================================================================
+            2. QUICK CONTACT INTERACTION CARDS (Giữ trọn màu nhận diện kênh)
             ================================================================ */}
         <div className="vip-contact-bar">
           <div className="vip-contact-grid">
             {/* THẺ 1: HOTLINE 24/7 */}
-            <a
+            <motion.a
               href={`tel:${phone}`}
               className="vip-contact-card"
               title="Gọi hotline tư vấn trực tiếp 24/7"
+              whileHover={{ y: -4, scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             >
               <div className="vip-contact-icon-box">
                 <PhoneCall size={20} />
@@ -105,15 +274,18 @@ export default function Footer({ settings, patch }) {
                 <span className="vip-contact-value">{phoneDisplay}</span>
                 <span className="vip-contact-sub">Bấm gọi ngay · Phục vụ 24/7</span>
               </div>
-            </a>
+            </motion.a>
 
             {/* THẺ 2: ZALO OFFICIAL */}
-            <a
+            <motion.a
               href={toZaloUrl(zalo)}
               target="_blank"
               rel="noopener noreferrer"
               className="vip-contact-card"
               title="Chat Zalo với chuyên viên tư vấn Duy Đinh"
+              whileHover={{ y: -4, scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             >
               <div className="vip-contact-icon-box">
                 <ZaloIcon style={{ width: 22, height: 22 }} />
@@ -123,10 +295,10 @@ export default function Footer({ settings, patch }) {
                 <span className="vip-contact-value">{phoneDisplay}</span>
                 <span className="vip-contact-sub">Nhắn tin Zalo · Phản hồi &lt; 5p</span>
               </div>
-            </a>
+            </motion.a>
 
             {/* THẺ 3: SHOWROOM / ĐỊA CHỈ */}
-            <a
+            <motion.a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -139,6 +311,9 @@ export default function Footer({ settings, patch }) {
                 '--icon-color': '#EF4444',
                 '--label-color': '#DC2626',
               }}
+              whileHover={{ y: -4, scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             >
               <div className="vip-contact-icon-box">
                 <MapPin size={20} />
@@ -148,10 +323,10 @@ export default function Footer({ settings, patch }) {
                 <span className="vip-contact-value">Số 06 An Thượng 30</span>
                 <span className="vip-contact-sub">Ngũ Hành Sơn, Đà Nẵng · Chỉ đường →</span>
               </div>
-            </a>
+            </motion.a>
 
             {/* THẺ 4: FANPAGE FACEBOOK */}
-            <a
+            <motion.a
               href={facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -164,6 +339,9 @@ export default function Footer({ settings, patch }) {
                 '--icon-color': '#1877F2',
                 '--label-color': '#1877F2',
               }}
+              whileHover={{ y: -4, scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             >
               <div className="vip-contact-icon-box">
                 <FacebookIcon style={{ width: 20, height: 20, color: '#1877F2' }} />
@@ -173,19 +351,21 @@ export default function Footer({ settings, patch }) {
                 <span className="vip-contact-value">{facebookName}</span>
                 <span className="vip-contact-sub">Cập nhật biển mới mỗi ngày</span>
               </div>
-            </a>
+            </motion.a>
 
             {/* THẺ 5: EMAIL LIÊN HỆ & SAO CHÉP */}
-            <a
+            <motion.a
               href={`mailto:${email}`}
               className="vip-contact-card"
               title="Bấm để gửi email hoặc sao chép địa chỉ"
               onClick={(e) => {
-                // Nếu click vào nút copy thì không mở app mail
                 if (e.target.closest('.copy-trigger')) {
                   handleCopyEmail(e);
                 }
               }}
+              whileHover={{ y: -4, scale: 1.015 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             >
               <div className="vip-contact-icon-box">
                 <Mail size={20} />
@@ -214,7 +394,7 @@ export default function Footer({ settings, patch }) {
                 <span className="vip-contact-value">{email}</span>
                 <span className="vip-contact-sub">{copiedEmail ? 'Đã sao chép vào bộ nhớ tạm' : 'Bấm để gửi thư hoặc sao chép'}</span>
               </div>
-            </a>
+            </motion.a>
 
             {/* THẺ 6: GIỜ LÀM VIỆC & TRẠNG THÁI */}
             <div
@@ -235,7 +415,7 @@ export default function Footer({ settings, patch }) {
                 <span className="vip-contact-label">Giờ Hoạt Động</span>
                 <span className="vip-contact-value">{hours}</span>
                 <span className="vip-contact-sub">
-                  <span className="vip-live-dot" /> Đang mở cửa (Cả T7 & CN)
+                  <span className="vip-live-dot" /> Đang mở cửa (Cả T7 &amp; CN)
                 </span>
               </div>
             </div>
@@ -243,20 +423,31 @@ export default function Footer({ settings, patch }) {
         </div>
 
         {/* ================================================================
-            2. KHỐI THÂN CHÂN TRANG: BRAND & SITEMAP COLUMNS
+            3. MOTION SITEMAP COLUMNS WITH STAGGERED IN-VIEW ANIMATION
             ================================================================ */}
         <div className="vip-footer-main">
           {/* CỘT THƯƠNG HIỆU & BẢO CHỨNG */}
-          <div className="vip-footer-brand-col">
+          <motion.div
+            className="vip-footer-brand-col"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45, delay: 0.05 }}
+          >
             <div className="vip-footer-brand-header">
               <img
                 src="/assets/logo-mark.png"
                 alt={T('common.brand.name') || 'Duy Đinh'}
                 className="vip-footer-logo"
               />
-              <span className="vip-footer-brand-name">
-                {T('common.brand.name') || 'Duy Đinh'} · Biển Số Đẹp
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span className="vip-footer-brand-name">
+                  {T('common.brand.name') || 'Duy Đinh'} · Biển Số Đẹp
+                </span>
+                <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 600, letterSpacing: '0.04em' }}>
+                  UY TÍN TẠO NÊN ĐẲNG CẤP
+                </span>
+              </div>
             </div>
 
             <p className="vip-footer-brand-desc">
@@ -268,117 +459,152 @@ export default function Footer({ settings, patch }) {
             <div className="vip-footer-badges">
               <div className="vip-footer-badge-item">
                 <ShieldCheck size={16} />
-                <span>Cam kết 100% biển số định danh hợp pháp</span>
+                <span>Cam kết 100% biển số định danh hợp pháp BCA</span>
               </div>
               <div className="vip-footer-badge-item">
                 <Sparkles size={16} />
-                <span>Hỗ trợ thủ tục sang tên, rút hồ sơ trọn gói</span>
+                <span>Hỗ trợ thủ tục sang tên, rút hồ sơ trọn gói 63 tỉnh</span>
+              </div>
+              <div className="vip-footer-badge-item">
+                <Award size={16} />
+                <span>Thẩm định phong thủy ngũ hành chuẩn xác</span>
               </div>
             </div>
-
-            {/* ĐĂNG KÝ NHẬN TIN BIỂN MỚI */}
-            <div className="vip-footer-newsletter">
-              <span className="vip-footer-newsletter-title">Nhận thông báo biển số mới</span>
-              <EmailCapture source="newsletter" />
-            </div>
-          </div>
+          </motion.div>
 
           {/* CÁC CỘT LIÊN KẾT ĐIỀU HƯỚNG */}
           <div className="vip-footer-columns">
             {/* CỘT 1: KHÁM PHÁ */}
-            <div className="vip-footer-section">
+            <motion.div
+              className="vip-footer-section"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: 0.12 }}
+            >
               <span className="vip-footer-section-title">
                 {T('common.footer.explore_title') || 'Khám Phá'}
               </span>
               <ul className="vip-footer-link-list">
-                {exploreLinks.map(([href, label]) => (
-                  <li key={href}>
-                    <a
-                      href={href}
+                {exploreLinks.map((item) => (
+                  <li key={item.href}>
+                    <motion.a
+                      href={item.href}
                       onClick={navClick}
-                      rel={href === '/yeu-thich' ? 'nofollow' : undefined}
+                      rel={item.href === '/yeu-thich' ? 'nofollow' : undefined}
                       className="vip-footer-link"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                     >
-                      <ChevronRight size={13} style={{ opacity: 0.5 }} />
-                      {label}
-                    </a>
+                      <ChevronRight size={13} className="vip-footer-link-chevron" />
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="vip-footer-link-badge">{item.badge}</span>
+                      )}
+                    </motion.a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
 
             {/* CỘT 2: KHO BIỂN THEO LOẠI */}
-            <div className="vip-footer-section">
+            <motion.div
+              className="vip-footer-section"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: 0.18 }}
+            >
               <span className="vip-footer-section-title">Kho Biển Theo Loại</span>
               <ul className="vip-footer-link-list">
                 {PLATE_TYPE_LANDINGS.map((p) => (
                   <li key={p.slug}>
-                    <a
+                    <motion.a
                       href={routeFor('post', p.slug)}
                       onClick={navClick}
                       className="vip-footer-link"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                     >
-                      <ChevronRight size={13} style={{ opacity: 0.5 }} />
-                      Biển {p.name}
-                    </a>
+                      <ChevronRight size={13} className="vip-footer-link-chevron" />
+                      <span>Biển {p.name}</span>
+                    </motion.a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
 
             {/* CỘT 3: KHO BIỂN THEO TỈNH THÀNH */}
-            <div className="vip-footer-section">
+            <motion.div
+              className="vip-footer-section"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: 0.24 }}
+            >
               <span className="vip-footer-section-title">Kho Biển Theo Tỉnh</span>
               <ul className="vip-footer-link-list">
                 {PROVINCE_LANDINGS.slice(0, 8).map((p) => (
                   <li key={p.slug}>
-                    <a
+                    <motion.a
                       href={routeFor('post', p.slug)}
                       onClick={navClick}
                       className="vip-footer-link"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                     >
-                      <ChevronRight size={13} style={{ opacity: 0.5 }} />
-                      Biển {p.name || p.code}
-                    </a>
+                      <ChevronRight size={13} className="vip-footer-link-chevron" />
+                      <span>Biển {p.name || p.code}</span>
+                    </motion.a>
                   </li>
                 ))}
                 <li>
-                  <a
+                  <motion.a
                     href={routeFor('list')}
                     onClick={navClick}
                     className="vip-footer-link highlight"
+                    whileHover={{ x: 5 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   >
-                    Xem tất cả tỉnh thành →
-                  </a>
+                    <span>Xem tất cả tỉnh thành →</span>
+                  </motion.a>
                 </li>
               </ul>
-            </div>
+            </motion.div>
 
             {/* CỘT 4: CHÍNH SÁCH & PHÁP LÝ */}
-            <div className="vip-footer-section">
+            <motion.div
+              className="vip-footer-section"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: 0.3 }}
+            >
               <span className="vip-footer-section-title">
                 {T('common.footer.policy_title') || 'Chính Sách & Hỗ Trợ'}
               </span>
               <ul className="vip-footer-link-list">
-                {policyLinks.map(([href, label]) => (
-                  <li key={href}>
-                    <a
-                      href={href}
+                {policyLinks.map((item) => (
+                  <li key={item.href}>
+                    <motion.a
+                      href={item.href}
                       onClick={navClick}
                       className="vip-footer-link"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                     >
-                      <ChevronRight size={13} style={{ opacity: 0.5 }} />
-                      {label}
-                    </a>
+                      <ChevronRight size={13} className="vip-footer-link-chevron" />
+                      <span>{item.label}</span>
+                    </motion.a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           </div>
         </div>
 
         {/* ================================================================
-            3. CHÂN ĐÁY (BOTTOM BAR: COPYRIGHT, PHÁP LÝ & BACK TO TOP)
+            4. CHÂN ĐÁY (BOTTOM BAR: COPYRIGHT, PHÁP LÝ & MOTION BACK TO TOP)
             ================================================================ */}
         <div className="vip-footer-bottom">
           <div className="vip-footer-copyright">
@@ -386,21 +612,27 @@ export default function Footer({ settings, patch }) {
           </div>
 
           <div className="vip-footer-trust-tags">
+            <span className="vip-footer-tag">
+              <span className="vip-live-dot" style={{ width: 6, height: 6, marginRight: 4 }} /> CSDL Bộ Công An
+            </span>
             <span className="vip-footer-tag">Định danh chính chủ</span>
             <span className="vip-footer-tag">Giao dịch an toàn</span>
             <span className="vip-footer-tag">Hỗ trợ toàn quốc</span>
           </div>
 
-          <button
+          <motion.button
             type="button"
             className="vip-back-to-top"
             onClick={scrollToTop}
             title="Cuộn về đầu trang"
             aria-label="Cuộn về đầu trang"
+            whileHover={{ y: -3, scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 22 }}
           >
             <ArrowUp size={14} />
             <span>Lên đầu trang</span>
-          </button>
+          </motion.button>
         </div>
       </div>
     </footer>
