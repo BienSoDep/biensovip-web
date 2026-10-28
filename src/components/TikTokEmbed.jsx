@@ -42,78 +42,49 @@ export default function TikTokEmbed({ videoUrl, title, compact = false }) {
     );
   }
 
-  // Chế độ compact dành cho thanh rail hẹp (PromoRails)
+  // Chế độ compact dành cho thanh rail hẹp (PromoRails) — hiển thị iframe preview thay vì hộp đen
   if (compact) {
     return (
-      <a
-        href={videoUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`Xem video TikTok: ${title || ''}`}
+      <div
         style={{
           position: 'relative',
           width: '100%',
           height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: '12px',
+          background: '#09090b',
+          borderRadius: 'inherit',
           overflow: 'hidden',
-          background: 'linear-gradient(180deg, #18181b 0%, #09090b 100%)',
-          textDecoration: 'none',
-          boxSizing: 'border-box',
         }}
       >
-        {/* TikTok Branding Top */}
-        <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-          <svg width="14" height="16" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-2.883 2.896 2.896 2.896 0 0 1-2.896-2.896 2.896 2.896 0 0 1 2.896-2.896c.328 0 .641.054.935.153V9.458a6.353 6.353 0 0 0-.935-.07 6.34 6.34 0 0 0-6.341 6.341 6.34 6.34 0 0 0 6.341 6.341 6.34 6.34 0 0 0 6.341-6.341V8.528a8.212 8.212 0 0 0 4.757 1.503V6.586a4.77 4.77 0 0 1-1.001-.1V6.686z"
-              fill="#fff"
-            />
-          </svg>
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>TIKTOK</span>
-        </div>
-
-        {/* Center Play Button */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(4px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '1px solid rgba(255,255,255,0.3)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-            }}
-          >
-            <Play size={20} fill="#ffffff" color="#ffffff" style={{ marginLeft: 2 }} />
-          </div>
-        </div>
-
-        {/* Bottom Title */}
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: '#ffffff',
-              lineHeight: 1.35,
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-            }}
-          >
-            {title || 'Xem video trên TikTok'}
-          </span>
-        </div>
-      </a>
+        <iframe
+          src={`https://www.tiktok.com/player/v1/${id}?description=0`}
+          title={title || 'Video TikTok'}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          loading="lazy"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            border: 0,
+            display: 'block',
+          }}
+        />
+        {/* Lớp phủ click mở video trực tiếp trên tab mới, không kẹt thanh cuộn rail */}
+        <a
+          href={videoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={title || 'Xem trên TikTok'}
+          aria-label={title || 'Xem video trên TikTok'}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 2,
+            display: 'block',
+          }}
+        />
+      </div>
     );
   }
 
