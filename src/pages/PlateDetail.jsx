@@ -403,7 +403,12 @@ export default function PlateDetail({
   const [checkingCoupon, setCheckingCoupon] = useState(false);
 
   const [lightbox, setLightbox] = useState(-1);
+  const [imageError, setImageError] = useState(false);
   const images = plate?.images || [];
+
+  useEffect(() => {
+    setImageError(false);
+  }, [plate?.id, plate?.plateNumber]);
 
   useEffect(() => {
     if (lightbox < 0) return;
@@ -666,8 +671,6 @@ export default function PlateDetail({
               background: "var(--surface-sunken)",
               borderRadius: "var(--radius-card)",
               padding: "clamp(20px,4vw,52px)",
-              display: "flex",
-              justifyContent: "center",
               boxShadow: "var(--shadow-card, 0 10px 30px -10px rgba(0,0,0,0.06))",
             }}
           >
@@ -675,17 +678,20 @@ export default function PlateDetail({
               style={{
                 width: "100%",
                 maxWidth: 560,
+                margin: "0 auto",
                 background: "var(--white)",
                 borderRadius: "var(--radius-surface)",
                 padding: 24,
                 boxShadow: "0 10px 30px -10px rgba(0,0,0,0.06)",
+                boxSizing: "border-box",
               }}
             >
-              {shouldShowGeneratedImage(settings, plate.images) ? (
+              {shouldShowGeneratedImage(settings, plate.images) && !imageError ? (
                 <img
                   src={optimizeImageUrl(plate.images[0])}
                   alt={`Biển số ${plate.plateNumber} — ${[plate.vehicleType, plate.province].filter(Boolean).join(" tại ")}`}
                   onClick={() => setLightbox(0)}
+                  onError={() => setImageError(true)}
                   loading="eager"
                   fetchPriority="high"
                   style={{
@@ -749,6 +755,7 @@ export default function PlateDetail({
             </div>
           </SpotlightCard>
           {shouldShowGeneratedImage(settings, plate.images) &&
+            !imageError &&
             plate.images.length > 1 && (
               <div
                 style={{

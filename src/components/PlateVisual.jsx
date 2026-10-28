@@ -90,6 +90,7 @@ export default function PlateVisual({ size = 'md', prov, seri, num, shape = 'sho
     flexDirection: isMoto ? 'column' : 'row',
     gap: s.gap,
     width: '100%',
+    minWidth: 0,
     aspectRatio: ASPECT[kind],
     containerType: 'size',
     padding: s.pad,
