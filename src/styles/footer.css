@@ -561,7 +561,8 @@
 }
 
 .vip-footer-brand-col {
-  flex: 1 1 320px;
+  flex: 1 1 280px;
+  max-width: 330px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -625,10 +626,10 @@
 
 /* CÁC CỘT LIÊN KẾT ĐIỀU HƯỚNG */
 .vip-footer-columns {
-  flex: 2 1 600px;
+  flex: 3 1 720px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: clamp(20px, 3vw, 36px);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: clamp(16px, 2.5vw, 32px);
 }
 
 .vip-footer-section {
@@ -679,7 +680,12 @@
   gap: 6px;
   line-height: 1.4;
   cursor: pointer;
+  white-space: nowrap;
   transition: color 0.18s ease;
+}
+
+.vip-footer-link span {
+  white-space: nowrap;
 }
 
 .vip-footer-link:hover {
@@ -705,8 +711,9 @@
   background: #FEF3C7;
   color: #B45309;
   border: 1px solid #FDE68A;
-  margin-left: 4px;
+  margin-left: 2px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .vip-footer-link.highlight {
