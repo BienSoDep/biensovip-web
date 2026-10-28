@@ -931,3 +931,49 @@
   box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
+
+/* ==========================================================================
+   SpotlightCard layout bridges for About page
+   ========================================================================== */
+.about-stat-card .rb-spotlight-content {
+  gap: 4px;
+  align-items: center;
+  text-align: center;
+}
+
+.about-timeline-card .rb-spotlight-content {
+  gap: 12px;
+}
+
+.about-value-card .rb-spotlight-content {
+  gap: 12px;
+}
+
+.about-guarantee-card .rb-spotlight-content {
+  gap: 14px;
+}
+
+.about-process-card .rb-spotlight-content {
+  gap: 10px;
+}
+
+.about-testi-card .rb-spotlight-content {
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.about-showroom-cta-card .rb-spotlight-content {
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+}
+
+.about-stat-card.rb-spotlight-card:hover,
+.about-timeline-card.rb-spotlight-card:hover,
+.about-value-card.rb-spotlight-card:hover,
+.about-guarantee-card.rb-spotlight-card:hover,
+.about-process-card.rb-spotlight-card:hover,
+.about-testi-card.rb-spotlight-card:hover,
+.about-showroom-cta-card.rb-spotlight-card:hover {
+  transform: none;
+}

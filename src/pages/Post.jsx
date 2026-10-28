@@ -551,7 +551,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', paddingTop: 'var(--space-2)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-        <Button variant="primary" size="md" onClick={go('list')}>{contentGet('posts.ui.cta_match')}</Button>
+        <Button variant="primary" size="md" shimmer rollingText onClick={go('list')}>{contentGet('posts.ui.cta_match')}</Button>
         <Button variant="outline" size="md" onClick={shareFacebook}><Share2 size={16} style={{ marginRight: 6 }} />Facebook</Button>
         <Button variant="outline" size="md" onClick={shareZalo}><MessageCircle size={16} style={{ marginRight: 6 }} />Zalo</Button>
         <Button variant="outline" size="md" onClick={copyLink}><Link2 size={16} style={{ marginRight: 6 }} />{copied ? contentGet('posts.ui.copied') : contentGet('posts.ui.cta_share')}</Button>

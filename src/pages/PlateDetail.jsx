@@ -19,6 +19,8 @@ import {
   Check,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
+import { motion } from "motion/react";
+import SpotlightCard from "../components/SpotlightCard.jsx";
 import {
   Badge,
   IconButton,
@@ -141,18 +143,24 @@ function LinkButton({
   style,
 }) {
   const bg = variant === "outline" ? "transparent" : "var(--action-primary)";
-  const color = variant === "outline" ? "var(--text-strong)" : "var(--white)";
+  const color =
+    variant === "outline"
+      ? "var(--text-strong)"
+      : "var(--action-primary-text, var(--ink-900))";
   const shadow =
     variant === "outline"
       ? "inset 0 0 0 1.5px var(--border-strong)"
       : "var(--shadow-blue)";
   return (
-    <a
+    <motion.a
       href={disabled ? undefined : href}
       target={target}
       rel={rel}
       onClick={disabled ? (e) => e.preventDefault() : onClick}
       aria-disabled={disabled}
+      whileHover={disabled ? undefined : { scale: 1.025, y: -1 }}
+      whileTap={disabled ? undefined : { scale: 0.975, y: 1 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
       style={{
         height: 48,
         padding: "0 20px",
@@ -174,7 +182,7 @@ function LinkButton({
       }}
     >
       {children}
-    </a>
+    </motion.a>
   );
 }
 
@@ -645,13 +653,20 @@ export default function PlateDetail({
             gap: "var(--space-4)",
           }}
         >
-          <div
+          <SpotlightCard
+            size={520}
+            spotlightColor="rgba(241, 151, 32, 0.18)"
+            borderColor="rgba(241, 151, 32, 0.28)"
+            tilt={true}
+            maxTilt={3.5}
+            glare={true}
             style={{
               background: "var(--surface-sunken)",
               borderRadius: "var(--radius-card)",
               padding: "clamp(20px,4vw,52px)",
               display: "flex",
               justifyContent: "center",
+              boxShadow: "var(--shadow-card, 0 10px 30px -10px rgba(0,0,0,0.06))",
             }}
           >
             <div
@@ -661,6 +676,7 @@ export default function PlateDetail({
                 background: "var(--white)",
                 borderRadius: "var(--radius-surface)",
                 padding: 24,
+                boxShadow: "0 10px 30px -10px rgba(0,0,0,0.06)",
               }}
             >
               {shouldShowGeneratedImage(settings, plate.images) ? (
@@ -729,7 +745,7 @@ export default function PlateDetail({
                 />
               )}
             </div>
-          </div>
+          </SpotlightCard>
           {shouldShowGeneratedImage(settings, plate.images) &&
             plate.images.length > 1 && (
               <div
@@ -1081,6 +1097,8 @@ export default function PlateDetail({
             <Button
               variant="primary"
               size="lg"
+              shimmer={!sold}
+              rollingText={!sold}
               onClick={() => {
                 if (sold) {
                   setContactOpen(true);
@@ -2197,6 +2215,7 @@ export default function PlateDetail({
         <Button
           variant="primary"
           size="lg"
+          shimmer={!sold}
           onClick={() => setContactOpen(true)}
           style={{ flex: "1 1 0" }}
         >

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PhoneCall, ChevronDown, HelpCircle, ShieldCheck } from 'lucide-react';
 import Button from '../components/Button.jsx';
+import SpotlightCard from '../components/SpotlightCard.jsx';
 import { PageHeader } from '../components/index.jsx';
 import AuthorBox from '../components/AuthorBox.jsx';
 import { contentGet, contentItems } from '../lib/content/index.js';
@@ -32,13 +33,28 @@ export default function TransferGuide({ go, zalo }) {
       {/* 4 Bước quy trình chuẩn */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {steps.map((s, i) => (
-          <div key={s.key || s.title || i} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, font: 'var(--type-title-3)' }}>{i + 1}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{s.title}</h3>
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)' }}>{s.desc}</p>
+          <SpotlightCard
+            key={s.key || s.title || i}
+            size={400}
+            spotlightColor="rgba(241, 151, 32, 0.12)"
+            borderColor="rgba(241, 151, 32, 0.28)"
+            tilt={true}
+            maxTilt={2.5}
+            style={{
+              background: 'var(--white)',
+              borderRadius: 'var(--radius-card)',
+              boxShadow: 'var(--shadow-inset-hairline)',
+              padding: 'var(--gutter-card)',
+            }}
+          >
+            <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--action-primary-text, var(--ink-900))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, font: 'var(--type-title-3)', fontWeight: 800 }}>{i + 1}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{s.title}</h3>
+                <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)' }}>{s.desc}</p>
+              </div>
             </div>
-          </div>
+          </SpotlightCard>
         ))}
       </div>
 
@@ -87,19 +103,41 @@ export default function TransferGuide({ go, zalo }) {
       )}
 
       {/* Banner tư vấn hỗ trợ */}
-      <div style={{ background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-card)', padding: 'var(--space-6) var(--gutter-card)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)' }}>
-        <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <PhoneCall size={18} style={{ color: 'var(--action-primary)' }} />
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{contentGet('transfer.need_help_title')}</span>
+      <SpotlightCard
+        size={500}
+        spotlightColor="rgba(241, 151, 32, 0.14)"
+        borderColor="rgba(241, 151, 32, 0.28)"
+        tilt={true}
+        maxTilt={2}
+        style={{
+          background: 'var(--surface-tint-cream)',
+          borderRadius: 'var(--radius-card)',
+          padding: 'var(--space-6) var(--gutter-card)',
+          boxShadow: 'var(--shadow-1)',
+        }}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)', width: '100%' }}>
+          <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <PhoneCall size={18} style={{ color: 'var(--action-primary)' }} />
+              <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{contentGet('transfer.need_help_title')}</span>
+            </div>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('transfer.need_help_desc')}</p>
           </div>
-          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('transfer.need_help_desc')}</p>
+          <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+            <Button
+              variant="primary"
+              size="md"
+              shimmer
+              rollingText
+              onClick={() => window.open(toZaloUrl(zalo || '0815792699'), '_blank')}
+            >
+              {contentGet('transfer.cta_zalo')}
+            </Button>
+            <Button variant="outline" size="md" onClick={go('list')}>{contentGet('transfer.cta_list')}</Button>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-          <Button variant="primary" size="md" onClick={() => window.open(toZaloUrl(zalo || '0815792699'), '_blank')}>{contentGet('transfer.cta_zalo')}</Button>
-          <Button variant="outline" size="md" onClick={go('list')}>{contentGet('transfer.cta_list')}</Button>
-        </div>
-      </div>
+      </SpotlightCard>
 
       {/* Tác giả E-E-A-T Chuyên gia Duy Đinh */}
       <AuthorBox style={{ margin: 0 }} />

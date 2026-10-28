@@ -414,7 +414,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
               <Clock size={18} />
             </button>
             {historyCount > 0 && (
-              <span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--action-primary-text, var(--ink-900))', fontWeight: 'var(--fw-bold)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {historyCount}
               </span>
             )}
@@ -429,7 +429,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
                 go('fav')();
               }}
             />
-            {favCount > 0 && (<span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--white)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{favCount}</span>)}
+            {favCount > 0 && (<span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--action-primary-text, var(--ink-900))', fontWeight: 'var(--fw-bold)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{favCount}</span>)}
           </div>
           {user ? (
             <button type="button" onClick={go('profile')} aria-label={typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')} title={typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')} style={{ display: 'flex', alignItems: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, flexShrink: 0 }}>

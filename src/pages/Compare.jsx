@@ -3,6 +3,7 @@ import { GitCompareArrows, X, Sparkles, Search, Heart, ChevronDown, ChevronUp, P
 import { useDebouncedValue } from '@mantine/hooks';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 import Button from '../components/Button.jsx';
+import SpotlightCard from '../components/SpotlightCard.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
 import { DateInputVN, PageHeader } from '../components/index.jsx';
 import PlateVisual from '../components/PlateVisual.jsx';
@@ -141,9 +142,15 @@ function PlateSuggestionCard({ plate, onAdd }) {
   const { prov, seri, num } = splitPlateNumber(plate.plateNumber);
 
   return (
-    <button
+    <SpotlightCard
+      as="button"
       type="button"
       onClick={() => onAdd(plate.id)}
+      size={240}
+      spotlightColor="rgba(241, 151, 32, 0.16)"
+      borderColor="rgba(241, 151, 32, 0.35)"
+      tilt={true}
+      maxTilt={3.5}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -155,18 +162,7 @@ function PlateSuggestionCard({ plate, onAdd }) {
         background: 'var(--white)',
         cursor: 'pointer',
         textAlign: 'left',
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         boxShadow: 'var(--shadow-1)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--action-primary)';
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = 'var(--shadow-3)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-hairline)';
-        e.currentTarget.style.transform = 'none';
-        e.currentTarget.style.boxShadow = 'var(--shadow-1)';
       }}
     >
       <div style={{ width: '100%', aspectRatio: '330/165', borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
@@ -184,8 +180,8 @@ function PlateSuggestionCard({ plate, onAdd }) {
           <span style={{
             fontSize: 11,
             fontWeight: 'var(--fw-semibold)',
-            color: 'var(--action-primary)',
-            background: 'var(--orange-50)',
+            color: 'var(--action-primary-text, var(--ink-900))',
+            background: 'var(--action-primary)',
             padding: '2px 6px',
             borderRadius: 'var(--radius-sm)',
             whiteSpace: 'nowrap',
@@ -200,7 +196,7 @@ function PlateSuggestionCard({ plate, onAdd }) {
           </span>
         )}
       </div>
-    </button>
+    </SpotlightCard>
   );
 }
 
@@ -302,7 +298,7 @@ function BirthDatePrompt({ onSubmit }) {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <DateInputVN value={date} onChange={(e) => setDate(e.target.value)} />
-        <Button type="submit" variant="primary" size="sm" disabled={!valid}>Xem điểm</Button>
+        <Button type="submit" variant="primary" size="sm" shimmer rollingText disabled={!valid}>Xem điểm</Button>
       </div>
     </form>
   );
