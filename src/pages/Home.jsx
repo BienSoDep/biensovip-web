@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import { Play, SearchX, BadgeCheck, GalleryThumbnails, LayoutGrid, ShieldCheck, Clock, HandCoins, Sparkles, ArrowRight, FileCheck2 } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { SearchField, Eyebrow } from '../components/index.jsx';
@@ -89,10 +90,16 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
               <Button className="hero-cta-btn" variant="outline" size="lg" magnetic onClick={() => { window.open(toZaloUrl(zalo), '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
             </div>
             {feedItems.length > 0 && (
-              <div className="hero-feed-pill" style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              <motion.div
+                className="hero-feed-pill"
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}
+              >
                 <span className="live-dot" aria-hidden="true" />
                 <span>{feedItems[0].fakeName} {feedItems[0].action} <strong style={{ color: 'var(--text-strong)' }}>{feedItems[0].plateNumber}</strong> · {feedItems[0].minutesAgo} phút trước</span>
-              </div>
+              </motion.div>
             )}
             <div className="hero-stats-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', paddingTop: 'var(--space-6)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
               <div className="hero-stat-item" style={{ display: 'flex', flexDirection: 'column' }}>

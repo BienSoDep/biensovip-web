@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
+gsap.config({ nullTargetWarn: false });
 
 /**
  * useHomeHeroMotion — GSAP & ScrollTrigger Orchestration Hook
@@ -87,16 +88,19 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
         '-=0.3'
       );
 
-      // 5. Ticker hoạt động thực tế (Live feed)
-      tl.from(
-        '.hero-feed-pill',
-        {
-          opacity: 0,
-          x: -16,
-          duration: 0.45,
-        },
-        '-=0.25'
-      );
+      // 5. Ticker hoạt động thực tế (Live feed) - chỉ animate nếu element đã tồn tại trong DOM
+      const feedPill = scope.querySelector('.hero-feed-pill');
+      if (feedPill) {
+        tl.from(
+          feedPill,
+          {
+            opacity: 0,
+            x: -16,
+            duration: 0.45,
+          },
+          '-=0.25'
+        );
+      }
 
       // 6. Dãy số liệu thống kê (Stats row)
       tl.from(
@@ -137,17 +141,20 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
           '-=0.2'
         );
 
-        tl.from(
-          '.home-search-cats > *',
-          {
-            opacity: 0,
-            scale: 0.92,
-            duration: 0.3,
-            stagger: 0.02,
-            ease: 'power1.out',
-          },
-          '-=0.3'
-        );
+        const searchCats = scope.querySelectorAll('.home-search-cats > *');
+        if (searchCats.length) {
+          tl.from(
+            searchCats,
+            {
+              opacity: 0,
+              scale: 0.92,
+              duration: 0.3,
+              stagger: 0.02,
+              ease: 'power1.out',
+            },
+            '-=0.3'
+          );
+        }
       }
 
       // Micro-interaction: Idle Floating cho card ảnh biển số
@@ -412,7 +419,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
           });
         }
         const contactGrid = contactSec.querySelector('.home-contact-grid');
-        if (contactGrid) {
+        if (contactGrid && contactGrid.children.length) {
           gsap.from(contactGrid.children, {
             y: 32,
             autoAlpha: 0,
