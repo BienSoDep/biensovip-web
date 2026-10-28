@@ -262,6 +262,13 @@ export default function Footer({ settings, patch }) {
               href={`tel:${phone}`}
               className="vip-contact-card"
               title="Gọi hotline tư vấn trực tiếp 24/7"
+              style={{
+                '--card-glow': 'rgba(22, 163, 74, 0.16)',
+                '--card-border': '#16A34A',
+                '--icon-bg': '#F0FDF4',
+                '--icon-color': '#16A34A',
+                '--label-color': '#15803D',
+              }}
               whileHover={{ y: -4, scale: 1.015 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 400, damping: 22 }}
@@ -283,12 +290,19 @@ export default function Footer({ settings, patch }) {
               rel="noopener noreferrer"
               className="vip-contact-card"
               title="Chat Zalo với chuyên viên tư vấn Duy Đinh"
+              style={{
+                '--card-glow': 'rgba(0, 104, 255, 0.16)',
+                '--card-border': '#0068FF',
+                '--icon-bg': '#EBF3FF',
+                '--icon-color': '#0068FF',
+                '--label-color': '#0068FF',
+              }}
               whileHover={{ y: -4, scale: 1.015 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             >
               <div className="vip-contact-icon-box">
-                <ZaloIcon style={{ width: 22, height: 22 }} />
+                <ZaloIcon size={20} />
               </div>
               <div className="vip-contact-info">
                 <span className="vip-contact-label">Zalo Duy Đinh</span>
