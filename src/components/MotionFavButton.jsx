@@ -101,3 +101,4 @@ export default function MotionFavButton({
     </motion.button>
   );
 }
+

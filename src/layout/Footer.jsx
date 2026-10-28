@@ -10,7 +10,6 @@ import {
   Copy,
   Check,
   ChevronRight,
-  ExternalLink,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { contentGet } from '../lib/content/index.js';
@@ -97,13 +96,6 @@ export default function Footer({ settings, patch }) {
               href={`tel:${phone}`}
               className="vip-contact-card"
               title="Gọi hotline tư vấn trực tiếp 24/7"
-              style={{
-                '--card-glow': 'rgba(241, 151, 32, 0.18)',
-                '--card-border': '#F19720',
-                '--icon-bg': '#FFF7ED',
-                '--icon-color': '#EA580C',
-                '--label-color': '#D97706',
-              }}
             >
               <div className="vip-contact-icon-box">
                 <PhoneCall size={20} />
@@ -122,13 +114,6 @@ export default function Footer({ settings, patch }) {
               rel="noopener noreferrer"
               className="vip-contact-card"
               title="Chat Zalo với chuyên viên tư vấn Duy Đinh"
-              style={{
-                '--card-glow': 'rgba(0, 104, 255, 0.16)',
-                '--card-border': '#0068FF',
-                '--icon-bg': '#EFF6FF',
-                '--icon-color': '#0068FF',
-                '--label-color': '#0284C7',
-              }}
             >
               <div className="vip-contact-icon-box">
                 <ZaloIcon style={{ width: 22, height: 22 }} />
@@ -147,13 +132,6 @@ export default function Footer({ settings, patch }) {
               rel="noopener noreferrer"
               className="vip-contact-card"
               title="Xem vị trí showroom trên Google Maps"
-              style={{
-                '--card-glow': 'rgba(239, 68, 68, 0.16)',
-                '--card-border': '#EF4444',
-                '--icon-bg': '#FEF2F2',
-                '--icon-color': '#DC2626',
-                '--label-color': '#DC2626',
-              }}
             >
               <div className="vip-contact-icon-box">
                 <MapPin size={20} />
@@ -172,20 +150,13 @@ export default function Footer({ settings, patch }) {
               rel="noopener noreferrer"
               className="vip-contact-card"
               title="Ghé thăm Fanpage Duy Đinh - Biển Số Đẹp Đà Nẵng"
-              style={{
-                '--card-glow': 'rgba(24, 119, 242, 0.16)',
-                '--card-border': '#1877F2',
-                '--icon-bg': '#EFF6FF',
-                '--icon-color': '#1877F2',
-                '--label-color': '#2563EB',
-              }}
             >
               <div className="vip-contact-icon-box">
-                <FacebookIcon style={{ width: 20, height: 20, color: '#1877F2' }} />
+                <FacebookIcon style={{ width: 20, height: 20 }} />
               </div>
               <div className="vip-contact-info">
                 <span className="vip-contact-label">Fanpage Facebook</span>
-                <span className="vip-contact-value">Duy Đinh - Biển Số Đẹp</span>
+                <span className="vip-contact-value">{facebookName}</span>
                 <span className="vip-contact-sub">Cập nhật biển mới mỗi ngày</span>
               </div>
             </a>
@@ -200,13 +171,6 @@ export default function Footer({ settings, patch }) {
                 if (e.target.closest('.copy-trigger')) {
                   handleCopyEmail(e);
                 }
-              }}
-              style={{
-                '--card-glow': 'rgba(139, 92, 246, 0.16)',
-                '--card-border': '#8B5CF6',
-                '--icon-bg': '#F5F3FF',
-                '--icon-color': '#7C3AED',
-                '--label-color': '#6D28D9',
               }}
             >
               <div className="vip-contact-icon-box">
@@ -223,7 +187,7 @@ export default function Footer({ settings, patch }) {
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: copiedEmail ? '#10B981' : '#64748B',
+                      color: copiedEmail ? 'var(--action-primary, #F19720)' : '#64748B',
                       cursor: 'pointer',
                       padding: 2,
                       display: 'flex',
@@ -241,14 +205,7 @@ export default function Footer({ settings, patch }) {
             {/* THẺ 6: GIỜ LÀM VIỆC & TRẠNG THÁI */}
             <div
               className="vip-contact-card"
-              style={{
-                '--card-glow': 'rgba(16, 185, 129, 0.16)',
-                '--card-border': '#10B981',
-                '--icon-bg': '#ECFDF5',
-                '--icon-color': '#059669',
-                '--label-color': '#047857',
-                cursor: 'default',
-              }}
+              style={{ cursor: 'default' }}
             >
               <div className="vip-contact-icon-box">
                 <Clock size={20} />
