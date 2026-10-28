@@ -451,3 +451,40 @@ span.compare-desktop-table { display: flex; }
     transform: none !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   8. SCROLL TRIGGER MOTION & PROGRESS (LENIS + GSAP)
+   -------------------------------------------------------------------------- */
+.home-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  background: linear-gradient(90deg, #d97706 0%, #f59e0b 50%, #10b981 100%);
+  transform-origin: 0% 50%;
+  transform: scaleX(0);
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 1px 6px rgba(217, 119, 6, 0.45);
+}
+
+.home-featured-head,
+.home-featured-card,
+.home-thematic-head,
+.home-thematic-card,
+.sold-marquee-head,
+.sold-marquee,
+.home-video-head,
+.home-video-item,
+.home-contact-head,
+.home-guide-card,
+.home-email-banner {
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-scroll-progress {
+    display: none !important;
+  }
+}

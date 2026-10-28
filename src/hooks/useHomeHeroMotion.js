@@ -1,32 +1,41 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /**
- * useHomeHeroMotion — GSAP Orchestration Hook for Biensovip Home Landing Page
- * Tuân thủ tiêu chuẩn /ui-ux-pro-max:
- * - Staggered entrance timeline cho hero content, CTA, live feed & stats
- * - Đếm số động (Count-up) cho thống kê tổng số biển
- * - Hiệu ứng thở / trôi nổi (Idle Floating) và 3D Tilt tương tác trên card ảnh thương hiệu
- * - Entrance cho thanh tìm kiếm nổi & các pill danh mục
- * - Tự động phát hiện và tôn trọng 'prefers-reduced-motion: reduce'
- * - Lifecycle cleanup an toàn qua gsap.context()
+ * useHomeHeroMotion — GSAP & ScrollTrigger Orchestration Hook
+ * Kết hợp kinh nghiệm từ giaimamanhai.vercel.app & chuẩn /ui-ux-pro-max:
+ * 1. Hero Entrance Timeline & Number Count-Up
+ * 2. Idle Floating & 3D Tilt Micro-interactions
+ * 3. Hero Parallax Scroll Scrubbing (yPercent: 12 khi lăn chuột)
+ * 4. Top Scroll Progress Indicator (Thanh tiến trình cuộn trang ở đỉnh)
+ * 5. ScrollTrigger Stagger Reveal cho tất cả các Section khi lăn chuột tới viewport
+ * 6. Tự động tôn trọng prefers-reduced-motion và dọn dẹp sạch bằng gsap.context()
  */
-export function useHomeHeroMotion({ totalPlates } = {}) {
+export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
+  const containerRef = useRef(null);
   const heroRef = useRef(null);
   const visualCardRef = useRef(null);
   const searchBarRef = useRef(null);
   const statCountRef = useRef(null);
-  const featuredGridRef = useRef(null);
 
-  // 1. Master Entrance & Idle Animations
+  // 1. Master Entrance & ScrollTrigger Animations
   useEffect(() => {
-    if (typeof window === 'undefined' || !heroRef.current) return;
+    if (typeof window === 'undefined' || !containerRef.current) return;
 
-    // Trợ năng: nếu người dùng bật reduced-motion thì bỏ qua entrance timeline
+    // Trợ năng: nếu người dùng bật reduced-motion thì bỏ qua animation
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     if (prefersReducedMotion) return;
 
     const ctx = gsap.context((self) => {
+      const scope = containerRef.current;
+      const visualEl = visualCardRef.current;
+
+      // ========================================================
+      // A. HERO ENTRANCE TIMELINE
+      // ========================================================
       const tl = gsap.timeline({
         defaults: { ease: 'power2.out' },
         delay: 0.08,
@@ -101,7 +110,7 @@ export function useHomeHeroMotion({ totalPlates } = {}) {
         '-=0.25'
       );
 
-      // 7. Khối visual hình ảnh bên phải (Card + Ambient Glow)
+      // 7. Khối visual hình ảnh bên phải
       tl.from(
         '.hero-visual-card',
         {
@@ -141,7 +150,7 @@ export function useHomeHeroMotion({ totalPlates } = {}) {
         );
       }
 
-      // Micro-interaction 1: Idle Floating (Thở nhẹ nhàng cho card ảnh biển số)
+      // Micro-interaction: Idle Floating cho card ảnh biển số
       const floatTween = gsap.to('.hero-visual-card', {
         y: -8,
         duration: 3.4,
@@ -151,7 +160,7 @@ export function useHomeHeroMotion({ totalPlates } = {}) {
         delay: 0.8,
       });
 
-      // Micro-interaction 2: Ambient glow pulse dịu nhẹ
+      // Micro-interaction: Ambient glow pulse dịu nhẹ
       gsap.to('.hero-ambient-glow', {
         scale: 1.15,
         opacity: 0.6,
@@ -161,8 +170,7 @@ export function useHomeHeroMotion({ totalPlates } = {}) {
         ease: 'sine.inOut',
       });
 
-      // Micro-interaction 3: 3D Tilt khi di chuột lên khối visual
-      const visualEl = visualCardRef.current;
+      // Micro-interaction: 3D Tilt khi di chuột lên khối visual
       if (visualEl) {
         let isHovered = false;
 
@@ -211,7 +219,229 @@ export function useHomeHeroMotion({ totalPlates } = {}) {
           visualEl.removeEventListener('pointerleave', onPointerLeave);
         });
       }
-    }, heroRef);
+
+      // ========================================================
+      // B. SCROLLTRIGGER & SCROLL MOTION (Theo phong cách giaimamanhai)
+      // ========================================================
+
+      // 1. Thanh tiến trình cuộn trang ở đỉnh (Top Scroll Progress Bar)
+      const progressBar = scope.querySelector('.home-scroll-progress');
+      if (progressBar) {
+        gsap.to(progressBar, {
+          scaleX: 1,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: scope,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 0.2,
+          },
+        });
+      }
+
+      // 2. Parallax Scrub cho ảnh Hero khi cuộn
+      if (visualEl && heroRef.current) {
+        gsap.to(visualEl, {
+          yPercent: 12,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 1,
+          },
+        });
+      }
+
+      // 3. Email Subscription Banner reveal
+      const emailBanner = scope.querySelector('.home-email-banner');
+      if (emailBanner) {
+        gsap.from(emailBanner, {
+          y: 28,
+          autoAlpha: 0,
+          duration: 0.65,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: emailBanner,
+            start: 'top 88%',
+          },
+        });
+      }
+
+      // 4. Featured Plates Section Reveal
+      const featHead = scope.querySelector('.home-featured-head');
+      if (featHead) {
+        gsap.from(featHead, {
+          y: 28,
+          autoAlpha: 0,
+          duration: 0.7,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: featHead,
+            start: 'top 85%',
+          },
+        });
+      }
+
+      const featCards = scope.querySelectorAll('.home-featured-card');
+      if (featCards.length) {
+        gsap.from(featCards, {
+          y: 36,
+          autoAlpha: 0,
+          stagger: 0.07,
+          duration: 0.75,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: featCards[0].parentElement || featHead,
+            start: 'top 85%',
+          },
+        });
+      }
+
+      // 5. Thematic Plate Types Collections Reveal
+      const thematicHead = scope.querySelector('.home-thematic-head');
+      if (thematicHead) {
+        gsap.from(thematicHead, {
+          y: 28,
+          autoAlpha: 0,
+          duration: 0.7,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: thematicHead,
+            start: 'top 85%',
+          },
+        });
+      }
+
+      const thematicCards = scope.querySelectorAll('.home-thematic-card');
+      if (thematicCards.length) {
+        gsap.from(thematicCards, {
+          y: 32,
+          autoAlpha: 0,
+          stagger: 0.05,
+          duration: 0.7,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: thematicCards[0].parentElement || thematicHead,
+            start: 'top 85%',
+          },
+        });
+      }
+
+      // 6. Sold Marquee Section Reveal
+      const soldSec = scope.querySelector('.sold-marquee-section');
+      if (soldSec) {
+        const soldHead = soldSec.querySelector('.sold-marquee-head');
+        if (soldHead) {
+          gsap.from(soldHead, {
+            y: 28,
+            autoAlpha: 0,
+            duration: 0.7,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: soldSec,
+              start: 'top 85%',
+            },
+          });
+        }
+        const soldTrack = soldSec.querySelector('.sold-marquee');
+        if (soldTrack) {
+          gsap.from(soldTrack, {
+            scale: 0.95,
+            autoAlpha: 0,
+            duration: 0.8,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: soldTrack,
+              start: 'top 90%',
+            },
+          });
+        }
+      }
+
+      // 7. Video Section Reveal
+      const videoSec = scope.querySelector('.home-video-section');
+      if (videoSec) {
+        const videoHead = videoSec.querySelector('.home-video-head');
+        if (videoHead) {
+          gsap.from(videoHead, {
+            y: 28,
+            autoAlpha: 0,
+            duration: 0.7,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: videoSec,
+              start: 'top 85%',
+            },
+          });
+        }
+        const videoItems = videoSec.querySelectorAll('.home-video-item');
+        if (videoItems.length) {
+          gsap.from(videoItems, {
+            y: 32,
+            autoAlpha: 0,
+            stagger: 0.09,
+            duration: 0.75,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: videoSec,
+              start: 'top 80%',
+            },
+          });
+        }
+      }
+
+      // 8. Contact Section Reveal
+      const contactSec = scope.querySelector('.home-contact-section');
+      if (contactSec) {
+        const contactHead = contactSec.querySelector('.home-contact-head');
+        if (contactHead) {
+          gsap.from(contactHead, {
+            y: 28,
+            autoAlpha: 0,
+            duration: 0.7,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: contactSec,
+              start: 'top 85%',
+            },
+          });
+        }
+        const contactGrid = contactSec.querySelector('.home-contact-grid');
+        if (contactGrid) {
+          gsap.from(contactGrid.children, {
+            y: 32,
+            autoAlpha: 0,
+            stagger: 0.1,
+            duration: 0.75,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: contactGrid,
+              start: 'top 80%',
+            },
+          });
+        }
+      }
+
+      // 9. Guide Section Reveal
+      const guideSec = scope.querySelector('.home-guide-section');
+      if (guideSec) {
+        const guideCard = guideSec.querySelector('.home-guide-card');
+        if (guideCard) {
+          gsap.from(guideCard, {
+            scale: 0.95,
+            y: 28,
+            autoAlpha: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: guideSec,
+              start: 'top 85%',
+            },
+          });
+        }
+      }
+    }, containerRef);
 
     return () => ctx.revert();
   }, []);
@@ -243,11 +473,20 @@ export function useHomeHeroMotion({ totalPlates } = {}) {
     return () => tween.kill();
   }, [totalPlates]);
 
+  // 3. Tự động tính toán lại vị trí ScrollTrigger khi dữ liệu async tải xong
+  const depsKey = dataDeps.join('-');
+  useEffect(() => {
+    const t = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 150);
+    return () => clearTimeout(t);
+  }, [depsKey]);
+
   return {
+    containerRef,
     heroRef,
     visualCardRef,
     searchBarRef,
     statCountRef,
-    featuredGridRef,
   };
 }

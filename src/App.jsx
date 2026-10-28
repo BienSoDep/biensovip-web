@@ -32,6 +32,7 @@ import { useNotificationRealtime } from './services/notificationRealtime.js';
 import { usePathRouter } from './hooks/usePathRouter.js';
 import { useScrollDepthTracking } from './hooks/useScrollDepthTracking.js';
 import { useRageClickDetection } from './hooks/useRageClickDetection.js';
+import { useLenisSmoothScroll } from './hooks/useLenisSmoothScroll.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 import { usePublicMaintenance } from './services/maintenanceService.js';
@@ -221,6 +222,7 @@ export default function App() {
   usePathRouter(st, patch);
   useScrollDepthTracking(st.screen);
   useRageClickDetection();
+  useLenisSmoothScroll({ enabled: !st.isAdmin });
 
   const routeKey = getRouteKey(st);
   const prevRouteKeyRef = useRef(routeKey);

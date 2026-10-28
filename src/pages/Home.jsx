@@ -44,10 +44,6 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
   const { data: soldData } = usePlates({ status: 'sold', perPage: 14 });
   const soldItems = soldData?.items || [];
 
-  const { heroRef, visualCardRef, searchBarRef, statCountRef } = useHomeHeroMotion({
-    totalPlates: plateCountData?.total,
-  });
-
   // Home search: catId/qDebounced empty = show featured plates as before.
   // Any non-empty selection replaces that section with live search results (usePlates is React
   // Query, so identical filters within the session are served from cache instead of refetching).
@@ -61,6 +57,11 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
   const displayItems = isSearching ? searchItems : featuredItems;
   const displayLoading = isSearching ? searchLoading : featuredLoading;
 
+  const { containerRef, heroRef, visualCardRef, searchBarRef, statCountRef } = useHomeHeroMotion({
+    totalPlates: plateCountData?.total,
+    dataDeps: [displayItems.length, soldItems.length, featuredVideoItems.length],
+  });
+
   useEffect(() => {
     if (!displayLoading && displayItems.length > 0) trackViewItemList('home_featured', displayItems);
   }, [displayLoading, displayItems]);
@@ -68,7 +69,8 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
   const zalo = (settings?.zalo || '').replace(/[^0-9]/g, '');
 
   return (
-    <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
+    <div ref={containerRef} className="home-page-container" style={{ animation: 'pageIn 180ms var(--ease-out)', position: 'relative' }}>
+      <div className="home-scroll-progress" aria-hidden="true" />
       <section ref={heroRef} style={{ padding: '0 var(--pad-page)', margin: '15px 0' }}>
         <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-hero)', borderRadius: 'var(--radius-surface)', padding: 'clamp(24px,8vw,64px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', alignItems: 'center' }}>
           <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
@@ -125,7 +127,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
       </section>
 
       {/* Banner đăng ký email nhận thông báo — cùng bảng subscriber với ô footer */}
-      <section style={{ padding: '0 var(--pad-page)', margin: 'clamp(8px,2vw,20px) 0' }}>
+      <section className="home-email-banner" style={{ padding: '0 var(--pad-page)', margin: 'clamp(8px,2vw,20px) 0' }}>
         <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-surface)', padding: 'clamp(20px,4vw,40px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhận thông báo biển số mới</span>
@@ -148,7 +150,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
         </div>
       </section>
 
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
+      <section className="home-featured-head" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
         <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <Eyebrow tone="blue" className="section-eyebrow">{isSearching ? 'Kết quả tìm kiếm' : T('home.featured.eyebrow')}</Eyebrow>
           <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
@@ -160,7 +162,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
         </div>
         <Button variant="ghost" size="sm" onClick={go('list')}>{isSearching ? 'Xem tất cả →' : T('home.featured.all')}</Button>
       </section>
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', animation: 'fadeIn 180ms var(--ease-out)' }}>
+      <section className="home-featured-grid-wrap" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-6) var(--pad-page) var(--pad-section-y)', animation: 'fadeIn 180ms var(--ease-out)' }}>
         {displayLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {Array.from({ length: 6 }, (_, i) => <div key={i} style={{ height: 320, background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)' }} />)}
@@ -171,9 +173,32 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
               <SearchX size={28} style={{ color: 'var(--text-faint)' }} />
               <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Không tìm thấy biển số phù hợp. Thử đuôi số khác hoặc xem các biển nổi bật bên dưới.</p>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            <div className="home-featured-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
               {featuredItems.map((p, i) => (
-                <PlateCard key={p.id} {...p}
+                <div key={p.id} className="home-featured-card">
+                  <PlateCard {...p}
+                    fav={!!favs?.[p.id]}
+                    onFav={onFav ? () => onFav(p.id) : undefined}
+                    onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
+                    inCompare={isInList(p.id)}
+                    onOpen={() => { trackSelectItem(p, 'home_featured'); openPlate(p.id); }}
+                    href={routeFor('detail', p.slug || p.id)}
+                    onBuy={() => openBuy?.(p.id)}
+                    contact={contact}
+                    style={stagger(i)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : displayItems.length === 0 ? (
+          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
+            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>{T('home.featured.empty')} <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>{T('home.featured.empty_link')}</button></p>
+          </div>
+        ) : (
+          <div className="home-featured-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            {displayItems.map((p, i) => (
+              <div key={p.id} className="home-featured-card">
+                <PlateCard {...p}
                   fav={!!favs?.[p.id]}
                   onFav={onFav ? () => onFav(p.id) : undefined}
                   onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
@@ -183,34 +208,15 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                   onBuy={() => openBuy?.(p.id)}
                   contact={contact}
                   style={stagger(i)} />
-              ))}
-            </div>
-          </div>
-        ) : displayItems.length === 0 ? (
-          <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center' }}>
-            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>{T('home.featured.empty')} <button type="button" onClick={go('list')} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', font: 'inherit', color: 'var(--action-primary)', textDecoration: 'underline' }}>{T('home.featured.empty_link')}</button></p>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(276px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-            {displayItems.map((p, i) => (
-              <PlateCard key={p.id} {...p}
-                fav={!!favs?.[p.id]}
-                onFav={onFav ? () => onFav(p.id) : undefined}
-                onCompare={() => isInList(p.id) ? removeCompare(p.id) : addCompare(p.id)}
-                inCompare={isInList(p.id)}
-                onOpen={() => { trackSelectItem(p, 'home_featured'); openPlate(p.id); }}
-                href={routeFor('detail', p.slug || p.id)}
-                onBuy={() => openBuy?.(p.id)}
-                contact={contact}
-                style={stagger(i)} />
+              </div>
             ))}
           </div>
         )}
       </section>
 
       {/* Bộ sưu tập thế số đẹp phong thủy */}
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+      <section className="home-thematic-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div className="home-thematic-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Eyebrow tone="blue" className="section-eyebrow">{T('home.plate_types.eyebrow')}</Eyebrow>
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
@@ -223,7 +229,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
           <Button variant="ghost" size="sm" onClick={go('list')}>{T('home.plate_types.all')}</Button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+        <div className="home-thematic-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
           {THEMATIC_PLATE_TYPES.map((pt, i) => (
             <a
               key={pt.slug}
@@ -233,7 +239,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                 history.pushState(null, '', `/${pt.slug}`);
                 window.dispatchEvent(new PopStateEvent('popstate'));
               }}
-              className="pressable"
+              className="home-thematic-card pressable"
               style={{
                 textDecoration: 'none',
                 background: pt.accent,
@@ -265,7 +271,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
 
       {soldItems.length > 0 && (
         <section className="sold-marquee-section" style={{ margin: '48px 0', padding: '0 0 var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <div className="sold-marquee-head" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Eyebrow tone="blue" className="section-eyebrow">Đã giao dịch thành công</Eyebrow>
             <h2 style={{ margin: '16px 0', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-primary)' }}>Những biển số đã về chủ mới</h2>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Giao dịch thật, khách hàng thật — minh bạch giá bán.</p>
@@ -304,7 +310,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
 
       {featuredVideoItems.length > 0 && (
         <section className="home-video-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <div className="home-video-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Eyebrow tone="blue" className="section-eyebrow">{T('home.video.eyebrow')}</Eyebrow>
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.video.featured_title')}</h2>
           </div>
@@ -358,13 +364,13 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
         </section>
       )}
 
-      <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+      <section className="home-contact-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div className="home-contact-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <Eyebrow tone="blue">{T('home.contact.eyebrow')}</Eyebrow>
           <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.contact.title')}</h2>
           <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{T('home.contact.desc')}</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+        <div className="home-contact-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--gutter-section)' }}>
           <ContactChannelList notify={notify} zaloSource="home_page" />
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <div>
@@ -376,8 +382,8 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
         </div>
       </section>
 
-      <section style={{ padding: '0 var(--pad-page) var(--pad-section-y)' }}>
-        <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-inverse)', borderRadius: 'var(--radius-surface)', padding: 'clamp(28px,4vw,52px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-8)' }}>
+      <section className="home-guide-section" style={{ padding: '0 var(--pad-page) var(--pad-section-y)' }}>
+        <div className="home-guide-card" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-inverse)', borderRadius: 'var(--radius-surface)', padding: 'clamp(28px,4vw,52px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-8)' }}>
           <div style={{ flex: '1 1 340px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <Eyebrow tone="inverse">{T('home.guide.eyebrow')}</Eyebrow>
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>{T('home.guide.title')}</h2>

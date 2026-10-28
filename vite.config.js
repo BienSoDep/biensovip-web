@@ -26,7 +26,7 @@ export default defineConfig({
             if (id.includes('@dnd-kit')) {
               return 'vendor-dnd';
             }
-            if (id.includes('framer-motion') || id.includes('@base-ui') || id.includes('gsap')) {
+            if (id.includes('framer-motion') || id.includes('@base-ui') || id.includes('gsap') || id.includes('lenis')) {
               return 'vendor-ui-motion';
             }
             if (id.includes('lucide-react')) {
