@@ -484,7 +484,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             }}
           >
             {/* Left Column: Heading, Description, 3 Trust Value Bullets, Dual CTAs */}
-            <div style={{ flex: '1 1 360px', maxWidth: 540, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ flex: '1 1 360px', minWidth: 0, maxWidth: 540, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
                 <Eyebrow tone="inverse">{T('home.guide.eyebrow')}</Eyebrow>
                 <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>
@@ -553,6 +553,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             <div
               style={{
                 flex: '1 1 360px',
+                minWidth: 0,
                 maxWidth: 480,
                 width: '100%',
                 background: 'rgba(255, 255, 255, 0.03)',

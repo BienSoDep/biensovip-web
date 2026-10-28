@@ -129,7 +129,7 @@ export default function MotionPlateGallery({
   };
 
   const isMobile = containerWidth < 640;
-  const slideWidth = isMobile ? 285 : 350;
+  const slideWidth = isMobile ? 280 : 350;
   const gap = isMobile ? 14 : 20;
   const stride = slideWidth + gap;
 
