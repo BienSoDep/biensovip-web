@@ -14,7 +14,7 @@
 .motion-plate-gallery__topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
   flex-wrap: wrap;

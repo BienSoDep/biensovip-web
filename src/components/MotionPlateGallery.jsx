@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Play, Pause, Flame, Sparkles, ArrowRight } from 'lucide-react';
 import { Badge } from './index.jsx';
@@ -11,6 +11,16 @@ import { trackCtaClick } from '../services/tracking/events.js';
 import '../styles/motion-gallery.css';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
+const CLONE_SETS = 7; // Nhân bản 7 tập hợp để tạo vòng xoay vô hạn mượt mà
+
+/**
+ * Kiểm tra xem biển số có mang thế số / yếu tố phong thủy cát lành hay không
+ */
+function checkIsFengShui(p) {
+  if (p.fengShui || p.fengShuiMeaning) return true;
+  const t = p.type || '';
+  return ['Lộc phát', 'Thần tài', 'Ông địa', 'Ngũ quý', 'Tứ quý', 'Tam hoa', 'Sảnh tiến', 'Tiến lên'].some((k) => t.includes(k));
+}
 
 export default function MotionPlateGallery({
   items = [],
@@ -23,13 +33,37 @@ export default function MotionPlateGallery({
   openBuy,
   _contact,
 }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const total = items.length;
+
+  // Tính toán chỉ số khởi tạo ở vị trí giữa danh sách để hai bên trái / phải luôn đầy đủ thẻ, không bị khoảng trống
+  const initialIndex = useMemo(() => {
+    if (total === 0) return 0;
+    const midSet = Math.floor(CLONE_SETS / 2); // set 3 trong 7 sets
+    const midItem = Math.floor(total / 2);     // thẻ ở giữa của set
+    return midSet * total + midItem;
+  }, [total]);
+
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const [isJumping, setIsJumping] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1000);
   const stageRef = useRef(null);
 
-  // Measure stage width dynamically for accurate card centering
+  // Tạo mảng ảo nhân bản đa tập hợp để cuộn vô hạn không giới hạn
+  const virtualItems = useMemo(() => {
+    if (total === 0) return [];
+    return Array.from({ length: CLONE_SETS }, () => items).flat();
+  }, [items, total]);
+
+  // Đồng bộ lại activeIndex nếu độ dài danh sách items thay đổi
+  const [prevTotal, setPrevTotal] = useState(total);
+  if (prevTotal !== total) {
+    setPrevTotal(total);
+    setActiveIndex(initialIndex);
+  }
+
+  // Đo chiều rộng khung hiển thị phục vụ căn giữa chuẩn xác
   useEffect(() => {
     if (!stageRef.current) return;
     const updateWidth = () => {
@@ -43,26 +77,47 @@ export default function MotionPlateGallery({
     return () => observer.disconnect();
   }, []);
 
-  const total = items.length;
-
   const goNext = useCallback(() => {
     if (total === 0) return;
-    setActiveIndex((prev) => (prev + 1) % total);
+    setActiveIndex((prev) => prev + 1);
   }, [total]);
 
   const goPrev = useCallback(() => {
     if (total === 0) return;
-    setActiveIndex((prev) => (prev - 1 + total) % total);
+    setActiveIndex((prev) => prev - 1);
   }, [total]);
 
-  // Subtle auto-advance every 5.5s when playing and not hovered
+  // Tự động chạy mượt mà vô hạn chu kỳ 4.5s (tự tạm dừng khi người dùng hover/drag)
   useEffect(() => {
     if (!isPlaying || isHovered || total <= 1) return;
-    const timer = setInterval(goNext, 5500);
+    const timer = setInterval(goNext, 4500);
     return () => clearInterval(timer);
   }, [isPlaying, isHovered, total, goNext]);
 
-  // Keyboard navigation when stage is focused
+  // Reset cờ isJumping sau khi đã dịch chuyển tọa độ tức thì
+  useEffect(() => {
+    if (isJumping) {
+      const frame = requestAnimationFrame(() => setIsJumping(false));
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [isJumping]);
+
+  // Chuẩn hóa vị trí âm thầm về dải an toàn (vô hạn không giật)
+  const handleAnimationComplete = () => {
+    if (isJumping) {
+      setIsJumping(false);
+      return;
+    }
+    if (activeIndex >= 5 * total) {
+      setIsJumping(true);
+      setActiveIndex((prev) => prev - 2 * total);
+    } else if (activeIndex < 2 * total) {
+      setIsJumping(true);
+      setActiveIndex((prev) => prev + 2 * total);
+    }
+  };
+
+  // Điều hướng bằng phím mũi tên khi focus
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
@@ -78,22 +133,33 @@ export default function MotionPlateGallery({
   const gap = isMobile ? 14 : 20;
   const stride = slideWidth + gap;
 
-  // Center the active card in the viewport
+  // Tính tọa độ x để thẻ active luôn luôn nằm ở tâm giữa khung nhìn
   const targetX = total > 0
     ? (containerWidth / 2) - (slideWidth / 2) - (activeIndex * stride)
     : 0;
 
   const handleDragEnd = (_e, info) => {
     const { offset, velocity } = info;
-    const threshold = 45;
-    if (offset.x < -threshold || velocity.x < -350) {
+    const threshold = 35;
+    if (offset.x < -threshold || velocity.x < -280) {
       goNext();
-    } else if (offset.x > threshold || velocity.x > 350) {
+    } else if (offset.x > threshold || velocity.x > 280) {
       goPrev();
     }
   };
 
+  // Nhảy nhanh đến biển khi bấm vào thẻ tròn nhỏ bên dưới
+  const handlePillClick = (targetRealIdx) => {
+    const currentRealIdx = ((activeIndex % total) + total) % total;
+    let diff = targetRealIdx - currentRealIdx;
+    if (diff > total / 2) diff -= total;
+    if (diff < -total / 2) diff += total;
+    setActiveIndex((prev) => prev + diff);
+  };
+
   if (!items || items.length === 0) return null;
+
+  const realActiveIndex = ((activeIndex % total) + total) % total;
 
   return (
     <div
@@ -104,18 +170,10 @@ export default function MotionPlateGallery({
       tabIndex={0}
       role="region"
       aria-roledescription="carousel"
-      aria-label="Chuỗi biển số nổi bật"
+      aria-label="Chuỗi biển số HOT và hợp phong thủy"
     >
-      {/* Top bar with active counter, auto-play toggle, and prev/next controls */}
-      <div className="motion-plate-gallery__topbar">
-        <div className="motion-plate-gallery__badge-info">
-          <span className="live-dot" aria-hidden="true" />
-          <span>Biển số chọn lọc:</span>
-          <span className="motion-plate-gallery__badge-num">
-            {String(activeIndex + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-          </span>
-        </div>
-
+      {/* Top bar: Đã xóa badge 'Biển số chọn lọc', hiển thị các nút điều khiển chạy tự động mượt mà */}
+      <div className="motion-plate-gallery__topbar" style={{ justifyContent: 'flex-end' }}>
         <div className="motion-plate-gallery__controls">
           <motion.button
             type="button"
@@ -161,12 +219,17 @@ export default function MotionPlateGallery({
           className="motion-plate-gallery__track"
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.22}
+          dragElastic={0.18}
           onDragEnd={handleDragEnd}
           animate={{ x: targetX }}
-          transition={{ type: 'spring', stiffness: 280, damping: 30, mass: 0.8 }}
+          transition={
+            isJumping
+              ? { duration: 0 }
+              : { type: 'spring', stiffness: 280, damping: 30, mass: 0.8 }
+          }
+          onAnimationComplete={handleAnimationComplete}
         >
-          {items.map((p, i) => {
+          {virtualItems.map((p, i) => {
             const { prov, seri, num } = splitPlateNumber(p.plateNumber);
             const isActive = i === activeIndex;
             const dist = Math.abs(i - activeIndex);
@@ -175,10 +238,11 @@ export default function MotionPlateGallery({
             const onSale = !isZeroOrNoPrice && p.salePrice != null && p.salePrice < p.price;
             const sold = p.status === 'sold';
             const inCompare = isInList?.(p.id);
+            const isFengShui = checkIsFengShui(p);
 
             return (
               <motion.div
-                key={p.id}
+                key={`${p.id}-v${i}`}
                 className={`motion-plate-gallery__slide ${isActive ? 'motion-plate-gallery__slide--active' : ''} home-featured-card`}
                 animate={{
                   scale: isActive ? 1 : 0.93,
@@ -209,10 +273,10 @@ export default function MotionPlateGallery({
                           </span>
                         </Badge>
                       )}
-                      {p.fengShui && (
+                      {isFengShui && (
                         <Badge tone="mint">
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                            <Sparkles size={11} /> {p.fengShui.element || 'Hợp mệnh'}
+                            <Sparkles size={11} /> {p.fengShui?.element ? `Mệnh ${p.fengShui.element}` : 'Hợp phong thủy'}
                           </span>
                         </Badge>
                       )}
@@ -320,14 +384,14 @@ export default function MotionPlateGallery({
       {/* Bottom Thumbnail / Quick-jump pill strip */}
       <div className="motion-plate-gallery__strip-wrap">
         {items.map((p, idx) => {
-          const isSelected = idx === activeIndex;
+          const isSelected = idx === realActiveIndex;
           const { prov, seri, num } = splitPlateNumber(p.plateNumber);
           return (
             <motion.button
-              key={p.id}
+              key={`pill-${p.id}`}
               type="button"
               className={`motion-plate-gallery__thumb-pill ${isSelected ? 'motion-plate-gallery__thumb-pill--active' : ''}`}
-              onClick={() => setActiveIndex(idx)}
+              onClick={() => handlePillClick(idx)}
               whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.95 }}
             >
