@@ -6,6 +6,7 @@ export function useSiteRating() {
   return useQuery({
     queryKey: ['site-rating'],
     queryFn: () => apiClient.get('/api/site-rating'),
+    staleTime: 5 * 60 * 1000,
     refetchInterval: 60_000,
   });
 }

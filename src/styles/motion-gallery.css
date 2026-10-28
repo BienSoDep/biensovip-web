@@ -106,7 +106,6 @@
   margin-right: 20px;
   position: relative;
   will-change: transform, opacity;
-  transition: filter 0.25s ease;
 }
 
 .motion-plate-gallery__slide:not(.motion-plate-gallery__slide--active) {

@@ -28,7 +28,7 @@ export default function PlateCard({
   status = plate?.status,
   badge = plate?.badge,
   fav, onFav, onCompare, inCompare, onOpen, onSelect, href, onBuy, style, plateSize = 'md',
-  contact, salePrice = plate?.salePrice, layout = 'grid', priceOnRequestLabel, fengShui,
+  contact, salePrice = plate?.salePrice, layout = 'grid', priceOnRequestLabel, fengShui, tilt = true,
 }) {
   const { triggerFly } = useFlyEffect();
   const handleOpen = onOpen || onSelect || (() => {});
@@ -175,7 +175,7 @@ export default function PlateCard({
       className="plate-card"
       spotlightColor={isHot && !sold ? 'rgba(241, 151, 32, 0.22)' : 'rgba(241, 151, 32, 0.14)'}
       borderColor={isHot && !sold ? 'rgba(241, 151, 32, 0.70)' : 'rgba(241, 151, 32, 0.35)'}
-      tilt={true}
+      tilt={!sold && tilt}
       maxTilt={4}
       style={{
         height: '100%',

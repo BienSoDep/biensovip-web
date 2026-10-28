@@ -21,6 +21,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
   const visualCardRef = useRef(null);
   const searchBarRef = useRef(null);
   const statCountRef = useRef(null);
+  const countRanRef = useRef(false);
 
   // 1. Master Entrance & ScrollTrigger Animations
   useEffect(() => {
@@ -290,7 +291,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
         });
       }
 
-      const featCards = scope.querySelectorAll('.home-featured-card');
+      const featCards = scope.querySelectorAll('.home-featured-grid > .home-featured-card');
       if (featCards.length) {
         gsap.from(featCards, {
           y: 36,
@@ -469,12 +470,19 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
       return;
     }
 
+    // Nếu đã hoàn tất animation count-up một lần rồi thì chỉ cập nhật số mới, không reset chạy lại từ 0
+    if (countRanRef.current) {
+      statCountRef.current.textContent = targetVal.toLocaleString('vi-VN');
+      return;
+    }
+
+    countRanRef.current = true;
     const counter = { val: 0 };
     const tween = gsap.to(counter, {
       val: targetVal,
-      duration: 1.4,
+      duration: 1.2,
       ease: 'power2.out',
-      delay: 0.3,
+      delay: 0.2,
       onUpdate: () => {
         if (statCountRef.current) {
           statCountRef.current.textContent = Math.round(counter.val).toLocaleString('vi-VN');
@@ -490,7 +498,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
   useEffect(() => {
     const t = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 150);
+    }, 280);
     return () => clearTimeout(t);
   }, [depsKey]);
 

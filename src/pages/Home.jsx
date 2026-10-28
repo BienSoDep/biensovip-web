@@ -44,9 +44,22 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
   const { data: activityFeed } = useActivityFeed(6);
   const feedItems = activityFeed?.items || [];
   const { add: addCompare, remove: removeCompare, isInList } = useCompareIds();
-  const { data: featuredVideos } = useFeaturedPromoVideos(3);
+
+  // Hoãn tải các section dưới chân trang (đã bán, video) sau khi màn hình chính đã render mượt mà
+  const [deferredReady, setDeferredReady] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if ('requestIdleCallback' in window) {
+      const handle = window.requestIdleCallback(() => setDeferredReady(true), { timeout: 600 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(() => setDeferredReady(true), 350);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const { data: featuredVideos } = useFeaturedPromoVideos(3, { enabled: deferredReady });
   const featuredVideoItems = featuredVideos?.items || [];
-  const { data: soldData } = usePlates({ status: 'sold', perPage: 14 });
+  const { data: soldData } = usePlates({ status: 'sold', perPage: 14 }, { enabled: deferredReady });
   const soldItems = soldData?.items || [];
 
   // Home search: catId/qDebounced empty = show featured plates as before.

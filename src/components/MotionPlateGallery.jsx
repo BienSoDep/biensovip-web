@@ -12,7 +12,7 @@ import { trackCtaClick } from '../services/tracking/events.js';
 import '../styles/motion-gallery.css';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
-const CLONE_SETS = 5; // Nhân bản 5 tập hợp để tạo vòng xoay vô hạn mượt mà
+const CLONE_SETS = 3; // Nhân bản 5 tập hợp để tạo vòng xoay vô hạn mượt mà
 
 /**
  * Kiểm tra xem biển số có mang thế số / yếu tố phong thủy cát lành hay không
@@ -40,7 +40,7 @@ export default function MotionPlateGallery({
   // Bắt đầu tại thẻ đầu tiên của tập giữa để luôn cân xứng 2 bên và nổi bật biển số #1
   const initialIndex = useMemo(() => {
     if (total === 0) return 0;
-    const midSet = Math.floor(CLONE_SETS / 2); // set 2 trong 5 sets
+    const midSet = Math.floor(CLONE_SETS / 2); // set 1 trong 3 sets
     return midSet * total;
   }, [total]);
 
@@ -111,12 +111,12 @@ export default function MotionPlateGallery({
       setIsJumping(false);
       return;
     }
-    if (activeIndex >= 4 * total) {
+    if (activeIndex >= 2 * total) {
       setIsJumping(true);
-      setActiveIndex((prev) => prev - 2 * total);
+      setActiveIndex((prev) => prev - total);
     } else if (activeIndex < 1 * total) {
       setIsJumping(true);
-      setActiveIndex((prev) => prev + 2 * total);
+      setActiveIndex((prev) => prev + total);
     }
   };
 
@@ -240,7 +240,7 @@ export default function MotionPlateGallery({
             return (
               <motion.div
                 key={`${p.id}-v${i}`}
-                className={`motion-plate-gallery__slide ${isActive ? 'motion-plate-gallery__slide--active' : ''} home-featured-card`}
+                className={`motion-plate-gallery__slide ${isActive ? 'motion-plate-gallery__slide--active' : ''}`}
                 style={{
                   width: `${slideWidth}px`,
                   marginRight: `${gap}px`,
@@ -249,7 +249,6 @@ export default function MotionPlateGallery({
                   scale: isActive ? 1 : 0.93,
                   opacity: isActive ? 1 : dist === 1 ? 0.74 : 0.42,
                   zIndex: isActive ? 10 : 5 - Math.min(dist, 4),
-                  filter: isActive ? 'blur(0px)' : dist === 1 ? 'blur(0.4px)' : 'blur(1.2px)',
                 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                 onClick={() => {

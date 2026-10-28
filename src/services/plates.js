@@ -36,7 +36,7 @@ export function useShopPlateSummary() {
 }
 
 export function useInfinitePlates(filters, options) {
-  const { page, ...rest } = filters;
+  const { page: _page, ...rest } = filters;
   return useInfiniteQuery({
     queryKey: ['plates-infinite', JSON.stringify(rest)],
     queryFn: ({ pageParam = 1 }) => {
@@ -55,9 +55,11 @@ export function useInfinitePlates(filters, options) {
   });
 }
 
-export function useFeaturedPlates(limit = 6) {
+export function useFeaturedPlates(limit = 6, options = {}) {
   return useQuery({
     queryKey: ['plates-featured', limit],
     queryFn: () => apiClient.get(`/api/plates/featured?limit=${limit}`),
+    staleTime: options?.staleTime ?? 2 * 60 * 1000,
+    ...options,
   });
 }
