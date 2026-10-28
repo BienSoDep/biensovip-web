@@ -11,7 +11,7 @@ import { trackCtaClick } from '../services/tracking/events.js';
 import '../styles/motion-gallery.css';
 
 const BADGE_TONE = { 'Mới lên sàn': 'amber', 'Đã có khách cọc': 'rose' };
-const CLONE_SETS = 7; // Nhân bản 7 tập hợp để tạo vòng xoay vô hạn mượt mà
+const CLONE_SETS = 5; // Nhân bản 5 tập hợp để tạo vòng xoay vô hạn mượt mà
 
 /**
  * Kiểm tra xem biển số có mang thế số / yếu tố phong thủy cát lành hay không
@@ -35,19 +35,20 @@ export default function MotionPlateGallery({
 }) {
   const total = items.length;
 
-  // Tính toán chỉ số khởi tạo ở vị trí giữa danh sách để hai bên trái / phải luôn đầy đủ thẻ, không bị khoảng trống
+  // Bắt đầu tại thẻ đầu tiên của tập giữa để luôn cân xứng 2 bên và nổi bật biển số #1
   const initialIndex = useMemo(() => {
     if (total === 0) return 0;
-    const midSet = Math.floor(CLONE_SETS / 2); // set 3 trong 7 sets
-    const midItem = Math.floor(total / 2);     // thẻ ở giữa của set
-    return midSet * total + midItem;
+    const midSet = Math.floor(CLONE_SETS / 2); // set 2 trong 5 sets
+    return midSet * total;
   }, [total]);
 
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [isJumping, setIsJumping] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isInteracting, setIsInteracting] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(1000);
+  const [containerWidth, setContainerWidth] = useState(() =>
+    typeof window !== 'undefined' ? Math.min(window.innerWidth, 1200) : 1000
+  );
   const stageRef = useRef(null);
 
   // Tạo mảng ảo nhân bản đa tập hợp để cuộn vô hạn không giới hạn
@@ -108,10 +109,10 @@ export default function MotionPlateGallery({
       setIsJumping(false);
       return;
     }
-    if (activeIndex >= 5 * total) {
+    if (activeIndex >= 4 * total) {
       setIsJumping(true);
       setActiveIndex((prev) => prev - 2 * total);
-    } else if (activeIndex < 2 * total) {
+    } else if (activeIndex < 1 * total) {
       setIsJumping(true);
       setActiveIndex((prev) => prev + 2 * total);
     }
@@ -238,6 +239,10 @@ export default function MotionPlateGallery({
               <motion.div
                 key={`${p.id}-v${i}`}
                 className={`motion-plate-gallery__slide ${isActive ? 'motion-plate-gallery__slide--active' : ''} home-featured-card`}
+                style={{
+                  width: `${slideWidth}px`,
+                  marginRight: `${gap}px`,
+                }}
                 animate={{
                   scale: isActive ? 1 : 0.93,
                   opacity: isActive ? 1 : dist === 1 ? 0.74 : 0.42,

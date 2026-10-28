@@ -87,6 +87,7 @@
 }
 
 .motion-plate-gallery__track {
+  position: relative;
   display: flex;
   align-items: center;
   cursor: grab;
@@ -101,7 +102,7 @@
 /* Slide item */
 .motion-plate-gallery__slide {
   flex-shrink: 0;
-  width: clamp(285px, 78vw, 360px);
+  width: 350px;
   margin-right: 20px;
   position: relative;
   will-change: transform, opacity;
