@@ -810,7 +810,7 @@ export default function PlateList({
             borderRadius: "var(--radius-card)",
             overflow: "hidden",
             boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
-            padding: "4px 8px 4px 0",
+            padding: "4px 8px 4px 6px",
             minHeight: 52,
           }}
         >
@@ -829,7 +829,7 @@ export default function PlateList({
               style={{
                 position: "absolute",
                 top: "50%",
-                left: 16,
+                left: 14,
                 transform: "translateY(-50%)",
                 color: "var(--text-faint)",
                 pointerEvents: "none",
@@ -837,6 +837,7 @@ export default function PlateList({
             />
             <input
               type="search"
+              className="plate-search-input"
               placeholder="Tìm theo số, VD: 68, 51A, 999.99"
               aria-label="Tìm biển số"
               value={filters.q}
@@ -847,7 +848,8 @@ export default function PlateList({
                 minWidth: 0,
                 border: "none",
                 background: "transparent",
-                padding: "0 16px 0 44px",
+                padding: "0 16px 0 40px",
+                borderRadius: "var(--radius-field, 8px)",
                 font: "var(--type-body-sm)",
                 color: "var(--text-strong)",
                 outline: "none",
@@ -940,6 +942,7 @@ export default function PlateList({
                 type="text"
                 inputMode="numeric"
                 maxLength={10}
+                className="plate-birth-input"
                 placeholder="Nhập ngày tháng năm sinh (dd/mm/yyyy)"
                 value={birthDateDraft}
                 onChange={handleBirthDateChange}

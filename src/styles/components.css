@@ -633,3 +633,17 @@ a:not(.btn):not(.pressable):not(.plate-card):hover {
   text-align: center;
   margin-top: var(--space-2);
 }
+
+/* --------------------------------------------------------------------------
+   14. PLATE LIST SEARCH BAR FOCUS AFFORDANCE
+   Đảm bảo khi click/focus ô tìm kiếm không bị mất viền trái (tránh clipping overflow)
+   -------------------------------------------------------------------------- */
+.plate-search-bar .plate-search-input:focus,
+.plate-search-bar .plate-search-input:focus-visible,
+.plate-search-bar .plate-birth-input:focus,
+.plate-search-bar .plate-birth-input:focus-visible {
+  outline: 2px solid var(--action-primary) !important;
+  outline-offset: -1px !important;
+  border-radius: var(--radius-field, 8px) !important;
+  box-shadow: inset 0 0 0 1px var(--action-primary), 0 0 0 3px rgba(241, 151, 32, 0.12) !important;
+}
