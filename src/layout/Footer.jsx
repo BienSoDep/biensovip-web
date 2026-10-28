@@ -626,9 +626,6 @@ export default function Footer({ settings, patch }) {
           </div>
 
           <div className="vip-footer-trust-tags">
-            <span className="vip-footer-tag">
-              <span className="vip-live-dot" style={{ width: 6, height: 6, marginRight: 4 }} /> CSDL Bộ Công An
-            </span>
             <span className="vip-footer-tag">Định danh chính chủ</span>
             <span className="vip-footer-tag">Giao dịch an toàn</span>
             <span className="vip-footer-tag">Hỗ trợ toàn quốc</span>
