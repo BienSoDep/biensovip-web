@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import Button from "../components/Button.jsx";
 import { motion } from "motion/react";
-import SpotlightCard from "../components/SpotlightCard.jsx";
 import {
   Badge,
   IconButton,
@@ -660,17 +659,13 @@ export default function PlateDetail({
             gap: "var(--space-4)",
           }}
         >
-          <SpotlightCard
-            size={520}
-            spotlightColor="rgba(241, 151, 32, 0.18)"
-            borderColor="rgba(241, 151, 32, 0.28)"
-            tilt={true}
-            maxTilt={3.5}
-            glare={true}
+          <div
             style={{
               background: "var(--surface-sunken)",
               borderRadius: "var(--radius-card)",
               padding: "clamp(20px,4vw,52px)",
+              display: "flex",
+              justifyContent: "center",
               boxShadow: "var(--shadow-card, 0 10px 30px -10px rgba(0,0,0,0.06))",
             }}
           >
@@ -753,7 +748,7 @@ export default function PlateDetail({
                 />
               )}
             </div>
-          </SpotlightCard>
+          </div>
           {shouldShowGeneratedImage(settings, plate.images) &&
             !imageError &&
             plate.images.length > 1 && (
