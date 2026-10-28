@@ -82,8 +82,8 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             </h1>
             <p className="hero-desc" style={{ margin: 0, maxWidth: 'var(--width-prose)', font: 'var(--type-body)', color: 'var(--text-body)' }}>{T('home.hero.desc')}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }} className="hero-cta-row">
-              <Button className="hero-cta-btn" variant="primary" size="lg" uppercase onClick={go('list')}>{T('home.hero.cta_list')}</Button>
-              <Button className="hero-cta-btn" variant="outline" size="lg" onClick={() => { window.open(toZaloUrl(zalo), '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
+              <Button className="hero-cta-btn" variant="primary" size="lg" uppercase shimmer rollingText onClick={go('list')}>{T('home.hero.cta_list')}</Button>
+              <Button className="hero-cta-btn" variant="outline" size="lg" magnetic onClick={() => { window.open(toZaloUrl(zalo), '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
             </div>
             {feedItems.length > 0 && (
               <div className="hero-feed-pill" style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
@@ -410,7 +410,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255,255,255,.72)', maxWidth: 'var(--width-prose)' }}>{T('home.guide.desc')}</p>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-            <Button variant="primary" size="lg" onClick={go('blog')}>{T('home.guide.cta_blog')}</Button>
+            <Button variant="primary" size="lg" shimmer rollingText onClick={go('blog')}>{T('home.guide.cta_blog')}</Button>
           </div>
         </SpotlightCard>
       </section>

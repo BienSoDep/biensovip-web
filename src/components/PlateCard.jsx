@@ -105,7 +105,7 @@ export default function PlateCard({
           {!sold && (onBuy || contact?.phone || contact?.zalo) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" style={{ whiteSpace: 'nowrap' }}>Chốt biển này</Button>
+                <Button variant="primary" size="sm" shimmer onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" style={{ whiteSpace: 'nowrap' }}>Chốt biển này</Button>
               )}
               {contact?.phone && (
                 isMobileDevice() ? (
@@ -252,7 +252,7 @@ export default function PlateCard({
           {!sold ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {onBuy && (
-                <Button variant="primary" size="sm" onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" fullWidth style={{ paddingTop: 12, paddingBottom: 12 }}>Chốt biển này</Button>
+                <Button variant="primary" size="sm" shimmer onClick={() => { trackCtaClick('chot_bien', plateNumber); onBuy(); }} className="plate-card-cta-primary" fullWidth style={{ paddingTop: 12, paddingBottom: 12 }}>Chốt biển này</Button>
               )}
               {(contact?.phone || contact?.zalo) && (
                 <div style={{ display: 'flex', gap: 8 }}>

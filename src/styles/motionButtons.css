@@ -1,0 +1,114 @@
+/* ==========================================================================
+   MOTION UI - BUTTON MICRO-INTERACTIONS (inspired by motion.dev/ui/buttons)
+   Physics-based springs, staggered rolling text, shimmer sweep, and hold-to-confirm.
+   ========================================================================== */
+
+/* 1. Core Button Motion Enhancements */
+.btn {
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.btn-content-wrap {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 8px);
+  width: 100%;
+  height: 100%;
+}
+
+/* 2. Shimmer Light Sweep (Motion Shimmer Button) */
+.btn-shimmer-track {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.btn-shimmer-beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  transform: skewX(-22deg);
+  pointer-events: none;
+}
+
+/* 3. Staggered Rolling Text (Motion Rolling Text Button) */
+.btn-rolling-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  line-height: 1.2;
+}
+
+.btn-rolling-row {
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-rolling-row--secondary {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.btn-rolling-char {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* 4. Hold to Confirm Button (Motion Hold-to-Confirm) */
+.btn-hold {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.btn-hold-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+  z-index: 1;
+  transform-origin: 0% 50%;
+}
+
+.btn-hold[data-holding="true"] {
+  user-select: none;
+}
+
+/* 5. Mobile & Reduced Motion Fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .btn-shimmer-beam,
+  .btn-rolling-char,
+  .btn-hold-progress {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .btn-rolling-row--secondary {
+    display: none !important;
+  }
+}
