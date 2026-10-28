@@ -46,7 +46,7 @@ export default function MotionPlateGallery({
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [isJumping, setIsJumping] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1000);
   const stageRef = useRef(null);
 
@@ -87,12 +87,12 @@ export default function MotionPlateGallery({
     setActiveIndex((prev) => prev - 1);
   }, [total]);
 
-  // Tự động chạy mượt mà vô hạn chu kỳ 4.5s (tự tạm dừng khi người dùng hover/drag)
+  // Tự động chạy mượt mà vô hạn chu kỳ 3s (tự tạm dừng chỉ khi người dùng đang giữ chuột / chạm vuốt)
   useEffect(() => {
-    if (!isPlaying || isHovered || total <= 1) return;
-    const timer = setInterval(goNext, 4500);
+    if (!isPlaying || isInteracting || total <= 1) return;
+    const timer = setInterval(goNext, 3000);
     return () => clearInterval(timer);
-  }, [isPlaying, isHovered, total, goNext]);
+  }, [isPlaying, isInteracting, total, goNext]);
 
   // Reset cờ isJumping sau khi đã dịch chuyển tọa độ tức thì
   useEffect(() => {
@@ -138,16 +138,6 @@ export default function MotionPlateGallery({
     ? (containerWidth / 2) - (slideWidth / 2) - (activeIndex * stride)
     : 0;
 
-  const handleDragEnd = (_e, info) => {
-    const { offset, velocity } = info;
-    const threshold = 35;
-    if (offset.x < -threshold || velocity.x < -280) {
-      goNext();
-    } else if (offset.x > threshold || velocity.x > 280) {
-      goPrev();
-    }
-  };
-
   // Nhảy nhanh đến biển khi bấm vào thẻ tròn nhỏ bên dưới
   const handlePillClick = (targetRealIdx) => {
     const currentRealIdx = ((activeIndex % total) + total) % total;
@@ -164,8 +154,6 @@ export default function MotionPlateGallery({
   return (
     <div
       className="motion-plate-gallery"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       role="region"
@@ -217,10 +205,16 @@ export default function MotionPlateGallery({
       <div ref={stageRef} className="motion-plate-gallery__stage">
         <motion.div
           className="motion-plate-gallery__track"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.18}
-          onDragEnd={handleDragEnd}
+          onPanStart={() => setIsInteracting(true)}
+          onPanEnd={(_e, info) => {
+            setIsInteracting(false);
+            const threshold = 30;
+            if (info.offset.x < -threshold || info.velocity.x < -200) {
+              goNext();
+            } else if (info.offset.x > threshold || info.velocity.x > 200) {
+              goPrev();
+            }
+          }}
           animate={{ x: targetX }}
           transition={
             isJumping
