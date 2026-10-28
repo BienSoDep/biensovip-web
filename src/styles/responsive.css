@@ -27,8 +27,7 @@
     --fs-title-2: 18px;
   }
 
-  .mobile-menu-btn,
-  .mobile-search-btn {
+  .mobile-menu-btn {
     display: flex !important;
     min-width: 44px;
     min-height: 44px;

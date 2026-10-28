@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Search, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock, MessageSquare } from 'lucide-react';
+import { Menu, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock, MessageSquare } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { IconButton, Avatar } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
@@ -11,7 +11,7 @@ import { usePlates } from '../services/plates.js';
 import { usePlateHistory } from '../services/plateHistory.js';
 
 
-export default function Header({ s, go, favCount, user, patch, notify, onMenu, openPlate, openPost, onOpenSearch }) {
+export default function Header({ s, go, favCount, user, patch, notify, onMenu, openPlate, openPost }) {
   const T = contentGet;
   const { ids: compareIds } = useCompareIds();
   const compareCount = compareIds.length;
@@ -87,7 +87,6 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
     <header style={{ position: 'sticky', top: 0, zIndex: 'var(--z-header)', background: 'var(--glass-fill)', backdropFilter: 'var(--glass-blur)', boxShadow: 'inset 0 -1px 0 var(--border-hairline)' }}>
       <div className="header-row" style={{ maxWidth: 'min(100%, 1280px)', margin: '0 auto', padding: '12px var(--pad-page)', display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 'var(--space-3)' }}>
         <button onClick={onMenu} style={{ display: 'none', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }} className="mobile-menu-btn"><Menu size={24} /></button>
-        <button type="button" onClick={onOpenSearch} style={{ display: 'none', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-body)', padding: 4 }} className="mobile-search-btn" aria-label="Tìm kiếm"><Search size={22} /></button>
         <a href="/" onClick={(e) => { e.preventDefault(); go('home')(); }} className="pressable" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', flexShrink: 0 }}>
           <img src="/assets/logo-mark.png" alt="" className="header-logo-mark" style={{ width: 38, height: 38, objectFit: 'contain', display: 'block' }} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
@@ -387,53 +386,6 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
           })}
         </nav>
         <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0, marginLeft: 'auto' }}>
-          {/* Quick Search Shortcut Pill (Ctrl+K) */}
-          <button
-            type="button"
-            onClick={onOpenSearch}
-            aria-label="Tìm kiếm nhanh (Ctrl+K)"
-            title="Tìm kiếm nhanh (Ctrl+K)"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              height: 36,
-              padding: '0 12px',
-              border: '1px solid var(--border-hairline)',
-              borderRadius: 'var(--radius-pill)',
-              background: 'var(--surface-sunken)',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              fontSize: 12.5,
-              fontWeight: 500,
-              transition: 'all 140ms ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--brand-500)';
-              e.currentTarget.style.background = 'var(--white)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-hairline)';
-              e.currentTarget.style.background = 'var(--surface-sunken)';
-            }}
-          >
-            <Search size={14} style={{ color: 'var(--brand-500)' }} />
-            <span className="header-search-text">Tìm biển...</span>
-            <kbd
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                padding: '2px 5px',
-                borderRadius: 4,
-                background: 'var(--white)',
-                border: '1px solid var(--border-hairline)',
-                color: 'var(--text-faint)',
-                lineHeight: 1,
-              }}
-            >
-              Ctrl K
-            </kbd>
-          </button>
           <NotificationBell go={go} openPlate={openPlate} openPost={openPost} user={user} />
           {/* Lịch sử xem biển gần đây */}
           <div style={{ position: 'relative', display: 'flex' }}>
