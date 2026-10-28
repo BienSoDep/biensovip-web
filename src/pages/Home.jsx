@@ -448,12 +448,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             margin: '0 auto',
             background: 'var(--surface-inverse)',
             borderRadius: 'var(--radius-surface)',
-            padding: 'clamp(32px, 5vw, 56px)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 'var(--space-8)',
+            padding: 'clamp(28px, 4vw, 48px)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -470,153 +465,168 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
               borderRadius: '50%',
               background: 'radial-gradient(circle, rgba(241, 151, 32, 0.16) 0%, transparent 70%)',
               pointerEvents: 'none',
+              zIndex: 0,
             }}
           />
 
-          {/* Left Column: Heading, Description, 3 Trust Value Bullets, Dual CTAs */}
-          <div style={{ flex: '1 1 420px', maxWidth: 580, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)', position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <Eyebrow tone="inverse">{T('home.guide.eyebrow')}</Eyebrow>
-              <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>
-                {T('home.guide.title')}
-              </h2>
-              <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255, 255, 255, 0.78)', lineHeight: 1.6 }}>
-                {T('home.guide.desc')}
-              </p>
-            </div>
-
-            {/* 3 Trust Value Bullets */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <ShieldCheck size={18} style={{ color: 'var(--brand-500)' }} />
-                </div>
-                <div>
-                  <strong style={{ color: 'var(--white)', fontSize: 14 }}>Pháp lý chuẩn Thông tư 24:</strong>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Hồ sơ Cục CSGT sạch 100%, bảo hành trọn đời.</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Clock size={18} style={{ color: 'var(--brand-500)' }} />
-                </div>
-                <div>
-                  <strong style={{ color: 'var(--white)', fontSize: 14 }}>Bàn giao siêu tốc 24–48h:</strong>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Hoàn tất thu hồi và cấp biển định danh nhanh gọn.</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <HandCoins size={18} style={{ color: 'var(--brand-500)' }} />
-                </div>
-                <div>
-                  <strong style={{ color: 'var(--white)', fontSize: 14 }}>Minh bạch & Trọn gói:</strong>
-                  <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Báo giá thật niêm yết, không phát sinh chi phí ẩn.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Dual CTAs */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', paddingTop: 'var(--space-2)' }}>
-              <Button variant="primary" size="lg" shimmer rollingText onClick={go('blog')}>
-                {T('home.guide.cta_blog')}
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={go('transfer')}
-                style={{
-                  borderColor: 'rgba(241, 151, 32, 0.45)',
-                  color: 'var(--white)',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                }}
-              >
-                <span>Thủ tục sang tên</span>
-                <ArrowRight size={16} style={{ marginLeft: 6 }} />
-              </Button>
-            </div>
-          </div>
-
-          {/* Right Column: Visual Stage with Embossed VIP Plate & Key Guarantee Metrics */}
+          {/* 2-Column Responsive Row: Left Content & Right VIP Plate Showcase side-by-side */}
           <div
             style={{
-              flex: '1 1 360px',
-              maxWidth: 460,
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(241, 151, 32, 0.28)',
-              borderRadius: 'var(--radius-card, 16px)',
-              padding: 'clamp(20px, 3vw, 28px)',
-              boxShadow: '0 16px 40px -10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
               display: 'flex',
-              flexDirection: 'column',
-              gap: 18,
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 'clamp(24px, 3.5vw, 44px)',
+              width: '100%',
               position: 'relative',
               zIndex: 1,
             }}
           >
-            {/* Header Badge */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '5px 12px',
-                  borderRadius: 9999,
-                  background: 'rgba(241, 151, 32, 0.16)',
-                  border: '1px solid rgba(241, 151, 32, 0.4)',
-                  color: 'var(--brand-500, #F19720)',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.02em',
-                }}
-              >
-                <BadgeCheck size={15} /> Bảo chứng chuẩn BCA
-              </span>
-              <span style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.65)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Sparkles size={13} style={{ color: 'var(--brand-500)' }} /> Thông tư 24/2023
-              </span>
+            {/* Left Column: Heading, Description, 3 Trust Value Bullets, Dual CTAs */}
+            <div style={{ flex: '1 1 360px', maxWidth: 540, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                <Eyebrow tone="inverse">{T('home.guide.eyebrow')}</Eyebrow>
+                <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>
+                  {T('home.guide.title')}
+                </h2>
+                <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255, 255, 255, 0.78)', lineHeight: 1.6 }}>
+                  {T('home.guide.desc')}
+                </p>
+              </div>
+
+              {/* 3 Trust Value Bullets */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <ShieldCheck size={17} style={{ color: 'var(--brand-500)' }} />
+                  </div>
+                  <div>
+                    <strong style={{ color: 'var(--white)', fontSize: 13.5 }}>Pháp lý chuẩn Thông tư 24:</strong>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Hồ sơ Cục CSGT sạch 100%, bảo hành trọn đời.</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Clock size={17} style={{ color: 'var(--brand-500)' }} />
+                  </div>
+                  <div>
+                    <strong style={{ color: 'var(--white)', fontSize: 13.5 }}>Bàn giao siêu tốc 24–48h:</strong>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Hoàn tất thu hồi và cấp biển định danh nhanh gọn.</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <HandCoins size={17} style={{ color: 'var(--brand-500)' }} />
+                  </div>
+                  <div>
+                    <strong style={{ color: 'var(--white)', fontSize: 13.5 }}>Minh bạch & Trọn gói:</strong>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Báo giá thật niêm yết, không phát sinh chi phí ẩn.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dual CTAs */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', paddingTop: 'var(--space-1)' }}>
+                <Button variant="primary" size="lg" shimmer rollingText onClick={go('blog')}>
+                  {T('home.guide.cta_blog')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={go('transfer')}
+                  style={{
+                    borderColor: 'rgba(241, 151, 32, 0.45)',
+                    color: 'var(--white)',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                  }}
+                >
+                  <span>Thủ tục sang tên</span>
+                  <ArrowRight size={16} style={{ marginLeft: 6 }} />
+                </Button>
+              </div>
             </div>
 
-            {/* Embossed Plate Visual Box */}
+            {/* Right Column: Visual Stage with Embossed Horizontal VIP Plate & Key Guarantee Metrics */}
             <div
               style={{
-                background: 'rgba(0, 0, 0, 0.35)',
-                borderRadius: 'var(--radius-sm, 10px)',
-                padding: '18px 12px 14px',
+                flex: '1 1 360px',
+                maxWidth: 480,
+                width: '100%',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(241, 151, 32, 0.28)',
+                borderRadius: 'var(--radius-card, 16px)',
+                padding: 'clamp(18px, 2.5vw, 24px)',
+                boxShadow: '0 16px 40px -10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
+                gap: 16,
               }}
             >
-              <div style={{ maxWidth: 220, width: '100%', display: 'flex', justifyContent: 'center' }}>
-                <PlateVisual prov="51K" seri="" num="999.99" shape="short" size="md" />
+              {/* Header Badge */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '5px 12px',
+                    borderRadius: 9999,
+                    background: 'rgba(241, 151, 32, 0.16)',
+                    border: '1px solid rgba(241, 151, 32, 0.4)',
+                    color: 'var(--brand-500, #F19720)',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  <BadgeCheck size={15} /> Bảo chứng chuẩn BCA
+                </span>
+                <span style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.65)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Sparkles size={13} style={{ color: 'var(--brand-500)' }} /> Thông tư 24/2023
+                </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 12, color: 'rgba(255, 255, 255, 0.72)' }}>
-                <span>Định danh chính chủ</span> · <span style={{ color: 'var(--brand-500, #F19720)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}><FileCheck2 size={13} /> Sẵn sàng bàn giao</span>
-              </div>
-            </div>
 
-            {/* 2x2 Grid of Key Guarantee Metrics */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>100%</div>
-                <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Pháp lý sạch CSGT</div>
+              {/* Embossed Horizontal Plate Visual Box (Biển số ngang) */}
+              <div
+                style={{
+                  background: 'rgba(0, 0, 0, 0.40)',
+                  borderRadius: 'var(--radius-sm, 10px)',
+                  padding: '16px 14px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  border: '1px solid rgba(255, 255, 255, 0.07)',
+                }}
+              >
+                <div style={{ maxWidth: 360, width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  <PlateVisual prov="51K" seri="" num="999.99" shape="long" size="listLg" />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 12, color: 'rgba(255, 255, 255, 0.72)' }}>
+                  <span>Định danh chính chủ</span> · <span style={{ color: 'var(--brand-500, #F19720)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}><FileCheck2 size={13} /> Sẵn sàng bàn giao</span>
+                </div>
               </div>
-              <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>1–2 Ngày</div>
-                <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Bàn giao hoàn tất</div>
-              </div>
-              <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>63 Tỉnh</div>
-                <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Giao tận nơi toàn quốc</div>
-              </div>
-              <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>Trọn Đời</div>
-                <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Bảo hành hồ sơ xe</div>
+
+              {/* 2x2 Grid of Key Guarantee Metrics */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>100%</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Pháp lý sạch CSGT</div>
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>1–2 Ngày</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Bàn giao hoàn tất</div>
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>63 Tỉnh</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Giao tận nơi toàn quốc</div>
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>Trọn Đời</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Bảo hành hồ sơ xe</div>
+                </div>
               </div>
             </div>
           </div>
