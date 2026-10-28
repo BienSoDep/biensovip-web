@@ -982,7 +982,7 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
                               <Headphones size={14} /> Nhắn tin trực tiếp với Quản lý Duy Đinh
                             </button>
                           )}
-                          <a href={ZALO_LINK} target="_blank" rel="noopener noreferrer" className="claude-chip-btn" style={{ background: '#0068FF', color: '#FFFFFF', borderColor: '#0068FF' }}>
+                          <a href={ZALO_LINK} target="_blank" rel="noopener noreferrer" className="claude-chip-btn" style={{ background: 'var(--brand-500, #F19720)', color: 'var(--action-primary-text, #111827)', borderColor: 'var(--brand-500, #F19720)' }}>
                             <MessageCircle size={14} /> Nhắn Zalo Chuyên viên
                           </a>
                           <a href={TEL_LINK} className="claude-chip-btn" style={{ borderColor: 'var(--brand-500)', color: 'var(--brand-700)' }}>
@@ -1122,7 +1122,7 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
           {rateLimited && (
             <div style={{ padding: '8px 12px', borderRadius: 10, background: '#FEE2E2', border: '1px solid #FCA5A5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 12.5, color: '#991B1B' }}>Bạn đã gửi quá nhiều tin nhắn liên tiếp.</span>
-              <a href={ZALO_LINK} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, fontWeight: 600, color: '#0068FF', textDecoration: 'none' }}>
+              <a href={ZALO_LINK} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--action-primary, #F19720)', textDecoration: 'none' }}>
                 Nhắn Zalo ngay
               </a>
             </div>

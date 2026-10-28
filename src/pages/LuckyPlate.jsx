@@ -509,7 +509,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
                         </div>
                       )}
                       <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
-                      <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}{r.source === 'vpa' && <Badge tone="blue" style={{ marginLeft: 8 }}>Biển VPA</Badge>}</span>
+                      <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)', flex: 1 }}>{r.plateNumber}{r.source === 'vpa' && <Badge tone="amber" style={{ marginLeft: 8 }}>Biển VPA</Badge>}</span>
                       <span style={{ font: 'var(--type-body)', color: 'var(--text-strong)' }}>{(r.priceOnRequest || !r.price || Number(r.price) <= 0) ? 'Giá liên hệ' : `${Number(r.price).toLocaleString('vi-VN')}đ`}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, minWidth: 150 }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)' }}>{r.score}% hợp mệnh</span>
@@ -544,7 +544,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
                         href={routeFor('detail', r.slug || r.plateId)}
                         onOpen={() => openPlate(r.slug || r.plateId, 'lucky')} contact={contact} plateSize="md" layout="grid"
                       />
-                      {r.source === 'vpa' && <Badge tone="blue" style={{ alignSelf: 'flex-start' }}>Biển VPA</Badge>}
+                      {r.source === 'vpa' && <Badge tone="amber" style={{ alignSelf: 'flex-start' }}>Biển VPA</Badge>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-muted)' }}>#{i + 1}</span>
                         <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-strong)', flex: 1 }}>{r.score}% hợp mệnh</span>
@@ -570,7 +570,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
               <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Lịch sử tra cứu</span>
               {history.data.map((h) => (
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
-                  <Badge tone="blue">Mệnh {elementAsciiLabel(h.element)}</Badge>
+                  <Badge tone="amber">Mệnh {elementAsciiLabel(h.element)}</Badge>
                   <span style={{ flex: 1 }}>{h.birthDate}</span>
                   <Button variant="ghost" size="sm" onClick={() => { setForm((f) => ({ ...f, birthDate: h.birthDate })); }}>Xem lại</Button>
                 </div>

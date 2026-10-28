@@ -189,7 +189,7 @@ function ChangePasswordSection({ notify }) {
 
   return (
     <div id="security-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <Eyebrow tone="blue">Bảo mật</Eyebrow>
+      <Eyebrow tone="brand">Bảo mật</Eyebrow>
       <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Đổi mật khẩu</h3>
         <Input label="Mật khẩu hiện tại" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
@@ -204,7 +204,7 @@ function ChangePasswordSection({ notify }) {
 function FeedbackSection() {
   return (
     <div id="feedback-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <Eyebrow tone="blue">Báo cáo hệ thống</Eyebrow>
+      <Eyebrow tone="brand">Báo cáo hệ thống</Eyebrow>
       <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <div>
           <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Gửi báo cáo lỗi / góp ý</h3>
@@ -244,7 +244,7 @@ function NotificationSettingsSection({ notify }) {
 
   return (
     <div id="notification-section" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <Eyebrow tone="blue">Thông báo</Eyebrow>
+      <Eyebrow tone="brand">Thông báo</Eyebrow>
       <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
           <input type="checkbox" checked={emailOn} onChange={toggleEmail} />
@@ -358,7 +358,7 @@ function BecomeCollaboratorSection({ notify, user, onUserUpdate }) {
 
   return (
     <div id="become-ctv" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <Eyebrow tone="blue">Cộng tác viên</Eyebrow>
+      <Eyebrow tone="brand">Cộng tác viên</Eyebrow>
       <div style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {isCtv ? (
           <>

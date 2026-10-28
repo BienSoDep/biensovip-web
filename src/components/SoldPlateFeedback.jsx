@@ -384,7 +384,7 @@ export default function SoldPlateFeedback({ plate, onConsultSimilar, go, notify 
                   gap: 6,
                   fontSize: 13,
                   fontWeight: 600,
-                  color: '#0068FF',
+                  color: 'var(--action-primary, #F19720)',
                   textDecoration: 'none',
                 }}
               >

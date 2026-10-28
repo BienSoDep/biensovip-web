@@ -42,7 +42,7 @@ export default function PageHeader({
         }}
       >
         {eyebrow && (
-          <Eyebrow tone="blue">
+          <Eyebrow tone="brand">
             {eyebrow}
           </Eyebrow>
         )}

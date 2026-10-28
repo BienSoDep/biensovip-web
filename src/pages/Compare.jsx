@@ -260,7 +260,7 @@ const ELEMENT_CONFIG = {
   thuy: { label: 'Mệnh Thủy', bg: '#DBEAFE', color: '#1D4ED8', border: '#93C5FD' },
 };
 
-const CHART_COLORS = ['#F97316', '#2563EB', '#16A34A'];
+const CHART_COLORS = ['#F19720', '#1E293B', '#EA580C'];
 
 // Form nhập ngày sinh gọn nhẹ (1 dòng inline)
 function BirthDatePrompt({ onSubmit }) {

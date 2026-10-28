@@ -1032,7 +1032,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                     Loại xe: {vehicle}
                   </Badge>
                   {analyzedData.provinceCode && (
-                    <Badge tone="blue">
+                    <Badge tone="amber">
                       Mã tỉnh/thành: {analyzedData.provinceCode}
                     </Badge>
                   )}
@@ -1385,7 +1385,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                     1. Ngũ hành Tiên Thiên Hà Đồ
                   </strong>
                 </div>
-                <Badge tone="blue">
+                <Badge tone="amber">
                   Số đuôi hành {analyzedData.lastElement}
                 </Badge>
               </div>

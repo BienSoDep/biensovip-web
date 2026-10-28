@@ -33,8 +33,8 @@ const REACTION_CONFIG = {
     key: "like",
     emoji: "👍",
     label: "Thích",
-    color: "#1877F2",
-    bg: "rgba(24,119,242,.12)",
+    color: "#F19720",
+    bg: "rgba(241,151,32,.12)",
   },
   love: {
     key: "love",
@@ -236,7 +236,7 @@ function CommentActions({
             if (!activeReaction) {
               e.currentTarget.style.background = "rgba(24,119,242,.08)";
               e.currentTarget.style.borderColor = "rgba(24,119,242,.25)";
-              e.currentTarget.style.color = "#1877F2";
+              e.currentTarget.style.color = "#F19720";
             }
           }}
           onMouseLeave={(e) => {
@@ -826,8 +826,8 @@ export default function PlateDiscussion({ plate, notify, user }) {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#0068FF",
-              color: "#FFF",
+              background: "var(--brand-500, #F19720)",
+              color: "var(--action-primary-text, #111827)",
               padding: "8px 16px",
               borderRadius: "var(--radius-sm)",
               fontSize: 13,

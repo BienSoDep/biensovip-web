@@ -364,13 +364,13 @@ export default function LiveStaffChatView({
             rel="noopener noreferrer"
             className="claude-chip-btn"
             style={{
-              background: '#0068FF',
-              color: '#FFFFFF',
-              borderColor: '#0068FF',
+              background: 'var(--brand-500, #F19720)',
+              color: 'var(--action-primary-text, #111827)',
+              borderColor: 'var(--brand-500, #F19720)',
               padding: '6px 12px',
               fontSize: 12.5,
               fontWeight: 600,
-              boxShadow: '0 2px 6px rgba(0, 104, 255, 0.25)',
+              boxShadow: '0 2px 6px rgba(241, 151, 32, 0.3)',
             }}
           >
             <MessageCircle size={14} /> Nhắn Zalo Quản lý

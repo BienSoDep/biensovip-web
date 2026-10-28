@@ -78,7 +78,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
       <section ref={heroRef} style={{ padding: '0 var(--pad-page)', margin: '15px 0' }}>
         <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-hero)', borderRadius: 'var(--radius-surface)', padding: 'clamp(24px,8vw,64px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', alignItems: 'center' }}>
           <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-            <Eyebrow tone="blue" className="hero-eyebrow">{plateCountData && plateCountData.total >= 395 ? `${plateCountData.total.toLocaleString('vi-VN')} biển số đang chờ chủ mới` : '395 biển số đang chờ chủ mới'}</Eyebrow>
+            <Eyebrow tone="brand" className="hero-eyebrow">{plateCountData && plateCountData.total >= 395 ? `${plateCountData.total.toLocaleString('vi-VN')} biển số đang chờ chủ mới` : '395 biển số đang chờ chủ mới'}</Eyebrow>
             <h1 className="hero-title" style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
               <span className="hero-title-line" style={{ display: 'block' }}>{T('home.hero.title_line1')}</span>
               <span className="hero-title-line" style={{ display: 'block' }}>{T('home.hero.title_line2')}</span>
@@ -156,7 +156,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
 
       <section className="home-featured-head" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
         <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <Eyebrow tone="blue" className="section-eyebrow">{isSearching ? 'Kết quả tìm kiếm' : T('home.featured.eyebrow')}</Eyebrow>
+          <Eyebrow tone="brand" className="section-eyebrow">{isSearching ? 'Kết quả tìm kiếm' : T('home.featured.eyebrow')}</Eyebrow>
           <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
             {isSearching ? `${searchItems.length} biển số phù hợp` : T('home.featured.title')}
           </h2>
@@ -260,7 +260,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
       <section className="home-thematic-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <div className="home-thematic-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <Eyebrow tone="blue" className="section-eyebrow">{T('home.plate_types.eyebrow')}</Eyebrow>
+            <Eyebrow tone="brand" className="section-eyebrow">{T('home.plate_types.eyebrow')}</Eyebrow>
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
               {T('home.plate_types.title')}
             </h2>
@@ -319,7 +319,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
       {soldItems.length > 0 && (
         <section className="sold-marquee-section" style={{ margin: '48px 0', padding: '0 0 var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div className="sold-marquee-head" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page)', width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <Eyebrow tone="blue" className="section-eyebrow">Đã giao dịch thành công</Eyebrow>
+            <Eyebrow tone="brand" className="section-eyebrow">Đã giao dịch thành công</Eyebrow>
             <h2 style={{ margin: '16px 0', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-primary)' }}>Những biển số đã về chủ mới</h2>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Giao dịch thật, khách hàng thật — minh bạch giá bán.</p>
           </div>
@@ -358,7 +358,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
       {featuredVideoItems.length > 0 && (
         <section className="home-video-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
           <div className="home-video-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <Eyebrow tone="blue" className="section-eyebrow">{T('home.video.eyebrow')}</Eyebrow>
+            <Eyebrow tone="brand" className="section-eyebrow">{T('home.video.eyebrow')}</Eyebrow>
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.video.featured_title')}</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
@@ -421,7 +421,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
 
       <section className="home-contact-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <div className="home-contact-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <Eyebrow tone="blue">{T('home.contact.eyebrow')}</Eyebrow>
+          <Eyebrow tone="brand">{T('home.contact.eyebrow')}</Eyebrow>
           <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.contact.title')}</h2>
           <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{T('home.contact.desc')}</p>
         </div>
