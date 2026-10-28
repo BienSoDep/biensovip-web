@@ -15,6 +15,7 @@ import { Select, Checkbox, Radio, Input, Icon, PageHeader } from "../components/
 import PlateCard from "../components/PlateCard.jsx";
 import Pagination from "../components/Pagination.jsx";
 import PlateCardSkeleton from "../components/skeletons/PlateCardSkeleton.jsx";
+import MotionLoader from "../components/MotionLoader.jsx";
 import { useStaggeredReveal } from "../hooks/useStaggeredReveal.js";
 import { useCategories } from "../services/categories.js";
 import { usePlates, useInfinitePlates } from "../services/plates.js";
@@ -2243,12 +2244,14 @@ export default function PlateList({
               style={{
                 display: "flex",
                 justifyContent: "center",
-                padding: "var(--space-4) 0",
-                font: "var(--type-body-sm)",
-                color: "var(--text-muted)",
+                padding: "var(--space-6) 0 var(--space-4)",
               }}
             >
-              Đang tải thêm…
+              <MotionLoader
+                variant="bars"
+                size="sm"
+                label="Đang tải thêm biển số..."
+              />
             </div>
           )}
           {!useInfinite && totalPages > 1 && (
