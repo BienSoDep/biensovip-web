@@ -1,3 +1,4 @@
+import { useFlyEffect } from '../contexts/FlyEffectContext.jsx';
 import { Phone, Flame, Sparkles } from 'lucide-react';
 import { Badge } from './index.jsx';
 import SpotlightCard from './SpotlightCard.jsx';
@@ -29,6 +30,7 @@ export default function PlateCard({
   fav, onFav, onCompare, inCompare, onOpen, onSelect, href, onBuy, style, plateSize = 'md',
   contact, salePrice = plate?.salePrice, layout = 'grid', priceOnRequestLabel, fengShui,
 }) {
+  const { triggerFly } = useFlyEffect();
   const handleOpen = onOpen || onSelect || (() => {});
   // Ảnh biển số sinh tự động chỉ hiện khi admin đã bật cờ toàn hệ thống (mặc định tắt — ưu tiên
   // PlateVisual). Xem AdminMaintenance > "Hiển thị biển số" hoặc trang cài đặt tương ứng.
@@ -97,7 +99,22 @@ export default function PlateCard({
               {onFav && (
                 <MotionFavButton
                   fav={fav}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!fav) {
+                      trackCtaClick('yeu_thich', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'favorite',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onFav();
+                  }}
                   size={32}
                   iconSize={18}
                 />
@@ -105,7 +122,22 @@ export default function PlateCard({
               {onCompare && (
                 <MotionCompareButton
                   inCompare={inCompare}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!inCompare) {
+                      trackCtaClick('so_sanh', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'compare',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onCompare();
+                  }}
                   size={32}
                   iconSize={18}
                 />
@@ -171,7 +203,20 @@ export default function PlateCard({
               {onFav && (
                 <MotionFavButton
                   fav={fav}
-                  onClick={() => { if (!fav) trackCtaClick('yeu_thich', plateNumber); onFav(); }}
+                  onClick={(e) => {
+                    if (!fav) {
+                      trackCtaClick('yeu_thich', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'favorite',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onFav();
+                  }}
                   size={28}
                   iconSize={16}
                 />
@@ -179,7 +224,20 @@ export default function PlateCard({
               {onCompare && (
                 <MotionCompareButton
                   inCompare={inCompare}
-                  onClick={() => { if (!inCompare) trackCtaClick('so_sanh', plateNumber); onCompare(); }}
+                  onClick={(e) => {
+                    if (!inCompare) {
+                      trackCtaClick('so_sanh', plateNumber);
+                      const stageEl = e?.currentTarget?.closest('.plate-card')?.querySelector('.plate-card-stage') || e?.currentTarget;
+                      if (stageEl) {
+                        triggerFly({
+                          startRect: stageEl.getBoundingClientRect(),
+                          type: 'compare',
+                          plate: { prov, seri, num, plateNumber },
+                        });
+                      }
+                    }
+                    onCompare();
+                  }}
                   size={28}
                   iconSize={16}
                 />

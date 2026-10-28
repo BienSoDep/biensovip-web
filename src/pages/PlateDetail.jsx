@@ -1,3 +1,4 @@
+import { useFlyEffect } from '../contexts/FlyEffectContext.jsx';
 import { useEffect, useState, useMemo } from "react";
 import {
   ArrowRight,
@@ -339,6 +340,7 @@ export default function PlateDetail({
   onUserUpdate,
   fromScreen,
 }) {
+  const { triggerFly } = useFlyEffect();
   const { data: plate, isLoading, isError } = usePlateDetail(plateId);
   const { data: similar } = useSimilarPlates(plateId, 8);
   const { data: settings } = useSiteSettings();
@@ -670,6 +672,7 @@ export default function PlateDetail({
             }}
           >
             <div
+              className="plate-detail-preview"
               style={{
                 width: "100%",
                 maxWidth: 560,
@@ -1159,7 +1162,17 @@ export default function PlateDetail({
               fav={isFav}
               size={48}
               iconSize={22}
-              onClick={() => {
+              onClick={(e) => {
+                if (!isFav) {
+                  const stageEl = document.querySelector('.plate-detail-preview') || e?.currentTarget;
+                  if (stageEl) {
+                    triggerFly({
+                      startRect: stageEl.getBoundingClientRect(),
+                      type: 'favorite',
+                      plate: { prov, seri, num, plateNumber: plate.plateNumber },
+                    });
+                  }
+                }
                 onFav?.(plate.id);
                 notify(isFav ? "Đã bỏ khỏi yêu thích" : "Đã lưu vào yêu thích");
               }}
@@ -1172,7 +1185,17 @@ export default function PlateDetail({
               inCompare={inCompare}
               size={48}
               iconSize={22}
-              onClick={() => {
+              onClick={(e) => {
+                if (!inCompare) {
+                  const stageEl = document.querySelector('.plate-detail-preview') || e?.currentTarget;
+                  if (stageEl) {
+                    triggerFly({
+                      startRect: stageEl.getBoundingClientRect(),
+                      type: 'compare',
+                      plate: { prov, seri, num, plateNumber: plate.plateNumber },
+                    });
+                  }
+                }
                 (inCompare ? removeCompare : addCompare)(plate.id);
                 notify(
                   inCompare ? "Đã bỏ khỏi so sánh" : "Đã thêm vào so sánh",

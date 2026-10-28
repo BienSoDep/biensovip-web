@@ -369,7 +369,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             }
 
             return (
-              <NavBtn key={key} onClick={go(String(key))} aria-current={s === key ? 'page' : undefined} {...pill(s === key)}>
+              <NavBtn key={key} id={key === 'compare' ? 'header-nav-compare' : undefined} onClick={go(String(key))} aria-current={s === key ? 'page' : undefined} {...pill(s === key)}>
                 {Icon && <Icon size={15} style={{ flexShrink: 0 }} />}
                 {key === 'compare' ? (
                   <>
@@ -420,7 +420,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
             )}
           </div>
           {/* Biển số yêu thích */}
-          <div style={{ position: 'relative', display: 'flex' }}>
+          <div id="header-nav-favorite" style={{ position: 'relative', display: 'flex' }}>
             <IconButton
               name="heart"
               label={T('common.fav.label')}

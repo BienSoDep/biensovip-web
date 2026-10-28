@@ -1,3 +1,4 @@
+import { FlyEffectProvider } from './contexts/FlyEffectContext.jsx';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { validatePhone } from './lib/phone.js';
@@ -759,7 +760,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
+      <FlyEffectProvider>
+        <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
         <Toaster position="top-right" toastOptions={{ role: 'alert', style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
         <main>
 
@@ -901,6 +903,7 @@ export default function App() {
         </div>
         </main>
       </div>
+      </FlyEffectProvider>
     </ErrorBoundary>
   );
 }
