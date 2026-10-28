@@ -7,6 +7,8 @@ export const THEMATIC_PLATE_TYPES = [
     desc: '5 chữ số đồng nhất, đỉnh cao quyền lực và tài vận dồi dào.',
     accent: 'linear-gradient(135deg, rgba(234,179,8,.1), rgba(245,158,11,.04))',
     borderColor: 'rgba(234,179,8,.22)',
+    spotlightColor: 'rgba(234, 179, 8, 0.22)',
+    spotlightBorder: 'rgba(234, 179, 8, 0.55)',
   },
   {
     name: 'Biển Tứ Quý',
@@ -16,6 +18,8 @@ export const THEMATIC_PLATE_TYPES = [
     desc: '4 số liền kề biểu trưng bốn mùa bình an, làm ăn thịnh vượng.',
     accent: 'linear-gradient(135deg, rgba(59,130,246,.1), rgba(37,99,235,.04))',
     borderColor: 'rgba(59,130,246,.22)',
+    spotlightColor: 'rgba(59, 130, 246, 0.22)',
+    spotlightBorder: 'rgba(59, 130, 246, 0.55)',
   },
   {
     name: 'Biển Tam Hoa',
@@ -25,6 +29,8 @@ export const THEMATIC_PLATE_TYPES = [
     desc: '3 số đuôi cân đối, tài lộc khởi sắc, phổ biến cho cả ô tô & xe máy.',
     accent: 'linear-gradient(135deg, rgba(16,185,129,.1), rgba(5,150,105,.04))',
     borderColor: 'rgba(16,185,129,.22)',
+    spotlightColor: 'rgba(16, 185, 129, 0.22)',
+    spotlightBorder: 'rgba(16, 185, 129, 0.55)',
   },
   {
     name: 'Biển Lộc Phát',
@@ -34,6 +40,8 @@ export const THEMATIC_PLATE_TYPES = [
     desc: 'Cặp số vàng 68 - 86 được giới kinh doanh, buôn bán săn đón hàng đầu.',
     accent: 'linear-gradient(135deg, rgba(249,115,22,.1), rgba(234,88,12,.04))',
     borderColor: 'rgba(249,115,22,.22)',
+    spotlightColor: 'rgba(249, 115, 22, 0.22)',
+    spotlightBorder: 'rgba(249, 115, 22, 0.55)',
   },
   {
     name: 'Biển Thần Tài',
@@ -43,6 +51,8 @@ export const THEMATIC_PLATE_TYPES = [
     desc: 'Thần tài lớn 79 & nhỏ 39 mang lại hanh thông, quý nhân phù trợ.',
     accent: 'linear-gradient(135deg, rgba(168,85,247,.1), rgba(147,51,234,.04))',
     borderColor: 'rgba(168,85,247,.22)',
+    spotlightColor: 'rgba(168, 85, 247, 0.22)',
+    spotlightBorder: 'rgba(168, 85, 247, 0.55)',
   },
   {
     name: 'Biển Sảnh Tiến',
@@ -52,6 +62,8 @@ export const THEMATIC_PLATE_TYPES = [
     desc: 'Dãy số tiến liên tục tượng trưng cho công danh sự nghiệp tiến bước.',
     accent: 'linear-gradient(135deg, rgba(99,102,241,.1), rgba(79,70,229,.04))',
     borderColor: 'rgba(99,102,241,.22)',
+    spotlightColor: 'rgba(99, 102, 241, 0.22)',
+    spotlightBorder: 'rgba(99, 102, 241, 0.55)',
   },
 ];
 

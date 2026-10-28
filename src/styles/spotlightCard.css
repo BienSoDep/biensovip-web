@@ -1,0 +1,109 @@
+/* ==========================================================================
+   REACT BITS - SPOTLIGHT & TILTED CARD STYLES
+   Cursor-tracking radial spotlight, dynamic border illumination, and 3D tilt.
+   ========================================================================== */
+
+.rb-spotlight-card {
+  position: relative;
+  border-radius: var(--radius-card, 16px);
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --spotlight-opacity: 0;
+  --spotlight-size: 360px;
+  --spotlight-color: rgba(217, 119, 6, 0.15);
+  --border-spotlight-color: rgba(217, 119, 6, 0.45);
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  --lift-y: 0px;
+
+  transform: perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(var(--lift-y, 0px));
+  transform-style: preserve-3d;
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* Fast-tracking transition while cursor moves across card for ultra-responsive feel */
+.rb-spotlight-card[data-hovered="true"] {
+  --lift-y: -4px;
+  transition: transform 80ms ease-out,
+              box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12),
+              0 0 24px -6px var(--spotlight-color);
+}
+
+/* 1. Dynamic Radial Spotlight Glow Layer (Surface illumination) */
+.rb-spotlight-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    var(--spotlight-size) circle at var(--mouse-x) var(--mouse-y),
+    var(--spotlight-color),
+    transparent 72%
+  );
+  opacity: var(--spotlight-opacity);
+  transition: opacity 280ms ease;
+  z-index: 5;
+}
+
+/* 2. Dynamic Border Highlight tracking cursor */
+.rb-spotlight-border {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1.5px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  background: radial-gradient(
+    calc(var(--spotlight-size) * 0.75) circle at var(--mouse-x) var(--mouse-y),
+    var(--border-spotlight-color),
+    transparent 65%
+  );
+  opacity: var(--spotlight-opacity);
+  transition: opacity 280ms ease;
+  z-index: 6;
+}
+
+/* 3. Specular Glare Sheen Layer */
+.rb-spotlight-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    calc(var(--spotlight-size) * 0.45) circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.35),
+    transparent 60%
+  );
+  mix-blend-mode: overlay;
+  opacity: calc(var(--spotlight-opacity) * 0.4);
+  transition: opacity 280ms ease;
+  z-index: 7;
+}
+
+/* 4. Content Container */
+.rb-spotlight-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile & Reduced Motion Fallbacks */
+@media (prefers-reduced-motion: reduce), (pointer: coarse) {
+  .rb-spotlight-card {
+    transform: none !important;
+    transition: none !important;
+  }
+  .rb-spotlight-glow,
+  .rb-spotlight-border,
+  .rb-spotlight-glare {
+    display: none !important;
+  }
+}

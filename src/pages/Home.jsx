@@ -3,6 +3,7 @@ import { Play, SearchX, BadgeCheck } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { SearchField, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
+import SpotlightCard from '../components/SpotlightCard.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
@@ -231,8 +232,9 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
 
         <div className="home-thematic-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
           {THEMATIC_PLATE_TYPES.map((pt, i) => (
-            <a
+            <SpotlightCard
               key={pt.slug}
+              as="a"
               href={`/${pt.slug}`}
               onClick={(e) => {
                 e.preventDefault();
@@ -240,6 +242,10 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                 window.dispatchEvent(new PopStateEvent('popstate'));
               }}
               className="home-thematic-card pressable"
+              spotlightColor={pt.spotlightColor}
+              borderColor={pt.spotlightBorder}
+              tilt={true}
+              maxTilt={4}
               style={{
                 textDecoration: 'none',
                 background: pt.accent,
@@ -264,7 +270,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                 <span style={{ font: 'var(--type-code, monospace)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--action-primary)', letterSpacing: '.05em' }}>{pt.examples}</span>
               </div>
               <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.4 }}>{pt.desc}</p>
-            </a>
+            </SpotlightCard>
           ))}
         </div>
       </section>
@@ -323,7 +329,15 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                 if (ytMatch) thumbSrc = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
               }
               return (
-                <div key={v.id} className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}>
+                <SpotlightCard
+                  key={v.id}
+                  className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`}
+                  spotlightColor="rgba(59, 130, 246, 0.16)"
+                  borderColor="rgba(59, 130, 246, 0.35)"
+                  tilt={true}
+                  maxTilt={3.5}
+                  style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}
+                >
                   {v.platform === 'tiktok' ? (
                     <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
                   ) : (
@@ -357,7 +371,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                       )}
                     </a>
                   )}
-                </div>
+                </SpotlightCard>
               );
             })}
           </div>
@@ -383,7 +397,13 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
       </section>
 
       <section className="home-guide-section" style={{ padding: '0 var(--pad-page) var(--pad-section-y)' }}>
-        <div className="home-guide-card" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-inverse)', borderRadius: 'var(--radius-surface)', padding: 'clamp(28px,4vw,52px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-8)' }}>
+        <SpotlightCard
+          className="home-guide-card"
+          spotlightColor="rgba(217, 119, 6, 0.22)"
+          borderColor="rgba(217, 119, 6, 0.45)"
+          tilt={false}
+          style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-inverse)', borderRadius: 'var(--radius-surface)', padding: 'clamp(28px,4vw,52px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-8)' }}
+        >
           <div style={{ flex: '1 1 340px', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <Eyebrow tone="inverse">{T('home.guide.eyebrow')}</Eyebrow>
             <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>{T('home.guide.title')}</h2>
@@ -392,7 +412,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
             <Button variant="primary" size="lg" onClick={go('blog')}>{T('home.guide.cta_blog')}</Button>
           </div>
-        </div>
+        </SpotlightCard>
       </section>
     </div>
   );

@@ -55,3 +55,4 @@ export function useLenisSmoothScroll({ enabled = true } = {}) {
     };
   }, [enabled]);
 }
+

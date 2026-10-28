@@ -156,16 +156,26 @@
    3. PLATE CARD, STAGE & ACTION BUTTONS
    -------------------------------------------------------------------------- */
 .plate-card {
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  --lift-y: 0px;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  transform: perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(var(--lift-y, 0px));
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
   will-change: transform;
 }
 .plate-card:hover {
-  transform: translateY(-4px);
+  --lift-y: -4px;
   box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12), 0 0 0 1.5px rgba(217, 119, 6, 0.32) !important;
 }
+.plate-card[data-hovered="true"] {
+  --lift-y: -4px;
+  transition: transform 80ms ease-out,
+              box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
 .plate-card:active {
-  transform: translateY(-1px) scale(0.995);
+  --lift-y: -1px;
+  transform: perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg)) translateY(var(--lift-y, -1px)) scale(0.995);
 }
 .plate-card .plate-card-stage {
   transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);

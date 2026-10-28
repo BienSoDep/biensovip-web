@@ -291,6 +291,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
           stagger: 0.07,
           duration: 0.75,
           ease: 'power3.out',
+          clearProps: 'transform',
           scrollTrigger: {
             trigger: featCards[0].parentElement || featHead,
             start: 'top 85%',
@@ -306,6 +307,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
           autoAlpha: 0,
           duration: 0.7,
           ease: 'power3.out',
+          clearProps: 'transform',
           scrollTrigger: {
             trigger: thematicHead,
             start: 'top 85%',
@@ -321,6 +323,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
           stagger: 0.05,
           duration: 0.7,
           ease: 'power3.out',
+          clearProps: 'transform',
           scrollTrigger: {
             trigger: thematicCards[0].parentElement || thematicHead,
             start: 'top 85%',
@@ -383,6 +386,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
             stagger: 0.09,
             duration: 0.75,
             ease: 'power3.out',
+            clearProps: 'transform',
             scrollTrigger: {
               trigger: videoSec,
               start: 'top 80%',
@@ -434,6 +438,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
             autoAlpha: 0,
             duration: 0.8,
             ease: 'power3.out',
+            clearProps: 'transform',
             scrollTrigger: {
               trigger: guideSec,
               start: 'top 85%',
