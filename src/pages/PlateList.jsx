@@ -9,6 +9,7 @@ import {
   Car,
   Search,
   Sparkles,
+  Calendar,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
 import { Select, Checkbox, Radio, Input, Icon, PageHeader } from "../components/index.jsx";
@@ -45,16 +46,6 @@ import {
   getScrollPosition,
 } from "../lib/scrollRestoration.js";
 import { validBirthDate } from "../lib/date.js";
-
-// Chuyển 'dd/mm/yyyy' sang 'yyyy-mm-dd'
-function parseVnDateToIso(vnDateStr) {
-  if (!vnDateStr) return null;
-  const parts = vnDateStr.trim().split('/');
-  if (parts.length !== 3) return null;
-  const [d, m, y] = parts;
-  if (!d || !m || !y || d.length !== 2 || m.length !== 2 || y.length !== 4) return null;
-  return `${y}-${m}-${d}`;
-}
 
 // Chuyển 'yyyy-mm-dd' sang 'dd/mm/yyyy'
 function parseIsoToVnDate(isoStr) {
@@ -421,7 +412,102 @@ export default function PlateList({
       ? infiniteItems
       : data?.items || [];
   const { year: birthYear, birthDate, fromProfile, setBirthDate, setYear } = useBirthYear();
-  const [birthDateDraft, setBirthDateDraft] = useState("");
+  const [birthDay, setBirthDay] = useState("");
+  const [birthMonth, setBirthMonth] = useState("");
+  const [birthYearDraft, setBirthYearDraft] = useState("");
+
+  const dayRef = useRef(null);
+  const monthRef = useRef(null);
+  const yearRef = useRef(null);
+
+  const clearDraft = () => {
+    setBirthDay("");
+    setBirthMonth("");
+    setBirthYearDraft("");
+  };
+
+  const handleDayChange = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setBirthDay(val);
+    if (val.length === 2) {
+      monthRef.current?.focus();
+    }
+  };
+
+  const handleMonthChange = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setBirthMonth(val);
+    if (val.length === 2) {
+      yearRef.current?.focus();
+    }
+  };
+
+  const handleYearChange = (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setBirthYearDraft(val);
+  };
+
+  const handleKeyDown = (e, field) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitBirthDate();
+    } else if (e.key === "Backspace") {
+      if (field === "year" && !birthYearDraft) {
+        monthRef.current?.focus();
+      } else if (field === "month" && !birthMonth) {
+        dayRef.current?.focus();
+      }
+    } else if (e.key === "ArrowRight") {
+      if (field === "day" && (e.target.selectionStart === birthDay.length || birthDay.length === 2)) {
+        monthRef.current?.focus();
+      } else if (field === "month" && (e.target.selectionStart === birthMonth.length || birthMonth.length === 2)) {
+        yearRef.current?.focus();
+      }
+    } else if (e.key === "ArrowLeft") {
+      if (field === "year" && e.target.selectionStart === 0) {
+        monthRef.current?.focus();
+      } else if (field === "month" && e.target.selectionStart === 0) {
+        dayRef.current?.focus();
+      }
+    }
+  };
+
+  const handleDatePaste = (e) => {
+    const text = e.clipboardData?.getData("text") || "";
+    const digits = text.replace(/\D/g, "");
+    if (digits.length >= 8) {
+      e.preventDefault();
+      const d = digits.slice(0, 2);
+      const m = digits.slice(2, 4);
+      const y = digits.slice(4, 8);
+      setBirthDay(d);
+      setBirthMonth(m);
+      setBirthYearDraft(y);
+      yearRef.current?.focus();
+    }
+  };
+
+  const submitBirthDate = () => {
+    if (birthYearDraft && !birthDay && !birthMonth) {
+      const y = Number(birthYearDraft);
+      const currentYear = new Date().getFullYear();
+      if (y >= 1900 && y <= currentYear) {
+        setYear(y);
+        clearDraft();
+        return;
+      }
+    }
+    const d = birthDay.padStart(2, "0");
+    const m = birthMonth.padStart(2, "0");
+    const y = birthYearDraft;
+    const iso = `${y}-${m}-${d}`;
+    if (!validBirthDate(iso)) {
+      notify?.("Vui lòng nhập ngày, tháng, năm sinh hợp lệ (VD: 20/11/2005).");
+      return;
+    }
+    setBirthDate(iso);
+    clearDraft();
+  };
   const [fengshuiOnly, setFengshuiOnly] = useState(false);
   const scoreNumbers = useMemo(
     () => [...new Set(items.map((p) => p.plateNumber))],
@@ -443,33 +529,7 @@ export default function PlateList({
     ? sortedItems.filter((p) => fsFor(p))
     : sortedItems;
 
-  const handleBirthDateChange = (e) => {
-    const val = e.target.value;
-    let digits = val.replace(/\D/g, "").slice(0, 8);
-    // Nếu bấm Backspace ngay sau dấu '/', xóa lùi 1 chữ số
-    if (val.length < birthDateDraft.length && birthDateDraft.endsWith("/")) {
-      digits = digits.slice(0, -1);
-    }
-    let formatted = "";
-    if (digits.length <= 2) {
-      formatted = digits;
-    } else if (digits.length <= 4) {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    } else {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-    }
-    setBirthDateDraft(formatted);
-  };
 
-  const submitBirthDate = () => {
-    const iso = parseVnDateToIso(birthDateDraft);
-    if (!iso || !validBirthDate(iso)) {
-      notify?.("Vui lòng nhập đúng cấu trúc ngày/tháng/năm sinh (VD: 20/11/2005).");
-      return;
-    }
-    setBirthDate(iso);
-    setBirthDateDraft("");
-  };
   const total = !vpaTab
     ? (hasActiveFilters ? (data?.total ?? stockTotal) : stockTotal)
     : vpaTab === "weekly"
@@ -898,7 +958,7 @@ export default function PlateList({
                   aria-label="Bỏ lọc ngày sinh"
                   onClick={() => {
                     setBirthDate(null);
-                    setBirthDateDraft("");
+                    clearDraft();
                     if (filters.sort === "fengshui")
                       setFilter({ sort: "newest" });
                   }}
@@ -931,60 +991,186 @@ export default function PlateList({
             </div>
           ) : (
             <div
+              className="plate-birth-container"
               style={{
                 display: "flex",
                 flex: "1 1 auto",
                 minWidth: 0,
                 alignItems: "center",
                 height: 44,
+                gap: 6,
+                padding: "0 4px",
               }}
             >
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                className="plate-birth-input"
-                placeholder="Nhập ngày tháng năm sinh (dd/mm/yyyy)"
-                value={birthDateDraft}
-                onChange={handleBirthDateChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") submitBirthDate();
-                }}
-                aria-label="Ngày tháng năm sinh"
+              <div
+                className="plate-birth-inputs-wrapper"
                 style={{
-                  height: 44,
-                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                  flex: "1 1 auto",
                   minWidth: 0,
-                  border: "none",
-                  background: "transparent",
-                  padding: "0 16px",
-                  font: "var(--type-body-sm)",
-                  color: "var(--text-strong)",
-                  outline: "none",
+                  maxWidth: 340,
+                  height: 40,
+                  background: "var(--surface-sunken)",
+                  borderRadius: "var(--radius-field, 8px)",
+                  padding: "0 10px",
+                  border: "1px solid var(--border-hairline)",
+                  transition: "border-color 160ms ease, box-shadow 160ms ease",
                 }}
-              />
-              {birthDateDraft && (
+              >
+                <Calendar
+                  size={15}
+                  style={{
+                    color: "var(--action-primary)",
+                    flexShrink: 0,
+                    marginRight: 4,
+                  }}
+                />
+
+                {/* Ô 1: Ngày */}
+                <input
+                  ref={dayRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={2}
+                  className="plate-birth-subinput"
+                  placeholder="Ngày"
+                  value={birthDay}
+                  onChange={handleDayChange}
+                  onKeyDown={(e) => handleKeyDown(e, "day")}
+                  onPaste={handleDatePaste}
+                  aria-label="Ngày sinh (2 chữ số)"
+                  style={{
+                    flex: "1 1 0",
+                    width: 0,
+                    minWidth: 38,
+                    height: 34,
+                    textAlign: "center",
+                    border: "none",
+                    background: "transparent",
+                    font: "var(--type-body-sm)",
+                    fontWeight: "var(--fw-semibold)",
+                    color: "var(--text-strong)",
+                    outline: "none",
+                    padding: 0,
+                  }}
+                />
+
+                <span style={{ color: "var(--text-faint)", fontWeight: 700, userSelect: "none" }}>/</span>
+
+                {/* Ô 2: Tháng */}
+                <input
+                  ref={monthRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={2}
+                  className="plate-birth-subinput"
+                  placeholder="Tháng"
+                  value={birthMonth}
+                  onChange={handleMonthChange}
+                  onKeyDown={(e) => handleKeyDown(e, "month")}
+                  onPaste={handleDatePaste}
+                  aria-label="Tháng sinh (2 chữ số)"
+                  style={{
+                    flex: "1 1 0",
+                    width: 0,
+                    minWidth: 42,
+                    height: 34,
+                    textAlign: "center",
+                    border: "none",
+                    background: "transparent",
+                    font: "var(--type-body-sm)",
+                    fontWeight: "var(--fw-semibold)",
+                    color: "var(--text-strong)",
+                    outline: "none",
+                    padding: 0,
+                  }}
+                />
+
+                <span style={{ color: "var(--text-faint)", fontWeight: 700, userSelect: "none" }}>/</span>
+
+                {/* Ô 3: Năm */}
+                <input
+                  ref={yearRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  className="plate-birth-subinput"
+                  placeholder="Năm"
+                  value={birthYearDraft}
+                  onChange={handleYearChange}
+                  onKeyDown={(e) => handleKeyDown(e, "year")}
+                  onPaste={handleDatePaste}
+                  aria-label="Năm sinh (4 chữ số)"
+                  style={{
+                    flex: "1.4 1 0",
+                    width: 0,
+                    minWidth: 48,
+                    height: 34,
+                    textAlign: "center",
+                    border: "none",
+                    background: "transparent",
+                    font: "var(--type-body-sm)",
+                    fontWeight: "var(--fw-semibold)",
+                    color: "var(--text-strong)",
+                    outline: "none",
+                    padding: 0,
+                  }}
+                />
+
+                {(birthDay || birthMonth || birthYearDraft) && (
+                  <button
+                    type="button"
+                    onClick={clearDraft}
+                    title="Xóa ngày sinh đang nhập"
+                    aria-label="Xóa ngày sinh đang nhập"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      border: "none",
+                      background: "rgba(0,0,0,0.08)",
+                      color: "var(--text-body)",
+                      cursor: "pointer",
+                      padding: 0,
+                      flexShrink: 0,
+                      marginLeft: 2,
+                    }}
+                  >
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+
+              {(birthDay || birthMonth || birthYearDraft) && (
                 <button
                   type="button"
                   onClick={submitBirthDate}
                   style={{
-                    height: 36,
-                    padding: "0 16px",
-                    marginRight: 6,
-                    borderRadius: "var(--radius-xs)",
+                    height: 38,
+                    padding: "0 14px",
+                    borderRadius: "var(--radius-xs, 6px)",
                     border: "none",
                     cursor: "pointer",
                     font: "var(--type-body-sm)",
                     fontWeight: "var(--fw-semibold)",
                     background: "var(--action-primary)",
-                    color: "var(--action-primary-text)",
+                    color: "var(--action-primary-text, #fff)",
                     whiteSpace: "nowrap",
                     flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
                   }}
                 >
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <Sparkles size={13} /> Xem
-                  </span>
+                  <Sparkles size={13} /> Xem
                 </button>
               )}
             </div>

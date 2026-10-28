@@ -647,3 +647,16 @@ a:not(.btn):not(.pressable):not(.plate-card):hover {
   border-radius: var(--radius-field, 8px) !important;
   box-shadow: inset 0 0 0 1px var(--action-primary), 0 0 0 3px rgba(241, 151, 32, 0.12) !important;
 }
+
+.plate-search-bar .plate-birth-inputs-wrapper:focus-within {
+  outline: 2px solid var(--action-primary) !important;
+  outline-offset: -1px !important;
+  border-color: var(--action-primary) !important;
+  background: var(--surface-card, #fff) !important;
+  box-shadow: inset 0 0 0 1px var(--action-primary), 0 0 0 3px rgba(241, 151, 32, 0.12) !important;
+}
+.plate-search-bar .plate-birth-subinput:focus,
+.plate-search-bar .plate-birth-subinput:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
