@@ -232,23 +232,55 @@ export default function Footer({ settings, patch }) {
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
         >
+          {/* Watermark dập chìm biển số phong cách VIP Concierge */}
+          <div className="motion-footer-hero-watermark" aria-hidden="true">
+            <div className="watermark-plate-frame">
+              <span className="watermark-prov">43A</span>
+              <span className="watermark-num">999.99</span>
+            </div>
+          </div>
+
           <div className="motion-footer-hero-content">
             <div className="motion-footer-hero-badge">
-              <Sparkles size={14} />
-              <span>Bản Tin Định Kỳ Biển Số Đẹp</span>
+              <Sparkles size={13} className="badge-sparkle-icon" />
+              <span>VIP Dispatch · Bản Tin Định Kỳ</span>
             </div>
             <h2 className="motion-footer-hero-title">
-              Đăng ký nhận danh sách biển VIP &amp; giá đấu mới nhất
+              Đăng ký nhận danh sách <span className="hero-title-highlight">biển VIP</span> &amp; giá đấu mới nhất
             </h2>
             <p className="motion-footer-hero-sub">
               Cập nhật sớm các biển số ngũ quý, lộc phát vừa về kho và thông tin đấu giá VPA tuần này kèm phân tích ngũ hành phong thủy.
             </p>
+
+            {/* 3 Value Pillars */}
+            <div className="motion-footer-hero-perks">
+              <span className="hero-perk-item">
+                <span className="hero-perk-dot" />
+                Nhận tin trước 24h
+              </span>
+              <span className="hero-perk-item">
+                <span className="hero-perk-dot" />
+                Luận ngũ hành phong thủy
+              </span>
+              <span className="hero-perk-item">
+                <span className="hero-perk-dot" />
+                Miễn phí &amp; bảo mật
+              </span>
+            </div>
           </div>
 
           <div className="motion-footer-hero-action">
             <MotionFooterNewsletter />
+            <div className="motion-footer-social-proof">
+              <div className="proof-avatars" aria-hidden="true">
+                <span className="proof-avatar" style={{ background: '#F19720' }}>VIP</span>
+                <span className="proof-avatar" style={{ background: '#0F172A' }}>43</span>
+                <span className="proof-avatar" style={{ background: '#16A34A' }}>51</span>
+              </div>
+              <span className="proof-text">Hơn <strong>2.450+</strong> nhà sưu tầm đang theo dõi</span>
+            </div>
           </div>
         </motion.div>
 
