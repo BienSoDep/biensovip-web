@@ -1,53 +1,38 @@
 import { useState, useMemo } from 'react';
 import {
   Download, FileSpreadsheet, FileText, FileCode, Check,
-  CarFront, Gavel, Calendar, Landmark, Filter, Layers2,
-  Clock, SlidersHorizontal, AlertCircle, Store, CheckCircle2,
-  ChevronDown, ChevronUp, Bike, Car, MapPin, Search, Sparkles, X
+  Gavel, Calendar, Landmark, Filter, Layers2,
+  Clock, AlertCircle, Store,
+  Bike, Car, MapPin, Search, X
 } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
 import { useVpaExportCounts } from '../../../services/adminVpa.js';
 import { useAdminCategories } from '../../../services/categories.js';
 
-// Các cấu hình định sẵn (Presets)
-const PRESETS = [
-  {
-    id: 'all',
-    label: 'Tất cả (VPA & Kho)',
-    desc: 'Bao gồm toàn bộ biển VPA và kho biển riêng Duy Đinh (cả ô tô & xe máy)',
-    sources: ['shop', 'month', 'week', 'expired'],
-    vehicle: null,
-  },
-  {
-    id: 'moto',
-    label: 'Chỉ Xe máy 🛵',
-    desc: 'Chỉ xuất các biển số xe máy trên toàn hệ thống (VPA & kho riêng)',
-    sources: ['shop', 'month', 'week', 'expired'],
-    vehicle: 2,
-  },
-  {
-    id: 'car',
-    label: 'Chỉ Ô tô 🚗',
-    desc: 'Chỉ xuất các biển số ô tô trên toàn hệ thống (VPA & kho riêng)',
-    sources: ['shop', 'month', 'week', 'expired'],
-    vehicle: 1,
-  },
-  {
-    id: 'shop',
-    label: 'Kho riêng Duy Đinh',
-    desc: 'Biển có sẵn showroom, sẵn sàng sang tên ngay',
-    sources: ['shop'],
-    vehicle: null,
-  },
-  {
-    id: 'open',
-    label: 'Phiên VPA đang mở',
-    desc: 'Biển sắp & đang đấu giá trên sàn VPA (Tháng & Tuần)',
-    sources: ['month', 'week'],
-    vehicle: null,
-  },
-];
+// Danh sách các thành phố lớn ưu tiên
+const TOP_5_NAMES = ['Hà Nội', 'Hồ Chí Minh', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'];
+
+// Bảng tra cứu tỉnh thành 3 miền tiêu chuẩn (phục vụ chọn nhanh chính xác)
+const REGION_PROVINCES = {
+  bac: [
+    'Hà Nội', 'Hải Phòng', 'Quảng Ninh', 'Bắc Ninh', 'Hải Dương', 'Hưng Yên',
+    'Vĩnh Phúc', 'Thái Nguyên', 'Nam Định', 'Ninh Bình', 'Thái Bình', 'Hà Nam',
+    'Phú Thọ', 'Bắc Giang', 'Lạng Sơn', 'Tuyên Quang', 'Cao Bằng', 'Hà Giang',
+    'Lào Cai', 'Yên Bái', 'Điện Biên', 'Lai Châu', 'Sơn La', 'Hòa Bình', 'Bắc Kạn'
+  ],
+  trung: [
+    'Thanh Hóa', 'Nghệ An', 'Hà Tĩnh', 'Quảng Bình', 'Quảng Trị', 'Thừa Thiên Huế', 'Huế',
+    'Đà Nẵng', 'Quảng Nam', 'Quảng Ngãi', 'Bình Định', 'Phú Yên', 'Khánh Hòa',
+    'Ninh Thuận', 'Bình Thuận', 'Kon Tum', 'Gia Lai', 'Đắk Lắk', 'Đắk Nông', 'Lâm Đồng'
+  ],
+  nam: [
+    'Hồ Chí Minh', 'TP. Hồ Chí Minh', 'Bình Dương', 'Đồng Nai', 'Bà Rịa - Vũng Tàu', 'Bà Rịa',
+    'Long An', 'Tiền Giang', 'Bến Tre', 'Trà Vinh', 'Vĩnh Long', 'Cần Thơ',
+    'Hậu Giang', 'Sóc Trăng', 'Bạc Liêu', 'Cà Mau', 'Kiên Giang', 'An Giang',
+    'Đồng Tháp', 'Tây Ninh', 'Bình Phước'
+  ]
+};
 
 export default function ExportOptionModal({
   open,
@@ -57,7 +42,7 @@ export default function ExportOptionModal({
   page = 1,
   pageSize = 50,
   currentPageCount = 0,
-  totalCount = 0,
+  totalCount: _totalCount = 0,
   counts = {},
   filter = {},
 }) {
@@ -73,23 +58,25 @@ export default function ExportOptionModal({
   const [provinceSearch, setProvinceSearch] = useState('');
 
   // Bộ lọc phụ bổ trợ
-  const [priceState, setPriceState] = useState(null); // null = Tất cả, 1 = Đã duyệt giá bán, 2 = Chờ định giá
+  const [priceState, _setPriceState] = useState(null); // null = Tất cả, 1 = Đã duyệt giá bán, 2 = Chờ định giá
 
   // Định dạng file & Phạm vi số lượng
   const [format, setFormat] = useState('xlsx'); // 'xlsx' | 'docx' | 'csv'
   const [range, setRange] = useState('all'); // 'all' | 'page'
 
   // Lấy toàn bộ danh mục tỉnh thành hệ thống
-  const { data: rawProvinces = [], isLoading: provincesLoading } = useAdminCategories('province');
-
-  // Danh sách các thành phố lớn ưu tiên
-  const TOP_5_NAMES = ['Hà Nội', 'Hồ Chí Minh', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'];
+  const { data: rawProvinces = [], isLoading: _provincesLoading } = useAdminCategories('province');
 
   const provinces = useMemo(() => {
-    if (!Array.isArray(rawProvinces)) return [];
-    return [...rawProvinces].sort((a, b) => {
-      const aTop = TOP_5_NAMES.some((n) => a.name?.includes(n));
-      const bTop = TOP_5_NAMES.some((n) => b.name?.includes(n));
+    const list = Array.isArray(rawProvinces)
+      ? rawProvinces
+      : (Array.isArray(rawProvinces?.items)
+        ? rawProvinces.items
+        : (Array.isArray(rawProvinces?.data) ? rawProvinces.data : []));
+
+    return [...list].sort((a, b) => {
+      const aTop = TOP_5_NAMES.some((n) => (a.name || '').includes(n));
+      const bTop = TOP_5_NAMES.some((n) => (b.name || '').includes(n));
       if (aTop && !bTop) return -1;
       if (!aTop && bTop) return 1;
       return (a.name || '').localeCompare(b.name || '', 'vi');
@@ -138,21 +125,6 @@ export default function ExportOptionModal({
   // Tính tổng số lượng biển cho các nguồn đang được chọn
   const totalSelectedPlates = selectedSources.reduce((sum, src) => sum + (sourceStats[src] || 0), 0);
 
-  // Kiểm tra preset hiện tại
-  const activePreset = PRESETS.find(
-    (p) =>
-      p.sources.length === selectedSources.length &&
-      p.sources.every((s) => selectedSources.includes(s)) &&
-      (p.vehicle === undefined || p.vehicle === vehicle)
-  )?.id;
-
-  const handleApplyPreset = (preset) => {
-    setSelectedSources([...preset.sources]);
-    if (preset.vehicle !== undefined) {
-      setVehicle(preset.vehicle);
-    }
-  };
-
   const handleToggleSource = (srcId) => {
     setSelectedSources((prev) =>
       prev.includes(srcId) ? prev.filter((s) => s !== srcId) : [...prev, srcId]
@@ -176,14 +148,18 @@ export default function ExportOptionModal({
 
   const handleSelectTop5 = () => {
     const topIds = provinces
-      .filter((p) => TOP_5_NAMES.some((n) => p.name?.includes(n)))
+      .filter((p) => TOP_5_NAMES.some((n) => (p.name || '').includes(n)))
       .map((p) => p.id);
     setSelectedProvinceIds(topIds);
   };
 
   const handleSelectRegion = (regionKey) => {
+    const fallbackNames = REGION_PROVINCES[regionKey] || [];
     const regionIds = provinces
-      .filter((p) => (p.region || '').toLowerCase() === regionKey.toLowerCase())
+      .filter((p) => {
+        if ((p.region || '').toLowerCase() === regionKey.toLowerCase()) return true;
+        return fallbackNames.some((name) => (p.name || '').includes(name));
+      })
       .map((p) => p.id);
     setSelectedProvinceIds(regionIds);
   };
@@ -293,46 +269,6 @@ export default function ExportOptionModal({
   return (
     <Modal open={open} onClose={onClose} title="Tùy chọn xuất dữ liệu biển số" maxWidth="720px">
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {/* Presets Bar */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Cấu hình nhanh:
-            </span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              Đã chọn: <strong style={{ color: 'var(--text-strong)' }}>{selectedSources.length}/4</strong> nguồn
-            </span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
-            {PRESETS.map((preset) => {
-              const active = activePreset === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => handleApplyPreset(preset)}
-                  title={preset.desc}
-                  style={{
-                    padding: '7px 4px',
-                    borderRadius: 'var(--radius-sm, 6px)',
-                    border: `1px solid ${active ? 'var(--action-primary, #F19720)' : 'var(--border-subtle, #e2e8f0)'}`,
-                    background: active ? 'rgba(241, 151, 32, 0.1)' : 'var(--surface-sunken, #f8fafc)',
-                    color: active ? 'var(--action-primary, #d97706)' : 'var(--text-strong, #334155)',
-                    fontSize: 11,
-                    fontWeight: active ? 700 : 500,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* MỤC 1: PHÂN LOẠI PHƯƠNG TIỆN (XE MÁY / Ô TÔ / TẤT CẢ) */}
         <div
           style={{
@@ -661,10 +597,65 @@ export default function ExportOptionModal({
 
         {/* MỤC 3: NGUỒN DỮ LIỆU BIỂN SỐ (CHECKBOXES) */}
         <div>
-          <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <Layers2 size={15} style={{ color: 'var(--action-primary, #F19720)' }} />
-            <span>3. Chọn các nguồn biển số cần xuất:</span>
-          </label>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+            <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Layers2 size={15} style={{ color: 'var(--action-primary, #F19720)' }} />
+              <span>3. Chọn các nguồn biển số cần xuất:</span>
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', marginRight: 4 }}>
+                Đã chọn: <strong style={{ color: selectedSources.length > 0 ? 'var(--text-strong)' : '#dc2626' }}>{selectedSources.length}/4</strong> nguồn
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedSources(['shop', 'month', 'week', 'expired'])}
+                style={{
+                  padding: '2px 7px',
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  borderRadius: 4,
+                  border: '1px solid var(--border-subtle, #cbd5e1)',
+                  background: 'var(--surface-sunken, #f8fafc)',
+                  color: 'var(--text-strong)',
+                  cursor: 'pointer',
+                }}
+              >
+                Tất cả (4)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedSources(['shop'])}
+                style={{
+                  padding: '2px 7px',
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  borderRadius: 4,
+                  border: '1px solid var(--border-subtle, #cbd5e1)',
+                  background: 'var(--surface-sunken, #f8fafc)',
+                  color: 'var(--text-strong)',
+                  cursor: 'pointer',
+                }}
+              >
+                Chỉ Kho riêng
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedSources(['month', 'week', 'expired'])}
+                style={{
+                  padding: '2px 7px',
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  borderRadius: 4,
+                  border: '1px solid var(--border-subtle, #cbd5e1)',
+                  background: 'var(--surface-sunken, #f8fafc)',
+                  color: 'var(--text-strong)',
+                  cursor: 'pointer',
+                }}
+              >
+                Chỉ VPA
+              </button>
+            </div>
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {sourceCards.map((card) => {
