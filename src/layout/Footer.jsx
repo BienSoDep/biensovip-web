@@ -132,6 +132,13 @@ export default function Footer({ settings, patch }) {
               rel="noopener noreferrer"
               className="vip-contact-card"
               title="Xem vị trí showroom trên Google Maps"
+              style={{
+                '--card-glow': 'rgba(239, 68, 68, 0.16)',
+                '--card-border': '#EF4444',
+                '--icon-bg': '#FEF2F2',
+                '--icon-color': '#EF4444',
+                '--label-color': '#DC2626',
+              }}
             >
               <div className="vip-contact-icon-box">
                 <MapPin size={20} />
@@ -150,9 +157,16 @@ export default function Footer({ settings, patch }) {
               rel="noopener noreferrer"
               className="vip-contact-card"
               title="Ghé thăm Fanpage Duy Đinh - Biển Số Đẹp Đà Nẵng"
+              style={{
+                '--card-glow': 'rgba(24, 119, 242, 0.16)',
+                '--card-border': '#1877F2',
+                '--icon-bg': '#EFF6FF',
+                '--icon-color': '#1877F2',
+                '--label-color': '#1877F2',
+              }}
             >
               <div className="vip-contact-icon-box">
-                <FacebookIcon style={{ width: 20, height: 20 }} />
+                <FacebookIcon style={{ width: 20, height: 20, color: '#1877F2' }} />
               </div>
               <div className="vip-contact-info">
                 <span className="vip-contact-label">Fanpage Facebook</span>
@@ -205,7 +219,14 @@ export default function Footer({ settings, patch }) {
             {/* THẺ 6: GIỜ LÀM VIỆC & TRẠNG THÁI */}
             <div
               className="vip-contact-card"
-              style={{ cursor: 'default' }}
+              style={{
+                '--card-glow': 'rgba(16, 185, 129, 0.16)',
+                '--card-border': '#10B981',
+                '--icon-bg': '#ECFDF5',
+                '--icon-color': '#059669',
+                '--label-color': '#047857',
+                cursor: 'default',
+              }}
             >
               <div className="vip-contact-icon-box">
                 <Clock size={20} />

@@ -193,39 +193,39 @@
   box-shadow: none;
 }
 
-/* Nút liên hệ nhanh Gọi điện & Zalo trên thẻ biển số — phong cách Luxury đồng bộ thương hiệu */
+/* Nút liên hệ nhanh Gọi điện & Zalo trên thẻ biển số — giữ màu nhận diện đặc trưng */
 .plate-btn-phone {
-  background: var(--surface-inverse, #1E293B) !important;
-  color: var(--white, #ffffff) !important;
+  background: var(--status-success-ink, #059669) !important;
+  color: #fff !important;
   transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease !important;
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2) !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2) !important;
 }
 .plate-btn-phone:hover {
-  background: #0F172A !important;
+  background: #047857 !important;
   transform: translateY(-2px) scale(1.03) !important;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35) !important;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.42) !important;
   filter: brightness(1.06) !important;
 }
 .plate-btn-phone:active {
   transform: translateY(0) scale(0.97) !important;
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2) !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2) !important;
 }
 
 .plate-btn-zalo {
-  background: var(--brand-500, #F19720) !important;
-  color: var(--action-primary-text, #111827) !important;
+  background: #0068FF !important;
+  color: #fff !important;
   transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease !important;
-  box-shadow: 0 2px 4px rgba(241, 151, 32, 0.25) !important;
+  box-shadow: 0 2px 4px rgba(0, 104, 255, 0.2) !important;
 }
 .plate-btn-zalo:hover {
-  background: var(--brand-600, #D97706) !important;
+  background: #0056D6 !important;
   transform: translateY(-2px) scale(1.03) !important;
-  box-shadow: 0 6px 16px rgba(241, 151, 32, 0.40) !important;
+  box-shadow: 0 6px 16px rgba(0, 104, 255, 0.45) !important;
   filter: brightness(1.06) !important;
 }
 .plate-btn-zalo:active {
   transform: translateY(0) scale(0.97) !important;
-  box-shadow: 0 2px 4px rgba(241, 151, 32, 0.2) !important;
+  box-shadow: 0 2px 4px rgba(0, 104, 255, 0.2) !important;
 }
 
 /* --------------------------------------------------------------------------
