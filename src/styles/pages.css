@@ -361,3 +361,93 @@ span.compare-desktop-table { display: flex; }
     display: none !important;
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   7. HOME LANDING HERO MOTION (GSAP & UI/UX PRO MAX)
+   -------------------------------------------------------------------------- */
+.hero-visual-card {
+  position: relative;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-visual-img {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  border-radius: var(--radius-surface);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.16), 0 0 0 1px var(--border-hairline);
+  transition: box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.hero-visual-card:hover .hero-visual-img {
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(217, 119, 6, 0.25);
+}
+
+.hero-ambient-glow {
+  position: absolute;
+  width: clamp(260px, 40vw, 380px);
+  height: clamp(260px, 40vw, 380px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.18) 0%, rgba(59, 130, 246, 0.10) 45%, transparent 70%);
+  filter: blur(44px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+  will-change: transform, opacity;
+}
+
+.hero-badge-floating {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  z-index: 2;
+  pointer-events: none;
+  transform: translateZ(24px);
+}
+
+.hero-badge-floating svg {
+  color: var(--action-primary);
+}
+
+.hero-title-line {
+  display: block;
+  will-change: transform, opacity;
+}
+
+.hero-eyebrow,
+.hero-desc,
+.hero-cta-btn,
+.hero-feed-pill,
+.hero-stat-item,
+.home-search-bar {
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-visual-card,
+  .hero-ambient-glow,
+  .hero-visual-img {
+    animation: none !important;
+    transform: none !important;
+  }
+}

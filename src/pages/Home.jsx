@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Play, SearchX } from 'lucide-react';
+import { Play, SearchX, BadgeCheck } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { SearchField, Eyebrow } from '../components/index.jsx';
 import PlateCard from '../components/PlateCard.jsx';
 import ContactChannelList from '../components/ContactChannelList.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { useStaggeredReveal } from '../hooks/useStaggeredReveal.js';
+import { useHomeHeroMotion } from '../hooks/useHomeHeroMotion.js';
 import { contentGet } from '../lib/content/index.js';
 import { optimizeImageUrl } from '../lib/cloudinary.js';
 import { useCategories } from '../services/categories.js';
@@ -25,7 +26,7 @@ import { THEMATIC_PLATE_TYPES } from '../data/homePlateTypes.js';
 import { useDebounce } from '../hooks/useDebounce.js';
 
 
-export default function Home({ settings, go, notify, heroAnim, openPlate, openBuy, favs, onFav, contact, user }) {
+export default function Home({ settings, go, notify, _heroAnim, openPlate, openBuy, favs, onFav, contact, user }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('Tất cả');
   const stagger = useStaggeredReveal();
@@ -42,6 +43,10 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
   const featuredVideoItems = featuredVideos?.items || [];
   const { data: soldData } = usePlates({ status: 'sold', perPage: 14 });
   const soldItems = soldData?.items || [];
+
+  const { heroRef, visualCardRef, searchBarRef, statCountRef } = useHomeHeroMotion({
+    totalPlates: plateCountData?.total,
+  });
 
   // Home search: catId/qDebounced empty = show featured plates as before.
   // Any non-empty selection replaces that section with live search results (usePlates is React
@@ -64,36 +69,57 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
-      <section style={{ padding: '0 var(--pad-page)', margin: '15px 0' }}>
+      <section ref={heroRef} style={{ padding: '0 var(--pad-page)', margin: '15px 0' }}>
         <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-hero)', borderRadius: 'var(--radius-surface)', padding: 'clamp(24px,8vw,64px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', alignItems: 'center' }}>
           <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
             <Eyebrow tone="blue" className="hero-eyebrow">{plateCountData && plateCountData.total >= 395 ? `${plateCountData.total.toLocaleString('vi-VN')} biển số đang chờ chủ mới` : '395 biển số đang chờ chủ mới'}</Eyebrow>
-            <h1 style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>{T('home.hero.title_line1')}<br />{T('home.hero.title_line2')}</h1>
+            <h1 className="hero-title" style={{ margin: 0, font: 'var(--type-display-1)', letterSpacing: 'var(--ls-display)', color: 'var(--text-strong)' }}>
+              <span className="hero-title-line" style={{ display: 'block' }}>{T('home.hero.title_line1')}</span>
+              <span className="hero-title-line" style={{ display: 'block' }}>{T('home.hero.title_line2')}</span>
+            </h1>
             <p className="hero-desc" style={{ margin: 0, maxWidth: 'var(--width-prose)', font: 'var(--type-body)', color: 'var(--text-body)' }}>{T('home.hero.desc')}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }} className="hero-cta-row">
-              <Button variant="primary" size="lg" uppercase onClick={go('list')}>{T('home.hero.cta_list')}</Button>
-              <Button variant="outline" size="lg" onClick={() => { window.open(toZaloUrl(zalo), '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
+              <Button className="hero-cta-btn" variant="primary" size="lg" uppercase onClick={go('list')}>{T('home.hero.cta_list')}</Button>
+              <Button className="hero-cta-btn" variant="outline" size="lg" onClick={() => { window.open(toZaloUrl(zalo), '_blank'); notify(T('home.hero.zalo_notify')); }}>{T('home.hero.cta_zalo')}</Button>
             </div>
             {feedItems.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
+              <div className="hero-feed-pill" style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
                 <span className="live-dot" aria-hidden="true" />
                 <span>{feedItems[0].fakeName} {feedItems[0].action} <strong style={{ color: 'var(--text-strong)' }}>{feedItems[0].plateNumber}</strong> · {feedItems[0].minutesAgo} phút trước</span>
               </div>
             )}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', paddingTop: 'var(--space-6)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{plateCountData && plateCountData.total >= 395 ? plateCountData.total.toLocaleString('vi-VN') : '395'}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span></div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{siteRating ? `${siteRating.avgRating.toFixed(1)}/5` : T('home.hero.stat_2_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_2_l')}</span></div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}><span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_3_n')}</span><span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_3_l')}</span></div>
+            <div className="hero-stats-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-8)', paddingTop: 'var(--space-6)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
+              <div className="hero-stat-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                <span ref={statCountRef} className="hero-stat-count" style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>
+                  {plateCountData && plateCountData.total >= 395 ? plateCountData.total.toLocaleString('vi-VN') : '395'}
+                </span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_1_l')}</span>
+              </div>
+              <div className="hero-stat-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{siteRating ? `${siteRating.avgRating.toFixed(1)}/5` : T('home.hero.stat_2_n')}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_2_l')}</span>
+              </div>
+              <div className="hero-stat-item" style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>{T('home.hero.stat_3_n')}</span>
+                <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{T('home.hero.stat_3_l')}</span>
+              </div>
             </div>
           </div>
-          <div style={{ flex: '1 1 340px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img
-              src={optimizeImageUrl('https://res.cloudinary.com/dvwt6npcl/image/upload/v1789878145/biensovip/branding/home.png')}
-              alt="Biển số đẹp Biensovip"
-              loading="eager"
-              fetchPriority="high"
-              style={{ width: '100%', maxWidth: 420, height: 'auto', borderRadius: 'var(--radius-surface)' }}
-            />
+          <div style={{ flex: '1 1 340px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <div className="hero-ambient-glow" aria-hidden="true" />
+            <div ref={visualCardRef} className="hero-visual-card">
+              <img
+                className="hero-visual-img"
+                src={optimizeImageUrl('https://res.cloudinary.com/dvwt6npcl/image/upload/v1789878145/biensovip/branding/home.png')}
+                alt="Biển số đẹp Biensovip"
+                loading="eager"
+                fetchPriority="high"
+              />
+              <span className="hero-badge-floating">
+                <BadgeCheck size={16} />
+                <span>Bảo chứng chuẩn BCA</span>
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -110,7 +136,7 @@ export default function Home({ settings, go, notify, heroAnim, openPlate, openBu
       </section>
 
       <section style={{ maxWidth: 'var(--width-content)', margin: '-26px auto 0', padding: '0 var(--pad-page)', position: 'relative', zIndex: 5 }}>
-        <div className="home-search-bar" style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
+        <div ref={searchBarRef} className="home-search-bar" style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <div className="home-search-field" style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder={T('home.search.placeholder')} value={q} onChange={(e) => setQ(e.target.value)} width="100%" /></div>
           <div className="home-search-cats" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)', flex: 1 }}>
             <NavBtn onClick={() => setCat('Tất cả')} {...pill(cat === 'Tất cả')}>{T('home.search.all')}</NavBtn>
