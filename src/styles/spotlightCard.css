@@ -10,8 +10,8 @@
   --mouse-y: 50%;
   --spotlight-opacity: 0;
   --spotlight-size: 360px;
-  --spotlight-color: rgba(217, 119, 6, 0.15);
-  --border-spotlight-color: rgba(217, 119, 6, 0.45);
+  --spotlight-color: rgba(241, 151, 32, 0.15);
+  --border-spotlight-color: rgba(241, 151, 32, 0.40);
   --rotate-x: 0deg;
   --rotate-y: 0deg;
   --lift-y: 0px;
@@ -107,3 +107,4 @@
     display: none !important;
   }
 }
+

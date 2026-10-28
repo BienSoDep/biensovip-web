@@ -48,10 +48,10 @@ export default function PlateCard({
         pad="10px"
         tone="muted"
         className="plate-card plate-card--row"
-        spotlightColor="rgba(217, 119, 6, 0.14)"
-        borderColor={isHot && !sold ? 'rgba(245, 158, 11, 0.7)' : (fengShui && !sold ? 'rgba(16, 185, 129, 0.6)' : 'rgba(217, 119, 6, 0.35)')}
+        spotlightColor="rgba(241, 151, 32, 0.14)"
+        borderColor={isHot && !sold ? 'rgba(241, 151, 32, 0.70)' : 'rgba(241, 151, 32, 0.35)'}
         tilt={false}
-        style={{ ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : fsRing), ...style }}
+        style={{ ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--brand-500), var(--shadow-2)' } : fsRing), ...style }}
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
           <a href={href || '#'} onClick={(e) => { e.preventDefault(); handleOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer', flex: '1 1 260px', minWidth: 0 }}>
@@ -131,13 +131,13 @@ export default function PlateCard({
       pad="10px"
       tone="muted"
       className="plate-card"
-      spotlightColor={isHot && !sold ? 'rgba(245, 158, 11, 0.22)' : 'rgba(217, 119, 6, 0.15)'}
-      borderColor={isHot && !sold ? 'rgba(245, 158, 11, 0.7)' : (fengShui && !sold ? 'rgba(16, 185, 129, 0.6)' : 'rgba(217, 119, 6, 0.35)')}
+      spotlightColor={isHot && !sold ? 'rgba(241, 151, 32, 0.22)' : 'rgba(241, 151, 32, 0.14)'}
+      borderColor={isHot && !sold ? 'rgba(241, 151, 32, 0.70)' : 'rgba(241, 151, 32, 0.35)'}
       tilt={true}
       maxTilt={4}
       style={{
         height: '100%',
-        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--amber-500), var(--shadow-2)' } : fsRing),
+        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--brand-500), var(--shadow-2)' } : fsRing),
         ...style,
       }}
     >

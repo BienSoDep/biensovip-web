@@ -166,7 +166,7 @@
 }
 .plate-card:hover {
   --lift-y: -4px;
-  box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12), 0 0 0 1.5px rgba(217, 119, 6, 0.32) !important;
+  box-shadow: 0 16px 36px -8px rgba(14, 15, 18, 0.12), 0 0 0 1.5px rgba(241, 151, 32, 0.35) !important;
 }
 .plate-card[data-hovered="true"] {
   --lift-y: -4px;

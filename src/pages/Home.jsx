@@ -332,8 +332,8 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                 <SpotlightCard
                   key={v.id}
                   className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`}
-                  spotlightColor="rgba(59, 130, 246, 0.16)"
-                  borderColor="rgba(59, 130, 246, 0.35)"
+                  spotlightColor="rgba(241, 151, 32, 0.15)"
+                  borderColor="rgba(241, 151, 32, 0.35)"
                   tilt={true}
                   maxTilt={3.5}
                   style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}
@@ -399,8 +399,8 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
       <section className="home-guide-section" style={{ padding: '0 var(--pad-page) var(--pad-section-y)' }}>
         <SpotlightCard
           className="home-guide-card"
-          spotlightColor="rgba(217, 119, 6, 0.22)"
-          borderColor="rgba(217, 119, 6, 0.45)"
+          spotlightColor="rgba(241, 151, 32, 0.20)"
+          borderColor="rgba(241, 151, 32, 0.45)"
           tilt={false}
           style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-inverse)', borderRadius: 'var(--radius-surface)', padding: 'clamp(28px,4vw,52px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-8)' }}
         >

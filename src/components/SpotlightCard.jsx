@@ -10,8 +10,8 @@ export default function SpotlightCard({
   children,
   as: Component = 'div',
   className = '',
-  spotlightColor = 'rgba(217, 119, 6, 0.15)',
-  borderColor = 'rgba(217, 119, 6, 0.45)',
+  spotlightColor = 'rgba(241, 151, 32, 0.15)',
+  borderColor = 'rgba(241, 151, 32, 0.40)',
   size = 360,
   tilt = true,
   maxTilt = 4.5,
@@ -121,3 +121,4 @@ export default function SpotlightCard({
     </Component>
   );
 }
+
