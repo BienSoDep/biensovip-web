@@ -86,7 +86,7 @@ export default function MessageTemplatesSection({ referralUrl, ctvName, ctvPhone
         <div key={t.id} style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
             <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)', flex: 1 }}>{t.title}</span>
-            {t.category && <Badge tone="blue">{t.category}</Badge>}
+            {t.category && <Badge tone="amber">{t.category}</Badge>}
             {t.channel && <Badge tone="amber">{t.channel}</Badge>}
           </div>
           {t.description && <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>{t.description}</span>}

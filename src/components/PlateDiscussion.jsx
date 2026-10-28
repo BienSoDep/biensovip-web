@@ -91,12 +91,12 @@ const QUICK_QUESTIONS = [
 ──────────────────────────────────────────────────────────── */
 function getAvatarColor(name = "") {
   const palettes = [
-    { bg: "#EFF6FF", text: "#C75B00", border: "#BFDBFE" },
-    { bg: "#F0FAF6", text: "#2E9970", border: "#D6F0E5" },
+    { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
     { bg: "#FEF3C7", text: "#B45309", border: "#FDE68A" },
-    { bg: "#FDF2F8", text: "#8a3645", border: "#FBCFE8" },
-    { bg: "#F5F3FF", text: "#4A4F59", border: "#DDD6FE" },
-    { bg: "#ECFEFF", text: "#8a3d00", border: "#A5F3FC" },
+    { bg: "#F8FAFC", text: "#334155", border: "#E2E8F0" },
+    { bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
+    { bg: "#FFFBEB", text: "#D97706", border: "#FDE68A" },
+    { bg: "#F1F5F9", text: "#1E293B", border: "#CBD5E1" },
   ];
   let s = 0;
   for (let i = 0; i < name.length; i++) s += name.charCodeAt(i);
