@@ -711,6 +711,9 @@ export default function App() {
         onBuy: () => openBuy(p.id),
       }));
 
+  // Đếm tức thì số lượng yêu thích thực tế từ state/localStorage (không bị trễ bởi network async)
+  const totalFavCount = Object.keys(st.favs || {}).length;
+
   const adminMeta = {
     dash: ['Tổng quan', 'Chào buổi sáng, đây là tình hình hôm nay.'],
     aguide: ['Hướng dẫn sử dụng', 'Các tính năng theo vai trò của bạn'],
@@ -767,9 +770,9 @@ export default function App() {
 
         <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative' }}>
 
-          {isPublic && <Header s={s} go={go} favCount={favCards.length} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost}  />}
+          {isPublic && <Header s={s} go={go} favCount={totalFavCount} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost}  />}
 
-          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={favCards.length} compareCount={compareIds.length} patch={patch} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
+          {isPublic && <MobileDrawer open={st.drawerOpen} onClose={() => patch({ drawerOpen: false })} s={s} go={go} user={st.user} favCount={totalFavCount} compareCount={compareIds.length} patch={patch} onLogout={async () => { await authApi.logout(); patch({ user: null, isAdmin: false }); notify(st.lang === 'vi' ? 'Đã đăng xuất' : 'Signed out'); go('home')(); }} />}
 
           {/* detail/post/provinceLanding/plateTypeLanding tự render breadcrumb riêng bên trong (cần dữ
               liệu tỉnh/category đã fetch — không có sẵn ở tầng App) — bỏ qua ở đây tránh render 2 lần. */}

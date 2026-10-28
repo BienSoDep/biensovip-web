@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock, MessageSquare } from 'lucide-react';
+import { Menu, GitCompareArrows, ChevronDown, Compass, Sparkles, Clock, MessageSquare, Heart } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import { IconButton, Avatar } from '../components/index.jsx';
+import { Avatar } from '../components/index.jsx';
 import NavBtn, { pill } from '../components/NavBtn.jsx';
 import { contentGet } from '../lib/content/index.js';
 import NotificationBell from './header/NotificationBell.jsx';
@@ -421,15 +421,55 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
           </div>
           {/* Biển số yêu thích */}
           <div id="header-nav-favorite" style={{ position: 'relative', display: 'flex' }}>
-            <IconButton
-              name="heart"
-              label={T('common.fav.label')}
+            <button
+              type="button"
+              aria-label={T('common.fav.label') || 'Biển số yêu thích'}
+              title={T('common.fav.label') || 'Biển số yêu thích'}
               onClick={() => {
                 patch?.({ favTab: 'saved' });
                 go('fav')();
               }}
-            />
-            {favCount > 0 && (<span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--action-primary-text, var(--ink-900))', fontWeight: 'var(--fw-bold)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{favCount}</span>)}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--text-body)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'background 120ms ease',
+              }}
+            >
+              <Heart size={18} />
+            </button>
+            {favCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -5,
+                  right: -6,
+                  minWidth: 18,
+                  height: 18,
+                  padding: '0 5px',
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--action-primary)',
+                  color: 'var(--action-primary-text, var(--ink-900))',
+                  fontWeight: 'var(--fw-bold)',
+                  font: 'var(--type-caption)',
+                  fontSize: 'var(--fs-micro)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  pointerEvents: 'none',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                }}
+              >
+                {favCount}
+              </span>
+            )}
           </div>
           {user ? (
             <button type="button" onClick={go('profile')} aria-label={typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')} title={typeof user === 'string' ? user : (user.fullName || user.identifier || user.email || 'User')} style={{ display: 'flex', alignItems: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
