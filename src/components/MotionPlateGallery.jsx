@@ -5,6 +5,7 @@ import { Badge } from './index.jsx';
 import PlateVisual from './PlateVisual.jsx';
 import MotionFavButton from './MotionFavButton.jsx';
 import MotionCompareButton from './MotionCompareButton.jsx';
+import { useFlyEffect } from '../contexts/FlyEffectContext.jsx';
 import { splitPlateNumber, formatPrice } from '../lib/plateFormat.js';
 import { routeFor } from '../config/routes.js';
 import { trackCtaClick } from '../services/tracking/events.js';
@@ -34,6 +35,7 @@ export default function MotionPlateGallery({
   _contact,
 }) {
   const total = items.length;
+  const { triggerFly } = useFlyEffect();
 
   // Bắt đầu tại thẻ đầu tiên của tập giữa để luôn cân xứng 2 bên và nổi bật biển số #1
   const initialIndex = useMemo(() => {
@@ -287,8 +289,18 @@ export default function MotionPlateGallery({
                       {onFav && (
                         <MotionFavButton
                           fav={!!favs[p.id]}
-                          onClick={() => {
-                            if (!favs[p.id]) trackCtaClick('yeu_thich', p.plateNumber);
+                          onClick={(e) => {
+                            if (!favs[p.id]) {
+                              trackCtaClick('yeu_thich', p.plateNumber);
+                              const stageEl = e?.currentTarget?.closest('.motion-plate-gallery__card')?.querySelector('.motion-plate-gallery__plate-stage') || e?.currentTarget;
+                              if (stageEl) {
+                                triggerFly({
+                                  startRect: stageEl.getBoundingClientRect(),
+                                  type: 'favorite',
+                                  plate: { prov, seri, num, plateNumber: p.plateNumber },
+                                });
+                              }
+                            }
                             onFav(p.id);
                           }}
                         />
@@ -296,9 +308,21 @@ export default function MotionPlateGallery({
                       {addCompare && removeCompare && (
                         <MotionCompareButton
                           inCompare={inCompare}
-                          onClick={() => {
-                            if (inCompare) removeCompare(p.id);
-                            else addCompare(p.id);
+                          onClick={(e) => {
+                            if (!inCompare) {
+                              trackCtaClick('so_sanh', p.plateNumber);
+                              const stageEl = e?.currentTarget?.closest('.motion-plate-gallery__card')?.querySelector('.motion-plate-gallery__plate-stage') || e?.currentTarget;
+                              if (stageEl) {
+                                triggerFly({
+                                  startRect: stageEl.getBoundingClientRect(),
+                                  type: 'compare',
+                                  plate: { prov, seri, num, plateNumber: p.plateNumber },
+                                });
+                              }
+                              addCompare(p.id);
+                            } else {
+                              removeCompare(p.id);
+                            }
                           }}
                         />
                       )}

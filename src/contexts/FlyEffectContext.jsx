@@ -10,8 +10,8 @@ export function useFlyEffect() {
   return useContext(FlyEffectContext);
 }
 
-const FLY_WIDTH = 136;
-const FLY_HEIGHT = 68;
+const FLY_WIDTH = 210;
+const FLY_HEIGHT = 105;
 
 function FlyingPlateItem({ item, onDone }) {
   const { id, startRect, targetRect, plate } = item;
@@ -22,12 +22,15 @@ function FlyingPlateItem({ item, onDone }) {
   const targetX = targetRect.left + targetRect.width / 2 - FLY_WIDTH / 2;
   const targetY = targetRect.top + targetRect.height / 2 - FLY_HEIGHT / 2;
 
-  // Parabolic arc midpoint
-  const midX = (startX + targetX) / 2;
-  // If moving upward, arc above the highest point; if downward, pop up slightly first
-  const midY = targetY < startY
-    ? Math.min(startY, targetY) - 60
-    : startY - 35;
+  // Quỹ đạo hình parabol 4 điểm mượt mà
+  const dx = targetX - startX;
+  const midX1 = startX + dx * 0.32;
+  const midX2 = startX + dx * 0.72;
+
+  // Vồng cung cao nổi bật để người dùng nhìn thấy rõ biển số phóng to khi bay
+  const arcLift = Math.max(85, Math.min(160, Math.abs(dx) * 0.22));
+  const peakY = Math.min(startY, targetY) - arcLift;
+  const glideY = targetY + (peakY - targetY) * 0.38;
 
   return (
     <motion.div
@@ -35,21 +38,21 @@ function FlyingPlateItem({ item, onDone }) {
       initial={{
         x: startX,
         y: startY,
-        scale: 1,
-        opacity: 0.95,
+        scale: 0.75,
+        opacity: 0.35,
         rotate: 0,
       }}
       animate={{
-        x: [startX, midX, targetX],
-        y: [startY, midY, targetY],
-        scale: [1, 0.65, 0.16],
-        opacity: [0.95, 1, 0.9, 0],
-        rotate: [0, -9, 7, -2],
+        x: [startX, midX1, midX2, targetX],
+        y: [startY, peakY, glideY, targetY],
+        scale: [0.75, 1.25, 0.96, 0.18],
+        opacity: [0.35, 1, 0.95, 0],
+        rotate: [0, -8, 6, -2],
       }}
       transition={{
-        duration: 0.72,
-        times: [0, 0.45, 1],
-        ease: [0.16, 1, 0.3, 1],
+        duration: 0.88,
+        times: [0, 0.24, 0.70, 1],
+        ease: [0.18, 0.9, 0.32, 1],
       }}
       onAnimationComplete={onDone}
       style={{
@@ -67,51 +70,69 @@ function FlyingPlateItem({ item, onDone }) {
         style={{
           width: '100%',
           height: '100%',
-          background: 'linear-gradient(180deg, #ffffff 0%, #f6f6f4 60%, #ececec 100%)',
-          borderRadius: 7,
-          border: '2.5px solid #101012',
-          boxShadow: '0 16px 36px rgba(0,0,0,0.35), 0 0 18px rgba(241,151,32,0.35)',
+          background: 'linear-gradient(145deg, #FFFFFF 0%, #FAFAFA 55%, #F1F5F9 100%)',
+          borderRadius: 12,
+          border: '3.5px solid #0F172A',
+          boxShadow: '0 24px 48px -8px rgba(0,0,0,0.45), 0 0 24px rgba(241,151,32,0.55), inset 0 2px 0 rgba(255,255,255,1), inset 0 0 0 1.5px rgba(241,151,32,0.25)',
           boxSizing: 'border-box',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          padding: '3px 4px',
+          padding: '4px 8px',
           overflow: 'hidden',
+          filter: 'drop-shadow(0 0 10px rgba(241,151,32,0.4))',
         }}
       >
-        {/* 4 Corner Rivets */}
-        <span style={{ position: 'absolute', top: 3, left: 3, width: 4, height: 4, borderRadius: '50%', background: '#333' }} />
-        <span style={{ position: 'absolute', top: 3, right: 3, width: 4, height: 4, borderRadius: '50%', background: '#333' }} />
-        <span style={{ position: 'absolute', bottom: 3, left: 3, width: 4, height: 4, borderRadius: '50%', background: '#333' }} />
-        <span style={{ position: 'absolute', bottom: 3, right: 3, width: 4, height: 4, borderRadius: '50%', background: '#333' }} />
+        {/* Shimmer ánh sáng quét trên mặt biển số */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '45%',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.05) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
 
-        {/* Embossed Text */}
+        {/* 4 Đinh tán kim loại mạ crom 4 góc */}
+        <span style={{ position: 'absolute', top: 5, left: 5, width: 6, height: 6, borderRadius: '50%', background: 'radial-gradient(circle, #E2E8F0 30%, #475569 100%)', boxShadow: '0 1px 2px rgba(0,0,0,0.5)' }} />
+        <span style={{ position: 'absolute', top: 5, right: 5, width: 6, height: 6, borderRadius: '50%', background: 'radial-gradient(circle, #E2E8F0 30%, #475569 100%)', boxShadow: '0 1px 2px rgba(0,0,0,0.5)' }} />
+        <span style={{ position: 'absolute', bottom: 5, left: 5, width: 6, height: 6, borderRadius: '50%', background: 'radial-gradient(circle, #E2E8F0 30%, #475569 100%)', boxShadow: '0 1px 2px rgba(0,0,0,0.5)' }} />
+        <span style={{ position: 'absolute', bottom: 5, right: 5, width: 6, height: 6, borderRadius: '50%', background: 'radial-gradient(circle, #E2E8F0 30%, #475569 100%)', boxShadow: '0 1px 2px rgba(0,0,0,0.5)' }} />
+
+        {/* Chữ dập nổi sắc nét — Tỉnh thành & Seri */}
         <div
           style={{
             fontFamily: 'Oswald, sans-serif',
             fontWeight: 700,
-            color: '#191919',
-            fontSize: 14,
+            color: '#0F172A',
+            fontSize: 20,
             lineHeight: 1,
-            letterSpacing: 0.5,
+            letterSpacing: 2,
             textShadow: '0 1px 0 #fff, 0 -1px 0 rgba(0,0,0,0.5)',
             whiteSpace: 'nowrap',
+            zIndex: 1,
           }}
         >
           {plate?.prov ? `${plate.prov}${plate.seri ? ` · ${plate.seri}` : ''}` : (plate?.plateNumber || 'BIỂN SỐ')}
         </div>
+
+        {/* Chữ dập nổi sắc nét — Dãy số biển chính */}
         <div
           style={{
             fontFamily: 'Oswald, sans-serif',
-            fontWeight: 700,
-            color: '#191919',
-            fontSize: 22,
+            fontWeight: 800,
+            color: '#0F172A',
+            fontSize: 34,
             lineHeight: 1.1,
-            letterSpacing: 1.2,
+            letterSpacing: 3,
             textShadow: '0 1px 0 #fff, 0 -1px 0 rgba(0,0,0,0.6)',
             whiteSpace: 'nowrap',
+            zIndex: 1,
           }}
         >
           {plate?.num || plate?.plateNumber || ''}
