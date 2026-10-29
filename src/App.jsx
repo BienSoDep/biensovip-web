@@ -458,7 +458,8 @@ export default function App() {
       const { accessToken, refreshToken, admin } = result.data;
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
       patchAuth({ aErr: {}, aPw: '' });
-      patch({ screen: 'dash', user: admin, isAdmin: true });
+      const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
+      patch({ screen: targetScreen, user: admin, isAdmin: true, redirectTo: null });
       notify('Đăng nhập quản trị thành công');
       return true;
     } catch {
@@ -478,7 +479,8 @@ export default function App() {
       const { accessToken, refreshToken, admin } = body.data;
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
       patchAuth({ aErr: {}, a2faCode: '', a2faToken: null });
-      patch({ screen: 'dash', user: admin, isAdmin: true });
+      const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
+      patch({ screen: targetScreen, user: admin, isAdmin: true, redirectTo: null });
       notify('Đăng nhập quản trị thành công');
     } catch {
       patchAuth({ aErr: { otp: 'Không kết nối được server.' } });
@@ -555,14 +557,30 @@ export default function App() {
       if (!ast.aEmail.trim()) err.email = 'Vui lòng nhập email hoặc số điện thoại.';
       if (ast.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
       if (Object.keys(err).length) { patchAuth({ aErr: err }); return; }
+
+      const emailInput = ast.aEmail.trim();
+      const isPotentialAdmin = emailInput.toLowerCase().endsWith('@biensovip.com') ||
+                               emailInput.toLowerCase().startsWith('admin') ||
+                               (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen));
+
+      // Ưu tiên thử đăng nhập quản trị trước cho email admin / domain hệ thống / redirect admin
+      if (isPotentialAdmin) {
+        const adminResult = await tryAdminLogin(emailInput, ast.aPw);
+        if (adminResult === true) return;
+        if (adminResult && adminResult.locked) {
+          patchAuth({ aErr: { pw: adminResult.reason, lockedReason: adminResult.reason } });
+          return;
+        }
+      }
+
       try {
-        const data = await authApi.login({ identifier: ast.aEmail.trim(), password: ast.aPw, remember });
+        const data = await authApi.login({ identifier: emailInput, password: ast.aPw, remember });
         trackLogin('password');
-        rememberEmail(ast.aEmail.trim());
-        // Hồ sơ chưa đủ (họ tên/ngày sinh/giới tính) → mời điền luôn thay vì vào thẳng trang cũ,
-        // để tính năng hợp mệnh + phân khúc khách hàng có dữ liệu ngay từ lần đăng nhập đầu.
+        rememberEmail(emailInput);
         patchAuth({ aErr: {}, aPw: '' });
-        if (isProfileIncomplete(data.user)) {
+        if (st.redirectTo?.screen && PUBLIC_SCREENS.includes(st.redirectTo.screen)) {
+          patch({ user: data.user, screen: st.redirectTo.screen, curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
+        } else if (isProfileIncomplete(data.user)) {
           patch({ user: data.user, screen: 'profile' });
         } else {
           patch({ user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
@@ -571,14 +589,14 @@ export default function App() {
         favApi.syncFavorites(); // fire-and-forget: merge local → server
         syncPlateHistory();
       } catch (e) {
-        // Sai với endpoint user — thử lại như tài khoản quản trị trước khi báo lỗi.
-        // 1 form, 1 ô nhập, tự nhận diện loại tài khoản qua endpoint nào chấp nhận.
-        if (e.status === 401) {
-          const adminResult = await tryAdminLogin(ast.aEmail.trim(), ast.aPw);
+        // Nếu chưa thử admin (không có dấu hiệu admin ban đầu) — thử fallback tài khoản quản trị khi 401
+        if (!isPotentialAdmin && e.status === 401) {
+          const adminResult = await tryAdminLogin(emailInput, ast.aPw);
           if (adminResult === true) return;
           if (adminResult && adminResult.locked) patchAuth({ aErr: { pw: adminResult.reason, lockedReason: adminResult.reason } });
           else patchAuth({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
         }
+        else if (e.status === 401) patchAuth({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
         else if (e.status === 429) patchAuth({ aErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
         // 403 + code ACCOUNT_LOCKED_BY_ADMIN — khóa thủ công bởi admin, message là lý do admin ghi.
         else if (e.status === 403 && e.code === 'ACCOUNT_LOCKED_BY_ADMIN') patchAuth({ aErr: { pw: e.message, lockedReason: e.message } });

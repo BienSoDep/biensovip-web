@@ -127,6 +127,34 @@ export default function Profile({ go, notify, user, onUserUpdate, onLogout }) {
             />
           </div>
 
+          {((user?.email && (user.email.toLowerCase().endsWith('@biensovip.com') || user.email.toLowerCase().startsWith('admin'))) ||
+            (user?.identifier && (user.identifier.toLowerCase().endsWith('@biensovip.com') || user.identifier.toLowerCase().startsWith('admin')))) && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-3)',
+              padding: '14px 20px', borderRadius: 'var(--radius-card)',
+              background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
+              color: '#FFFFFF', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.12)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: '1.25rem' }}>🛡️</span>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9375rem' }}>Tài khoản Quản trị viên hệ thống</div>
+                  <div style={{ fontSize: '0.8125rem', color: '#94A3B8' }}>Bạn đang ở giao diện hồ sơ khách hàng. Chuyển sang khu vực quản trị để thao tác toàn quyền.</div>
+                </div>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  window.location.href = '/admin/tong-quan';
+                }}
+                style={{ background: 'var(--action-primary)', color: 'var(--white)', fontWeight: 600, border: 'none' }}
+              >
+                Vào Trang Quản Trị &rarr;
+              </Button>
+            </div>
+          )}
+
           <form onSubmit={(e) => { e.preventDefault(); save(); }} style={{ width: '100%', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', borderRadius: 'var(--radius-card)', padding: 'clamp(20px,3vw,32px)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <AvatarUploader user={user} onUserUpdate={onUserUpdate} notify={notify} />
             <div>

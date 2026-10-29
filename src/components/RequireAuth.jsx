@@ -23,7 +23,7 @@ export default function RequireAuth({ st, go, patch, children }) {
         setRefreshed(true);
       } else {
         clearAuth();
-        patch?.({ user: null, isAdmin: false });
+        patch?.({ user: null, isAdmin: false, redirectTo: { screen: st.screen } });
       }
       setChecking(false);
     });
@@ -36,10 +36,10 @@ export default function RequireAuth({ st, go, patch, children }) {
   useEffect(() => {
     if (!checking && !authed) {
       clearAuth();
-      patch?.({ user: null, isAdmin: false });
+      patch?.({ user: null, isAdmin: false, redirectTo: { screen: st.screen } });
       go('login')();
     }
-  }, [checking, authed, go, patch]);
+  }, [checking, authed, go, patch, st.screen]);
 
   return authed ? children : null;
 }

@@ -41,6 +41,7 @@ export function routeFor(s, id) {
 export function parseRoute(pathname) {
   const p = String(pathname || '').split('?')[0].split('/').filter(Boolean);
   if (!p.length) return { screen: 'home' };
+  if (p[0] === 'admin' && p.length === 1) return { screen: 'dash' };
   if (p[0] === 'bien') return p[1] ? { screen: 'detail', detailId: decodeURIComponent(p[1]) } : { screen: 'list' };
   if (p[0] === 'bai-viet') return { screen: 'post', postId: p[1] || 'a1' };
   if (p[0] === 'tu-van') return { screen: 'lucky' }; // alias cũ → hop-menh (redirect)
