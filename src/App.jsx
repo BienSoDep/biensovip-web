@@ -782,11 +782,11 @@ export default function App() {
   return (
     <ErrorBoundary>
       <FlyEffectProvider>
-        <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--surface-page)', ...(s === 'aiChat' ? { height: '100vh', height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' } : {}) }}>
         <Toaster position="top-right" toastOptions={{ role: 'alert', style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
-        <main>
+        <main style={s === 'aiChat' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } : undefined}>
 
-        <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative', ...(s === 'aiChat' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%' } : {}) }}>
 
           {isPublic && <Header s={s} go={go} favCount={totalFavCount} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost}  />}
 
@@ -894,23 +894,23 @@ export default function App() {
           </Suspense>
           )}
 
-          {isPublic && <Footer settings={st.settings} patch={patch} />}
+          {isPublic && s !== 'aiChat' && <Footer settings={st.settings} patch={patch} />}
 
-          {isPublic && <PromoRails openPlate={openPlate} />}
+          {isPublic && s !== 'aiChat' && <PromoRails openPlate={openPlate} />}
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} openPlate={openPlate} />
           </Suspense>
 
-          {isPublic && <ContactFab zalo={st.settings?.zalo} phone={st.settings?.phone} />}
+          {isPublic && s !== 'aiChat' && <ContactFab zalo={st.settings?.zalo} phone={st.settings?.phone} />}
 
-          {isPublic && (
+          {isPublic && s !== 'aiChat' && (
             <Suspense fallback={null}>
               <AiChatbot go={go} openPlate={openPlate} openPost={openPost} />
             </Suspense>
           )}
 
-          {isPublic && st.screen !== 'compare' && <CompareBar go={go} />}
+          {isPublic && st.screen !== 'compare' && st.screen !== 'aiChat' && <CompareBar go={go} />}
 
           {isPublic && (
             <CommandPalette

@@ -698,100 +698,34 @@ export function ChatConversationView({ conv, onOpenPlate, onOpenPost, onAction, 
               Hệ thống hỗ trợ song song giữa Trợ lý AI thế hệ mới và Đội ngũ Chuyên viên tư vấn trực tiếp 1:1.
             </p>
 
-            {/* Hai thẻ chọn chế độ lớn ở màn hình chính */}
-            <div className="claude-hero-modes">
-              {/* Thẻ AI */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={switchToBot}
-                className="claude-hero-mode-card active"
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
-                  <div style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: 'rgba(241, 151, 32, 0.12)',
-                    color: '#D97706',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <Sparkles size={20} />
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#D97706', background: 'rgba(241, 151, 32, 0.1)', padding: '3px 10px', borderRadius: 999 }}>
-                    ✓ Đang sử dụng
-                  </span>
-                </div>
-                <strong style={{ fontSize: 15.5, color: '#0F172A', marginBottom: 6 }}>
-                  Hỏi Trợ lý AI Thông Minh
-                </strong>
-                <p style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, margin: '0 0 12px 0' }}>
-                  Tra cứu tình trạng biển số, định giá tự động, phân tích phong thủy hợp tuổi và giải đáp thủ tục đấu giá 24/7.
-                </p>
-                <div style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#D97706' }}>
-                  <span>Nhập câu hỏi bên dưới để hỏi ngay</span> ↓
-                </div>
+            {/* Thanh chuyển đổi chế độ tinh gọn phong cách Claude */}
+            <div className="claude-hero-mode-bar">
+              <div className="claude-hero-mode-status">
+                <span className="claude-hero-mode-pill">
+                  <Sparkles size={13} /> Trợ lý AI 24/7
+                </span>
+                <span className="claude-hero-mode-desc">Tra cứu kho biển VPA, định giá tự động & phong thủy</span>
               </div>
-
-              {/* Thẻ Tư vấn viên */}
-              <div
-                role="button"
-                tabIndex={0}
+              <button
+                type="button"
                 onClick={handleInitiateStaffChat}
-                className="claude-hero-mode-card live-card"
+                className="claude-hero-staff-link"
+                title="Chuyển sang trao đổi trực tiếp với Chuyên viên"
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
-                  <div style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: 'rgba(16, 185, 129, 0.12)',
-                    color: '#059669',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <Headphones size={20} />
-                  </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#059669', background: '#DCFCE7', padding: '3px 10px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                    <span className="live-dot-pulse" style={{ width: 6, height: 6 }} /> Chuyên viên 1:1
-                  </span>
-                </div>
-                <strong style={{ fontSize: 15.5, color: '#0F172A', marginBottom: 6 }}>
-                  Gặp Tư vấn viên Trực tiếp
-                </strong>
-                <p style={{ fontSize: 12.5, color: '#64748B', lineHeight: 1.5, margin: '0 0 12px 0' }}>
-                  Kết nối chuyên viên hỗ trợ đàm phán giá tốt, đặt cọc giữ chỗ độc quyền, hỗ trợ đấu giá và sang tên trọn gói.
-                </p>
-                <div style={{
-                  marginTop: 'auto',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  background: '#059669',
-                  padding: '6px 14px',
-                  borderRadius: 8,
-                  boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
-                }}>
-                  <span>Gặp Chuyên viên ngay</span> →
-                </div>
-              </div>
+                <Headphones size={13} />
+                <span>Gặp Tư vấn viên 1:1</span>
+                &rarr;
+              </button>
             </div>
 
             <div style={{ width: '100%', maxWidth: 680, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 4 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-700)' }}>
-                Hoặc bắt đầu nhanh với câu hỏi mẫu:
+                Gợi ý câu hỏi phổ biến:
               </span>
               <span style={{ fontSize: 11.5, color: 'var(--grey-400)' }}>
                 Bấm vào để hỏi AI ngay
               </span>
             </div>
-
             <div className="claude-prompt-grid">
               {STARTER_PROMPTS.map((p, idx) => {
                 const IconComponent = p.icon;
