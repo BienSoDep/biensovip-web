@@ -217,8 +217,8 @@ export default function PlateCard({
                     }
                     onFav();
                   }}
-                  size={28}
-                  iconSize={16}
+                  size={34}
+                  iconSize={18}
                 />
               )}
               {onCompare && (
@@ -238,8 +238,8 @@ export default function PlateCard({
                     }
                     onCompare();
                   }}
-                  size={28}
-                  iconSize={16}
+                  size={34}
+                  iconSize={18}
                 />
               )}
             </div>
@@ -278,7 +278,7 @@ export default function PlateCard({
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{formatPrice(price, false)}</span>
             </span>
           ) : (
-            <span style={{ font: 'var(--type-price)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }}>{priceOnRequest && priceOnRequestLabel ? priceOnRequestLabel : formatPrice(price, priceOnRequest)}</span>
+            <span style={{ font: 'var(--type-price)', color: isZeroOrNoPrice ? 'var(--text-muted)' : 'var(--brand-700)', fontWeight: 700, whiteSpace: 'nowrap' }}>{priceOnRequest && priceOnRequestLabel ? priceOnRequestLabel : formatPrice(price, priceOnRequest)}</span>
           )}
           {!sold ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

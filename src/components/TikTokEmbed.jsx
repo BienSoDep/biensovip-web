@@ -42,49 +42,81 @@ export default function TikTokEmbed({ videoUrl, title, compact = false }) {
     );
   }
 
-  // Chế độ compact dành cho thanh rail hẹp (PromoRails) — hiển thị iframe preview thay vì hộp đen
+  // Chế độ compact dành cho thanh rail hẹp (PromoRails) — hiển thị card preview sang trọng, tránh lỗi iframe Access Denied
   if (compact) {
     return (
-      <div
+      <a
+        href={videoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={title || 'Xem trên TikTok'}
         style={{
           position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           width: '100%',
           height: '100%',
-          background: '#09090b',
+          minHeight: 130,
+          background: 'linear-gradient(145deg, #18181b 0%, #09090b 100%)',
           borderRadius: 'inherit',
+          padding: '12px 10px',
+          textAlign: 'center',
+          textDecoration: 'none',
+          boxSizing: 'border-box',
           overflow: 'hidden',
+          border: '1px solid rgba(241, 151, 32, 0.2)',
+          transition: 'all 0.2s ease',
         }}
       >
-        <iframe
-          src={`https://www.tiktok.com/player/v1/${id}?description=0`}
-          title={title || 'Video TikTok'}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          loading="lazy"
+        <div
           style={{
-            position: 'absolute',
-            inset: 0,
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #F19720 0%, #D97706 100%)',
+            color: '#FFFFFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 8,
+            boxShadow: '0 4px 12px rgba(241, 151, 32, 0.3)',
+            flexShrink: 0,
+          }}
+        >
+          <Play size={16} fill="#FFFFFF" style={{ marginLeft: 2 }} />
+        </div>
+        <span
+          style={{
+            font: 'var(--type-caption)',
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#F8FAFC',
+            lineHeight: 1.3,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
             width: '100%',
-            height: '100%',
-            border: 0,
-            display: 'block',
           }}
-        />
-        {/* Lớp phủ click mở video trực tiếp trên tab mới, không kẹt thanh cuộn rail */}
-        <a
-          href={videoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={title || 'Xem trên TikTok'}
-          aria-label={title || 'Xem video trên TikTok'}
+        >
+          {title || 'Video Biển Số VIP'}
+        </span>
+        <span
           style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 2,
-            display: 'block',
+            marginTop: 6,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+            color: '#F19720',
+            textTransform: 'uppercase',
           }}
-        />
-      </div>
+        >
+          TikTok ↗
+        </span>
+      </a>
     );
   }
 

@@ -22,7 +22,7 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
   const thangCount = vpaCounts?.monthly || 829407;
   const { history } = usePlateHistory(user);
   const historyCount = history?.length || 0;
-  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['aiChat', T('common.nav.aiChat'), MessageSquare], ['chat', T('common.nav.contact')], ['collab', 'Cộng tác']];
+  const nav = [['list', T('common.nav.plates')], ['lucky', T('common.nav.lucky')], ['compare', T('common.nav.compare'), GitCompareArrows], ['blog', T('common.nav.blog')], ['aiChat', T('common.nav.aiChat'), Sparkles], ['chat', T('common.nav.contact')], ['collab', 'Cộng tác']];
   const navRef = useRef(null);
   const [luckyOpen, setLuckyOpen] = useState(false);
   const [platesOpen, setPlatesOpen] = useState(false);
@@ -398,10 +398,10 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
                 go('fav')();
               }}
               style={{
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 borderRadius: 'var(--radius-pill)',
-                border: 'none',
+                border: '1px solid var(--border-hairline)',
                 background: 'transparent',
                 color: 'var(--text-body)',
                 display: 'inline-flex',
@@ -410,11 +410,13 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
                 cursor: 'pointer',
                 transition: 'background 120ms ease',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               <Clock size={18} />
             </button>
             {historyCount > 0 && (
-              <span style={{ position: 'absolute', top: -5, right: -6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--action-primary-text, var(--ink-900))', fontWeight: 'var(--fw-bold)', font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 19, height: 19, padding: '0 5px', borderRadius: 'var(--radius-pill)', background: '#475569', color: '#FFFFFF', fontWeight: 'var(--fw-bold)', font: 'var(--type-caption)', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                 {historyCount}
               </span>
             )}
@@ -430,10 +432,10 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
                 go('fav')();
               }}
               style={{
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 borderRadius: 'var(--radius-pill)',
-                border: 'none',
+                border: '1px solid var(--border-hairline)',
                 background: 'transparent',
                 color: 'var(--text-body)',
                 display: 'inline-flex',
@@ -442,6 +444,8 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
                 cursor: 'pointer',
                 transition: 'background 120ms ease',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-sunken)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               <Heart size={18} />
             </button>
@@ -449,22 +453,22 @@ export default function Header({ s, go, favCount, user, patch, notify, onMenu, o
               <span
                 style={{
                   position: 'absolute',
-                  top: -5,
-                  right: -6,
-                  minWidth: 18,
-                  height: 18,
+                  top: -4,
+                  right: -4,
+                  minWidth: 19,
+                  height: 19,
                   padding: '0 5px',
                   borderRadius: 'var(--radius-pill)',
-                  background: 'var(--action-primary)',
-                  color: 'var(--action-primary-text, var(--ink-900))',
+                  background: '#E11D48',
+                  color: '#FFFFFF',
                   fontWeight: 'var(--fw-bold)',
                   font: 'var(--type-caption)',
-                  fontSize: 'var(--fs-micro)',
+                  fontSize: '11px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   pointerEvents: 'none',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                  boxShadow: '0 1px 3px rgba(225,29,72,0.3)',
                 }}
               >
                 {favCount}

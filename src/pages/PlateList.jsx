@@ -11,6 +11,9 @@ import {
   Sparkles,
   Calendar,
   Check,
+  Store,
+  Timer,
+  RotateCcw,
 } from "lucide-react";
 import Button from "../components/Button.jsx";
 import { Select, Checkbox, Radio, Input, Icon, PageHeader } from "../components/index.jsx";
@@ -912,6 +915,8 @@ export default function PlateList({
                 : t.key === "weekly"
                   ? (vpaCounts?.weekly || 70000)
                   : (vpaCounts?.monthly || 829407);
+            const TabIcon = t.key === "available" ? Store : t.key === "weekly" ? Timer : Calendar;
+            const subtitle = t.key === "available" ? "Kho Duy Định · Giao ngay" : t.key === "weekly" ? "Đang mở đấu giá tuần" : "Kho đấu giá tháng";
             return (
               <button
                 key={t.key}
@@ -923,7 +928,7 @@ export default function PlateList({
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "flex-start",
-                  gap: 6,
+                  gap: 8,
                   padding: "var(--space-3) var(--space-4)",
                   border: active
                     ? "2px solid var(--action-primary)"
@@ -938,8 +943,7 @@ export default function PlateList({
                   boxShadow: active
                     ? "var(--shadow-2)"
                     : "var(--shadow-inset-hairline)",
-                  transition:
-                    "all 160ms var(--ease-standard)",
+                  transition: "all 160ms var(--ease-standard)",
                 }}
               >
                 <div
@@ -951,14 +955,31 @@ export default function PlateList({
                     gap: 8,
                   }}
                 >
-                  <span
-                    style={{
-                      font: "var(--type-title-3)",
-                      fontWeight: "var(--fw-bold)",
-                    }}
-                  >
-                    {t.label}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "6px",
+                        background: active ? "rgba(255,255,255,0.2)" : "var(--surface-sunken)",
+                        color: active ? "var(--white)" : "var(--action-primary)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <TabIcon size={16} />
+                    </span>
+                    <span
+                      style={{
+                        font: "var(--type-title-3)",
+                        fontWeight: "var(--fw-bold)",
+                      }}
+                    >
+                      {t.label}
+                    </span>
+                  </div>
                   {active && (
                     <span
                       style={{
@@ -978,19 +999,31 @@ export default function PlateList({
                     </span>
                   )}
                 </div>
-                <span
-                  style={{
-                    font: "var(--type-caption)",
-                    color: active
-                      ? "var(--action-primary-text)"
-                      : "var(--text-muted)",
-                    opacity: active ? 0.95 : 1,
-                  }}
-                >
-                  {n != null
-                    ? `${new Intl.NumberFormat("vi-VN").format(n)} biển`
-                    : "—"}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", marginTop: 2 }}>
+                  <span
+                    style={{
+                      font: "var(--type-caption)",
+                      fontSize: 11,
+                      color: active ? "var(--action-primary-text)" : "var(--text-muted)",
+                      opacity: active ? 0.9 : 0.8,
+                    }}
+                  >
+                    {subtitle}
+                  </span>
+                  <span
+                    style={{
+                      font: "var(--type-caption)",
+                      fontWeight: 700,
+                      color: active
+                        ? "var(--action-primary-text)"
+                        : "var(--action-primary)",
+                    }}
+                  >
+                    {n != null
+                      ? `${new Intl.NumberFormat("vi-VN").format(n)} biển`
+                      : "—"}
+                  </span>
+                </div>
               </button>
             );
           })}
@@ -1410,6 +1443,118 @@ export default function PlateList({
           </div>
         </div>
       </section>
+
+      {/* Active Filter Chips Bar: hiển thị tức thì các tiêu chí đang lọc kèm nút Xóa 1-click */}
+      {hasActiveFilters && (
+        <section
+          style={{
+            maxWidth: "var(--width-content)",
+            margin: "0 auto",
+            padding: "0 var(--pad-page) var(--space-3)",
+            width: "100%",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+              padding: "10px 14px",
+              background: "var(--white)",
+              border: "1px solid var(--border-hairline)",
+              borderRadius: "var(--radius-md)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+            }}
+          >
+            <span
+              style={{
+                font: "var(--type-caption)",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--text-muted)",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                marginRight: 4,
+              }}
+            >
+              Đang lọc ({activeFilterCount}):
+            </span>
+
+            {/* Chip từ khóa tìm kiếm */}
+            {filters.q && (
+              <span className="filter-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", background: "var(--surface-sunken)", borderRadius: "var(--radius-pill)", font: "var(--type-caption)", fontSize: 12, color: "var(--text-strong)" }}>
+                <span>Tìm: <strong>"{filters.q}"</strong></span>
+                <button type="button" onClick={() => setFilter({ q: "" })} aria-label="Xóa từ khóa" style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, display: "flex", color: "var(--text-muted)" }}><X size={13} /></button>
+              </span>
+            )}
+
+            {/* Chip Tỉnh thành */}
+            {filters.city.map((cId) => {
+              const pName = provinceItems.find((p) => p.id === cId)?.name || cId;
+              return (
+                <span key={cId} className="filter-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", background: "var(--surface-sunken)", borderRadius: "var(--radius-pill)", font: "var(--type-caption)", fontSize: 12, color: "var(--text-strong)" }}>
+                  <span>Tỉnh: <strong>{pName}</strong></span>
+                  <button type="button" onClick={() => toggleArrayFilter("city", cId)} aria-label={`Bỏ chọn ${pName}`} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, display: "flex", color: "var(--text-muted)" }}><X size={13} /></button>
+                </span>
+              );
+            })}
+
+            {/* Chip Loại biển */}
+            {filters.cat.map((cId) => {
+              const tName = typeItems.find((t) => t.id === cId)?.name || cId;
+              return (
+                <span key={cId} className="filter-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", background: "var(--surface-sunken)", borderRadius: "var(--radius-pill)", font: "var(--type-caption)", fontSize: 12, color: "var(--text-strong)" }}>
+                  <span>Loại: <strong>{tName}</strong></span>
+                  <button type="button" onClick={() => toggleArrayFilter("cat", cId)} aria-label={`Bỏ chọn ${tName}`} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, display: "flex", color: "var(--text-muted)" }}><X size={13} /></button>
+                </span>
+              );
+            })}
+
+            {/* Chip Tránh số */}
+            {filters.avoidNumbers.map((num) => (
+              <span key={num} className="filter-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: "var(--radius-pill)", font: "var(--type-caption)", fontSize: 12, color: "#991B1B" }}>
+                <span>Tránh số: <strong>{num}</strong></span>
+                <button type="button" onClick={() => toggleArrayFilter("avoidNumbers", num)} aria-label={`Bỏ tránh số ${num}`} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, display: "flex", color: "#991B1B" }}><X size={13} /></button>
+              </span>
+            ))}
+
+            {/* Chip Khoảng giá */}
+            {(filters.priceMin || filters.priceMax) && (
+              <span className="filter-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", background: "var(--surface-sunken)", borderRadius: "var(--radius-pill)", font: "var(--type-caption)", fontSize: 12, color: "var(--text-strong)" }}>
+                <span>Giá: <strong>{filters.priceMin ? `${filters.priceMin}tr` : '0'} – {filters.priceMax ? `${filters.priceMax}tr` : '∞'}</strong></span>
+                <button type="button" onClick={() => setFilter({ priceMin: "", priceMax: "" })} aria-label="Xóa lọc giá" style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, display: "flex", color: "var(--text-muted)" }}><X size={13} /></button>
+              </span>
+            )}
+
+            {/* Nút Xóa tất cả */}
+            <button
+              type="button"
+              onClick={clearFilters}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "3px 10px",
+                borderRadius: "var(--radius-pill)",
+                border: "none",
+                background: "transparent",
+                color: "var(--status-danger)",
+                font: "var(--type-caption)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                marginLeft: "auto",
+                transition: "opacity 120ms ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
+            >
+              <RotateCcw size={12} /> Xóa tất cả bộ lọc
+            </button>
+          </div>
+        </section>
+      )}
 
       <section
         className="list-filter-toggle-row"

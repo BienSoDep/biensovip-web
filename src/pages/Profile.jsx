@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { User, ShieldCheck, Bell, Briefcase, HelpCircle, ChevronRight } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import BulletPicker from '../components/BulletPicker.jsx';
 import AvatarUploader from '../components/AvatarUploader.jsx';
@@ -100,22 +101,32 @@ export default function Profile({ go, notify, user, onUserUpdate, onLogout }) {
   // Settings dùng bố cục 2 cột (nav section bên trái sticky + nội dung bên phải) trên desktop
   // thay vì 1 card đơn độc giữa trang trống — giữ form max-width dễ đọc nhưng không lạc lõng.
   const SECTION_NAV = [
-    { href: '#profile-section', label: 'Tài khoản' },
-    { href: '#security-section', label: 'Bảo mật' },
-    { href: '#notification-section', label: 'Thông báo' },
-    { href: '#become-ctv', label: 'Cộng tác viên' },
-    { href: '#feedback-section', label: 'Báo cáo hệ thống' },
+    { href: '#profile-section', label: 'Tài khoản', icon: User },
+    { href: '#security-section', label: 'Bảo mật', icon: ShieldCheck },
+    { href: '#notification-section', label: 'Thông báo', icon: Bell },
+    { href: '#become-ctv', label: 'Cộng tác viên', icon: Briefcase },
+    { href: '#feedback-section', label: 'Báo cáo hệ thống', icon: HelpCircle },
   ];
 
   return (
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', animation: 'pageIn 180ms var(--ease-out)' }}>
       <div className="profile-layout">
         <nav aria-label="Mục cài đặt" className="profile-side-nav">
-          {SECTION_NAV.map((item) => (
-            <a key={item.href} href={item.href}>
-              {item.label}
-            </a>
-          ))}
+          <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid var(--border-hairline)', marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Cài đặt hồ sơ</span>
+          </div>
+          {SECTION_NAV.map((item) => {
+            const IconComp = item.icon;
+            return (
+              <a key={item.href} href={item.href} className="profile-side-nav__item">
+                <span className="profile-side-nav__icon-box">
+                  <IconComp size={16} />
+                </span>
+                <span style={{ flex: 1 }}>{item.label}</span>
+                <ChevronRight size={14} className="profile-side-nav__arrow" />
+              </a>
+            );
+          })}
         </nav>
 
         <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>

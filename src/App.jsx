@@ -896,7 +896,7 @@ export default function App() {
 
           {isPublic && s !== 'aiChat' && <Footer settings={st.settings} patch={patch} />}
 
-          {isPublic && s !== 'aiChat' && <PromoRails openPlate={openPlate} />}
+          {isPublic && !['aiChat', 'profile', 'compare', 'login', 'register', 'forgot', 'adminForgot', 'adminReset', 'gmailCallback', 'saved', 'notifications'].includes(s) && <PromoRails openPlate={openPlate} />}
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} openPlate={openPlate} />
@@ -910,7 +910,7 @@ export default function App() {
             </Suspense>
           )}
 
-          {isPublic && st.screen !== 'compare' && st.screen !== 'aiChat' && <CompareBar go={go} />}
+          {isPublic && ['home', 'list', 'lucky', 'luanBien', 'provinceLanding', 'plateTypeLanding'].includes(s) && <CompareBar go={go} />}
 
           {isPublic && (
             <CommandPalette
