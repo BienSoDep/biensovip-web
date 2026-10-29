@@ -4,6 +4,7 @@
    ========================================================================== */
 
 .rb-spotlight-card {
+  overflow: hidden;
   position: relative;
   border-radius: var(--radius-card, 16px);
   --mouse-x: 50%;

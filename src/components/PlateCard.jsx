@@ -1,7 +1,6 @@
 import { useFlyEffect } from '../contexts/FlyEffectContext.jsx';
 import { Phone, Flame, Sparkles } from 'lucide-react';
 import { Badge } from './index.jsx';
-import SpotlightCard from './SpotlightCard.jsx';
 import Button from './Button.jsx';
 import PlateVisual from './PlateVisual.jsx';
 import MotionFavButton from './MotionFavButton.jsx';
@@ -48,14 +47,16 @@ export default function PlateCard({
 
   if (layout === 'row') {
     return (
-      <SpotlightCard
-        pad="10px"
-        tone="muted"
+      <div
         className="plate-card plate-card--row"
-        spotlightColor="rgba(241, 151, 32, 0.14)"
-        borderColor={isHot && !sold ? 'rgba(241, 151, 32, 0.70)' : 'rgba(241, 151, 32, 0.35)'}
-        tilt={false}
-        style={{ ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--brand-500), var(--shadow-2)' } : fsRing), ...style }}
+        style={{
+          padding: '10px',
+          background: 'var(--surface-muted)',
+          borderRadius: 'var(--radius-card, 16px)',
+          border: '1px solid var(--border-hairline)',
+          boxShadow: 'var(--shadow-1)',
+          ...style,
+        }}
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
           <a href={href || '#'} onClick={(e) => { e.preventDefault(); handleOpen(); }} className="pressable" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none', cursor: 'pointer', flex: '1 1 260px', minWidth: 0 }}>
@@ -164,22 +165,22 @@ export default function PlateCard({
             </div>
           )}
         </div>
-      </SpotlightCard>
+      </div>
     );
   }
 
   return (
-    <SpotlightCard
-      pad="10px"
-      tone="muted"
+    <div
       className="plate-card"
-      spotlightColor={isHot && !sold ? 'rgba(241, 151, 32, 0.22)' : 'rgba(241, 151, 32, 0.14)'}
-      borderColor={isHot && !sold ? 'rgba(241, 151, 32, 0.70)' : 'rgba(241, 151, 32, 0.35)'}
-      tilt={!sold && tilt}
-      maxTilt={4}
       style={{
+        display: 'flex',
+        flexDirection: 'column',
         height: '100%',
-        ...(isHot && !sold ? { boxShadow: '0 0 0 2px var(--brand-500), var(--shadow-2)' } : fsRing),
+        padding: '10px',
+        background: 'var(--surface-muted)',
+        borderRadius: 'var(--radius-card, 16px)',
+        border: '1px solid var(--border-hairline)',
+        boxShadow: 'var(--shadow-1)',
         ...style,
       }}
     >
@@ -307,6 +308,6 @@ export default function PlateCard({
           )}
         </div>
       </div>
-    </SpotlightCard>
+    </div>
   );
 }
