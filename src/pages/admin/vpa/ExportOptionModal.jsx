@@ -3,7 +3,10 @@ import {
   Download, FileSpreadsheet, FileText, FileCode, Check,
   Gavel, Calendar, Landmark, Filter, Layers2,
   Clock, AlertCircle, Store,
-  Bike, Car, MapPin, Search, X, Eye, EyeOff
+  Bike, Car, MapPin, Search, X, Eye, EyeOff,
+  Save, RotateCcw, RotateCw, Minus, Square,
+  AlignLeft, AlignCenter, AlignRight,
+  ChevronDown
 } from 'lucide-react';
 import Modal from '../../../components/Modal.jsx';
 import Button from '../../../components/Button.jsx';
@@ -1011,103 +1014,244 @@ export default function ExportOptionModal({
           {showPreview && (
             <div style={{ marginTop: 6 }}>
               {previewTab === 'xlsx' ? (
-                /* EXCEL MOCKUP */
-                <div style={{ border: '1px solid #cbd5e1', borderRadius: 6, overflow: 'hidden', background: '#ffffff', fontSize: 11 }}>
-                  {/* Excel Window Header */}
-                  <div style={{ background: '#107c41', color: '#ffffff', padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                /* EXCEL MOCKUP — REVERSED ENGINEERED MICROSOFT EXCEL DESKTOP / 365 */
+                <div style={{ border: '1px solid #cbd5e1', borderRadius: 7, overflow: 'hidden', background: '#ffffff', fontSize: 11, boxShadow: '0 3px 12px rgba(0,0,0,0.06)' }}>
+                  {/* 1. Title Bar (Xanh lá chuẩn Excel #107c41) */}
+                  <div style={{ background: '#107c41', color: '#ffffff', padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', userSelect: 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <FileSpreadsheet size={14} color="#ffffff" />
-                      <strong style={{ fontSize: 11 }}>
-                        bien-so-vpa-{vehicle === 2 ? 'xe-may' : vehicle === 1 ? 'o-to' : 'tat-ca'}-{provinceMode === 'custom' && selectedProvinceIds.length === 1 ? 'tinh-thanh' : 'toan-quoc'}.xlsx
-                      </strong>
+                      <FileSpreadsheet size={13} color="#ffffff" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingRight: 6, borderRight: '1px solid rgba(255,255,255,0.25)' }}>
+                        <Save size={11} color="rgba(255,255,255,0.85)" title="Lưu (Ctrl+S)" />
+                        <RotateCcw size={11} color="rgba(255,255,255,0.85)" title="Hoàn tác (Undo)" />
+                        <RotateCw size={11} color="rgba(255,255,255,0.85)" title="Làm lại (Redo)" />
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Excel</span>
                     </div>
-                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 6px', borderRadius: 3 }}>
-                      Microsoft Excel Spreadsheet
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, fontWeight: 600 }}>
+                      <span>bien-so-vpa-{vehicle === 2 ? 'xe-may' : vehicle === 1 ? 'o-to' : 'tat-ca'}-{provinceMode === 'custom' && selectedProvinceIds.length === 1 ? 'tinh-thanh' : 'toan-quoc'}.xlsx</span>
+                      <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.2)', padding: '0.5px 5px', borderRadius: 3, fontWeight: 500 }}>Đã lưu</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.8)' }}>
+                      <Minus size={11} />
+                      <Square size={9} />
+                      <X size={11} />
+                    </div>
+                  </div>
+
+                  {/* 2. Menu Ribbon Tabs */}
+                  <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', padding: '0 6px', fontSize: 10.5, userSelect: 'none' }}>
+                    {['Tệp', 'Trang đầu', 'Chèn', 'Bố trí trang', 'Công thức', 'Dữ liệu', 'Xem'].map((tab, idx) => {
+                      const isActive = idx === 1; // 'Trang đầu' (Home) active
+                      return (
+                        <div
+                          key={tab}
+                          style={{
+                            padding: '4px 9px',
+                            fontWeight: isActive ? 700 : 500,
+                            color: isActive ? '#107c41' : '#475569',
+                            background: isActive ? '#ffffff' : 'transparent',
+                            borderTop: isActive ? '2px solid #107c41' : '2px solid transparent',
+                            borderLeft: isActive ? '1px solid #e2e8f0' : 'none',
+                            borderRight: isActive ? '1px solid #e2e8f0' : 'none',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {tab}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 3. Ribbon Controls Toolbar Mini */}
+                  <div style={{ background: '#ffffff', borderBottom: '1px solid #cbd5e1', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, flexWrap: 'wrap', userSelect: 'none' }}>
+                    {/* Font & Size */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, paddingRight: 6, borderRight: '1px solid #e2e8f0' }}>
+                      <span style={{ padding: '1px 5px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 3, fontWeight: 600 }}>Calibri ▾</span>
+                      <span style={{ padding: '1px 5px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 3, fontWeight: 600 }}>11 ▾</span>
+                    </div>
+
+                    {/* Format Buttons */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, paddingRight: 6, borderRight: '1px solid #e2e8f0' }}>
+                      <span style={{ padding: '2px 5px', background: '#dcfce7', border: '1px solid #86efac', borderRadius: 3, fontWeight: 800, color: '#15803d' }}>B</span>
+                      <span style={{ padding: '2px 5px', fontStyle: 'italic', fontWeight: 600, color: '#64748b' }}>I</span>
+                      <span style={{ padding: '2px 5px', textDecoration: 'underline', fontWeight: 600, color: '#64748b' }}>U</span>
+                      <span style={{ padding: '2px 4px', border: '1px solid #cbd5e1', borderRadius: 3, color: '#64748b' }}>田▾</span>
+                      <span style={{ padding: '2px 4px', border: '1px solid #cbd5e1', borderRadius: 3, color: '#d97706' }}>🪣▾</span>
+                    </div>
+
+                    {/* Alignment */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, paddingRight: 6, borderRight: '1px solid #e2e8f0' }}>
+                      <AlignLeft size={11} color="#64748b" />
+                      <AlignCenter size={11} color="#107c41" />
+                      <AlignRight size={11} color="#64748b" />
+                      <span style={{ marginLeft: 3, padding: '1px 5px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 3, fontSize: 9.5 }}>Gộp ô ▾</span>
+                    </div>
+
+                    {/* Number Formatting */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <span style={{ padding: '1px 4px', fontWeight: 700, color: '#107c41' }}>₫</span>
+                      <span style={{ padding: '1px 4px', fontWeight: 700, color: '#64748b' }}>%</span>
+                      <span style={{ padding: '1px 4px', fontWeight: 700, color: '#64748b' }}>,</span>
+                      <span style={{ padding: '1px 4px', fontWeight: 700, color: '#64748b' }}>.00</span>
+                    </div>
+                  </div>
+
+                  {/* 4. Formula Bar */}
+                  <div style={{ background: '#f8fafc', borderBottom: '1px solid #cbd5e1', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#ffffff', border: '1px solid #cbd5e1', padding: '1px 6px', borderRadius: 3, fontWeight: 700, color: '#334155' }}>
+                      <span>A1</span>
+                      <ChevronDown size={10} color="#94a3b8" />
+                    </div>
+                    <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: 700, padding: '0 4px', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }}>
+                      fx
+                    </span>
+                    <span style={{ color: '#0f172a', fontWeight: 600, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      =&quot;DANH SÁCH BIỂN SỐ XE {vehicle === 2 ? 'XE MÁY 🛵' : vehicle === 1 ? 'Ô TÔ 🚗' : 'HỆ THỐNG'} — BIENSOVIP.COM&quot;
                     </span>
                   </div>
 
-                  {/* Formula Bar */}
-                  <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 10.5 }}>
-                    <span style={{ fontWeight: 700, color: '#64748b', background: '#e2e8f0', padding: '1px 6px', borderRadius: 3 }}>A1</span>
-                    <span style={{ fontStyle: 'italic', fontWeight: 700, color: '#94a3b8' }}>fx</span>
-                    <span style={{ color: '#334155', fontWeight: 600 }}>
-                      DANH SÁCH BIỂN SỐ XE {vehicle === 2 ? 'XE MÁY 🛵' : vehicle === 1 ? 'Ô TÔ 🚗' : 'HỆ THỐNG'} — BIENSOVIP.COM
-                    </span>
-                  </div>
-
-                  {/* Spreadsheet Grid */}
+                  {/* 5. Spreadsheet Grid (Table với AutoFilter & Active Cell) */}
                   <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, textAlign: 'left', minWidth: 540 }}>
                       <thead>
-                        {/* Column Index Row */}
+                        {/* Column Letters Row (A, B, C...) */}
                         <tr style={{ background: '#f1f5f9', color: '#64748b', fontSize: 9.5 }}>
-                          <th style={{ width: 28, padding: '2px 4px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>#</th>
-                          <th style={{ width: 100, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>A</th>
+                          <th style={{ width: 28, padding: '2px 4px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#e2e8f0' }}>◢</th>
+                          <th style={{ width: 105, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>A</th>
                           <th style={{ width: 70, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>B</th>
                           <th style={{ width: 85, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>C</th>
                           <th style={{ width: 95, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>D</th>
-                          <th style={{ width: 80, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>E</th>
-                          <th style={{ width: 110, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>F</th>
+                          <th style={{ width: 85, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>E</th>
+                          <th style={{ width: 115, padding: '2px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>F</th>
                           <th style={{ padding: '2px 6px', textAlign: 'center', borderBottom: '1px solid #cbd5e1' }}>G</th>
                         </tr>
-                        {/* Data Header Row */}
-                        <tr style={{ background: '#e8f5e9', color: '#166534', fontWeight: 700, fontSize: 10.5 }}>
-                          <th style={{ padding: '4px 6px', textAlign: 'center', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>1</th>
-                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Biển số</th>
-                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Loại xe</th>
-                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Loại thế số</th>
-                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Tỉnh/Thành</th>
-                          <th style={{ padding: '4px 6px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Nguồn gốc</th>
-                          <th style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>Giá niêm yết</th>
-                          <th style={{ padding: '4px 6px', borderBottom: '1px solid #cbd5e1' }}>Trạng thái</th>
+                        {/* Data Header Row với AutoFilter ▾ */}
+                        <tr style={{ background: '#107c41', color: '#ffffff', fontWeight: 700, fontSize: 10.5 }}>
+                          <th style={{ padding: '4px 6px', textAlign: 'center', borderRight: '1px solid #15803d', borderBottom: '1px solid #cbd5e1', background: '#0e6937', color: '#ffffff' }}>1</th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #15803d', borderBottom: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                              <span>Biển số</span>
+                              <span style={{ fontSize: 8, background: 'rgba(255,255,255,0.25)', padding: '0 3px', borderRadius: 2 }}>▾</span>
+                            </div>
+                          </th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #15803d', borderBottom: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                              <span>Loại xe</span>
+                              <span style={{ fontSize: 8, background: 'rgba(255,255,255,0.25)', padding: '0 3px', borderRadius: 2 }}>▾</span>
+                            </div>
+                          </th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #15803d', borderBottom: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                              <span>Loại thế số</span>
+                              <span style={{ fontSize: 8, background: 'rgba(255,255,255,0.25)', padding: '0 3px', borderRadius: 2 }}>▾</span>
+                            </div>
+                          </th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #15803d', borderBottom: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                              <span>Tỉnh/Thành</span>
+                              <span style={{ fontSize: 8, background: 'rgba(255,255,255,0.25)', padding: '0 3px', borderRadius: 2 }}>▾</span>
+                            </div>
+                          </th>
+                          <th style={{ padding: '4px 6px', borderRight: '1px solid #15803d', borderBottom: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                              <span>Nguồn gốc</span>
+                              <span style={{ fontSize: 8, background: 'rgba(255,255,255,0.25)', padding: '0 3px', borderRadius: 2 }}>▾</span>
+                            </div>
+                          </th>
+                          <th style={{ padding: '4px 6px', textAlign: 'right', borderRight: '1px solid #15803d', borderBottom: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                              <span>Giá niêm yết</span>
+                              <span style={{ fontSize: 8, background: 'rgba(255,255,255,0.25)', padding: '0 3px', borderRadius: 2 }}>▾</span>
+                            </div>
+                          </th>
+                          <th style={{ padding: '4px 6px', borderBottom: '1px solid #cbd5e1' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                              <span>Trạng thái</span>
+                              <span style={{ fontSize: 8, background: 'rgba(255,255,255,0.25)', padding: '0 3px', borderRadius: 2 }}>▾</span>
+                            </div>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {previewPlates.map((row, idx) => (
-                          <tr key={row.id} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfc' }}>
-                            <td style={{ padding: '4px 6px', textAlign: 'center', color: '#94a3b8', fontSize: 10, borderRight: '1px solid #cbd5e1', background: '#f8fafc' }}>
-                              {idx + 2}
-                            </td>
-                            <td style={{ padding: '4px 6px', fontWeight: 800, fontFamily: 'monospace', color: '#0f172a', borderRight: '1px solid #e2e8f0' }}>
-                              {row.plate}
-                            </td>
-                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: row.vehicle === 'Xe máy' ? '#d97706' : '#2563eb', fontWeight: 600 }}>
-                              {row.vehicle}
-                            </td>
-                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: '#475569' }}>
-                              {row.type}
-                            </td>
-                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: '#334155', fontWeight: 500 }}>
-                              {row.prov}
-                            </td>
-                            <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0' }}>
-                              <span style={{ fontSize: 9.5, padding: '1px 5px', borderRadius: 3, background: row.source === 'Kho riêng' ? '#dcfce7' : '#eff6ff', color: row.source === 'Kho riêng' ? '#15803d' : '#1d4ed8', fontWeight: 600 }}>
-                                {row.source}
-                              </span>
-                            </td>
-                            <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700, color: '#b45309', fontVariantNumeric: 'tabular-nums', borderRight: '1px solid #e2e8f0' }}>
-                              {row.price}
-                            </td>
-                            <td style={{ padding: '4px 6px', color: '#059669', fontWeight: 600, fontSize: 10 }}>
-                              {row.state}
-                            </td>
-                          </tr>
-                        ))}
+                        {previewPlates.map((row, idx) => {
+                          const isFirstRow = idx === 0;
+                          return (
+                            <tr key={row.id} style={{ borderBottom: '1px solid #e2e8f0', background: idx % 2 === 0 ? '#ffffff' : '#fcfcfc' }}>
+                              <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', fontSize: 10, borderRight: '1px solid #cbd5e1', background: '#f8fafc', fontWeight: 600 }}>
+                                {idx + 2}
+                              </td>
+                              {/* Ô A2 là Active Cell có viền xanh lá đậm 2px và Fill Handle ở góc */}
+                              <td
+                                style={{
+                                  padding: '4px 6px',
+                                  fontWeight: 800,
+                                  fontFamily: 'monospace',
+                                  color: '#0f172a',
+                                  borderRight: isFirstRow ? '2px solid #107c41' : '1px solid #e2e8f0',
+                                  borderTop: isFirstRow ? '2px solid #107c41' : 'none',
+                                  borderBottom: isFirstRow ? '2px solid #107c41' : '1px solid #e2e8f0',
+                                  position: 'relative',
+                                  background: isFirstRow ? '#f0fdf4' : 'inherit',
+                                }}
+                              >
+                                {row.plate}
+                                {isFirstRow && (
+                                  <span
+                                    title="Excel Fill Handle"
+                                    style={{
+                                      position: 'absolute',
+                                      bottom: -3,
+                                      right: -3,
+                                      width: 6,
+                                      height: 6,
+                                      background: '#107c41',
+                                      border: '1px solid #ffffff',
+                                      zIndex: 2,
+                                    }}
+                                  />
+                                )}
+                              </td>
+                              <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: row.vehicle === 'Xe máy' ? '#d97706' : '#2563eb', fontWeight: 600 }}>
+                                {row.vehicle}
+                              </td>
+                              <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: '#475569' }}>
+                                {row.type}
+                              </td>
+                              <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0', color: '#334155', fontWeight: 500 }}>
+                                {row.prov}
+                              </td>
+                              <td style={{ padding: '4px 6px', borderRight: '1px solid #e2e8f0' }}>
+                                <span style={{ fontSize: 9.5, padding: '1px 5px', borderRadius: 3, background: row.source === 'Kho riêng' ? '#dcfce7' : '#eff6ff', color: row.source === 'Kho riêng' ? '#15803d' : '#1d4ed8', fontWeight: 600 }}>
+                                  {row.source}
+                                </span>
+                              </td>
+                              <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700, color: '#b45309', fontVariantNumeric: 'tabular-nums', borderRight: '1px solid #e2e8f0' }}>
+                                {row.price}
+                              </td>
+                              <td style={{ padding: '4px 6px', color: '#059669', fontWeight: 600, fontSize: 10 }}>
+                                {row.state}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Excel Sheet Tabs Bar */}
-                  <div style={{ background: '#f1f5f9', borderTop: '1px solid #cbd5e1', padding: '3px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10.5 }}>
+                  {/* 6. Excel Sheet Tabs Bar */}
+                  <div style={{ background: '#f1f5f9', borderTop: '1px solid #cbd5e1', padding: '3px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10.5, userSelect: 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflowX: 'auto', maxWidth: '75%' }}>
-                      <span style={{ color: '#94a3b8', fontSize: 10, marginRight: 2 }}>◀ ▶</span>
+                      <span style={{ color: '#94a3b8', fontSize: 10, marginRight: 2 }}>|◀ ◀ ▶ ▶|</span>
+                      <span style={{ color: '#107c41', fontWeight: 800, padding: '0 4px', cursor: 'pointer' }}>+</span>
                       {previewSheets.slice(0, 5).map((sh, idx) => (
                         <div
                           key={sh}
                           style={{
                             padding: '3px 8px',
-                            background: idx === 0 ? '#ffffff' : 'transparent',
-                            borderTop: idx === 0 ? '2px solid #107c41' : 'none',
+                            background: idx === 0 ? '#ffffff' : '#f8fafc',
+                            borderBottom: idx === 0 ? '2.5px solid #107c41' : 'none',
                             borderLeft: '1px solid #cbd5e1',
                             borderRight: '1px solid #cbd5e1',
                             fontWeight: idx === 0 ? 700 : 500,
@@ -1120,86 +1264,186 @@ export default function ExportOptionModal({
                         </div>
                       ))}
                       {previewSheets.length > 5 && (
-                        <span style={{ color: '#64748b', padding: '0 4px' }}>+{previewSheets.length - 5} tỉnh...</span>
+                        <span style={{ color: '#64748b', padding: '0 4px' }}>+{previewSheets.length - 5} tỉnh khác...</span>
                       )}
                     </div>
                     <span style={{ color: '#64748b', fontSize: 10 }}>
                       ⚡ Tự động chia Sheet từng Tỉnh
                     </span>
                   </div>
+
+                  {/* 7. Status Bar đáy (Excel Status Bar chuẩn Office) */}
+                  <div style={{ background: '#e2e8f0', borderTop: '1px solid #cbd5e1', padding: '2px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: '#475569', userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span>Sẵn sàng</span>
+                      <span style={{ borderLeft: '1px solid #cbd5e1', paddingLeft: 8 }}>Bật phím số</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
+                      <span>Số lượng: {previewPlates.length}</span>
+                      <span>Trung bình: 650.000.000 ₫</span>
+                      <span>Tổng: 2.600.000.000 ₫</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>100%</span>
+                      <span>[-] ──●── [+]</span>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                /* WORD MOCKUP */
-                <div style={{ border: '1px solid #cbd5e1', borderRadius: 6, overflow: 'hidden', background: '#e2e8f0', fontSize: 11 }}>
-                  {/* Word Window Header */}
-                  <div style={{ background: '#2b579a', color: '#ffffff', padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                /* WORD MOCKUP — REVERSED ENGINEERED MICROSOFT WORD DESKTOP / 365 */
+                <div style={{ border: '1px solid #cbd5e1', borderRadius: 7, overflow: 'hidden', background: '#94a3b8', fontSize: 11, boxShadow: '0 3px 12px rgba(0,0,0,0.06)' }}>
+                  {/* 1. Title Bar (Xanh dương chuẩn Word #2b579a) */}
+                  <div style={{ background: '#2b579a', color: '#ffffff', padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', userSelect: 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <FileText size={14} color="#ffffff" />
-                      <strong style={{ fontSize: 11 }}>
-                        catalogue-bien-so-{vehicle === 2 ? 'xe-may' : vehicle === 1 ? 'o-to' : 'tat-ca'}.docx
-                      </strong>
+                      <FileText size={13} color="#ffffff" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingRight: 6, borderRight: '1px solid rgba(255,255,255,0.25)' }}>
+                        <Save size={11} color="rgba(255,255,255,0.85)" title="Lưu (Ctrl+S)" />
+                        <RotateCcw size={11} color="rgba(255,255,255,0.85)" title="Hoàn tác (Undo)" />
+                        <RotateCw size={11} color="rgba(255,255,255,0.85)" title="Làm lại (Redo)" />
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Word</span>
                     </div>
-                    <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.2)', padding: '1px 6px', borderRadius: 3 }}>
-                      Microsoft Word (Bảng biểu in ấn & Báo giá)
-                    </span>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, fontWeight: 600 }}>
+                      <span>catalogue-bien-so-{vehicle === 2 ? 'xe-may' : vehicle === 1 ? 'o-to' : 'tat-ca'}.docx</span>
+                      <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.2)', padding: '0.5px 5px', borderRadius: 3, fontWeight: 500 }}>Đã lưu</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.8)' }}>
+                      <Minus size={11} />
+                      <Square size={9} />
+                      <X size={11} />
+                    </div>
                   </div>
 
-                  {/* Word Paper Document Simulator */}
-                  <div style={{ padding: '8px 10px', display: 'flex', justifyContent: 'center' }}>
+                  {/* 2. Menu Ribbon Tabs */}
+                  <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', padding: '0 6px', fontSize: 10.5, userSelect: 'none' }}>
+                    {['Tệp', 'Trang đầu', 'Chèn', 'Vẽ', 'Thiết kế', 'Bố cục', 'Tham khảo', 'Xem'].map((tab, idx) => {
+                      const isActive = idx === 1; // 'Trang đầu' (Home) active
+                      return (
+                        <div
+                          key={tab}
+                          style={{
+                            padding: '4px 9px',
+                            fontWeight: isActive ? 700 : 500,
+                            color: isActive ? '#2b579a' : '#475569',
+                            background: isActive ? '#ffffff' : 'transparent',
+                            borderTop: isActive ? '2px solid #2b579a' : '2px solid transparent',
+                            borderLeft: isActive ? '1px solid #e2e8f0' : 'none',
+                            borderRight: isActive ? '1px solid #e2e8f0' : 'none',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {tab}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 3. Ribbon Controls Toolbar Mini */}
+                  <div style={{ background: '#ffffff', borderBottom: '1px solid #cbd5e1', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, flexWrap: 'wrap', userSelect: 'none' }}>
+                    {/* Font & Size */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, paddingRight: 6, borderRight: '1px solid #e2e8f0' }}>
+                      <span style={{ padding: '1px 5px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 3, fontWeight: 600 }}>Times New Roman ▾</span>
+                      <span style={{ padding: '1px 5px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 3, fontWeight: 600 }}>12 ▾</span>
+                    </div>
+
+                    {/* Format Buttons */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, paddingRight: 6, borderRight: '1px solid #e2e8f0' }}>
+                      <span style={{ padding: '2px 5px', background: '#dbeafe', border: '1px solid #93c5fd', borderRadius: 3, fontWeight: 800, color: '#1e40af' }}>B</span>
+                      <span style={{ padding: '2px 5px', fontStyle: 'italic', fontWeight: 600, color: '#64748b' }}>I</span>
+                      <span style={{ padding: '2px 5px', textDecoration: 'underline', fontWeight: 600, color: '#64748b' }}>U</span>
+                      <span style={{ padding: '2px 5px', textDecoration: 'line-through', color: '#64748b', fontSize: 9 }}>abc</span>
+                    </div>
+
+                    {/* Alignment & Paragraph */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, paddingRight: 6, borderRight: '1px solid #e2e8f0' }}>
+                      <AlignLeft size={11} color="#64748b" />
+                      <AlignCenter size={11} color="#2b579a" />
+                      <AlignRight size={11} color="#64748b" />
+                      <span style={{ padding: '1px 3px', color: '#64748b' }}>•▾</span>
+                      <span style={{ padding: '1px 3px', color: '#64748b' }}>1.▾</span>
+                    </div>
+
+                    {/* Styles Gallery */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ padding: '1px 6px', background: '#eff6ff', border: '1px solid #93c5fd', borderRadius: 3, fontWeight: 700, color: '#1e40af' }}>Tiêu đề 1</span>
+                      <span style={{ padding: '1px 6px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 3, color: '#64748b' }}>Văn bản</span>
+                    </div>
+                  </div>
+
+                  {/* 4. Horizontal Ruler (Thước đo căn lề kinh điển của Word) */}
+                  <div style={{ background: '#ffffff', borderBottom: '1px solid #cbd5e1', padding: '1px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 8.5, color: '#94a3b8', userSelect: 'none' }}>
+                    <span style={{ color: '#2b579a', fontWeight: 700 }}>▼ 1</span>
+                    <span>· · · 2 · · · 3 · · · 4 · · · 5 · · · 6 · · · 7 · · · 8 · · · 9 · · · 10 · · · 11 · · · 12 · · · 13 · · · 14 · · · 15</span>
+                    <span style={{ color: '#2b579a', fontWeight: 700 }}>16 ▲</span>
+                  </div>
+
+                  {/* 5. Word Paper Document Simulator (Trang A4 trắng đổ bóng trên nền xám) */}
+                  <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'center', background: '#cbd5e1' }}>
                     <div
                       style={{
                         width: '100%',
-                        maxWidth: 640,
+                        maxWidth: 630,
                         background: '#ffffff',
-                        border: '1px solid #cbd5e1',
-                        boxShadow: '0 3px 10px rgba(0,0,0,0.07)',
-                        padding: '10px 14px',
-                        borderRadius: 3,
+                        boxShadow: '0 4px 18px rgba(0,0,0,0.18)',
+                        padding: '14px 18px',
+                        borderRadius: 2,
+                        position: 'relative',
                       }}
                     >
-                      {/* Brand Header */}
-                      <div style={{ textAlign: 'center', borderBottom: '1.5px solid #2b579a', paddingBottom: 5, marginBottom: 6 }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                          BIENSOVIP.COM — HỆ THỐNG BIỂN SỐ XE VIP & ĐẤU GIÁ VPA
+                      {/* Header Margin Note */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8.5, color: '#94a3b8', borderBottom: '1px dashed #e2e8f0', paddingBottom: 4, marginBottom: 8 }}>
+                        <span>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM — BIENSOVIP.COM</span>
+                        <span>Catalogue Biển VIP</span>
+                      </div>
+
+                      {/* Main Title Heading 1 (Times New Roman Style) */}
+                      <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 700, color: '#64748b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                          HỆ THỐNG PHÂN PHỐI BIỂN SỐ XE VIP & ĐẤU GIÁ VPA TOÀN QUỐC
                         </div>
-                        <div style={{ fontSize: 12.5, fontWeight: 800, color: '#1e293b', marginTop: 1 }}>
-                          DANH MỤC & BẢNG BÁO GIÁ BIỂN SỐ {vehicle === 2 ? 'XE MÁY 🛵' : vehicle === 1 ? 'Ô TÔ 🚗' : 'XE VIP'}
+                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#1f4e78', fontFamily: '"Times New Roman", Times, serif', marginTop: 3 }}>
+                          BẢNG BÁO GIÁ BIỂN SỐ {vehicle === 2 ? 'XE MÁY 🛵' : vehicle === 1 ? 'Ô TÔ 🚗' : 'XE CƠ GIỚI'}
+                        </div>
+                        <div style={{ fontSize: 9, fontStyle: 'italic', color: '#64748b', marginTop: 1 }}>
+                          (Áp dụng cho khách hàng cá nhân & doanh nghiệp trên toàn quốc)
                         </div>
                       </div>
 
-                      {/* Summary Box */}
-                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 4, padding: '5px 8px', marginBottom: 6, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, fontSize: 10 }}>
-                        <div>• <strong>Phạm vi:</strong> {provinceMode === 'custom' && selectedProvinceIds.length > 0 ? `${selectedProvinceIds.length} tỉnh thành đã chọn` : 'Toàn quốc (63 tỉnh/thành)'}</div>
-                        <div>• <strong>Chủng loại:</strong> {vehicle === 2 ? 'Chỉ Xe máy 🛵' : vehicle === 1 ? 'Chỉ Ô tô 🚗' : 'Cả Ô tô & Xe máy'}</div>
-                        <div>• <strong>Nguồn dữ liệu:</strong> {selectedSources.length === 4 ? 'Toàn bộ 4 nguồn' : `${selectedSources.length} nguồn đã chọn`}</div>
-                        <div>• <strong>Định dạng in:</strong> A4 Tiêu chuẩn (Portrait)</div>
+                      {/* Summary Metadata Box (Khung viền chuẩn Word in ấn) */}
+                      <div style={{ border: '1px solid #cbd5e1', borderRadius: 4, padding: '6px 10px', marginBottom: 10, background: '#f8fafc', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, fontSize: 10 }}>
+                        <div>• <strong>Đơn vị lập:</strong> Công ty TNHH Biensovip Việt Nam</div>
+                        <div>• <strong>Chủng loại xe:</strong> {vehicle === 2 ? 'Chỉ Xe máy 🛵' : vehicle === 1 ? 'Chỉ Ô tô 🚗' : 'Cả Ô tô & Xe máy'}</div>
+                        <div>• <strong>Phạm vi tỉnh:</strong> {provinceMode === 'custom' && selectedProvinceIds.length > 0 ? `${selectedProvinceIds.length} tỉnh thành đã chọn` : 'Toàn quốc (63 tỉnh/thành)'}</div>
+                        <div>• <strong>Hiệu lực báo giá:</strong> 24 giờ kể từ thời điểm xuất file</div>
                       </div>
 
-                      {/* Print-ready Table */}
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, textAlign: 'left' }}>
+                      {/* Print-ready Table (Table Style: Grid Table 4 - Accent 1 chuẩn Word) */}
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5, textAlign: 'left' }}>
                         <thead>
-                          <tr style={{ background: '#1e293b', color: '#ffffff', fontWeight: 700 }}>
-                            <th style={{ padding: '3px 5px', width: 28, textAlign: 'center' }}>STT</th>
-                            <th style={{ padding: '3px 5px', width: 110 }}>Biển số</th>
-                            <th style={{ padding: '3px 5px', width: 90 }}>Tỉnh / Loại</th>
-                            <th style={{ padding: '3px 5px' }}>Thế số / Phong thủy</th>
-                            <th style={{ padding: '3px 5px', textAlign: 'right', width: 110 }}>Giá niêm yết</th>
+                          <tr style={{ background: '#2b579a', color: '#ffffff', fontWeight: 700 }}>
+                            <th style={{ padding: '4px 6px', width: 28, textAlign: 'center', border: '1px solid #1e40af' }}>STT</th>
+                            <th style={{ padding: '4px 6px', width: 110, border: '1px solid #1e40af' }}>Biển số</th>
+                            <th style={{ padding: '4px 6px', width: 90, border: '1px solid #1e40af' }}>Tỉnh / Loại</th>
+                            <th style={{ padding: '4px 6px', border: '1px solid #1e40af' }}>Thế số / Phong thủy</th>
+                            <th style={{ padding: '4px 6px', textAlign: 'right', width: 115, border: '1px solid #1e40af' }}>Giá niêm yết</th>
                           </tr>
                         </thead>
                         <tbody>
                           {previewPlates.slice(0, 3).map((row, idx) => (
-                            <tr key={row.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                              <td style={{ padding: '3px 5px', textAlign: 'center', color: '#64748b' }}>{idx + 1}</td>
-                              <td style={{ padding: '3px 5px', fontWeight: 800, fontFamily: 'monospace', fontSize: 11, color: '#0f172a' }}>
+                            <tr key={row.id} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f2f5f9' }}>
+                              <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', border: '1px solid #cbd5e1' }}>{idx + 1}</td>
+                              <td style={{ padding: '4px 6px', fontWeight: 800, fontFamily: 'monospace', fontSize: 11.5, color: '#0f172a', border: '1px solid #cbd5e1' }}>
                                 {row.plate}
                               </td>
-                              <td style={{ padding: '3px 5px', color: '#475569' }}>
+                              <td style={{ padding: '4px 6px', color: '#475569', border: '1px solid #cbd5e1' }}>
                                 {row.prov} • {row.vehicle}
                               </td>
-                              <td style={{ padding: '3px 5px', color: '#334155' }}>
+                              <td style={{ padding: '4px 6px', color: '#334155', border: '1px solid #cbd5e1' }}>
                                 <strong>{row.type}</strong>
                               </td>
-                              <td style={{ padding: '3px 5px', textAlign: 'right', fontWeight: 800, color: '#b45309' }}>
+                              <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 800, color: '#991b1b', border: '1px solid #cbd5e1' }}>
                                 {row.price}
                               </td>
                             </tr>
@@ -1207,11 +1451,25 @@ export default function ExportOptionModal({
                         </tbody>
                       </table>
 
-                      {/* Word Document Footer */}
-                      <div style={{ marginTop: 6, paddingTop: 3, borderTop: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, color: '#94a3b8' }}>
-                        <span>Biên bản báo giá chuẩn in ấn • Hỗ trợ sang tên toàn quốc</span>
-                        <span>Trang 1 / 1 • Hotline: 09xx.xxx.xxx</span>
+                      {/* Footer Margin Note */}
+                      <div style={{ marginTop: 10, paddingTop: 6, borderTop: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, color: '#94a3b8' }}>
+                        <span>* Hỗ trợ hồ sơ công chứng & đăng ký sang tên chính chủ toàn quốc</span>
+                        <span>Trang 1 / 1</span>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* 6. Status Bar đáy (Word Status Bar chuẩn Office) */}
+                  <div style={{ background: '#1e3a8a', color: '#ffffff', padding: '2px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, userSelect: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span>Trang 1 trên 1</span>
+                      <span>185 từ</span>
+                      <span>Tiếng Việt</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>Bố cục in</span>
+                      <span>100%</span>
+                      <span>[-] ──●── [+]</span>
                     </div>
                   </div>
                 </div>
