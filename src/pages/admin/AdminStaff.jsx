@@ -107,10 +107,17 @@ const CSKH_PRESET = CSKH_RESOURCES.flatMap((r) => ['view', 'create', 'update'].m
 const HR_RESOURCES = ['staff', 'collaborators', 'ctv_message_templates', 'risk_events'];
 const HR_PRESET = HR_RESOURCES.flatMap((r) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
 
-// Preset Dev: Xem toàn bộ tất cả các trang + quyền bật/tắt Feature flags
+// Preset Dev / Kỹ thuật & QA: Xem toàn bộ 28 phân hệ + quyền thao tác kỹ thuật (flags, logs, db console, bảo trì, vanity metrics, dữ liệu mẫu test)
 const DEV_PRESET = [
   ...PERM_RESOURCES.map(([r]) => `${r}:view`),
   'feature_flags:update',
+  'error_logs:delete',
+  'db_console:create',
+  'maintenance:update',
+  'vanity_metrics:update',
+  'plates:create', 'plates:update',
+  'categories:create', 'categories:update',
+  'chatbot:update',
 ];
 
 const slugify = (s) => (s || '').toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');

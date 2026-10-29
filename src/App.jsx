@@ -113,6 +113,8 @@ export default function App() {
   const [ast, setAst] = useState({
     aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '',
     aResetToken: '', aAgree: false, aReferral: '', aErr: {}, step: 1, a2faToken: null, a2faCode: '',
+    adminPendingToken: null, adminOtpRecipients: [], adminOtpStep: null, adminSelectedRecipient: null,
+    adminOtpCode: '', adminTrustDevice: true,
   });
   const patchAuth = (p) => setAst((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
   const fanDone = useRef(false);
@@ -434,9 +436,11 @@ export default function App() {
 
   // Gọi /api/admin/auth/login — chia sẻ bởi form login user (auto-detect tài khoản admin).
   const adminLoginRequest = async (email, password) => {
+    let trustedToken = null;
+    try { trustedToken = localStorage.getItem('bsv_admin_trusted_device'); } catch { /* ignore */ }
     const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, trustedDeviceToken: trustedToken || null }),
     });
     const body = await resp.json();
     if (!resp.ok || !body?.success) return { ok: false, status: resp.status, message: body?.error?.message };
@@ -444,26 +448,118 @@ export default function App() {
   };
 
   // Thử đăng nhập như admin sau khi form user thất bại (401) — cùng ô email/password.
-  // true = đã đăng nhập thành công (hoặc chuyển bước 2FA) + điều hướng; false = không phải tài khoản admin.
+  // true = đã đăng nhập thành công (hoặc chuyển bước OTP/2FA) + điều hướng; false = không phải tài khoản admin.
   const tryAdminLogin = async (email, password) => {
     try {
       const result = await adminLoginRequest(email, password);
-      // 403 = tài khoản nhân viên bị admin khóa (lý do trong result.message) — khác "không phải tài
-      // khoản admin" (result.ok=false không có message rõ) — báo lý do thật thay vì rơi về generic.
+      // 403 = tài khoản nhân viên bị admin khóa
       if (!result.ok) return result.status === 403 && result.message ? { locked: true, reason: result.message } : false;
+
+      // Bước MFA Email OTP: Thiết bị mới chưa tin cậy
+      if (result.data.otpRequired) {
+        patchAuth({
+          aErr: {},
+          aPw: '',
+          adminPendingToken: result.data.pendingToken,
+          adminOtpRecipients: result.data.recipients || [],
+          adminOtpStep: 'choose_recipient',
+          adminSelectedRecipient: null,
+          adminOtpCode: '',
+          adminTrustDevice: true,
+        });
+        return true;
+      }
+
       if (result.data.twoFactorRequired) {
         patchAuth({ aErr: {}, aPw: '', a2faToken: result.data.twoFactorToken, a2faCode: '' });
         return true;
       }
-      const { accessToken, refreshToken, admin } = result.data;
+      const { accessToken, refreshToken, admin, trustedDeviceToken } = result.data;
+      if (trustedDeviceToken) {
+        try { localStorage.setItem('bsv_admin_trusted_device', trustedDeviceToken); } catch { /* ignore */ }
+      }
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
-      patchAuth({ aErr: {}, aPw: '' });
+      patchAuth({ aErr: {}, aPw: '', adminOtpStep: null, adminPendingToken: null });
       const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
       patch({ screen: targetScreen, user: admin, isAdmin: true, redirectTo: null });
       notify('Đăng nhập quản trị thành công');
       return true;
     } catch {
       return false;
+    }
+  };
+
+  const sendAdminOtp = async (recipientId) => {
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/mfa/send-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pendingToken: ast.adminPendingToken, recipientId }),
+      });
+      const body = await resp.json();
+      if (!resp.ok || !body?.success) {
+        patchAuth({ aErr: { otp: body?.error?.message || 'Không gửi được mã OTP.' } });
+        return false;
+      }
+      patchAuth({
+        adminOtpStep: 'enter_otp',
+        adminSelectedRecipient: recipientId,
+        adminOtpCode: '',
+        aErr: {},
+      });
+      notify(`Mã OTP đã được gửi đến email của ${body.data?.recipientLabel || 'quản trị viên'}`);
+      return true;
+    } catch {
+      patchAuth({ aErr: { otp: 'Không kết nối được server.' } });
+      return false;
+    }
+  };
+
+  const verifyAdminOtp = async () => {
+    if (!ast.adminOtpCode || ast.adminOtpCode.trim().length !== 6) {
+      patchAuth({ aErr: { otp: 'Vui lòng nhập đủ 6 chữ số OTP.' } });
+      return;
+    }
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/mfa/verify-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pendingToken: ast.adminPendingToken,
+          code: ast.adminOtpCode.trim(),
+          trustDevice: !!ast.adminTrustDevice,
+        }),
+      });
+      const body = await resp.json();
+      if (!resp.ok || !body?.success) {
+        patchAuth({ aErr: { otp: body?.error?.message || 'Mã xác thực không đúng.' } });
+        return;
+      }
+      if (body.data.twoFactorRequired) {
+        patchAuth({
+          aErr: {},
+          adminOtpStep: null,
+          adminPendingToken: null,
+          a2faToken: body.data.twoFactorToken,
+          a2faCode: '',
+        });
+        return;
+      }
+      const { accessToken, refreshToken, admin, trustedDeviceToken } = body.data;
+      if (trustedDeviceToken) {
+        try { localStorage.setItem('bsv_admin_trusted_device', trustedDeviceToken); } catch { /* ignore */ }
+      }
+      saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
+      patchAuth({
+        aErr: {},
+        adminOtpStep: null,
+        adminPendingToken: null,
+        adminSelectedRecipient: null,
+        adminOtpCode: '',
+      });
+      const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
+      patch({ screen: targetScreen, user: admin, isAdmin: true, redirectTo: null });
+      notify('Đăng nhập quản trị thành công');
+    } catch {
+      patchAuth({ aErr: { otp: 'Không kết nối được server.' } });
     }
   };
 
@@ -476,7 +572,10 @@ export default function App() {
       });
       const body = await resp.json();
       if (!resp.ok || !body?.success) { patchAuth({ aErr: { otp: body?.error?.message || 'Mã không đúng.' } }); return; }
-      const { accessToken, refreshToken, admin } = body.data;
+      const { accessToken, refreshToken, admin, trustedDeviceToken } = body.data;
+      if (trustedDeviceToken) {
+        try { localStorage.setItem('bsv_admin_trusted_device', trustedDeviceToken); } catch { /* ignore */ }
+      }
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
       patchAuth({ aErr: {}, a2faCode: '', a2faToken: null });
       const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
@@ -834,7 +933,7 @@ export default function App() {
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} fromScreen={st.detailFrom} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} openPlate={openPlate} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
+              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} openPlate={openPlate} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} sendAdminOtp={sendAdminOtp} verifyAdminOtp={verifyAdminOtp} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
             )}
 
             {s === 'adminForgot' && <AdminForgotPassword go={go} />}
