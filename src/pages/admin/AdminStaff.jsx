@@ -32,27 +32,28 @@ const ROLE_OPTS = [
 ];
 const ROLE_LABEL = { 'super-admin': 'Quản trị viên', staff: 'Nhân viên' };
 
-// Nhóm theo loại nghiệp vụ — cho phép chọn nhanh cả nhóm
-// Nhóm theo loại nghiệp vụ — đầy đủ toàn bộ các phân hệ và trang trong Admin
+// Nhóm theo loại nghiệp vụ — đầy đủ toàn bộ 28 phân hệ quản trị trong hệ thống
 const PERM_GROUPS = [
   ['Kho biển số & Đấu giá VPA', [
-    ['plates', 'Biển số (Kho Shop)'],
+    ['plates', 'Biển số (Kho Shop Duy Định)'],
+    ['plates_cost', 'Xem/nhập giá vốn nội bộ biển số'],
     ['vpa_prices', 'Biển đấu giá VPA & Thống kê VPA'],
     ['categories', 'Danh mục (Tỉnh & Loại biển)'],
   ]],
-  ['Bán hàng & Khách hàng', [
-    ['contacts', 'Yêu cầu liên hệ & Bán hàng'],
+  ['Bán hàng & Khách hàng (CRM)', [
+    ['contacts', 'Yêu cầu liên hệ, Phụ trách & Bán hàng (Kanban)'],
     ['interest-leads', 'Khách quan tâm (Interest Leads)'],
-    ['customers', 'Khách hàng'],
+    ['customers', 'Quản lý khách hàng'],
     ['transactions', 'Giao dịch & Báo cáo chốt deal'],
     ['coupons', 'Mã giảm giá'],
-    ['payment_links', 'Link thanh toán'],
+    ['payment_links', 'Tạo & Quản lý link thanh toán VietQR'],
   ]],
-  ['Phân tích & Tương tác', [
-    ['analytics', 'Insight & Phân tích khách hàng'],
-    ['reviews', 'Đánh giá khách hàng'],
-    ['notifications', 'Thông báo nội bộ & đẩy'],
-    ['chatbot', 'Trợ lý AI'],
+  ['Tương tác & CSKH', [
+    ['chatbot', 'Trợ lý AI & Live Chat hỗ trợ khách'],
+    ['reviews', 'Đánh giá của khách hàng'],
+    ['notifications', 'Thông báo nội bộ & Đẩy thông báo'],
+    ['fengshui_history', 'Lịch sử luận giải phong thủy'],
+    ['system_feedback', 'Báo cáo góp ý & Phản hồi hệ thống'],
   ]],
   ['Cộng tác viên (CTV)', [
     ['collaborators', 'Cộng tác viên & Nội dung CTV'],
@@ -60,46 +61,57 @@ const PERM_GROUPS = [
     ['risk_events', 'Rủi ro & Gian lận CTV'],
   ]],
   ['Nội dung & Marketing', [
-    ['posts', 'Blog & Bài viết'],
-    ['videos', 'Video quảng bá'],
+    ['posts', 'Blog, Bài viết, FAQ & Bình luận'],
+    ['videos', 'Video quảng bá TikTok & YouTube'],
     ['meanings', 'Ý nghĩa phong thủy'],
-    ['policy_pages', 'Trang chính sách & Điều khoản'],
+    ['policy_pages', 'Trang chính sách, Điều khoản & Hướng dẫn'],
     ['email_templates', 'Mẫu email hệ thống'],
     ['subscribers', 'Người đăng ký nhận tin'],
   ]],
+  ['Phân tích & Thống kê', [
+    ['analytics', 'Insight & Phân tích khách hàng / Traffic'],
+  ]],
   ['Kỹ thuật & Hệ thống', [
-    ['settings', 'Thứ tự hiển thị & Cài đặt'],
-    ['vanity_metrics', 'Số liệu hiển thị trang Public'],
-    ['maintenance', 'Bảo trì hệ thống'],
+    ['staff', 'Quản lý nhân viên & Phân quyền'],
+    ['settings', 'Thứ tự hiển thị & Cài đặt hệ thống'],
+    ['vanity_metrics', 'Số liệu hiển thị trang Public (Showroom)'],
+    ['maintenance', 'Bảo trì hệ thống & Cờ hiển thị'],
     ['feature_flags', 'Feature flags & Công cụ vận hành'],
     ['audit_logs', 'Nhật ký hệ thống (Audit log)'],
     ['error_logs', 'Nhật ký lỗi hệ thống'],
-    ['db_console', 'DB Console (chỉ xem)'],
+    ['db_console', 'DB Console (Truy vấn CSDL)'],
   ]],
 ];
 const PERM_RESOURCES = PERM_GROUPS.flatMap(([, items]) => items);
 const PERM_ACTIONS = [['view', 'Xem'], ['create', 'Thêm'], ['update', 'Sửa'], ['delete', 'Xóa']];
+
+// Chọn hết toàn bộ quyền (Xem, Thêm, Sửa, Xóa) trên tất cả phân hệ
+const ALL_PERMS = PERM_RESOURCES.flatMap(([r]) => PERM_ACTIONS.map(([a]) => `${r}:${a}`));
+
+// Mặc định: Xem + Thêm + Sửa trên tất cả các phân hệ (trừ quyền Xóa)
+const RECOMMENDED = PERM_RESOURCES.flatMap(([r]) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+// Preset Nhân viên Bán hàng / Sales
+const SALES_RESOURCES = ['plates', 'vpa_prices', 'contacts', 'interest-leads', 'customers', 'transactions', 'coupons', 'payment_links', 'chatbot'];
+const SALES_PRESET = SALES_RESOURCES.flatMap((r) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+// Preset Nhân viên Nội dung / Marketing
+const MARKETING_RESOURCES = ['posts', 'videos', 'meanings', 'policy_pages', 'email_templates', 'subscribers', 'analytics'];
+const MARKETING_PRESET = MARKETING_RESOURCES.flatMap((r) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+// Preset Chăm sóc khách hàng / Support
+const CSKH_RESOURCES = ['contacts', 'chatbot', 'reviews', 'notifications', 'fengshui_history', 'system_feedback'];
+const CSKH_PRESET = CSKH_RESOURCES.flatMap((r) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
+
+// Preset Quản lý Nhân sự / HR
+const HR_RESOURCES = ['staff', 'collaborators', 'ctv_message_templates', 'risk_events'];
+const HR_PRESET = HR_RESOURCES.flatMap((r) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
 
 // Preset Dev: Xem toàn bộ tất cả các trang + quyền bật/tắt Feature flags
 const DEV_PRESET = [
   ...PERM_RESOURCES.map(([r]) => `${r}:view`),
   'feature_flags:update',
 ];
-
-// Preset Nhân viên vận hành (Staff nghiệp vụ): Xem + Thêm + Sửa cho toàn bộ kinh doanh, VPA, CTV, nội dung
-const OPERATOR_RESOURCES = [
-  'plates', 'vpa_prices', 'categories', 'contacts', 'interest-leads', 'customers',
-  'transactions', 'coupons', 'payment_links', 'analytics', 'reviews', 'notifications',
-  'chatbot', 'collaborators', 'ctv_message_templates', 'posts', 'videos', 'meanings',
-  'policy_pages', 'email_templates', 'subscribers'
-];
-const OPERATOR_PRESET = OPERATOR_RESOURCES.flatMap((r) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
-
-// Mặc định: Xem + Thêm + Sửa trên tất cả các phân hệ
-const RECOMMENDED = PERM_RESOURCES.flatMap(([r]) => ['view', 'create', 'update'].map((a) => `${r}:${a}`));
-
-// Chọn hết toàn bộ quyền (Xem, Thêm, Sửa, Xóa)
-const ALL_PERMS = PERM_RESOURCES.flatMap(([r]) => PERM_ACTIONS.map(([a]) => `${r}:${a}`));
 
 const slugify = (s) => (s || '').toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 
@@ -136,6 +148,7 @@ export default function AdminStaff({ notify }) {
   const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
   const [err, setErr] = useState({});
   const [saving, setSaving] = useState(false);
+  const [permSearch, setPermSearch] = useState('');
 
   const items = data?.items || [];
 
@@ -210,7 +223,7 @@ export default function AdminStaff({ notify }) {
   const toggleGroup = (resources) => (v) => setForm((f) => {
     const next = new Set(f.permissions);
     for (const [r] of resources) {
-      for (const a of ['view', 'create', 'update']) {
+      for (const a of ['view', 'create', 'update', 'delete']) {
         const perm = `${r}:${a}`;
         if (v) next.add(perm); else next.delete(perm);
       }
@@ -218,7 +231,52 @@ export default function AdminStaff({ notify }) {
     return { ...f, permissions: [...next] };
   });
 
-  const isGroupChecked = (resources) => resources.every(([r]) => ['view', 'create', 'update'].every((a) => form.permissions.includes(`${r}:${a}`)));
+  const isGroupChecked = (resources) => resources.every(([r]) => ['view', 'create', 'update', 'delete'].every((a) => form.permissions.includes(`${r}:${a}`)));
+
+  // Chọn / bỏ chọn toàn bộ hành động (Xem, Thêm, Sửa hoặc Xóa) trên tất cả 28 phân hệ
+  const toggleActionCol = (action) => {
+    const allForAction = PERM_RESOURCES.map(([r]) => `${r}:${action}`);
+    const allChecked = allForAction.every((p) => form.permissions.includes(p));
+    setForm((f) => {
+      const next = new Set(f.permissions);
+      if (allChecked) {
+        allForAction.forEach((p) => next.delete(p));
+      } else {
+        allForAction.forEach((p) => next.add(p));
+      }
+      return { ...f, permissions: [...next] };
+    });
+  };
+
+  const isActionColChecked = (action) => PERM_RESOURCES.length > 0 && PERM_RESOURCES.every(([r]) => form.permissions.includes(`${r}:${action}`));
+
+  // Chọn / bỏ chọn cả dòng phân hệ (cả 4 quyền Xem, Thêm, Sửa, Xóa)
+  const toggleResourceRow = (resource) => {
+    const rowPerms = PERM_ACTIONS.map(([a]) => `${resource}:${a}`);
+    const allRowChecked = rowPerms.every((p) => form.permissions.includes(p));
+    setForm((f) => {
+      const next = new Set(f.permissions);
+      if (allRowChecked) {
+        rowPerms.forEach((p) => next.delete(p));
+      } else {
+        rowPerms.forEach((p) => next.add(p));
+      }
+      return { ...f, permissions: [...next] };
+    });
+  };
+
+  const isResourceRowChecked = (resource) => PERM_ACTIONS.every(([a]) => form.permissions.includes(`${resource}:${a}`));
+
+  const filteredPermGroups = useMemo(() => {
+    if (!permSearch.trim()) return PERM_GROUPS;
+    const q = permSearch.trim().toLowerCase();
+    return PERM_GROUPS.map(([groupLabel, resources]) => {
+      const matched = resources.filter(([r, label]) =>
+        label.toLowerCase().includes(q) || r.toLowerCase().includes(q) || groupLabel.toLowerCase().includes(q)
+      );
+      return [groupLabel, matched];
+    }).filter(([, resources]) => resources.length > 0);
+  }, [permSearch]);
 
   const resetForm = () => {
     setForm({ fullName: '', email: '', password: '', role: 'staff', active: true, permissions: RECOMMENDED });
@@ -884,109 +942,282 @@ export default function AdminStaff({ notify }) {
               </span>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ font: 'var(--type-label)', fontWeight: 700, color: 'var(--text-strong)' }}>
-                  Ma trận phân quyền chức năng
-                </span>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, permissions: DEV_PRESET }))}
-                    title="Cấp quyền xem tất cả các trang/phân hệ cho Dev/Tester (kèm bật/tắt Feature flags)"
-                    style={{ font: 'var(--type-caption)', color: '#C75B00', background: 'rgba(199,91,0, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(199,91,0, 0.25)', fontWeight: 600 }}
-                  >
-                    Preset Dev (Chỉ xem)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, permissions: OPERATOR_PRESET }))}
-                    title="Cấp quyền Xem + Thêm + Sửa cho các trang nghiệp vụ (Biển số, VPA, Bán hàng, Khách hàng, CTV, Nội dung...)"
-                    style={{ font: 'var(--type-caption)', color: 'var(--action-primary, #C75B00)', background: 'rgba(199, 91, 0, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(199, 91, 0, 0.25)', fontWeight: 600 }}
-                  >
-                    Nhân viên vận hành
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))}
-                    title="Cấp quyền Xem + Thêm + Sửa cho tất cả các phân hệ"
-                    style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', background: 'var(--surface-sunken)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border-hairline)' }}
-                  >
-                    Tất cả (Xem + Sửa)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, permissions: ALL_PERMS }))}
-                    title="Chọn toàn bộ quyền (Xem, Thêm, Sửa, Xóa)"
-                    style={{ font: 'var(--type-caption)', color: '#3FBF8F', background: 'rgba(63,191,143, 0.08)', padding: '3px 8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(63,191,143, 0.25)' }}
-                  >
-                    Chọn hết
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, permissions: [] }))}
-                    title="Bỏ chọn toàn bộ quyền"
-                    style={{ font: 'var(--type-caption)', color: 'var(--status-danger)', background: 'none', padding: '3px 6px', cursor: 'pointer', border: 'none' }}
-                  >
-                    Bỏ chọn
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden', maxHeight: '52vh', overflowY: 'auto' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 52px)', background: 'var(--surface-sunken)', padding: '10px 14px', font: 'var(--type-caption)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', position: 'sticky', top: 0, zIndex: 2 }}>
-                  <span>Phân hệ</span>
-                  {PERM_ACTIONS.map(([, l]) => <span key={l} style={{ textAlign: 'center' }}>{l}</span>)}
-                </div>
-
-                {PERM_GROUPS.map(([groupLabel, resources]) => (
-                  <div key={groupLabel}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', background: 'var(--surface-sunken)', borderBottom: '1px solid var(--border-hairline)' }}>
-                      <span style={{ font: 'var(--type-caption)', fontWeight: 700, color: 'var(--text-strong)' }}>{groupLabel}</span>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)' }}>
-                        <input
-                          type="checkbox"
-                          checked={isGroupChecked(resources)}
-                          onChange={(e) => toggleGroup(resources)(e.target.checked)}
-                          style={{ width: 15, height: 15, accentColor: 'var(--action-primary)' }}
-                        />
-                        Chọn cả nhóm
-                      </label>
-                    </div>
-
-                    {resources.map(([r, label]) => (
-                      <div key={r} style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 52px)', alignItems: 'center', padding: '8px 14px', borderBottom: '1px solid var(--border-hairline)' }}>
-                        <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>{label}</span>
-                        {PERM_ACTIONS.map(([a]) => {
-                          const perm = `${r}:${a}`;
-                          return (
-                            <label key={a} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
-                              <input
-                                type="checkbox"
-                                checked={form.permissions.includes(perm)}
-                                onChange={(e) => togglePerm(perm)(e.target.checked)}
-                                style={{ width: 17, height: 17, accentColor: 'var(--action-primary)' }}
-                              />
-                            </label>
-                          );
-                        })}
-                      </div>
-                    ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Header thanh công cụ & thống kê */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ font: 'var(--type-label)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                      Ma trận phân quyền chi tiết (28 phân hệ)
+                    </span>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      background: form.permissions.length === ALL_PERMS.length ? 'rgba(63, 191, 143, 0.15)' : 'var(--surface-sunken)',
+                      color: form.permissions.length === ALL_PERMS.length ? '#27986B' : 'var(--text-muted)',
+                      border: '1px solid var(--border-hairline)'
+                    }}>
+                      Đã cấp: {form.permissions.length} / {ALL_PERMS.length} quyền ({Math.round((form.permissions.length / ALL_PERMS.length) * 100)}%)
+                    </span>
                   </div>
-                ))}
+                  <p style={{ margin: '3px 0 0', font: 'var(--type-caption)', color: 'var(--text-muted)', fontSize: 12 }}>
+                    Cấp quyền theo cơ chế RBAC chi tiết (Xem, Thêm, Sửa, Xóa). Nhân viên chỉ thấy các menu được cấp quyền.
+                  </p>
+                </div>
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginTop: 4 }}>
-                <input
-                  type="checkbox"
-                  checked={form.permissions.includes('plates_cost:view')}
-                  onChange={(e) => togglePerm('plates_cost:view')(e.target.checked)}
-                  style={{ width: 17, height: 17, accentColor: 'var(--action-primary)' }}
-                />
-                <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-body)' }}>
-                  Xem giá vốn nội bộ biển số <InfoTip size={12} text="Cho phép nhân viên này xem/nhập giá vốn nhập biển số." />
+              {/* Các nút Presets nghiệp vụ phân quyền nhanh */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', padding: '8px 10px', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-hairline)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 4 }}>
+                  Mẫu quyền:
                 </span>
-              </label>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: ALL_PERMS }))}
+                  title="Cấp toàn bộ 4 quyền trên tất cả 28 phân hệ"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: '#27986B', background: 'rgba(63,191,143, 0.12)', padding: '4px 9px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(63,191,143, 0.3)', fontWeight: 600 }}
+                >
+                  👑 Chọn hết ({ALL_PERMS.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: RECOMMENDED }))}
+                  title="Cấp quyền Xem + Thêm + Sửa trên tất cả 28 phân hệ (Không bao gồm quyền Xóa)"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-strong)', background: 'var(--white)', padding: '4px 9px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border-hairline)', fontWeight: 600 }}
+                >
+                  ⚡ Vận hành (Xem + Sửa)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: SALES_PRESET }))}
+                  title="Dành cho Sale: Biển số, VPA, Yêu cầu liên hệ, Khách hàng, Giao dịch, Mã giảm giá, Link thanh toán, Live Chat"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: '#C75B00', background: 'rgba(199, 91, 0, 0.1)', padding: '4px 9px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(199, 91, 0, 0.3)', fontWeight: 600 }}
+                >
+                  💼 Sales
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: CSKH_PRESET }))}
+                  title="Dành cho CSKH: Yêu cầu liên hệ, Trợ lý AI / Live Chat, Đánh giá, Thông báo, Lịch sử luận giải, Báo cáo góp ý"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: '#2563EB', background: 'rgba(37, 99, 235, 0.1)', padding: '4px 9px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(37, 99, 235, 0.3)', fontWeight: 600 }}
+                >
+                  🎧 CSKH
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: MARKETING_PRESET }))}
+                  title="Dành cho Marketing: Blog, Video TikTok/YouTube, Ý nghĩa phong thủy, Trang chính sách, Mẫu email, Người đăng ký, Insight"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: '#7C3AED', background: 'rgba(124, 58, 237, 0.1)', padding: '4px 9px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(124, 58, 237, 0.3)', fontWeight: 600 }}
+                >
+                  ✍️ Marketing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: HR_PRESET }))}
+                  title="Dành cho HR / Nhân sự: Quản lý nhân viên, Cộng tác viên, Mẫu tin nhắn CTV, Rủi ro CTV"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: '#0D9488', background: 'rgba(13, 148, 136, 0.1)', padding: '4px 9px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid rgba(13, 148, 136, 0.3)', fontWeight: 600 }}
+                >
+                  🧑‍💼 Nhân sự
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: DEV_PRESET }))}
+                  title="Dành cho Kỹ thuật / Tester: Xem toàn bộ các trang + bật tắt Feature flags"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--text-muted)', background: 'var(--white)', padding: '4px 9px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border-hairline)', fontWeight: 500 }}
+                >
+                  🛠️ Dev (Chỉ xem)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, permissions: [] }))}
+                  title="Bỏ chọn toàn bộ quyền"
+                  style={{ font: 'var(--type-caption)', fontSize: 11, color: 'var(--status-danger)', background: 'none', padding: '4px 8px', cursor: 'pointer', border: 'none', marginLeft: 'auto' }}
+                >
+                  ❌ Bỏ chọn hết
+                </button>
+              </div>
+
+              {/* Ô tìm kiếm phân hệ */}
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={permSearch}
+                  onChange={(e) => setPermSearch(e.target.value)}
+                  placeholder="🔍 Lọc nhanh phân hệ... (VD: Biển số, Bán hàng, CTV, Blog, Nhân viên...)"
+                  style={{
+                    width: '100%',
+                    padding: '8px 32px 8px 12px',
+                    fontSize: 13,
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-hairline)',
+                    background: 'var(--white)',
+                    color: 'var(--text-strong)',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                {permSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setPermSearch('')}
+                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, padding: 4 }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Bảng ma trận checkbox */}
+              <div style={{ border: '1px solid var(--border-hairline)', borderRadius: 'var(--radius-md)', overflow: 'hidden', maxHeight: '52vh', overflowY: 'auto' }}>
+                {/* Header hàng cột */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr repeat(4, 56px) 60px',
+                  background: 'var(--surface-sunken)',
+                  padding: '10px 14px',
+                  font: 'var(--type-caption)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  color: 'var(--text-muted)',
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 2,
+                  borderBottom: '1px solid var(--border-hairline)'
+                }}>
+                  <span>Phân hệ ({PERM_RESOURCES.length})</span>
+                  {PERM_ACTIONS.map(([a, l]) => (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => toggleActionCol(a)}
+                      title={`Nhấp để chọn/bỏ chọn cột ${l} trên tất cả phân hệ`}
+                      style={{
+                        background: isActionColChecked(a) ? 'rgba(63, 191, 143, 0.15)' : 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '2px 0',
+                        borderRadius: 3,
+                        textAlign: 'center',
+                        font: 'inherit',
+                        color: isActionColChecked(a) ? '#27986B' : 'var(--text-strong)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 2
+                      }}
+                    >
+                      <span>{l}</span>
+                      <span style={{ fontSize: 9, opacity: 0.7 }}>{isActionColChecked(a) ? '✓ Tất cả' : 'Chọn hết'}</span>
+                    </button>
+                  ))}
+                  <span style={{ textAlign: 'center' }}>Cả dòng</span>
+                </div>
+
+                {filteredPermGroups.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                    Không tìm thấy phân hệ nào khớp với từ khóa "{permSearch}".
+                  </div>
+                ) : (
+                  filteredPermGroups.map(([groupLabel, resources]) => (
+                    <div key={groupLabel}>
+                      {/* Tiêu đề nhóm */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px 14px',
+                        background: 'var(--surface-sunken)',
+                        borderBottom: '1px solid var(--border-hairline)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ font: 'var(--type-caption)', fontWeight: 700, color: 'var(--text-strong)' }}>
+                            {groupLabel}
+                          </span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            ({resources.length} phân hệ)
+                          </span>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', font: 'var(--type-caption)', color: 'var(--link)', fontSize: 12 }}>
+                          <input
+                            type="checkbox"
+                            checked={isGroupChecked(resources)}
+                            onChange={(e) => toggleGroup(resources)(e.target.checked)}
+                            style={{ width: 15, height: 15, accentColor: 'var(--action-primary)' }}
+                          />
+                          Chọn cả nhóm
+                        </label>
+                      </div>
+
+                      {/* Các dòng phân hệ */}
+                      {resources.map(([r, label]) => {
+                        const rowChecked = isResourceRowChecked(r);
+                        return (
+                          <div
+                            key={r}
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr repeat(4, 56px) 60px',
+                              alignItems: 'center',
+                              padding: '8px 14px',
+                              borderBottom: '1px solid var(--border-hairline)',
+                              background: rowChecked ? 'rgba(63, 191, 143, 0.03)' : 'transparent'
+                            }}
+                          >
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-strong)', fontWeight: 500 }}>
+                                {label}
+                              </span>
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                                {r}
+                              </span>
+                            </div>
+
+                            {PERM_ACTIONS.map(([a]) => {
+                              const perm = `${r}:${a}`;
+                              const checked = form.permissions.includes(perm);
+                              return (
+                                <label key={a} style={{ display: 'flex', justifyContent: 'center', cursor: 'pointer', padding: '4px 0' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={(e) => togglePerm(perm)(e.target.checked)}
+                                    style={{ width: 17, height: 17, accentColor: 'var(--action-primary)' }}
+                                  />
+                                </label>
+                              );
+                            })}
+
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => toggleResourceRow(r)}
+                                title={rowChecked ? "Bỏ chọn tất cả 4 quyền của phân hệ này" : "Chọn tất cả 4 quyền (Xem, Thêm, Sửa, Xóa)"}
+                                style={{
+                                  border: '1px solid var(--border-hairline)',
+                                  background: rowChecked ? 'rgba(63, 191, 143, 0.15)' : 'var(--white)',
+                                  color: rowChecked ? '#27986B' : 'var(--text-muted)',
+                                  padding: '2px 6px',
+                                  borderRadius: 4,
+                                  fontSize: 10,
+                                  cursor: 'pointer',
+                                  fontWeight: 600
+                                }}
+                              >
+                                {rowChecked ? 'Đủ 4' : 'Tất cả'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
 

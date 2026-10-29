@@ -68,13 +68,14 @@ const NAV_PERM = {
   ainsights: 'analytics:view',
   avpamarket: 'vpa_prices:view',
   avpastats: 'vpa_prices:view',
+  astaff: 'staff:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
 
 // Mục menu nào vai trò hiện tại được thấy. Sidebar lọc bằng hàm này; AdminGuide suy thẳng từ đây
 // nên hướng dẫn không thể lệch khỏi menu thật.
 export const canSeeNav = (st, navKey) => {
-  if (navKey === 'astaff') return st.user?.role === 'super-admin';
+  if (navKey === 'astaff') return st.user?.role === 'super-admin' || canPerm(st, 'staff:view');
   if (navKey === 'arisklog') return st.user?.role === 'super-admin' || canPerm(st, 'risk_events:view');
   const perm = NAV_PERM[navKey];
   return !perm || canPerm(st, perm);
