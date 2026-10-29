@@ -925,12 +925,17 @@ export default function ExportOptionModal({
           }}
         >
           {/* Header Preview & Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPreview ? 8 : 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPreview ? 8 : 0, flexWrap: 'wrap', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Eye size={15} style={{ color: previewTab === 'xlsx' ? '#107c41' : '#2b579a' }} />
+              <Eye size={16} style={{ color: previewTab === 'xlsx' ? '#107c41' : '#2b579a' }} />
               <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-strong)' }}>
                 6. Xem trước mẫu thành phẩm ({previewTab === 'xlsx' ? 'Bảng tính Excel .xlsx' : 'Tài liệu in ấn Word .docx'}):
               </label>
+              {format === 'csv' && (
+                <span style={{ fontSize: 10, background: '#ffedd5', color: '#c2410c', padding: '1px 6px', borderRadius: 3, fontWeight: 600 }}>
+                  CSV dùng chung cấu trúc cột
+                </span>
+              )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -938,18 +943,20 @@ export default function ExportOptionModal({
               <div style={{ display: 'inline-flex', background: '#ffffff', borderRadius: 6, padding: 2, border: '1px solid var(--border-subtle, #cbd5e1)' }}>
                 <button
                   type="button"
+                  aria-label="Xem trước định dạng Excel"
                   onClick={() => {
                     setPreviewTab('xlsx');
                     setShowPreview(true);
                   }}
                   style={{
-                    padding: '3px 9px',
+                    padding: '4px 11px',
+                    minHeight: 28,
                     fontSize: 11,
                     fontWeight: 700,
                     borderRadius: 4,
                     border: 'none',
                     background: previewTab === 'xlsx' ? '#107c41' : 'transparent',
-                    color: previewTab === 'xlsx' ? '#ffffff' : 'var(--text-strong)',
+                    color: previewTab === 'xlsx' ? '#ffffff' : '#334155',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -962,18 +969,20 @@ export default function ExportOptionModal({
                 </button>
                 <button
                   type="button"
+                  aria-label="Xem trước định dạng Word"
                   onClick={() => {
                     setPreviewTab('docx');
                     setShowPreview(true);
                   }}
                   style={{
-                    padding: '3px 9px',
+                    padding: '4px 11px',
+                    minHeight: 28,
                     fontSize: 11,
                     fontWeight: 700,
                     borderRadius: 4,
                     border: 'none',
                     background: previewTab === 'docx' ? '#2b579a' : 'transparent',
-                    color: previewTab === 'docx' ? '#ffffff' : 'var(--text-strong)',
+                    color: previewTab === 'docx' ? '#ffffff' : '#334155',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -989,22 +998,25 @@ export default function ExportOptionModal({
               {/* Nút Ẩn/Hiện */}
               <button
                 type="button"
+                aria-label={showPreview ? 'Thu gọn phần xem trước' : 'Mở xem mẫu thành phẩm'}
                 onClick={() => setShowPreview(!showPreview)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 4,
-                  padding: '3px 8px',
+                  gap: 5,
+                  padding: '4px 9px',
+                  minHeight: 28,
                   fontSize: 11,
                   fontWeight: 600,
                   borderRadius: 4,
                   border: '1px solid var(--border-subtle, #cbd5e1)',
                   background: '#ffffff',
-                  color: 'var(--text-muted)',
+                  color: '#334155',
                   cursor: 'pointer',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                {showPreview ? <EyeOff size={12} /> : <Eye size={12} />}
+                {showPreview ? <EyeOff size={13} /> : <Eye size={13} />}
                 <span>{showPreview ? 'Thu gọn' : 'Xem mẫu'}</span>
               </button>
             </div>
@@ -1373,37 +1385,38 @@ export default function ExportOptionModal({
                   </div>
 
                   {/* 4. Horizontal Ruler (Thước đo căn lề kinh điển của Word) */}
-                  <div style={{ background: '#ffffff', borderBottom: '1px solid #cbd5e1', padding: '1px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 8.5, color: '#94a3b8', userSelect: 'none' }}>
-                    <span style={{ color: '#2b579a', fontWeight: 700 }}>▼ 1</span>
+                  <div style={{ background: '#ffffff', borderBottom: '1px solid #cbd5e1', padding: '1px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 9, color: '#475569', fontWeight: 600, userSelect: 'none' }}>
+                    <span style={{ color: '#2b579a', fontWeight: 800 }}>▼ 1</span>
                     <span>· · · 2 · · · 3 · · · 4 · · · 5 · · · 6 · · · 7 · · · 8 · · · 9 · · · 10 · · · 11 · · · 12 · · · 13 · · · 14 · · · 15</span>
-                    <span style={{ color: '#2b579a', fontWeight: 700 }}>16 ▲</span>
+                    <span style={{ color: '#2b579a', fontWeight: 800 }}>16 ▲</span>
                   </div>
 
                   {/* 5. Word Paper Document Simulator (Trang A4 trắng đổ bóng trên nền xám) */}
-                  <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'center', background: '#cbd5e1' }}>
+                  <div style={{ padding: '12px 14px', display: 'flex', justifyContent: 'center', background: '#e2e8f0', maxHeight: '310px', overflowY: 'auto' }}>
                     <div
                       style={{
                         width: '100%',
                         maxWidth: 630,
                         background: '#ffffff',
-                        boxShadow: '0 4px 18px rgba(0,0,0,0.18)',
+                        boxShadow: '0 4px 18px rgba(0,0,0,0.14)',
                         padding: '14px 18px',
-                        borderRadius: 2,
+                        borderRadius: 3,
+                        border: '1px solid #cbd5e1',
                         position: 'relative',
                       }}
                     >
                       {/* Header Margin Note */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8.5, color: '#94a3b8', borderBottom: '1px dashed #e2e8f0', paddingBottom: 4, marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, color: '#475569', borderBottom: '1px dashed #cbd5e1', paddingBottom: 4, marginBottom: 8, fontWeight: 500 }}>
                         <span>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM — BIENSOVIP.COM</span>
                         <span>Catalogue Biển VIP</span>
                       </div>
 
                       {/* Main Title Heading 1 (Times New Roman Style) */}
                       <div style={{ textAlign: 'center', marginBottom: 10 }}>
-                        <div style={{ fontSize: 9.5, fontWeight: 700, color: '#64748b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                           HỆ THỐNG PHÂN PHỐI BIỂN SỐ XE VIP & ĐẤU GIÁ VPA TOÀN QUỐC
                         </div>
-                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#1f4e78', fontFamily: '"Times New Roman", Times, serif', marginTop: 3 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#1f4e78', fontFamily: '"Times New Roman", Times, Georgia, serif', marginTop: 3 }}>
                           BẢNG BÁO GIÁ BIỂN SỐ {vehicle === 2 ? 'XE MÁY 🛵' : vehicle === 1 ? 'Ô TÔ 🚗' : 'XE CƠ GIỚI'}
                         </div>
                         <div style={{ fontSize: 9, fontStyle: 'italic', color: '#64748b', marginTop: 1 }}>
@@ -1412,7 +1425,7 @@ export default function ExportOptionModal({
                       </div>
 
                       {/* Summary Metadata Box (Khung viền chuẩn Word in ấn) */}
-                      <div style={{ border: '1px solid #cbd5e1', borderRadius: 4, padding: '6px 10px', marginBottom: 10, background: '#f8fafc', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, fontSize: 10 }}>
+                      <div style={{ border: '1px solid #cbd5e1', borderRadius: 4, padding: '6px 10px', marginBottom: 10, background: '#f8fafc', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, fontSize: 10, color: '#1e293b' }}>
                         <div>• <strong>Đơn vị lập:</strong> Công ty TNHH Biensovip Việt Nam</div>
                         <div>• <strong>Chủng loại xe:</strong> {vehicle === 2 ? 'Chỉ Xe máy 🛵' : vehicle === 1 ? 'Chỉ Ô tô 🚗' : 'Cả Ô tô & Xe máy'}</div>
                         <div>• <strong>Phạm vi tỉnh:</strong> {provinceMode === 'custom' && selectedProvinceIds.length > 0 ? `${selectedProvinceIds.length} tỉnh thành đã chọn` : 'Toàn quốc (63 tỉnh/thành)'}</div>
@@ -1433,17 +1446,17 @@ export default function ExportOptionModal({
                         <tbody>
                           {previewPlates.slice(0, 3).map((row, idx) => (
                             <tr key={row.id} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f2f5f9' }}>
-                              <td style={{ padding: '4px 6px', textAlign: 'center', color: '#64748b', border: '1px solid #cbd5e1' }}>{idx + 1}</td>
+                              <td style={{ padding: '4px 6px', textAlign: 'center', color: '#475569', border: '1px solid #cbd5e1', fontWeight: 600 }}>{idx + 1}</td>
                               <td style={{ padding: '4px 6px', fontWeight: 800, fontFamily: 'monospace', fontSize: 11.5, color: '#0f172a', border: '1px solid #cbd5e1' }}>
                                 {row.plate}
                               </td>
-                              <td style={{ padding: '4px 6px', color: '#475569', border: '1px solid #cbd5e1' }}>
+                              <td style={{ padding: '4px 6px', color: '#334155', border: '1px solid #cbd5e1' }}>
                                 {row.prov} • {row.vehicle}
                               </td>
-                              <td style={{ padding: '4px 6px', color: '#334155', border: '1px solid #cbd5e1' }}>
+                              <td style={{ padding: '4px 6px', color: '#1e293b', border: '1px solid #cbd5e1' }}>
                                 <strong>{row.type}</strong>
                               </td>
-                              <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 800, color: '#991b1b', border: '1px solid #cbd5e1' }}>
+                              <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 800, color: '#991b1b', border: '1px solid #cbd5e1', fontVariantNumeric: 'tabular-nums' }}>
                                 {row.price}
                               </td>
                             </tr>
@@ -1452,9 +1465,9 @@ export default function ExportOptionModal({
                       </table>
 
                       {/* Footer Margin Note */}
-                      <div style={{ marginTop: 10, paddingTop: 6, borderTop: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, color: '#94a3b8' }}>
+                      <div style={{ marginTop: 10, paddingTop: 6, borderTop: '1px dashed #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, color: '#475569' }}>
                         <span>* Hỗ trợ hồ sơ công chứng & đăng ký sang tên chính chủ toàn quốc</span>
-                        <span>Trang 1 / 1</span>
+                        <span style={{ fontWeight: 600 }}>Trang 1 / 1</span>
                       </div>
                     </div>
                   </div>
