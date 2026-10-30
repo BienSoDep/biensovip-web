@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Search } from 'lucide-react';
 import LazyImage from '../components/LazyImage.jsx';
 import Button from '../components/Button.jsx';
+import Breadcrumb from '../components/Breadcrumb.jsx';
 import SpotlightCard from '../components/SpotlightCard.jsx';
 import Pagination from '../components/Pagination.jsx';
 import { PageHeader } from '../components/index.jsx';
@@ -63,7 +64,7 @@ function readInitialQueryParams() {
   };
 }
 
-export default function Blog({ patch }) {
+export default function Blog({ patch, go }) {
   const stagger = useStaggeredReveal();
   const urlInit = readInitialQueryParams();
   const hasQueryParams = !!urlInit;
@@ -106,8 +107,57 @@ export default function Blog({ patch }) {
 
   const getPageHref = (n) => (n <= 1 ? '/tin' : `/tin?page=${n}`);
 
+  const clearAllBlogFilters = () => {
+    setCategory('');
+    setTag('');
+    setQuery('');
+    setPage(1);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', '/tin');
+    }
+  };
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
+      <Breadcrumb
+        keepOnMobile
+        items={[
+          { label: 'Trang chủ', href: '/', onClick: go ? go('home') : undefined },
+          {
+            label: 'Tin phong thủy',
+            href: '/tin',
+            onClick: isFiltering ? clearAllBlogFilters : undefined,
+          },
+          ...(category
+            ? [
+                {
+                  label: CATEGORY_LABEL[category] || category,
+                  href: `/tin?category=${encodeURIComponent(category)}`,
+                  onClick:
+                    tag || query
+                      ? () => {
+                          setTag('');
+                          setQuery('');
+                          setPage(1);
+                          if (typeof window !== 'undefined') {
+                            window.history.replaceState(null, '', `/tin?category=${encodeURIComponent(category)}`);
+                          }
+                        }
+                      : undefined,
+                },
+              ]
+            : []),
+          ...(tag
+            ? [
+                {
+                  label: `#${tag}`,
+                  onClick: query ? () => { setQuery(''); setPage(1); } : undefined,
+                },
+              ]
+            : []),
+          ...(query.trim() ? [{ label: `Tìm kiếm: ${query.trim()}` }] : []),
+        ]}
+      />
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--space-4)' }}>
         <PageHeader
           eyebrow="Cẩm nang & Kiến thức"

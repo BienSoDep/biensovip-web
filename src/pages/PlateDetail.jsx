@@ -58,7 +58,7 @@ import {
   trackShare,
 } from "../services/tracking/events.js";
 import { useCompareIds } from "../services/compareService.js";
-import { routeFor, PROVINCE_LANDINGS } from "../config/routes.js";
+import { routeFor, PROVINCE_LANDINGS, PLATE_TYPE_LANDINGS } from "../config/routes.js";
 import Breadcrumb from "../components/Breadcrumb.jsx";
 import { usePlateReviews } from "../services/reviewService.js";
 import { formatDate } from "../lib/date.js";
@@ -327,7 +327,12 @@ const FROM_SCREEN_CRUMB = {
   luanBien: { label: "Luận giải biển số", screen: "luanBien", href: "/luan-bien-so" },
   compare: { label: "So sánh", screen: "compare", href: "/so-sanh" },
   fav: { label: "Biển số đã lưu", screen: "fav", href: "/yeu-thich" },
+  aiChat: { label: "Trợ lý AI", screen: "aiChat", href: "/tro-ly-ai" },
+  blog: { label: "Tin phong thủy", screen: "blog", href: "/tin" },
+  post: { label: "Tin phong thủy", screen: "blog", href: "/tin" },
   list: { label: "Biển số", screen: "list", href: "/danh-sach" },
+  provinceLanding: { label: "Biển số", screen: "list", href: "/danh-sach" },
+  plateTypeLanding: { label: "Biển số", screen: "list", href: "/danh-sach" },
 };
 
 export default function PlateDetail({
@@ -611,7 +616,15 @@ export default function PlateDetail({
       )
     : null;
 
-  // Bước giữa breadcrumb khớp đúng nơi khách bấm vào biển (Hợp mệnh/So sánh) — mặc định "Biển số"
+  const plateTypeLanding = plate?.plateType
+    ? PLATE_TYPE_LANDINGS.find(
+        (pt) =>
+          pt.name.toLowerCase() === String(plate.plateType).toLowerCase() ||
+          String(plate.plateType).toLowerCase().includes(pt.name.toLowerCase()),
+      )
+    : null;
+
+  // Bước giữa breadcrumb khớp đúng nơi khách bấm vào biển (Hợp mệnh/So sánh/Trợ lý AI/Blog) — mặc định "Biển số"
   // nếu đến từ danh sách hoặc không rõ nguồn (fromScreen null/không nằm trong map).
   const midCrumb =
     fromScreen && FROM_SCREEN_CRUMB[fromScreen]
@@ -631,6 +644,15 @@ export default function PlateDetail({
                   label: plateProvinceLanding.name,
                   href: routeFor("provinceLanding", plateProvinceLanding.code),
                   onClick: go("provinceLanding", plateProvinceLanding.code),
+                },
+              ]
+            : []),
+          ...(plateTypeLanding
+            ? [
+                {
+                  label: `Biển ${plateTypeLanding.name}`,
+                  href: routeFor("plateTypeLanding", plateTypeLanding.slug.replace(/^bien-/, "")),
+                  onClick: go("plateTypeLanding", plateTypeLanding.slug.replace(/^bien-/, "")),
                 },
               ]
             : []),

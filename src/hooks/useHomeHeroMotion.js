@@ -31,62 +31,58 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     if (prefersReducedMotion) return;
 
+    const scope = containerRef.current;
     const ctx = gsap.context((self) => {
-      const scope = containerRef.current;
       const visualEl = visualCardRef.current;
 
       // ========================================================
       // A. HERO ENTRANCE TIMELINE
       // ========================================================
       const tl = gsap.timeline({
-        defaults: { ease: 'power2.out' },
-        delay: 0.08,
+        defaults: { ease: 'power3.out', clearProps: 'opacity,transform' },
       });
 
       // 1. Eyebrow badge
       tl.from('.hero-eyebrow', {
-        opacity: 0,
-        y: -14,
-        scale: 0.94,
-        duration: 0.45,
-      });
+        opacity: 0.2,
+        y: -8,
+        duration: 0.25,
+      }, 0);
 
       // 2. Tiêu đề chính (Stagger 2 dòng tiêu đề)
       tl.from(
         '.hero-title-line',
         {
-          opacity: 0,
-          y: 28,
-          duration: 0.65,
-          stagger: 0.12,
-          ease: 'power3.out',
+          opacity: 0.2,
+          y: 14,
+          duration: 0.32,
+          stagger: 0.05,
         },
-        '-=0.25'
+        0.03
       );
 
       // 3. Đoạn mô tả
       tl.from(
         '.hero-desc',
         {
-          opacity: 0,
-          y: 16,
-          duration: 0.5,
+          opacity: 0.2,
+          y: 10,
+          duration: 0.28,
         },
-        '-=0.35'
+        0.08
       );
 
       // 4. Các nút CTA
       tl.from(
         '.hero-cta-btn',
         {
-          opacity: 0,
-          y: 14,
-          scale: 0.95,
-          duration: 0.45,
-          stagger: 0.08,
-          ease: 'back.out(1.4)',
+          opacity: 0.2,
+          y: 10,
+          scale: 0.98,
+          duration: 0.28,
+          stagger: 0.04,
         },
-        '-=0.3'
+        0.12
       );
 
       // 5. Ticker hoạt động thực tế (Live feed) - chỉ animate nếu element đã tồn tại trong DOM
@@ -95,11 +91,11 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
         tl.from(
           feedPill,
           {
-            opacity: 0,
-            x: -16,
-            duration: 0.45,
+            opacity: 0.2,
+            x: -10,
+            duration: 0.25,
           },
-          '-=0.25'
+          0.14
         );
       }
 
@@ -107,25 +103,24 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
       tl.from(
         '.hero-stat-item',
         {
-          opacity: 0,
-          y: 18,
-          duration: 0.45,
-          stagger: 0.08,
+          opacity: 0.2,
+          y: 10,
+          duration: 0.28,
+          stagger: 0.04,
         },
-        '-=0.25'
+        0.15
       );
 
       // 7. Khối visual hình ảnh bên phải
       tl.from(
         '.hero-visual-card',
         {
-          opacity: 0,
-          scale: 0.92,
-          y: 26,
-          duration: 0.8,
-          ease: 'power3.out',
+          opacity: 0.25,
+          scale: 0.96,
+          y: 14,
+          duration: 0.35,
         },
-        '-=0.65'
+        0.05
       );
 
       // 8. Thanh tìm kiếm nổi (Search bar dock)
@@ -133,13 +128,12 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
         tl.from(
           searchBarRef.current,
           {
-            opacity: 0,
-            y: 24,
-            scale: 0.98,
-            duration: 0.55,
-            ease: 'back.out(1.2)',
+            opacity: 0.25,
+            y: 12,
+            scale: 0.99,
+            duration: 0.3,
           },
-          '-=0.2'
+          0.1
         );
 
         const searchCats = scope.querySelectorAll('.home-search-cats > *');
@@ -147,13 +141,13 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
           tl.from(
             searchCats,
             {
-              opacity: 0,
-              scale: 0.92,
-              duration: 0.3,
-              stagger: 0.02,
+              opacity: 0.3,
+              scale: 0.96,
+              duration: 0.22,
+              stagger: 0.015,
               ease: 'power1.out',
             },
-            '-=0.3'
+            0.15
           );
         }
       }
@@ -454,7 +448,7 @@ export function useHomeHeroMotion({ totalPlates, dataDeps = [] } = {}) {
           });
         }
       }
-    }, containerRef);
+    }, scope);
 
     return () => ctx.revert();
   }, []);

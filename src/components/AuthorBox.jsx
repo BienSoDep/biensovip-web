@@ -199,7 +199,7 @@ export default function AuthorBox({ style }) {
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2, 8px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2, 8px)' }}>
           <a
             href={`https://zalo.me/${content.info.zalo || '0815792699'}`}
             target="_blank"

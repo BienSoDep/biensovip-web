@@ -14,7 +14,7 @@ export const NAV = [
 // sidebar (29→21) và xếp các mục liên quan gần nhau theo đúng luồng thao tác thật.
 export const ADMIN_NAV = [
   { group: null, items: [['dash', 'Tổng quan'], ['ainsights', 'Insight khách hàng'], ['aguide', 'Hướng dẫn sử dụng']] },
-  { group: 'Kho biển số & VPA', items: [['avpastats', 'Thống kê Biển số & VPA'], ['aplates', 'Biển số'], ['avpa', 'Biển VPA'], ['acats', 'Danh mục']] },
+  { group: 'Kho biển số & VPA', items: [['avpastats', 'Thống kê Biển số & VPA'], ['aplates', 'Biển số'], ['avpa', 'Biển VPA'], ['aexporthistory', 'Lịch sử tải xuống'], ['acats', 'Danh mục']] },
   { group: 'Bán hàng & Khách hàng', items: [['asales', 'Bán hàng'], ['alivestream', 'Trợ lý Livestream'], ['ainterestleads', 'Khách quan tâm'], ['acustomers', 'Khách hàng'], ['acoupons', 'Mã giảm giá']] },
   { group: 'Nội dung', items: [['aposts', 'Blog'], ['avideos', 'Video'], ['ameanings', 'Ý nghĩa phong thủy'], ['apolicypages', 'Trang chính sách']] },
   { group: 'Tương tác khách hàng', items: [['anotifications', 'Thông báo'], ['areviews', 'Đánh giá'], ['achatbot', 'Trợ lý AI'], ['afengshuihistory', 'Lịch sử luận giải']] },

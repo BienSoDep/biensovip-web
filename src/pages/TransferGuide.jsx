@@ -48,7 +48,7 @@ export default function TransferGuide({ go, zalo }) {
           >
             <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
               <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-pill)', background: 'var(--action-primary)', color: 'var(--action-primary-text, var(--ink-900))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, font: 'var(--type-title-3)', fontWeight: 800 }}>{i + 1}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                 <h3 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{s.title}</h3>
                 <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-body)', lineHeight: 'var(--lh-body)' }}>{s.desc}</p>
               </div>
@@ -94,14 +94,14 @@ export default function TransferGuide({ go, zalo }) {
         }}
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-6)', width: '100%' }}>
-          <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <div style={{ flex: '1 1 240px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <PhoneCall size={18} style={{ color: 'var(--action-primary)' }} />
               <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{contentGet('transfer.need_help_title')}</span>
             </div>
             <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{contentGet('transfer.need_help_desc')}</p>
           </div>
-          <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
             <Button
               variant="primary"
               size="md"
