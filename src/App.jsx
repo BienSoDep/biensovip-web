@@ -81,6 +81,7 @@ const TransferGuide = lazy(() => import('./pages/TransferGuide.jsx'));
 const Faq = lazy(() => import('./pages/Faq.jsx'));
 const GmailCallback = lazy(() => import('./pages/GmailCallback.jsx'));
 const AdminShell = lazy(() => import('./layout/AdminShell.jsx'));
+const LiveDisplayOverlay = lazy(() => import('./pages/overlay/LiveDisplayOverlay.jsx'));
 const Modals = lazy(() => import('./layout/Modals.jsx'));
 const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
@@ -293,6 +294,8 @@ export default function App() {
       sent: false,
       ...(s === 'detail' && id ? { curId: id } : {}),
       ...(s === 'post' && id ? { postId: id } : {}),
+      ...(s === 'provinceLanding' && id ? { provinceCode: id } : {}),
+      ...(s === 'plateTypeLanding' && id ? { typeSlug: String(id).replace(/^bien-/, '') } : {}),
       redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo,
       ...(s !== 'compose' ? { editPostId: null } : {}),
       drawerOpen: false,
@@ -790,7 +793,8 @@ export default function App() {
       ref: modalPlate.plateNumber.replace(/[^A-Z0-9]/gi, ''),
     };
   }
-  useSeo(s, s === 'detail' ? { plate: seoPlate } : s === 'post' ? { post: seoPost } : undefined);
+  const isSelfSeoScreen = ['list', 'provinceLanding', 'plateTypeLanding', 'aiChat'].includes(s);
+  useSeo(s, isSelfSeoScreen ? { skip: true } : s === 'detail' ? { plate: seoPlate } : s === 'post' ? { post: seoPost } : undefined);
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
@@ -843,6 +847,7 @@ export default function App() {
     // 3 trang cũ (liên hệ/quy trình/giao dịch) đã gộp vào 1 trang có view bên trong — xem AdminSales.jsx.
     // Giữ key cũ ở đây vì URL cũ vẫn resolve được (GROUPED_REDIRECT đưa về asales).
     asales: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
+    alivestream: ['Trợ lý Livestream TikTok 9:16 & OBS', 'Bàn đạo diễn hiệu ứng phím tắt (1–6 / F1–F6), tra cứu bình luận khách 3-trong-1 và điều khiển màn hình OBS Overlay'],
     acontacts: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
     atransactions: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
     astaff: ['Nhân viên', 'Quản lý tài khoản nhân viên và phân quyền'],
@@ -907,9 +912,9 @@ export default function App() {
             else if (s === 'reviews') trail = [{ label: 'Đánh giá' }];
             else if (s === 'notifications') trail = [{ label: 'Thông báo' }];
             else if (s === 'collab') trail = [{ label: 'Cộng tác viên' }];
-            else if (s === 'collabProcess') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Quy trình nhận hoa hồng' }];
-            else if (s === 'collabLeaderboard') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Bảng xếp hạng' }];
-            else if (s === 'collabCustomers') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Khách hàng của tôi' }];
+            else if (s === 'collabProcess') trail = [{ label: 'Cộng tác viên', href: '/cong-tac-vien', onClick: go('collab') }, { label: 'Quy trình nhận hoa hồng' }];
+            else if (s === 'collabLeaderboard') trail = [{ label: 'Cộng tác viên', href: '/cong-tac-vien', onClick: go('collab') }, { label: 'Bảng xếp hạng' }];
+            else if (s === 'collabCustomers') trail = [{ label: 'Cộng tác viên', href: '/cong-tac-vien', onClick: go('collab') }, { label: 'Khách hàng của tôi' }];
             else if (s === 'terms') trail = [{ label: 'Điều khoản sử dụng' }];
             else if (s === 'privacy') trail = [{ label: 'Chính sách bảo mật' }];
             else if (s === 'transfer') trail = [{ label: 'Hướng dẫn sang tên' }];
@@ -918,7 +923,7 @@ export default function App() {
             else if (s === 'register') trail = [{ label: 'Đăng ký tài khoản' }];
             else if (s === 'forgot') trail = [{ label: 'Quên mật khẩu' }];
             if (!trail.length) return null;
-            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), onClick: go('home') }, ...trail]} />;
+            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), href: '/', onClick: go('home') }, ...trail]} />;
           })()}
 
           {maintenanceActive ? (
@@ -983,6 +988,7 @@ export default function App() {
             {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} user={st.user} />}
 
             {s === 'notfound' && <NotFound go={go} notify={notify} />}
+            {s === 'overlayLive' && <LiveDisplayOverlay />}
 
             {isAdminShell && (
               <RequireAuth st={st} go={go} patch={patch}>

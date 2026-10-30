@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LineChart, BookOpen, Car, Gavel, BarChart3, FolderTree,
   ShoppingBag, Flame, Users, TicketPercent, FileText, Video, Compass,
   ShieldCheck, Bell, Star, Bot, Handshake, FileCode, MessageSquareShare,
-  UserCog, History, Eye, SlidersHorizontal, ScrollText, MessageSquareWarning,
+  UserCog, History, Eye, SlidersHorizontal, ScrollText, MessageSquareWarning, Radio,
 } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
@@ -48,6 +48,7 @@ import AdminNotificationsHub from '../pages/admin/AdminNotificationsHub.jsx';
 import AdminInsights from '../pages/admin/AdminInsights.jsx';
 import AdminVpaMarket from '../pages/admin/AdminVpaMarket.jsx';
 import AdminVpaStats from '../pages/admin/AdminVpaStats.jsx';
+import AdminLiveAssist from '../pages/admin/AdminLiveAssist.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
 import RecoveryEmailModal from '../components/RecoveryEmailModal.jsx';
@@ -154,6 +155,7 @@ const ADMIN_INFO = {
   acats: 'Danh mục dùng cho bộ lọc phía khách (loại biển, tỉnh/thành, khoảng giá…). Kéo-thả để đổi thứ tự hiển thị ngoài trang chủ.',
   acontacts: 'Danh sách khách để lại SĐT/yêu cầu tư vấn. Cập nhật trạng thái Mới → Đang tư vấn → Đã chốt và ghi chú nội bộ để đồng nghiệp nắm tiến độ.',
   asales: 'Toàn bộ luồng bán hàng trong một trang, chuyển giữa 3 chế độ xem: Quy trình (bảng kanban, kéo thẻ đổi trạng thái), Danh sách (bảng chi tiết để lọc/gán/xuất CSV) và Giao dịch (chốt thanh toán). Mọi view đọc chung một dữ liệu — đổi trạng thái ở view này là các view kia cập nhật ngay, không cần tải lại trang.',
+  alivestream: 'Bàn đạo diễn Trợ lý Livestream TikTok 9:16 & OBS Studio: Bấm phím tắt 1–6 (hoặc F1–F6) để tung hiệu ứng hình ảnh & âm thanh chốt đơn, tra cứu bình luận khách 3-trong-1 (gõ tắt "30 68", năm sinh "1990", hoặc dán câu comment), và ghim biển lên sóng tức thì (< 10ms) mà không lộ giá đáy nội bộ.',
   akanban: 'Bảng quy trình dạng kanban — mỗi cột là một trạng thái, kéo thẻ khách sang cột khác để đổi trạng thái nhanh thay vì mở từng dòng. Cột Giao dịch chỉ để xem.',
   atransactions: 'Giao dịch mua/đặt cọc biển số. Tự tạo khi khách gửi liên hệ đặt cọc/mua, hoặc admin tự tạo tay từ 1 liên hệ tư vấn. Bấm "Xác nhận đã nhận tiền" khi khách đã chuyển khoản (ảnh minh chứng không bắt buộc) — hoa hồng CTV liên quan tự chuyển sang "Chờ duyệt" → "Đã duyệt".',
   aposts: 'Bài viết blog — nội dung SEO cho landing tỉnh/loại biển và tin phong thủy. Bấm "Đăng bài mới" để soạn bài. Tab Bình luận để duyệt/từ chối bình luận độc giả.',
@@ -228,6 +230,7 @@ const NAV_ICONS = {
   avpastats: BarChart3,
   acats: FolderTree,
   asales: ShoppingBag,
+  alivestream: Radio,
   ainterestleads: Flame,
   acustomers: Users,
   acoupons: TicketPercent,
@@ -595,6 +598,7 @@ export default function AdminShell({
         {s === 'avpastats' && <AdminVpaStats go={go} patch={patch} st={st} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
         {s === 'asales' && <AdminSales notify={notify} go={go} st={st} initialView={salesViewFromUrl()} />}
+        {s === 'alivestream' && <AdminLiveAssist notify={notify} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} st={st} />}
         {s === 'akanban' && <AdminKanban notify={notify} go={go} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
