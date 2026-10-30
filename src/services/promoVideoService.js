@@ -5,7 +5,12 @@ const PUBLIC_KEY = ['promo-videos'];
 const ADMIN_KEY = ['admin', 'promo-videos'];
 
 export function usePromoVideos({ enabled = true } = {}) {
-  return useQuery({ queryKey: PUBLIC_KEY, queryFn: () => apiClient.get('/api/promo-videos'), enabled });
+  return useQuery({
+    queryKey: PUBLIC_KEY,
+    queryFn: () => apiClient.get('/api/promo-videos'),
+    staleTime: 5 * 60 * 1000,
+    enabled,
+  });
 }
 
 export function useFeaturedPromoVideos(limit = 3, options = {}) {

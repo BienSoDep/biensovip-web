@@ -38,6 +38,7 @@ import { useLenisSmoothScroll } from './hooks/useLenisSmoothScroll.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 import { usePublicMaintenance } from './services/maintenanceService.js';
+import { useSiteSettings } from './services/siteSettings.js';
 import {
   getRouteKey,
   getScrollPosition,
@@ -123,6 +124,7 @@ export default function App() {
   usePlateRealtime();
   // UC17 realtime — user đăng nhập nhận thông báo mới (chuông/toast tức thì)
   useNotificationRealtime(st.user);
+  const { data: publicSettings } = useSiteSettings();
 
   useEffect(() => {
     const t = setTimeout(() => { fanDone.current = true; }, 1200);
@@ -155,8 +157,8 @@ export default function App() {
 
   // UC05+UC06 — fetch public settings for chat widget + Zalo
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings`)
-      .then(r => r.json())
+    (publicSettings ? Promise.resolve({ success: true, data: publicSettings }) : fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings`).then(r => r.json()))
+      .then(r => (typeof r.json === 'function' ? r.json() : r))
       .then(body => {
         if (!body?.success) return;
         const s = body.data;
@@ -169,7 +171,7 @@ export default function App() {
         }
       })
       .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [publicSettings]);
 
   // UC05 — Messenger Customer Chat plugin (chỉ load khi có VITE_FB_PAGE_ID; Zalo là fallback).
   useEffect(() => {

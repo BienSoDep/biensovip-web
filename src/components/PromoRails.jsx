@@ -37,8 +37,9 @@ function PlateRailItem({ plate, openPlate }) {
 
 function PlateRail({ openPlate }) {
   const wide = useIsWide();
-  const { data } = useFeaturedPlates(6);
-  const items = data || [];
+  // Dùng limit=8 đồng bộ với Home.jsx để React Query dùng chung cache, loại bỏ 1 request GET thừa
+  const { data } = useFeaturedPlates(8);
+  const items = (data || []).slice(0, 6);
   if (!wide || !items.length || !openPlate) return null;
   return (
     <aside className="promo-rail promo-rail--left">
