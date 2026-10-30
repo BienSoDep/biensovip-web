@@ -112,7 +112,20 @@ const STARTER_PROMPTS = [
 ];
 
 function escapeHtml(s) {
-  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return (s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function sanitizeSafeUrl(rawUrl) {
+  const trimmed = String(rawUrl || '').replace(/[\u0000-\u0020]+/g, '').trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
+  if (/^(https?:|mailto:|tel:)/i.test(trimmed)) return trimmed;
+  return null;
 }
 
 const normalizePlate = (str) => (str || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase();
@@ -127,7 +140,7 @@ function renderMarkdownLite(text, plates = []) {
     plates.forEach((p) => {
       const target = p.slugOrId || p.slug || p.id;
       if (p.plateNumber && target) {
-        plateMap[normalizePlate(p.plateNumber)] = target;
+        plateMap[normalizePlate(p.plateNumber)] = String(target).replace(/[^\w-]/g, '');
       }
     });
   }
@@ -142,8 +155,10 @@ function renderMarkdownLite(text, plates = []) {
     if (plateSlug && plateMap[normalizePlate(plateSlug)]) {
       plateSlug = plateMap[normalizePlate(plateSlug)];
     }
-    const finalUrl = isPlateUrl && plateSlug ? `/bien/${plateSlug}` : url;
-    return `<a href="${finalUrl}" class="${isPlateUrl ? 'claude-plate-pill-link' : 'claude-text-link'}" ${plateSlug ? `data-plate="${plateSlug}"` : ''} title="Bấm để xem chi tiết ${label}">${label}</a>`;
+    const candidateUrl = isPlateUrl && plateSlug ? `/bien/${plateSlug}` : url;
+    const safeUrl = sanitizeSafeUrl(candidateUrl);
+    if (!safeUrl) return label;
+    return `<a href="${safeUrl}" class="${isPlateUrl ? 'claude-plate-pill-link' : 'claude-text-link'}" ${plateSlug ? `data-plate="${plateSlug}"` : ''} rel="noopener noreferrer" title="Bấm để xem chi tiết ${label}">${label}</a>`;
   });
 
   // 3. Tự động nhận diện biển số xe (VD: 30F-68679, 51C7-88679, 30K-999.99...) khi LLM trả về text thông thường

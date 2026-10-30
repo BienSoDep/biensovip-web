@@ -10,8 +10,13 @@ const LIVE_SESSIONS_KEY = ['admin', 'live-chat', 'sessions'];
 export function useAdminLiveChatRealtime({ activeSessionId, onMessageReceived } = {}) {
   const qc = useQueryClient();
   const connRef = useRef(null);
+  const activeSessionRef = useRef(activeSessionId);
+  activeSessionRef.current = activeSessionId;
 
   useEffect(() => {
+    const auth = loadAuth();
+    if (!auth?.accessToken || !auth?.isAdmin) return;
+
     const base = import.meta.env.VITE_API_URL || '';
     const conn = new signalR.HubConnectionBuilder()
       .withUrl(`${base}/hubs/live-chat`, {
@@ -26,7 +31,6 @@ export function useAdminLiveChatRealtime({ activeSessionId, onMessageReceived } 
     conn.on('NewSupportRequest', (data) => {
       qc.invalidateQueries({ queryKey: LIVE_SESSIONS_KEY });
       toast.success(`🔔 Khách ${data?.guestName || 'mới'} vừa yêu cầu hỗ trợ trực tiếp!`, { duration: 6000 });
-      // Phát âm thanh thông báo nếu trình duyệt hỗ trợ
       try {
         const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
         audio.play().catch(() => {});
@@ -50,9 +54,19 @@ export function useAdminLiveChatRealtime({ activeSessionId, onMessageReceived } 
       }
     });
 
+    conn.onreconnected(() => {
+      conn.invoke('JoinAdminLive').catch(() => {});
+      if (activeSessionRef.current) {
+        conn.invoke('JoinSession', activeSessionRef.current.toString()).catch(() => {});
+      }
+    });
+
     conn.start()
       .then(() => {
         conn.invoke('JoinAdminLive').catch(() => {});
+        if (activeSessionRef.current) {
+          conn.invoke('JoinSession', activeSessionRef.current.toString()).catch(() => {});
+        }
       })
       .catch(() => {});
 
@@ -66,10 +80,10 @@ export function useAdminLiveChatRealtime({ activeSessionId, onMessageReceived } 
     const conn = connRef.current;
     if (!conn || !activeSessionId || conn.state !== signalR.HubConnectionState.Connected) return;
 
-    conn.invoke('JoinSession', activeSessionId).catch(() => {});
+    conn.invoke('JoinSession', activeSessionId.toString()).catch(() => {});
     return () => {
       if (conn.state === signalR.HubConnectionState.Connected) {
-        conn.invoke('LeaveSession', activeSessionId).catch(() => {});
+        conn.invoke('LeaveSession', activeSessionId.toString()).catch(() => {});
       }
     };
   }, [activeSessionId]);
@@ -103,6 +117,10 @@ export function useClientLiveChatRealtime(sessionId, { onReceiveMessage, onStatu
       if (onStatusChanged) {
         onStatusChanged(statusInfo);
       }
+    });
+
+    conn.onreconnected(() => {
+      conn.invoke('JoinSession', sessionId.toString()).catch(() => {});
     });
 
     conn.start()
