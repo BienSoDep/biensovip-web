@@ -17,6 +17,7 @@ import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 import { forceScrollToTop } from '../lib/scrollRestoration.js';
 import { PostReaderToolbar, useReaderPrefs } from './post/PostReaderToolbar.jsx';
 import { PostCommentSection } from './post/PostCommentSection.jsx';
+import TikTokEmbed from '../components/TikTokEmbed.jsx';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -476,8 +477,14 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       {post.videos?.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {post.videos.map((v) => (
-            <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', aspectRatio: v.platform === 'tiktok' ? '9/14' : '16/9', maxWidth: v.platform === 'tiktok' ? 360 : '100%', overflow: 'hidden' }}>
-              <iframe src={v.videoUrl} title={v.title || 'Video'} style={{ width: '100%', height: '100%', border: 0 }} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+            <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', maxWidth: v.platform === 'tiktok' ? 360 : 640, overflow: 'hidden' }}>
+              {v.platform === 'tiktok' ? (
+                <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={v.thumbnailUrl} />
+              ) : (
+                <div style={{ aspectRatio: '16/9', width: '100%' }}>
+                  <iframe src={v.videoUrl} title={v.title || 'Video'} style={{ width: '100%', height: '100%', border: 0 }} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+                </div>
+              )}
             </div>
           ))}
         </div>
