@@ -155,7 +155,7 @@ export default function RichTextEditor({ value, onChange, minHeight = 220, place
 
   // Đồng bộ khi value đổi từ ngoài (VD load lại dữ liệu edit) mà không phải do gõ tại chỗ.
   useEffect(() => {
-    if (editor && value !== editor.getHTML() && !editor.isFocused) {
+    if (editor && editor.schema && value !== editor.getHTML() && !editor.isFocused) {
       editor.commands.setContent(value || '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

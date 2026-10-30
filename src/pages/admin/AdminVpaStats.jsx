@@ -167,7 +167,7 @@ export default function AdminVpaStats({ go, patch, st }) {
               variant="outline"
               size="md"
               title="Xem và tải lại các file đã xuất trong vòng 30 ngày qua"
-              onClick={() => setHistoryModalOpen(true)}
+              onClick={go ? go('aexporthistory') : () => setHistoryModalOpen(true)}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

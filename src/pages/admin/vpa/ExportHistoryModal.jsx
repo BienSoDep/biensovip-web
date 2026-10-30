@@ -341,7 +341,18 @@ export default function ExportHistoryModal({ open, onClose }) {
         )}
 
         {/* Footer */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid var(--border-subtle)', gap: 8 }}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onClose?.();
+              window.location.href = '/admin/lich-su-tai-xuong';
+            }}
+          >
+            Mở trang quản lý Lịch sử tải xuống →
+          </Button>
           <Button type="button" variant="outline" size="md" onClick={onClose}>
             Đóng
           </Button>

@@ -21,6 +21,11 @@ const LABEL_HREF_MAP = {
   'trợ lý ai': '/tro-ly-ai',
   'biển số đã lưu': '/yeu-thich',
   'lịch sử duyệt biển số': '/yeu-thich',
+  'hướng dẫn sang tên': '/sang-ten',
+  'câu hỏi thường gặp': '/hoi-dap',
+  'điều khoản sử dụng': '/dieu-khoan',
+  'chính sách bảo mật': '/bao-mat',
+  'về duy đinh — người sáng lập biensovip': '/gioi-thieu',
   'quản trị': '/admin/tong-quan',
 };
 

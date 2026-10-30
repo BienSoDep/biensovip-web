@@ -140,7 +140,7 @@ export default function Compose({ st, patch, notify }) {
 
   const [, forceEditorUpdate] = useState(0);
   const editor = useEditor({
-    extensions: [StarterKit, TiptapLink, ResizableImage],
+    immediatelyRender: false, extensions: [StarterKit.configure({ link: false }), TiptapLink, ResizableImage],
     content: '',
     onUpdate: () => forceEditorUpdate((n) => n + 1),
   });
@@ -204,7 +204,7 @@ export default function Compose({ st, patch, notify }) {
     const s = savedRef.current;
     const c = {
       title, slug, coverImageUrl, metaTitle, metaDescription, category,
-      tags: JSON.stringify(tags), contentHtml: editor?.getHTML() || '',
+      tags: JSON.stringify(tags), contentHtml: (editor && editor.schema ? editor.getHTML() : ''),
       summaryFengShui, summaryTaboo, summaryMeaning, sourceNote,
       scheduledPublishAt, deliveryLocation, deliveryDate, plateId,
       faqSetIds: JSON.stringify(faqSetIds),
@@ -347,8 +347,8 @@ export default function Compose({ st, patch, notify }) {
     }
   };
 
-  const contentHtml = editor?.getHTML() || '';
-  const plainText = editor?.getText() || '';
+  const contentHtml = editor && editor.schema ? editor.getHTML() : '';
+  const plainText = editor && editor.schema ? editor.getText() : '';
   const wordCount = plainText.trim() ? plainText.trim().split(/\s+/).length : 0;
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 200));
   // Đếm số lần từ khóa chính xuất hiện trong 1 chuỗi (so khớp không phân biệt hoa thường).

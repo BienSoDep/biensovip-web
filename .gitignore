@@ -25,6 +25,8 @@ dist-ssr
 
 .vercel
 .env
+.env.*
+!.env.example
 
 # Playwright
 /test-results/

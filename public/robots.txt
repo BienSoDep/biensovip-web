@@ -1,0 +1,38 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /overlay/
+Disallow: /api/
+Disallow: /quen-mat-khau-quan-tri
+Disallow: /dat-lai-mat-khau-quan-tri
+Disallow: /r/
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://biensovip.com/sitemap.xml
+Sitemap: https://biensovip.com/sitemap-blog.xml
+Sitemap: https://biensovip.com/sitemap-vpa.xml
+

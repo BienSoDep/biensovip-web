@@ -142,7 +142,8 @@ export function useSeo(screen, data) {
         offers: {
           '@type': 'Offer',
           priceCurrency: 'VND',
-          ...(p.priceOnRequest ? {} : { price: p.price }),
+          price: (!p.priceOnRequest && Number(p.price) > 0) ? p.price : (String(p.vehicleType || '').toLowerCase().includes('máy') ? 5000000 : 40000000),
+          priceValidUntil: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10),
           itemCondition: 'https://schema.org/NewCondition',
           availability: p.status === 'sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
           url: canonical,
@@ -253,7 +254,7 @@ export function useSeo(screen, data) {
                   name: 'Người mệnh Kim, Mộc, Thủy, Hỏa, Thổ hợp với những con số nào?',
                   acceptedAnswer: {
                     '@type': 'Answer',
-                    text: 'Theo Hà Đồ Lạc Thư và Ngũ Hành: Mệnh Kim hợp số 6, 7 (tương sinh 2, 5, 8); Mệnh Mộc hợp số 3, 4 (tương sinh 1); Mệnh Thủy hợp số 1 (tương sinh 6, 7); Mệnh Hỏa hợp số 9 (tương sinh 3, 4); Mệnh Thổ hợp số 2, 5, 8 (tương sinh 9).',
+                    text: 'Theo hệ thống Hà Đồ / Thiên Can chuẩn Ngũ Hành: Mệnh Kim hợp số 7, 8 (tương sinh Thổ 5, 6); Mệnh Mộc hợp số 1, 2 (tương sinh Thủy 9, 0); Mệnh Thủy hợp số 9, 0 (tương sinh Kim 7, 8); Mệnh Hỏa hợp số 3, 4 (tương sinh Mộc 1, 2); Mệnh Thổ hợp số 5, 6 (tương sinh Hỏa 3, 4).',
                   },
                 },
               ],
@@ -586,6 +587,17 @@ export function useSeo(screen, data) {
     } else if (screen === 'collabCustomers') {
       title = 'Khách Hàng Của Tôi — Cộng Tác Viên | ' + BRAND;
       canonical = SITE + '/cong-tac-vien/khach-hang';
+      ld = {
+        '@context': 'https://schema.org',
+        '@graph': [
+          { '@type': 'WebPage', name: title, url: canonical },
+          makeBreadcrumbLd([
+            { name: 'Trang chủ', item: SITE + '/' },
+            { name: 'Cộng tác viên', item: SITE + '/cong-tac-vien' },
+            { name: 'Khách hàng của tôi', item: canonical },
+          ]),
+        ],
+      };
     } else if (screen === 'aiChat') {
       title = 'Trợ lý AI Biensovip — Tư vấn biển số đẹp | ' + BRAND;
       desc = 'Chat trực tiếp với trợ lý AI Biensovip để tìm biển số đẹp hợp mệnh, tra giá và quy trình đấu giá hộ.';

@@ -84,7 +84,7 @@ function useExportJobsStatus() {
   }));
 }
 
-export default function AdminRunWatcher() {
+export default function AdminRunWatcher({ go }) {
   const qc = useQueryClient();
   const approveRuns = useApproveRunsStatus();
   const exportJobs = useExportJobsStatus();
@@ -199,7 +199,7 @@ export default function AdminRunWatcher() {
           >
             <button
               type="button"
-              onClick={() => setHistoryOpen(true)}
+              onClick={() => (go ? go('aexporthistory')() : setHistoryOpen(true))}
               style={{
                 border: 'none',
                 background: 'transparent',
