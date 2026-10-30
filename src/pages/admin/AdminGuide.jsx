@@ -39,7 +39,7 @@ import {
   List,
   Maximize2,
   ArrowRight,
-  Radio,
+  Radio, FolderDown, ScrollText, MessageSquareWarning,
 } from 'lucide-react';
 import Modal from '../../components/Modal.jsx';
 import { ADMIN_NAV } from '../../common/constants.js';
@@ -51,6 +51,9 @@ const ICON_MAP = {
   aplates: Car,
   avpa: Gavel,
   avpastats: BarChart3,
+  aexporthistory: FolderDown,
+  afengshuihistory: ScrollText,
+  asystemfeedback: MessageSquareWarning,
   asales: Layers,
   alivestream: Radio,
   acats: FolderTree,
@@ -88,7 +91,7 @@ const GUIDE_DETAILS = {
       'Nhấn phím mũi tên Lên/Xuống để chọn biển và nhấn Enter để ghim biển lên màn hình Live tức thì; nhấn Space để phóng to phôi biển 3D giơ trước camera.',
       'Nhấn phím 1–6 (hoặc F1–F6 / Alt+1..6 mọi lúc) để tung hiệu ứng Pháo hoa Chốt đơn, Lửa rồng Siêu phẩm, Mưa xu Giảm giá, Vỗ tay, Kèn chiến thắng kèm âm thanh sống động. Nhấn 0 hoặc Esc để dừng hiệu ứng.',
     ],
-    tips: 'Bật/tắt độc lập nút "Loa Admin" và "Âm thanh OBS" để tránh dội âm khi phát trực tiếp. Cột Giá Đáy Nội Bộ được bảo mật 100% không bao giờ xuất hiện trên OBS.',
+    tips: 'Bạn có thể kéo thanh chia cạnh trái hoặc dùng nút Nhỏ / Vừa / Rộng (320px–520px) để điều chỉnh độ rộng khung mô phỏng 9:16 không bao giờ bị che. Cột Giá Đáy Nội Bộ (BR-LIVE-01) được bảo mật 100% không xuất hiện trên OBS.',
     perm: 'Mọi vai trò (Staff & SuperAdmin)',
   },
   dash: {
@@ -160,7 +163,7 @@ const GUIDE_DETAILS = {
       'Tài chính & Biên lợi nhuận: Ước tính tổng giá trị kho biển VPA, biên lợi nhuận kỳ vọng khi bán chênh so với giá sàn/giá trúng.',
       'Thị trường & Xu hướng: So sánh giá trúng trung bình các kỳ 7 ngày, đường xu hướng 12 tuần, mô hình dự báo và đối chiếu với giá shop.',
     ],
-    tips: 'Dữ liệu thị trường được tính toán từ các phiên đấu giá thành công thực tế, giúp định giá chính xác và phát hiện các dòng biển đang tăng giá nóng.',
+    tips: 'Dữ liệu thị trường được tính toán từ các phiên đấu giá thành công thực tế, giúp định giá chính xác và phát hiện các dòng biển đang tăng giá nóng.', perm: 'vpa_prices:view' }, aexporthistory: { summary: 'Trung tâm quản lý Lịch sử tải xuống & Xuất dữ liệu (Lưu trữ 30 ngày): Theo dõi tiến trình xuất file chạy ngầm theo thời gian thực, lọc và tải lại tức thì các file Excel (.xlsx), Word (.docx), CSV (.csv) mà không cần chạy lại tiến trình.', badge: 'Lưu trữ 30 ngày', badgeType: 'brand', tabs: ['Dải KPI lưu trữ', 'Tiến trình xuất ngầm Realtime', 'Lọc theo Định dạng & Nguồn kho', 'Tải lại & Khởi tạo xuất mới'], workflow: ['Theo dõi tiến trình đang chạy: Khi bạn bấm xuất dữ liệu kho biển số, thanh tiến độ % thời gian thực sẽ hiển thị ngay đầu trang và tự động lưu vào bảng lịch sử khi đạt 100%.', 'Lọc & Tìm kiếm nhanh: Gõ tên file hoặc email người tạo, kết hợp lọc theo định dạng (Excel .xlsx, Word .docx, CSV .csv) và phạm vi kho (Kho gộp, Riêng VPA, Biển có sẵn).', 'Tải lại tức thì: Bấm nút "Tải về" ở bất kỳ dòng nào để lấy lại file gốc từ ổ cứng máy chủ mà không tốn tài nguyên kết xuất lại.', 'Xuất file mới: Bấm nút "+ Xuất file mới" ngay góc phải bảng để mở hộp thoại cấu hình xuất dữ liệu mới.'], tips: 'Mỗi file xuất ra được lưu trữ độc lập trên máy chủ trong 30 ngày (có hiển thị badge "Còn X ngày"). Bạn có thể chủ động xóa sớm các file không còn nhu cầu sử dụng để giải phóng dung lượng ổ cứng.',
     perm: 'vpa_prices:view',
   },
   asales: {
@@ -173,7 +176,7 @@ const GUIDE_DETAILS = {
       'Xem Danh sách: Tìm kiếm theo tên/SĐT khách, lọc theo trạng thái, gán nhân viên phụ trách tư vấn, và thêm ghi chú chăm sóc nội bộ.',
       'Xem Giao dịch: Theo dõi các giao dịch mua/đặt cọc. Bấm "Xác nhận đã nhận tiền" khi khách đã chuyển khoản → Hoa hồng CTV liên quan sẽ tự động chuyển sang trạng thái "Chờ duyệt".',
     ],
-    tips: 'Bấm vào thẻ khách hàng trên bảng Kanban sẽ tự động chuyển sang chế độ Danh sách kèm lọc đúng tên khách để bạn xem lịch sử ghi chú chi tiết.',
+    tips: 'Bấm vào thẻ khách hàng trên bảng Kanban sẽ tự động chuyển sang chế độ Danh sách kèm lọc đúng tên khách để bạn xem lịch sử ghi chú chi tiết.', perm: 'contacts:view, contacts:edit, transactions:view, transactions:confirm' }, alivestream: { summary: 'Trung tâm Điều phối Livestream Đa Nguồn (7 luồng dữ liệu thời gian thực): Hợp nhất Kho Biển Shop + Kho Đấu Giá VPA + Giá Trúng Đấu Giá Thực Tế + Radar Phong Thủy Realtime + Khách Quan Tâm + Kho Voucher + Đẩy Lead 1-Chạm sang CRM Bán Hàng.', badge: '7 Nguồn Dữ Liệu Live', badgeType: 'brand', tabs: ['Kho Hợp Nhất (Shop + VPA + Rổ Live)', 'Trợ lý Kịch bản Đọc Sóng & Đối chiếu VPA', 'Radar Tín Hiệu Khách (3 Tab Realtime)', 'Bàn Hiệu Ứng 6-Pad & Tung Voucher OBS', 'Mô phỏng TikTok 9:16 (Co giãn linh hoạt)'], workflow: ['Lọc đa chiều & Rổ Hàng Live: Tra cứu tức thì (< 30ms) trên cả Kho Shop và Kho VPA theo 6 tiêu chí (Nguồn kho, Loại xe, Tầm giá, Ngũ hành Kim-Mộc-Thủy-Hỏa-Thổ, Tỉnh thành, Thế số). Bấm ngôi sao để gom biển vào "Rổ Live" chuẩn bị trước giờ lên sóng.', 'Trợ lý Kịch bản Đọc Sóng (Teleprompter): Khi chọn bất kỳ biển nào, hệ thống tự động sinh kịch bản đọc mic gồm Tổng nút, Mệnh hợp, Luận giải phong thủy, Biên độ giảm tối đa (Giá niêm yết trừ Giá đáy nội bộ) và tự động tìm 1 biển tương đương vừa trúng đấu giá VPA thực tế làm dẫn chứng báo giá.', 'Radar Tín Hiệu Khách (3 Tab): Theo dõi trực tiếp khách vừa hỏi trên bình luận Live, khách đang tra cứu năm sinh/luận biển trên web (/luan-bien-so) và khách vừa thả tim/xem lặp lại biển số để chủ động đọc tên chốt đơn trên sóng.', 'Đẩy CRM 1-Chạm & Tung Voucher: Bấm nút "Đẩy CRM" cạnh khách hỏi trên Live để tạo ngay phiếu yêu cầu đặt cọc thật vào bảng Kanban Bán hàng (/admin/ban-hang); hoặc bấm 1 chạm vào các mã giảm giá đang hoạt động để phát chữ chạy Flash Sale lên OBS.'], tips: 'Bạn có thể thu gọn hoặc chuyển kích thước khung Mô phỏng TikTok 9:16 (Nhỏ / Vừa / Rộng) ngay trên thanh công cụ để mở rộng tối đa diện tích bảng tra cứu biển số khi dùng màn hình laptop.',
     perm: 'contacts:view, contacts:edit, transactions:view, transactions:confirm',
   },
   acats: {
@@ -247,7 +250,7 @@ const GUIDE_DETAILS = {
     tabs: ['Danh sách video', 'Thêm video qua link', 'Gắn với biển số'],
     workflow: [
       'Bấm "Thêm video" → Dán đường link video từ TikTok hoặc YouTube Shorts.',
-      'Hệ thống tự động nhận diện nền tảng, bóc tách ID video và tự lấy ảnh đại diện (thumbnail).',
+      'Hệ thống tự động nhận diện nền tảng, bóc tách ID video, tự lấy ảnh bìa (thumbnail) và tự động làm mới link ảnh TikTok CDN khi chữ ký x-expires hết hạn.',
       'Nhập mã biển số tương ứng để video hiển thị trực tiếp trong trang chi tiết của biển số đó.',
     ],
     tips: 'Video ngắn quay thực tế biển số lắp trên xe thật luôn có tỷ lệ chuyển đổi chốt cọc cao gấp 3 lần so với chỉ xem ảnh tĩnh.',
@@ -396,11 +399,12 @@ const GUIDE_DETAILS = {
     perm: 'vanity_metrics:view, settings:view',
   },
   afeatureflags: {
-    summary: 'Bộ công cụ vận hành kỹ thuật (SuperAdmin): Bật/tắt tính năng theo cờ (Feature Flags), chế độ bảo trì hệ thống kèm thông báo đếm ngược, và DB Console tra cứu an toàn.',
+    summary: 'Bộ công cụ vận hành kỹ thuật & Giám sát hạ tầng 2 Máy chủ (SuperAdmin): Theo dõi trực tuyến Server 1 (VPS Chính: CPU/RAM/Disk/DB/Uptime) & Server 2 (Proxy Cào Dữ Liệu VPA), quản lý cờ tính năng (Feature Flags), chế độ bảo trì hệ thống và DB Console.',
     badge: 'Gộp 3 tab',
     badgeType: 'danger',
-    tabs: ['Feature Flags', 'Chế độ bảo trì', 'DB Console'],
+    tabs: ['Máy chủ & Hạ tầng (VPS + Proxy)', 'Feature Flags', 'Chế độ bảo trì', 'DB Console'],
     workflow: [
+      'Tab Máy chủ & Hạ tầng: Giám sát chi tiết 2 máy chủ theo thời gian thực — Server 1 (VPS Chính: CPU cores, RAM hệ thống, ổ cứng Disk, PostgreSQL DB Size/Connections, tiến trình .NET) và Server 2 (Proxy Cào Dữ Liệu VPA: ping TCP/SOCKS5, tỷ lệ cào thành công, thống kê 3 nguồn VPA).',
       'Tab Feature Flags: Bật hoặc tắt nhanh các tính năng thử nghiệm mà không cần phải triển khai lại code máy chủ.',
       'Tab Bảo trì: Bật bảo trì toàn trang hoặc bảo trì từng trang cụ thể; cài đặt thời gian bắt đầu/kết thúc dự kiến và lời nhắn cho khách. Tài khoản Admin vẫn truy cập bình thường.',
       'Tab DB Console: Tra cứu nhanh dữ liệu của 7 bảng cơ sở dữ liệu chính qua giao diện lọc có sẵn mà không cần mở phần mềm quản lý DB ngoài.',
@@ -436,7 +440,7 @@ const GUIDE_DETAILS = {
       'Lời khuyên: vài câu gợi ý sinh tự động từ các số liệu trên (không phải AI) — đọc nhanh thay vì tự ngồi suy ra từ biểu đồ.',
       'So giá VPA vs shop: đối chiếu giá trúng đấu giá VPA với giá niêm yết biển của shop theo cùng tỉnh + loại biển. Hai con số KHÁC BẢN CHẤT (giá trúng thật vs giá rao bán) — chỉ dùng để cảm nhận mặt bằng, không phải so sánh trực tiếp lãi/lỗ.',
     ],
-    tips: 'Dự báo và xu hướng chỉ đáng tin khi có đủ tuần dữ liệu (càng nhiều tuần, R² càng đáng tin) — với nhóm nhỏ (tỉnh ít giao dịch, loại biển hiếm), nên xem toàn thị trường thay vì lọc quá hẹp.',
+    tips: 'Dự báo và xu hướng chỉ đáng tin khi có đủ tuần dữ liệu (càng nhiều tuần, R² càng đáng tin) — với nhóm nhỏ (tỉnh ít giao dịch, loại biển hiếm), nên xem toàn thị trường thay vì lọc quá hẹp.', perm: 'vpa_prices:view' }, afengshuihistory: { summary: 'Lịch sử tra cứu & Luận giải biển số phong thủy (/luan-bien-so): Ghi nhận toàn bộ các biển số, năm sinh, bản mệnh và điểm phong thủy mà khách hàng (cả vãng lai và đăng nhập) đã tra cứu trên website.', badge: 'Insight phong thủy', badgeType: 'brand', tabs: ['Danh sách lượt luận giải', 'Lọc theo Mệnh & Năm sinh', 'Biển số khách quan tâm'], workflow: ['Theo dõi thời gian thực các biển số và năm sinh mà khách vừa nhập vào công cụ Luận giải biển số.', 'Phân tích xu hướng mệnh (Kim, Mộc, Thủy, Hỏa, Thổ) và các đuôi số đang được khách tra cứu nhiều nhất.', 'Khi khách đã đăng nhập tra cứu nhiều lần một biển số trong kho, nhân viên có thể chủ động liên hệ tư vấn.'], tips: 'Dữ liệu lịch sử luận giải giúp đội ngũ kinh doanh nắm bắt ngay khẩu vị phong thủy thực tế của khách truy cập.', perm: 'fengshui_history:view' }, asystemfeedback: { summary: 'Trung tâm tiếp nhận Báo cáo hệ thống & Góp ý người dùng: Quản lý toàn bộ báo cáo lỗi giao diện, lỗi tính năng hoặc đề xuất cải tiến do khách hàng và cộng tác viên gửi kèm ảnh chụp màn hình.', badge: 'Phản hồi & Báo lỗi', badgeType: 'accent', tabs: ['Tất cả báo cáo', 'Lọc theo Trạng thái xử lý', 'Ảnh đính kèm & Phản hồi'], workflow: ['Kiểm tra các báo cáo mới ở trạng thái "Mới" (hiển thị số lượng tồn đọng trực tiếp trên huy hiệu đỏ ở menu trái).', 'Mở xem chi tiết nội dung mô tả lỗi, đường dẫn trang gặp sự cố và ảnh chụp màn hình đính kèm của người dùng.', 'Cập nhật trạng thái xử lý (Mới → Đang xử lý → Đã xử lý / Từ chối) và ghi chú phản hồi của quản trị viên.'], tips: 'Huy hiệu số lượng báo cáo trên thanh menu chỉ giảm xuống khi quản trị viên chuyển trạng thái khỏi mục "Mới", đảm bảo không bỏ sót bất kỳ phản hồi nào.',
     perm: 'vpa_prices:view',
   },
 };

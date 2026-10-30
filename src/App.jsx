@@ -388,7 +388,7 @@ export default function App() {
   }, []);
   // Bảo trì từng trang — admin đang đăng nhập bypass để test trang thật (xem MaintenancePage.jsx).
   const { data: maintenanceList } = usePublicMaintenance();
-  const maintenanceActive = !st.isAdmin ? maintenanceList?.find((m) => m.screen === st.screen) : null;
+  const maintenanceActive = !st.isAdmin && Array.isArray(maintenanceList) ? maintenanceList.find((m) => m.screen === st.screen) : null;
 
   // Liên hệ shop cho card biển số: ưu tiên settings từ backend, fallback số mặc định (info.json).
   const contact = {
@@ -844,6 +844,8 @@ export default function App() {
     acats: ['Danh mục', 'Danh mục dùng cho bộ lọc phía khách'],
     acoupons: ['Mã giảm giá', 'Mã giảm giá áp dụng khi khách đặt cọc'],
     avpa: ['Biển VPA', 'Biển đấu giá VPA: duyệt giá, đồng bộ và cấu hình'],
+    avpastats: ['Thống kê Biển số & VPA', 'Báo cáo kho biển số hệ thống, dữ liệu đấu giá VPA và xuất dữ liệu'],
+    aexporthistory: ['Lịch sử tải xuống', 'Quản lý và tải lại các file xuất dữ liệu (Excel, Word, CSV) lưu trữ trong 30 ngày'],
     // 3 trang cũ (liên hệ/quy trình/giao dịch) đã gộp vào 1 trang có view bên trong — xem AdminSales.jsx.
     // Giữ key cũ ở đây vì URL cũ vẫn resolve được (GROUPED_REDIRECT đưa về asales).
     asales: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
@@ -905,7 +907,6 @@ export default function App() {
             if (s === 'fav') trail = [{ label: st.favTab === 'history' ? 'Lịch sử duyệt biển số' : 'Biển số đã lưu' }];
             else if (s === 'profile') trail = [{ label: 'Hồ sơ tài khoản' }];
             else if (s === 'about') trail = [{ label: 'Về Duy Đinh — Người sáng lập Biensovip' }];
-            else if (s === 'blog') trail = [{ label: 'Tin phong thủy' }];
             else if (s === 'chat') trail = [{ label: 'Liên hệ tư vấn' }];
             else if (s === 'compare') trail = [{ label: 'So sánh biển số' }];
             else if (s === 'saved') trail = [{ label: 'Thông báo biển mới' }];
@@ -922,8 +923,11 @@ export default function App() {
             else if (s === 'login') trail = [{ label: 'Đăng nhập' }];
             else if (s === 'register') trail = [{ label: 'Đăng ký tài khoản' }];
             else if (s === 'forgot') trail = [{ label: 'Quên mật khẩu' }];
+            else if (s === 'adminForgot') trail = [{ label: 'Quên mật khẩu quản trị' }];
+            else if (s === 'adminReset') trail = [{ label: 'Đặt lại mật khẩu quản trị' }];
+            else if (s === 'notfound') trail = [{ label: 'Không tìm thấy trang (404)' }];
             if (!trail.length) return null;
-            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), href: '/', onClick: go('home') }, ...trail]} />;
+            return <Breadcrumb keepOnMobile items={[{ label: contentGet('common.breadcrumb.home'), href: '/', onClick: go('home') }, ...trail]} />;
           })()}
 
           {maintenanceActive ? (
@@ -979,7 +983,7 @@ export default function App() {
             {s === 'faq' && <Faq go={go} zalo={st.settings?.zalo} />}
             {s === 'gmailCallback' && <GmailCallback go={go} />}
 
-            {s === 'blog' && <Blog patch={patch} />}
+            {s === 'blog' && <Blog patch={patch} go={go} />}
 
             {s === 'provinceLanding' && <ProvinceLandingPage provinceCode={st.provinceCode || '43'} openPlate={openPlate} onBuy={openBuy} contact={contact} go={go} />}
 

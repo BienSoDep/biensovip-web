@@ -24,7 +24,7 @@ export default function SystemHealthWidget() {
     setTestingEmail(true);
     try {
       const res = await sendTestEmail();
-      toast.success(res?.data || 'Đã gửi email kiểm tra thành công!');
+      toast.success(typeof res === 'string' ? res : (res?.data || 'Đã gửi email kiểm tra thành công!'));
       refetch();
     } catch (err) {
       toast.error(err?.message || 'Gửi email kiểm tra thất bại.');
@@ -33,8 +33,13 @@ export default function SystemHealthWidget() {
     }
   };
 
-  const metrics = data.serverMetrics;
-  const jobs = data.jobsLastRun || [];
+  const metrics = data.serverMetrics || data.ServerMetrics;
+  const main = data.mainServer || data.MainServer;
+  const rawDisk = main?.disk || main?.Disk;
+  const proxy = data.proxyServer || data.ProxyServer;
+  const proxyStatus = proxy?.status || proxy?.Status;
+  const proxyLatency = proxy?.latencyMs ?? proxy?.LatencyMs ?? 0;
+  const jobs = data.jobsLastRun || data.JobsLastRun || [];
 
   return (
     <div style={{
@@ -83,21 +88,21 @@ export default function SystemHealthWidget() {
           )}
 
           {/* Proxy VPA */}
-          {data.proxyServer && (
+          {proxy && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-body-sm)' }}>
               <span aria-hidden style={{
                 width: 8, height: 8, borderRadius: '50%',
-                background: data.proxyServer.Status === 'ok' ? '#3FBF8F' : (data.proxyServer.Status === 'blocked' ? '#ea580c' : (data.proxyServer.Status === 'not_configured' ? '#6b7280' : '#dc2626')),
+                background: proxyStatus === 'ok' ? '#3FBF8F' : (proxyStatus === 'blocked' ? '#ea580c' : (proxyStatus === 'not_configured' ? '#6b7280' : '#dc2626')),
                 display: 'inline-block'
               }} />
               Proxy VPA: <b style={{
-                color: data.proxyServer.Status === 'ok' ? '#3FBF8F' : (data.proxyServer.Status === 'blocked' ? '#ea580c' : '#dc2626')
+                color: proxyStatus === 'ok' ? '#3FBF8F' : (proxyStatus === 'blocked' ? '#ea580c' : '#dc2626')
               }}>
-                {data.proxyServer.Status === 'ok' ? 'Online' : (data.proxyServer.Status === 'blocked' ? 'Bị 403' : (data.proxyServer.Status === 'not_configured' ? 'Chưa bật' : 'Mất kết nối'))}
+                {proxyStatus === 'ok' ? 'Online' : (proxyStatus === 'blocked' ? 'Bị 403' : (proxyStatus === 'not_configured' ? 'Direct' : 'Mất kết nối'))}
               </b>
-              {data.proxyServer.LatencyMs > 0 && (
+              {proxyLatency > 0 && (
                 <span style={{ color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', fontSize: '0.8rem' }}>
-                  ({data.proxyServer.LatencyMs}ms)
+                  ({proxyLatency}ms)
                 </span>
               )}
             </span>
@@ -106,15 +111,20 @@ export default function SystemHealthWidget() {
           {/* Server Metrics (CPU / RAM / Disk / Uptime) */}
           {metrics && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', font: 'var(--type-caption)', color: 'var(--text-muted)', background: 'var(--surface-sunken)', padding: '2px 8px', borderRadius: 'var(--radius-sm)' }}>
-              {data.mainServer?.Disk && (
+              {rawDisk && (
                 <>
-                  <span>Ổ đĩa: <b style={{ color: data.mainServer.Disk.Status === 'danger' ? 'var(--status-danger)' : 'inherit' }}>{data.mainServer.Disk.UsedGb}/{data.mainServer.Disk.TotalGb}GB ({data.mainServer.Disk.UsedPercent}%)</b></span>
+                  <span>
+                    Ổ đĩa:{' '}
+                    <b style={{ color: (rawDisk.status || rawDisk.Status) === 'danger' ? 'var(--status-danger)' : 'inherit' }}>
+                      {rawDisk.usedGb ?? rawDisk.UsedGb}/{rawDisk.totalGb ?? rawDisk.TotalGb}GB ({rawDisk.usedPercent ?? rawDisk.UsedPercent}%)
+                    </b>
+                  </span>
                   <span>•</span>
                 </>
               )}
-              <span>RAM: <b>{metrics.memoryUsedMb}MB</b></span>
+              <span>RAM: <b>{metrics.memoryUsedMb ?? metrics.MemoryUsedMb}MB</b></span>
               <span>•</span>
-              <span>Uptime: <b>{metrics.uptimeHours}h</b></span>
+              <span>Uptime: <b>{metrics.uptimeFormatted || (metrics.uptimeHours != null ? `${metrics.uptimeHours}h` : '—')}</b></span>
             </span>
           )}
         </div>
@@ -160,7 +170,7 @@ export default function SystemHealthWidget() {
           </button>
 
           <a
-            href="/admin?tab=afeatureflags&subtab=servers"
+            href="/admin/feature-flags?subtab=servers"
             style={{
               padding: '4px 10px',
               borderRadius: 'var(--radius-sm)',

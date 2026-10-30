@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LineChart, BookOpen, Car, Gavel, BarChart3, FolderTree,
   ShoppingBag, Flame, Users, TicketPercent, FileText, Video, Compass,
   ShieldCheck, Bell, Star, Bot, Handshake, FileCode, MessageSquareShare,
-  UserCog, History, Eye, SlidersHorizontal, ScrollText, MessageSquareWarning, Radio,
+  UserCog, History, Eye, SlidersHorizontal, ScrollText, MessageSquareWarning, Radio, FolderDown,
 } from 'lucide-react';
 import { ADMIN_NAV } from '../common/constants.js';
 import Button from '../components/Button.jsx';
@@ -48,6 +48,7 @@ import AdminNotificationsHub from '../pages/admin/AdminNotificationsHub.jsx';
 import AdminInsights from '../pages/admin/AdminInsights.jsx';
 import AdminVpaMarket from '../pages/admin/AdminVpaMarket.jsx';
 import AdminVpaStats from '../pages/admin/AdminVpaStats.jsx';
+import AdminExportHistory from '../pages/admin/AdminExportHistory.jsx';
 import AdminLiveAssist from '../pages/admin/AdminLiveAssist.jsx';
 import GlobalSearch from '../components/GlobalSearch.jsx';
 import TwoFactorSettingsModal from '../components/TwoFactorSettingsModal.jsx';
@@ -68,7 +69,7 @@ const NAV_PERM = {
   actvtemplates: 'ctv_message_templates:view',
   ainsights: 'analytics:view',
   avpamarket: 'vpa_prices:view',
-  avpastats: 'vpa_prices:view',
+  avpastats: 'vpa_prices:view', aexporthistory: 'vpa_prices:view',
   astaff: 'staff:view',
 };
 export const canPerm = (st, perm) => st.user?.role === 'super-admin' || st.user?.permissions?.includes('*') || st.user?.permissions?.includes(perm);
@@ -187,6 +188,7 @@ const ADMIN_INFO = {
   ainsights: 'Báo cáo chuyên sâu: Phễu chuyển đổi toàn diện, radar phát hiện điểm nghẽn, đối soát cung - cầu kho biển, sức khỏe nguồn lead và danh sách biển số tồn đọng cần kích cầu.',
   avpamarket: 'Phân tích thị trường biển VPA dựa trên giá trúng đấu giá thật — so kỳ 7 ngày, chuỗi xu hướng 12 tuần & MA 4 tuần, xếp hạng biến động và đối chiếu giá shop.',
   avpastats: 'Báo cáo toàn diện kho biển số hệ thống và dữ liệu đấu giá VPA toàn quốc. Bao gồm dải KPI chung, xuất dữ liệu đa định dạng (Excel/Word/CSV), cùng 2 phân hệ thống kê: Biển đấu giá VPA và Kho biển số hiện tại của shop.',
+  aexporthistory: 'Toàn bộ file xuất dữ liệu biển số (Excel .xlsx, Word .docx, CSV .csv) được hệ thống tự động lưu trữ độc lập trong 30 ngày. Bạn có thể lọc theo định dạng, nguồn kho, tải lại tức thì mà không cần chạy lại tiến trình ngầm, hoặc khởi tạo lượt xuất mới ngay tại đây.',
 };
 
 // UC35 — badge "mới" cạnh Yêu cầu liên hệ/Đánh giá/Cộng tác viên, dựa lastSeenAt lưu localStorage (per-nav-item).
@@ -228,6 +230,7 @@ const NAV_ICONS = {
   aplates: Car,
   avpa: Gavel,
   avpastats: BarChart3,
+  aexporthistory: FolderDown,
   acats: FolderTree,
   asales: ShoppingBag,
   alivestream: Radio,
@@ -487,7 +490,7 @@ export default function AdminShell({
 
   return (
     <div className="admin-shell" style={{ display: 'flex', flexWrap: 'nowrap', alignItems: 'stretch', minHeight: 'calc(100vh - 42px)', background: 'var(--surface-sunken)', width: '100%', overflowX: 'clip' }}>
-      <AdminRunWatcher />
+      <AdminRunWatcher go={go} />
       {!drawerOpen && (
         <button type="button" className="admin-mobile-topbar-btn" onClick={() => setDrawerOpen(true)} aria-label="Mở menu quản trị" aria-controls="admin-drawer" aria-expanded={drawerOpen} style={{ display: 'none', position: 'fixed', top: 10, left: 12, zIndex: 70, width: 44, height: 44, border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-2)', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <Menu size={20} />
@@ -570,8 +573,34 @@ export default function AdminShell({
             <PanelLeftOpen size={18} />
           </button>
         )}
-        <Breadcrumb inset items={[{ label: 'Quản trị', onClick: go('dash') }, { label: adminMeta[0] }]} />
-        {s !== 'ainsights' && (
+        <Breadcrumb
+          inset
+          keepOnMobile
+          items={[
+            { label: 'Quản trị', href: '/admin/tong-quan', onClick: go('dash') },
+            ...(function () {
+              const navTarget = s === 'compose' ? 'aposts' : s;
+              const matchedGroup = ADMIN_NAV.find((g) => g.group && g.items.some(([k]) => k === navTarget));
+              const groupCrumb = matchedGroup?.group ? [{ label: matchedGroup.group }] : [];
+              if (s === 'compose') {
+                return [
+                  ...groupCrumb,
+                  { label: 'Quản lý Blog', href: '/admin/bai-viet', onClick: go('aposts') },
+                  { label: st.editingPostId ? 'Chỉnh sửa bài viết' : adminMeta[0] },
+                ];
+              }
+              if (s === 'aexporthistory') {
+                return [
+                  ...groupCrumb,
+                  { label: 'Biển VPA', href: '/admin/bien-vpa', onClick: go('avpa') },
+                  { label: adminMeta[0] },
+                ];
+              }
+              return [...groupCrumb, { label: adminMeta[0] }];
+            })(),
+          ]}
+        />
+        {s !== 'ainsights' && s !== 'alivestream' && (
           <div className="tablet-stack" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 'var(--space-4)' }}>
             <div style={{ flex: '1 1 280px' }}>
               <h1 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{adminMeta[0]}</h1>
@@ -596,9 +625,10 @@ export default function AdminShell({
         {s === 'acoupons' && <AdminCoupons notify={notify} />}
         {s === 'avpa' && <AdminVpa notify={notify} isSuperAdmin={isSuperAdmin} go={go} />}
         {s === 'avpastats' && <AdminVpaStats go={go} patch={patch} st={st} />}
+        {s === 'aexporthistory' && <AdminExportHistory notify={notify} />}
         {s === 'acats' && <AdminCats st={st} setField={setField} patch={patch} setSt={setSt} notify={notify} askDelete={askDelete} goToMeanings={(keyword) => patch({ screen: 'ameanings', meaningsPrefillKeyword: keyword })} />}
         {s === 'asales' && <AdminSales notify={notify} go={go} st={st} initialView={salesViewFromUrl()} />}
-        {s === 'alivestream' && <AdminLiveAssist notify={notify} />}
+        {s === 'alivestream' && <AdminLiveAssist notify={notify} go={go} />}
         {s === 'acontacts' && <AdminContacts notify={notify} go={go} st={st} />}
         {s === 'akanban' && <AdminKanban notify={notify} go={go} />}
         {s === 'astaff' && (isSuperAdmin ? <AdminStaff notify={notify} /> : null)}
