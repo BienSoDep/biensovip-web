@@ -1641,6 +1641,7 @@ export default function PlateDetail({
                     <TikTokEmbed
                       videoUrl={plate.journeyPost.videoUrl}
                       title={plate.journeyPost.title}
+                      thumbnailUrl={plate.journeyPost.coverImageUrl}
                     />
                   </div>
                 ) : (

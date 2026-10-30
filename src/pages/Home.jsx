@@ -400,7 +400,7 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                   style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}
                 >
                   {v.platform === 'tiktok' ? (
-                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={thumbSrc} />
                   ) : (
                     <a
                       href={v.videoUrl}

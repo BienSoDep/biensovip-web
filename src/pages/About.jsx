@@ -368,7 +368,7 @@ export default function About({ go }) {
               <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ width: '100%', borderRadius: 'var(--radius-card)', background: 'var(--surface-card)', border: '1px solid var(--border-hairline)', overflow: 'hidden', boxShadow: 'var(--shadow-1)' }}>
                   {v.platform === 'tiktok' ? (
-                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={v.thumbnailUrl} />
                   ) : (
                     <a
                       href={v.videoUrl}

@@ -139,7 +139,7 @@ export default function AdminVideos({ notify }) {
     <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', overflow: 'hidden', border: v.isFeatured ? '1.5px solid var(--action-primary)' : '1px solid var(--border-hairline)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ background: 'var(--surface-sunken)', display: 'flex', justifyContent: 'center', position: 'relative' }}>
         {v.platform === 'tiktok' ? (
-          <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+          <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={v.thumbnailUrl} />
         ) : (
           <a href={v.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Xem video Facebook: ${v.title || ''}`}
             style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', aspectRatio: RATIO[v.platform] || '16 / 9', overflow: 'hidden', background: '#0f172a', textDecoration: 'none' }}>
@@ -507,7 +507,7 @@ export default function AdminVideos({ notify }) {
               <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Xem trước:</span>
                 <div style={{ width: 'min(220px, 60%)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                  <TikTokEmbed videoUrl={debouncedUrl.trim()} title="Xem trước video" />
+                  <TikTokEmbed videoUrl={debouncedUrl.trim()} title="Xem trước video" thumbnailUrl={form.thumbnailUrl} />
                 </div>
               </div>
             )}
