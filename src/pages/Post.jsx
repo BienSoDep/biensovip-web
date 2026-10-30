@@ -17,6 +17,7 @@ import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 import { forceScrollToTop } from '../lib/scrollRestoration.js';
 import { PostReaderToolbar, useReaderPrefs } from './post/PostReaderToolbar.jsx';
 import { PostCommentSection } from './post/PostCommentSection.jsx';
+import TikTokEmbed from '../components/TikTokEmbed.jsx';
 
 const CATEGORY_LABEL = {
   'phong-thuy': 'Phong thủy', 'phap-ly': 'Pháp lý', 'kien-thuc': 'Kiến thức',
@@ -159,30 +160,6 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   useEffect(() => {
     if (!post) return;
     trackViewBlogPost(post);
-    document.title = post.metaTitle || post.title;
-    let meta = document.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'description';
-      document.head.appendChild(meta);
-    }
-    meta.content = post.metaDescription || post.excerpt || '';
-    const og = [
-      ['og:title', post.metaTitle || post.title],
-      ['og:description', post.metaDescription || post.excerpt || ''],
-      ['og:type', 'article'],
-      ['og:image', post.coverImageUrl || ''],
-      ['og:url', typeof window !== 'undefined' ? window.location.href : ''],
-    ].filter(([, v]) => v);
-    og.forEach(([prop, content]) => {
-      let m = document.querySelector(`meta[property="${prop}"]`);
-      if (!m) {
-        m = document.createElement('meta');
-        m.setAttribute('property', prop);
-        document.head.appendChild(m);
-      }
-      m.setAttribute('content', content);
-    });
   }, [post]);
 
   // Kho FAQ chung — bài gắn nhiều bộ (post.faqSets), gộp toàn bộ câu hỏi làm JSON-LD FAQPage
@@ -299,10 +276,10 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
     <>
       <div aria-hidden="true" style={{ position: 'fixed', top: 0, left: 0, width: `${progress}%`, height: 3, background: 'var(--action-primary)', zIndex: 'var(--z-header)', transition: 'width 80ms linear' }} />
       <Breadcrumb keepOnMobile items={[
-        { label: 'Trang chủ', onClick: go('home') },
-        { label: 'Tin phong thủy', onClick: go('blog') },
-        { label: CATEGORY_LABEL[post.category] || post.category, onClick: () => { history.replaceState(null, '', `${routeFor('blog')}?category=${encodeURIComponent(post.category)}`); go('blog')(); } },
-        ...(postProvinceLanding ? [{ label: postProvinceLanding.name, onClick: () => { window.location.href = routeFor('provinceLanding', postProvinceLanding.code); } }] : []),
+        { label: 'Trang chủ', href: '/', onClick: go('home') },
+        { label: 'Tin phong thủy', href: '/tin', onClick: go('blog') },
+        ...(post.category ? [{ label: CATEGORY_LABEL[post.category] || post.category, href: `${routeFor('blog')}?category=${encodeURIComponent(post.category)}`, onClick: () => { history.replaceState(null, '', `${routeFor('blog')}?category=${encodeURIComponent(post.category)}`); go('blog')(); } }] : []),
+        ...(postProvinceLanding ? [{ label: postProvinceLanding.name, href: routeFor('provinceLanding', postProvinceLanding.code), onClick: go('provinceLanding', postProvinceLanding.code) }] : []),
         { label: post.title },
       ]} />
       <article style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', animation: 'pageIn 180ms var(--ease-out)' }} itemScope itemType="https://schema.org/BlogPosting">
@@ -421,7 +398,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
           )}
 
           {midPlate && (
-            <div onClick={() => { trackSelectContent('related_plate_mid_article', midPlate.id, post.id, post.meaningKey); openPlate?.(midPlate.slug || midPlate.id); }} className="pressable" style={{ cursor: 'pointer', margin: 'var(--space-6) 0', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'center', flexWrap: 'wrap' }}>
+            <a href={routeFor('detail', midPlate.slug || midPlate.id)} onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) { e.preventDefault(); trackSelectContent('related_plate_mid_article', midPlate.id, post.id, post.meaningKey); openPlate?.(midPlate.slug || midPlate.id); } }} className="pressable" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', margin: 'var(--space-6) 0', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--gutter-card)', display: 'flex', gap: 'var(--space-4)', alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ width: 180, flexShrink: 0 }}>
                 <PlateVisual size="md" prov={splitPlateNumber(midPlate.plateNumber).prov} seri={splitPlateNumber(midPlate.plateNumber).seri} num={splitPlateNumber(midPlate.plateNumber).num} />
               </div>
@@ -430,7 +407,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
                 <span style={{ font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{midPlate.plateNumber} · {midPlate.province}</span>
                 <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(midPlate.price, midPlate.priceOnRequest)}</span>
               </div>
-            </div>
+            </a>
           )}
 
           <div className="article-body" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: parts[parts.length - 1] }} />
@@ -467,8 +444,8 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       {post.tags?.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {post.tags.map((t) => (
-            <button key={t} type="button" onClick={() => { history.replaceState(null, '', `${routeFor('blog')}?tag=${encodeURIComponent(t)}`); go('blog')(); }}
-              style={{ border: 'none', cursor: 'pointer', padding: '3px 12px', borderRadius: 'var(--radius-xs)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</button>
+            <a key={t} href={`${routeFor('blog')}?tag=${encodeURIComponent(t)}`} onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) { e.preventDefault(); history.replaceState(null, '', `${routeFor('blog')}?tag=${encodeURIComponent(t)}`); go('blog')(); } }}
+              style={{ textDecoration: 'none', cursor: 'pointer', padding: '3px 12px', borderRadius: 'var(--radius-xs)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--text-muted)' }}>#{t}</a>
           ))}
         </div>
       )}
@@ -476,8 +453,14 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
       {post.videos?.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {post.videos.map((v) => (
-            <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', aspectRatio: v.platform === 'tiktok' ? '9/14' : '16/9', maxWidth: v.platform === 'tiktok' ? 360 : '100%', overflow: 'hidden' }}>
-              <iframe src={v.videoUrl} title={v.title || 'Video'} style={{ width: '100%', height: '100%', border: 0 }} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+            <div key={v.id} style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', maxWidth: v.platform === 'tiktok' ? 360 : 640, overflow: 'hidden' }}>
+              {v.platform === 'tiktok' ? (
+                <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={v.thumbnailUrl} />
+              ) : (
+                <div style={{ aspectRatio: '16/9', width: '100%' }}>
+                  <iframe src={v.videoUrl} title={v.title || 'Video'} style={{ width: '100%', height: '100%', border: 0 }} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -506,13 +489,13 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
               const sp = splitPlateNumber(p.plateNumber);
               return (
                 <div key={key} className="plate-marquee__item" tabIndex={isHidden ? -1 : undefined}>
-                  <div onClick={() => { trackSelectContent('related_plate_end_article', p.id, post.id, post.meaningKey); openPlate?.(p.slug || p.id); }} className="pressable" style={{ cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
+                  <a href={routeFor('detail', p.slug || p.id)} tabIndex={isHidden ? -1 : undefined} onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) { e.preventDefault(); trackSelectContent('related_plate_end_article', p.id, post.id, post.meaningKey); openPlate?.(p.slug || p.id); } }} className="pressable" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', transition: 'var(--transition-card)' }}>
                     <PlateVisual size="md" prov={sp.prov} seri={sp.seri} num={sp.num} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)' }}>{p.plateNumber} · {p.province}</span>
                       <span style={{ font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--action-primary)' }}>{formatPrice(p.price, p.priceOnRequest)}</span>
                     </div>
-                  </div>
+                  </a>
                 </div>
               );
             };
@@ -546,9 +529,9 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
               <h2 style={{ margin: 0, font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Bài viết liên quan</h2>
               <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Cẩm nang phong thủy, thị trường & hướng dẫn chọn biển số đẹp</span>
             </div>
-            <button type="button" onClick={() => go('blog')()} style={{ border: 'none', background: 'transparent', color: 'var(--action-primary)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <a href="/tin" onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) { e.preventDefault(); go('blog')(); } }} style={{ textDecoration: 'none', color: 'var(--action-primary)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               Xem tất cả bài viết →
-            </button>
+            </a>
           </div>
           <div className="article-related-grid">
             {related.map((p) => (

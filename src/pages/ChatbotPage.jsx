@@ -459,47 +459,37 @@ export default function ChatbotPage({ go, user, openPlate, openPost }) {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {chatMode === 'ai' ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleNewAiChat}
-                    className="claude-action-btn"
-                    title="Tạo cuộc trò chuyện AI mới"
-                  >
-                    <Plus size={15} color="var(--brand-600)" />
-                    <span className="claude-header-btn-text" style={{ fontSize: 13, fontWeight: 500 }}>Đoạn chat mới</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNewAiChat}
-                    className="claude-action-btn"
-                    title="Làm mới cuộc trò chuyện"
-                  >
-                    <RotateCcw size={15} />
-                    <span className="claude-header-btn-text" style={{ fontSize: 13 }}>Làm mới</span>
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={handleNewAiChat}
+                  className="claude-action-btn"
+                  title="Tạo cuộc trò chuyện AI mới"
+                  style={{
+                    background: 'var(--brand-50, #FFFBEB)',
+                    borderColor: 'rgba(241, 151, 32, 0.3)',
+                    color: 'var(--brand-700, #B45309)',
+                    fontWeight: 600,
+                  }}
+                >
+                  <Plus size={15} color="var(--brand-600)" />
+                  <span className="claude-header-btn-text" style={{ fontSize: 13 }}>Đoạn chat mới</span>
+                </button>
               ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleNewStaffChat}
-                    className="claude-action-btn"
-                    title="Mở phiên trao đổi mới với Chuyên viên"
-                  >
-                    <Plus size={15} color="#059669" />
-                    <span className="claude-header-btn-text" style={{ fontSize: 13, fontWeight: 500, color: '#059669' }}>Phiên tư vấn mới</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNewStaffChat}
-                    className="claude-action-btn"
-                    title="Kết nối lại chuyên viên"
-                  >
-                    <RotateCcw size={15} />
-                    <span className="claude-header-btn-text" style={{ fontSize: 13 }}>Kết nối lại</span>
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={handleNewStaffChat}
+                  className="claude-action-btn"
+                  title="Mở phiên trao đổi mới với Chuyên viên"
+                  style={{
+                    background: '#ECFDF5',
+                    borderColor: 'rgba(16, 185, 129, 0.3)',
+                    color: '#065F46',
+                    fontWeight: 600,
+                  }}
+                >
+                  <Plus size={15} color="#059669" />
+                  <span className="claude-header-btn-text" style={{ fontSize: 13 }}>Phiên tư vấn mới</span>
+                </button>
               )}
             </div>
           </header>

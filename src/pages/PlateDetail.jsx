@@ -323,9 +323,11 @@ function AutoCarousel({
 // Nhãn/đích quay lại cho breadcrumb bước giữa — khớp đúng màn đã đưa khách tới đây, thay vì luôn
 // cứng "Biển số" dù khách đến từ Hợp mệnh/So sánh/Trang chủ.
 const FROM_SCREEN_CRUMB = {
-  lucky: { label: "Hợp mệnh", screen: "lucky" },
-  compare: { label: "So sánh", screen: "compare" },
-  list: { label: "Biển số", screen: "list" },
+  lucky: { label: "Hợp mệnh", screen: "lucky", href: "/hop-menh" },
+  luanBien: { label: "Luận giải biển số", screen: "luanBien", href: "/luan-bien-so" },
+  compare: { label: "So sánh", screen: "compare", href: "/so-sanh" },
+  fav: { label: "Biển số đã lưu", screen: "fav", href: "/yeu-thich" },
+  list: { label: "Biển số", screen: "list", href: "/danh-sach" },
 };
 
 export default function PlateDetail({
@@ -614,31 +616,25 @@ export default function PlateDetail({
   const midCrumb =
     fromScreen && FROM_SCREEN_CRUMB[fromScreen]
       ? FROM_SCREEN_CRUMB[fromScreen]
-      : { label: "Biển số", screen: "list" };
+      : { label: "Biển số", screen: "list", href: "/danh-sach" };
 
   return (
     <div style={{ animation: "pageIn 180ms var(--ease-out)" }}>
       <Breadcrumb
         keepOnMobile
         items={[
-          { label: "Trang chủ", onClick: go("home") },
-          { label: midCrumb.label, onClick: go(midCrumb.screen) },
-          // Landing tỉnh chỉ vào được qua URL trực tiếp (không có state provinceCode ở tầng App
-          // để điều hướng SPA từ đây) — dùng full navigation, chấp nhận reload trang.
+          { label: "Trang chủ", href: "/", onClick: go("home") },
+          { label: midCrumb.label, href: midCrumb.href, onClick: go(midCrumb.screen) },
           ...(plateProvinceLanding
             ? [
                 {
                   label: plateProvinceLanding.name,
-                  onClick: () => {
-                    window.location.href = routeFor(
-                      "provinceLanding",
-                      plateProvinceLanding.code,
-                    );
-                  },
+                  href: routeFor("provinceLanding", plateProvinceLanding.code),
+                  onClick: go("provinceLanding", plateProvinceLanding.code),
                 },
               ]
             : []),
-          { label: plate?.plateNumber || "Chi tiết biển số" },
+          { label: plate?.plateNumber ? `Biển số ${plate.plateNumber}` : "Chi tiết biển số" },
         ]}
       />
       <section
@@ -1641,6 +1637,7 @@ export default function PlateDetail({
                     <TikTokEmbed
                       videoUrl={plate.journeyPost.videoUrl}
                       title={plate.journeyPost.title}
+                      thumbnailUrl={plate.journeyPost.coverImageUrl}
                     />
                   </div>
                 ) : (

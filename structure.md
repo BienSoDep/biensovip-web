@@ -28,6 +28,8 @@ src/
 │   ├── Breadcrumb.jsx          # Thanh điều hướng phân cấp breadcrumbs
 │   ├── PlateCard.jsx           # Card hiển thị biển số ngoài sàn (tag, giá, ảnh mô phỏng)
 │   ├── PlateVisual.jsx         # Mô phỏng phôi biển dập nổi chuẩn BCA bằng SVG/CSS
+│   ├── TikTokEmbed.jsx         # Component Facade nhúng video TikTok tối ưu (0 iframe ban đầu, click-to-play)
+│   ├── TikTokIcon.jsx          # Icon SVG nốt nhạc TikTok chuẩn nhận diện
 │   ├── PriceReferenceModal.jsx # Modal minh bạch nguồn gốc & công thức định giá gợi ý VPA
 │   ├── FloatingActionBar.jsx   # Thanh công cụ thao tác hàng loạt nổi (khi chọn nhiều biển)
 │   └── index.jsx               # Re-export các primitives (Input, Select, Badge, Switch, Toast...)
@@ -67,8 +69,9 @@ src/
 │   └── admin/                  # Phân hệ Quản trị viên (Admin Portal)
 │       ├── Dashboard.jsx       # Bảng điều khiển kinh doanh tổng quan
 │       ├── AdminPlates.jsx     # Quản lý kho biển shop & giá thị trường tham khảo VPA
+│       ├── AdminLiveMode.jsx   # Bàn điều khiển Trợ lý Livestream TikTok/Facebook (tra cứu <20ms, giá đáy, ghim OBS)
 │       ├── AdminCats.jsx       # Quản lý danh mục (loại biển, tỉnh thành, loại xe)
-│       ├── AdminStaff.jsx      # Quản lý nhân viên & phân quyền theo ma trận 30 resources
+│       ├── AdminStaff.jsx      # Quản lý nhân viên & phân quyền theo ma trận 28 module chi tiết
 │       ├── AdminVpa.jsx        # Trang VPA chính tích hợp 5 tab ngang qua AdminTabbedPage
 │       ├── AdminVpaStats.jsx   # Báo cáo & Phân tích thị trường VPA
 │       ├── AdminContacts.jsx   # Khách hàng & CRM tư vấn
@@ -134,3 +137,35 @@ Dự án trang bị hệ thống kiểm thử tự động toàn diện:
   - `npx playwright test e2e/admin-vpa.spec.js`: Kiểm tra phân hệ Biển VPA (5 tab, điều hướng URL, thao tác hàng loạt, mở hướng dẫn quy trình).
   - `npx playwright test e2e/admin-staff-videos-notifications.spec.js`: Kiểm tra phân hệ Nhân viên & Phân quyền.
   - `npx playwright test`: Chạy toàn bộ 23 test suites E2E trên các thiết bị Desktop, Tablet và Mobile.
+
+
+---
+
+## 5. Phân Hệ Livestream & Tối Ưu Hiệu Năng Mạng
+
+- **Bàn điều khiển Trợ lý Livestream (`AdminLiveMode.jsx`):**
+  - Hỗ trợ streamer & trợ lý phòng livestream tra cứu biển số trong 20ms bằng phím tắt.
+  - Hiển thị song song **Giá niêm yết** và **Giá đáy bí mật** để kiểm soát biên độ chốt giá.
+  - Chế độ **Thẻ Phóng To (Showcase Mode)** giơ biển trước camera.
+  - Ghim biển số thời gian thực lên màn hình Livestream thông qua `BroadcastChannel`.
+  - Lưu ý: Nút "Khóa cọc live" đã được loại bỏ theo yêu cầu nghiệp vụ để giữ quy trình đơn giản, tránh nhầm lẫn.
+- **Tối ưu hóa Video Facade (`TikTokEmbed.jsx`):**
+  - Thay thế toàn bộ việc render `<iframe>` trực tiếp trên các trang (`Home`, `PromoRails`, `About`, `PlateDetail`, `Post`).
+  - Ban đầu nạp 0 iframe — triệt tiêu 886 request telemetry rác của TikTok, tránh lỗi 403 Forbidden và 1.180 console errors.
+- **Chống lãng phí tài nguyên mạng (Network Hygiene):**
+  - `useSiteSettings`: Dùng TanStack Query cache thay vì `fetch('/api/settings')` thô, loại bỏ request trùng lặp khi khởi động ứng dụng.
+  - `PromoRails.jsx`: Đồng bộ cache key `useFeaturedPlates(8)` với Trang chủ.
+  - `useScrollDepthTracking`: Debounce 300ms / 250ms cho sự kiện cuộn trang, gộp các mốc cuộn thành 1 beacon tracking duy nhất.
+
+---
+
+## 6. Bảo Mật Nâng Cao & Ma Trận Phân Quyền (RBAC & MFA)
+
+- **Xác thực Đa yếu tố Admin (MFA Email OTP):**
+  - Tự động kích hoạt khi đăng nhập tài khoản quản trị.
+  - Cho phép người dùng chọn nhận OTP qua Email đăng nhập hoặc Email khôi phục dự phòng.
+  - Hỗ trợ **Thiết bị tin cậy (Trusted Device)** trong 30 ngày qua HTTP-only Secure Token, giúp nhân viên không phải nhập lại OTP liên tục trên máy làm việc quen thuộc.
+- **Ma trận Phân quyền 28 Module (`AdminStaff.jsx`):**
+  - Phân quyền chi tiết dạng ma trận cột (Xem, Thêm, Sửa, Xóa, Toàn quyền).
+  - Tích hợp bộ cấu hình nhanh (Presets): *Kinh doanh / CSKH*, *Biên tập Nội dung*, *Quản trị Kỹ thuật*, *Thực tập sinh*.
+  - Cơ chế Super Admin Guardrail: ngăn chặn việc vô hiệu hóa hoặc hạ quyền nhầm Super Admin.

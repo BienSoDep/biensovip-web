@@ -37,6 +37,7 @@ export function usePublicBroadcasts(limit = 5) {
     queryKey: ['public', 'broadcasts', limit],
     queryFn: () => apiClient.get('/api/notifications/public', { params: { limit } }),
     refetchInterval: 60000,
+    staleTime: 30000,
   });
 }
 

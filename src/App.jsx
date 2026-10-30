@@ -38,6 +38,7 @@ import { useLenisSmoothScroll } from './hooks/useLenisSmoothScroll.js';
 import { makeHeroAnim } from './animations/heroAnim.js';
 import { isComposeDirty, resetComposeDirty } from './lib/unsavedGuard.js';
 import { usePublicMaintenance } from './services/maintenanceService.js';
+import { useSiteSettings } from './services/siteSettings.js';
 import {
   getRouteKey,
   getScrollPosition,
@@ -80,6 +81,7 @@ const TransferGuide = lazy(() => import('./pages/TransferGuide.jsx'));
 const Faq = lazy(() => import('./pages/Faq.jsx'));
 const GmailCallback = lazy(() => import('./pages/GmailCallback.jsx'));
 const AdminShell = lazy(() => import('./layout/AdminShell.jsx'));
+const LiveDisplayOverlay = lazy(() => import('./pages/overlay/LiveDisplayOverlay.jsx'));
 const Modals = lazy(() => import('./layout/Modals.jsx'));
 const AiChatbot = lazy(() => import('./components/AiChatbot.jsx'));
 
@@ -113,6 +115,8 @@ export default function App() {
   const [ast, setAst] = useState({
     aName: '', aEmail: '', aPhone: '', aIdType: 'email', aPw: '', aPw2: '', aOtp: '',
     aResetToken: '', aAgree: false, aReferral: '', aErr: {}, step: 1, a2faToken: null, a2faCode: '',
+    adminPendingToken: null, adminOtpRecipients: [], adminOtpStep: null, adminSelectedRecipient: null,
+    adminOtpCode: '', adminTrustDevice: true,
   });
   const patchAuth = (p) => setAst((s) => ({ ...s, ...(typeof p === 'function' ? p(s) : p) }));
   const fanDone = useRef(false);
@@ -121,6 +125,7 @@ export default function App() {
   usePlateRealtime();
   // UC17 realtime — user đăng nhập nhận thông báo mới (chuông/toast tức thì)
   useNotificationRealtime(st.user);
+  const { data: publicSettings } = useSiteSettings();
 
   useEffect(() => {
     const t = setTimeout(() => { fanDone.current = true; }, 1200);
@@ -153,8 +158,8 @@ export default function App() {
 
   // UC05+UC06 — fetch public settings for chat widget + Zalo
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings`)
-      .then(r => r.json())
+    (publicSettings ? Promise.resolve({ success: true, data: publicSettings }) : fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings`).then(r => r.json()))
+      .then(r => (typeof r.json === 'function' ? r.json() : r))
       .then(body => {
         if (!body?.success) return;
         const s = body.data;
@@ -167,7 +172,7 @@ export default function App() {
         }
       })
       .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [publicSettings]);
 
   // UC05 — Messenger Customer Chat plugin (chỉ load khi có VITE_FB_PAGE_ID; Zalo là fallback).
   useEffect(() => {
@@ -289,6 +294,8 @@ export default function App() {
       sent: false,
       ...(s === 'detail' && id ? { curId: id } : {}),
       ...(s === 'post' && id ? { postId: id } : {}),
+      ...(s === 'provinceLanding' && id ? { provinceCode: id } : {}),
+      ...(s === 'plateTypeLanding' && id ? { typeSlug: String(id).replace(/^bien-/, '') } : {}),
       redirectTo: (s === 'login' || s === 'register') && !['login', 'register', 'forgot'].includes(st.screen) ? { screen: st.screen, curId: st.curId } : st.redirectTo,
       ...(s !== 'compose' ? { editPostId: null } : {}),
       drawerOpen: false,
@@ -434,9 +441,11 @@ export default function App() {
 
   // Gọi /api/admin/auth/login — chia sẻ bởi form login user (auto-detect tài khoản admin).
   const adminLoginRequest = async (email, password) => {
+    let trustedToken = null;
+    try { trustedToken = localStorage.getItem('bsv_admin_trusted_device'); } catch { /* ignore */ }
     const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, trustedDeviceToken: trustedToken || null }),
     });
     const body = await resp.json();
     if (!resp.ok || !body?.success) return { ok: false, status: resp.status, message: body?.error?.message };
@@ -444,25 +453,118 @@ export default function App() {
   };
 
   // Thử đăng nhập như admin sau khi form user thất bại (401) — cùng ô email/password.
-  // true = đã đăng nhập thành công (hoặc chuyển bước 2FA) + điều hướng; false = không phải tài khoản admin.
+  // true = đã đăng nhập thành công (hoặc chuyển bước OTP/2FA) + điều hướng; false = không phải tài khoản admin.
   const tryAdminLogin = async (email, password) => {
     try {
       const result = await adminLoginRequest(email, password);
-      // 403 = tài khoản nhân viên bị admin khóa (lý do trong result.message) — khác "không phải tài
-      // khoản admin" (result.ok=false không có message rõ) — báo lý do thật thay vì rơi về generic.
+      // 403 = tài khoản nhân viên bị admin khóa
       if (!result.ok) return result.status === 403 && result.message ? { locked: true, reason: result.message } : false;
+
+      // Bước MFA Email OTP: Thiết bị mới chưa tin cậy
+      if (result.data.otpRequired) {
+        patchAuth({
+          aErr: {},
+          aPw: '',
+          adminPendingToken: result.data.pendingToken,
+          adminOtpRecipients: result.data.recipients || [],
+          adminOtpStep: 'choose_recipient',
+          adminSelectedRecipient: null,
+          adminOtpCode: '',
+          adminTrustDevice: true,
+        });
+        return true;
+      }
+
       if (result.data.twoFactorRequired) {
         patchAuth({ aErr: {}, aPw: '', a2faToken: result.data.twoFactorToken, a2faCode: '' });
         return true;
       }
-      const { accessToken, refreshToken, admin } = result.data;
+      const { accessToken, refreshToken, admin, trustedDeviceToken } = result.data;
+      if (trustedDeviceToken) {
+        try { localStorage.setItem('bsv_admin_trusted_device', trustedDeviceToken); } catch { /* ignore */ }
+      }
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
-      patchAuth({ aErr: {}, aPw: '' });
-      patch({ screen: 'dash', user: admin, isAdmin: true });
+      patchAuth({ aErr: {}, aPw: '', adminOtpStep: null, adminPendingToken: null });
+      const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
+      patch({ screen: targetScreen, user: admin, isAdmin: true, redirectTo: null });
       notify('Đăng nhập quản trị thành công');
       return true;
     } catch {
       return false;
+    }
+  };
+
+  const sendAdminOtp = async (recipientId) => {
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/mfa/send-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pendingToken: ast.adminPendingToken, recipientId }),
+      });
+      const body = await resp.json();
+      if (!resp.ok || !body?.success) {
+        patchAuth({ aErr: { otp: body?.error?.message || 'Không gửi được mã OTP.' } });
+        return false;
+      }
+      patchAuth({
+        adminOtpStep: 'enter_otp',
+        adminSelectedRecipient: recipientId,
+        adminOtpCode: '',
+        aErr: {},
+      });
+      notify(`Mã OTP đã được gửi đến email của ${body.data?.recipientLabel || 'quản trị viên'}`);
+      return true;
+    } catch {
+      patchAuth({ aErr: { otp: 'Không kết nối được server.' } });
+      return false;
+    }
+  };
+
+  const verifyAdminOtp = async () => {
+    if (!ast.adminOtpCode || ast.adminOtpCode.trim().length !== 6) {
+      patchAuth({ aErr: { otp: 'Vui lòng nhập đủ 6 chữ số OTP.' } });
+      return;
+    }
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/mfa/verify-otp`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pendingToken: ast.adminPendingToken,
+          code: ast.adminOtpCode.trim(),
+          trustDevice: !!ast.adminTrustDevice,
+        }),
+      });
+      const body = await resp.json();
+      if (!resp.ok || !body?.success) {
+        patchAuth({ aErr: { otp: body?.error?.message || 'Mã xác thực không đúng.' } });
+        return;
+      }
+      if (body.data.twoFactorRequired) {
+        patchAuth({
+          aErr: {},
+          adminOtpStep: null,
+          adminPendingToken: null,
+          a2faToken: body.data.twoFactorToken,
+          a2faCode: '',
+        });
+        return;
+      }
+      const { accessToken, refreshToken, admin, trustedDeviceToken } = body.data;
+      if (trustedDeviceToken) {
+        try { localStorage.setItem('bsv_admin_trusted_device', trustedDeviceToken); } catch { /* ignore */ }
+      }
+      saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
+      patchAuth({
+        aErr: {},
+        adminOtpStep: null,
+        adminPendingToken: null,
+        adminSelectedRecipient: null,
+        adminOtpCode: '',
+      });
+      const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
+      patch({ screen: targetScreen, user: admin, isAdmin: true, redirectTo: null });
+      notify('Đăng nhập quản trị thành công');
+    } catch {
+      patchAuth({ aErr: { otp: 'Không kết nối được server.' } });
     }
   };
 
@@ -475,10 +577,14 @@ export default function App() {
       });
       const body = await resp.json();
       if (!resp.ok || !body?.success) { patchAuth({ aErr: { otp: body?.error?.message || 'Mã không đúng.' } }); return; }
-      const { accessToken, refreshToken, admin } = body.data;
+      const { accessToken, refreshToken, admin, trustedDeviceToken } = body.data;
+      if (trustedDeviceToken) {
+        try { localStorage.setItem('bsv_admin_trusted_device', trustedDeviceToken); } catch { /* ignore */ }
+      }
       saveAuth({ accessToken, refreshToken, user: admin, isAdmin: true });
       patchAuth({ aErr: {}, a2faCode: '', a2faToken: null });
-      patch({ screen: 'dash', user: admin, isAdmin: true });
+      const targetScreen = (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen)) ? st.redirectTo.screen : 'dash';
+      patch({ screen: targetScreen, user: admin, isAdmin: true, redirectTo: null });
       notify('Đăng nhập quản trị thành công');
     } catch {
       patchAuth({ aErr: { otp: 'Không kết nối được server.' } });
@@ -555,14 +661,30 @@ export default function App() {
       if (!ast.aEmail.trim()) err.email = 'Vui lòng nhập email hoặc số điện thoại.';
       if (ast.aPw.length < 8) err.pw = 'Mật khẩu tối thiểu 8 ký tự.';
       if (Object.keys(err).length) { patchAuth({ aErr: err }); return; }
+
+      const emailInput = ast.aEmail.trim();
+      const isPotentialAdmin = emailInput.toLowerCase().endsWith('@biensovip.com') ||
+                               emailInput.toLowerCase().startsWith('admin') ||
+                               (st.redirectTo?.screen && ADMIN_SCREENS.includes(st.redirectTo.screen));
+
+      // Ưu tiên thử đăng nhập quản trị trước cho email admin / domain hệ thống / redirect admin
+      if (isPotentialAdmin) {
+        const adminResult = await tryAdminLogin(emailInput, ast.aPw);
+        if (adminResult === true) return;
+        if (adminResult && adminResult.locked) {
+          patchAuth({ aErr: { pw: adminResult.reason, lockedReason: adminResult.reason } });
+          return;
+        }
+      }
+
       try {
-        const data = await authApi.login({ identifier: ast.aEmail.trim(), password: ast.aPw, remember });
+        const data = await authApi.login({ identifier: emailInput, password: ast.aPw, remember });
         trackLogin('password');
-        rememberEmail(ast.aEmail.trim());
-        // Hồ sơ chưa đủ (họ tên/ngày sinh/giới tính) → mời điền luôn thay vì vào thẳng trang cũ,
-        // để tính năng hợp mệnh + phân khúc khách hàng có dữ liệu ngay từ lần đăng nhập đầu.
+        rememberEmail(emailInput);
         patchAuth({ aErr: {}, aPw: '' });
-        if (isProfileIncomplete(data.user)) {
+        if (st.redirectTo?.screen && PUBLIC_SCREENS.includes(st.redirectTo.screen)) {
+          patch({ user: data.user, screen: st.redirectTo.screen, curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
+        } else if (isProfileIncomplete(data.user)) {
           patch({ user: data.user, screen: 'profile' });
         } else {
           patch({ user: data.user, screen: st.redirectTo?.screen || 'home', curId: st.redirectTo?.curId ?? st.curId, redirectTo: null });
@@ -571,14 +693,14 @@ export default function App() {
         favApi.syncFavorites(); // fire-and-forget: merge local → server
         syncPlateHistory();
       } catch (e) {
-        // Sai với endpoint user — thử lại như tài khoản quản trị trước khi báo lỗi.
-        // 1 form, 1 ô nhập, tự nhận diện loại tài khoản qua endpoint nào chấp nhận.
-        if (e.status === 401) {
-          const adminResult = await tryAdminLogin(ast.aEmail.trim(), ast.aPw);
+        // Nếu chưa thử admin (không có dấu hiệu admin ban đầu) — thử fallback tài khoản quản trị khi 401
+        if (!isPotentialAdmin && e.status === 401) {
+          const adminResult = await tryAdminLogin(emailInput, ast.aPw);
           if (adminResult === true) return;
           if (adminResult && adminResult.locked) patchAuth({ aErr: { pw: adminResult.reason, lockedReason: adminResult.reason } });
           else patchAuth({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
         }
+        else if (e.status === 401) patchAuth({ aErr: { pw: 'Thông tin đăng nhập không đúng.' } });
         else if (e.status === 429) patchAuth({ aErr: { pw: 'Tài khoản tạm khóa, thử lại sau 15 phút.' } });
         // 403 + code ACCOUNT_LOCKED_BY_ADMIN — khóa thủ công bởi admin, message là lý do admin ghi.
         else if (e.status === 403 && e.code === 'ACCOUNT_LOCKED_BY_ADMIN') patchAuth({ aErr: { pw: e.message, lockedReason: e.message } });
@@ -671,7 +793,8 @@ export default function App() {
       ref: modalPlate.plateNumber.replace(/[^A-Z0-9]/gi, ''),
     };
   }
-  useSeo(s, s === 'detail' ? { plate: seoPlate } : s === 'post' ? { post: seoPost } : undefined);
+  const isSelfSeoScreen = ['list', 'provinceLanding', 'plateTypeLanding', 'aiChat'].includes(s);
+  useSeo(s, isSelfSeoScreen ? { skip: true } : s === 'detail' ? { plate: seoPlate } : s === 'post' ? { post: seoPost } : undefined);
   const isAdminShell = ADMIN_SCREENS.indexOf(s) >= 0;
   const isPublic = PUBLIC_SCREENS.indexOf(s) >= 0;
 
@@ -724,6 +847,7 @@ export default function App() {
     // 3 trang cũ (liên hệ/quy trình/giao dịch) đã gộp vào 1 trang có view bên trong — xem AdminSales.jsx.
     // Giữ key cũ ở đây vì URL cũ vẫn resolve được (GROUPED_REDIRECT đưa về asales).
     asales: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
+    alivestream: ['Trợ lý Livestream TikTok 9:16 & OBS', 'Bàn đạo diễn hiệu ứng phím tắt (1–6 / F1–F6), tra cứu bình luận khách 3-trong-1 và điều khiển màn hình OBS Overlay'],
     acontacts: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
     atransactions: ['Bán hàng', 'Yêu cầu liên hệ, quy trình và giao dịch trong cùng một trang'],
     astaff: ['Nhân viên', 'Quản lý tài khoản nhân viên và phân quyền'],
@@ -764,11 +888,11 @@ export default function App() {
   return (
     <ErrorBoundary>
       <FlyEffectProvider>
-        <div style={{ minHeight: '100vh', background: 'var(--surface-page)' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--surface-page)', ...(s === 'aiChat' ? { height: '100vh', height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column' } : {}) }}>
         <Toaster position="top-right" toastOptions={{ role: 'alert', style: { background: 'var(--surface-inverse)', color: 'var(--white)', borderRadius: 'var(--radius-md)', font: 'var(--type-caption)' } }} />
-        <main>
+        <main style={s === 'aiChat' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } : undefined}>
 
-        <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: '100%', margin: '0 auto', position: 'relative', ...(s === 'aiChat' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%' } : {}) }}>
 
           {isPublic && <Header s={s} go={go} favCount={totalFavCount} user={st.user} patch={patch} notify={notify} onMenu={() => patch({ drawerOpen: true })} openPlate={openPlate} openPost={openPost}  />}
 
@@ -788,9 +912,9 @@ export default function App() {
             else if (s === 'reviews') trail = [{ label: 'Đánh giá' }];
             else if (s === 'notifications') trail = [{ label: 'Thông báo' }];
             else if (s === 'collab') trail = [{ label: 'Cộng tác viên' }];
-            else if (s === 'collabProcess') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Quy trình nhận hoa hồng' }];
-            else if (s === 'collabLeaderboard') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Bảng xếp hạng' }];
-            else if (s === 'collabCustomers') trail = [{ label: 'Cộng tác viên', onClick: go('collab') }, { label: 'Khách hàng của tôi' }];
+            else if (s === 'collabProcess') trail = [{ label: 'Cộng tác viên', href: '/cong-tac-vien', onClick: go('collab') }, { label: 'Quy trình nhận hoa hồng' }];
+            else if (s === 'collabLeaderboard') trail = [{ label: 'Cộng tác viên', href: '/cong-tac-vien', onClick: go('collab') }, { label: 'Bảng xếp hạng' }];
+            else if (s === 'collabCustomers') trail = [{ label: 'Cộng tác viên', href: '/cong-tac-vien', onClick: go('collab') }, { label: 'Khách hàng của tôi' }];
             else if (s === 'terms') trail = [{ label: 'Điều khoản sử dụng' }];
             else if (s === 'privacy') trail = [{ label: 'Chính sách bảo mật' }];
             else if (s === 'transfer') trail = [{ label: 'Hướng dẫn sang tên' }];
@@ -799,7 +923,7 @@ export default function App() {
             else if (s === 'register') trail = [{ label: 'Đăng ký tài khoản' }];
             else if (s === 'forgot') trail = [{ label: 'Quên mật khẩu' }];
             if (!trail.length) return null;
-            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), onClick: go('home') }, ...trail]} />;
+            return <Breadcrumb items={[{ label: contentGet('common.breadcrumb.home'), href: '/', onClick: go('home') }, ...trail]} />;
           })()}
 
           {maintenanceActive ? (
@@ -816,7 +940,7 @@ export default function App() {
             {s === 'detail' && <PlateDetail plateId={st.curId} fallbackPlate={cur} favs={st.favs} onFav={toggleFav} go={go} openPlate={openPlate} openPost={openPost} notify={notify} user={st.user} onUserUpdate={(u) => patch({ user: u })} fromScreen={st.detailFrom} />}
 
             {(s === 'register' || s === 'login' || s === 'forgot') && (
-              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} openPlate={openPlate} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
+              <Auth st={ast} s={s} patch={patchAuth} onNavigate={(scr) => patch({ screen: scr })} go={go} openPlate={openPlate} setField={setAuthField} authMeta={authMeta} authSubmit={authSubmit} otpLoginRequest={otpLoginRequest} otpLoginVerify={otpLoginVerify} resendOtp={resendOtp} submitAdmin2fa={submitAdmin2fa} sendAdminOtp={sendAdminOtp} verifyAdminOtp={verifyAdminOtp} blurValidateRegisterField={blurValidateRegisterField} zalo={st.settings?.zalo} />
             )}
 
             {s === 'adminForgot' && <AdminForgotPassword go={go} />}
@@ -864,6 +988,7 @@ export default function App() {
             {s === 'post' && <Post postId={st.postId} go={go} patch={patch} notify={notify} openPlate={openPlate} user={st.user} />}
 
             {s === 'notfound' && <NotFound go={go} notify={notify} />}
+            {s === 'overlayLive' && <LiveDisplayOverlay />}
 
             {isAdminShell && (
               <RequireAuth st={st} go={go} patch={patch}>
@@ -876,23 +1001,23 @@ export default function App() {
           </Suspense>
           )}
 
-          {isPublic && <Footer settings={st.settings} patch={patch} />}
+          {isPublic && s !== 'aiChat' && <Footer settings={st.settings} patch={patch} />}
 
-          {isPublic && <PromoRails openPlate={openPlate} />}
+          {isPublic && !['aiChat', 'profile', 'compare', 'login', 'register', 'forgot', 'adminForgot', 'adminReset', 'gmailCallback', 'saved', 'notifications'].includes(s) && <PromoRails openPlate={openPlate} />}
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} openPlate={openPlate} />
           </Suspense>
 
-          {isPublic && <ContactFab zalo={st.settings?.zalo} phone={st.settings?.phone} />}
+          {isPublic && s !== 'aiChat' && <ContactFab zalo={st.settings?.zalo} phone={st.settings?.phone} />}
 
-          {isPublic && (
+          {isPublic && s !== 'aiChat' && (
             <Suspense fallback={null}>
               <AiChatbot go={go} openPlate={openPlate} openPost={openPost} />
             </Suspense>
           )}
 
-          {isPublic && st.screen !== 'compare' && <CompareBar go={go} />}
+          {isPublic && ['home', 'list', 'lucky', 'luanBien', 'provinceLanding', 'plateTypeLanding'].includes(s) && <CompareBar go={go} />}
 
           {isPublic && (
             <CommandPalette

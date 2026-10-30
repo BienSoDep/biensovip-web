@@ -108,6 +108,7 @@ export async function trackPageView(screen, url) {
 }
 
 let lastScrollTracked = { pageViewId: null, maxPct: 0 };
+let scrollDebounceTimer = null;
 
 export function updateScrollDepth(pct) {
   const session = loadSession();
@@ -120,11 +121,14 @@ export function updateScrollDepth(pct) {
   }
   lastScrollTracked = { pageViewId: session.pageViewId, maxPct: validPct };
 
-  const url = `${BASE_URL}/api/analytics/pageview/${session.pageViewId}/scroll`;
-  const body = JSON.stringify({ pct: validPct });
-  // sendBeacon không cho set Content-Type JSON trực tiếp nhưng backend chỉ đọc body — đủ dùng, không cần retry.
-  if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
-  else fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  // Debounce 250ms tránh spam socket mạng khi người dùng cuộn nhanh
+  if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
+  scrollDebounceTimer = setTimeout(() => {
+    const url = `${BASE_URL}/api/analytics/pageview/${session.pageViewId}/scroll`;
+    const body = JSON.stringify({ pct: lastScrollTracked.maxPct });
+    if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+    else fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  }, 250);
 }
 
 // Đóng phiên khi tab đóng/ẩn đột ngột — sendBeacon không bị hủy khi trang unload (khác fetch thường).

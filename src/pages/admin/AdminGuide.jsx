@@ -39,6 +39,7 @@ import {
   List,
   Maximize2,
   ArrowRight,
+  Radio,
 } from 'lucide-react';
 import Modal from '../../components/Modal.jsx';
 import { ADMIN_NAV } from '../../common/constants.js';
@@ -51,6 +52,7 @@ const ICON_MAP = {
   avpa: Gavel,
   avpastats: BarChart3,
   asales: Layers,
+  alivestream: Radio,
   acats: FolderTree,
   acoupons: Ticket,
   acustomers: Users,
@@ -75,6 +77,20 @@ const ICON_MAP = {
 
 // Dữ liệu cẩm nang vận hành chi tiết, chuẩn xác 100% với tính năng thực tế trong ứng dụng
 const GUIDE_DETAILS = {
+  alivestream: {
+    summary: 'Bàn đạo diễn Trợ lý Livestream TikTok (Khung dọc 9:16 Safe-Zone) & OBS Studio: Bấm phím tắt 1–6 / F1–F6 phát hiệu ứng hình ảnh + âm thanh chốt đơn, tra cứu bình luận khách 3-trong-1 và ghim biển lên sóng tức thì (< 10ms).',
+    badge: 'Livestream 9:16',
+    badgeType: 'brand',
+    tabs: ['Bàn phím hiệu ứng VFX/SFX (1–6)', 'Tra cứu bình luận 3-trong-1', 'Khung dọc 9:16 TikTok Safe-Zone', 'Khách vừa hỏi trên Live'],
+    workflow: [
+      'Sao chép link OBS Overlay (/overlay/live-display?obs=1&layout=9:16) dán vào nguồn Browser Source (1080x1920) trên TikTok Live Studio hoặc OBS.',
+      'Khi khách bình luận trên TikTok: Nhấn phím "/" để nhảy vào ô tìm kiếm, gõ tắt "30 68", gõ năm sinh "1990" (tự động hiện kịch bản đọc phong thủy Can Chi & Mệnh), hoặc dán nguyên câu comment của khách.',
+      'Nhấn phím mũi tên Lên/Xuống để chọn biển và nhấn Enter để ghim biển lên màn hình Live tức thì; nhấn Space để phóng to phôi biển 3D giơ trước camera.',
+      'Nhấn phím 1–6 (hoặc F1–F6 / Alt+1..6 mọi lúc) để tung hiệu ứng Pháo hoa Chốt đơn, Lửa rồng Siêu phẩm, Mưa xu Giảm giá, Vỗ tay, Kèn chiến thắng kèm âm thanh sống động. Nhấn 0 hoặc Esc để dừng hiệu ứng.',
+    ],
+    tips: 'Bật/tắt độc lập nút "Loa Admin" và "Âm thanh OBS" để tránh dội âm khi phát trực tiếp. Cột Giá Đáy Nội Bộ được bảo mật 100% không bao giờ xuất hiện trên OBS.',
+    perm: 'Mọi vai trò (Staff & SuperAdmin)',
+  },
   dash: {
     summary: 'Trung tâm chỉ huy & giám sát: Doanh thu tiềm năng, tỷ lệ chuyển đổi, ma trận phân bổ kho biển 6 chiều và widget giám sát sức khỏe hạ tầng thời gian thực.',
     badge: 'Giám sát điều hành',

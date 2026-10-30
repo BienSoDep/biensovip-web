@@ -7,10 +7,11 @@ export async function checkBlogPostVersion(id, updatedAt) {
   return result.conflict;
 }
 
-export function useBlogPosts(page = 1, limit = 20) {
+export function useBlogPosts(page = 1, limit = 20, options = {}) {
   return useQuery({
     queryKey: ['blog-posts', page, limit],
     queryFn: () => apiClient.get(`/api/blog/posts?page=${page}&limit=${limit}`),
+    ...options,
   });
 }
 

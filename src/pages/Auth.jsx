@@ -359,6 +359,8 @@ export default function Auth({
   otpLoginVerify,
   resendOtp,
   submitAdmin2fa,
+  sendAdminOtp,
+  verifyAdminOtp,
   blurValidateRegisterField,
   zalo,
 }) {
@@ -474,7 +476,9 @@ export default function Auth({
 
   const handlePrimarySubmit = (e) => {
     e?.preventDefault();
-    if (s === 'login' && !!st.a2faToken) {
+    if (s === 'login' && st.adminOtpStep === 'enter_otp') {
+      verifyAdminOtp();
+    } else if (s === 'login' && !!st.a2faToken) {
       submitAdmin2fa();
     } else if (otpMode) {
       if (st.step === 1) otpLoginRequest();
@@ -970,7 +974,7 @@ const FALLBACK_PLATES = [
           >
             <div style={{ width: '100%', maxWidth: 410, display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
               {/* Quick Tab Switcher giữa Đăng nhập & Đăng ký */}
-              {(s === 'login' || s === 'register') && !otpMode && !st.a2faToken && (
+              {(s === 'login' || s === 'register') && !otpMode && !st.a2faToken && !st.adminOtpStep && (
                 <div
                   style={{
                     display: 'flex',
@@ -1036,6 +1040,8 @@ const FALLBACK_PLATES = [
                 >
                   {s === 'forgot' && <Eyebrow tone="brand">{`Bước ${st.step}/3 · Khôi phục quyền truy cập`}</Eyebrow>}
                   {otpMode && <Eyebrow tone="brand">{`Đăng nhập bằng OTP · Bước ${st.step}/2`}</Eyebrow>}
+                  {s === 'login' && st.adminOtpStep === 'choose_recipient' && <Eyebrow tone="brand">Xác thực bảo mật Quản trị viên · Bước 1/2</Eyebrow>}
+                  {s === 'login' && st.adminOtpStep === 'enter_otp' && <Eyebrow tone="brand">Xác thực bảo mật Quản trị viên · Bước 2/2</Eyebrow>}
 
                   <div>
                     <h1
@@ -1047,13 +1053,23 @@ const FALLBACK_PLATES = [
                         fontSize: 'clamp(1.4rem, 2.2vw, 1.75rem)',
                       }}
                     >
-                      {otpMode ? (st.step === 1 ? 'Đăng nhập bằng OTP' : 'Nhập mã xác thực') : authMeta[0]}
+                      {st.adminOtpStep === 'choose_recipient'
+                        ? 'Xác thực người nhận OTP'
+                        : st.adminOtpStep === 'enter_otp'
+                        ? 'Nhập mã xác thực 6 số'
+                        : otpMode
+                        ? (st.step === 1 ? 'Đăng nhập bằng OTP' : 'Nhập mã xác thực')
+                        : authMeta[0]}
                     </h1>
                     <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                      {otpMode
-                        ? st.step === 1
+                      {st.adminOtpStep === 'choose_recipient'
+                        ? 'Tài khoản quản trị truy cập từ thiết bị mới. Vui lòng chọn người nhận mã OTP để cấp quyền đăng nhập:'
+                        : st.adminOtpStep === 'enter_otp'
+                        ? 'Mã OTP 6 số đã được gửi tới email quản trị. Vui lòng nhập mã để hoàn tất đăng nhập:'
+                        : otpMode
+                        ? (st.step === 1
                           ? 'Không cần nhớ mật khẩu — chúng tôi sẽ gửi mã OTP bảo mật qua email của bạn.'
-                          : 'Mã xác thực 6 số đã được gửi tới email của bạn.'
+                          : 'Mã xác thực 6 số đã được gửi tới email của bạn.')
                         : authMeta[1]}
                     </p>
                   </div>
@@ -1142,6 +1158,217 @@ const FALLBACK_PLATES = [
                     </div>
                   )}
 
+                  {/* MFA ADMIN: BƯỚC 1 - CHỌN NGƯỜI NHẬN OTP */}
+                  {s === 'login' && st.adminOtpStep === 'choose_recipient' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                      {st.aErr?.otp && (
+                        <div
+                          style={{
+                            padding: '10px 14px',
+                            borderRadius: 'var(--radius-control)',
+                            background: 'var(--status-danger-bg)',
+                            border: '1px solid var(--status-danger)',
+                            color: 'var(--status-danger-ink)',
+                            font: 'var(--type-caption)',
+                            fontWeight: 'var(--fw-medium)',
+                          }}
+                        >
+                          {st.aErr.otp}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {st.adminOtpRecipients?.map((r) => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => sendAdminOtp(r.id)}
+                            className="pressable"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '16px 18px',
+                              borderRadius: 'var(--radius-card)',
+                              border: '1.5px solid var(--border-subtle)',
+                              background: 'var(--surface-card, #ffffff)',
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              transition: 'all 0.2s ease',
+                              boxShadow: 'var(--shadow-1)',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = 'var(--action-primary)';
+                              e.currentTarget.style.background = 'var(--surface-hover, #fafafa)';
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                              e.currentTarget.style.background = 'var(--surface-card, #ffffff)';
+                              e.currentTarget.style.transform = 'none';
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                              <div
+                                style={{
+                                  width: 44,
+                                  height: 44,
+                                  borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                                  color: '#ffffff',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: '700',
+                                  fontSize: 16,
+                                  flexShrink: 0,
+                                  boxShadow: '0 2px 8px rgba(217, 119, 6, 0.3)',
+                                }}
+                              >
+                                {r.label?.slice(0, 1) || 'A'}
+                              </div>
+                              <div>
+                                <div style={{ font: 'var(--type-label)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                                  {r.label}
+                                </div>
+                                <div style={{ font: 'var(--type-caption)', color: 'var(--text-muted)', marginTop: 2 }}>
+                                  {r.maskedEmail}
+                                </div>
+                              </div>
+                            </div>
+                            <span
+                              style={{
+                                font: 'var(--type-caption)',
+                                fontWeight: '700',
+                                color: 'var(--action-primary)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              Gửi OTP →
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => patch({ adminOtpStep: null, adminPendingToken: null, aErr: {} })}
+                        style={{
+                          border: 'none',
+                          background: 'none',
+                          color: 'var(--text-muted)',
+                          font: 'var(--type-caption)',
+                          cursor: 'pointer',
+                          padding: '8px 0',
+                          textAlign: 'center',
+                          marginTop: 4,
+                        }}
+                      >
+                        ← Hủy & Quay lại đăng nhập
+                      </button>
+                    </div>
+                  )}
+
+                  {/* MFA ADMIN: BƯỚC 2 - NHẬP MÃ OTP & GHI NHỚ THIẾT BỊ TIN CẬY */}
+                  {s === 'login' && st.adminOtpStep === 'enter_otp' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: '12px 14px',
+                          borderRadius: 'var(--radius-card)',
+                          background: 'rgba(59, 130, 246, 0.08)',
+                          border: '1px solid rgba(59, 130, 246, 0.25)',
+                        }}
+                      >
+                        <ShieldCheck size={22} style={{ color: '#2563EB', flexShrink: 0 }} />
+                        <span style={{ font: 'var(--type-caption)', color: 'var(--text-strong)', lineHeight: 1.4 }}>
+                          Mã xác thực đã gửi tới hòm thư của{' '}
+                          <strong>{st.adminOtpRecipients?.find((r) => r.id === st.adminSelectedRecipient)?.label || 'Quản trị viên'}</strong>.
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                        <span style={{ font: 'var(--type-label)', color: 'var(--text-strong)' }}>Mã xác thực 6 số</span>
+                        <OtpBoxes
+                          value={st.adminOtpCode || ''}
+                          onChange={(v) => patch({ adminOtpCode: v, aErr: { ...st.aErr, otp: '' } })}
+                          error={st.aErr?.otp}
+                        />
+                        {st.aErr?.otp && (
+                          <span style={{ font: 'var(--type-caption)', color: 'var(--status-danger)' }}>{st.aErr.otp}</span>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '10px 14px',
+                          borderRadius: 'var(--radius-control)',
+                          background: 'var(--surface-subtle, #f8fafc)',
+                          border: '1px solid var(--border-hairline)',
+                          marginTop: 4,
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => patch({ adminTrustDevice: !st.adminTrustDevice })}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!st.adminTrustDevice}
+                          onChange={(e) => patch({ adminTrustDevice: e.target.checked })}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ width: 16, height: 16, accentColor: 'var(--action-primary)', cursor: 'pointer' }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <span style={{ font: 'var(--type-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }}>
+                            Tin tưởng thiết bị này trong 30 ngày
+                          </span>
+                          <span style={{ font: 'var(--type-caption)', fontSize: 'var(--fs-micro)', color: 'var(--text-muted)' }}>
+                            Lần sau không cần hỏi lại mã OTP khi đăng nhập trên trình duyệt này.
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                        <button
+                          type="button"
+                          onClick={() => patch({ adminOtpStep: 'choose_recipient', adminOtpCode: '', aErr: {} })}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            padding: 0,
+                            font: 'var(--type-caption)',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ← Chọn người nhận khác
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => sendAdminOtp(st.adminSelectedRecipient)}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            padding: 0,
+                            font: 'var(--type-caption)',
+                            color: 'var(--action-primary)',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                          }}
+                        >
+                          Gửi lại mã OTP
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* 2FA ADMIN/STAFF */}
                   {s === 'login' && !!st.a2faToken && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -1160,7 +1387,7 @@ const FALLBACK_PLATES = [
                   )}
 
                   {/* FORM ĐĂNG NHẬP TIÊU CHUẨN */}
-                  {s === 'login' && !otpMode && !st.a2faToken && (
+                  {s === 'login' && !otpMode && !st.a2faToken && !st.adminOtpStep && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                       {st.aErr.lockedReason && (
                         <div
@@ -1386,7 +1613,12 @@ const FALLBACK_PLATES = [
 
                   {/* NÚT SUBMIT CHÍNH */}
                   <div style={{ marginTop: 4 }}>
-                    {s === 'login' && !!st.a2faToken ? (
+                    {s === 'login' && st.adminOtpStep === 'choose_recipient' ? null :
+                     s === 'login' && st.adminOtpStep === 'enter_otp' ? (
+                      <Button variant="primary" type="submit" size="lg" fullWidth>
+                        Xác nhận & Vào Quản trị
+                      </Button>
+                    ) : s === 'login' && !!st.a2faToken ? (
                       <Button variant="primary" type="submit" size="lg" fullWidth>
                         Xác nhận 2FA
                       </Button>
@@ -1448,7 +1680,7 @@ const FALLBACK_PLATES = [
                   )}
 
                   {/* TIẾP TỤC VỚI GOOGLE */}
-                  {(s === 'register' || s === 'login') && !otpMode && !st.a2faToken && (
+                  {(s === 'register' || s === 'login') && !otpMode && !st.a2faToken && !st.adminOtpStep && (
                     <>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', margin: '4px 0' }}>
                         <span style={{ flex: 1, height: 1, background: 'var(--border-hairline)' }} />
@@ -1467,7 +1699,7 @@ const FALLBACK_PLATES = [
                   )}
 
                   {/* FOOTER SWITCH GIỮA ĐĂNG NHẬP / ĐĂNG KÝ (DÀNH CHO KHÁCH CUỘN XUỐNG) */}
-                  {(s === 'register' || s === 'login') && !st.a2faToken && (
+                  {(s === 'register' || s === 'login') && !st.a2faToken && !st.adminOtpStep && (
                     <p style={{ margin: '8px 0 0', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
                       {s === 'register' ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
                       <a

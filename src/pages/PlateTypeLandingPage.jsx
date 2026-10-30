@@ -9,12 +9,12 @@ import { forceScrollToTop } from '../lib/scrollRestoration.js';
 
 export default function PlateTypeLandingPage({ typeSlug, openPlate, onBuy, contact, go }) {
   const { data, isLoading, isError } = usePlateTypeLanding(typeSlug);
-  useSeo('plateTypeLanding', { landing: data });
+  useSeo('plateTypeLanding', { landing: data, typeSlug });
 
   useEffect(() => {
     forceScrollToTop();
   }, [typeSlug]);
-  const landingSlug = 'bien-' + typeSlug;
+  const landingSlug = 'bien-' + String(typeSlug || 'tu-quy').replace(/^bien-/, '');
   const pt = PLATE_TYPE_LANDINGS.find((p) => p.slug === landingSlug);
   // Bài blog cùng slug ("bien-ngu-quy"...) đã có sẵn cover ảnh thật trong DB — lấy để hiện ảnh minh họa
   // ở khối "Bài viết chi tiết" thay vì object dựng tay thiếu ảnh trước đây.
@@ -28,7 +28,7 @@ export default function PlateTypeLandingPage({ typeSlug, openPlate, onBuy, conta
   const relatedLandings = PLATE_TYPE_LANDINGS.filter((p) => p.slug !== landingSlug);
   return (
     <>
-      {go && <Breadcrumb items={[{ label: 'Trang chủ', onClick: go('home') }, { label: 'Biển số', onClick: go('list') }, { label: pt?.name || 'Loại biển' }]} />}
+      {go && <Breadcrumb keepOnMobile items={[{ label: 'Trang chủ', href: '/', onClick: go('home') }, { label: 'Biển số', href: '/danh-sach', onClick: go('list') }, { label: pt?.name ? `Biển ${pt.name}` : 'Loại biển' }]} />}
       <LandingBody
         title={data?.title} intro={data?.intro} plates={data?.plates} faqs={data?.faqs}
         isLoading={isLoading} isError={isError} openPlate={openPlate} onBuy={onBuy} contact={contact}

@@ -204,14 +204,16 @@ export default function Footer({ settings, patch }) {
     { href: routeFor('list'), label: T('common.footer.list') || 'Kho biển số' },
     { href: routeFor('lucky'), label: T('common.footer.lucky') || 'Hợp mệnh phong thủy' },
     { href: routeFor('luanBien'), label: 'Luận giải biển số xe', badge: 'Mới' },
+    { href: routeFor('aiChat'), label: 'Trợ lý AI Phong Thủy', badge: '24/7' },
     { href: routeFor('chat'), label: 'Nhắn tin tư vấn trực tiếp' },
     { href: routeFor('compare'), label: T('common.footer.compare') || 'So sánh biển số' },
     { href: routeFor('collab'), label: T('common.footer.collab') || 'Cộng tác viên', badge: 'Hoa hồng 10%' },
-    { href: routeFor('fav'), label: T('common.footer.fav') || 'Biển số yêu thích' },
     { href: routeFor('blog'), label: T('common.footer.blog') || 'Tin phong thủy' },
   ];
 
   const policyLinks = [
+    { href: routeFor('about'), label: T('common.footer.about') || 'Về Duy Đinh — Sáng lập Biensovip' },
+    { href: routeFor('reviews'), label: 'Đánh giá từ khách hàng thực tế' },
     { href: routeFor('transfer'), label: T('common.footer.transfer') || 'Hướng dẫn sang tên Thông tư 24' },
     { href: routeFor('faq'), label: T('common.footer.faq') || 'Câu hỏi thường gặp (FAQ)' },
     { href: routeFor('terms'), label: T('common.footer.terms') || 'Điều khoản dịch vụ' },
@@ -566,7 +568,7 @@ export default function Footer({ settings, patch }) {
                 {PLATE_TYPE_LANDINGS.map((p) => (
                   <li key={p.slug}>
                     <motion.a
-                      href={routeFor('post', p.slug)}
+                      href={routeFor('plateTypeLanding', p.slug)}
                       onClick={navClick}
                       className="vip-footer-link"
                       whileHover={{ x: 4 }}
@@ -593,7 +595,7 @@ export default function Footer({ settings, patch }) {
                 {PROVINCE_LANDINGS.slice(0, 8).map((p) => (
                   <li key={p.slug}>
                     <motion.a
-                      href={routeFor('post', p.slug)}
+                      href={routeFor('provinceLanding', p.code)}
                       onClick={navClick}
                       className="vip-footer-link"
                       whileHover={{ x: 4 }}

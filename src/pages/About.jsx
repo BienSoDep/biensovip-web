@@ -368,7 +368,7 @@ export default function About({ go }) {
               <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ width: '100%', borderRadius: 'var(--radius-card)', background: 'var(--surface-card)', border: '1px solid var(--border-hairline)', overflow: 'hidden', boxShadow: 'var(--shadow-1)' }}>
                   {v.platform === 'tiktok' ? (
-                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} />
+                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={v.thumbnailUrl} />
                   ) : (
                     <a
                       href={v.videoUrl}
@@ -579,59 +579,65 @@ export default function About({ go }) {
         </div>
 
         <div className="about-cluster-grid">
-          <button
-            type="button"
+          <a
+            href="/danh-sach"
             className="about-cluster-card"
-            onClick={() => go('list')()}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); go('list')(); }}
           >
             <span>Kho Biển Số Đẹp Toàn Quốc</span>
             <ArrowRight size={16} />
-          </button>
+          </a>
 
-          <button
-            type="button"
+          <a
+            href="/bien-so-da-nang"
             className="about-cluster-card"
-            onClick={() => { window.location.href = '/tinh-thanh/da-nang'; }}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); go('provinceLanding', '43')(); }}
           >
             <span>Biển Số Đẹp Đà Nẵng (Đầu 43)</span>
             <ArrowRight size={16} />
-          </button>
+          </a>
 
-          <button
-            type="button"
+          <a
+            href="/hop-menh"
             className="about-cluster-card"
-            onClick={() => go('lucky')()}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); go('lucky')(); }}
           >
             <span>Tra Cứu Biển Hợp Mệnh Ngũ Hành</span>
             <ArrowRight size={16} />
-          </button>
+          </a>
 
-          <button
-            type="button"
+          <a
+            href="/luan-bien-so"
             className="about-cluster-card"
-            onClick={() => go('luanBien')()}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); go('luanBien')(); }}
           >
             <span>Luận Giải Phong Thủy Biển 5 Chiều</span>
             <ArrowRight size={16} />
-          </button>
+          </a>
 
-          <button
-            type="button"
+          <a
+            href="/bai-viet/bien-so-xe-may-da-nang"
             className="about-cluster-card"
-            onClick={() => { window.location.href = '/bai-viet/bang-gia-bien-so-xe-may-da-nang-2026'; }}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); history.pushState(null, '', '/bai-viet/bien-so-xe-may-da-nang'); window.dispatchEvent(new PopStateEvent('popstate')); }}
           >
             <span>Bảng Giá Biển Số Xe Máy Đà Nẵng</span>
             <ArrowRight size={16} />
-          </button>
+          </a>
 
-          <button
-            type="button"
+          <a
+            href="/tin"
             className="about-cluster-card"
-            onClick={() => go('blog')()}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); go('blog')(); }}
           >
             <span>Cẩm Nang Pháp Lý & Sang Tên Định Danh</span>
             <ArrowRight size={16} />
-          </button>
+          </a>
         </div>
       </section>
     </div>
