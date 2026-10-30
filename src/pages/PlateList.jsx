@@ -863,17 +863,42 @@ export default function PlateList({
     <div style={{ animation: "pageIn 180ms var(--ease-out)" }}>
       {go && (
         <Breadcrumb
+          keepOnMobile
           items={[
-            { label: "Trang chủ", onClick: go("home") },
+            { label: "Trang chủ", href: "/", onClick: go("home") },
             {
               label: "Biển số",
+              href: "/danh-sach",
               onClick:
-                activeProvince || activeType
-                  ? () => setFilters((f) => ({ ...f, city: [], cat: [] }))
+                activeProvince || activeType || filters.q
+                  ? () => {
+                      setFilters((f) => ({ ...f, city: [], cat: [], q: "" }));
+                      if (typeof window !== "undefined" && window.location.pathname.startsWith("/tim-kiem/")) {
+                        window.history.replaceState(null, "", "/danh-sach");
+                      }
+                    }
                   : undefined,
             },
-            ...(activeProvince ? [{ label: activeProvince.name }] : []),
-            ...(activeType ? [{ label: activeType.name }] : []),
+            ...(activeProvince
+              ? [
+                  {
+                    label: activeProvince.name,
+                    onClick:
+                      activeType || filters.q
+                        ? () => setFilters((f) => ({ ...f, cat: [], q: "" }))
+                        : undefined,
+                  },
+                ]
+              : []),
+            ...(activeType
+              ? [
+                  {
+                    label: activeType.name,
+                    onClick: filters.q ? () => setFilters((f) => ({ ...f, q: "" })) : undefined,
+                  },
+                ]
+              : []),
+            ...(filters.q ? [{ label: `Tìm kiếm: ${filters.q.trim()}` }] : []),
           ]}
         />
       )}

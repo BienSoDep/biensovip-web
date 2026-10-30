@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, ExternalLink, X, RotateCcw } from 'lucide-react';
 import TikTokIcon from './TikTokIcon.jsx';
 
@@ -10,18 +10,33 @@ export function extractVideoId(videoUrl) {
   return m ? m[1] : null;
 }
 
+// Kiểm tra URL ảnh CDN của TikTok có chứa x-expires đã hết hạn hay chưa để chặn trước lỗi 403 trên Network
+function isUsableThumbnailUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url, 'https://biensovip.com');
+    const expires = parsed.searchParams.get('x-expires');
+    if (expires) {
+      const expSec = Number(expires);
+      if (Number.isFinite(expSec) && expSec * 1000 < Date.now() + 60_000) {
+        return false; // Đã hết hạn -> không gắn vào <img> để tránh lỗi 403 đỏ trên Network
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Bộ nhớ đệm in-memory cho oEmbed JSON nhẹ (tránh gọi trùng lặp cùng 1 video)
+const oembedMemCache = new Map();
+
 /**
- * TikTokEmbed — High-Performance Facade Component
- * 
- * Vấn đề trước đây: Trực tiếp mount <iframe> player của TikTok khi tải trang làm phát sinh:
- * - 800+ request mạng rác từ TikTok telemetry / Slardar crash reporter
- * - 403 Forbidden trên các API nội bộ của TikTok (api/related/item_list)
- * - 1,180+ lỗi console và làm treo luồng JS của trình duyệt
- * 
- * Giải pháp: Facade Pattern (Poster + Play On-Demand)
- * - Ban đầu: 0 iframe, 0 script ngoài, 0 request rác, hiển thị poster cao cấp mượt mà.
- * - Khi người dùng bấm Play: kích hoạt trình phát iframe tại chỗ CHỈ cho duy nhất video đó,
- *   hoặc người dùng có thể bấm mở trực tiếp trên app TikTok để có trải nghiệm 60fps tốt nhất.
+ * TikTokEmbed — High-Performance Zero-Spam Facade Component
+ *
+ * - Mặc định: 0 iframe, 0 script ngoài, 0 lỗi telemetry, tự động lọc bỏ link ảnh TikTok CDN hết hạn (x-expires) để không báo đỏ 403.
+ * - Khi người dùng bấm Play: kích hoạt trình phát iframe tại chỗ đã tắt gợi ý liên quan (rel=0) và bọc sandbox,
+ *   hoặc mở trực tiếp trên ứng dụng TikTok.
  */
 export default function TikTokEmbed({
   videoUrl,
@@ -35,6 +50,62 @@ export default function TikTokEmbed({
   const [isPlaying, setIsPlaying] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [resolvedThumb, setResolvedThumb] = useState(() =>
+    isUsableThumbnailUrl(thumbnailUrl) ? thumbnailUrl : null
+  );
+  const [resolvedTitle, setResolvedTitle] = useState(title || '');
+
+  useEffect(() => {
+    setImgError(false);
+    if (title) setResolvedTitle(title);
+
+    if (isUsableThumbnailUrl(thumbnailUrl)) {
+      setResolvedThumb(thumbnailUrl);
+      return;
+    }
+
+    setResolvedThumb(null);
+    if (!id || compact) return;
+
+    const canonicalUrl =
+      videoUrl && String(videoUrl).startsWith('http')
+        ? videoUrl
+        : `https://www.tiktok.com/@duydinhbiensodepdanang/video/${id}`;
+
+    if (oembedMemCache.has(id)) {
+      const cached = oembedMemCache.get(id);
+      if (cached?.thumbnail_url && isUsableThumbnailUrl(cached.thumbnail_url)) {
+        setResolvedThumb(cached.thumbnail_url);
+      }
+      if (!title && cached?.title) {
+        setResolvedTitle(cached.title);
+      }
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+    fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(canonicalUrl)}`, {
+      signal: controller.signal,
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        oembedMemCache.set(id, data);
+        if (data.thumbnail_url && isUsableThumbnailUrl(data.thumbnail_url)) {
+          setResolvedThumb(data.thumbnail_url);
+        }
+        if (!title && data.title) {
+          setResolvedTitle(data.title);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [id, videoUrl, thumbnailUrl, title, compact]);
 
   // Link dự phòng nếu URL không hợp lệ
   if (!id) {
@@ -62,7 +133,7 @@ export default function TikTokEmbed({
         }}
       >
         <Play size={24} fill="currentColor" style={{ color: 'var(--text-body)' }} />
-        <span>{title || 'Xem trên TikTok'}</span>
+        <span>{resolvedTitle || 'Xem trên TikTok'}</span>
       </a>
     );
   }
@@ -74,7 +145,7 @@ export default function TikTokEmbed({
         href={videoUrl}
         target="_blank"
         rel="noopener noreferrer"
-        title={title || 'Xem trên TikTok'}
+        title={resolvedTitle || 'Xem trên TikTok'}
         className={className}
         style={{
           position: 'relative',
@@ -129,7 +200,7 @@ export default function TikTokEmbed({
             width: '100%',
           }}
         >
-          {title || 'Video Biển Số VIP'}
+          {resolvedTitle || 'Video Biển Số VIP'}
         </span>
         <span
           style={{
@@ -200,8 +271,10 @@ export default function TikTokEmbed({
         {/* Trình phát iframe TikTok chính thức chỉ mount khi bấm Play */}
         {!loadError ? (
           <iframe
-            src={`https://www.tiktok.com/player/v1/${id}?autoplay=1&description=1`}
-            title={title || 'Video TikTok'}
+            src={`https://www.tiktok.com/player/v1/${id}?autoplay=1&rel=0&music_info=0&description=0`}
+            title={resolvedTitle || 'Video TikTok'}
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+            referrerPolicy="no-referrer-when-downgrade"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             loading="eager"
@@ -254,7 +327,10 @@ export default function TikTokEmbed({
             </a>
             <button
               type="button"
-              onClick={() => { setLoadError(false); setIsPlaying(false); }}
+              onClick={() => {
+                setLoadError(false);
+                setIsPlaying(false);
+              }}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -275,7 +351,7 @@ export default function TikTokEmbed({
   }
 
   // 3. Facade Poster View (MẶC ĐỊNH — 0 iframe, 0 request rác, tải tức thì)
-  const hasThumb = !!thumbnailUrl && !imgError;
+  const hasThumb = !!resolvedThumb && !imgError;
 
   return (
     <div
@@ -297,9 +373,10 @@ export default function TikTokEmbed({
       {/* Background Image / Ambient Glow */}
       {hasThumb ? (
         <img
-          src={thumbnailUrl}
-          alt={title || 'Video TikTok'}
+          src={resolvedThumb}
+          alt={resolvedTitle || 'Video TikTok'}
           loading="lazy"
+          referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
           style={{
             position: 'absolute',
@@ -412,7 +489,7 @@ export default function TikTokEmbed({
         <button
           type="button"
           onClick={() => setIsPlaying(true)}
-          aria-label={`Phát video: ${title || 'Biển Số VIP'}`}
+          aria-label={`Phát video: ${resolvedTitle || 'Biển Số VIP'}`}
           style={{
             width: 62,
             height: 62,
@@ -471,7 +548,7 @@ export default function TikTokEmbed({
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
           }}
         >
-          {title || 'Video thực tế Biển Số VIP'}
+          {resolvedTitle || 'Video thực tế Biển Số VIP'}
         </h3>
 
         {/* Action Row */}

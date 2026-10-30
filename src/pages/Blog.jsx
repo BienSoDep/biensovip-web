@@ -17,6 +17,26 @@ const CATEGORY_LABEL = {
   'cau-chuyen': 'Câu chuyện khách hàng', 'tinh-thanh': 'Tỉnh thành', 'loai-bien': 'Loại biển', general: 'Tin tức',
 };
 
+const PILLAR_BLOG_LINKS = [
+  { slug: 'bien-ngu-quy', label: 'Biển số Ngũ Quý (111.11 – 999.99)' },
+  { slug: 'bien-tu-quy', label: 'Biển số Tứ Quý (1111 – 9999)' },
+  { slug: 'bien-tam-hoa', label: 'Biển số Tam Hoa (555, 666, 888, 999)' },
+  { slug: 'bien-loc-phat', label: 'Biển số Lộc Phát (68, 86)' },
+  { slug: 'bien-than-tai', label: 'Biển số Thần Tài (39, 79)' },
+  { slug: 'bien-sanh-tien', label: 'Biển số Sảnh Tiến (12345, 56789)' },
+  { slug: 'bien-so-kep', label: 'Biển số Kép & Cặp số lặp đôi' },
+  { slug: 'bien-so-doi-so-kep-y-nghia', label: 'Ý nghĩa biển số đôi, số kép' },
+  { slug: 'bien-so-ganh-y-nghia', label: 'Biển số Gánh đảo đối xứng' },
+  { slug: 'bien-so-dep-khac', label: 'Các dòng biển số đẹp đặc biệt khác' },
+  { slug: 'bien-so-hop-menh-kim', label: 'Biển số hợp mệnh Kim' },
+  { slug: 'bien-so-hop-menh-moc', label: 'Biển số hợp mệnh Mộc' },
+  { slug: 'bien-so-hop-menh-thuy', label: 'Biển số hợp mệnh Thủy' },
+  { slug: 'bien-so-hop-menh-hoa', label: 'Biển số hợp mệnh Hỏa' },
+  { slug: 'bien-so-hop-menh-tho', label: 'Biển số hợp mệnh Thổ' },
+  { slug: 'so-nut-bien-so-cach-tinh-y-nghia', label: 'Cách tính số nút biển số xe' },
+  { slug: 'thu-tuc-sang-ten-bien-so-2026', label: 'Thủ tục sang tên biển số định danh 2026' },
+];
+
 function formatDate(iso) {
   if (!iso) return '';
   return format(new Date(iso), 'dd/MM/yyyy');
@@ -31,33 +51,31 @@ function readSavedState() {
   try { return JSON.parse(sessionStorage.getItem(STATE_KEY) || 'null'); } catch { return null; }
 }
 
+function readInitialQueryParams() {
+  if (typeof window === 'undefined' || !window.location.search) return null;
+  const params = new URLSearchParams(window.location.search);
+  const pNum = parseInt(params.get('page') || '1', 10);
+  return {
+    tag: params.get('tag') || '',
+    category: params.get('category') || '',
+    query: params.get('q') || '',
+    page: Number.isFinite(pNum) && pNum > 0 ? pNum : 1,
+  };
+}
+
 export default function Blog({ patch }) {
   const stagger = useStaggeredReveal();
-  const hasQueryParams = typeof window !== 'undefined' && !!window.location.search;
+  const urlInit = readInitialQueryParams();
+  const hasQueryParams = !!urlInit;
   const saved = !hasQueryParams ? readSavedState() : null;
-  const [query, setQuery] = useState(saved?.query || '');
-  const [category, setCategory] = useState(saved?.category || '');
-  const [tag, setTag] = useState(saved?.tag || '');
-  const [page, setPage] = useState(saved?.page || 1);
+  const [query, setQuery] = useState(urlInit?.query || saved?.query || '');
+  const [category, setCategory] = useState(urlInit?.category || saved?.category || '');
+  const [tag, setTag] = useState(urlInit?.tag || saved?.tag || '');
+  const [page, setPage] = useState(urlInit?.page || saved?.page || 1);
   const isFiltering = !!(query || category || tag);
-  // Backend /blog/posts chỉ hỗ trợ page+limit (không q/category/tag) → khi đang lọc, load cap 100 rồi
+  // Backend /blog/posts chỉ hỗ trợ page+limit (không q/category/tag) → khi đang lọc, load cap 150 rồi
   // lọc client-side; khi không lọc, phân trang thật (limit nhỏ) để tránh tải dữ liệu lớn mỗi lần vào trang.
-  const { data, isLoading, isError, refetch, isFetching } = useBlogPosts(isFiltering ? 1 : page, isFiltering ? 100 : PAGE_SIZE);
-
-  // Deep-link `/tin?tag=xxx` (hashtag bài viết) hoặc `?category=xxx` (breadcrumb bài viết) → tự lọc
-  // khi mở trang, tránh người dùng phải lọc lại từ đầu. Query string mới → không phục hồi state cũ
-  // (đã xử lý ở saved phía trên), chỉ set filter theo query.
-  useEffect(() => {
-    if (!hasQueryParams) return;
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get('tag');
-    const c = params.get('category');
-    const q = params.get('q');
-    if (t) setTag(t);
-    if (c) setCategory(c);
-    if (q) setQuery(q);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data, isLoading, isError, refetch, isFetching } = useBlogPosts(isFiltering ? 1 : page, isFiltering ? 150 : PAGE_SIZE);
 
   // Khôi phục vị trí cuộn đã lưu (nếu quay lại từ bài viết) — chạy sau khi data đã load xong.
   useEffect(() => {
@@ -86,6 +104,8 @@ export default function Blog({ patch }) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const categories = ['', ...Object.keys(CATEGORY_LABEL)];
 
+  const getPageHref = (n) => (n <= 1 ? '/tin' : `/tin?page=${n}`);
+
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
       <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--space-4)' }}>
@@ -102,15 +122,35 @@ export default function Blog({ patch }) {
             <input type="search" placeholder="Tìm bài viết…" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} aria-label="Tìm bài viết"
               style={{ width: '100%', height: 44, padding: '0 14px 0 40px', border: 'none', borderRadius: 'var(--radius-pill)', background: 'var(--white)', boxShadow: 'var(--shadow-inset-hairline)', font: 'var(--type-body-sm)', color: 'var(--text-strong)', outline: 'none' }} />
           </div>
-          <div className="blog-category-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {categories.map((c) => (
-              <button key={c || 'all'} type="button" onClick={() => { setCategory(c); setPage(1); }}
-                style={{ height: 36, padding: '0 14px', border: 'none', borderRadius: 'var(--radius-pill)', cursor: 'pointer', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', flexShrink: 0,
-                  background: category === c ? 'var(--action-primary)' : 'var(--white)', color: category === c ? 'var(--action-primary-text, var(--ink-900))' : 'var(--text-muted)', boxShadow: 'var(--shadow-inset-hairline)' }}>
-                {c ? CATEGORY_LABEL[c] : 'Tất cả'}
-              </button>
-            ))}
-          </div>
+          <nav aria-label="Chuyên mục bài viết" className="blog-category-row" style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {categories.map((c) => {
+              const catHref = c ? `/tin?category=${encodeURIComponent(c)}` : '/tin';
+              return (
+                <a
+                  key={c || 'all'}
+                  href={catHref}
+                  onClick={(e) => {
+                    if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                      e.preventDefault();
+                      setCategory(c);
+                      setPage(1);
+                      history.replaceState(null, '', catHref);
+                    }
+                  }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 14px',
+                    borderRadius: 'var(--radius-pill)', textDecoration: 'none', cursor: 'pointer',
+                    font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)', flexShrink: 0,
+                    background: category === c ? 'var(--action-primary)' : 'var(--white)',
+                    color: category === c ? 'var(--action-primary-text, var(--ink-900))' : 'var(--text-muted)',
+                    boxShadow: 'var(--shadow-inset-hairline)',
+                  }}
+                >
+                  {c ? CATEGORY_LABEL[c] : 'Tất cả'}
+                </a>
+              );
+            })}
+          </nav>
         </div>
 
         {tag && (
@@ -123,7 +163,7 @@ export default function Blog({ patch }) {
           </div>
         )}
 
-  {isLoading ? (
+        {isLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 'var(--gutter-section)' }}>
             {Array.from({ length: 6 }, (_, i) => <PostCardSkeleton key={i} />)}
           </div>
@@ -136,7 +176,7 @@ export default function Blog({ patch }) {
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px', textAlign: 'center', font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>Không tìm thấy bài viết nào.</div>
         ) : (
           <>
-            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{items.length} bài viết</span>
+            <span style={{ font: 'var(--type-caption)', color: 'var(--text-faint)' }}>{isFiltering ? `${items.length} bài viết phù hợp` : `${total} bài viết`}</span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 'var(--gutter-section)', animation: 'fadeIn 180ms var(--ease-out)' }}>
               {items.map((p, i) => (
                 <SpotlightCard
@@ -162,7 +202,7 @@ export default function Blog({ patch }) {
                     ...stagger(i),
                   }}
                 >
-                  <a href={routeFor('post', p.slug)} onClick={(e) => { e.preventDefault(); saveStateBeforeLeave(); patch({ screen: 'post', postId: p.slug }); }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
+                  <a href={routeFor('post', p.slug)} onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) { e.preventDefault(); saveStateBeforeLeave(); patch({ screen: 'post', postId: p.slug }); } }} style={{ display: 'flex', flexDirection: 'column', flex: 1, textDecoration: 'none', color: 'inherit' }}>
                     <LazyImage src={p.coverImageUrl || ''} alt={p.title} style={{ height: 170, background: 'var(--surface-muted)' }} imgStyle={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} skeletonHeight={170} />
                     <div style={{ padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -177,10 +217,56 @@ export default function Blog({ patch }) {
               ))}
             </div>
             {!isFiltering && totalPages > 1 && (
-              <Pagination page={page} totalPages={totalPages} onChange={(n) => { if (isFetching) return; setPage(n); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ paddingTop: 'var(--space-4)' }} />
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                getHref={getPageHref}
+                onChange={(n) => {
+                  if (isFetching) return;
+                  setPage(n);
+                  history.pushState(null, '', getPageHref(n));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                style={{ paddingTop: 'var(--space-4)' }}
+              />
             )}
           </>
         )}
+
+        {/* Chuyên đề phong thủy & Thế số biển đẹp trọng điểm — Hub liên kết nội bộ giúp Googlebot WRS khám phá nhanh bài trụ cột */}
+        <section aria-label="Chuyên đề phong thủy trọng điểm" style={{ marginTop: 'var(--space-6)', padding: 'var(--gutter-card)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <h2 style={{ margin: 0, font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>Chuyên đề biển số đẹp & Phong thủy ngũ hành trọng điểm</h2>
+          <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>
+            Tổng hợp các bài viết chuyên sâu phân tích ý nghĩa thế số, cách chọn biển hợp mệnh Kim - Mộc - Thủy - Hỏa - Thổ và quy định định danh biển số mới nhất:
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {PILLAR_BLOG_LINKS.map((item) => (
+              <a
+                key={item.slug}
+                href={routeFor('post', item.slug)}
+                onClick={(e) => {
+                  if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                    e.preventDefault();
+                    saveStateBeforeLeave();
+                    patch({ screen: 'post', postId: item.slug });
+                  }
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'var(--white)',
+                  boxShadow: 'var(--shadow-inset-hairline)',
+                  font: 'var(--type-caption)',
+                  fontWeight: 'var(--fw-semibold)',
+                  color: 'var(--text-strong)',
+                  textDecoration: 'none',
+                }}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </section>
       </section>
     </div>
   );

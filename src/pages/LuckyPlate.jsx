@@ -208,11 +208,11 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
   return (
     <>
       <Breadcrumb keepOnMobile items={[
-        { label: 'Trang chủ', onClick: go('home') },
+        { label: 'Trang chủ', href: '/', onClick: go('home') },
         ...(activeTab === 'luan-bien'
           ? [{ label: 'Luận giải phong thủy biển số & Gợi ý cải vận' }]
           : result
-          ? [{ label: 'Tư vấn biển hợp mệnh', onClick: () => { lookup.reset(); } }, { label: 'Kết quả' }]
+          ? [{ label: 'Tư vấn biển hợp mệnh', href: '/hop-menh', onClick: () => { lookup.reset(); } }, { label: 'Kết quả' }]
           : [{ label: 'Tư vấn biển hợp mệnh' }]),
       ]} />
     <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--space-8) var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-7)', animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -242,10 +242,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
           type="button"
           onClick={() => {
             setActiveTab('tim-bien');
-            try {
-              window.history.replaceState(null, '', '/hop-menh');
-              document.title = 'Tra cứu Biển Số Hợp Mệnh Theo Ngũ Hành — Tư Vấn Miễn Phí | Biensovip';
-            } catch { /* ignore */ }
+            patch?.({ screen: 'lucky' });
           }}
           style={{
             padding: '8px 18px',
@@ -273,10 +270,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
           type="button"
           onClick={() => {
             setActiveTab('luan-bien');
-            try {
-              window.history.replaceState(null, '', '/luan-bien-so');
-              document.title = 'Luận Giải Phong Thủy Biển Số Xe — Chấm Điểm 5 Chiều & Gợi Ý Cải Vận 2026 | Biensovip';
-            } catch { /* ignore */ }
+            patch?.({ screen: 'luanBien' });
           }}
           style={{
             padding: '8px 18px',

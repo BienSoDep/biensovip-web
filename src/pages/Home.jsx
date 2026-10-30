@@ -17,6 +17,7 @@ import { useCategories } from '../services/categories.js';
 import { useFeaturedPlates, usePlates } from '../services/plates.js';
 import { useCompareIds } from '../services/compareService.js';
 import { useFeaturedPromoVideos } from '../services/promoVideoService.js';
+import { useBlogPosts } from '../services/blog.js';
 import TikTokEmbed from '../components/TikTokEmbed.jsx';
 import EmailCapture from '../components/EmailCapture.jsx';
 import { trackViewItemList, trackSelectItem } from '../services/tracking/events.js';
@@ -61,6 +62,8 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
   const featuredVideoItems = featuredVideos?.items || [];
   const { data: soldData } = usePlates({ status: 'sold', perPage: 14 }, { enabled: deferredReady });
   const soldItems = soldData?.items || [];
+  const { data: homeBlogData } = useBlogPosts(1, 6, { enabled: deferredReady });
+  const homeBlogPosts = homeBlogData?.items || [];
 
   // Home search: catId/qDebounced empty = show featured plates as before.
   // Any non-empty selection replaces that section with live search results (usePlates is React
@@ -652,6 +655,102 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             </div>
           </div>
         </SpotlightCard>
+      </section>
+
+      {/* Cẩm nang phong thủy & Bài viết chuyên sâu — Liên kết nội bộ trực tiếp từ Trang chủ sang /bai-viet/* */}
+      <section className="home-blog-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Eyebrow tone="brand" className="section-eyebrow">Kiến thức & Phong thủy</Eyebrow>
+            <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
+              Cẩm nang biển số đẹp & Hợp mệnh ngũ hành
+            </h2>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>
+              Phân tích chuyên sâu ý nghĩa các thế số VIP, quy tắc chọn biển hợp tuổi bản mệnh và thủ tục định danh theo Thông tư 24.
+            </p>
+          </div>
+          <a href="/tin" onClick={(e) => { if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) { e.preventDefault(); go('blog')(); } }} style={{ textDecoration: 'none', color: 'var(--action-primary)', font: 'var(--type-body-sm)', fontWeight: 'var(--fw-semibold)' }}>
+            Xem tất cả bài viết →
+          </a>
+        </div>
+
+        {homeBlogPosts.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            {homeBlogPosts.map((po) => (
+              <a
+                key={po.id}
+                href={routeFor('post', po.slug)}
+                onClick={(e) => {
+                  if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                    e.preventDefault();
+                    history.pushState(null, '', routeFor('post', po.slug));
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
+                style={{
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  background: 'var(--white)',
+                  borderRadius: 'var(--radius-card)',
+                  boxShadow: 'var(--shadow-inset-hairline)',
+                  padding: 'var(--gutter-card)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-2)',
+                }}
+              >
+                <h3 style={{ margin: 0, font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>{po.title}</h3>
+                <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {po.excerpt}
+                </p>
+              </a>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 'var(--space-2)' }}>
+          {[
+            { slug: 'bien-ngu-quy', label: 'Biển Ngũ Quý' },
+            { slug: 'bien-tu-quy', label: 'Biển Tứ Quý' },
+            { slug: 'bien-tam-hoa', label: 'Biển Tam Hoa' },
+            { slug: 'bien-loc-phat', label: 'Biển Lộc Phát 68-86' },
+            { slug: 'bien-than-tai', label: 'Biển Thần Tài 39-79' },
+            { slug: 'bien-sanh-tien', label: 'Biển Sảnh Tiến' },
+            { slug: 'bien-so-doi-so-kep-y-nghia', label: 'Biển Số Đôi & Số Kép' },
+            { slug: 'bien-so-ganh-y-nghia', label: 'Biển Số Gánh' },
+            { slug: 'bien-so-dep-khac', label: 'Biển Đẹp Đặc Biệt' },
+            { slug: 'bien-so-hop-menh-kim', label: 'Hợp Mệnh Kim' },
+            { slug: 'bien-so-hop-menh-moc', label: 'Hợp Mệnh Mộc' },
+            { slug: 'bien-so-hop-menh-thuy', label: 'Hợp Mệnh Thủy' },
+            { slug: 'bien-so-hop-menh-hoa', label: 'Hợp Mệnh Hỏa' },
+            { slug: 'bien-so-hop-menh-tho', label: 'Hợp Mệnh Thổ' },
+            { slug: 'so-nut-bien-so-cach-tinh-y-nghia', label: 'Cách Tính Nút Biển Số' },
+            { slug: 'thu-tuc-sang-ten-bien-so-2026', label: 'Thủ Tục Sang Tên 2026' },
+          ].map((item) => (
+            <a
+              key={item.slug}
+              href={routeFor('post', item.slug)}
+              onClick={(e) => {
+                if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                  e.preventDefault();
+                  history.pushState(null, '', routeFor('post', item.slug));
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }
+              }}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 'var(--radius-pill)',
+                background: 'var(--surface-sunken)',
+                font: 'var(--type-caption)',
+                fontWeight: 'var(--fw-semibold)',
+                color: 'var(--text-strong)',
+                textDecoration: 'none',
+              }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
       </section>
     </div>
   );

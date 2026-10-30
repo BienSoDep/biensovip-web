@@ -86,12 +86,19 @@ function FaqAccordion({ faqs }) {
   );
 }
 
-export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact, blogPost, listName = 'landing', relatedLandings }) {
+export default function LandingBody({ title, intro, plates, faqs, isLoading, isError, openPlate, onBuy, contact, blogPost, listName = 'landing', relatedLandings, relatedHeading = 'Khám phá các thế số đẹp khác' }) {
   const stagger = useStaggeredReveal();
 
   useEffect(() => {
     if (!isLoading && plates?.length > 0) trackViewItemList(listName, plates);
   }, [isLoading, plates, listName]);
+
+  const navigateSpaHref = (e, targetHref) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    history.pushState(null, '', targetHref);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  };
 
   return (
     <div style={{ animation: 'pageIn 180ms var(--ease-out)' }}>
@@ -114,7 +121,11 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
               <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface-sunken)', font: 'var(--type-caption)', color: 'var(--action-primary)', alignSelf: 'flex-start' }}>Bài viết chi tiết</span>
               <h2 style={{ margin: 0, font: 'var(--type-title-2)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{blogPost.title}</h2>
               {blogPost.excerpt && <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{blogPost.excerpt}</p>}
-              <a href={routeFor('post', blogPost.slug)}>
+              <a
+                href={routeFor('post', blogPost.slug)}
+                onClick={(e) => navigateSpaHref(e, routeFor('post', blogPost.slug))}
+                style={{ alignSelf: 'flex-start', textDecoration: 'none' }}
+              >
                 <Button variant="primary" size="md">Đọc tiếp →</Button>
               </a>
             </div>
@@ -160,18 +171,14 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
       {relatedLandings?.length > 0 && (
         <section style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--space-8)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
-            Khám phá các thế số đẹp khác
+            {relatedHeading}
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(220px,100%),1fr))', gap: 'var(--space-3)' }}>
             {relatedLandings.map((r) => (
               <a
                 key={r.slug}
                 href={`/${r.slug}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  history.pushState(null, '', `/${r.slug}`);
-                  window.dispatchEvent(new PopStateEvent('popstate'));
-                }}
+                onClick={(e) => navigateSpaHref(e, `/${r.slug}`)}
                 className="pressable"
                 style={{
                   textDecoration: 'none',
