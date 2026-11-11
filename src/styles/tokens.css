@@ -170,6 +170,8 @@ a,button,input,select,textarea,[tabindex],h1,h2,h3,h4{scroll-margin-top:76px}
 body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 h1,h2,h3,h4,p{margin:0}
 a{color:var(--text-link);text-decoration:none;transition:var(--transition-control)}
-a:hover{color:var(--blue-700);text-decoration:underline;text-underline-offset:3px}
+a:hover{text-decoration:none}
+.article-body a, .prose a, a.text-link{text-decoration:underline;text-underline-offset:3px}
+.article-body a:hover, .prose a:hover, a.text-link:hover{color:var(--blue-700);text-decoration:underline}
 button{font:inherit}
 ::selection{background:var(--blue-100);color:var(--ink-900)}

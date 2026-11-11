@@ -6,12 +6,12 @@
     "desc": "Kho biển số đẹp toàn quốc: ngũ quý, tứ quý, tam hoa, lộc phát, thần tài, sảnh tiến. Tư vấn biển số hợp mệnh miễn phí, giá rõ ràng, hỗ trợ sang tên xe trọn gói.",
     "cta_list": "Xem kho biển số",
     "cta_zalo": "Nhắn Zalo tư vấn",
-    "zalo_notify": "Đã mở Zalo — shop sẽ trả lời trong 15 phút",
+    "zalo_notify": "Đã mở Zalo, shop sẽ trả lời trong 15 phút",
     "stat_1_n": "395", "stat_1_l": "biển số hiện có",
     "stat_2_n": "4,9/5", "stat_2_l": "khách hài lòng",
     "stat_3_n": "15 phút", "stat_3_l": "phản hồi trung bình",
     "plate_badge": "Ngũ quý · còn 1 số",
-    "plate_price": "43A1 · 999.99 — 2.150.000.000đ"
+    "plate_price": "43A1 · 999.99, 2.150.000.000đ"
   },
   "search": {
     "placeholder": "Tìm theo đuôi số, VD: 79, 68, 39…",
@@ -29,7 +29,7 @@
   "plate_types": {
     "eyebrow": "Thế số phong thủy",
     "title": "Bộ sưu tập biển số theo thế số tài lộc",
-    "desc": "Khám phá các dòng biển số đẹp phong thủy được ưa chuộng nhất: ngũ quý, tứ quý, tam hoa, lộc phát, thần tài, sảnh tiến — trợ mệnh hanh thông, khẳng định vị thế.",
+    "desc": "Khám phá các dòng biển số đẹp phong thủy được ưa chuộng nhất: ngũ quý, tứ quý, tam hoa, lộc phát, thần tài, sảnh tiến, trợ mệnh hanh thông, khẳng định vị thế.",
     "all": "Xem toàn bộ kho biển →"
   },
   "video": {
@@ -44,7 +44,7 @@
   "contact": {
     "eyebrow": "Liên hệ",
     "title": "Liên hệ nhanh với shop qua Zalo",
-    "desc": "Zalo là kênh chính để kết nối — nhắn ngay để nhận báo giá và tư vấn biển đẹp trong 15 phút.",
+    "desc": "Zalo là kênh chính để kết nối, nhắn ngay để nhận báo giá và tư vấn biển đẹp trong 15 phút.",
     "zalo_cta": "Nhắn Zalo ngay",
     "form_title": "Để lại số điện thoại",
     "form_sub": "Shop gọi lại tư vấn trong 15 phút.",

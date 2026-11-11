@@ -91,7 +91,7 @@ export default function App() {
   const initRoute = (typeof window !== 'undefined') ? parseRoute(window.location.pathname) : { screen: 'home' };
   // Mobile lần đầu vào domain gốc "/" — chuyển thẳng vào kho biển số thay vì Home,
   // giúp khách xem biển ngay thay vì lướt qua landing page trên màn hình nhỏ.
-  if (typeof window !== 'undefined' && window.location.pathname === '/' && window.innerWidth < 768 && initRoute.screen === 'home') {
+  if (typeof window !== 'undefined' && !/bot|googlebot|crawler|spider|inspect|lighthouse|headless/i.test(navigator.userAgent || '') && window.location.pathname === '/' && window.innerWidth < 768 && initRoute.screen === 'home') {
     initRoute.screen = 'list';
   }
   const [favItems, setFavItems] = useState([]);
@@ -1007,7 +1007,7 @@ export default function App() {
 
           {isPublic && s !== 'aiChat' && <Footer settings={st.settings} patch={patch} />}
 
-          {isPublic && !['aiChat', 'profile', 'compare', 'login', 'register', 'forgot', 'adminForgot', 'adminReset', 'gmailCallback', 'saved', 'notifications'].includes(s) && <PromoRails openPlate={openPlate} />}
+          {isPublic && !['aiChat', 'login', 'register', 'forgot', 'adminForgot', 'adminReset', 'gmailCallback', 'overlayLive'].includes(s) && <PromoRails openPlate={openPlate} />}
 
           <Suspense fallback={null}>
             <Modals st={st} patch={patch} cur={cur} submitContact={submitContact} mSending={mSending} setField={setField} openPlate={openPlate} />

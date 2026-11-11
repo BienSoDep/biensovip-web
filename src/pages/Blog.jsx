@@ -53,12 +53,18 @@ function readSavedState() {
 }
 
 function readInitialQueryParams() {
-  if (typeof window === 'undefined' || !window.location.search) return null;
-  const params = new URLSearchParams(window.location.search);
+  if (typeof window === 'undefined') return null;
+  const pathname = window.location.pathname || '';
+  const isCatPath = pathname.startsWith('/chuyen-muc/');
+  const rawCatSlug = isCatPath ? decodeURIComponent(pathname.slice('/chuyen-muc/'.length).split('/')[0] || '').toLowerCase() : '';
+  const pathCategory = rawCatSlug === 'tin-tuc' ? 'general' : rawCatSlug;
+
+  if (!window.location.search && !pathCategory) return null;
+  const params = new URLSearchParams(window.location.search || '');
   const pNum = parseInt(params.get('page') || '1', 10);
   return {
     tag: params.get('tag') || '',
-    category: params.get('category') || '',
+    category: params.get('category') || pathCategory || '',
     query: params.get('q') || '',
     page: Number.isFinite(pNum) && pNum > 0 ? pNum : 1,
   };

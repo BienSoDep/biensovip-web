@@ -153,7 +153,7 @@ export default function LandingBody({ title, intro, plates, faqs, isLoading, isE
           </div>
         ) : (
           <div style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', padding: '48px var(--space-6)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Hiện chưa có biển còn hàng phù hợp — liên hệ Zalo để chúng tôi tìm biển theo yêu cầu.</p>
+            <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)' }}>Hiện chưa có biển còn hàng phù hợp, liên hệ Zalo 0815 792 699 để chuyên gia Duy Đinh tìm biển theo yêu cầu.</p>
             <a href="#chat" onClick={(e) => { e.preventDefault(); onBuy?.(null); }}>
               <Button variant="primary" size="md"><MessageCircle size={16} style={{ marginRight: 6 }} />Săn biển theo yêu cầu</Button>
             </a>

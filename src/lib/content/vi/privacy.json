@@ -5,7 +5,7 @@
     "section_0": {
       "title": "1. Thông tin chúng tôi thu thập",
       "type": "list",
-      "body": "<li><strong>Thông tin bạn cung cấp:</strong> họ tên, số điện thoại, email khi đăng ký tài khoản, gửi yêu cầu tư vấn, hoặc đăng ký CTV.</li><li><strong>Thông tin tự động:</strong> loại trình duyệt, thiết bị, địa chỉ IP, các trang đã xem — phục vụ phân tích lưu lượng truy cập.</li><li><strong>Cookie:</strong> chúng tôi dùng cookie để duy trì phiên đăng nhập và ghi nhớ tùy chọn của bạn.</li>"
+      "body": "<li><strong>Thông tin bạn cung cấp:</strong> họ tên, số điện thoại, email khi đăng ký tài khoản, gửi yêu cầu tư vấn, hoặc đăng ký CTV.</li><li><strong>Thông tin tự động:</strong> loại trình duyệt, thiết bị, địa chỉ IP, các trang đã xem, phục vụ phân tích lưu lượng truy cập.</li><li><strong>Cookie:</strong> chúng tôi dùng cookie để duy trì phiên đăng nhập và ghi nhớ tùy chọn của bạn.</li>"
     },
     "section_1": {
       "title": "2. Mục đích sử dụng thông tin",
@@ -15,7 +15,7 @@
     "section_2": {
       "title": "3. Chia sẻ thông tin",
       "type": "mixed",
-      "body": "<p>Chúng tôi <strong>không bán, cho thuê, hoặc chia sẻ</strong> thông tin cá nhân của bạn với bên thứ ba, ngoại trừ:</p><li>Khi có yêu cầu từ cơ quan nhà nước có thẩm quyền theo quy định pháp luật.</li><li>Đối tác vận chuyển, thanh toán (nếu có) — chỉ ở mức cần thiết để hoàn thành giao dịch.</li>"
+      "body": "<p>Chúng tôi <strong>không bán, cho thuê, hoặc chia sẻ</strong> thông tin cá nhân của bạn với bên thứ ba, ngoại trừ:</p><li>Khi có yêu cầu từ cơ quan nhà nước có thẩm quyền theo quy định pháp luật.</li><li>Đối tác vận chuyển, thanh toán (nếu có), chỉ ở mức cần thiết để hoàn thành giao dịch.</li>"
     },
     "section_3": {
       "title": "4. Bảo mật dữ liệu",
@@ -25,7 +25,7 @@
     "section_4": {
       "title": "5. Quyền của bạn",
       "type": "list",
-      "body": "<li>Yêu cầu xem, chỉnh sửa hoặc xóa thông tin cá nhân.</li><li>Từ chối nhận thông báo tiếp thị bất kỳ lúc nào.</li><li>Yêu cầu xóa tài khoản.</li><li>Để thực hiện các quyền trên, gửi yêu cầu qua trang <strong>Liên hệ</strong> (chọn mục \"Yêu cầu về dữ liệu cá nhân\") hoặc email/hotline ở mục 7 bên dưới — chúng tôi phản hồi trong vòng 72 giờ.</li>"
+      "body": "<li>Yêu cầu xem, chỉnh sửa hoặc xóa thông tin cá nhân.</li><li>Từ chối nhận thông báo tiếp thị bất kỳ lúc nào.</li><li>Yêu cầu xóa tài khoản.</li><li>Để thực hiện các quyền trên, gửi yêu cầu qua trang <strong>Liên hệ</strong> (chọn mục \"Yêu cầu về dữ liệu cá nhân\") hoặc email/hotline ở mục 7 bên dưới, chúng tôi phản hồi trong vòng 72 giờ.</li>"
     },
     "section_5": {
       "title": "6. Thời gian lưu trữ",
