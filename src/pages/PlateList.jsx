@@ -1002,7 +1002,7 @@ export default function PlateList({
                   ? (vpaCounts?.weekly || 70000)
                   : (vpaCounts?.monthly || 829407);
             const TabIcon = t.key === "available" ? Store : t.key === "weekly" ? Timer : Calendar;
-            const subtitle = t.key === "available" ? "Kho Duy Định · Giao ngay" : t.key === "weekly" ? "Đang mở đấu giá tuần" : "Kho đấu giá tháng";
+            const subtitle = t.key === "available" ? "Kho Duy Đinh · Giao ngay" : t.key === "weekly" ? "Đang mở đấu giá tuần" : "Kho đấu giá tháng";
             return (
               <button
                 key={t.key}

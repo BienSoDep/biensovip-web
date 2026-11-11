@@ -398,7 +398,7 @@ export default function LuckyPlate({ screen, go, patch, notify, onNotice, user, 
                       <Button key={o.value || 'all'} variant={filters.source === o.value ? 'dark' : 'ghost'} size="sm" onClick={() => setFilter({ source: o.value })}>{o.label}</Button>
                     ))}
                   </div>
-                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển có sẵn của Duy Định luôn xếp trước; biển đấu giá VPA chưa duyệt giá hiển thị "Giá liên hệ".</span>
+                  <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>Biển có sẵn của Duy Đinh luôn xếp trước; biển đấu giá VPA chưa duyệt giá hiển thị "Giá liên hệ".</span>
                 </div>
                 {activeFilterCount > 0 && (
                   <Button variant="ghost" size="sm" onClick={() => setFilters({ catIds: [], cityIds: [], vehicleTypeId: '', priceMin: '', priceMax: '', q: '', avoidNumbers: [], source: '' })}>Xóa bộ lọc</Button>
