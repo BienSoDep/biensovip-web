@@ -22,7 +22,7 @@ export default function PlateTypeLandingPage({ typeSlug, openPlate, onBuy, conta
   const blogPost = pt ? {
     slug: pt.slug,
     title: relatedPost?.title || `Bài viết chi tiết biển ${pt.name}`,
-    excerpt: relatedPost?.excerpt || `Ý nghĩa phong thủy, đặc điểm và cách sở hữu biển ${pt.name} — đọc ngay trong bài viết chi tiết.`,
+    excerpt: relatedPost?.excerpt || `Ý nghĩa phong thủy, đặc điểm và cách sở hữu biển ${pt.name}, đọc ngay trong bài viết chi tiết.`,
     coverImageUrl: relatedPost?.coverImageUrl,
   } : null;
   const relatedLandings = PLATE_TYPE_LANDINGS.filter((p) => p.slug !== landingSlug);

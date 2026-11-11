@@ -168,6 +168,13 @@
 }
 
 /* Card Visual Showcase Stage */
+.motion-plate-gallery a,
+.motion-plate-gallery a:hover,
+.motion-plate-gallery a:focus,
+.motion-plate-gallery a:active {
+  text-decoration: none !important;
+}
+
 .motion-plate-gallery__plate-stage {
   position: relative;
   z-index: 1;
@@ -180,12 +187,16 @@
   border-radius: var(--radius-card);
   border: 1px solid var(--border-hairline);
   cursor: pointer;
-  text-decoration: none;
+  text-decoration: none !important;
+  color: inherit;
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.motion-plate-gallery__plate-stage:hover {
+.motion-plate-gallery__plate-stage:hover,
+.motion-plate-gallery__plate-stage:focus,
+.motion-plate-gallery__plate-stage:active {
   background: rgba(241, 151, 32, 0.04);
+  text-decoration: none !important;
 }
 
 .motion-plate-gallery__plate-visual-box {
@@ -208,12 +219,19 @@
   color: var(--text-strong);
   letter-spacing: 0.05em;
   margin-bottom: 2px;
+  text-decoration: none !important;
 }
 
 .motion-plate-gallery__plate-meta {
   font: var(--type-caption);
   color: var(--text-muted);
   font-size: 12px;
+  text-decoration: none !important;
+}
+
+.motion-plate-gallery__plate-stage:hover .motion-plate-gallery__plate-text,
+.motion-plate-gallery__plate-stage:hover .motion-plate-gallery__plate-meta {
+  text-decoration: none !important;
 }
 
 /* Card Footer: price + CTA */
@@ -300,18 +318,31 @@
   color: var(--text-muted);
   cursor: pointer;
   outline: none;
+  text-decoration: none !important;
   transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
 }
 
-.motion-plate-gallery__thumb-pill:hover {
+.motion-plate-gallery__thumb-pill span {
+  text-decoration: none !important;
+}
+
+.motion-plate-gallery__thumb-pill:hover,
+.motion-plate-gallery__thumb-pill:focus {
   color: var(--text-strong);
   border-color: rgba(241, 151, 32, 0.4);
+  text-decoration: none !important;
+}
+
+.motion-plate-gallery__thumb-pill:hover span,
+.motion-plate-gallery__thumb-pill:focus span {
+  text-decoration: none !important;
 }
 
 .motion-plate-gallery__thumb-pill--active {
   color: var(--text-strong);
   border-color: var(--brand-500);
   font-weight: var(--fw-bold, 700);
+  text-decoration: none !important;
 }
 
 .motion-plate-gallery__thumb-indicator {

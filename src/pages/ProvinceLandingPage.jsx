@@ -13,15 +13,18 @@ export default function ProvinceLandingPage({ provinceCode = '43', openPlate, on
   useEffect(() => {
     forceScrollToTop();
   }, [provinceCode]);
-  const prov = PROVINCE_LANDINGS.find((p) => p.code === provinceCode);
+  const provIdx = PROVINCE_LANDINGS.findIndex((p) => p.code === provinceCode);
+  const prov = provIdx >= 0 ? PROVINCE_LANDINGS[provIdx] : null;
   const name = prov?.name || '';
   const blogPost = prov ? {
     slug: prov.slug,
     title: `Bài viết chi tiết biển số ${name}`,
-    excerpt: `Tìm hiểu về đầu số, thị trường và phong thủy biển số ${name} — đọc ngay trong bài viết chi tiết.`,
+    excerpt: `Tìm hiểu về đầu số, thị trường và phong thủy biển số ${name}, đọc ngay trong bài viết chi tiết.`,
   } : null;
-  const relatedProvinces = PROVINCE_LANDINGS
-    .filter((p) => p.code !== provinceCode)
+  const rotatedProvinces = provIdx >= 0
+    ? [...PROVINCE_LANDINGS.slice(provIdx + 1), ...PROVINCE_LANDINGS.slice(0, provIdx)]
+    : PROVINCE_LANDINGS;
+  const relatedProvinces = rotatedProvinces
     .slice(0, 8)
     .map((p) => ({ name: `Biển số ${p.name} (${p.code})`, slug: p.slug }));
   return (

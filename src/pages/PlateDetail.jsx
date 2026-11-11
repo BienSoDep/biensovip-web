@@ -1740,8 +1740,7 @@ export default function PlateDetail({
                       font: "var(--type-body-sm)",
                       fontWeight: "var(--fw-semibold)",
                       color: "var(--action-primary)",
-                      textDecoration: "underline",
-                      textUnderlineOffset: 3,
+                      textDecoration: "none",
                     }}
                   >
                     Xem đầy đủ câu chuyện →
@@ -1867,8 +1866,7 @@ export default function PlateDetail({
                             font: "var(--type-body-sm)",
                             fontWeight: "var(--fw-semibold)",
                             color: "var(--action-primary)",
-                            textDecoration: "underline",
-                            textUnderlineOffset: 3,
+                            textDecoration: "none",
                           }}
                         >
                           Xem chi tiết →
@@ -1893,8 +1891,7 @@ export default function PlateDetail({
                               font: "var(--type-body-sm)",
                               fontWeight: "var(--fw-semibold)",
                               color: "var(--action-primary)",
-                              textDecoration: "underline",
-                              textUnderlineOffset: 3,
+                              textDecoration: "none",
                             }}
                           >
                             Xem chi tiết →

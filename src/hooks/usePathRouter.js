@@ -60,7 +60,8 @@ export function usePathRouter(st, patch) {
 
   useEffect(() => {
     const scr = st.screen;
-    const target = scr === 'detail' ? routeFor('detail', st.curId) : scr === 'post' ? routeFor('post', st.postId) : scr === 'provinceLanding' ? routeFor('provinceLanding', st.provinceCode) : scr === 'plateTypeLanding' ? routeFor('plateTypeLanding', st.typeSlug) : routeFor(scr);
+    const rawTarget = scr === 'detail' ? routeFor('detail', st.curId) : scr === 'post' ? routeFor('post', st.postId) : scr === 'provinceLanding' ? routeFor('provinceLanding', st.provinceCode) : scr === 'plateTypeLanding' ? routeFor('plateTypeLanding', st.typeSlug) : routeFor(scr);
+    const target = (scr === 'list' && window.location.pathname.startsWith('/tim-kiem/')) || (scr === 'blog' && window.location.pathname.startsWith('/chuyen-muc/')) ? window.location.pathname : rawTarget;
     if (window.location.pathname !== target) {
       currentHistoryIdx += 1;
       try {

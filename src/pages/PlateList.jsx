@@ -386,11 +386,27 @@ export default function PlateList({
       ? "MotorBike"
       : "Car";
 
+  const vpaProvinceParam = useMemo(() => {
+    const cityId = filters.city[0];
+    if (!cityId) return "";
+    if (vpaProvinces?.some((p) => p.code === cityId)) return cityId;
+    const prov = (provinces?.items || []).find((c) => c.id === cityId);
+    if (!prov) return cityId;
+    const vpaMatch = vpaProvinces?.find(
+      (vp) =>
+        vp.name?.toLowerCase() === prov.name?.toLowerCase() ||
+        vp.code === prov.code ||
+        (prov.code && prov.code.split(",").includes(vp.code)),
+    );
+    if (vpaMatch?.code) return vpaMatch.code;
+    return prov.code || cityId;
+  }, [filters.city, provinces?.items, vpaProvinces]);
+
   const vpaWeeklyQuery = useVpaPlates(
     {
       tab: "weekly",
       vehicle: vpaVehicle,
-      province: filters.city[0] || "",
+      province: vpaProvinceParam,
       type: filters.cat[0] || "",
       q: qDebounced,
       sort: vpaSort,
@@ -404,7 +420,7 @@ export default function PlateList({
     {
       tab: "monthly",
       vehicle: vpaVehicle,
-      province: filters.city[0] || "",
+      province: vpaProvinceParam,
       type: filters.cat[0] || "",
       q: qDebounced,
       sort: vpaSort,
@@ -420,22 +436,65 @@ export default function PlateList({
     { enabled: hasVpa },
   );
 
-  const provinceItems = hasVpa
-    ? (vpaProvinces || []).map((p) => ({
-        id: p.code,
-        name: p.name,
-        plateCount: vpaFacets
-          ? (vpaFacets.provinces?.[p.code] ?? 0)
-          : undefined,
-      }))
-    : provinces?.items || [];
+  const provinceItems = useMemo(() => {
+    const base = provinces?.items || [];
+    if (base.length > 0) {
+      if (!hasVpa) return base;
+      return base.map((p) => {
+        const vpaMatch = vpaProvinces?.find(
+          (vp) =>
+            vp.code === p.code ||
+            vp.name?.toLowerCase() === p.name?.toLowerCase() ||
+            (p.code && p.code.split(",").includes(vp.code)),
+        );
+        const vpaCode = vpaMatch?.code || p.code;
+        const vpaCount = vpaFacets?.provinces
+          ? (vpaFacets.provinces[p.id] ??
+             (vpaCode ? vpaFacets.provinces[vpaCode] : undefined) ??
+             0)
+          : undefined;
 
-  const typeItems = hasVpa
-    ? (plateTypes?.items || []).map((t) => ({
+        const count =
+          isAvailableActive && vpaCount !== undefined
+            ? (p.plateCount || 0) + vpaCount
+            : (vpaCount !== undefined ? vpaCount : p.plateCount);
+
+        return {
+          ...p,
+          plateCount: count,
+        };
+      });
+    }
+
+    if (Array.isArray(vpaProvinces) && vpaProvinces.length > 0) {
+      return vpaProvinces.map((p) => ({
+        id: p.code,
+        code: p.code,
+        name: p.name,
+        plateCount: vpaFacets?.provinces
+          ? (vpaFacets.provinces[p.code] ?? 0)
+          : undefined,
+      }));
+    }
+
+    return [];
+  }, [provinces?.items, hasVpa, isAvailableActive, vpaProvinces, vpaFacets]);
+
+  const typeItems = useMemo(() => {
+    const base = plateTypes?.items || [];
+    if (!hasVpa) return base;
+    return base.map((t) => {
+      const vpaCount = vpaFacets?.types ? (vpaFacets.types[t.id] ?? 0) : undefined;
+      const count =
+        isAvailableActive && vpaCount !== undefined
+          ? (t.plateCount || 0) + vpaCount
+          : (vpaCount !== undefined ? vpaCount : t.plateCount);
+      return {
         ...t,
-        plateCount: vpaFacets ? (vpaFacets.types?.[t.id] ?? 0) : undefined,
-      }))
-    : plateTypes?.items || [];
+        plateCount: count,
+      };
+    });
+  }, [plateTypes?.items, hasVpa, isAvailableActive, vpaFacets]);
 
   useEffect(() => {
     if (!useInfinite) return;
@@ -703,7 +762,9 @@ export default function PlateList({
   useSeo("list", { items: hasVpa && !isAvailableActive ? [] : items });
 
   const toggleArrayFilter = (key, id) => {
-    const isRemoving = filters[key].includes(id);
+    const currentList = filters[key] || [];
+    const matchedCode = key === "city" ? provinces?.items?.find((p) => p.id === id)?.code : null;
+    const isRemoving = currentList.includes(id) || (matchedCode && currentList.includes(matchedCode));
     if (hasVpa && !isAvailableActive && (key === "cat" || key === "city")) {
       setFilter({ [key]: isRemoving ? [] : [id] });
       return;
@@ -712,8 +773,8 @@ export default function PlateList({
       trackAvoidNumberToggle(id, isRemoving ? "remove" : "add");
     setFilter({
       [key]: isRemoving
-        ? filters[key].filter((x) => x !== id)
-        : [...filters[key], id],
+        ? currentList.filter((x) => x !== id && x !== matchedCode)
+        : [...currentList.filter((x) => x !== matchedCode), id],
     });
   };
 
@@ -1570,10 +1631,11 @@ export default function PlateList({
                 fontWeight: 600,
                 cursor: "pointer",
                 marginLeft: "auto",
+                textDecoration: "none",
                 transition: "opacity 120ms ease",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.75"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
             >
               <RotateCcw size={12} /> Xóa tất cả bộ lọc
             </button>
@@ -1809,7 +1871,7 @@ export default function PlateList({
                     >
                       <Checkbox
                         label={c.name}
-                        checked={filters.city.includes(c.id)}
+                        checked={filters.city.includes(c.id) || (!!c.code && filters.city.includes(c.code))}
                         onChange={() => toggleArrayFilter("city", c.id)}
                         style={{ flex: 1 }}
                       />
@@ -2197,7 +2259,7 @@ export default function PlateList({
               >
                 <Checkbox
                   label={c.name}
-                  checked={filters.city.includes(c.id)}
+                  checked={filters.city.includes(c.id) || (!!c.code && filters.city.includes(c.code))}
                   onChange={() => toggleArrayFilter("city", c.id)}
                   style={{ flex: 1 }}
                 />

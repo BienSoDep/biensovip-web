@@ -79,6 +79,9 @@ export const PLATE_TYPE_LANDINGS = [
   { name: 'Sảnh tiến', slug: 'bien-sanh-tien' },
   { name: 'Số kép', slug: 'bien-so-kep' },
   { name: 'Số đẹp khác', slug: 'bien-so-dep-khac' },
+  { name: 'Ông địa', slug: 'bien-ong-dia' },
+  { name: 'Số gánh', slug: 'bien-so-ganh' },
+  { name: 'Lặp đôi', slug: 'bien-lap-doi' },
 ];
 
 export const PLATE_TYPE_SLUGS = new Set(PLATE_TYPE_LANDINGS.map((p) => p.slug));

@@ -153,17 +153,6 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
         </div>
       </section>
 
-      {/* Banner đăng ký email nhận thông báo — cùng bảng subscriber với ô footer */}
-      <section className="home-email-banner" style={{ padding: '0 var(--pad-page)', margin: 'clamp(8px,2vw,20px) 0' }}>
-        <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-surface)', padding: 'clamp(20px,4vw,40px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhận thông báo biển số mới</span>
-            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 420 }}>Đăng ký email để được báo khi có biển đẹp mới, giá và khuyến mãi — không bỏ lỡ biển hợp ý.</span>
-          </div>
-          <EmailCapture source="banner" style={{ flex: '1 1 300px', maxWidth: 460 }} />
-        </div>
-      </section>
-
       <section style={{ maxWidth: 'var(--width-content)', margin: '-26px auto 0', padding: '0 var(--pad-page)', position: 'relative', zIndex: 5 }}>
         <div ref={searchBarRef} className="home-search-bar" style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-3)', padding: '10px 14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-3)' }}>
           <div className="home-search-field" style={{ flex: '1 1 180px', minWidth: 140, maxWidth: 360 }}><SearchField placeholder={T('home.search.placeholder')} value={q} onChange={(e) => setQ(e.target.value)} width="100%" /></div>
@@ -279,6 +268,75 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
         )}
       </section>
 
+      {featuredVideoItems.length > 0 && (
+        <section className="home-video-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+          <div className="home-video-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <Eyebrow tone="brand" className="section-eyebrow">Thực tế & Bàn giao</Eyebrow>
+            <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>
+              {T('home.video.featured_title')}
+            </h2>
+            <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>
+              Video ghi lại trải nghiệm giao dịch thực tế, bàn giao xe và biển số đẹp tận tay khách hàng của Duy Đinh.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+            {featuredVideoItems.map((v) => {
+              // Tự động lấy YouTube thumbnail nếu không có thumbnailUrl trong DB
+              let thumbSrc = v.thumbnailUrl || null;
+              if (!thumbSrc && v.platform === 'youtube') {
+                const ytMatch = v.videoUrl?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([\w-]{11})/);
+                if (ytMatch) thumbSrc = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+              }
+              return (
+                <SpotlightCard
+                  key={v.id}
+                  className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`}
+                  spotlightColor="rgba(241, 151, 32, 0.15)"
+                  borderColor="rgba(241, 151, 32, 0.35)"
+                  tilt={true}
+                  maxTilt={3.5}
+                  style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}
+                >
+                  {v.platform === 'tiktok' ? (
+                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={thumbSrc} />
+                  ) : (
+                    <a
+                      href={v.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ position: 'relative', display: 'block', width: '100%', minHeight: 220, background: 'var(--surface-card)', textDecoration: 'none' }}
+                    >
+                      {thumbSrc ? (
+                        <img
+                          src={thumbSrc}
+                          alt={v.title || 'Video'}
+                          loading="lazy"
+                          style={{ width: '100%', height: '100%', minHeight: 220, objectFit: 'cover', display: 'block' }}
+                        />
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 220, color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Xem video</div>
+                      )}
+                      {/* Play button overlay */}
+                      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(14,15,18,0.72)', backdropFilter: 'blur(6px)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.45)', border: '1.5px solid rgba(255,255,255,0.25)' }}>
+                          <Play size={24} fill="currentColor" style={{ marginLeft: 3 }} />
+                        </span>
+                      </span>
+                      {/* Title overlay at bottom */}
+                      {v.title && (
+                        <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 14px 12px', background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)', font: 'var(--type-caption)', fontWeight: 600, color: '#fff', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+                          {v.title}
+                        </span>
+                      )}
+                    </a>
+                  )}
+                </SpotlightCard>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Bộ sưu tập thế số đẹp phong thủy */}
       <section className="home-thematic-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page) 0', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
         <div className="home-thematic-head" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
@@ -378,102 +436,22 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
         </section>
       )}
 
-      {featuredVideoItems.length > 0 && (
-        <section className="home-video-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: '0 var(--pad-page) var(--pad-section-y)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-          <div className="home-video-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <Eyebrow tone="brand" className="section-eyebrow">{T('home.video.eyebrow')}</Eyebrow>
-            <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.video.featured_title')}</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-            {featuredVideoItems.map((v) => {
-              // Tự động lấy YouTube thumbnail nếu không có thumbnailUrl trong DB
-              let thumbSrc = v.thumbnailUrl || null;
-              if (!thumbSrc && v.platform === 'youtube') {
-                const ytMatch = v.videoUrl?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([\w-]{11})/);
-                if (ytMatch) thumbSrc = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
-              }
-              return (
-                <SpotlightCard
-                  key={v.id}
-                  className={`home-video-item${v.platform === 'tiktok' ? ' home-video-item--tiktok' : ''}`}
-                  spotlightColor="rgba(241, 151, 32, 0.15)"
-                  borderColor="rgba(241, 151, 32, 0.35)"
-                  tilt={true}
-                  maxTilt={3.5}
-                  style={{ background: 'var(--surface-sunken)', borderRadius: 'var(--radius-card)', overflow: 'hidden' }}
-                >
-                  {v.platform === 'tiktok' ? (
-                    <TikTokEmbed videoUrl={v.videoUrl} title={v.title} thumbnailUrl={thumbSrc} />
-                  ) : (
-                    <a
-                      href={v.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ position: 'relative', display: 'block', width: '100%', minHeight: 220, background: 'var(--surface-card)', textDecoration: 'none' }}
-                    >
-                      {thumbSrc ? (
-                        <img
-                          src={thumbSrc}
-                          alt={v.title || 'Video'}
-                          loading="lazy"
-                          style={{ width: '100%', height: '100%', minHeight: 220, objectFit: 'cover', display: 'block' }}
-                        />
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 220, color: 'var(--text-muted)', font: 'var(--type-body-sm)' }}>Xem video</div>
-                      )}
-                      {/* Play button overlay */}
-                      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(14,15,18,0.72)', backdropFilter: 'blur(6px)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.45)', border: '1.5px solid rgba(255,255,255,0.25)' }}>
-                          <Play size={24} fill="currentColor" style={{ marginLeft: 3 }} />
-                        </span>
-                      </span>
-                      {/* Title overlay at bottom */}
-                      {v.title && (
-                        <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 14px 12px', background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)', font: 'var(--type-caption)', fontWeight: 600, color: '#fff', lineHeight: 1.35, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-                          {v.title}
-                        </span>
-                      )}
-                    </a>
-                  )}
-                </SpotlightCard>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      <section className="home-contact-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-        <div className="home-contact-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <Eyebrow tone="brand">{T('home.contact.eyebrow')}</Eyebrow>
-          <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.contact.title')}</h2>
-          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{T('home.contact.desc')}</p>
-        </div>
-        <div className="home-contact-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--gutter-section)' }}>
-          <ContactChannelList notify={notify} zaloSource="home_page" />
-          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-            <div>
-              <h3 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{T('home.contact.form_title')}</h3>
-              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{T('home.contact.form_sub')}</p>
-            </div>
-            <ContactRequestForm user={user} source="home-page" compact />
-          </div>
-        </div>
-      </section>
-
       <section className="home-guide-section" style={{ padding: '0 var(--pad-page) var(--pad-section-y)' }}>
         <SpotlightCard
           className="home-guide-card"
-          spotlightColor="rgba(241, 151, 32, 0.20)"
-          borderColor="rgba(241, 151, 32, 0.45)"
+          spotlightColor="rgba(255, 255, 255, 0.40)"
+          borderColor="rgba(217, 126, 12, 0.35)"
           tilt={false}
           style={{
             maxWidth: 'var(--width-content)',
             margin: '0 auto',
-            background: 'var(--surface-inverse)',
+            background: 'linear-gradient(135deg, #FFFDF8 0%, #FEF4E4 35%, #FDE7C7 70%, #FADBA2 100%)',
+            border: '1px solid rgba(217, 126, 12, 0.30)',
             borderRadius: 'var(--radius-surface)',
             padding: 'clamp(28px, 4vw, 48px)',
             position: 'relative',
             overflow: 'hidden',
+            boxShadow: '0 16px 44px -12px rgba(217, 126, 12, 0.16), 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
           }}
         >
           {/* Ambient lighting decor */}
@@ -482,11 +460,11 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             style={{
               position: 'absolute',
               top: '-60px',
-              right: '15%',
-              width: 320,
-              height: 320,
+              right: '12%',
+              width: 360,
+              height: 360,
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(241, 151, 32, 0.16) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(241, 151, 32, 0.28) 0%, rgba(254, 235, 200, 0.2) 45%, transparent 75%)',
               pointerEvents: 'none',
               zIndex: 0,
             }}
@@ -509,11 +487,29 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
             {/* Left Column: Heading, Description, 3 Trust Value Bullets, Dual CTAs */}
             <div style={{ flex: '1 1 360px', minWidth: 0, maxWidth: 540, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <Eyebrow tone="inverse">{T('home.guide.eyebrow')}</Eyebrow>
-                <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--white)' }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 12px',
+                    borderRadius: 9999,
+                    background: 'rgba(217, 126, 12, 0.12)',
+                    border: '1px solid rgba(217, 126, 12, 0.28)',
+                    color: 'var(--brand-700, #6A3F06)',
+                    fontSize: 11.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    width: 'fit-content',
+                  }}
+                >
+                  {T('home.guide.eyebrow')}
+                </span>
+                <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: '#1A130B' }}>
                   {T('home.guide.title')}
                 </h2>
-                <p style={{ margin: 0, font: 'var(--type-body)', color: 'rgba(255, 255, 255, 0.78)', lineHeight: 1.6 }}>
+                <p style={{ margin: 0, font: 'var(--type-body)', color: '#5C442A', lineHeight: 1.65 }}>
                   {T('home.guide.desc')}
                 </p>
               </div>
@@ -521,32 +517,32 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
               {/* 3 Trust Value Bullets */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <ShieldCheck size={17} style={{ color: 'var(--brand-500)' }} />
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(217, 126, 12, 0.32)', boxShadow: '0 2px 6px rgba(163, 97, 10, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <ShieldCheck size={18} style={{ color: 'var(--brand-600, #A3610A)' }} />
                   </div>
                   <div>
-                    <strong style={{ color: 'var(--white)', fontSize: 13.5 }}>Pháp lý chuẩn Thông tư 24:</strong>
-                    <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Hồ sơ Cục CSGT sạch 100%, bảo hành trọn đời.</span>
+                    <strong style={{ color: '#26180B', fontSize: 13.5 }}>Pháp lý chuẩn Thông tư 24:</strong>
+                    <span style={{ color: '#5C442A', fontSize: 13, marginLeft: 6 }}>Hồ sơ Cục CSGT sạch 100%, bảo hành trọn đời.</span>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Clock size={17} style={{ color: 'var(--brand-500)' }} />
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(217, 126, 12, 0.32)', boxShadow: '0 2px 6px rgba(163, 97, 10, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Clock size={18} style={{ color: 'var(--brand-600, #A3610A)' }} />
                   </div>
                   <div>
-                    <strong style={{ color: 'var(--white)', fontSize: 13.5 }}>Bàn giao siêu tốc 24–48h:</strong>
-                    <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Hoàn tất thu hồi và cấp biển định danh nhanh gọn.</span>
+                    <strong style={{ color: '#26180B', fontSize: 13.5 }}>Bàn giao siêu tốc 24–48h:</strong>
+                    <span style={{ color: '#5C442A', fontSize: 13, marginLeft: 6 }}>Hoàn tất thu hồi và cấp biển định danh nhanh gọn.</span>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(241, 151, 32, 0.14)', border: '1px solid rgba(241, 151, 32, 0.32)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <HandCoins size={17} style={{ color: 'var(--brand-500)' }} />
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(217, 126, 12, 0.32)', boxShadow: '0 2px 6px rgba(163, 97, 10, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <HandCoins size={18} style={{ color: 'var(--brand-600, #A3610A)' }} />
                   </div>
                   <div>
-                    <strong style={{ color: 'var(--white)', fontSize: 13.5 }}>Minh bạch & Trọn gói:</strong>
-                    <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 13, marginLeft: 6 }}>Báo giá thật niêm yết, không phát sinh chi phí ẩn.</span>
+                    <strong style={{ color: '#26180B', fontSize: 13.5 }}>Minh bạch & Trọn gói:</strong>
+                    <span style={{ color: '#5C442A', fontSize: 13, marginLeft: 6 }}>Báo giá thật niêm yết, không phát sinh chi phí ẩn.</span>
                   </div>
                 </div>
               </div>
@@ -561,9 +557,11 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                   size="lg"
                   onClick={go('transfer')}
                   style={{
-                    borderColor: 'rgba(241, 151, 32, 0.45)',
-                    color: 'var(--white)',
-                    background: 'rgba(255, 255, 255, 0.04)',
+                    borderColor: 'rgba(217, 126, 12, 0.45)',
+                    color: '#2B1B0E',
+                    background: 'rgba(255, 255, 255, 0.88)',
+                    boxShadow: '0 2px 6px rgba(163, 97, 10, 0.06)',
+                    fontWeight: 700,
                   }}
                 >
                   <span>Thủ tục sang tên</span>
@@ -579,11 +577,11 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                 minWidth: 0,
                 maxWidth: 480,
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(241, 151, 32, 0.28)',
+                background: 'rgba(255, 255, 255, 0.92)',
+                border: '1px solid rgba(217, 126, 12, 0.30)',
                 borderRadius: 'var(--radius-card, 16px)',
                 padding: 'clamp(18px, 2.5vw, 24px)',
-                boxShadow: '0 16px 40px -10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
+                boxShadow: '0 16px 40px -10px rgba(217, 126, 12, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 1)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 16,
@@ -598,58 +596,59 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
                     gap: 6,
                     padding: '5px 12px',
                     borderRadius: 9999,
-                    background: 'rgba(241, 151, 32, 0.16)',
-                    border: '1px solid rgba(241, 151, 32, 0.4)',
-                    color: 'var(--brand-500, #F19720)',
+                    background: 'rgba(217, 126, 12, 0.12)',
+                    border: '1px solid rgba(217, 126, 12, 0.32)',
+                    color: 'var(--brand-700, #6A3F06)',
                     fontSize: 12,
                     fontWeight: 700,
                     letterSpacing: '0.02em',
                   }}
                 >
-                  <BadgeCheck size={15} /> Bảo chứng chuẩn BCA
+                  <BadgeCheck size={15} style={{ color: 'var(--brand-600, #A3610A)' }} /> Bảo chứng chuẩn BCA
                 </span>
-                <span style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.65)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  <Sparkles size={13} style={{ color: 'var(--brand-500)' }} /> Thông tư 24/2023
+                <span style={{ fontSize: 12, color: '#6A4D30', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                  <Sparkles size={13} style={{ color: 'var(--brand-600, #A3610A)' }} /> Thông tư 24/2023
                 </span>
               </div>
 
               {/* Embossed Horizontal Plate Visual Box (Biển số ngang) */}
               <div
                 style={{
-                  background: 'rgba(0, 0, 0, 0.40)',
+                  background: 'linear-gradient(180deg, #FBF6EE 0%, #F5ECDD 100%)',
                   borderRadius: 'var(--radius-sm, 10px)',
                   padding: '16px 14px 12px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.07)',
+                  border: '1px solid rgba(217, 126, 12, 0.20)',
+                  boxShadow: 'inset 0 1px 3px rgba(163, 97, 10, 0.08)',
                 }}
               >
                 <div style={{ maxWidth: 360, width: '100%', display: 'flex', justifyContent: 'center' }}>
                   <PlateVisual prov="51K" seri="" num="999.99" shape="long" size="listLg" />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 12, color: 'rgba(255, 255, 255, 0.72)' }}>
-                  <span>Định danh chính chủ</span> · <span style={{ color: 'var(--brand-500, #F19720)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}><FileCheck2 size={13} /> Sẵn sàng bàn giao</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 12, color: '#5C442A' }}>
+                  <span>Định danh chính chủ</span> · <span style={{ color: 'var(--brand-700, #6A3F06)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 3 }}><FileCheck2 size={13} style={{ color: 'var(--brand-600, #A3610A)' }} /> Sẵn sàng bàn giao</span>
                 </div>
               </div>
 
               {/* 2x2 Grid of Key Guarantee Metrics */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>100%</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Pháp lý sạch CSGT</div>
+                <div style={{ background: 'linear-gradient(135deg, #FFFDF9 0%, #FEF5E7 100%)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(217, 126, 12, 0.22)', boxShadow: '0 2px 6px rgba(163, 97, 10, 0.04)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-600, #A3610A)', fontWeight: 800 }}>100%</div>
+                  <div style={{ fontSize: 11.5, color: '#634E39', marginTop: 2, fontWeight: 500 }}>Pháp lý sạch CSGT</div>
                 </div>
-                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>1–2 Ngày</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Bàn giao hoàn tất</div>
+                <div style={{ background: 'linear-gradient(135deg, #FFFDF9 0%, #FEF5E7 100%)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(217, 126, 12, 0.22)', boxShadow: '0 2px 6px rgba(163, 97, 10, 0.04)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-600, #A3610A)', fontWeight: 800 }}>1–2 Ngày</div>
+                  <div style={{ fontSize: 11.5, color: '#634E39', marginTop: 2, fontWeight: 500 }}>Bàn giao hoàn tất</div>
                 </div>
-                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>63 Tỉnh</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Giao tận nơi toàn quốc</div>
+                <div style={{ background: 'linear-gradient(135deg, #FFFDF9 0%, #FEF5E7 100%)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(217, 126, 12, 0.22)', boxShadow: '0 2px 6px rgba(163, 97, 10, 0.04)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-600, #A3610A)', fontWeight: 800 }}>63 Tỉnh</div>
+                  <div style={{ fontSize: 11.5, color: '#634E39', marginTop: 2, fontWeight: 500 }}>Giao tận nơi toàn quốc</div>
                 </div>
-                <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-500)', fontWeight: 800 }}>Trọn Đời</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.65)', marginTop: 2 }}>Bảo hành hồ sơ xe</div>
+                <div style={{ background: 'linear-gradient(135deg, #FFFDF9 0%, #FEF5E7 100%)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(217, 126, 12, 0.22)', boxShadow: '0 2px 6px rgba(163, 97, 10, 0.04)' }}>
+                  <div style={{ font: 'var(--type-title-3)', color: 'var(--brand-600, #A3610A)', fontWeight: 800 }}>Trọn Đời</div>
+                  <div style={{ fontSize: 11.5, color: '#634E39', marginTop: 2, fontWeight: 500 }}>Bảo hành hồ sơ xe</div>
                 </div>
               </div>
             </div>
@@ -750,6 +749,37 @@ export default function Home({ settings, go, notify, _heroAnim, openPlate, openB
               {item.label}
             </a>
           ))}
+        </div>
+      </section>
+
+      {/* Banner đăng ký email nhận thông báo — cùng bảng subscriber với ô footer */}
+      <section className="home-email-banner" style={{ padding: '0 var(--pad-page)', margin: 'clamp(8px,2vw,20px) 0' }}>
+        <div style={{ maxWidth: 'var(--width-content)', margin: '0 auto', background: 'var(--surface-tint-cream)', borderRadius: 'var(--radius-surface)', padding: 'clamp(20px,4vw,40px)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ font: 'var(--type-title-3)', color: 'var(--text-strong)' }}>Nhận thông báo biển số mới</span>
+            <span style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', maxWidth: 420 }}>Đăng ký email để được báo khi có biển đẹp mới, giá và khuyến mãi — không bỏ lỡ biển hợp ý.</span>
+          </div>
+          <EmailCapture source="banner" style={{ flex: '1 1 300px', maxWidth: 460 }} />
+        </div>
+      </section>
+
+
+
+      <section className="home-contact-section" style={{ maxWidth: 'var(--width-content)', margin: '0 auto', padding: 'var(--pad-section-y) var(--pad-page)', display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <div className="home-contact-head" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <Eyebrow tone="brand">{T('home.contact.eyebrow')}</Eyebrow>
+          <h2 style={{ margin: 0, font: 'var(--type-display-3)', letterSpacing: 'var(--ls-title)', color: 'var(--text-strong)' }}>{T('home.contact.title')}</h2>
+          <p style={{ margin: 0, font: 'var(--type-body)', color: 'var(--text-muted)', maxWidth: 'var(--width-prose)' }}>{T('home.contact.desc')}</p>
+        </div>
+        <div className="home-contact-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 'var(--gutter-section)' }}>
+          <ContactChannelList notify={notify} zaloSource="home_page" />
+          <div style={{ background: 'var(--white)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-inset-hairline)', padding: 'var(--gutter-card)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div>
+              <h3 style={{ margin: '0 0 var(--space-1)', font: 'var(--type-title-2)', color: 'var(--text-strong)' }}>{T('home.contact.form_title')}</h3>
+              <p style={{ margin: 0, font: 'var(--type-body-sm)', color: 'var(--text-muted)' }}>{T('home.contact.form_sub')}</p>
+            </div>
+            <ContactRequestForm user={user} source="home-page" compact />
+          </div>
         </div>
       </section>
     </div>

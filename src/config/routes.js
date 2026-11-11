@@ -66,7 +66,12 @@ export function parseRoute(pathname) {
       return { screen: 'provinceLanding', landingSlug: provSlug, provinceCode: PROVINCE_CODE_BY_SLUG[provSlug] };
     }
   }
-  if (p[0] === 'tu-van') return { screen: 'lucky' }; // alias cũ → hop-menh (redirect)
+  if (p[0] === 'tu-van' || p[0] === 'bien-so-hop-menh' || p[0] === 'tra-cuu-hop-menh') return { screen: 'lucky' }; // alias cũ → hop-menh (redirect)
+  if (p[0] === 'chuyen-muc') {
+    const rawCat = p[1] ? decodeURIComponent(p[1]).toLowerCase() : '';
+    const categoryKey = rawCat === 'tin-tuc' ? 'general' : rawCat;
+    return { screen: 'blog', categorySlug: rawCat, categoryKey };
+  }
   if (p[0] === 'luan-bien-so') return { screen: 'luanBien' };
   if (p[0] === 'tim-kiem') return { screen: 'list', searchTerm: p[1] || '' };
   if (p[0] === 'bien-dau-gia') return { screen: 'list' }; // đã gộp vào trang Biển số (tab VPA)

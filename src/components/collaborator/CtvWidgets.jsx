@@ -130,7 +130,7 @@ export function LeaderboardVisibilityToggle({ go }) {
   const setVisibility = useSetLeaderboardVisibility();
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-      <a href={routeFor('collabLeaderboard')} onClick={(e) => { e.preventDefault(); go('collabLeaderboard')(); }} style={{ font: 'var(--type-caption)', color: 'var(--action-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Xem bảng xếp hạng →</a>
+      <a href={routeFor('collabLeaderboard')} onClick={(e) => { e.preventDefault(); go('collabLeaderboard')(); }} style={{ font: 'var(--type-caption)', fontWeight: 600, color: 'var(--action-primary)', textDecoration: 'none' }}>Xem bảng xếp hạng →</a>
       <label style={{ display: 'flex', alignItems: 'center', gap: 6, font: 'var(--type-caption)', color: 'var(--text-muted)', cursor: 'pointer' }}>
         <input type="checkbox" onChange={(e) => setVisibility.mutate(e.target.checked, { onError: (err) => toast.error(err.message || 'Cập nhật thất bại') })} />
         Hiện tên trên bảng xếp hạng

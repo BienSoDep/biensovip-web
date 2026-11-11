@@ -7,7 +7,8 @@
 // "Thiên tam sinh Mộc, Địa bát thành chi" => 3, 8 thuộc Mộc
 // "Địa tứ sinh Kim, Thiên cửu thành chi" => 4, 9 thuộc Kim
 // "Thiên ngũ sinh Thổ, Địa thập thành chi" => 5, 0 (10) thuộc Thổ
-export const DIGIT_ELEMENTS = {
+export const DIGIT_ELEMENTS = { 1: 'Mộc', 2: 'Mộc', 3: 'Hỏa', 4: 'Hỏa', 5: 'Thổ', 6: 'Thổ', 7: 'Kim', 8: 'Kim', 9: 'Thủy', 0: 'Thủy' };
+export const HA_DO_TIEN_THIEN_ELEMENTS = {
   1: 'Thủy', 6: 'Thủy',
   2: 'Hỏa',  7: 'Hỏa',
   3: 'Mộc',  8: 'Mộc',

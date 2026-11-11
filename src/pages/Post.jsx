@@ -164,7 +164,8 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
 
   // Kho FAQ chung — bài gắn nhiều bộ (post.faqSets), gộp toàn bộ câu hỏi làm JSON-LD FAQPage
   // (pattern giống Faq.jsx) cho cơ hội rich snippet Google.
-  const postFaqItems = post?.faqSets?.flatMap((s) => s.items) || [];
+  const contentHasEmbeddedFaq = Boolean(post?.contentHtml && /Câu hỏi thường gặp/i.test(post.contentHtml));
+  const postFaqItems = (post?.faqSets?.flatMap((s) => s.items) || []).length > 0 ? post.faqSets.flatMap((s) => s.items) : (post?.faqItems || []);
   useEffect(() => {
     const old = document.head.querySelector('script[data-post-faq-ld]');
     if (old) old.remove();
@@ -187,7 +188,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
   useEffect(() => {
     const old = document.head.querySelector('script[data-post-howto-ld]');
     if (old) old.remove();
-    if (!post?.howToSteps?.length) return;
+    if (!post?.howToSteps?.length || post?.title) return;
     const sc = document.createElement('script');
     sc.type = 'application/ld+json';
     sc.dataset.postHowtoLd = '1';
@@ -416,7 +417,7 @@ export default function Post({ postId, go, patch, notify, openPlate, user }) {
         <div className="article-body" itemProp="articleBody" style={{ ...articleBodyVars, color: 'var(--text-body)' }} dangerouslySetInnerHTML={{ __html: contentWithIds }} />
       )}
 
-      {postFaqItems.length > 0 && (
+      {postFaqItems.length > 0 && !contentHasEmbeddedFaq && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', paddingTop: 'var(--space-4)', boxShadow: 'inset 0 1px 0 var(--border-hairline)' }}>
           <h2 style={{ margin: '0 0 var(--space-2)', font: 'var(--type-title-1)', color: 'var(--text-strong)' }}>Câu hỏi thường gặp</h2>
           <MotionAccordion items={postFaqItems} />
