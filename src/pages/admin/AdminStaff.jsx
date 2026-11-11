@@ -35,7 +35,7 @@ const ROLE_LABEL = { 'super-admin': 'Quản trị viên', staff: 'Nhân viên' }
 // Nhóm theo loại nghiệp vụ — đầy đủ toàn bộ 28 phân hệ quản trị trong hệ thống
 const PERM_GROUPS = [
   ['Kho biển số & Đấu giá VPA', [
-    ['plates', 'Biển số (Kho Shop Duy Định)'],
+    ['plates', 'Biển số (Kho Shop Duy Đinh)'],
     ['plates_cost', 'Xem/nhập giá vốn nội bộ biển số'],
     ['vpa_prices', 'Biển đấu giá VPA & Thống kê VPA'],
     ['categories', 'Danh mục (Tỉnh & Loại biển)'],

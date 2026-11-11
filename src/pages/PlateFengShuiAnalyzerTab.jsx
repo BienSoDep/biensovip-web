@@ -1979,7 +1979,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
         </div>
       )}
 
-          {/* GỢI Ý BIỂN SỐ CẢI VẬN TỪ HỆ THỐNG DUY ĐỊNH & VPA */}
+          {/* GỢI Ý BIỂN SỐ CẢI VẬN TỪ HỆ THỐNG DUY ĐINH & VPA */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
@@ -1987,7 +1987,7 @@ export default function PlateFengShuiAnalyzerTab({ go, patch, notify, user }) {
                   Gợi ý biển số cải vận & bổ khuyết cho bạn
                 </h3>
                 <span style={{ font: 'var(--type-caption)', color: 'var(--text-muted)' }}>
-                  Các biển số có sẵn trong kho Duy Định & đấu giá VPA khắc phục triệt để các điểm yếu của biển hiện tại
+                  Các biển số có sẵn trong kho Duy Đinh & đấu giá VPA khắc phục triệt để các điểm yếu của biển hiện tại
                 </span>
               </div>
 

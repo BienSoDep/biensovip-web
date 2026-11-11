@@ -26,6 +26,19 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
 }
 
+// Tự động tải lại trang khi phát hiện mã nguồn mới được deploy (chunk cũ trả về 404 khi người dùng chưa F5)
+if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    const storageKey = 'last_chunk_reload';
+    const lastReload = Number(sessionStorage.getItem(storageKey) || 0);
+    if (Date.now() - lastReload > 10000) {
+      sessionStorage.setItem(storageKey, String(Date.now()));
+      window.location.reload();
+    }
+  });
+}
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 })
